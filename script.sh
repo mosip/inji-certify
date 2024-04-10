@@ -4,6 +4,7 @@ install_sunbird_rc() {
   cd ./docker-compose-sunbird
   echo "Installing Sunbird RC"
   make start
+  cd ..
 }
 
 install_esignet() {
@@ -11,6 +12,7 @@ install_esignet() {
   echo "Installing esignet"
   cd ./docker-compose-esignet
   docker compose up -d
+  cd ..
 }
 
 display_menu() {

@@ -25,8 +25,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-    networks:
-      - mosip_stack
   identity:
     image: ghcr.io/sunbird-rc/sunbird-rc-identity-service:v2.0.0-beta2
     ports:
@@ -53,8 +51,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - mosip_stack
   schema:
     image: ghcr.io/sunbird-rc/sunbird-rc-credential-schema:v2.0.0-beta1
     ports:
@@ -75,8 +71,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - mosip_stack
   credential:
     image: ghcr.io/sunbird-rc/sunbird-rc-credentials-service:v2.0.0-beta2
     ports:
@@ -101,8 +95,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - mosip_stack
   db:
     image: postgres:12.1-alpine
     ports:
@@ -117,8 +109,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - mosip_stack
   registry:
     image: ghcr.io/sunbird-rc/sunbird-rc-core:${RELEASE_VERSION}
     volumes:
@@ -156,8 +146,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 10
-    networks:
-      - mosip_stack
   nginx:
     image: mosip-nginx
     build: .
@@ -172,8 +160,5 @@ services:
         condition: service_healthy
       credential:
         condition: service_healthy
-    networks:
-      - mosip_stack
-
 volumes:
   vault-data:
