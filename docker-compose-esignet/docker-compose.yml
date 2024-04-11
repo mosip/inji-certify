@@ -54,7 +54,6 @@ services:
       KAFKA_CREATE_TOPICS: "esignet-linked:1:1,esignet-consented:1:1"
 
   esignet:
-#    image: 'mosipdev/esignet@sha256:10e1a812e670b1ab788343099762657fbd1dc9f785478dda4c2ff391c88322a4'
     image: 'mosipdev/esignet:develop'
     user: root
     ports:
