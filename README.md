@@ -48,6 +48,7 @@ Execute installation script
 
 ## Properties for custom use case
 - Sample schemas for Insurance registry are provided [here](docker-compose-sunbird/schemas), change it according to use case.
+- Change these properties for different use case `mosip.esignet.authenticator.sunbird-rc.auth-factor.kba.field-details`,`mosip.esignet.authenticator.sunbird-rc.auth-factor.kba.individual-id-field`
 - Add the Sunbird registry URL for these properties: `mosip.esignet.vciplugin.sunbird-rc.issue-credential-url`,`mosip.esignet.authenticator.sunbird-rc.auth-factor.kba.registry-search-url`.
 - Specify the list of supported credential types using the property: `mosip.esignet.vciplugin.sunbird-rc.supported-credential-types`.
 - For each supported credential type change the below properties. Sample properties are provided in the [default properties](docker-compose-esignet/config/esignet-default.properties) file.
