@@ -3,7 +3,8 @@
 install_sunbird_rc() {
   cd ./docker-compose-sunbird
   echo "Installing Sunbird RC"
-  make start
+  bash setup_vault.sh docker-compose.yml vault
+  docker compose up -d
   cd ..
 }
 

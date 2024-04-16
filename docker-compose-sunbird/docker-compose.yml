@@ -25,6 +25,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    networks:
+      - network
   identity:
     image: ghcr.io/sunbird-rc/sunbird-rc-identity-service:v2.0.0-beta2
     ports:
@@ -51,6 +53,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - network
   schema:
     image: ghcr.io/sunbird-rc/sunbird-rc-credential-schema:v2.0.0-beta1
     ports:
@@ -71,6 +75,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - network
   credential:
     image: ghcr.io/sunbird-rc/sunbird-rc-credentials-service:v2.0.0-beta2
     ports:
@@ -95,6 +101,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - network
   db:
     image: postgres:12.1-alpine
     ports:
@@ -109,6 +117,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - network
   registry:
     image: ghcr.io/sunbird-rc/sunbird-rc-core:${RELEASE_VERSION}
     volumes:
@@ -146,6 +156,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 10
+    networks:
+      - network
   nginx:
     image: mosip-nginx
     build: .
@@ -160,5 +172,9 @@ services:
         condition: service_healthy
       credential:
         condition: service_healthy
-volumes:
-  vault-data:
+    networks:
+      - network
+networks:
+  network:
+    driver: bridge
+    name: mosip_network
