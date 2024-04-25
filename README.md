@@ -13,7 +13,15 @@ The following steps will help you to setup Sunbird RC and Esignet services using
 * Docker Compose (2.25)
 
 ## Installation
-### Steps to setup Insurance credential use case  
+
+### Steps to setup Insurance credential use case
+
+NOTE:
+
+- Apple Silicon Mac users should export or set `DOCKER_DEFAULT_PLATFORM=linux/amd64` before running the `install.sh` and use GNU `sed` to run the script over BSD `sed`. A simple way to do it would be to replace all instances of `sed` in the script with `gsed`. The former change is required to bring-up Vault cleanly without any unsealing errors and the latter had to be done because `sed` scripts are usually not portable across platforms.
+- Windows users should run this script from `git bash` shell as-is.
+- All users should install [postman utility lib](https://joolfe.github.io/postman-util-lib/) to their Postman setup.
+
 Execute installation script
 
 1. Clone the repository and navigate to its directory:
@@ -29,22 +37,25 @@ Execute installation script
     1. Sunbird RC
     2. Esignet
     0. Exit
-    Select: 
+    Select:
     ```
 
 3. Select "Sunbird RC" as the first step of the installation process.
 
 4. The installation will encompass the following services:
-
    * [Credential Schema](https://github.com/Sunbird-RC/sunbird-rc-core/tree/main/services/credential-schema)
    * [Credential Service](https://github.com/Sunbird-RC/sunbird-rc-core/tree/main/services/credentials-service)
    * [Identity Service](https://github.com/Sunbird-RC/sunbird-rc-core/tree/main/services/identity-service)
    * [Registry](https://github.com/Sunbird-RC/sunbird-rc-core)
 5. Post Sunbird installation, proceed to create an issuer and credential schema. Refer to the API schemas available [here](https://github.com/Sunbird-RC/sunbird-rc-core/tree/main/api-documentation).
+    * Set the hostname of the endpoints correctly as per your docker setup
+    * Perform requests of 1, 2, 4 from Demo Mosip RC > Main Flow
+        * take note of $.schema[0].author & $.schema[0].id from request #2
 6. Add the jar file of Digital Credential Stack(DCS) plugin implementation in [loader_path](docker-compose-esignet/loader_path) the GitHub link for the repository can be found [here](https://github.com/mosip/digital-credential-plugins).
 7. Modify the properties of the Esignet service located in the [esignet-default.properties](docker-compose-esignet/config/esignet-default.properties) file:
    - Include Issuer ID and credential schema ID for the following properties: `mosip.esignet.vciplugin.sunbird-rc.credential-type.{credential type}.static-value-map.issuerId`, `mosip.esignet.vciplugin.sunbird-rc.credential-type.{credential-type}.cred-schema-id`.
-8. Once the Esignet properties are configured, proceed to select Esignet from the options provided for installation steps.
+   - The `$.schema[0].author` DID goes to the config ending in issuerId and `$.schema[0].id` DID goes to the config ending in `cred-schema-id`.
+8. Once the Esignet properties are configured, proceed to select Esignet from the options provided for eSignet and follow [these steps](https://github.com/mosip/esignet/blob/develop/docker-compose/README.md#how-to-run-this-setup.).
 
 ## Properties for custom use case
 - Sample schemas for Insurance registry are provided [here](docker-compose-sunbird/schemas), change it according to use case.
@@ -68,4 +79,4 @@ Execute installation script
       *  [Registry](https://github.com/challabeehyv/sunbird-devops/tree/main/deploy-as-code/helm/demo-mosip-registry)
       *  [Credential service, Credential schema service & Identity service](https://github.com/Sunbird-RC/devops/tree/main/deploy-as-code/helm/v2)
       *  [Vault](https://github.com/challabeehyv/sunbird-devops/blob/main/deploy-as-code/helm/v2/README.md#vault-deployment)
-   * [Esignet](https://github.com/mosip/esignet/tree/develop/helm) 
+   * [Esignet](https://github.com/mosip/esignet/tree/develop/helm)
