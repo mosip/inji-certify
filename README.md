@@ -16,12 +16,6 @@ The following steps will help you to setup Sunbird RC and Esignet services using
 
 ### Steps to setup Insurance credential use case
 
-NOTE:
-
-- Apple Silicon Mac users should export or set `DOCKER_DEFAULT_PLATFORM=linux/amd64` before running the `install.sh` and use GNU `sed` to run the script over BSD `sed`. A simple way to do it would be to replace all instances of `sed` in the script with `gsed`. The former change is required to bring-up Vault cleanly without any unsealing errors and the latter had to be done because `sed` scripts are usually not portable across platforms.
-- Windows users should run this script from `git bash` shell as-is.
-- All users should install [postman utility lib](https://joolfe.github.io/postman-util-lib/) to their Postman setup.
-
 Execute installation script
 
 1. Clone the repository and navigate to its directory:
@@ -49,15 +43,16 @@ Execute installation script
    * [Registry](https://github.com/Sunbird-RC/sunbird-rc-core)
 5. Post Sunbird installation, proceed to create an issuer and credential schema. Refer to the API schemas available [here](https://github.com/Sunbird-RC/sunbird-rc-core/tree/main/api-documentation).
     * Set the hostname of the endpoints correctly as per your docker setup
-    * Perform requests of 1, 2, 4 from Demo Mosip RC > Main Flow
-        * take note of $.schema[0].author & $.schema[0].id from request #2
-6. Add the jar file of Digital Credential Stack(DCS) plugin implementation in [loader_path](docker-compose-esignet/loader_path) the GitHub link for the repository can be found [here](https://github.com/mosip/digital-credential-plugins).
+    * Now generate a DID, create a credential schema and create an issuance registry
+        * take note of $.schema[0].author & $.schema[0].id from the create credential schema request
+6. Add the jar file of Digital Credential Stack(DCS) plugin implementation in [loader_path](docker-compose-esignet/loader_path) the GitHub link for the repository can be found [here](https://github.com/mosip/digital-credential-plugins) if you wish to build it locally or you can download from [here](https://mvnrepository.com/artifact/io.mosip.esignet.sunbirdrc/sunbird-rc-esignet-integration-impl).
 7. Modify the properties of the Esignet service located in the [esignet-default.properties](docker-compose-esignet/config/esignet-default.properties) file:
    - Include Issuer ID and credential schema ID for the following properties: `mosip.esignet.vciplugin.sunbird-rc.credential-type.{credential type}.static-value-map.issuerId`, `mosip.esignet.vciplugin.sunbird-rc.credential-type.{credential-type}.cred-schema-id`.
    - The `$.schema[0].author` DID goes to the config ending in issuerId and `$.schema[0].id` DID goes to the config ending in `cred-schema-id`.
 8. Once the Esignet properties are configured, proceed to select Esignet from the options provided for eSignet and follow [these steps](https://github.com/mosip/esignet/blob/develop/docker-compose/README.md#how-to-run-this-setup.).
 
 ## Properties for custom use case
+
 - Sample schemas for Insurance registry are provided [here](docker-compose-sunbird/schemas), change it according to use case.
 - Change these properties for different use case `mosip.esignet.authenticator.sunbird-rc.auth-factor.kba.field-details`,`mosip.esignet.authenticator.sunbird-rc.auth-factor.kba.individual-id-field`
 - Add the Sunbird registry URL for these properties: `mosip.esignet.vciplugin.sunbird-rc.issue-credential-url`,`mosip.esignet.authenticator.sunbird-rc.auth-factor.kba.registry-search-url`.
@@ -70,6 +65,12 @@ Execute installation script
    * Credential schema version `mosip.esignet.vciplugin.sunbird-rc.credential-type.{credential type}.cred-schema-version`
 - Define the list of supported scopes using: `mosip.esignet.supported.credential.scopes`, and for each scope, map the resource accordingly at `mosip.esignet.credential.scope-resource-mapping`.
 - Change this property for different credential types supported `mosip.esignet.vci.key-values` based on OID4VCI version.
+
+## Troubleshooting
+
+- Apple Silicon Mac users should export or set `DOCKER_DEFAULT_PLATFORM=linux/amd64` before running the `install.sh` and use GNU `sed` to run the script over BSD `sed`. A simple way to do it would be to replace all instances of `sed` in the script with `gsed`. The former change is required to bring-up Vault cleanly without any unsealing errors and the latter had to be done because `sed` scripts are usually not portable across platforms.
+- Windows users should run this script from `git bash` shell as-is.
+- All users should install [postman utility lib](https://joolfe.github.io/postman-util-lib/) to their Postman setup.
 
 
 ## Helm Deployments
