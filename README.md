@@ -44,7 +44,7 @@ Execute installation script
 5. Post Sunbird installation, proceed to create an issuer and credential schema. Refer to the API schemas available [here](https://github.com/Sunbird-RC/sunbird-rc-core/tree/main/api-documentation).
     * Set the hostname of the endpoints correctly as per your docker setup
     * Now generate a DID, create a credential schema and create an issuance registry
-        * take note of $.schema[0].author & $.schema[0].id from the create credential schema request
+        * take note of $.schema[0].author and $.schema[0].id from the create credential schema request
 6. Add the jar file of Digital Credential Stack(DCS) plugin implementation in [loader_path](docker-compose-esignet/loader_path). The JAR can be built [from source](https://github.com/mosip/digital-credential-plugins/) or [downloaded directly](https://mvnrepository.com/artifact/io.mosip.esignet.sunbirdrc/sunbird-rc-esignet-integration-impl).
 7. Modify the properties of the Esignet service located in the [esignet-default.properties](docker-compose-esignet/config/esignet-default.properties) file:
    - Include Issuer ID and credential schema ID for the following properties: `mosip.esignet.vciplugin.sunbird-rc.credential-type.{credential type}.static-value-map.issuerId`, `mosip.esignet.vciplugin.sunbird-rc.credential-type.{credential-type}.cred-schema-id`.
