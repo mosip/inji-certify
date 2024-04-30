@@ -55,7 +55,7 @@ Execute installation script
 11. Change `aud` variable in environment to 'http://localhost:8088/v1/esignet/oauth/v2/token' and set `audUrl` to http://localhost:8088
 12. Perform a Knowledge based authentication(KBA) as specified in the Postman collection.
     * perform the authorize callback request
-    * in the /authorization/authenticate request update the challenge to a URL-safe base64 encoded string with the KBA details such as `"fullName":"Abhishek Gangwar","dob":"1967-10-24"}`, one can use an [online base64 encoding service](https://base64encode.org) for the same.
+    * in the /authorization/authenticate request update the challenge to a URL-safe base64 encoded string with the KBA details such as `{"fullName":"Abhishek Gangwar","dob":"1967-10-24"}`, one can use an [online base64 encoding service](https://base64encode.org) for the same.
     * in the /vci/credential api inside pre-request script section change the aud env variable to  -> "aud" : pm.environment.get('audUrl')
 
 ## Properties for custom use case
