@@ -163,7 +163,7 @@ services:
     volumes:
       - ./imports/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
     ports:
-      - '80:80'
+      - '8000:80'
     depends_on:
       registry:
         condition: service_healthy
