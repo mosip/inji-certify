@@ -44,7 +44,7 @@ Execute installation script
 5. Post Sunbird installation, proceed to create an issuer and credential schema. Refer to the API schemas available [here](https://github.com/Sunbird-RC/sunbird-rc-core/tree/main/api-documentation).
     * Set the hostname of the endpoints correctly as per your docker setup
     * Now generate a DID, create a credential schema and create an issuance registry
-        * take note of $.schema[0].author & $.schema[0].id from the create credential schema request
+        * take note of `$.schema[0].author`  and  `$.schema[0].id` from the create credential schema request
 6. Add the jar file of Digital Credential Stack(DCS) plugin implementation in [loader_path](docker-compose-esignet/loader_path). The JAR can be built [from source](https://github.com/mosip/digital-credential-plugins/) or [downloaded directly](https://mvnrepository.com/artifact/io.mosip.esignet.sunbirdrc/sunbird-rc-esignet-integration-impl).
 7. Modify the properties of the Esignet service located in the [esignet-default.properties](docker-compose-esignet/config/esignet-default.properties) file:
    - Include Issuer ID and credential schema ID for the following properties: `mosip.esignet.vciplugin.sunbird-rc.credential-type.{credential type}.static-value-map.issuerId`, `mosip.esignet.vciplugin.sunbird-rc.credential-type.{credential-type}.cred-schema-id`.
@@ -55,7 +55,7 @@ Execute installation script
 11. Change `aud` variable in environment to 'http://localhost:8088/v1/esignet/oauth/v2/token' and set `audUrl` to http://localhost:8088
 12. Perform a Knowledge based authentication(KBA) as specified in the Postman collection.
     * perform the authorize callback request
-    * in the /authorization/authenticate request update the challenge to a URL-safe base64 encoded string with the KBA details such as `"fullName":"Abhishek Gangwar","dob":"1967-10-24"}`, one can use an [online base64 encoding service](https://base64encode.org) for the same.
+    * in the /authorization/authenticate request update the challenge to a URL-safe base64 encoded string with the KBA details such as `{"fullName":"Abhishek Gangwar","dob":"1967-10-24"}`, one can use an [online base64 encoding service](https://base64encode.org) for the same.
     * in the /vci/credential api inside pre-request script section change the aud env variable to  -> "aud" : pm.environment.get('audUrl')
 
 ## Properties for custom use case
