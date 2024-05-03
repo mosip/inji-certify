@@ -22,9 +22,14 @@ Execute installation script
 
     ```bash
     cd inji-certify
-    ./install.sh
     ```
 2. Change the value of `WEB_DID_BASE_URL` in [.env](docker-compose-sunbird/.env) file to your public domain where did.json will be hosted(You can use your github profile to host DIDs).
+
+3. Execute the installation script:
+
+    ```bash
+    ./install.sh
+    ```
 
 3. During the execution of the `install.sh` script, user will be prompted to select the service to be installed:
 
