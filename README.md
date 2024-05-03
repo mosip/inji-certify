@@ -31,7 +31,7 @@ Execute installation script
     ./install.sh
     ```
 
-3. During the execution of the `install.sh` script, user will be prompted to select the service to be installed:
+4. During the execution of the `install.sh` script, user will be prompted to select the service to be installed:
 
     ```
     1. Sunbird RC
@@ -40,27 +40,27 @@ Execute installation script
     Select:
     ```
 
-4. Select "Sunbird RC" as the first step of the installation process.
+5. Select "Sunbird RC" as the first step of the installation process.
 
-5. The installation will encompass the following services:
+6. The installation will encompass the following services:
    * [Credential Schema](https://github.com/Sunbird-RC/sunbird-rc-core/tree/main/services/credential-schema)
    * [Credential Service](https://github.com/Sunbird-RC/sunbird-rc-core/tree/main/services/credentials-service)
    * [Identity Service](https://github.com/Sunbird-RC/sunbird-rc-core/tree/main/services/identity-service)
    * [Registry](https://github.com/Sunbird-RC/sunbird-rc-core)
-6. Post Sunbird installation, proceed to create an issuer and credential schema. Refer to the API schemas available [here](https://github.com/Sunbird-RC/sunbird-rc-core/tree/main/api-documentation).
+7. Post Sunbird installation, proceed to create an issuer and credential schema. Refer to the API schemas available [here](https://github.com/Sunbird-RC/sunbird-rc-core/tree/main/api-documentation).
     * Set the hostname of the endpoints correctly as per your docker setup
     * Now generate a DID, create a credential schema and create an issuance registry
         * take note of `$.schema[0].author`  and  `$.schema[0].id` from the create credential schema request
     * As mentioned in point 2, For local testing create a git repo and host the did response from `Generate a DID` API.
-7. Add the jar file of Digital Credential Stack(DCS) plugin implementation in [loader_path](docker-compose-esignet/loader_path). The JAR can be built [from source](https://github.com/mosip/digital-credential-plugins/) or [downloaded directly](https://mvnrepository.com/artifact/io.mosip.esignet.sunbirdrc/sunbird-rc-esignet-integration-impl).
-8. Modify the properties of the Esignet service located in the [esignet-default.properties](docker-compose-esignet/config/esignet-default.properties) file:
+8. Add the jar file of Digital Credential Stack(DCS) plugin implementation in [loader_path](docker-compose-esignet/loader_path). The JAR can be built [from source](https://github.com/mosip/digital-credential-plugins/) or [downloaded directly](https://mvnrepository.com/artifact/io.mosip.esignet.sunbirdrc/sunbird-rc-esignet-integration-impl).
+9. Modify the properties of the Esignet service located in the [esignet-default.properties](docker-compose-esignet/config/esignet-default.properties) file:
    - Include Issuer ID and credential schema ID for the following properties: `mosip.esignet.vciplugin.sunbird-rc.credential-type.{credential type}.static-value-map.issuerId`, `mosip.esignet.vciplugin.sunbird-rc.credential-type.{credential-type}.cred-schema-id`.
    - The `$.schema[0].author` DID goes to the config ending in issuerId and `$.schema[0].id` DID goes to the config ending in `cred-schema-id`.
-9. Once the Esignet properties are configured, proceed to select Esignet from the options provided for eSignet.
-10. Download the postman collection and environment for sunbird use case from [here](https://github.com/mosip/digital-credential-plugins/tree/master/sunbird-rc-esignet-integration-impl/postman-collections).
-11. Create Client from Create OIDC client API, add redirect uri 'http://localhost:3001', add auth-factor 'mosip:idp:acr:knowledge' to the request body.
-12. Change `aud` variable in environment to 'http://localhost:8088/v1/esignet/oauth/v2/token' and set `audUrl` to http://localhost:8088
-13. Perform a Knowledge based authentication(KBA) as specified in the Postman collection.
+10. Once the Esignet properties are configured, proceed to select Esignet from the options provided for eSignet.
+11. Download the postman collection and environment for sunbird use case from [here](https://github.com/mosip/digital-credential-plugins/tree/master/sunbird-rc-esignet-integration-impl/postman-collections).
+12. Create Client from Create OIDC client API, add redirect uri 'http://localhost:3001', add auth-factor 'mosip:idp:acr:knowledge' to the request body.
+13. Change `aud` variable in environment to 'http://localhost:8088/v1/esignet/oauth/v2/token' and set `audUrl` to http://localhost:8088
+14. Perform a Knowledge based authentication(KBA) as specified in the Postman collection.
     * perform the authorize callback request
     * in the /authorization/authenticate request update the challenge to a URL-safe base64 encoded string with the KBA details such as `{"fullName":"Abhishek Gangwar","dob":"1967-10-24"}`, one can use an [online base64 encoding service](https://base64encode.org) for the same.
     * in the /vci/credential api inside pre-request script section:
