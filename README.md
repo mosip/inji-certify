@@ -50,9 +50,15 @@ Execute installation script
 7. Post Sunbird installation, proceed to create an issuer and credential schema. Refer to the Postman collections available [here](https://github.com/Sunbird-RC/demo-mosip-rc/blob/main/Demo%20Mosip%20RC.postman_collection.json).
     * Set the hostname of the endpoints correctly as per your docker setup
     * For generating a DID use the `Generate a DID` API:
-      * change the `method` field in request body to `web` and `services` to an empty list
-    * As mentioned in point 2, For local testing create a git repo and publish the did response from `Generate a DID` API as a webpage with did.json as fie name.
-    * Now generate a DID, create a credential schema and create an issuance registry
+      * Change the `method` field in request body to `web` and `services` to an empty list
+      * Take note of the `id` field from the API response.
+      *  For local testing:
+        * Inside the github repo mentioned in point 2, create a folder with the name of the unique id from the `id` field.
+          * Example: If the `id` from the response is `did:web:challabeehyv.github.io:DID-Resolve:3313e611-d08a-49c8-b478-7f55eafe62f2` then the folder name should be `3313e611-d08a-49c8-b478-7f55eafe62f2`
+        *  Create a file named did.json in the above folder and add the response from `Generate a DID` API.
+        * Publish the did.json as a webpage.
+        * Similarly multiple DIDs can be hosted in a single git repo with different folder names.
+    * Now create a credential schema and create an issuance registry
          * take note of `$.schema[0].author`  and  `$.schema[0].id` from the create credential schema request
 8. Add the jar file of Digital Credential Stack(DCS) plugin implementation in [loader_path](docker-compose-esignet/loader_path). The JAR can be built [from source](https://github.com/mosip/digital-credential-plugins/) or [downloaded directly](https://mvnrepository.com/artifact/io.mosip.esignet.sunbirdrc/sunbird-rc-esignet-integration-impl).
 9. Modify the properties of the Esignet service located in the [esignet-default.properties](docker-compose-esignet/config/esignet-default.properties) file:
