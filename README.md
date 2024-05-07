@@ -22,10 +22,16 @@ Execute installation script
 
     ```bash
     cd inji-certify
+    ```
+2. Change the value of `WEB_DID_BASE_URL` in [.env](docker-compose-sunbird/.env) file to your public domain where did.json will be hosted(You can use your github profile to host DIDs).
+
+3. Execute the installation script:
+
+    ```bash
     ./install.sh
     ```
 
-2. During the execution of the `install.sh` script, user will be prompted to select the service to be installed:
+4. During the execution of the `install.sh` script, user will be prompted to select the service to be installed:
 
     ```
     1. Sunbird RC
@@ -34,29 +40,43 @@ Execute installation script
     Select:
     ```
 
-3. Select "Sunbird RC" as the first step of the installation process.
+5. Select "Sunbird RC" as the first step of the installation process.
 
-4. The installation will encompass the following services:
+6. The installation will encompass the following services:
    * [Credential Schema](https://github.com/Sunbird-RC/sunbird-rc-core/tree/main/services/credential-schema)
    * [Credential Service](https://github.com/Sunbird-RC/sunbird-rc-core/tree/main/services/credentials-service)
    * [Identity Service](https://github.com/Sunbird-RC/sunbird-rc-core/tree/main/services/identity-service)
    * [Registry](https://github.com/Sunbird-RC/sunbird-rc-core)
-5. Post Sunbird installation, proceed to create an issuer and credential schema. Refer to the API schemas available [here](https://github.com/Sunbird-RC/sunbird-rc-core/tree/main/api-documentation).
+7. Post Sunbird installation, proceed to create an issuer and credential schema. Refer to the Postman collections available [here](https://github.com/Sunbird-RC/demo-mosip-rc/blob/main/Demo%20Mosip%20RC.postman_collection.json).
     * Set the hostname of the endpoints correctly as per your docker setup
-    * Now generate a DID, create a credential schema and create an issuance registry
-        * take note of `$.schema[0].author`  and  `$.schema[0].id` from the create credential schema request
-6. Add the jar file of Digital Credential Stack(DCS) plugin implementation in [loader_path](docker-compose-esignet/loader_path). The JAR can be built [from source](https://github.com/mosip/digital-credential-plugins/) or [downloaded directly](https://mvnrepository.com/artifact/io.mosip.esignet.sunbirdrc/sunbird-rc-esignet-integration-impl).
-7. Modify the properties of the Esignet service located in the [esignet-default.properties](docker-compose-esignet/config/esignet-default.properties) file:
+    * For generating a DID use the `Generate a DID` API:
+      * Change the `method` field in request body to `web` and `services` to an empty list
+      * Take note of the `id` field from the API response.
+      *  For local testing:
+        * Inside the github repo mentioned in point 2, create a folder with the name of the unique id from the `id` field.
+          * Example: If the `id` from the response is `did:web:challabeehyv.github.io:DID-Resolve:3313e611-d08a-49c8-b478-7f55eafe62f2` then the folder name should be `3313e611-d08a-49c8-b478-7f55eafe62f2`
+        *  Create a file named did.json in the above folder and add the response from `Generate a DID` API.
+        * Publish the did.json as a webpage.
+        * Similarly multiple DIDs can be hosted in a single git repo with different folder names.
+    * Now create a credential schema and create an issuance registry
+         * take note of `$.schema[0].author`  and  `$.schema[0].id` from the create credential schema request
+8. Add the jar file of Digital Credential Stack(DCS) plugin implementation in [loader_path](docker-compose-esignet/loader_path). The JAR can be built [from source](https://github.com/mosip/digital-credential-plugins/) or [downloaded directly](https://mvnrepository.com/artifact/io.mosip.esignet.sunbirdrc/sunbird-rc-esignet-integration-impl).
+9. Modify the properties of the Esignet service located in the [esignet-default.properties](docker-compose-esignet/config/esignet-default.properties) file:
    - Include Issuer ID and credential schema ID for the following properties: `mosip.esignet.vciplugin.sunbird-rc.credential-type.{credential type}.static-value-map.issuerId`, `mosip.esignet.vciplugin.sunbird-rc.credential-type.{credential-type}.cred-schema-id`.
    - The `$.schema[0].author` DID goes to the config ending in issuerId and `$.schema[0].id` DID goes to the config ending in `cred-schema-id`.
-8. Once the Esignet properties are configured, proceed to select Esignet from the options provided for eSignet.
-9. Download the postman collection and environment for sunbird use case from [here](https://github.com/mosip/digital-credential-plugins/tree/master/sunbird-rc-esignet-integration-impl/postman-collections).
-10. Create Client from Create OIDC client API, add redirect uri 'http://localhost:3001', add auth-factor 'mosip:idp:acr:knowledge' to the request body.
-11. Change `aud` variable in environment to 'http://localhost:8088/v1/esignet/oauth/v2/token' and set `audUrl` to http://localhost:8088
-12. Perform a Knowledge based authentication(KBA) as specified in the Postman collection.
+10. Once the Esignet properties are configured, proceed to select Esignet from the options provided for eSignet.
+11. Download the postman collection and environment for sunbird use case from [here](https://github.com/mosip/digital-credential-plugins/tree/master/sunbird-rc-esignet-integration-impl/postman-collections).
+12. Create Client from Create OIDC client API, add redirect uri 'http://localhost:3001', add auth-factor 'mosip:idp:acr:knowledge' to the request body.
+13. Change `aud` variable in environment to 'http://localhost:8088/v1/esignet/oauth/v2/token' and set `audUrl` to http://localhost:8088
+14. Perform a Knowledge based authentication(KBA) as specified in the Postman collection.
     * perform the authorize callback request
     * in the /authorization/authenticate request update the challenge to a URL-safe base64 encoded string with the KBA details such as `{"fullName":"Abhishek Gangwar","dob":"1967-10-24"}`, one can use an [online base64 encoding service](https://base64encode.org) for the same.
-    * in the /vci/credential api inside pre-request script section change the aud env variable to  -> "aud" : pm.environment.get('audUrl')
+    * in the /vci/credential api inside pre-request script section:
+      * change the aud env variable to  -> "aud" : pm.environment.get('audUrl')
+      * For generating a credential with smaller VC change the below variables:
+        * `keypair` variable to -> keyPair = pmlib.rs.KEYUTIL.generateKeypair("EC", "P-256");
+        * `alg` to ES256 in place of RS256
+ 
 
 ## Properties for custom use case
 
