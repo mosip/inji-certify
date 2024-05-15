@@ -45,8 +45,8 @@ Execute installation script
     * Set the hostname of the endpoints correctly as per your docker setup
     * Now generate a DID, create a credential schema and create an issuance registry
         * take note of `$.schema[0].author`  and  `$.schema[0].id` from the create credential schema request
-6. Add the jar file of Digital Credential Stack(DCS) plugin implementation in [loader_path](docker-compose-esignet/loader_path). The JAR can be built [from source](https://github.com/mosip/digital-credential-plugins/) or [downloaded directly](https://mvnrepository.com/artifact/io.mosip.esignet.sunbirdrc/sunbird-rc-esignet-integration-impl).
-7. Modify the properties of the Esignet service located in the [esignet-default.properties](docker-compose-esignet/config/esignet-default.properties) file:
+6. Add the jar file of Digital Credential Stack(DCS) plugin implementation in [loader_path](docker-compose/docker-compose-esignet/loader_path). The JAR can be built [from source](https://github.com/mosip/digital-credential-plugins/) or [downloaded directly](https://mvnrepository.com/artifact/io.mosip.esignet.sunbirdrc/sunbird-rc-esignet-integration-impl).
+7. Modify the properties of the Esignet service located in the [esignet-default.properties](docker-compose/docker-compose-esignet/config/esignet-default.properties) file:
    - Include Issuer ID and credential schema ID for the following properties: `mosip.esignet.vciplugin.sunbird-rc.credential-type.{credential type}.static-value-map.issuerId`, `mosip.esignet.vciplugin.sunbird-rc.credential-type.{credential-type}.cred-schema-id`.
    - The `$.schema[0].author` DID goes to the config ending in issuerId and `$.schema[0].id` DID goes to the config ending in `cred-schema-id`.
 8. Once the Esignet properties are configured, proceed to select Esignet from the options provided for eSignet.
@@ -60,11 +60,11 @@ Execute installation script
 
 ## Properties for custom use case
 
-- Sample schemas for Insurance registry are provided [here](docker-compose-sunbird/schemas), change it according to use case.
+- Sample schemas for Insurance registry are provided [here](docker-compose/docker-compose-sunbird/schemas), change it according to use case.
 - Change these properties for different use case `mosip.esignet.authenticator.sunbird-rc.auth-factor.kba.field-details`,`mosip.esignet.authenticator.sunbird-rc.auth-factor.kba.individual-id-field`
 - Add the Sunbird registry URL for these properties: `mosip.esignet.vciplugin.sunbird-rc.issue-credential-url`,`mosip.esignet.authenticator.sunbird-rc.auth-factor.kba.registry-search-url`.
 - Specify the list of supported credential types using the property: `mosip.esignet.vciplugin.sunbird-rc.supported-credential-types`.
-- For each supported credential type change the below properties. Sample properties are provided in the [default properties](docker-compose-esignet/config/esignet-default.properties) file.
+- For each supported credential type change the below properties. Sample properties are provided in the [default properties](docker-compose/docker-compose-esignet/config/esignet-default.properties) file.
    * Issuer id `mosip.esignet.vciplugin.sunbird-rc.credential-type.{credential type}.static-value-map.issuerId`
    * Credential schema id `mosip.esignet.vciplugin.sunbird-rc.credential-type.{credential type}.cred-schema-id`
    * Registry Url `mosip.esignet.vciplugin.sunbird-rc.credential-type.{credential type}.registry-get-url`
