@@ -180,7 +180,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
     private Optional<CredentialMetadata>  getScopeCredentialMapping(String scope) {
         LinkedHashMap<String, Object> vciMetadata = issuerMetadata.get("latest");
         if(supportedCredentials == null) {
-            supportedCredentials = (LinkedHashMap<String, Object>) vciMetadata.get("credentials_supported");
+            supportedCredentials = (LinkedHashMap<String, Object>) vciMetadata.get("credential_configurations_supported");
         }
 
         Optional<Map.Entry<String, Object>> result = supportedCredentials.entrySet().stream()

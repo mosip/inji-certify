@@ -51,7 +51,7 @@ public class VCIssuanceControllerTest {
         Map<String, Object> issuerMetadata = new HashMap<>();
         issuerMetadata.put("credential_issuer", "https://localhost:9090");
         issuerMetadata.put("credential_endpoint", "https://localhost:9090/v1/certify/issuance/credential");
-        issuerMetadata.put("credentials_supported", Arrays.asList());
+        issuerMetadata.put("credential_configurations_supported", Arrays.asList());
 
         Mockito.when(vcIssuanceService.getCredentialIssuerMetadata(Mockito.anyString())).thenReturn(issuerMetadata);
 
@@ -59,7 +59,7 @@ public class VCIssuanceControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.credential_issuer").exists())
                 .andExpect(jsonPath("$.credential_issuer").exists())
-                .andExpect(jsonPath("$.credentials_supported").exists())
+                .andExpect(jsonPath("$.credential_configurations_supported").exists())
                 .andExpect(header().string("Content-Type", "application/json"));
 
         Mockito.verify(vcIssuanceService).getCredentialIssuerMetadata("latest");
@@ -70,7 +70,7 @@ public class VCIssuanceControllerTest {
         Map<String, Object> issuerMetadata = new HashMap<>();
         issuerMetadata.put("credential_issuer", "https://localhost:9090");
         issuerMetadata.put("credential_endpoint", "https://localhost:9090/v1/certify/issuance/credential");
-        issuerMetadata.put("credentials_supported", Arrays.asList());
+        issuerMetadata.put("credential_configurations_supported", Arrays.asList());
 
         Mockito.when(vcIssuanceService.getCredentialIssuerMetadata(Mockito.anyString())).thenReturn(issuerMetadata);
 
@@ -78,7 +78,7 @@ public class VCIssuanceControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.credential_issuer").exists())
                 .andExpect(jsonPath("$.credential_issuer").exists())
-                .andExpect(jsonPath("$.credentials_supported").exists())
+                .andExpect(jsonPath("$.credential_configurations_supported").exists())
                 .andExpect(header().string("Content-Type", "application/json"));
 
         Mockito.verify(vcIssuanceService).getCredentialIssuerMetadata("v11");
