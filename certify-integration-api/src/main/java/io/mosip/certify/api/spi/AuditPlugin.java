@@ -12,7 +12,7 @@ import io.mosip.certify.api.util.ActionStatus;
 public interface AuditPlugin {
 
     /**
-     + Plugin method to audit all the actions in e-Signet service.
+     + Plugin method to audit all the actions in certify service.
      +
      +  @param action Action to audit @{@link Action}
      +  @param actionStatus Action status to audit @{@link ActionStatus}
@@ -22,7 +22,7 @@ public interface AuditPlugin {
     void logAudit(Action action, ActionStatus status, AuditDTO audit, Throwable t);
 
     /**
-    + Plugin method to audit all the actions in e-Signet service.
+    + Plugin method to audit all the actions in certify service.
     +
     +  @param username Session username for audit
     +  @param action Action to audit @{@link Action}

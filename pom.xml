@@ -102,13 +102,9 @@
 		<sonar.cpd.exclusions>**/dto/**,**/entity/**,**/config/**</sonar.cpd.exclusions>
 
 		<java.version>21</java.version>
-
-
-
 		<validation.api.version>3.0.2</validation.api.version>
-
 		<jose4j.version>0.6.5</jose4j.version>
-		<kernel.core.version>1.2.0.1-B1</kernel.core.version>
+		<kernel.core.version>1.2.1-java21-SNAPSHOT</kernel.core.version>
 	</properties>
 
 	<modules>
@@ -119,7 +115,6 @@
 	</modules>
 
 	<dependencies>
-
 		<dependency>
 			<groupId>jakarta.validation</groupId>
 			<artifactId>jakarta.validation-api</artifactId>
@@ -134,6 +129,16 @@
 			<groupId>io.mosip.kernel</groupId>
 			<artifactId>kernel-core</artifactId>
 			<version>${kernel.core.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>io.mosip.kernel</groupId>
+					<artifactId>kernel-keymanager-service</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.springframework.data</groupId>
+					<artifactId>spring-data-jpa</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>

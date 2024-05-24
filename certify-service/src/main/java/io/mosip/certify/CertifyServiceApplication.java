@@ -13,9 +13,10 @@ import org.springframework.scheduling.annotation.EnableAsync;
 
 @EnableAsync
 @EnableCaching
-@SpringBootApplication(scanBasePackages = "io.mosip.certify")
+@SpringBootApplication(scanBasePackages = "io.mosip.certify,"+
+        "${mosip.certify.integration.scan-base-package}")
 public class CertifyServiceApplication {
     public static void main(String[] args) {
-        SpringApplication.run(CertifyServiceApplication.class, args);;
+        SpringApplication.run(CertifyServiceApplication.class, args);
     }
 }
