@@ -5,6 +5,7 @@
  */
 package io.mosip.certify.vci.filter;
 
+import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.dto.vci.ParsedAccessToken;
 import io.mosip.certify.core.util.IdentityProviderUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
-import static io.mosip.certify.core.spi.TokenService.CLIENT_ID;
 
 @Slf4j
 @Component
@@ -61,7 +61,7 @@ public class AccessTokenValidationFilter extends OncePerRequestFilter {
                     new JwtIssuerValidator(issuerUri),
                     new JwtClaimValidator<List<String>>(JwtClaimNames.AUD, allowedAudiences::containsAll),
                     new JwtClaimValidator<String>(JwtClaimNames.SUB, Objects::nonNull),
-                    new JwtClaimValidator<String>(CLIENT_ID, Objects::nonNull),
+                    new JwtClaimValidator<String>(Constants.CLIENT_ID, Objects::nonNull),
                     new JwtClaimValidator<Instant>(JwtClaimNames.IAT,
                             iat -> iat != null && iat.isBefore(Instant.now(Clock.systemUTC()))),
                     new JwtClaimValidator<Instant>(JwtClaimNames.EXP,

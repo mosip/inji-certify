@@ -8,29 +8,10 @@ package io.mosip.certify.api.dto;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @NoArgsConstructor
 public class AuditDTO {
 
     String transactionId;
-    String clientId;
-    String relyingPartyId;
-    String redirectUri;
-    Claims requestedClaims;
-    List<String> requestedAuthorizeScopes;
-    String[] claimsLocales;
-    String authTransactionId;
-    long authTimeInSeconds;
-    String codeHash;
-    List<String> acceptedClaims;
-    List<String> permittedScopes;
-    String accessTokenHash;
-    String linkedCodeHash;
-    String linkedTransactionId;
-    String nonce;
-    String state;
-
     String idType;
 }

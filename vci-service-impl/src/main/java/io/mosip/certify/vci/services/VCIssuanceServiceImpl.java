@@ -44,9 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static io.mosip.certify.core.spi.TokenService.*;
-
-
 @Slf4j
 @Service
 public class VCIssuanceServiceImpl implements VCIssuanceService {
@@ -101,7 +98,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         }
 
         ProofValidator proofValidator = proofValidatorFactory.getProofValidator(credentialRequest.getProof().getProof_type());
-        if(!proofValidator.validate((String)parsedAccessToken.getClaims().get(CLIENT_ID), getValidClientNonce(),
+        if(!proofValidator.validate((String)parsedAccessToken.getClaims().get(Constants.CLIENT_ID), getValidClientNonce(),
                 credentialRequest.getProof())) {
             throw new CertifyException(ErrorConstants.INVALID_PROOF);
         }
@@ -111,7 +108,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
                 proofValidator.getKeyMaterial(credentialRequest.getProof()));
 
         auditWrapper.logAudit(Action.VC_ISSUANCE, ActionStatus.SUCCESS,
-                AuditHelper.buildAuditDto(parsedAccessToken.getAccessTokenHash(), "accessTokenHash", null), null);
+                AuditHelper.buildAuditDto(parsedAccessToken.getAccessTokenHash(), "accessTokenHash"), null);
         return getCredentialResponse(credentialRequest.getFormat(), vcResult);
     }
 
@@ -158,7 +155,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
         log.error("Failed to generate VC : {}", vcResult);
         auditWrapper.logAudit(Action.VC_ISSUANCE, ActionStatus.ERROR,
-                AuditHelper.buildAuditDto(parsedAccessToken.getAccessTokenHash(), "accessTokenHash", null), null);
+                AuditHelper.buildAuditDto(parsedAccessToken.getAccessTokenHash(), "accessTokenHash"), null);
         throw new CertifyException(ErrorConstants.VC_ISSUANCE_FAILED);
     }
 
@@ -216,9 +213,9 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         VCIssuanceTransaction transaction = vciCacheService.getVCITransaction(parsedAccessToken.getAccessTokenHash());
         //If the transaction is null, it means that VCI service never created cNonce, its authorization server issued cNonce
         String cNonce = (transaction == null) ?
-                (String) parsedAccessToken.getClaims().get(C_NONCE) :
+                (String) parsedAccessToken.getClaims().get(Constants.C_NONCE) :
                 transaction.getCNonce();
-        Object nonceExpireSeconds = parsedAccessToken.getClaims().getOrDefault(C_NONCE_EXPIRES_IN, 0);
+        Object nonceExpireSeconds = parsedAccessToken.getClaims().getOrDefault(Constants.C_NONCE_EXPIRES_IN, 0);
         int cNonceExpire = (transaction == null) ?
                 nonceExpireSeconds instanceof Long ? (int)(long)nonceExpireSeconds : (int)nonceExpireSeconds :
                 transaction.getCNonceExpireSeconds();

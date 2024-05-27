@@ -12,9 +12,6 @@ public class ErrorConstants {
     public static final String INVALID_AUTH_TOKEN="invalid_token";
     public static final String INVALID_ALGORITHM = "invalid_algorithm";
     public static final String UNKNOWN_ERROR = "unknown_error";
-    public static final String MISSING_HEADER="missing_header";
-    public static final String UNSUPPORTED_PKCE_CHALLENGE_METHOD = "unsupported_pkce_challenge_method";
-    public static final String INVALID_PKCE_CHALLENGE = "invalid_pkce_challenge";
     public static final String UNSUPPORTED_VC_FORMAT = "unsupported_credential_format";
     public static final String INVALID_VC_FORMAT = "invalid_vc_format";
     public static final String INVALID_PROOF = "invalid_proof";

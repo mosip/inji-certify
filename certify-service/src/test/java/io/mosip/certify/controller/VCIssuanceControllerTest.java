@@ -47,7 +47,7 @@ public class VCIssuanceControllerTest {
     VCICacheService vciCacheService;
 
     @Test
-    public void test_getIssuerMetadata_thenPass() throws Exception {
+    public void getIssuerMetadata_withValidDetails_thenPass() throws Exception {
         Map<String, Object> issuerMetadata = new HashMap<>();
         issuerMetadata.put("credential_issuer", "https://localhost:9090");
         issuerMetadata.put("credential_endpoint", "https://localhost:9090/v1/certify/vci/credential");
@@ -66,7 +66,7 @@ public class VCIssuanceControllerTest {
     }
 
     @Test
-    public void test_getIssuerMetadataWithQueryParam_thenPass() throws Exception {
+    public void getIssuerMetadata_withQueryParam_thenPass() throws Exception {
         Map<String, Object> issuerMetadata = new HashMap<>();
         issuerMetadata.put("credential_issuer", "https://localhost:9090");
         issuerMetadata.put("credential_endpoint", "https://localhost:9090/v1/certify/vci/credential");
@@ -85,7 +85,7 @@ public class VCIssuanceControllerTest {
     }
 
     @Test
-    public void getVC_withValidDetails_thenPass() throws Exception {
+    public void getVerifiableCredential_withValidDetails_thenPass() throws Exception {
         CredentialDefinition credentialDefinition = new CredentialDefinition();
         credentialDefinition.setType(Arrays.asList("VerifiableCredential", "SampleVerifiableCredential_ldp"));
         credentialDefinition.setContext(Arrays.asList("https://www.w3.org/2018/credentials/v1"));
@@ -111,7 +111,7 @@ public class VCIssuanceControllerTest {
     }
 
     @Test
-    public void getVC_withInvalidFormat_thenFail() throws Exception {
+    public void getVerifiableCredential_withInvalidFormat_thenFail() throws Exception {
         CredentialRequest credentialRequest = new CredentialRequest();
         credentialRequest.setFormat(null);
         CredentialProof credentialProof = new CredentialProof();
@@ -136,7 +136,7 @@ public class VCIssuanceControllerTest {
     }
 
     @Test
-    public void getVC_withInvalidProof_thenFail() throws Exception {
+    public void getVerifiableCredential_withInvalidProof_thenFail() throws Exception {
         CredentialRequest credentialRequest = new CredentialRequest();
         credentialRequest.setFormat("jwt_vc_json");
         CredentialDefinition credentialDefinition = new CredentialDefinition();
@@ -169,7 +169,7 @@ public class VCIssuanceControllerTest {
     }
 
     @Test
-    public void test_getVC_withInvalidNonceException_thenFail() throws Exception {
+    public void getVerifiableCredential_withInvalidNonceException_thenFail() throws Exception {
         CredentialDefinition credentialDefinition = new CredentialDefinition();
         credentialDefinition.setType(Arrays.asList("VerifiableCredential", "SampleVerifiableCredential_ldp"));
         credentialDefinition.setContext(Arrays.asList("https://www.w3.org/2018/credentials/v1"));

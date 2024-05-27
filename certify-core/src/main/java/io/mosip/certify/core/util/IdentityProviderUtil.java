@@ -9,29 +9,15 @@ import com.nimbusds.jose.util.ByteUtils;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.core.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.validator.routines.UrlValidator;
-import org.bouncycastle.util.io.pem.PemObject;
-import org.bouncycastle.util.io.pem.PemReader;
-import org.jose4j.jwk.RsaJsonWebKey;
-import org.jose4j.keys.X509Util;
-import org.jose4j.lang.JoseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.PathMatcher;
-
-import javax.xml.bind.DatatypeConverter;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.cert.*;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -95,10 +81,5 @@ public class IdentityProviderUtil {
             builder.append(CHARACTERS.charAt(index));
         }
         return builder.toString();
-    }
-
-    private static boolean matchUri(String registeredUri, String requestedUri) {
-        return (urlValidator.isValid(registeredUri) && urlValidator.isValid(requestedUri))
-                && pathMatcher.match(registeredUri, requestedUri);
     }
 }

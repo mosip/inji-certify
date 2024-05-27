@@ -10,5 +10,7 @@ public class Constants {
     public static final String UTC_DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
     public static final String SPACE = " ";
 
-    public static final String S256 = "S256";
+    public static final String C_NONCE = "c_nonce";
+    public static final String C_NONCE_EXPIRES_IN = "c_nonce_expires_in";
+    public static final String CLIENT_ID = "client_id";
 }

@@ -25,7 +25,6 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.web.access.AccessDeniedHandler;
-import org.springframework.util.MultiValueMap;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -95,14 +94,7 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
         log.error("Unhandled exception encountered in handler advice", ex);
         String pathInfo = ((ServletWebRequest)request).getRequest().getPathInfo();
 
-        boolean isInternalAPI = pathInfo != null && (pathInfo.startsWith("/authorization") ||
-                pathInfo.startsWith("/client-mgmt/"));
-
-        if(!isInternalAPI && pathInfo.startsWith("/oidc/userinfo")) {
-            return handleExceptionWithHeader(ex);
-        }
-
-        if(!isInternalAPI && pathInfo.startsWith("/vci/")) {
+        if(pathInfo != null && pathInfo.startsWith("/vci/")) {
             return handleVCIControllerExceptions(ex);
         }
 
@@ -171,24 +163,6 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
         log.error("Unhandled exception encountered in handler advice", ex);
         return new ResponseEntity<VCError>(getVCErrorDto(UNKNOWN_ERROR, ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
-
-    private ResponseEntity handleExceptionWithHeader(Exception ex) {
-        String errorCode = UNKNOWN_ERROR;
-        if(ex instanceof NotAuthenticatedException) {
-            errorCode = INVALID_AUTH_TOKEN;
-        }
-        if(ex instanceof MissingRequestHeaderException) {
-            errorCode = MISSING_HEADER;
-        }
-        log.error("Unhandled exception encountered in handler advice", ex);
-        MultiValueMap<String, String> headers = new HttpHeaders();
-        headers.add("WWW-Authenticate", "error=\""+errorCode+"\"");
-        ResponseEntity responseEntity = new ResponseEntity(headers, HttpStatus.UNAUTHORIZED);
-        return responseEntity;
-    }
-
-
-
 
     private ResponseWrapper getResponseWrapper(String errorCode, String errorMessage) {
         Error error = new Error();
