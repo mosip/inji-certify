@@ -44,7 +44,7 @@ public class JwtProofValidator implements ProofValidator {
     @Value("#{${mosip.certify.vci.supported.jwt-proof-alg}}")
     private List<String> supportedAlgorithms;
 
-    @Value("${mosip.esignet.vci.identifier}")
+    @Value("${mosip.certify.vci.identifier}")
     private String credentialIdentifier;
 
     @Override

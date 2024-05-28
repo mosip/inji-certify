@@ -31,16 +31,16 @@ import java.util.Objects;
 @Component
 public class AccessTokenValidationFilter extends OncePerRequestFilter {
 
-    @Value("${mosip.esignet.vci.authn.issuer-uri}")
+    @Value("${mosip.certify.vci.authn.issuer-uri}")
     private String issuerUri;
 
-    @Value("${mosip.esignet.vci.authn.jwk-set-uri}")
+    @Value("${mosip.certify.vci.authn.jwk-set-uri}")
     private String jwkSetUri;
 
-    @Value("#{${mosip.esignet.vci.authn.allowed-audiences}}")
+    @Value("#{${mosip.certify.vci.authn.allowed-audiences}}")
     private List<String> allowedAudiences;
 
-    @Value("#{${mosip.esignet.vci.authn.filter-urls}}")
+    @Value("#{${mosip.certify.vci.authn.filter-urls}}")
     private List<String> urlPatterns;
 
     @Autowired

@@ -46,7 +46,7 @@ public class SecurityConfig {
     @Value("#{${mosip.certify.security.auth.get-urls}}")
     private Map<String, List<String>> secureGetUrls;
 
-    @Value("${mosip.esignet.vci.authn.jwk-set-uri}")
+    @Value("${mosip.certify.vci.authn.jwk-set-uri}")
     private String jwkSetUri;
 
     @Value("${mosip.certify.security.ignore-auth-urls}")
