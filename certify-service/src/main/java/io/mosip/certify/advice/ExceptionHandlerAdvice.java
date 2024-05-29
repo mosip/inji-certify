@@ -7,11 +7,11 @@ package io.mosip.certify.advice;
 
 import io.mosip.certify.core.dto.Error;
 import io.mosip.certify.core.dto.ResponseWrapper;
-import io.mosip.certify.core.dto.vci.VCError;
+import io.mosip.certify.core.dto.VCError;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import io.mosip.certify.core.exception.NotAuthenticatedException;
-import io.mosip.certify.core.util.IdentityProviderUtil;
+import io.mosip.certify.core.util.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,7 +94,7 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
         log.error("Unhandled exception encountered in handler advice", ex);
         String pathInfo = ((ServletWebRequest)request).getRequest().getPathInfo();
 
-        if(pathInfo != null && pathInfo.startsWith("/vci/")) {
+        if(pathInfo != null && pathInfo.startsWith("/issuance/")) {
             return handleVCIControllerExceptions(ex);
         }
 
@@ -173,7 +173,7 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
 
     private ResponseWrapper getResponseWrapper(List<Error> errors) {
         ResponseWrapper responseWrapper = new ResponseWrapper<>();
-        responseWrapper.setResponseTime(IdentityProviderUtil.getUTCDateTime());
+        responseWrapper.setResponseTime(CommonUtil.getUTCDateTime());
         responseWrapper.setErrors(errors);
         return responseWrapper;
     }

@@ -1,11 +1,11 @@
 package io.mosip.certify.controller;
 
-import io.mosip.certify.core.dto.vci.CredentialRequest;
-import io.mosip.certify.core.dto.vci.CredentialResponse;
-import io.mosip.certify.core.dto.vci.VCError;
+import io.mosip.certify.core.dto.CredentialRequest;
+import io.mosip.certify.core.dto.CredentialResponse;
+import io.mosip.certify.core.dto.VCError;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.VCIssuanceService;
-import io.mosip.certify.vci.exception.InvalidNonceException;
+import io.mosip.certify.exception.InvalidNonceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -18,7 +18,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/vci")
+@RequestMapping("/issuance")
 public class VCIssuanceController {
 
     @Autowired

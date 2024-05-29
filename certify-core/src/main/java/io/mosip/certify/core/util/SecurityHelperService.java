@@ -14,6 +14,6 @@ public class SecurityHelperService {
 
     public String generateSecureRandomString(int length) {
         //TODO
-        return IdentityProviderUtil.generateRandomAlphaNumeric(length);
+        return CommonUtil.generateRandomAlphaNumeric(length);
     }
 }

@@ -3,9 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-package io.mosip.certify.vci.services;
+package io.mosip.certify.services;
 
-import io.mosip.certify.core.dto.vci.VCIssuanceTransaction;
+import io.mosip.certify.core.dto.VCIssuanceTransaction;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;

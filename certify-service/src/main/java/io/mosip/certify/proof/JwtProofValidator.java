@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-package io.mosip.certify.vci.pop;
+package io.mosip.certify.proof;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JOSEObjectType;
@@ -23,7 +23,7 @@ import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import io.mosip.certify.core.constants.ErrorConstants;
-import io.mosip.certify.core.dto.vci.CredentialProof;
+import io.mosip.certify.core.dto.CredentialProof;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
@@ -41,10 +41,10 @@ public class JwtProofValidator implements ProofValidator {
     private static final String HEADER_TYP = "openid4vci-proof+jwt";
     private static final String DID_JWK_PREFIX = "did:jwk:";
 
-    @Value("#{${mosip.certify.vci.supported.jwt-proof-alg}}")
+    @Value("#{${mosip.certify.supported.jwt-proof-alg}}")
     private List<String> supportedAlgorithms;
 
-    @Value("${mosip.certify.vci.identifier}")
+    @Value("${mosip.certify.identifier}")
     private String credentialIdentifier;
 
     @Override

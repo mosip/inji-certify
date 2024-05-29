@@ -16,21 +16,10 @@
     <description>Certify Integration Library</description>
 
     <properties>
-        <lombok.version>1.18.30</lombok.version>
         <jsonld.common.java.version>0.5.0</jsonld.common.java.version>
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>provided</scope>
-            <version>${lombok.version}</version>
-        </dependency>
         <dependency>
             <groupId>decentralized-identity</groupId>
             <artifactId>jsonld-common-java</artifactId>

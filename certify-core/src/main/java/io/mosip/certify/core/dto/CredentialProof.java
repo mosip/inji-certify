@@ -1,4 +1,4 @@
-package io.mosip.certify.core.dto.vci;
+package io.mosip.certify.core.dto;
 
 import io.mosip.certify.core.constants.ErrorConstants;
 import lombok.Data;

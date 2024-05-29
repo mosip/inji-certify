@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.spi.AuditPlugin;
 import io.mosip.certify.core.constants.ErrorConstants;
-import io.mosip.certify.core.dto.vci.*;
+import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.spi.VCIssuanceService;
-import io.mosip.certify.vci.exception.InvalidNonceException;
-import io.mosip.certify.vci.services.VCICacheService;
+import io.mosip.certify.exception.InvalidNonceException;
+import io.mosip.certify.services.VCICacheService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -50,12 +50,12 @@ public class VCIssuanceControllerTest {
     public void getIssuerMetadata_withValidDetails_thenPass() throws Exception {
         Map<String, Object> issuerMetadata = new HashMap<>();
         issuerMetadata.put("credential_issuer", "https://localhost:9090");
-        issuerMetadata.put("credential_endpoint", "https://localhost:9090/v1/certify/vci/credential");
+        issuerMetadata.put("credential_endpoint", "https://localhost:9090/v1/certify/issuance/credential");
         issuerMetadata.put("credentials_supported", Arrays.asList());
 
         Mockito.when(vcIssuanceService.getCredentialIssuerMetadata(Mockito.anyString())).thenReturn(issuerMetadata);
 
-        mockMvc.perform(get("/vci/.well-known/openid-credential-issuer"))
+        mockMvc.perform(get("/issuance/.well-known/openid-credential-issuer"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.credential_issuer").exists())
                 .andExpect(jsonPath("$.credential_issuer").exists())
@@ -69,12 +69,12 @@ public class VCIssuanceControllerTest {
     public void getIssuerMetadata_withQueryParam_thenPass() throws Exception {
         Map<String, Object> issuerMetadata = new HashMap<>();
         issuerMetadata.put("credential_issuer", "https://localhost:9090");
-        issuerMetadata.put("credential_endpoint", "https://localhost:9090/v1/certify/vci/credential");
+        issuerMetadata.put("credential_endpoint", "https://localhost:9090/v1/certify/issuance/credential");
         issuerMetadata.put("credentials_supported", Arrays.asList());
 
         Mockito.when(vcIssuanceService.getCredentialIssuerMetadata(Mockito.anyString())).thenReturn(issuerMetadata);
 
-        mockMvc.perform(get("/vci/.well-known/openid-credential-issuer?version=v11"))
+        mockMvc.perform(get("/issuance/.well-known/openid-credential-issuer?version=v11"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.credential_issuer").exists())
                 .andExpect(jsonPath("$.credential_issuer").exists())
@@ -102,7 +102,7 @@ public class VCIssuanceControllerTest {
         credentialResponse.setCredential(new JsonLDObject());
         Mockito.when(vcIssuanceService.getCredential(credentialRequest)).thenReturn(credentialResponse);
 
-        mockMvc.perform(post("/vci/credential")
+        mockMvc.perform(post("/issuance/credential")
                         .content(objectMapper.writeValueAsBytes(credentialRequest))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -121,14 +121,14 @@ public class VCIssuanceControllerTest {
         credentialDefinition.setType(Arrays.asList("VerifiableCredential", "SampleVerifiableCredential_ldp"));
         credentialRequest.setCredential_definition(credentialDefinition);
 
-        mockMvc.perform(post("/vci/credential")
+        mockMvc.perform(post("/issuance/credential")
                         .content(objectMapper.writeValueAsBytes(credentialRequest))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value(ErrorConstants.INVALID_VC_FORMAT));
 
         credentialRequest.setFormat("  ");
-        mockMvc.perform(post("/vci/credential")
+        mockMvc.perform(post("/issuance/credential")
                         .content(objectMapper.writeValueAsBytes(credentialRequest))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
@@ -144,7 +144,7 @@ public class VCIssuanceControllerTest {
         credentialRequest.setCredential_definition(credentialDefinition);
 
         credentialRequest.setProof(null);
-        mockMvc.perform(post("/vci/credential")
+        mockMvc.perform(post("/issuance/credential")
                         .content(objectMapper.writeValueAsBytes(credentialRequest))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
@@ -152,7 +152,7 @@ public class VCIssuanceControllerTest {
 
         CredentialProof credentialProof = new CredentialProof();
         credentialRequest.setProof(credentialProof);
-        mockMvc.perform(post("/vci/credential")
+        mockMvc.perform(post("/issuance/credential")
                         .content(objectMapper.writeValueAsBytes(credentialRequest))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
@@ -161,7 +161,7 @@ public class VCIssuanceControllerTest {
 
         credentialProof.setProof_type("  ");
         credentialRequest.setProof(credentialProof);
-        mockMvc.perform(post("/vci/credential")
+        mockMvc.perform(post("/issuance/credential")
                         .content(objectMapper.writeValueAsBytes(credentialRequest))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
@@ -184,7 +184,7 @@ public class VCIssuanceControllerTest {
         InvalidNonceException exception = new InvalidNonceException("test-new-nonce", 400);
         Mockito.when(vcIssuanceService.getCredential(credentialRequest)).thenThrow(exception);
 
-        mockMvc.perform(post("/vci/credential")
+        mockMvc.perform(post("/issuance/credential")
                         .content(objectMapper.writeValueAsBytes(credentialRequest))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())

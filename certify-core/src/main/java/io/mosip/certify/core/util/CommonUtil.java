@@ -28,9 +28,9 @@ import static org.apache.commons.validator.routines.UrlValidator.ALLOW_ALL_SCHEM
 import static org.apache.commons.validator.routines.UrlValidator.ALLOW_LOCAL_URLS;
 
 @Slf4j
-public class IdentityProviderUtil {
+public class CommonUtil {
 
-    private static final Logger logger = LoggerFactory.getLogger(IdentityProviderUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(CommonUtil.class);
     public static final String ALGO_SHA_256 = "SHA-256";
     public static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 

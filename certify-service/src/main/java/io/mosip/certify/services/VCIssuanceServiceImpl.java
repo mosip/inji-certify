@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-package io.mosip.certify.vci.services;
+package io.mosip.certify.services;
 
 import foundation.identity.jsonld.JsonLDObject;
 
@@ -14,11 +14,11 @@ import io.mosip.certify.api.spi.AuditPlugin;
 import io.mosip.certify.api.spi.VCIssuancePlugin;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
-import io.mosip.certify.core.dto.vci.CredentialMetadata;
-import io.mosip.certify.core.dto.vci.CredentialRequest;
-import io.mosip.certify.core.dto.vci.CredentialResponse;
-import io.mosip.certify.core.dto.vci.ParsedAccessToken;
-import io.mosip.certify.core.dto.vci.VCIssuanceTransaction;
+import io.mosip.certify.core.dto.CredentialMetadata;
+import io.mosip.certify.core.dto.CredentialRequest;
+import io.mosip.certify.core.dto.CredentialResponse;
+import io.mosip.certify.core.dto.ParsedAccessToken;
+import io.mosip.certify.core.dto.VCIssuanceTransaction;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
@@ -27,9 +27,9 @@ import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.core.util.AuditHelper;
 import io.mosip.certify.core.util.SecurityHelperService;
-import io.mosip.certify.vci.exception.InvalidNonceException;
-import io.mosip.certify.vci.pop.ProofValidator;
-import io.mosip.certify.vci.pop.ProofValidatorFactory;
+import io.mosip.certify.exception.InvalidNonceException;
+import io.mosip.certify.proof.ProofValidator;
+import io.mosip.certify.proof.ProofValidatorFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,7 +50,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     private static final String TYPE_VERIFIABLE_CREDENTIAL = "VerifiableCredential";
 
-    @Value("#{${mosip.certify.vci.key-values}}")
+    @Value("#{${mosip.certify.key-values}}")
     private LinkedHashMap<String, LinkedHashMap<String, Object>> issuerMetadata;
 
     @Value("${mosip.certify.cnonce-expire-seconds:300}")

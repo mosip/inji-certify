@@ -1,4 +1,4 @@
-package io.mosip.certify.core.dto.vci;
+package io.mosip.certify.core.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;

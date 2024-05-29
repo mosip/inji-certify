@@ -1,7 +1,7 @@
 package io.mosip.certify.core.spi;
 
-import io.mosip.certify.core.dto.vci.CredentialRequest;
-import io.mosip.certify.core.dto.vci.CredentialResponse;
+import io.mosip.certify.core.dto.CredentialRequest;
+import io.mosip.certify.core.dto.CredentialResponse;
 
 import java.util.Map;
 
