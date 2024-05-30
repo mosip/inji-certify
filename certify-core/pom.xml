@@ -19,11 +19,6 @@
     <version>${project.parent.version}</version>
     <description>Certify Core Library</description>
 
-    <properties>
-        <springdoc-openapi-webmvc-ui-version>2.5.0</springdoc-openapi-webmvc-ui-version>
-        <commons.validator.version>1.7</commons.validator.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.springdoc</groupId>

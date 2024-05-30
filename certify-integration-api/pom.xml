@@ -15,10 +15,6 @@
     <name>certify-integration-api</name>
     <description>Certify Integration Library</description>
 
-    <properties>
-        <jsonld.common.java.version>0.5.0</jsonld.common.java.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>decentralized-identity</groupId>
