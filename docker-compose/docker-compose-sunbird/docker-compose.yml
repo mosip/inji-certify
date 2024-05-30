@@ -28,7 +28,7 @@ services:
     networks:
       - network
   identity:
-    image: ghcr.io/sunbird-rc/sunbird-rc-identity-service:v2.0.0-beta2
+    image: ghcr.io/sunbird-rc/sunbird-rc-identity-service:v2.0.0-rc3
     ports:
       - "3332:3332"
     depends_on:
@@ -47,6 +47,7 @@ services:
       - SIGNING_ALGORITHM=${SIGNING_ALGORITHM}
       - JWKS_URI=${JWKS_URI}
       - ENABLE_AUTH=${ENABLE_AUTH}
+      - WEB_DID_BASE_URL=${WEB_DID_BASE_URL}
     healthcheck:
       test:
         [ "CMD-SHELL", "curl -f http://localhost:3332/health || exit 1" ]
@@ -56,7 +57,7 @@ services:
     networks:
       - network
   schema:
-    image: ghcr.io/sunbird-rc/sunbird-rc-credential-schema:v2.0.0-beta1
+    image: ghcr.io/sunbird-rc/sunbird-rc-credential-schema:v2.0.0-rc3
     ports:
       - "3333:3333"
     depends_on:
@@ -78,7 +79,7 @@ services:
     networks:
       - network
   credential:
-    image: ghcr.io/sunbird-rc/sunbird-rc-credentials-service:v2.0.0-beta2
+    image: ghcr.io/sunbird-rc/sunbird-rc-credentials-service:v2.0.0-rc3
     ports:
       - "3000:3000"
     depends_on:
@@ -95,6 +96,7 @@ services:
       - CREDENTIAL_SERVICE_BASE_URL=${CREDENTIAL_SERVICE_BASE_URL}
       - JWKS_URI=${JWKS_URI}
       - ENABLE_AUTH=${ENABLE_AUTH}
+      - QR_TYPE=W3C_VC
     healthcheck:
       test:
         [ "CMD-SHELL", "curl -f http://localhost:3000/health || exit 1" ]
