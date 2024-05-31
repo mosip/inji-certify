@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd docker-compose-esignet
+cd docker-compose-certify
   docker compose down
   sudo rm -rf data
 cd ..

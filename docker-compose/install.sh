@@ -8,10 +8,10 @@ install_sunbird_rc() {
   cd ..
 }
 
-install_esignet() {
+install_certify() {
   read -p "Please update the properties and press enter: " choice
-  echo "Installing esignet"
-  cd ./docker-compose-esignet
+  echo "Installing certify"
+  cd ./docker-compose-certify
   docker compose up -d
   cd ..
 }
@@ -19,7 +19,7 @@ install_esignet() {
 display_menu() {
     echo "Select which services to install: "
     echo "1. Sunbird RC"
-    echo "2. Esignet"
+    echo "2. Certify"
     echo "0. Exit"
 }
 
@@ -32,7 +32,7 @@ handle_input() {
             install_sunbird_rc
             ;;
         2)
-            install_esignet
+            install_certify
             ;;
         0)
             echo "Exiting..."
