@@ -69,10 +69,11 @@ services:
       - artifactory_url_env=http://artifactory-server:8080/
       - container_user=mosip
       - active_profile_env=default
-      - SPRING_CONFIG_NAME=certify
-      - SPRING_CONFIG_LOCATION=/home/mosip/certify-default.properties
+      - SPRING_CONFIG_NAME=certify,certify-plugin
+      - SPRING_CONFIG_LOCATION=/home/mosip/certify-default.properties,/home/mosip/certify-plugin-default.properties
     volumes:
       - ./config/certify-default.properties:/home/mosip/certify-default.properties
+      - ./config/certify-plugin-default.properties:/home/mosip/certify-plugin-default.properties
       - ./loader_path/certify/:/home/mosip/additional_jars/
     depends_on:
       - esignet
