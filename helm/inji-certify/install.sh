@@ -1,5 +1,5 @@
 #!/bin/bash
-# Installs idrepo
+# Installs inji-certify
 ## Usage: ./install.sh [kubeconfig]
 
 if [ $# -ge 1 ] ; then
