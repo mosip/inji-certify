@@ -61,7 +61,7 @@ services:
     networks:
       - network
   certify:
-    image: certify:latest
+    image: mosipdev/inji-certify:INJICERT-13
     user: root
     ports:
       - 8090:8090
