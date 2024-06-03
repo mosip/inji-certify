@@ -100,7 +100,7 @@ public class VCIssuanceControllerTest {
         CredentialResponse credentialResponse = new CredentialResponse<JsonLDObject>();
         credentialResponse.setFormat("ldp_vc");
         credentialResponse.setCredential(new JsonLDObject());
-        Mockito.when(vcIssuanceService.getCredential(credentialRequest)).thenReturn(credentialResponse);
+        Mockito.when(vcIssuanceService.getCredential(credentialRequest, "latest")).thenReturn(credentialResponse);
 
         mockMvc.perform(post("/issuance/credential")
                         .content(objectMapper.writeValueAsBytes(credentialRequest))
@@ -182,7 +182,7 @@ public class VCIssuanceControllerTest {
         credentialRequest.setCredential_definition(credentialDefinition);
 
         InvalidNonceException exception = new InvalidNonceException("test-new-nonce", 400);
-        Mockito.when(vcIssuanceService.getCredential(credentialRequest)).thenThrow(exception);
+        Mockito.when(vcIssuanceService.getCredential(credentialRequest, "latest")).thenThrow(exception);
 
         mockMvc.perform(post("/issuance/credential")
                         .content(objectMapper.writeValueAsBytes(credentialRequest))

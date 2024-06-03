@@ -39,10 +39,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -78,14 +75,14 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
 
     @Override
-    public CredentialResponse getCredential(CredentialRequest credentialRequest) {
+    public CredentialResponse getCredential(CredentialRequest credentialRequest, String version) {
         if(!parsedAccessToken.isActive())
             throw new NotAuthenticatedException();
 
         String scopeClaim = (String) parsedAccessToken.getClaims().getOrDefault("scope", "");
         CredentialMetadata credentialMetadata = null;
         for(String scope : scopeClaim.split(Constants.SPACE)) {
-            Optional<CredentialMetadata> result = getScopeCredentialMapping(scope);
+            Optional<CredentialMetadata> result = getScopeCredentialMapping(scope, version);
             if(result.isPresent()) {
                 credentialMetadata = result.get(); //considering only first credential scope
                 break;
@@ -109,7 +106,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
         auditWrapper.logAudit(Action.VC_ISSUANCE, ActionStatus.SUCCESS,
                 AuditHelper.buildAuditDto(parsedAccessToken.getAccessTokenHash(), "accessTokenHash"), null);
-        return getCredentialResponse(credentialRequest.getFormat(), vcResult);
+        return getCredentialResponse(credentialRequest.getFormat(), vcResult, version);
     }
 
     @Override
@@ -159,12 +156,13 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         throw new CertifyException(ErrorConstants.VC_ISSUANCE_FAILED);
     }
 
-    private CredentialResponse<?> getCredentialResponse(String format, VCResult<?> vcResult) {
+    private CredentialResponse<?> getCredentialResponse(String format, VCResult<?> vcResult, String version) {
         switch (format) {
             case "ldp_vc":
                 CredentialResponse<JsonLDObject> ldpVcResponse = new CredentialResponse<>();
                 ldpVcResponse.setCredential((JsonLDObject)vcResult.getCredential());
-                ldpVcResponse.setFormat(vcResult.getFormat());
+                if (!(version.equals("v13") || version.equals("latest")))
+                    ldpVcResponse.setFormat(vcResult.getFormat());
                 return ldpVcResponse;
 
             case "jwt_vc_json-ld":
@@ -177,9 +175,11 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
     }
 
-    private Optional<CredentialMetadata>  getScopeCredentialMapping(String scope) {
-        LinkedHashMap<String, Object> vciMetadata = issuerMetadata.get("latest");
-        if(supportedCredentials == null) {
+    private Optional<CredentialMetadata>  getScopeCredentialMapping(String scope, String version) {
+        Map<String, Object> vciMetadata = getCredentialIssuerMetadata(version);
+        if (supportedCredentials == null && (version.equals("vd11") || version.equals("vd12"))) {
+            supportedCredentials = (LinkedHashMap<String, Object>) vciMetadata.get("credentials_supported");
+        } else if (supportedCredentials == null && (version.equals("vd13") || version.equals("latest")) ) {
             supportedCredentials = (LinkedHashMap<String, Object>) vciMetadata.get("credential_configurations_supported");
         }
 
@@ -190,9 +190,12 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
             LinkedHashMap<String, Object> metadata = (LinkedHashMap<String, Object>)result.get().getValue();
             CredentialMetadata credentialMetadata = new CredentialMetadata();
             credentialMetadata.setFormat((String) metadata.get("format"));
-            credentialMetadata.setProof_types_supported((List<String>) metadata.get("proof_types_supported"));
+            credentialMetadata.setProof_types_supported(metadata.get("proof_types_supported"));
             credentialMetadata.setScope((String) metadata.get("scope"));
             credentialMetadata.setId(result.get().getKey());
+            if (vciMetadata.containsKey("background_image")) {
+                credentialMetadata.setBackground_image(vciMetadata.get("backround_image"));
+            }
 
             LinkedHashMap<String, Object> credentialDefinition = (LinkedHashMap<String, Object>) metadata.get("credential_definition");
             credentialMetadata.setTypes((List<String>) credentialDefinition.get("type"));
