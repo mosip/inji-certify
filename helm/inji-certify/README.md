@@ -1,6 +1,6 @@
 # Inji Certify
 
-## Install
+## Install 
 ```sh
 ./install.sh
 ```
