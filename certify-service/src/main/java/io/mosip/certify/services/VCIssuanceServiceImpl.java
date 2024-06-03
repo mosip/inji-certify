@@ -71,9 +71,6 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
     @Autowired
     private AuditPlugin auditWrapper;
 
-    private LinkedHashMap<String, Object> supportedCredentials;
-
-
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest, String version) {
         if(!parsedAccessToken.isActive())
@@ -161,15 +158,18 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
             case "ldp_vc":
                 CredentialResponse<JsonLDObject> ldpVcResponse = new CredentialResponse<>();
                 ldpVcResponse.setCredential((JsonLDObject)vcResult.getCredential());
-                if (!(version.equals("v13") || version.equals("latest")))
+                if (!isV13OrAbove(version)) {
                     ldpVcResponse.setFormat(vcResult.getFormat());
+                }
                 return ldpVcResponse;
 
             case "jwt_vc_json-ld":
             case "jwt_vc_json":
                 CredentialResponse<String> jsonResponse = new CredentialResponse<>();
                 jsonResponse.setCredential((String)vcResult.getCredential());
-                jsonResponse.setFormat(vcResult.getFormat());
+                if (!isV13OrAbove(version)) {
+                    jsonResponse.setFormat(vcResult.getFormat());
+                }
                 return jsonResponse;
         }
         throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
@@ -177,10 +177,11 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     private Optional<CredentialMetadata>  getScopeCredentialMapping(String scope, String version) {
         Map<String, Object> vciMetadata = getCredentialIssuerMetadata(version);
-        if (supportedCredentials == null && (version.equals("vd11") || version.equals("vd12"))) {
-            supportedCredentials = (LinkedHashMap<String, Object>) vciMetadata.get("credentials_supported");
-        } else if (supportedCredentials == null && (version.equals("vd13") || version.equals("latest")) ) {
+        LinkedHashMap<String, Object> supportedCredentials;
+        if (isV13OrAbove(version)) {
             supportedCredentials = (LinkedHashMap<String, Object>) vciMetadata.get("credential_configurations_supported");
+        } else {
+            supportedCredentials = (LinkedHashMap<String, Object>) vciMetadata.get("credentials_supported");
         }
 
         Optional<Map.Entry<String, Object>> result = supportedCredentials.entrySet().stream()
@@ -190,11 +191,11 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
             LinkedHashMap<String, Object> metadata = (LinkedHashMap<String, Object>)result.get().getValue();
             CredentialMetadata credentialMetadata = new CredentialMetadata();
             credentialMetadata.setFormat((String) metadata.get("format"));
-            credentialMetadata.setProof_types_supported(metadata.get("proof_types_supported"));
+            credentialMetadata.setProof_types_supported(metadata.get("proof_types_supported"));  // Map<String, String> or List<String>
             credentialMetadata.setScope((String) metadata.get("scope"));
             credentialMetadata.setId(result.get().getKey());
             if (vciMetadata.containsKey("background_image")) {
-                credentialMetadata.setBackground_image(vciMetadata.get("backround_image"));
+                credentialMetadata.setBackground_image((Map<String, String>) vciMetadata.get("backround_image"));
             }
 
             LinkedHashMap<String, Object> credentialDefinition = (LinkedHashMap<String, Object>) metadata.get("credential_definition");
@@ -242,5 +243,9 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         transaction.setCNonceIssuedEpoch(LocalDateTime.now(ZoneOffset.UTC).toEpochSecond(ZoneOffset.UTC));
         transaction.setCNonceExpireSeconds(cNonceExpireSeconds);
         return vciCacheService.setVCITransaction(parsedAccessToken.getAccessTokenHash(), transaction);
+    }
+
+    public static boolean isV13OrAbove(String v) {
+        return v.equals(("v13")) || v.equals("latest");
     }
 }

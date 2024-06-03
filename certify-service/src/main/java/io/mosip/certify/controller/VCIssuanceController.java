@@ -52,7 +52,7 @@ public class VCIssuanceController {
      */
     @PostMapping(value = "/vd12/credential",produces = "application/json")
     public CredentialResponse getCredentialV12d(@Valid @RequestBody CredentialRequest credentialRequest) throws CertifyException {
-        return vcIssuanceService.getCredential(credentialRequest, "vd12");
+        return vcIssuanceService.getCredential(credentialRequest, "v12");
     }
 
 
@@ -64,7 +64,7 @@ public class VCIssuanceController {
      */
     @PostMapping(value = "/vd11/credential",produces = "application/json")
     public CredentialResponse getCredentialV11d(@Valid @RequestBody CredentialRequest credentialRequest) throws CertifyException {
-        return vcIssuanceService.getCredential(credentialRequest, "vd12");
+        return vcIssuanceService.getCredential(credentialRequest, "v11");
     }
     /**
      * Open endpoint to provide VC issuer's metadata
