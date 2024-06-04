@@ -246,6 +246,6 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
     }
 
     public static boolean isV13OrAbove(String v) {
-        return v.equals(("v13")) || v.equals("latest");
+        return v.equals("v13") || v.equals("latest");
     }
 }
