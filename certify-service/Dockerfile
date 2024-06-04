@@ -1,4 +1,4 @@
-FROM openjdk:21
+FROM eclipse-temurin:21-jre-alpine
 
 ARG SOURCE
 ARG COMMIT_HASH
@@ -53,11 +53,10 @@ ARG container_user_gid=1001
 
 
 # install packages and create user
-RUN apt-get -y update \
-&& apt-get install -y unzip file sudo \
-&& groupadd -g ${container_user_gid} ${container_user_group} \
-&& useradd -u ${container_user_uid} -g ${container_user_group} -s /bin/sh -m ${container_user} \
-&& id -u ${container_user} &>/dev/null || adduser ${container_user}
+RUN apk -q update \
+&& apk add -q unzip \
+&& addgroup -g ${container_user_gid} ${container_user_group} \
+&& adduser -s /bin/sh -u ${container_user_uid} -G ${container_user_group} -h /home/${container_user} --disabled-password ${container_user}
 
 RUN id -u ${container_user}
 # set working directory for the user
