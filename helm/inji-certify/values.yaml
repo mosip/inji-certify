@@ -67,7 +67,7 @@ image:
   #   - myRegistryKeySecretName
 
 ## Port on which this particular spring service module is running.
-springServicePort: 8088
+springServicePort: 8090
 
 ## Configure extra options for liveness and readiness probes
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
@@ -75,8 +75,8 @@ springServicePort: 8088
 startupProbe:
   enabled: true
   httpGet:
-    path: /v1/inji-certify/actuator/health
-    port: 8088
+    path: /v1/certify/actuator/health
+    port: 8090
   initialDelaySeconds: 0
   periodSeconds: 10
   timeoutSeconds: 5
@@ -86,8 +86,8 @@ startupProbe:
 livenessProbe:
   enabled: true
   httpGet:
-    path: /v1/inji-certify/actuator/health
-    port: 8088
+    path: /v1/certify/actuator/health
+    port: 8090
   initialDelaySeconds: 20
   periodSeconds: 10
   timeoutSeconds: 5
@@ -97,8 +97,8 @@ livenessProbe:
 readinessProbe:
   enabled: true
   httpGet:
-    path: /v1/inji-certify/actuator/health
-    port: 8088
+    path: /v1/certify/actuator/health
+    port: 8090
   initialDelaySeconds: 0
   periodSeconds: 10
   timeoutSeconds: 5
@@ -453,7 +453,7 @@ istio:
   gateways:
     - istio-system/public
     - istio-system/internal
-  prefix: /v1/inji-certify/
+  prefix: /v1/certify/
 
 enable_insecure: false
 springConfigNameEnv:
