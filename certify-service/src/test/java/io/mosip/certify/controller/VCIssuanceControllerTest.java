@@ -1,6 +1,5 @@
 package io.mosip.certify.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.spi.AuditPlugin;
@@ -10,11 +9,7 @@ import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.services.VCICacheService;
 import org.junit.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -75,7 +70,7 @@ public class VCIssuanceControllerTest {
         Map<String, Object> issuerMetadata = new HashMap<>();
         issuerMetadata.put("credential_issuer", "https://localhost:9090");
         issuerMetadata.put("credential_endpoint", "https://localhost:9090/v1/certify/issuance/credential");
-        issuerMetadata.put("credential_configurations_supported", Arrays.asList());
+        issuerMetadata.put("credential_supported", Arrays.asList());
 
         Mockito.when(vcIssuanceService.getCredentialIssuerMetadata(Mockito.anyString())).thenReturn(issuerMetadata);
 
@@ -83,7 +78,7 @@ public class VCIssuanceControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.credential_issuer").exists())
                 .andExpect(jsonPath("$.credential_issuer").exists())
-                .andExpect(jsonPath("$.credential_configurations_supported").exists())
+                .andExpect(jsonPath("$.credential_supported").exists())
                 .andExpect(header().string("Content-Type", "application/json"));
 
         Mockito.verify(vcIssuanceService).getCredentialIssuerMetadata("v11");
@@ -104,7 +99,7 @@ public class VCIssuanceControllerTest {
 
         CredentialResponse credentialResponse = new CredentialResponse<JsonLDObject>();
         credentialResponse.setCredential(new JsonLDObject());
-        Mockito.when(vcIssuanceService.getCredential(credentialRequest, "latest")).thenReturn(credentialResponse);
+        Mockito.when(vcIssuanceService.getCredential(credentialRequest)).thenReturn(credentialResponse);
 
         mockMvc.perform(post("/issuance/credential")
                         .content(objectMapper.writeValueAsBytes(credentialRequest))
@@ -185,7 +180,7 @@ public class VCIssuanceControllerTest {
         credentialRequest.setCredential_definition(credentialDefinition);
 
         InvalidNonceException exception = new InvalidNonceException("test-new-nonce", 400);
-        Mockito.when(vcIssuanceService.getCredential(credentialRequest, "latest")).thenThrow(exception);
+        Mockito.when(vcIssuanceService.getCredential(credentialRequest)).thenThrow(exception);
 
         mockMvc.perform(post("/issuance/credential")
                         .content(objectMapper.writeValueAsBytes(credentialRequest))
@@ -212,7 +207,7 @@ public class VCIssuanceControllerTest {
         CredentialResponse credentialResponse = new CredentialResponse<JsonLDObject>();
         credentialResponse.setFormat("ldp_vc");
         credentialResponse.setCredential(new JsonLDObject());
-        Mockito.when(vcIssuanceService.getCredential(credentialRequest, "v11")).thenReturn(credentialResponse);
+        Mockito.when(vcIssuanceService.getCredential(credentialRequest)).thenReturn(credentialResponse);
 
         mockMvc.perform(post("/issuance/vd11/credential")
                         .content(objectMapper.writeValueAsBytes(credentialRequest))
@@ -238,7 +233,7 @@ public class VCIssuanceControllerTest {
         CredentialResponse credentialResponse = new CredentialResponse<JsonLDObject>();
         credentialResponse.setFormat("ldp_vc");
         credentialResponse.setCredential(new JsonLDObject());
-        Mockito.when(vcIssuanceService.getCredential(credentialRequest, "v12")).thenReturn(credentialResponse);
+        Mockito.when(vcIssuanceService.getCredential(credentialRequest)).thenReturn(credentialResponse);
 
         mockMvc.perform(post("/issuance/vd12/credential")
                         .content(objectMapper.writeValueAsBytes(credentialRequest))

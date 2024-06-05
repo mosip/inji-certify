@@ -72,14 +72,14 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
     private AuditPlugin auditWrapper;
 
     @Override
-    public CredentialResponse getCredential(CredentialRequest credentialRequest, String version) {
+    public CredentialResponse getCredential(CredentialRequest credentialRequest) {
         if(!parsedAccessToken.isActive())
             throw new NotAuthenticatedException();
 
         String scopeClaim = (String) parsedAccessToken.getClaims().getOrDefault("scope", "");
         CredentialMetadata credentialMetadata = null;
         for(String scope : scopeClaim.split(Constants.SPACE)) {
-            Optional<CredentialMetadata> result = getScopeCredentialMapping(scope, version);
+            Optional<CredentialMetadata> result = getScopeCredentialMapping(scope);
             if(result.isPresent()) {
                 credentialMetadata = result.get(); //considering only first credential scope
                 break;
@@ -103,7 +103,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
         auditWrapper.logAudit(Action.VC_ISSUANCE, ActionStatus.SUCCESS,
                 AuditHelper.buildAuditDto(parsedAccessToken.getAccessTokenHash(), "accessTokenHash"), null);
-        return getCredentialResponse(credentialRequest.getFormat(), vcResult, version);
+        return getCredentialResponse(credentialRequest.getFormat(), vcResult);
     }
 
     @Override
@@ -153,76 +153,37 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         throw new CertifyException(ErrorConstants.VC_ISSUANCE_FAILED);
     }
 
-    private CredentialResponse<?> getCredentialResponse(String format, VCResult<?> vcResult, String version) {
+    private CredentialResponse<?> getCredentialResponse(String format, VCResult<?> vcResult) {
         switch (format) {
             case "ldp_vc":
                 CredentialResponse<JsonLDObject> ldpVcResponse = new CredentialResponse<>();
                 ldpVcResponse.setCredential((JsonLDObject)vcResult.getCredential());
-                if (!isV13OrAbove(version)) {
-                    ldpVcResponse.setFormat(vcResult.getFormat());
-                }
                 return ldpVcResponse;
 
             case "jwt_vc_json-ld":
             case "jwt_vc_json":
                 CredentialResponse<String> jsonResponse = new CredentialResponse<>();
                 jsonResponse.setCredential((String)vcResult.getCredential());
-                if (!isV13OrAbove(version)) {
-                    jsonResponse.setFormat(vcResult.getFormat());
-                }
                 return jsonResponse;
         }
         throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
     }
 
-    protected Optional<CredentialMetadata>  getScopeCredentialMapping(String scope, String version) {
-        // TODO: Implement CredentialMetadataGetter ∀ versions
-        Map<String, Object> vciMetadata = getCredentialIssuerMetadata(version);
-        String key;
-        if (isV13OrAbove(version)) {
-            key = "credential_configurations_supported";
-        } else {
-            key = "credentials_supported"; // can be array(v11) or Map(v12)
-        }
-        if (isV13OrAbove(version) || version.equals("v12")) {
-            // map
-            LinkedHashMap<String, Object> supportedCredentials = (LinkedHashMap<String, Object>) vciMetadata.get(key);
-            Optional<Map.Entry<String, Object>> result = supportedCredentials.entrySet().stream()
-                    .filter(cm -> ((LinkedHashMap<String, Object>) cm.getValue()).get("scope").equals(scope)).findFirst();
-            if(result.isPresent()) {
-                LinkedHashMap<String, Object> metadata = (LinkedHashMap<String, Object>)result.get().getValue();
-                CredentialMetadata credentialMetadata = new CredentialMetadata();
-                credentialMetadata.setFormat((String) metadata.get("format"));
-                credentialMetadata.setProof_types_supported(metadata.get("proof_types_supported"));  // Map<String, String> or List<String>
-                credentialMetadata.setScope((String) metadata.get("scope"));
-                credentialMetadata.setId(result.get().getKey());
-                if (vciMetadata.containsKey("background_image")) {
-                    credentialMetadata.setBackground_image((Map<String, String>) vciMetadata.get("backround_image"));
-                }
+    private Optional<CredentialMetadata>  getScopeCredentialMapping(String scope) {
+        Map<String, Object> vciMetadata = getCredentialIssuerMetadata("latest");
+        LinkedHashMap<String, Object> supportedCredentials = (LinkedHashMap<String, Object>) vciMetadata.get("credential_configurations_supported");
+        Optional<Map.Entry<String, Object>> result = supportedCredentials.entrySet().stream()
+                .filter(cm -> ((LinkedHashMap<String, Object>) cm.getValue()).get("scope").equals(scope)).findFirst();
 
-                LinkedHashMap<String, Object> credentialDefinition = (LinkedHashMap<String, Object>) metadata.get("credential_definition");
-                credentialMetadata.setTypes((List<String>) credentialDefinition.get("type"));
-                return Optional.of(credentialMetadata);
-            }
-        } else {
-            // array
-            ArrayList<Map<String, Object>> supportedCredentials = (ArrayList<Map<String, Object>>) vciMetadata.get(key);
-            // Array of objects with key as scope
-            Optional<Map<String, Object>> result = supportedCredentials.stream()
-                    .filter(cm -> cm.get("scope").equals(scope)).findFirst();
-            if (result.isPresent()) {
-                LinkedHashMap<String, Object> metadata = (LinkedHashMap<String, Object>) result.get();
-                CredentialMetadata credentialMetadata = new CredentialMetadata();
-                credentialMetadata.setFormat((String) metadata.get("format"));
-                credentialMetadata.setScope((String) metadata.get("scope"));
-                credentialMetadata.setProof_types_supported(metadata.get("proof_types_supported"));
-                if (vciMetadata.containsKey("background_image")) {
-                    credentialMetadata.setBackground_image((Map<String, String>) vciMetadata.get("backround_image"));
-                }
-                LinkedHashMap<String, Object> credentialDefinition = (LinkedHashMap<String, Object>) metadata.get("credential_definition");
-                credentialMetadata.setTypes((List<String>) credentialDefinition.get("type"));
-                return Optional.of(credentialMetadata);
-            }
+        if(result.isPresent()) {
+            LinkedHashMap<String, Object> metadata = (LinkedHashMap<String, Object>)result.get().getValue();
+            CredentialMetadata credentialMetadata = new CredentialMetadata();
+            credentialMetadata.setFormat((String) metadata.get("format"));
+            credentialMetadata.setScope((String) metadata.get("scope"));
+            credentialMetadata.setId(result.get().getKey());
+            LinkedHashMap<String, Object> credentialDefinition = (LinkedHashMap<String, Object>) metadata.get("credential_definition");
+            credentialMetadata.setTypes((List<String>) credentialDefinition.get("type"));
+            return Optional.of(credentialMetadata);
         }
         return Optional.empty();
     }

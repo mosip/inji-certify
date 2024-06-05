@@ -18,9 +18,5 @@ public class CredentialMetadata {
     private String id;
     private String format;
     private String scope;
-    // proof_types_supported is a map from v13 & an array before
-    private Object proof_types_supported;
     private List<String> types;
-    private Map<String, String> background_image;
-
 }

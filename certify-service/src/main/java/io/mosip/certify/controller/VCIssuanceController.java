@@ -40,7 +40,7 @@ public class VCIssuanceController {
      */
     @PostMapping(value = "/credential",produces = "application/json")
     public CredentialResponse getCredential(@Valid @RequestBody CredentialRequest credentialRequest) throws CertifyException {
-        return vcIssuanceService.getCredential(credentialRequest, "latest");
+        return vcIssuanceService.getCredential(credentialRequest);
     }
 
 
@@ -51,8 +51,10 @@ public class VCIssuanceController {
      * @throws CertifyException
      */
     @PostMapping(value = "/vd12/credential",produces = "application/json")
-    public CredentialResponse getCredentialV12d(@Valid @RequestBody CredentialRequest credentialRequest) throws CertifyException {
-        return vcIssuanceService.getCredential(credentialRequest, "v12");
+    public CredentialResponse getCredentialV12Draft(@Valid @RequestBody CredentialRequest credentialRequest) throws CertifyException {
+        CredentialResponse credentialResponse = vcIssuanceService.getCredential(credentialRequest);
+        credentialResponse.setFormat(credentialRequest.getFormat());
+        return credentialResponse;
     }
 
 
@@ -63,8 +65,10 @@ public class VCIssuanceController {
      * @throws CertifyException
      */
     @PostMapping(value = "/vd11/credential",produces = "application/json")
-    public CredentialResponse getCredentialV11d(@Valid @RequestBody CredentialRequest credentialRequest) throws CertifyException {
-        return vcIssuanceService.getCredential(credentialRequest, "v11");
+    public CredentialResponse getCredentialV11Draft(@Valid @RequestBody CredentialRequest credentialRequest) throws CertifyException {
+        CredentialResponse credentialResponse = vcIssuanceService.getCredential(credentialRequest);
+        credentialResponse.setFormat(credentialRequest.getFormat());
+        return credentialResponse;
     }
     /**
      * Open endpoint to provide VC issuer's metadata
