@@ -21,7 +21,7 @@ Execute installation script
 1. Clone the repository and navigate to its directory:
 
     ```bash
-    cd inji-certify
+    cd inji-certify/docker-compose
     ./install.sh
     ```
 
@@ -47,10 +47,15 @@ Execute installation script
         * take note of `$.schema[0].author`  and  `$.schema[0].id` from the create credential schema request
 6. Create a folder with name loader_path [here](docker-compose/docker-compose-certify).
 7. Add the jar file of Digital Credential Stack(DCS) plugin implementations for eSignet and certify:
-     * For eSignet create a folder with name esignet inside loader_path folder created in the above step and add the jar files inside the folder.
+     * For eSignet:
+       * create a folder with name esignet inside loader_path folder created in the above step and add the jar files inside the folder.
        *  JAR file for sunbird can be downloaded [here](https://mvnrepository.com/artifact/io.mosip.esignet.sunbirdrc/sunbird-rc-esignet-integration-impl).
        *  JAR file for mock identity can be downloaded [here](https://repo1.maven.org/maven2/io/mosip/esignet/mock/mock-esignet-integration-impl/0.9.2/mock-esignet-integration-impl-0.9.2.jar)
-     * For certify create a folder with name certify inside loader_path folder created in the above step and add the jar file inside the folder. The JAR can be built [from source](https://github.com/mosip/digital-credential-plugins/tree/INJICERT-13/sunbird-rc-certify-integration-impl).
+     * For certify:
+       * By default, the plugin will be taken from artifactory server
+       * For custom plugin:
+         * In the [docker compose file](docker-compose/docker-compose-certify/docker-compose.yml) uncomment the [enable_certify_artifactory](docker-compose/docker-compose-certify/docker-compose.yml#L74) and [volume](docker-compose/docker-compose-certify/docker-compose.yml#L78)
+         * create a folder with name certify inside loader_path folder created in the above step and add the jar file inside the folder. The JAR can be built [from source](https://github.com/mosip/digital-credential-plugins/tree/INJICERT-13/sunbird-rc-certify-integration-impl).
 8. Modify the properties of the Esignet and Certify services located in the [esignet-default.properties](docker-compose/docker-compose-certify/config/esignet-default.properties) and [certify-default.properties](docker-compose/docker-compose-certify/config/certify-default.properties) files respectively.
    - Include Issuer ID and credential schema ID for the following properties: 
      - esignet-default-properties:
