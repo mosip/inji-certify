@@ -1,5 +1,6 @@
 package io.mosip.certify.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.spi.AuditPlugin;
@@ -9,7 +10,11 @@ import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.services.VCICacheService;
 import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -98,7 +103,6 @@ public class VCIssuanceControllerTest {
         credentialRequest.setCredential_definition(credentialDefinition);
 
         CredentialResponse credentialResponse = new CredentialResponse<JsonLDObject>();
-        credentialResponse.setFormat("ldp_vc");
         credentialResponse.setCredential(new JsonLDObject());
         Mockito.when(vcIssuanceService.getCredential(credentialRequest, "latest")).thenReturn(credentialResponse);
 
@@ -106,7 +110,6 @@ public class VCIssuanceControllerTest {
                         .content(objectMapper.writeValueAsBytes(credentialRequest))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.format").exists())
                 .andExpect(jsonPath("$.credential").exists());
     }
 
@@ -191,5 +194,57 @@ public class VCIssuanceControllerTest {
                 .andExpect(jsonPath("$.error").value(exception.getErrorCode()))
                 .andExpect(jsonPath("$.c_nonce_expires_in").value(exception.getClientNonceExpireSeconds()))
                 .andExpect(jsonPath("$.c_nonce").value(exception.getClientNonce()));
+    }
+
+    @Test
+    public void getVerifiableCredential_v11() throws Exception {
+        CredentialDefinition credentialDefinition = new CredentialDefinition();
+        credentialDefinition.setType(Arrays.asList("VerifiableCredential", "SampleVerifiableCredential_ldp"));
+        credentialDefinition.setContext(Arrays.asList("https://www.w3.org/2018/credentials/v1"));
+        CredentialProof credentialProof = new CredentialProof();
+        credentialProof.setProof_type("jwt");
+        credentialProof.setJwt("dummy_jwt_proof");
+        CredentialRequest credentialRequest = new CredentialRequest();
+        credentialRequest.setFormat("ldp_vc");
+        credentialRequest.setProof(credentialProof);
+        credentialRequest.setCredential_definition(credentialDefinition);
+
+        CredentialResponse credentialResponse = new CredentialResponse<JsonLDObject>();
+        credentialResponse.setFormat("ldp_vc");
+        credentialResponse.setCredential(new JsonLDObject());
+        Mockito.when(vcIssuanceService.getCredential(credentialRequest, "v11")).thenReturn(credentialResponse);
+
+        mockMvc.perform(post("/issuance/vd11/credential")
+                        .content(objectMapper.writeValueAsBytes(credentialRequest))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.format").exists())
+                .andExpect(jsonPath("$.credential").exists());
+    }
+
+    @Test
+    public void getVerifiableCredential_v12() throws Exception {
+        CredentialDefinition credentialDefinition = new CredentialDefinition();
+        credentialDefinition.setType(Arrays.asList("VerifiableCredential", "SampleVerifiableCredential_ldp"));
+        credentialDefinition.setContext(Arrays.asList("https://www.w3.org/2018/credentials/v1"));
+        CredentialProof credentialProof = new CredentialProof();
+        credentialProof.setProof_type("jwt");
+        credentialProof.setJwt("dummy_jwt_proof");
+        CredentialRequest credentialRequest = new CredentialRequest();
+        credentialRequest.setFormat("ldp_vc");
+        credentialRequest.setProof(credentialProof);
+        credentialRequest.setCredential_definition(credentialDefinition);
+
+        CredentialResponse credentialResponse = new CredentialResponse<JsonLDObject>();
+        credentialResponse.setFormat("ldp_vc");
+        credentialResponse.setCredential(new JsonLDObject());
+        Mockito.when(vcIssuanceService.getCredential(credentialRequest, "v12")).thenReturn(credentialResponse);
+
+        mockMvc.perform(post("/issuance/vd12/credential")
+                        .content(objectMapper.writeValueAsBytes(credentialRequest))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.format").exists())
+                .andExpect(jsonPath("$.credential").exists());
     }
 }
