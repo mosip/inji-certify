@@ -39,6 +39,9 @@ ENV is_glowroot_env=${is_glowroot}
 # environment variable to pass artifactory url, at docker runtime
 ENV artifactory_url_env=${artifactory_url}
 
+# environment variable for certify artifactory plugins to pass at docker run time
+ENV enable_certify_artifactory="true"
+
 # can be passed during Docker build as build time environment for github branch to pickup configuration from.
 ARG container_user=mosip
 
@@ -54,7 +57,7 @@ ARG container_user_gid=1001
 
 # install packages and create user
 RUN apk -q update \
-&& apk add -q unzip \
+&& apk add -q unzip sudo bash curl \
 && addgroup -g ${container_user_gid} ${container_user_group} \
 && adduser -s /bin/sh -u ${container_user_uid} -G ${container_user_group} -h /home/${container_user} --disabled-password ${container_user}
 
@@ -70,6 +73,10 @@ RUN mkdir -p ${loader_path}
 
 ENV loader_path_env=${loader_path}
 
+ADD configure_start.sh configure_start.sh
+
+RUN chmod +x configure_start.sh
+
 COPY ./target/certify-service-*.jar certify-service.jar
 
 # change permissions of file inside working dir
@@ -81,9 +88,10 @@ USER ${container_user_uid}:${container_user_gid}
 EXPOSE 8090
 EXPOSE 9010
 
-#ENTRYPOINT [ "./configure_start.sh" ]
+ENTRYPOINT [ "./configure_start.sh" ]
+
 CMD if [ "$is_glowroot_env" = "present" ]; then \
-    wget -q --show-progress "${artifactory_url_env}"/artifactory/libs-release-local/io/mosip/testing/glowroot.zip ; \
+    wget -q "${artifactory_url_env}"/artifactory/libs-release-local/io/mosip/testing/glowroot.zip ; \
     unzip glowroot.zip ; \
     rm -rf glowroot.zip ; \
     sed -i 's/<service_name>/idp-service/g' glowroot/glowroot.properties ; \

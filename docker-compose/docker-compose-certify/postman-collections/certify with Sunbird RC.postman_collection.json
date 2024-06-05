@@ -889,7 +889,7 @@
 							}
 						},
 						"url": {
-							"raw": "{{certifyServiceUrl}}/v1/certify/issuance/credential",
+							"raw": "{{certifyServiceUrl}}/issuance/credential",
 							"host": [
 								"{{certifyServiceUrl}}"
 							],
