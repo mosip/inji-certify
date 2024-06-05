@@ -35,7 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.stereotype.Service;
-
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -73,9 +72,6 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     @Autowired
     private AuditPlugin auditWrapper;
-
-    private LinkedHashMap<String, Object> supportedCredentials;
-
 
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
@@ -164,36 +160,29 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
             case "ldp_vc":
                 CredentialResponse<JsonLDObject> ldpVcResponse = new CredentialResponse<>();
                 ldpVcResponse.setCredential((JsonLDObject)vcResult.getCredential());
-                ldpVcResponse.setFormat(vcResult.getFormat());
                 return ldpVcResponse;
 
             case "jwt_vc_json-ld":
             case "jwt_vc_json":
                 CredentialResponse<String> jsonResponse = new CredentialResponse<>();
                 jsonResponse.setCredential((String)vcResult.getCredential());
-                jsonResponse.setFormat(vcResult.getFormat());
                 return jsonResponse;
         }
         throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
     }
 
     private Optional<CredentialMetadata>  getScopeCredentialMapping(String scope) {
-        LinkedHashMap<String, Object> vciMetadata = issuerMetadata.get("latest");
-        if(supportedCredentials == null) {
-            supportedCredentials = (LinkedHashMap<String, Object>) vciMetadata.get("credentials_supported");
-        }
-
+        Map<String, Object> vciMetadata = getCredentialIssuerMetadata("latest");
+        LinkedHashMap<String, Object> supportedCredentials = (LinkedHashMap<String, Object>) vciMetadata.get("credential_configurations_supported");
         Optional<Map.Entry<String, Object>> result = supportedCredentials.entrySet().stream()
-                .filter(cm -> ((LinkedHashMap<String, Object>)cm.getValue()).get("scope").equals(scope)).findFirst();
+                .filter(cm -> ((LinkedHashMap<String, Object>) cm.getValue()).get("scope").equals(scope)).findFirst();
 
         if(result.isPresent()) {
             LinkedHashMap<String, Object> metadata = (LinkedHashMap<String, Object>)result.get().getValue();
             CredentialMetadata credentialMetadata = new CredentialMetadata();
             credentialMetadata.setFormat((String) metadata.get("format"));
-            credentialMetadata.setProof_types_supported((List<String>) metadata.get("proof_types_supported"));
             credentialMetadata.setScope((String) metadata.get("scope"));
             credentialMetadata.setId(result.get().getKey());
-
             LinkedHashMap<String, Object> credentialDefinition = (LinkedHashMap<String, Object>) metadata.get("credential_definition");
             credentialMetadata.setTypes((List<String>) credentialDefinition.get("type"));
             return Optional.of(credentialMetadata);

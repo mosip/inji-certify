@@ -14,6 +14,7 @@ public class CredentialResponse<T> {
     /**
      *  JSON string denoting the format of the issued Credential.
      */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String format;
 
     /**

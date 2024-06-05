@@ -43,6 +43,33 @@ public class VCIssuanceController {
         return vcIssuanceService.getCredential(credentialRequest);
     }
 
+
+    /**
+     * 1. The credential Endpoint MUST accept Access Tokens
+     * @param credentialRequest VC credential request
+     * @return Credential Response w.r.t requested format
+     * @throws CertifyException
+     */
+    @PostMapping(value = "/vd12/credential",produces = "application/json")
+    public CredentialResponse getCredentialV12Draft(@Valid @RequestBody CredentialRequest credentialRequest) throws CertifyException {
+        CredentialResponse credentialResponse = vcIssuanceService.getCredential(credentialRequest);
+        credentialResponse.setFormat(credentialRequest.getFormat());
+        return credentialResponse;
+    }
+
+
+    /**
+     * 1. The credential Endpoint MUST accept Access Tokens
+     * @param credentialRequest VC credential request
+     * @return Credential Response w.r.t requested format
+     * @throws CertifyException
+     */
+    @PostMapping(value = "/vd11/credential",produces = "application/json")
+    public CredentialResponse getCredentialV11Draft(@Valid @RequestBody CredentialRequest credentialRequest) throws CertifyException {
+        CredentialResponse credentialResponse = vcIssuanceService.getCredential(credentialRequest);
+        credentialResponse.setFormat(credentialRequest.getFormat());
+        return credentialResponse;
+    }
     /**
      * Open endpoint to provide VC issuer's metadata
      * @return
