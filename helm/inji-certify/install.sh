@@ -17,6 +17,8 @@ function installing_inji-certify() {
   kubectl label ns $NS istio-injection=enabled --overwrite
   helm repo update
 
+  kubectl -n config-server set env --keys=mosip-injicertify-host --from configmap/global deployment/config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_
+  kubectl -n config-server get deploy -o name |  xargs -n1 -t  kubectl -n config-server rollout status
 
   echo Copy configmaps
   sed -i 's/\r$//' copy_cm.sh
