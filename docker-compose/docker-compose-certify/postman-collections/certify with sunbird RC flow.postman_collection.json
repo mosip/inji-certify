@@ -1,10 +1,9 @@
 {
 	"info": {
-		"_postman_id": "568cc3d3-7c01-479a-817b-4851c8bfbc17",
+		"_postman_id": "71d7ab55-0817-40ad-97c7-c95f939a3e3e",
 		"name": "eSignet with Sunbird RC",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "24329429",
-		"_collection_link": "https://interstellar-desert-939250.postman.co/workspace/Mosip-Stack~f3d15b43-032d-423d-84f1-fab7c0114ec3/collection/24329429-568cc3d3-7c01-479a-817b-4851c8bfbc17?action=share&source=collection_link&creator=24329429"
+		"_exporter_id": "24329429"
 	},
 	"item": [
 		{
@@ -617,7 +616,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"requestTime\": \"{{$isoTimestamp}}\",\n    \"request\": {\n        \"transactionId\": \"{{transaction_id}}\",\n        \"individualId\": \"{{individual_id}}\",\n        \"challengeList\" : [\n            {\n                \"authFactorType\" : \"KBA\",\n                \"challenge\" : \"eyJmdWxsTmFtZSI6IkFiaGlzaGVrIEdhbmd3YXIiLCJkb2IiOiIxOTY3LTEwLTI0In0=\",\n                \"format\" : \"base64url-encoded-json\"\n            }\n        ]\n    }\n}",
+							"raw": "{\n    \"requestTime\": \"{{$isoTimestamp}}\",\n    \"request\": {\n        \"transactionId\": \"{{transaction_id}}\",\n        \"individualId\": \"{{individual_id}}\",\n        \"challengeList\" : [\n            {\n                \"authFactorType\" : \"KBA\",\n                \"challenge\" : \"eyJmdWxsTmFtZSI6IkFiaGlzaGVrIEdhbmd3YXIiLCJkb2IiOiIxOTY5LTEyLTI0In0=\",\n                \"format\" : \"base64url-encoded-json\"\n            }\n        ]\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -894,8 +893,6 @@
 								"{{certifyServiceUrl}}"
 							],
 							"path": [
-								"v1",
-								"certify",
 								"issuance",
 								"credential"
 							]
