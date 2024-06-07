@@ -446,14 +446,19 @@ metrics:
     #       severity: error
     rules: []
 
-inji-certify:
 ## Only internal access
 istio:
   enabled: true
+  ingressController:
+    name: ingressgateway
   gateways:
-    - istio-system/public
-    - istio-system/internal
-  prefix: /v1/certify/
+    - name: inji-certify-gateway
+      protocol: HTTP
+      portName: http
+      port: 80
+  hosts:
+    - injicertify.sandbox.xyz.net
+  prefix: /
 
 enable_insecure: false
 springConfigNameEnv:
