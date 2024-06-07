@@ -24,6 +24,7 @@ function installing_inji-certify() {
   sed -i 's/\r$//' copy_cm.sh
   ./copy_cm.sh
 
+  INJICERTIFY_HOST=$(kubectl get cm global -o jsonpath={.data.mosip-injicertify-host})
   echo "Do you have public domain & valid SSL? (Y/n) "
   echo "Y: if you have public domain & valid ssl certificate"
   echo "n: If you don't have a public domain and a valid SSL certificate. Note: It is recommended to use this option only in development environments."
@@ -39,7 +40,7 @@ function installing_inji-certify() {
   fi
 
   echo Running inji-certify
-  helm -n $NS install inji-certify mosip/inji-certify --version $CHART_VERSION $ENABLE_INSECURE
+  helm -n $NS install inji-certify mosip/inji-certify --set image.repository=mosipqa/inji-certify --set image.tag=0.9.x --set istio.hosts\[0\]=$INJICERTIFY_HOST --version $CHART_VERSION $ENABLE_INSECURE
 
   kubectl -n $NS  get deploy -o name |  xargs -n1 -t  kubectl -n $NS rollout status
 
