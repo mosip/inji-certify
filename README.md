@@ -9,7 +9,6 @@ The following steps will help you to setup Sunbird RC and Esignet services using
 
 ## Requirements
 
-* Java 21
 * Docker (26.0.0)
 * Docker Compose (2.25)
 
@@ -65,7 +64,7 @@ Execute installation script
        *  JAR file for mock identity can be downloaded [here](https://repo1.maven.org/maven2/io/mosip/esignet/mock/mock-esignet-integration-impl/0.9.2/mock-esignet-integration-impl-0.9.2.jar)
      * For certify:
        * By default, the plugin will be taken from artifactory server
-       * For custom plugin:
+       * For custom plugin: Java 21 is needed 
          * In the [docker compose file](docker-compose/docker-compose-certify/docker-compose.yml) uncomment the [enable_certify_artifactory](docker-compose/docker-compose-certify/docker-compose.yml#L74) and [volume](docker-compose/docker-compose-certify/docker-compose.yml#L78)
          * create a folder with name certify inside loader_path folder created in the above step and add the jar file inside the folder. The JAR can be built [from source](https://github.com/mosip/digital-credential-plugins/tree/INJICERT-13/sunbird-rc-certify-integration-impl).
 9. Modify the properties of the Esignet and Certify services located in the [esignet-default.properties](docker-compose/docker-compose-certify/config/esignet-default.properties) and [certify-default.properties](docker-compose/docker-compose-certify/config/certify-default.properties) files respectively.
