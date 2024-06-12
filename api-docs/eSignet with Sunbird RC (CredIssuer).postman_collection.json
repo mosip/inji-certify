@@ -1,0 +1,1312 @@
+{
+	"info": {
+		"_postman_id": "5879c8d1-cbaa-453f-8d41-81bd947bba81",
+		"name": "eSignet with Sunbird RC (CredIssuer)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "19014814"
+	},
+	"item": [
+		{
+			"name": "Sunbird Registry",
+			"item": [
+				{
+					"name": "Generate DID (Issuer)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// JSON data",
+									"var jsonData = pm.response.json();",
+									"",
+									"// Extracting the ID from the response",
+									"var id = jsonData[0].id;",
+									"",
+									"// Store the id in an environment variable",
+									"pm.environment.set(\"author_did_id\", id);",
+									"",
+									"// Creating the folder name",
+									"var folderName = id.substring(id.lastIndexOf(\":\") + 1);",
+									"",
+									"// Content of the file",
+									"var content = JSON.stringify(jsonData[0]);",
+									"",
+									"// Convert JSON to base64",
+									"var contentBase64 = btoa(content);",
+									"",
+									"console.log(folderName)",
+									"",
+									"// GitHub API endpoint",
+									"var githubApiUrl = \"https://api.github.com/repos/chandru-engineer/identity/contents/\" + folderName + \"/did.json\";",
+									"",
+									"// Retrieve existing file details",
+									"pm.sendRequest({",
+									"    url: githubApiUrl,",
+									"    method: 'GET',",
+									"    header: {",
+									"        'Authorization': 'Bearer ' + pm.globals.get(\"github_token\"),",
+									"        'Content-Type': 'application/json'",
+									"    }",
+									"}, function (err, response) {",
+									"    if (err) {",
+									"        console.error(err);",
+									"        return;",
+									"    }",
+									"    ",
+									"    var sha = response.json().sha;",
+									"    ",
+									"    // Create the request payload with sha",
+									"    var requestPayload = {",
+									"        \"message\": \"Update DID file via API\",",
+									"        \"content\": contentBase64,",
+									"        \"sha\": sha",
+									"    };",
+									"    ",
+									"    // Send request to update the file",
+									"    pm.sendRequest({",
+									"        url: githubApiUrl,",
+									"        method: 'PUT',",
+									"        header: {",
+									"            'Authorization': 'Bearer ' + pm.globals.get(\"github_token\"),",
+									"            'Content-Type': 'application/json'",
+									"        },",
+									"        body: JSON.stringify(requestPayload)",
+									"    }, function (err, response) {",
+									"        if (err) {",
+									"            console.error(err);",
+									"            return;",
+									"        }",
+									"        ",
+									"        console.log(response.json());",
+									"    });",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"content\": [\n        {\n            \"alsoKnownAs\": [\n                \"issuer@ooru.io\"\n            ],\n            \"method\": \"web\",\n            \"description\": \"This is an example DID for a fictional entity.\",\n            \"logo\": \"https://example.com/logo.png\",\n            \"contactPoint\": [\n                {\n                    \"name\": \"Example Support\",\n                    \"email\": \"support@example.com\",\n                    \"telephone\": \"+1-800-555-1234\"\n                }\n            ]\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{sunbird_url}}/identity/did/generate",
+							"host": [
+								"{{sunbird_url}}"
+							],
+							"path": [
+								"identity",
+								"did",
+								"generate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Schema",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Check if the status code is 201",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Parse the response JSON",
+									"let responseData = pm.response.json();",
+									"",
+									"// Extract the id from the schema object in the response",
+									"let schemaId = responseData.schema.id;",
+									"",
+									"// Store the id in an environment variable",
+									"pm.environment.set(\"schema_id\", schemaId);",
+									"",
+									"// Log the id to the console (optional, for debugging)",
+									"console.log(\"Schema ID:\", schemaId);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"schema\": {\n        \"type\": \"https://w3c-ccg.github.io/vc-json-schemas/\",\n        \"version\": \"1.0.0\",\n        \"id\": \"did:ulpschema:c9cc0f03-4f94-4f44-9bcd-b24a8696fa2\",\n        \"name\": \"Proof of Medical Insurance Credential\",\n        \"author\": \"{{author_did_id}}\",\n        \"authored\": \"2022-12-19T09:22:23.064Z\",\n        \"schema\": {\n            \"$id\": \"Proof-of-Medical-Insurance-Credential-1.0\",\n            \"$schema\": \"https://json-schema.org/draft/2019-09/schema\",\n            \"description\": \"The holder is holding the certificate of Insurance\",\n            \"type\": \"object\",\n            \"properties\": {\n                \"policyNumber\": {\n                    \"type\": \"string\"\n                },\n                \"policyName\": {\n                    \"type\": \"string\"\n                },\n                \"policyExpiresOn\": {\n                    \"type\": \"string\"\n                },\n                \"policyIssuedOn\": {\n                    \"type\": \"string\"\n                },\n                \"benefits\": {\n                    \"type\": \"array\",\n                    \"items\": {\n                        \"type\": \"string\"\n                    }\n                },\n                \"fullName\": {\n                    \"type\": \"string\",\n                    \"title\": \"Full Name\"\n                },\n                \"dob\": {\n                    \"type\": \"string\"\n                },\n                \"gender\": {\n                    \"type\": \"string\",\n                    \"enum\": [\n                        \"Male\",\n                        \"Female\",\n                        \"Other\"\n                    ]\n                }\n            },\n            \"required\": [\n                \"policyNumber\",\n                \"policyName\",\n                \"fullName\",\n                \"dob\"\n            ],\n            \"additionalProperties\": true\n        }\n    },\n    \"tags\": [\n        \"InsuranceCertificate\"\n    ],\n    \"status\": \"DRAFT\"\n}\n"
+						},
+						"url": {
+							"raw": "{{sunbird_url}}/schema/credential-schema",
+							"host": [
+								"{{sunbird_url}}"
+							],
+							"path": [
+								"schema",
+								"credential-schema"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{sunbird_url}}/schema/credential-schema/publish/{{schema_id}}/1.0.0",
+							"host": [
+								"{{sunbird_url}}"
+							],
+							"path": [
+								"schema",
+								"credential-schema",
+								"publish",
+								"{{schema_id}}",
+								"1.0.0"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "One time Creation.\n\n1. Create the DID id and configure in esignet Properties file.\n2. Create schema and publish it and add in esignet properties file.\n    \n\nNote. We need to store the `DID` id in some where online to make it web resolvable.\n\nIn my case, i am storeing it in `chandru-engineer.github.io/identity.`"
+		},
+		{
+			"name": "OIDC Client Mgmt",
+			"item": [
+				{
+					"name": "Get CSRF token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var token = pm.cookies.get(\"XSRF-TOKEN\")",
+									"pm.environment.set(\"csrf_token\", token);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/csrf/token",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"csrf",
+								"token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create OIDC client",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"eval(pm.globals.get('pmlib_code'))",
+									"kp = pmlib.rs.KEYUTIL.generateKeypair(\"RSA\", 2048);",
+									"privateKey_jwk = pmlib.rs.KEYUTIL.getJWK(kp.prvKeyObj);",
+									"publicKey_jwk = pmlib.rs.KEYUTIL.getJWK(kp.pubKeyObj);",
+									"",
+									"pm.environment.set(\"privateKey_jwk\", JSON.stringify(privateKey_jwk));",
+									"pm.environment.set(\"publicKey_jwk\", JSON.stringify(publicKey_jwk));"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Validate clientId\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.response.clientId).to.eql(pm.collectionVariables.get(\"clientId\"));",
+									"});",
+									"",
+									"pm.test(\"Validate status\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.response.status).to.eql(\"ACTIVE\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authorizationToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-XSRF-TOKEN",
+								"value": "{{csrf_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{    \n    \"requestTime\": \"{{$isoTimestamp}}\",\n    \"request\": {\n        \"clientId\": \"{{clientId}}\",\n        \"clientName\": \"{{$randomAvatarImage}}\",\n        \"publicKey\": {{publicKey_jwk}},\n        \"relyingPartyId\": \"{{relayingPartyId}}\",\n        \"userClaims\": [\n            \"name\"\n        ],\n        \"authContextRefs\": [\n            \"mosip:idp:acr:knowledge\"\n        ],\n        \"logoUri\": \"https://avatars.githubusercontent.com/u/60199888\",\n        \"redirectUris\": [\n             \"{{redirectionUrl}}\",\n             \"io.mosip.residentapp://oauth\"\n        ],\n        \"grantTypes\": [\n            \"authorization_code\"\n        ],\n        \"clientAuthMethods\": [\n            \"private_key_jwt\"\n        ]\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/client-mgmt/oidc-client",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"client-mgmt",
+								"oidc-client"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update OIDC",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Validate clientId\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.response.clientId).to.eql(pm.collectionVariables.get(\"clientId\"));",
+									"});",
+									"",
+									"pm.test(\"Validate status\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.response.status).to.eql(\"ACTIVE\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authorizationToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "X-XSRF-TOKEN",
+								"value": "{{csrf_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"requestTime\": \"{{$isoTimestamp}}\",\n    \"request\": {\n        \"logoUri\": \"https://avatars.githubusercontent.com/u/60199888\",\n        \"redirectUris\": [\n            \"{{redirectionUrl}}\"\n        ],\n        \"userClaims\": [\n            \"name\"\n        ],\n        \"authContextRefs\": [\n            \"mosip:idp:acr:knowledge\"\n        ],\n        \"status\": \"ACTIVE\",\n        \"grantTypes\": [\n            \"authorization_code\"\n        ],\n        \"clientName\": \"Pension Scheme\",\n        \"clientAuthMethods\": [\n            \"private_key_jwt\"\n        ]\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/client-mgmt/oidc-client/{{clientId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"client-mgmt",
+								"oidc-client",
+								"{{clientId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "One time Creation."
+		},
+		{
+			"name": "Sunbird RC Insurance Registry",
+			"item": [
+				{
+					"name": "Create Insurance Registry",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let jsonData = pm.response.json();",
+									"pm.collectionVariables.set(\"insurance_registry_osid\", jsonData?.result?.Insurance?.osid);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"let req = JSON.parse(pm.request.body.toJSON().raw);",
+									"",
+									"pm.collectionVariables.set(\"insurance_registry_fullName\", req?.fullName);",
+									"pm.collectionVariables.set(\"insurance_registry_dob\", req?.dob);",
+									"pm.collectionVariables.set(\"insurance_registry_policyNumber\", req?.policyNumber);",
+									"",
+									"// added Newly we need to change based on the individual_id config",
+									"pm.collectionVariables.set(\"individual_id\", req?.policyNumber);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"policyNumber\": \"9791394624\",\n    \"policyName\": \"Start Insurance Gold Premium\",\n    \"policyExpiresOn\": \"2033-04-20T20:48:17.684Z\",\n    \"policyIssuedOn\": \"2023-04-20T20:48:17.684Z\",\n    \"fullName\": \"Kavya G\",\n    \"dob\": \"1999-04-10\",\n    \"benefits\": [\n        \"Critical Surgery\",\n        \"Full body checkup\"\n    ],\n    \"gender\": \"Male\",\n    \"mobile\": \"0123456789\",\n    \"email\": \"abhishek@gmail.com\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{REGISTRY_BASE_URL}}/api/v1/Insurance",
+							"host": [
+								"{{REGISTRY_BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"Insurance"
+							]
+						},
+						"description": "Create new Insurance"
+					},
+					"response": [
+						{
+							"name": "OK",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"policyNumber\": \"laborum veniam dolore\",\n  \"policyName\": \"veniam sed est culpa\",\n  \"expiresOn\": \"2003-04-20T20:48:17.684Z\",\n  \"fullName\": \"minim nisi\",\n  \"dob\": \"1966-10-03\",\n  \"benefits\": [\n    \"exercitation aliqua consequat pariatur fugiat\",\n    \"eiusmod\"\n  ],\n  \"gender\": \"Other\",\n  \"mobile\": \"et aute incididunt cupidatat\",\n  \"email\": \"Ut irure pariatur\"\n}",
+									"options": {
+										"raw": {
+											"headerFamily": "json",
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{REGISTRY_BASE_URL}}/api/v1/Insurance",
+									"host": [
+										"{{REGISTRY_BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"Insurance"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"policyNumber\": \"laborum veniam dolore\",\n  \"policyName\": \"veniam sed est culpa\",\n  \"expiresOn\": \"2003-04-20T20:48:17.684Z\",\n  \"fullName\": \"minim nisi\",\n  \"dob\": \"1966-10-03\",\n  \"benefits\": [\n    \"exercitation aliqua consequat pariatur fugiat\",\n    \"eiusmod\"\n  ],\n  \"gender\": \"Other\",\n  \"mobile\": \"et aute incididunt cupidatat\",\n  \"email\": \"Ut irure pariatur\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Search Insurance Registry",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let jsonData = pm.response.json();",
+									"let osid = pm.collectionVariables.get(\"insurance_registry_osid\");",
+									"let obj = jsonData.find(d => d?.osid === osid) || {};",
+									"let registry = Object.keys(obj).reduce((res, item) => {",
+									"    if(!item.startsWith(\"os\")) return { ...res, [item]: obj[item] };",
+									"    return res;",
+									"}, {});",
+									"pm.collectionVariables.set(\"insurance_registry_expiresOn\", registry?.expiresOn);",
+									"pm.collectionVariables.set(\"insurance_registry\", JSON.stringify(registry));"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"offset\": 0,\n  \"limit\": 5,\n  \"filters\": {\n    \"fullName\": {\n      \"eq\": \"{{insurance_registry_fullName}}\"\n    },\n    \"dob\": {\n      \"eq\": \"{{insurance_registry_dob}}\"\n    },\n    \"policyNumber\": {\n      \"eq\": \"{{insurance_registry_policyNumber}}\"\n    }\n  }\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{REGISTRY_BASE_URL}}/api/v1/Insurance/search",
+							"host": [
+								"{{REGISTRY_BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"Insurance",
+								"search"
+							]
+						},
+						"description": "Create new Insurance"
+					},
+					"response": [
+						{
+							"name": "OK",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"offset\": 0,\n  \"limit\": 0,\n  \"filters\": {\n    \"field_path\": {\n      \"operators\": \"name\"\n    }\n  }\n}",
+									"options": {
+										"raw": {
+											"headerFamily": "json",
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{REGISTRY_BASE_URL}}/api/v1/Insurance/search",
+									"host": [
+										"{{REGISTRY_BASE_URL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"Insurance",
+										"search"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "[\n  {\n    \"policyNumber\": \"aliquip sed\",\n    \"policyName\": \"aliquip aute dolore eu Excepteur\",\n    \"expiresOn\": \"2000-09-05T20:23:37.158Z\",\n    \"fullName\": \"consequat enim exercitation officia\",\n    \"dob\": \"1965-03-01\",\n    \"benefits\": [\n      \"incididunt\",\n      \"et irure conseq\"\n    ],\n    \"gender\": \"Other\",\n    \"mobile\": \"amet officia\",\n    \"email\": \"ut velit\"\n  },\n  {\n    \"policyNumber\": \"cupidatat in\",\n    \"policyName\": \"incididunt ut aliqua\",\n    \"expiresOn\": \"1950-08-21T23:59:52.932Z\",\n    \"fullName\": \"mollit aute culpa\",\n    \"dob\": \"1946-12-10\",\n    \"benefits\": [\n      \"mollit incididunt ea\",\n      \"nostrud non ea\"\n    ],\n    \"gender\": \"Female\",\n    \"mobile\": \"reprehenderit pariatur quis\",\n    \"email\": \"nisi eu Duis\"\n  }\n]"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "KBA",
+			"item": [
+				{
+					"name": "Get CSRF token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var token = pm.cookies.get(\"XSRF-TOKEN\")",
+									"pm.environment.set(\"csrf_token\", token);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/csrf/token",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"csrf",
+								"token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Authorize / OAuthdetails request V2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var btoa = require('btoa');",
+									"",
+									"var token = pm.cookies.get(\"XSRF-TOKEN\")",
+									"pm.environment.set(\"csrf_token\", token);",
+									"",
+									"pm.test(\"Validate transactionId\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.response.transactionId).not.equals(null);",
+									"    pm.environment.set(\"transaction_id\", jsonData.response.transactionId);",
+									"});",
+									"",
+									"pm.test(\"Validate auth factors\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.response.authFactors[0].name).to.eql(pm.environment.get(\"expected_amr\"));",
+									"});",
+									"",
+									"pm.test(\"set oauth-details-hash\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var sha256Hash = CryptoJS.SHA256(JSON.stringify(jsonData.response));",
+									"    var base64Encoded = sha256Hash.toString(CryptoJS.enc.Base64);",
+									"    // Remove padding characters",
+									"    base64Encoded = base64Encoded.replace(/=+$/, '');",
+									"    // Replace '+' with '-' and '/' with '_' to convert to base64 URL encoding",
+									"    base64Encoded = base64Encoded.replace(/\\+/g, '-').replace(/\\//g, '_');",
+									"    console.log(\"base64Encoded : \" + base64Encoded);",
+									"    pm.environment.set(\"oauth_details_key\", jsonData.response.transactionId);",
+									"    pm.environment.set(\"oauth_details_hash\", base64Encoded);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"eval(pm.globals.get('pmlib_code'))",
+									"",
+									"const pkce = pmlib.pkceChallenge();",
+									"pm.collectionVariables.set(\"codeChallenge\",pkce.code_challenge);",
+									"pm.collectionVariables.set(\"codeChallengeMethod\",pkce.code_challenge_method);",
+									"pm.collectionVariables.set(\"codeVerifier\",pkce.code_verifier);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-XSRF-TOKEN",
+								"value": "{{csrf_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"requestTime\": \"{{$isoTimestamp}}\",\n    \"request\": {\n        \"clientId\": \"{{clientId}}\",\n        \"scope\": \"sunbird_rc_insurance_vc_ldp\",\n        \"responseType\": \"code\",\n        \"redirectUri\": \"{{redirectionUrl}}\",\n        \"display\": \"popup\",\n        \"prompt\": \"login\",\n        \"acrValues\": \"mosip:idp:acr:knowledge\",\n        \"nonce\" : \"{{nonce}}\",\n        \"state\" : \"{{state}}\",\n        \"claimsLocales\" : \"en\",\n        \"codeChallenge\" : \"{{codeChallenge}}\",\n        \"codeChallengeMethod\" : \"{{codeChallengeMethod}}\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/authorization/v2/oauth-details",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"authorization",
+								"v2",
+								"oauth-details"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Authenticate User V2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var token = pm.cookies.get(\"XSRF-TOKEN\")",
+									"pm.environment.set(\"csrf_token\", token);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-XSRF-TOKEN",
+								"value": "{{csrf_token}}",
+								"type": "text"
+							},
+							{
+								"key": "oauth-details-key",
+								"value": "{{oauth_details_key}}",
+								"type": "text"
+							},
+							{
+								"key": "oauth-details-hash",
+								"value": "{{oauth_details_hash}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"requestTime\": \"{{$isoTimestamp}}\",\n    \"request\": {\n        \"transactionId\": \"{{transaction_id}}\",\n        \"individualId\": \"{{individual_id}}\",\n        \"challengeList\" : [\n            {\n                \"authFactorType\" : \"KBA\",\n                \"challenge\" : \"ewogICAgImZ1bGxOYW1lIjogIkthdnlhIEciLAogICAgImRvYiI6ICIxOTk5LTA0LTEwIgp9\",\n                \"format\" : \"base64url-encoded-json\"\n            }\n        ]\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/authorization/authenticate",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"authorization",
+								"authenticate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Authorization Code",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var token = pm.cookies.get(\"XSRF-TOKEN\")",
+									"pm.environment.set(\"csrf_token\", token);",
+									"",
+									"pm.test(\"Validate code\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.response.code).not.equals(null);",
+									"    pm.collectionVariables.set(\"code\", jsonData.response.code);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"followRedirects": false
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-XSRF-TOKEN",
+								"value": "{{csrf_token}}",
+								"type": "text"
+							},
+							{
+								"key": "oauth-details-key",
+								"value": "{{oauth_details_key}}",
+								"type": "text"
+							},
+							{
+								"key": "oauth-details-hash",
+								"value": "{{oauth_details_hash}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"requestTime\": \"{{$isoTimestamp}}\",\n    \"request\": {\n        \"transactionId\": \"{{transaction_id}}\",\n        \"acceptedClaims\": [],\n        \"permittedAuthorizeScopes\" : []\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/authorization/auth-code",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"authorization",
+								"auth-code"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Tokens V2",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"eval(pm.globals.get('pmlib_code'))",
+									"",
+									"// Set headers for JWT",
+									"var header = {\t",
+									"\t\"alg\": \"RS256\"",
+									"};",
+									"",
+									"",
+									"//sign token",
+									"//Note: Key pair is generated in \"Create OIDC client\" pre-requests script",
+									"//generated private and public keys are stored in the postman environment ",
+									"const signed_jwt = pmlib.clientAssertPrivateKey(JSON.parse(pm.environment.get(\"privateKey_jwk\")), pm.environment.get('clientId'), pm.environment.get('aud'), exp = 60,  \"RS256\");",
+									"",
+									"pm.collectionVariables.set(\"client_assertion\",signed_jwt);",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Validate Id-token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id_token).not.equals(null);",
+									"});",
+									"",
+									"pm.test(\"Validate access-token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.access_token).not.equals(null);",
+									"    pm.environment.set(\"access_token\", jsonData.access_token);",
+									"",
+									"    var jwt_parts = pm.environment.get('access_token').split('.'); // header.payload.signature",
+									"    var jwt_payload = JSON.parse(atob(jwt_parts[1]));",
+									"    pm.environment.set(\"c_nonce\", jwt_payload.c_nonce);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "code",
+									"value": "{{code}}",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "{{clientId}}",
+									"type": "text"
+								},
+								{
+									"key": "redirect_uri",
+									"value": "{{redirectionUrl}}",
+									"type": "text"
+								},
+								{
+									"key": "grant_type",
+									"value": "authorization_code",
+									"type": "text"
+								},
+								{
+									"key": "client_assertion_type",
+									"value": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+									"type": "text"
+								},
+								{
+									"key": "client_assertion",
+									"value": "{{client_assertion}}",
+									"type": "text"
+								},
+								{
+									"key": "code_verifier",
+									"value": "{{codeVerifier}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/oauth/v2/token",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"oauth",
+								"v2",
+								"token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Credential",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"eval(pm.globals.get('pmlib_code'))",
+									"keyPair = pmlib.rs.KEYUTIL.generateKeypair(\"RSA\", 2048);",
+									"jwkPrivateKey = pmlib.rs.KEYUTIL.getJWK(keyPair.prvKeyObj);",
+									"jwkPublicKey  = pmlib.rs.KEYUTIL.getJWK(keyPair.pubKeyObj);",
+									"jwkPublicKey[\"alg\"] = \"RS256\";",
+									"jwkPublicKey[\"use\"] = \"sig\";",
+									"",
+									"pm.environment.set(\"holder_public_key\", JSON.stringify(jwkPublicKey))",
+									"pm.environment.set(\"holder_private_key\", JSON.stringify(jwkPrivateKey));",
+									"",
+									"// Set headers for JWT",
+									"var header = {\t",
+									"\t\"alg\": \"RS256\",",
+									"    \"typ\" : \"openid4vci-proof+jwt\",",
+									"    \"jwk\" : JSON.parse(pm.environment.get(\"holder_public_key\"))",
+									"};",
+									"",
+									"",
+									"console.log(\"Getting c_nonce >> \" +  pm.environment.get('c_nonce'));",
+									"",
+									"const signed_jwt = pmlib.jwtSign(JSON.parse(pm.environment.get(\"holder_private_key\")), {",
+									"    \"aud\" : 'http://localhost:8088',",
+									"\t\"nonce\": pm.environment.get('c_nonce'),",
+									"    \"iss\" : pm.environment.get('clientId'),",
+									"}, header, exp=600, alg = \"RS256\")",
+									"",
+									"pm.collectionVariables.set(\"proof_jwt\",signed_jwt);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Validate c_nonce\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if(jsonData.c_nonce != null) {",
+									"        pm.environment.set(\"c_nonce\", jsonData.c_nonce);",
+									"        console.log(\"setting c_nonce\");",
+									"    }    ",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"format\": \"ldp_vc\",\n    \"credential_definition\" : { \"type\" : [\"VerifiableCredential\",\"InsuranceCredential\"], \"@context\" : [\"https://www.w3.org/2018/credentials/v1\"]},\n    \"proof\": {\n        \"proof_type\": \"jwt\",\n        \"jwt\": \"{{proof_jwt}}\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/vci/credential",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"vci",
+								"credential"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Well-known endpoints",
+			"item": [
+				{
+					"name": "JWKS",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/oauth/.well-known/jwks.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"oauth",
+								".well-known",
+								"jwks.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Openid-configuration",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/oidc/.well-known/openid-configuration",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"oidc",
+								".well-known",
+								"openid-configuration"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "VC issuer metadata",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/vci/.well-known/openid-credential-issuer",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"vci",
+								".well-known",
+								"openid-credential-issuer"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "clientId",
+			"value": "mock-oidc-client"
+		},
+		{
+			"key": "redirectionUrl",
+			"value": "https://mosip.io/index.php"
+		},
+		{
+			"key": "relayingPartyId",
+			"value": "mock-relaying-party-id"
+		},
+		{
+			"key": "status",
+			"value": "\"ACTIVE\""
+		},
+		{
+			"key": "acr_values",
+			"value": "level0 level1"
+		},
+		{
+			"key": "scope",
+			"value": "openid profile"
+		},
+		{
+			"key": "claims_request_param",
+			"value": "{\n            \"userinfo\": {\n                \"email\": {\n                    \"value\": null,\n                    \"values\": null,\n           ..."
+		},
+		{
+			"key": "nonce",
+			"value": "2erwER34WW"
+		},
+		{
+			"key": "state",
+			"value": "ptOO76SD"
+		},
+		{
+			"key": "expected_amr",
+			"value": "\"pin\""
+		},
+		{
+			"key": "transaction_id",
+			"value": "ece56bfa-d0c2-46ce-a5a2-8500dfb393a7"
+		},
+		{
+			"key": "individual_id",
+			"value": "8267411571"
+		},
+		{
+			"key": "auth_pin",
+			"value": "34789"
+		},
+		{
+			"key": "url",
+			"value": "http://localhost:8088/v1/idp"
+		},
+		{
+			"key": "url",
+			"value": "",
+			"disabled": true
+		},
+		{
+			"key": "code",
+			"value": ""
+		},
+		{
+			"key": "client_assertion",
+			"value": ""
+		},
+		{
+			"key": "access_token",
+			"value": ""
+		},
+		{
+			"key": "linkTransactionId",
+			"value": ""
+		},
+		{
+			"key": "wla_challenge",
+			"value": ""
+		},
+		{
+			"key": "client_secret",
+			"value": "JfoG3eLWLW7iSZDt"
+		},
+		{
+			"key": "client_secret",
+			"value": ""
+		},
+		{
+			"key": "csrf_token",
+			"value": "08a17840-da3c-4b93-9ab3-83d9b297ac68",
+			"type": "string"
+		},
+		{
+			"key": "proof_jwt",
+			"value": ""
+		},
+		{
+			"key": "codeChallenge",
+			"value": ""
+		},
+		{
+			"key": "codeChallengeMethod",
+			"value": ""
+		},
+		{
+			"key": "codeVerifier",
+			"value": ""
+		},
+		{
+			"key": "insurance_registry_fullName",
+			"value": ""
+		},
+		{
+			"key": "insurance_registry_dob",
+			"value": ""
+		},
+		{
+			"key": "insurance_registry_policyNumber",
+			"value": ""
+		},
+		{
+			"key": "insurance_registry_osid",
+			"value": ""
+		},
+		{
+			"key": "insurance_registry_expiresOn",
+			"value": ""
+		},
+		{
+			"key": "insurance_registry",
+			"value": ""
+		}
+	]
+}

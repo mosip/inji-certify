@@ -1,39 +1,12 @@
 version: '2.4'
 
 services:
-  vault:
-    image: vault:1.13.3
-    restart: always
-    volumes:
-      - ./vault.json:/vault/config/vault.json
-      - ./data/vault-data:/vault/file
-    environment:
-      - VAULT_ADDR=${VAULT_ADDR}
-      - VAULT_API_ADDR=${VAULT_API_ADDR}
-      - VAULT_ADDRESS=${VAULT_ADDRESS}
-    cap_add:
-      - IPC_LOCK
-    command: vault server -config=/vault/config/vault.json
-    ports:
-      - 8200:8200
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget --spider http://127.0.0.1:8200/v1/sys/health || exit 1",
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    networks:
-      - network
+
   identity:
     image: ghcr.io/sunbird-rc/sunbird-rc-identity-service:v2.0.0-rc3
     ports:
       - "3332:3332"
     depends_on:
-      vault:
-        condition: service_healthy
       db:
         condition: service_healthy
     environment:
