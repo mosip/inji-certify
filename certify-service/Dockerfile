@@ -24,6 +24,12 @@ ARG is_glowroot
 # can be passed during Docker build as build time environment for artifactory URL
 ARG artifactory_url
 
+# can be passed during Docker build as build time environment for hsm client zip file path
+ARG hsm_client_zip_path
+
+# environment variable to pass hsm client zip file path, at docker runtime
+ENV hsm_zip_file_path=${hsm_client_zip_path}
+
 # environment variable to pass active profile such as DEV, QA etc at docker runtime
 ENV active_profile_env=${active_profile}
 
@@ -54,6 +60,10 @@ ARG container_user_uid=1001
 # can be passed during Docker build as build time environment for github branch to pickup configuration from.
 ARG container_user_gid=1001
 
+
+ARG hsm_local_dir=hsm-client
+
+ENV hsm_local_dir_name=${hsm_local_dir}
 
 # install packages and create user
 RUN apk -q update \
