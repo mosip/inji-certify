@@ -69,7 +69,8 @@ ENV hsm_local_dir_name=${hsm_local_dir}
 RUN apk -q update \
 && apk add -q unzip sudo bash curl \
 && addgroup -g ${container_user_gid} ${container_user_group} \
-&& adduser -s /bin/sh -u ${container_user_uid} -G ${container_user_group} -h /home/${container_user} --disabled-password ${container_user}
+&& adduser -s /bin/sh -u ${container_user_uid} -G ${container_user_group} -h /home/${container_user} --disabled-password ${container_user} \
+&& echo "%sudo ALL=(ALL) NOPASSWD:/home/${container_user}/${hsm_local_dir}/install.sh" >> /etc/sudoers
 
 RUN id -u ${container_user}
 # set working directory for the user
