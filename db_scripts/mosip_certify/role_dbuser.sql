@@ -1,0 +1,4 @@
+CREATE ROLE certifyuser WITH
+	INHERIT
+	LOGIN
+	PASSWORD :dbuserpwd;

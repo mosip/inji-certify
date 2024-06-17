@@ -9,7 +9,8 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./esignet_init.sql:/docker-entrypoint-initdb.d/esignet_init.sql
+      - ./certify_init.sql:/docker-entrypoint-initdb.d/certify_init.sql
     networks:
       - network
   artifactory-server:
@@ -57,7 +58,7 @@ services:
     volumes:
       - ./config/esignet-default.properties:/home/mosip/esignet-default.properties
       - ./loader_path/esignet/:/home/mosip/additional_jars/
-      - ./data/PKCS12:/home/mosip/PKCS12
+      - ./data/ESIGNET_PKCS12:/home/mosip/ESIGNET_PKCS12
     networks:
       - network
   certify:
@@ -72,9 +73,11 @@ services:
       - SPRING_CONFIG_NAME=certify,certify-plugin
       - SPRING_CONFIG_LOCATION=/home/mosip/certify-default.properties,/home/mosip/certify-plugin-default.properties
 #      - enable_certify_artifactory=false
+      - download_hsm_client=false
     volumes:
       - ./config/certify-default.properties:/home/mosip/certify-default.properties
       - ./config/certify-plugin-default.properties:/home/mosip/certify-plugin-default.properties
+      - ./data/CERTIFY_PKCS12:/home/mosip/CERTIFY_PKCS12
 #      - ./loader_path/certify/:/home/mosip/additional_jars/
     depends_on:
       - esignet
