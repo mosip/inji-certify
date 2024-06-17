@@ -1,0 +1,17 @@
+\c mosip_certify
+
+GRANT CONNECT
+   ON DATABASE mosip_certify
+   TO certifyuser;
+
+GRANT USAGE
+   ON SCHEMA certify
+   TO certifyuser;
+
+GRANT SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES
+   ON ALL TABLES IN SCHEMA certify
+   TO certifyuser;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA certify
+	GRANT SELECT,INSERT,UPDATE,DELETE,REFERENCES ON TABLES TO certifyuser;
+

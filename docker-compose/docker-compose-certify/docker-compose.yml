@@ -73,6 +73,7 @@ services:
       - SPRING_CONFIG_NAME=certify,certify-plugin
       - SPRING_CONFIG_LOCATION=/home/mosip/certify-default.properties,/home/mosip/certify-plugin-default.properties
 #      - enable_certify_artifactory=false
+      - download_hsm_client=false
     volumes:
       - ./config/certify-default.properties:/home/mosip/certify-default.properties
       - ./config/certify-plugin-default.properties:/home/mosip/certify-plugin-default.properties

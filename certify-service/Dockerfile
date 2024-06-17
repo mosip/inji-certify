@@ -48,6 +48,9 @@ ENV artifactory_url_env=${artifactory_url}
 # environment variable for certify artifactory plugins to pass at docker run time
 ENV enable_certify_artifactory="true"
 
+# environment variable for downloading hsm client in certify, to pass at docker run time
+ENV download_hsm_client="true"
+
 # can be passed during Docker build as build time environment for github branch to pickup configuration from.
 ARG container_user=mosip
 
