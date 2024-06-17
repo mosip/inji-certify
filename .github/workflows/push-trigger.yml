@@ -20,7 +20,7 @@ on:
       - develop
       - MOSIP*
       - release*
-      - INJICERT-13
+      - INJICERT-*
 
 jobs:
   build-maven-inji-certify:
