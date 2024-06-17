@@ -13,7 +13,7 @@ public class Constants {
     public static final String C_NONCE = "c_nonce";
     public static final String C_NONCE_EXPIRES_IN = "c_nonce_expires_in";
     public static final String CLIENT_ID = "client_id";
-    public static final String OIDC_PARTNER_APP_ID = "CERTIFY_PARTNER";
-    public static final String OIDC_SERVICE_APP_ID = "CERTIFY_SERVICE";
+    public static final String CERTIFY_PARTNER_APP_ID = "CERTIFY_PARTNER";
+    public static final String CERTIFY_SERVICE_APP_ID = "CERTIFY_SERVICE";
     public static final String ROOT_KEY = "ROOT";
 }

@@ -6,9 +6,7 @@
 package io.mosip.certify.api.util;
 
 public enum Action {
-    VC_ISSUANCE("vci-service"),
-    UPLOAD_CERTIFICATE("keymanager"),
-    GET_CERTIFICATE("keymanager");
+    VC_ISSUANCE("vci-service");
 
     String module;
 

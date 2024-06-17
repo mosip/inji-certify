@@ -78,12 +78,12 @@ public class AppConfig implements ApplicationRunner {
         keymanagerService.generateMasterKey(objectType, rootKeyRequest);
         log.info("===================== IDP_SERVICE MASTER KEY CHECK ========================");
         KeyPairGenerateRequestDto masterKeyRequest = new KeyPairGenerateRequestDto();
-        masterKeyRequest.setApplicationId(Constants.OIDC_SERVICE_APP_ID);
+        masterKeyRequest.setApplicationId(Constants.CERTIFY_SERVICE_APP_ID);
         keymanagerService.generateMasterKey(objectType, masterKeyRequest);
 
         if(!StringUtils.isEmpty(cacheSecretKeyRefId)) {
             SymmetricKeyGenerateRequestDto symmetricKeyGenerateRequestDto = new SymmetricKeyGenerateRequestDto();
-            symmetricKeyGenerateRequestDto.setApplicationId(Constants.OIDC_SERVICE_APP_ID);
+            symmetricKeyGenerateRequestDto.setApplicationId(Constants.CERTIFY_SERVICE_APP_ID);
             symmetricKeyGenerateRequestDto.setReferenceId(cacheSecretKeyRefId);
             symmetricKeyGenerateRequestDto.setForce(false);
             keymanagerService.generateSymmetricKey(symmetricKeyGenerateRequestDto);
@@ -92,7 +92,7 @@ public class AppConfig implements ApplicationRunner {
 
         log.info("===================== IDP_PARTNER MASTER KEY CHECK ========================");
         KeyPairGenerateRequestDto partnerMasterKeyRequest = new KeyPairGenerateRequestDto();
-        partnerMasterKeyRequest.setApplicationId(Constants.OIDC_PARTNER_APP_ID);
+        partnerMasterKeyRequest.setApplicationId(Constants.CERTIFY_PARTNER_APP_ID);
         keymanagerService.generateMasterKey(objectType, partnerMasterKeyRequest);
         log.info("===================== IDP KEY SETUP COMPLETED ========================");
     }

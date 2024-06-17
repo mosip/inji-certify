@@ -53,13 +53,9 @@ public class SystemInfoController {
         try {
         	responseWrapper.setResponse(keymanagerService.getCertificate(applicationId, referenceId));
         } catch (CertifyException ex) {
-        	auditWrapper.logAudit(AuditHelper.getClaimValue(SecurityContextHolder.getContext(), claimName),
-					Action.GET_CERTIFICATE, ActionStatus.ERROR, AuditHelper.buildAuditDto(null), ex);
         	throw ex;
         }
         responseWrapper.setResponseTime(CommonUtil.getUTCDateTime());
-        auditWrapper.logAudit(AuditHelper.getClaimValue(SecurityContextHolder.getContext(), claimName),
-                Action.GET_CERTIFICATE, ActionStatus.SUCCESS, AuditHelper.buildAuditDto(null), null);
         return responseWrapper;
     }
 
@@ -71,13 +67,9 @@ public class SystemInfoController {
         try {
         	responseWrapper.setResponse(keymanagerService.uploadCertificate(uploadCertificateRequestDto));
         } catch (CertifyException ex) {
-        	auditWrapper.logAudit(AuditHelper.getClaimValue(SecurityContextHolder.getContext(), claimName),
-					Action.UPLOAD_CERTIFICATE, ActionStatus.ERROR, AuditHelper.buildAuditDto(null), ex);
             throw ex;
         }
         responseWrapper.setResponseTime(CommonUtil.getUTCDateTime());
-        auditWrapper.logAudit(AuditHelper.getClaimValue(SecurityContextHolder.getContext(), claimName),
-                Action.UPLOAD_CERTIFICATE, ActionStatus.SUCCESS, AuditHelper.buildAuditDto(null), null);
         return responseWrapper;
     }
 
