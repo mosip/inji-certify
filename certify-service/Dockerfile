@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:21-jre
 
 ARG SOURCE
 ARG COMMIT_HASH
@@ -66,13 +66,13 @@ ARG hsm_local_dir=hsm-client
 ENV hsm_local_dir_name=${hsm_local_dir}
 
 # install packages and create user
-RUN apk -q update \
-&& apk add -q unzip sudo bash curl \
-&& addgroup -g ${container_user_gid} ${container_user_group} \
-&& adduser -s /bin/sh -u ${container_user_uid} -G ${container_user_group} -h /home/${container_user} --disabled-password ${container_user} \
+RUN apt-get -y update \
+&& apt-get install -y unzip sudo\
+&& groupadd -g ${container_user_gid} ${container_user_group} \
+&& useradd -u ${container_user_uid} -g ${container_user_group} -s /bin/sh -m ${container_user} \
+&& adduser ${container_user} sudo \
 && echo "%sudo ALL=(ALL) NOPASSWD:/home/${container_user}/${hsm_local_dir}/install.sh" >> /etc/sudoers
 
-RUN id -u ${container_user}
 # set working directory for the user
 WORKDIR /home/${container_user}
 
@@ -87,6 +87,8 @@ ENV loader_path_env=${loader_path}
 ADD configure_start.sh configure_start.sh
 
 RUN chmod +x configure_start.sh
+
+RUN chmod a-w /home/${container_user}/configure_start.sh
 
 COPY ./target/certify-service-*.jar certify-service.jar
 

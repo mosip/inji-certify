@@ -42,10 +42,6 @@
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.mosip.kernel</groupId>
             <artifactId>kernel-keymanager-service</artifactId>
             <version>1.2.1-java21-SNAPSHOT</version>
@@ -60,6 +56,11 @@
                     <artifactId>spring-security-test</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>info.weboftrust</groupId>
+            <artifactId>ld-signatures-java</artifactId>
+            <version>1.0.0</version>
         </dependency>
     </dependencies>
 

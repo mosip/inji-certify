@@ -31,6 +31,11 @@
             <version>${commons.validator.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${google.guava.version}</version>
+        </dependency>
+        <dependency>
             <groupId>io.mosip.certify</groupId>
             <artifactId>certify-integration-api</artifactId>
             <version>${project.version}</version>
@@ -39,6 +44,14 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
     </dependencies>
 </project>

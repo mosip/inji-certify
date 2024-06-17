@@ -29,7 +29,7 @@ fi
 #installs the pkcs11 libraries.
 set -e
 
-DEFAULT_ZIP_PATH=artifactory/libs-release-local/hsm/client.zip
+DEFAULT_ZIP_PATH=artifactory/libs-release-local/hsm/client-21.zip
 [ -z "$hsm_zip_file_path" ] && zip_path="$DEFAULT_ZIP_PATH" || zip_path="$hsm_zip_file_path"
 
 echo "Download the client from $artifactory_url_env"

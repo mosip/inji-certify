@@ -13,7 +13,7 @@ services:
     networks:
       - network
   artifactory-server:
-    image: 'mosipdev/artifactory-server:develop'
+    image: 'mosipdev/artifactory-server:release-0.9.0-INJI'
     ports:
       - 8080:8080
     networks:
