@@ -5,6 +5,7 @@ import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.spi.AuditPlugin;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.*;
+import io.mosip.certify.core.exception.InvalidRequestException;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.services.VCICacheService;
@@ -47,7 +48,7 @@ public class VCIssuanceControllerTest {
     VCICacheService vciCacheService;
 
     @Test
-    public void getIssuerMetadata_withValidDetails_thenPass() throws Exception {
+    public void getIssuerMetadata_noQueryParams_thenPass() throws Exception {
         Map<String, Object> issuerMetadata = new HashMap<>();
         issuerMetadata.put("credential_issuer", "https://localhost:9090");
         issuerMetadata.put("credential_endpoint", "https://localhost:9090/v1/certify/issuance/credential");
@@ -66,13 +67,13 @@ public class VCIssuanceControllerTest {
     }
 
     @Test
-    public void getIssuerMetadata_withQueryParam_thenPass() throws Exception {
+    public void getIssuerMetadata_withValidQueryParam_thenPass() throws Exception {
         Map<String, Object> issuerMetadata = new HashMap<>();
         issuerMetadata.put("credential_issuer", "https://localhost:9090");
         issuerMetadata.put("credential_endpoint", "https://localhost:9090/v1/certify/issuance/credential");
         issuerMetadata.put("credentials_supported", Arrays.asList());
 
-        Mockito.when(vcIssuanceService.getCredentialIssuerMetadata(Mockito.anyString())).thenReturn(issuerMetadata);
+        Mockito.when(vcIssuanceService.getCredentialIssuerMetadata("v11")).thenReturn(issuerMetadata);
 
         mockMvc.perform(get("/issuance/.well-known/openid-credential-issuer?version=v11"))
                 .andExpect(status().isOk())
@@ -82,6 +83,15 @@ public class VCIssuanceControllerTest {
                 .andExpect(header().string("Content-Type", "application/json"));
 
         Mockito.verify(vcIssuanceService).getCredentialIssuerMetadata("v11");
+    }
+
+    @Test
+    public void getIssuerMetadata_withInvalidQueryParam_thenPass() throws Exception {
+        Exception e = new InvalidRequestException(ErrorConstants.UNSUPPORTED_OPENID_VERSION);
+        Mockito.when(vcIssuanceService.getCredentialIssuerMetadata("v123")).thenThrow(e);
+        mockMvc.perform(get("/issuance/.well-known/openid-credential-issuer?version=v123"))
+                .andExpect(status().is4xxClientError());
+        Mockito.verify(vcIssuanceService).getCredentialIssuerMetadata("v123");
     }
 
     @Test

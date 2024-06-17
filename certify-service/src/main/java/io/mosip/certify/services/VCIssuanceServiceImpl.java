@@ -112,7 +112,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
     public Map<String, Object> getCredentialIssuerMetadata(String version) {
        if(issuerMetadata.containsKey(version))
            return issuerMetadata.get(version);
-       return issuerMetadata.get("latest");
+       throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_OPENID_VERSION);
     }
 
     private VCResult<?> getVerifiableCredential(CredentialRequest credentialRequest, CredentialMetadata credentialMetadata,
