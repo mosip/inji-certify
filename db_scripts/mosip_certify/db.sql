@@ -1,3 +1,8 @@
+-- This Source Code Form is subject to the terms of the Mozilla Public
+-- License, v. 2.0. If a copy of the MPL was not distributed with this
+-- file, You can obtain one at https://mozilla.org/MPL/2.0/.
+-- -------------------------------------------------------------------------------------------------
+
 CREATE DATABASE mosip_certify
 	ENCODING = 'UTF8' 
 	LC_COLLATE = 'en_US.UTF-8' 
@@ -6,7 +11,7 @@ CREATE DATABASE mosip_certify
 	OWNER = postgres
 	TEMPLATE  = template0;
 
-COMMENT ON DATABASE mosip_idp IS 'e-Signet and certify related data is stored in this database';
+COMMENT ON DATABASE mosip_idp IS 'Certify related data is stored in this database';
 
 \c mosip_certify postgres
 
