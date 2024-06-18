@@ -5,25 +5,26 @@ set -e
 download_and_extract() {
   local url=$1
   local dest_dir=$2
-  shift 2
-  local files_to_extract=("$@")
   local temp_zip=$(mktemp)
 
   wget -q "$url" -O "$temp_zip"
 
-  for file in "${files_to_extract[@]}"; do
-    unzip -o -j "$temp_zip" "$file" -d "$dest_dir"
+  echo "Installation of plugins started"
+  local files=$(unzip -l "$temp_zip" | awk 'NR>3 {print $4}' | sed '$d')
+
+  unzip -o -j "$temp_zip" -d "$dest_dir"
+
+  for file in $files; do
+    echo "Extracted file $file"
   done
+
+  echo "Installation of plugins completed"
 
   rm -f "$temp_zip"
 }
 
-#if [ "$enable_esignet_artifactory" = "true" ]; then
-#  download_and_extract "${artifactory_url_env}/artifactory/libs-release-local/esignet/esignet-wrapper.zip" "${loader_path_env}" "esignet-mock-wrapper.jar" "sunbird-rc-esignet-integration-impl.jar"
-#fi
-
 if [ "$enable_certify_artifactory" = "true" ]; then
-  download_and_extract "${artifactory_url_env}/artifactory/libs-release-local/certify/certify-plugin.zip" "${loader_path_env}" "certify-sunbird-plugin.jar"
+  download_and_extract "${artifactory_url_env}/artifactory/libs-release-local/certify/certify-plugin.zip" "${loader_path_env}"
 fi
 
 #installs the pkcs11 libraries.
