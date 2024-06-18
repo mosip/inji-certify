@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:21-jre
 
 ARG SOURCE
 ARG COMMIT_HASH
@@ -24,6 +24,12 @@ ARG is_glowroot
 # can be passed during Docker build as build time environment for artifactory URL
 ARG artifactory_url
 
+# can be passed during Docker build as build time environment for hsm client zip file path
+ARG hsm_client_zip_path
+
+# environment variable to pass hsm client zip file path, at docker runtime
+ENV hsm_zip_file_path=${hsm_client_zip_path}
+
 # environment variable to pass active profile such as DEV, QA etc at docker runtime
 ENV active_profile_env=${active_profile}
 
@@ -42,6 +48,9 @@ ENV artifactory_url_env=${artifactory_url}
 # environment variable for certify artifactory plugins to pass at docker run time
 ENV enable_certify_artifactory="true"
 
+# environment variable for downloading hsm client in certify, to pass at docker run time
+ENV download_hsm_client="true"
+
 # can be passed during Docker build as build time environment for github branch to pickup configuration from.
 ARG container_user=mosip
 
@@ -55,13 +64,18 @@ ARG container_user_uid=1001
 ARG container_user_gid=1001
 
 
-# install packages and create user
-RUN apk -q update \
-&& apk add -q unzip sudo bash curl \
-&& addgroup -g ${container_user_gid} ${container_user_group} \
-&& adduser -s /bin/sh -u ${container_user_uid} -G ${container_user_group} -h /home/${container_user} --disabled-password ${container_user}
+ARG hsm_local_dir=hsm-client
 
-RUN id -u ${container_user}
+ENV hsm_local_dir_name=${hsm_local_dir}
+
+# install packages and create user
+RUN apt-get -y update \
+&& apt-get install -y unzip sudo\
+&& groupadd -g ${container_user_gid} ${container_user_group} \
+&& useradd -u ${container_user_uid} -g ${container_user_group} -s /bin/sh -m ${container_user} \
+&& adduser ${container_user} sudo \
+&& echo "%sudo ALL=(ALL) NOPASSWD:/home/${container_user}/${hsm_local_dir}/install.sh" >> /etc/sudoers
+
 # set working directory for the user
 WORKDIR /home/${container_user}
 
@@ -76,6 +90,8 @@ ENV loader_path_env=${loader_path}
 ADD configure_start.sh configure_start.sh
 
 RUN chmod +x configure_start.sh
+
+RUN chmod a-w /home/${container_user}/configure_start.sh
 
 COPY ./target/certify-service-*.jar certify-service.jar
 

@@ -13,5 +13,6 @@ import lombok.NoArgsConstructor;
 public class AuditDTO {
 
     String transactionId;
+    String clientId;
     String idType;
 }
