@@ -7,7 +7,7 @@ if [ $# -ge 1 ] ; then
 fi
 
 SOFTHSM_NS=softhsm
-SOFTHSM_CHART_VERSION=12.0.1
+SOFTHSM_CHART_VERSION=0.0.1-develop
 
 echo Create $SOFTHSM_NS namespace
 kubectl create ns $SOFTHSM_NS
