@@ -6,7 +6,7 @@ This is the docker-compose setup to run esignet UI and esignet-service. This is 
 
 1. "config" folder holds the esignet properties file.
 2. "docker-compose.yml" file with esignet setup with other required services
-3. "init.sql" comprises DDL and DMLs required by esignet.
+3. "esignet_init.sql" comprises DDL and DMLs required by esignet.
 4. "loader_path" this is esignet mount volume from where all the runtime dependencies are loaded to classpath. If any new esignet plugins to be tested
 should be placed in this folder and respective plugin configuration should be updated in config/esignet-default.properties.
 
