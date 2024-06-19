@@ -86,7 +86,7 @@ public class VCIssuanceControllerTest {
     }
 
     @Test
-    public void getIssuerMetadata_withInvalidQueryParam_thenPass() throws Exception {
+    public void getIssuerMetadata_withInvalidQueryParam_thenFail() throws Exception {
         Exception e = new InvalidRequestException(ErrorConstants.UNSUPPORTED_OPENID_VERSION);
         Mockito.when(vcIssuanceService.getCredentialIssuerMetadata("v123")).thenThrow(e);
         mockMvc.perform(get("/issuance/.well-known/openid-credential-issuer?version=v123"))
