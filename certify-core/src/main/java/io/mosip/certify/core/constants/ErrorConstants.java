@@ -22,4 +22,5 @@ public class ErrorConstants {
     public static final String PROOF_HEADER_INVALID_ALG = "proof_header_invalid_alg";
     public static final String PROOF_HEADER_INVALID_KEY = "proof_header_invalid_key";
     public static final String PROOF_HEADER_AMBIGUOUS_KEY = "proof_header_ambiguous_key";
+    public static final String UNSUPPORTED_OPENID_VERSION = "unsupported_openid4vci_draft_version";
 }
