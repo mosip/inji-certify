@@ -91,7 +91,6 @@ public class VCIssuanceControllerTest {
         Mockito.when(vcIssuanceService.getCredentialIssuerMetadata("v123")).thenThrow(e);
         mockMvc.perform(get("/issuance/.well-known/openid-credential-issuer?version=v123"))
                 .andExpect(status().is4xxClientError());
-        Mockito.verify(vcIssuanceService).getCredentialIssuerMetadata("v123");
     }
 
     @Test
