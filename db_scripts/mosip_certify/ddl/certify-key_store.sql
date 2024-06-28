@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -- -------------------------------------------------------------------------------------------------
--- Database Name: mosip_certify
+-- Database Name: inji_certify
 -- Table Name : key_store
 -- Purpose    : Key Store table
 --

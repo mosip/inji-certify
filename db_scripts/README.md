@@ -23,7 +23,7 @@ Default data that's populated in the tables is present under `<db name>/dml` fol
 These scripts are automatically run with below mentioned script in existing k8 cluster with Postgres installed.
 ### Install
 * Set your kube_config file or kube_config variable on PC.
-* Update `init_values.yaml` with db-common-password from the postgres namespace in the required field `dbUserPasswords.dbuserPassword` and ensure `databases.mosip_certify` is enabled.
+* Update `init_values.yaml` with db-common-password from the postgres namespace in the required field `dbUserPasswords.dbuserPassword` and ensure `databases.inji_certify` is enabled.
   ```
   ./init_db.sh`
   ```
