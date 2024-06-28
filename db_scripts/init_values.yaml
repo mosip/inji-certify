@@ -59,7 +59,7 @@ databases:
   mosip_esignet:
     enabled: false
 
-  mosip_certify:
+  inji_certify:
     enabled: true
     host: "postgres-postgresql.postgres"
     port: 5432

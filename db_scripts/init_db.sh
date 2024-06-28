@@ -6,8 +6,8 @@ if [ $# -ge 1 ] ; then
   export KUBECONFIG=$1
 fi
 
-NS=esignet
-CHART_VERSION=12.0.2
+NS=inji-certify
+CHART_VERSION=12.0.1
 
 helm repo add mosip https://mosip.github.io/mosip-helm
 helm repo update
@@ -20,7 +20,7 @@ while true; do
 
         kubectl create ns $NS
 
-        echo Removing existing mosip_certify DB installation
+        echo Removing existing inji_certify DB installation
         helm -n $NS delete postgres-init-certify
 
         echo Copy Postgres secrets
