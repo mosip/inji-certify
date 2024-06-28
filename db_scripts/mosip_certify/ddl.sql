@@ -1,4 +1,4 @@
-\c mosip_certify
+\c inji_certify
 
 \ir ddl/certify-key_alias.sql
 \ir ddl/certify-key_policy_def.sql
