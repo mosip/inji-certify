@@ -3,10 +3,10 @@
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -- -------------------------------------------------------------------------------------------------
 
-\c mosip_certify
+\c inji_certify
 
 GRANT CONNECT
-   ON DATABASE mosip_certify
+   ON DATABASE inji_certify
    TO certifyuser;
 
 GRANT USAGE
