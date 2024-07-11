@@ -5,6 +5,7 @@
  */
 package io.mosip.certify.services;
 
+import colesico.framework.ioc.listener.PostConstruct;
 import foundation.identity.jsonld.JsonLDObject;
 
 import io.mosip.certify.api.dto.VCRequestDto;
@@ -35,6 +36,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -48,6 +51,12 @@ import java.util.Optional;
 public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     private static final String TYPE_VERIFIABLE_CREDENTIAL = "VerifiableCredential";
+
+    @Value("${mosip.certify.well-known.file.uri:}")
+    private String metadataURL;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     @Value("#{${mosip.certify.key-values}}")
     private LinkedHashMap<String, LinkedHashMap<String, Object>> issuerMetadata;
@@ -72,6 +81,11 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     @Autowired
     private AuditPlugin auditWrapper;
+
+    @PostConstruct
+    public void init() {
+        issuerMetadata = restTemplate.getForObject(metadataURL, LinkedHashMap.class);
+    }
 
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
