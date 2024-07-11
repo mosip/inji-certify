@@ -5,7 +5,6 @@
  */
 package io.mosip.certify.services;
 
-import colesico.framework.ioc.listener.PostConstruct;
 import foundation.identity.jsonld.JsonLDObject;
 
 import io.mosip.certify.api.dto.VCRequestDto;
@@ -31,6 +30,7 @@ import io.mosip.certify.core.util.SecurityHelperService;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
