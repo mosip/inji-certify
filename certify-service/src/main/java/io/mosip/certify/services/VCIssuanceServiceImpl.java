@@ -5,6 +5,9 @@
  */
 package io.mosip.certify.services;
 
+import ch.qos.logback.core.net.SyslogOutputStream;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.jsonld.JsonLDObject;
 
 import io.mosip.certify.api.dto.VCRequestDto;
@@ -41,10 +44,7 @@ import org.springframework.web.client.RestTemplate;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -52,7 +52,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     private static final String TYPE_VERIFIABLE_CREDENTIAL = "VerifiableCredential";
 
-    @Value("${mosip.certify.well-known.file.uri:}")
+    @Value("${mosip.certify.well-known.file.uri}")
     private String metadataURL;
 
     @Autowired
@@ -82,9 +82,17 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
     @Autowired
     private AuditPlugin auditWrapper;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @PostConstruct
-    public void init() {
-        issuerMetadata = restTemplate.getForObject(metadataURL, LinkedHashMap.class);
+    public void postConstructMetadata() {
+        String issuer = restTemplate.getForObject(metadataURL, String.class);
+        try {
+            issuerMetadata = objectMapper.readValue(issuer, LinkedHashMap.class);
+        } catch (JsonProcessingException e) {
+            throw new CertifyException(ErrorConstants.MISSING_WELLKNOWN_CONFIG);
+        }
     }
 
     @Override
