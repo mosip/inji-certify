@@ -7,15 +7,14 @@ package io.mosip.certify.core.dto;
 
 import io.mosip.certify.core.constants.ErrorConstants;
 import jakarta.validation.Valid;
-import lombok.Data;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 
 import java.util.Map;
 
 @Data
-public class CredentialRequest {
+public class MsoMdocVcCredentialRequest  {
 
     /**
      * REQUIRED. Format of the Credential to be issued.
@@ -31,26 +30,12 @@ public class CredentialRequest {
     @NotNull(message = ErrorConstants.INVALID_PROOF)
     private CredentialProof proof;
 
-    /**
-     * "format": jwt_vc_json | jwt_vc_json-ld | ldp_vc
-     * REQUIRED
-     * JSON object containing (and isolating) the detailed description of the credential type.
-     * This object MUST be processed using full JSON-LD processing.
-     * It consists of the following sub claims:
-     * @context: REQUIRED. JSON array
-     * types: REQUIRED. JSON array. This claim contains the type values the Wallet shall request
-     * in the subsequent Credential Request.
-     */
-    //TODO: Add validator correctly
     @Valid
-//    @NotNull(message = ErrorConstants.INVALID_REQUEST)
-    private CredentialDefinition credential_definition;
+    @NotNull(message = ErrorConstants.INVALID_REQUEST)
+    private String doc_type;
 
     @Valid
-//    @NotNull(message = ErrorConstants.INVALID_REQUEST)
-    private String doctype;
-
-    @Valid
-//    @NotNull(message = ErrorConstants.INVALID_REQUEST)
+    @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private Map<String,Object> claims;
+
 }
