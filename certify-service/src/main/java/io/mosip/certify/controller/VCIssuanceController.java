@@ -5,9 +5,7 @@
  */
 package io.mosip.certify.controller;
 
-import io.mosip.certify.core.dto.CredentialRequest;
-import io.mosip.certify.core.dto.CredentialResponse;
-import io.mosip.certify.core.dto.VCError;
+import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.exception.InvalidNonceException;
@@ -38,10 +36,21 @@ public class VCIssuanceController {
      * @return Credential Response w.r.t requested format
      * @throws CertifyException
      */
+    //TODO: Check if this is possible
     @PostMapping(value = "/credential",produces = "application/json")
     public CredentialResponse getCredential(@Valid @RequestBody CredentialRequest credentialRequest) throws CertifyException {
         return vcIssuanceService.getCredential(credentialRequest);
     }
+/*
+    @PostMapping(value = "/credential",produces = "application/json")
+    public CredentialResponse getCredential(@Valid @RequestBody LdpVcCredentialRequest ldpVcCredentialRequest) throws CertifyException {
+        return vcIssuanceService.getCredential(ldpVcCredentialRequest);
+    }
+    @PostMapping(value = "/credential",produces = "application/json")
+    public CredentialResponse getCredential(@Valid @RequestBody MsoMdocVcCredentialRequest msoMdocVcCredentialRequest) throws CertifyException {
+        return vcIssuanceService.getCredential(msoMdocVcCredentialRequest);
+    }
+*/
 
 
     /**

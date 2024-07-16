@@ -33,6 +33,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>io.mosip.certify</groupId>
+            <artifactId>mock-certify-plugin</artifactId>
+            <version>0.2.6-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-bootstrap</artifactId>
         </dependency>
@@ -62,6 +67,13 @@
             <artifactId>ld-signatures-java</artifactId>
             <version>1.0.0</version>
         </dependency>
+<!--        override lombok-->
+       <!-- <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.32</version>
+            <scope>provided</scope>
+        </dependency>-->
     </dependencies>
 
     <build>
@@ -71,6 +83,12 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring.boot.version}</version>
                 <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
                     <executable>true</executable>
                     <layout>ZIP</layout>
                 </configuration>

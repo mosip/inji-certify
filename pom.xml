@@ -161,6 +161,13 @@
 					</exclusion>
 				</exclusions>
 			</dependency>
+			<dependency>
+				<groupId>io.mosip.kernel</groupId>
+				<artifactId>kernel-bom</artifactId>
+				<version>1.2.1-java21-SNAPSHOT</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
@@ -206,6 +213,12 @@
 						<configuration>
 							<executable>true</executable>
 							<layout>ZIP</layout>
+							<excludes>
+								<exclude>
+									<groupId>org.project-lombok</groupId>
+									<artifactId>lombok</artifactId>
+								</exclude>
+							</excludes>
 						</configuration>
 						<executions>
 							<execution>
