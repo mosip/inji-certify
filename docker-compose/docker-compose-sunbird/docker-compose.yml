@@ -179,5 +179,5 @@ services:
       - network
 networks:
   network:
-    driver: bridge
     name: mosip_network
+    external: true

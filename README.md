@@ -14,6 +14,52 @@ The following steps will help you to setup Sunbird RC and Esignet services using
 
 ## Installation
 
+### Steps to setup Mock credential use case
+
+1. Clone the repository and navigate to its directory:
+
+    ```bash
+    cd inji-certify/docker-compose/docker-compose-certify
+    ```
+2. Change the variable `active_profile_env` in [esignet](docker-compose/docker-compose-certify/docker-compose.yml#L79) and [certify](docker-compose/docker-compose-certify/docker-compose.yml#L103) to `active_profile_env=default,mock-identity`
+3. Esignet and Certify takes the required plugin from artifactory server by default, in case there is a custom use case where plugin is to be added manually follow the below steps:
+    * Create a folder with name loader_path [here](docker-compose/docker-compose-certify).
+    * Add the jar file of Digital Credential Stack(DCS) plugin implementations for eSignet and certify:
+        * For eSignet:
+            * In the [docker compose file](docker-compose/docker-compose-certify/docker-compose.yml) comment the line [esignet_wrapper_url_env](docker-compose/docker-compose-certify/docker-compose.yml#L82)
+            *  create a folder with name esignet inside loader_path folder created in the above step and add the jar files inside the folder.
+            *  JAR file for mock identity can be downloaded [here](https://repo1.maven.org/maven2/io/mosip/esignet/mock/mock-esignet-integration-impl/0.9.2/mock-esignet-integration-impl-0.9.2.jar)
+        * For certify:
+            * By default, the plugin will be taken from artifactory server
+            * For custom plugin:
+                * In the [docker compose file](docker-compose/docker-compose-certify/docker-compose.yml) uncomment the [enable_certify_artifactory](docker-compose/docker-compose-certify/docker-compose.yml#L106) and [volume](docker-compose/docker-compose-certify/docker-compose.yml#L113)
+                    * create a folder with name certify inside loader_path folder created in the above step and add the jar file inside the folder. The JAR can be built [from source](https://github.com/mosip/digital-credential-plugins/tree/develop/sunbird-rc-certify-integration-impl).
+4. Execute the installation script
+
+    ```bash
+    ./install.sh
+    ```
+
+5. During the execution of the `install.sh` script, user will be prompted to select the service to be installed:
+
+    ```
+    1. Sunbird RC
+    2. Certify
+    0. Exit
+    Select:
+    ```
+
+6. Select "Certify" from the choices provided.
+7. The installation of Certify will encompass the following services:
+    * [Esignet Service](https://github.com/mosip/esignet)
+    * [Certify Service](https://github.com/mosip/inji-certify)
+8. Download the postman collection and environment for mock use case from [here](docker-compose/docker-compose-certify/postman-collections/mock).
+9. Create Client from Create OIDC client API, add redirect uri 'http://localhost:3001'.
+10. Create a mock identity with Create Mock Identity API in the Mock Identity System folder.
+11. Change the `individualId` variable in environment to the above created mock identity identifier.
+12. Perform a Mock Authentication with the API's in `VCI` folder as specified in the Postman collection.
+
+
 ### Steps to setup Insurance credential use case
 
 Execute installation script
@@ -45,8 +91,9 @@ Execute installation script
     * Set the hostname of the endpoints correctly as per your docker setup
     * Now generate a DID, create a credential schema and create an issuance registry
         * take note of `$.schema[0].author`  and  `$.schema[0].id` from the create credential schema request
-6. Create a folder with name loader_path [here](docker-compose/docker-compose-certify).
-7. Add the jar file of Digital Credential Stack(DCS) plugin implementations for eSignet and certify:
+6. Change the variable `active_profile_env` in [esignet](docker-compose/docker-compose-certify/docker-compose.yml#L79) and [certify](docker-compose/docker-compose-certify/docker-compose.yml#L103) to `active_profile_env=default,sunbird-insurance`
+7. Create a folder with name loader_path [here](docker-compose/docker-compose-certify).
+8. Add the jar file of Digital Credential Stack(DCS) plugin implementations for eSignet and certify:
      * For eSignet:
        * create a folder with name esignet inside loader_path folder created in the above step and add the jar files inside the folder.
        *  JAR file for sunbird can be downloaded [here](https://mvnrepository.com/artifact/io.mosip.esignet.sunbirdrc/sunbird-rc-esignet-integration-impl).
@@ -56,7 +103,7 @@ Execute installation script
        * For custom plugin:
          * In the [docker compose file](docker-compose/docker-compose-certify/docker-compose.yml) uncomment the [enable_certify_artifactory](docker-compose/docker-compose-certify/docker-compose.yml#L74) and [volume](docker-compose/docker-compose-certify/docker-compose.yml#L78)
          * create a folder with name certify inside loader_path folder created in the above step and add the jar file inside the folder. The JAR can be built [from source](https://github.com/mosip/digital-credential-plugins/tree/INJICERT-13/sunbird-rc-certify-integration-impl).
-8. Modify the properties of the Esignet and Certify services located in the [esignet-default.properties](docker-compose/docker-compose-certify/config/esignet-default.properties) and [certify-default.properties](docker-compose/docker-compose-certify/config/certify-default.properties) files respectively.
+9. Modify the properties of the Esignet and Certify services located in the [esignet-sunbird-insurance.properties](docker-compose/docker-compose-certify/config/esignet-sunbird-insurance.properties) and [certify-sunbird-insurance.properties](docker-compose/docker-compose-certify/config/certify-sunbird-insurance.properties) files respectively.
    - Include Issuer ID and credential schema ID for the following properties: 
      - esignet-default-properties:
        - `mosip.esignet.vciplugin.sunbird-rc.credential-type.{credential type}.static-value-map.issuerId`.
@@ -65,17 +112,15 @@ Execute installation script
        - `mosip.certify.vciplugin.sunbird-rc.credential-type.{credential type}.static-value-map.issuerId`.
        - `mosip.certify.vciplugin.sunbird-rc.credential-type.{credential-type}.cred-schema-id`.
    - The `$.schema[0].author` DID goes to the config ending in issuerId and `$.schema[0].id` DID goes to the config ending in `cred-schema-id`.
-9. Once the Esignet and Certify properties are configured, proceed to select Certify from the option provided in the installation steps.
-10. The installation of Certify will encompass the following services:
+10. Once the Esignet and Certify properties are configured, proceed to select Certify from the option provided in the installation steps.
+11. The installation of Certify will encompass the following services:
     * [Esignet Service](https://github.com/mosip/esignet)
     * [Certify Service](https://github.com/mosip/inji-certify)
-11. Download the postman collection and environment for sunbird use case from [here](docker-compose/docker-compose-certify/postman-collections).
-12. Create Client from Create OIDC client API, add redirect uri 'http://localhost:3001'.
-13. Change `aud` variable in environment to 'http://localhost:8088/v1/esignet/oauth/v2/token' and set `audUrl` to http://localhost:8088
+12. Download the postman collection and environment for sunbird use case from [here](docker-compose/docker-compose-certify/postman-collections/sunbird).
+13. Create Client from Create OIDC client API, add redirect uri 'http://localhost:3001'.
 14. Perform a Knowledge based authentication(KBA) as specified in the Postman collection.
     * perform the authorize callback request
     * in the /authorization/authenticate request update the challenge to a URL-safe base64 encoded string with the KBA details such as `{"fullName":"Abhishek Gangwar","dob":"1967-10-24"}`, one can use an [online base64 encoding service](https://base64encode.org) for the same.
-    * in the /issuance/credential api inside pre-request script section change the aud env variable to  -> "aud" : pm.environment.get('audUrl')
 
 ## Properties for custom use case
 

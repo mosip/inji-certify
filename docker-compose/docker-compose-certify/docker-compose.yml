@@ -76,7 +76,6 @@ services:
     environment:
       - artifactory_url_env=http://artifactory-server:8080/
       - container_user=mosip
-#      - active_profile_env=default,sunbird-insurance
       - active_profile_env=default,mock-identity
       - SPRING_CONFIG_NAME=esignet
       - SPRING_CONFIG_LOCATION=/home/mosip/config/
@@ -89,8 +88,8 @@ services:
       - ./config/esignet-default.properties:/home/mosip/config/esignet-default.properties
       - ./config/esignet-sunbird-insurance.properties:/home/mosip/config/esignet-sunbird-insurance.properties
       - ./config/esignet-mock-identity.properties:/home/mosip/config/esignet-mock-identity.properties
-      - ./loader_path/esignet/:/home/mosip/additional_jars/
       - ./data/ESIGNET_PKCS12:/home/mosip/ESIGNET_PKCS12
+#      - ./loader_path/esignet/:/home/mosip/additional_jars/
     networks:
       - network
   certify:
@@ -101,7 +100,6 @@ services:
     environment:
       - artifactory_url_env=http://artifactory-server:8080
       - container_user=mosip
-#      - active_profile_env=default,sunbird-insurance
       - active_profile_env=default,mock-identity
       - SPRING_CONFIG_NAME=certify
       - SPRING_CONFIG_LOCATION=/home/mosip/config/
