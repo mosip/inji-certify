@@ -3,6 +3,21 @@ INJI Certify enables an issuer to connect with an existing database in order to 
 It assumes the source database has a primary key for each data record and information required to authenticate a user (e.g. phone, email, or other personal information).
 Issuer can configure their respective credential schema for various types of certificates they wish to issue. Certificates are generated in JSON-LD as per W3C VC v1.1.
 
+## Requirements
+- Java SE 21
+- Maven 
+
+## Build
+```shell
+mvn clean install -Dgpg.skip=true
+```
+## Run
+```shell
+mvn spring-boot:run -Dspring.profiles.active=local
+```
+## Databases
+Refer to [SQL scripts](db_scripts).
+
 ## Installation Guide
 
 The following steps will help you to setup Sunbird RC and Esignet services using Docker compose.
@@ -12,7 +27,6 @@ The following steps will help you to setup Sunbird RC and Esignet services using
 * Docker (26.0.0)
 * Docker Compose (2.25)
 
-## Installation
 
 ### Steps to setup Mock credential use case
 
@@ -149,12 +163,18 @@ Execute installation script
     * Change these properties for different credential types supported `mosip.certify.key-values` based on OID4VCI version.
 
 ## Note
- To test the Setup from UI we can configure a Client and Issuer in InjiWeb.
+ - To test the Setup from UI we can configure a Client and Issuer in InjiWeb.
    * Setup [InjiWeb](https://github.com/mosip/inji-web/blob/qa-develop/README.md) and [Mimoto](https://github.com/mosip/mimoto/blob/release-0.13.x/docker-compose/README.md) in local.
    * Add an issuer to mimoto issuer config with `authorization_endpoint`, `credential_endpoint` and `.well-known` properties pointing to eSignet and certify installed above.
    * Add the private key from the OIDC client created in eSignet(collection to create a client can be found [here](docker-compose/docker-compose-certify/postman-collections)) to the p12 file in mimoto.
    * You will be able to see the newly created issuer in InjiWeb home page to download the credential.
 
+ - For this release Mosip ID and Mock plugins are using eSignet DTO's due to shared redis cache dependency to resolve serialization issues, so eSignet image tag version in docker compose should be in consistent with Mock and Mosip ID pom dependency version.As of now we are using eSignet 1.4.0 in docker compose as well as plugins in artifactory
+   - [Mosip ID](https://github.com/mosip/digital-credential-plugins/blob/a96fada5b8eefa00282cadab1c698f429223c0b3/mosip-identity-certify-plugin/pom.xml#L148)
+   - [Mock](https://github.com/mosip/digital-credential-plugins/blob/a96fada5b8eefa00282cadab1c698f429223c0b3/mock-certify-plugin/pom.xml#L75)
+
+
+ 
 
 ## Troubleshooting
 
