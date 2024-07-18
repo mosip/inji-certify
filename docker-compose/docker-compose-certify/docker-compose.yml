@@ -11,6 +11,7 @@ services:
     volumes:
       - ./esignet_init.sql:/docker-entrypoint-initdb.d/esignet_init.sql
       - ./certify_init.sql:/docker-entrypoint-initdb.d/certify_init.sql
+      - ./mock_identity_init.sql:/docker-entrypoint-initdb.d/mock_identity_init.sql
     networks:
       - network
   artifactory-server:
