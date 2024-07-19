@@ -23,6 +23,7 @@ public class VCICacheService {
 
     @CachePut(value = VCISSUANCE_CACHE, key = "#accessTokenHash")
     public VCIssuanceTransaction setVCITransaction(String accessTokenHash, VCIssuanceTransaction vcIssuanceTransaction) {
+        System.out.println("VCI transation cache: of " + accessTokenHash + " the transaction" + vcIssuanceTransaction);
         return vcIssuanceTransaction;
     }
 
