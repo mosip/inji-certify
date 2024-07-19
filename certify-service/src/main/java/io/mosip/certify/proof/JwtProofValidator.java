@@ -109,6 +109,8 @@ public class JwtProofValidator implements ProofValidator {
             log.error("exception occurred while validating JWT ",exception);
         }
         log.error("invalid proof so returning false");
+        log.info("cNonce "+cNonce);
+        log.info("clientId "+clientId);
         return false;
     }
 

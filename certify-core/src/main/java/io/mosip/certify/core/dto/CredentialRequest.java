@@ -6,6 +6,7 @@
 package io.mosip.certify.core.dto;
 
 import io.mosip.certify.core.constants.ErrorConstants;
+import io.mosip.certify.core.validators.ValidCredentialRequest;
 import jakarta.validation.Valid;
 import lombok.Data;
 
@@ -15,6 +16,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.Map;
 
 @Data
+@ValidCredentialRequest
 public class CredentialRequest {
 
     /**
@@ -43,14 +45,13 @@ public class CredentialRequest {
      */
     //TODO: Add validator correctly
     @Valid
+
 //    @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private CredentialDefinition credential_definition;
 
     @Valid
-//    @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private String doctype;
 
     @Valid
-//    @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private Map<String,Object> claims;
 }

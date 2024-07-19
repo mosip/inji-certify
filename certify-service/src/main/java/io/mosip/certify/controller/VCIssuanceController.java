@@ -8,11 +8,13 @@ package io.mosip.certify.controller;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.VCIssuanceService;
+import io.mosip.certify.core.validators.ValidCredentialRequest;
 import io.mosip.certify.exception.InvalidNonceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -74,7 +76,7 @@ public class VCIssuanceController {
      * @throws CertifyException
      */
     @PostMapping(value = "/vd11/credential",produces = "application/json")
-    public CredentialResponse getCredentialV11Draft(@Valid @RequestBody CredentialRequest credentialRequest) throws CertifyException {
+    public CredentialResponse getCredentialV11Draft(@Validated @RequestBody CredentialRequest credentialRequest) throws CertifyException {
         CredentialResponse credentialResponse = vcIssuanceService.getCredential(credentialRequest);
         credentialResponse.setFormat(credentialRequest.getFormat());
         return credentialResponse;
