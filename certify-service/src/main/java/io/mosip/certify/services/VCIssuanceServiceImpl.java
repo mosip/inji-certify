@@ -5,6 +5,9 @@
  */
 package io.mosip.certify.services;
 
+import ch.qos.logback.core.net.SyslogOutputStream;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.jsonld.JsonLDObject;
 
 import io.mosip.certify.api.dto.VCRequestDto;
@@ -30,24 +33,30 @@ import io.mosip.certify.core.util.SecurityHelperService;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Service
 public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     private static final String TYPE_VERIFIABLE_CREDENTIAL = "VerifiableCredential";
+
+    @Value("${mosip.certify.well-known.file.uri}")
+    private String metadataURL;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     @Value("#{${mosip.certify.key-values}}")
     private LinkedHashMap<String, LinkedHashMap<String, Object>> issuerMetadata;
@@ -72,6 +81,19 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     @Autowired
     private AuditPlugin auditWrapper;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @PostConstruct
+    public void postConstructMetadata() {
+        String issuer = restTemplate.getForObject(metadataURL, String.class);
+        try {
+            issuerMetadata = objectMapper.readValue(issuer, LinkedHashMap.class);
+        } catch (JsonProcessingException e) {
+            throw new CertifyException(ErrorConstants.MISSING_WELLKNOWN_CONFIG);
+        }
+    }
 
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
