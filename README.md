@@ -174,7 +174,8 @@ Execute installation script
     * Credential schema version  `mosip.certify.vciplugin.sunbird-rc.credential-type.{credential type}.cred-schema-version`
     * Change these properties for different credential types supported `mosip.certify.key-values` based on OID4VCI version.
 
-## Note
+## Web interface for VC Issuance (optional)
+
  - To test the Setup from UI we can configure a Client and Issuer in InjiWeb.
    * Setup [InjiWeb](https://github.com/mosip/inji-web/blob/qa-develop/README.md) and [Mimoto](https://github.com/mosip/mimoto/blob/release-0.13.x/docker-compose/README.md) in local.
    * Add an issuer to mimoto issuer config with `authorization_endpoint`, `credential_endpoint` and `.well-known` properties pointing to eSignet and certify installed above.
