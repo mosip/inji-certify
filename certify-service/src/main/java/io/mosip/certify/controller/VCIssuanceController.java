@@ -34,25 +34,27 @@ public class VCIssuanceController {
 
     /**
      * 1. The credential Endpoint MUST accept Access Tokens
+     * @param msoMdocVcCredentialRequest VC credential request specific to mso_mdoc type
+     * @return Credential Response w.r.t requested format
+     * @throws CertifyException
+     */
+    @PostMapping(value = "/mso_mdoc/credential",produces = "application/json")
+    public CredentialResponse getMsoMdocCredential(@Valid @RequestBody MsoMdocVcCredentialRequest msoMdocVcCredentialRequest) throws CertifyException {
+        return vcIssuanceService.getMsoMdocCredential(msoMdocVcCredentialRequest);
+    }
+
+
+    /**
+     * 1. The credential Endpoint MUST accept Access Tokens
      * @param credentialRequest VC credential request
      * @return Credential Response w.r.t requested format
      * @throws CertifyException
      */
-    //TODO: Check if this is possible
     @PostMapping(value = "/credential",produces = "application/json")
     public CredentialResponse getCredential(@Valid @RequestBody CredentialRequest credentialRequest) throws CertifyException {
         return vcIssuanceService.getCredential(credentialRequest);
     }
-/*
-    @PostMapping(value = "/credential",produces = "application/json")
-    public CredentialResponse getCredential(@Valid @RequestBody LdpVcCredentialRequest ldpVcCredentialRequest) throws CertifyException {
-        return vcIssuanceService.getCredential(ldpVcCredentialRequest);
-    }
-    @PostMapping(value = "/credential",produces = "application/json")
-    public CredentialResponse getCredential(@Valid @RequestBody MsoMdocVcCredentialRequest msoMdocVcCredentialRequest) throws CertifyException {
-        return vcIssuanceService.getCredential(msoMdocVcCredentialRequest);
-    }
-*/
+
 
 
     /**
