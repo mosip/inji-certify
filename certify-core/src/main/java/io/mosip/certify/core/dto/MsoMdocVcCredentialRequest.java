@@ -14,6 +14,7 @@ import lombok.Data;
 import java.util.Map;
 
 @Data
+@Valid
 public class MsoMdocVcCredentialRequest  {
 
     /**
@@ -32,10 +33,13 @@ public class MsoMdocVcCredentialRequest  {
 
     @Valid
     @NotNull(message = ErrorConstants.INVALID_REQUEST)
-    private String doc_type;
+    private String doctype;
 
+    /**
+     * REQUIRED
+     * claims that is to be issued
+     */
     @Valid
     @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private Map<String,Object> claims;
-
 }
