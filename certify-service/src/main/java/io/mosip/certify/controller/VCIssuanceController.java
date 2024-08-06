@@ -8,7 +8,6 @@ package io.mosip.certify.controller;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.VCIssuanceService;
-import io.mosip.certify.core.validators.ValidCredentialRequest;
 import io.mosip.certify.exception.InvalidNonceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

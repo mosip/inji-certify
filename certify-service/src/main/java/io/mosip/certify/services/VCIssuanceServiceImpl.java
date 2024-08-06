@@ -14,6 +14,7 @@ import io.mosip.certify.api.spi.AuditPlugin;
 import io.mosip.certify.api.spi.VCIssuancePlugin;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
+import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
@@ -23,6 +24,7 @@ import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.core.util.AuditHelper;
 import io.mosip.certify.core.util.SecurityHelperService;
+import io.mosip.certify.core.validators.CredentialRequestValidatorFactory;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
@@ -86,6 +88,10 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
+        boolean isValidCredentialRequest = new CredentialRequestValidatorFactory().isValid(credentialRequest);
+        if(!isValidCredentialRequest) {
+            throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
+        }
         System.out.println("getCredential parsedAccessToken "+parsedAccessToken);
 
         if(!parsedAccessToken.isActive())
@@ -93,7 +99,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
         String scopeClaim = (String) parsedAccessToken.getClaims().getOrDefault("scope", "");
         CredentialMetadata credentialMetadata = null;
-        if(!credentialRequest.getFormat().equals("mso_mdoc")){
+        if(!credentialRequest.getFormat().equals(VCFormats.MSO_MDOC)){
             for(String scope : scopeClaim.split(Constants.SPACE)) {
                 Optional<CredentialMetadata> result = getScopeCredentialMapping(scope);
                 if(result.isPresent()) {
@@ -159,7 +165,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
                     vcResult = vcIssuancePlugin.getVerifiableCredential(vcRequestDto, holderId,
                             parsedAccessToken.getClaims());
                     break;
-                case "mso_mdoc" :
+                case VCFormats.MSO_MDOC :
                     vcRequestDto.setClaims(credentialRequest.getClaims());
                     vcRequestDto.setDoctype( credentialRequest.getDoctype());
                     vcResult = vcIssuancePlugin.getVerifiableCredential(vcRequestDto, holderId,
@@ -216,7 +222,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
             case "jwt_vc_json-ld":
             case "jwt_vc_json":
-            case "mso_mdoc" :
+            case VCFormats.MSO_MDOC :
                 CredentialResponse<String> jsonResponse = new CredentialResponse<>();
                 jsonResponse.setCredential((String)vcResult.getCredential());
                 return jsonResponse;
