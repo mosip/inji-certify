@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -30,18 +29,6 @@ public class VCIssuanceController {
 
     @Autowired
     MessageSource messageSource;
-
-    /**
-     * 1. The credential Endpoint MUST accept Access Tokens
-     * @param msoMdocVcCredentialRequest VC credential request specific to mso_mdoc type
-     * @return Credential Response w.r.t requested format
-     * @throws CertifyException
-     */
-    @PostMapping(value = "/mso_mdoc/credential",produces = "application/json")
-    public CredentialResponse getMsoMdocCredential(@Valid @RequestBody MsoMdocVcCredentialRequest msoMdocVcCredentialRequest) throws CertifyException {
-        return vcIssuanceService.getMsoMdocCredential(msoMdocVcCredentialRequest);
-    }
-
 
     /**
      * 1. The credential Endpoint MUST accept Access Tokens
@@ -77,7 +64,7 @@ public class VCIssuanceController {
      * @throws CertifyException
      */
     @PostMapping(value = "/vd11/credential",produces = "application/json")
-    public CredentialResponse getCredentialV11Draft(@Validated @RequestBody CredentialRequest credentialRequest) throws CertifyException {
+    public CredentialResponse getCredentialV11Draft(@Valid @RequestBody CredentialRequest credentialRequest) throws CertifyException {
         CredentialResponse credentialResponse = vcIssuanceService.getCredential(credentialRequest);
         credentialResponse.setFormat(credentialRequest.getFormat());
         return credentialResponse;

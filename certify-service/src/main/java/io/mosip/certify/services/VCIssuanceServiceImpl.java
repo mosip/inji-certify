@@ -72,21 +72,6 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
     private AuditPlugin auditWrapper;
 
     @Override
-    public CredentialResponse getMsoMdocCredential(MsoMdocVcCredentialRequest msoMdocVcCredentialRequest) {
-
-        CredentialMetadata credentialMetadata = null;
-
-        ProofValidator proofValidator = proofValidatorFactory.getProofValidator(msoMdocVcCredentialRequest.getProof().getProof_type());
-
-        VCResult<?> vcResult = getVerifiableCredential(msoMdocVcCredentialRequest, credentialMetadata,
-                proofValidator.getKeyMaterial(msoMdocVcCredentialRequest.getProof()));
-
-        auditWrapper.logAudit(Action.VC_ISSUANCE, ActionStatus.SUCCESS,
-                AuditHelper.buildAuditDto(parsedAccessToken.getAccessTokenHash(), "accessTokenHash"), null);
-        return getCredentialResponse(msoMdocVcCredentialRequest.getFormat(), vcResult);
-    }
-
-    @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
         boolean isValidCredentialRequest = new CredentialRequestValidatorFactory().isValid(credentialRequest);
         if(!isValidCredentialRequest) {
@@ -117,7 +102,6 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         ProofValidator proofValidator = proofValidatorFactory.getProofValidator(credentialRequest.getProof().getProof_type());
         if(!proofValidator.validate((String)parsedAccessToken.getClaims().get(Constants.CLIENT_ID), getValidClientNonce(),
                 credentialRequest.getProof())) {
-            log.error("error occured with client id. In access token "+parsedAccessToken.getClaims().get(Constants.CLIENT_ID));
             throw new CertifyException(ErrorConstants.INVALID_PROOF);
         }
 
@@ -174,32 +158,6 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
                 default:
                     throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
             }
-        } catch (VCIExchangeException e) {
-            throw new CertifyException(e.getErrorCode());
-        }
-
-        if(vcResult != null && vcResult.getCredential() != null)
-            return vcResult;
-
-        log.error("Failed to generate VC : {}", vcResult);
-        auditWrapper.logAudit(Action.VC_ISSUANCE, ActionStatus.ERROR,
-                AuditHelper.buildAuditDto(parsedAccessToken.getAccessTokenHash(), "accessTokenHash"), null);
-        throw new CertifyException(ErrorConstants.VC_ISSUANCE_FAILED);
-    }
-
-    private VCResult<?> getVerifiableCredential(MsoMdocVcCredentialRequest credentialRequest, CredentialMetadata credentialMetadata,
-                                                String holderId) {
-        parsedAccessToken.getClaims().put("accessTokenHash", parsedAccessToken.getAccessTokenHash());
-        VCRequestDto vcRequestDto = new VCRequestDto();
-        vcRequestDto.setFormat(credentialRequest.getFormat());
-
-
-        VCResult<?> vcResult = null;
-        vcRequestDto.setClaims(credentialRequest.getClaims());
-        vcRequestDto.setDoctype(credentialRequest.getDoctype());
-        try {
-            vcResult = vcIssuancePlugin.getVerifiableCredential(vcRequestDto, holderId,
-                    parsedAccessToken.getClaims());
         } catch (VCIExchangeException e) {
             throw new CertifyException(e.getErrorCode());
         }
