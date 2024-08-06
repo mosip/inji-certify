@@ -16,6 +16,9 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @SpringBootApplication(scanBasePackages = "io.mosip.certify,"+
         "io.mosip.kernel.crypto," +
         "io.mosip.kernel.keymanager.hsm," +
+        "io.mosip.kernel.cryptomanager," +
+        "io.mosip.kernel.keymanagerservice.validator,"+
+        "io.mosip.kernel.keymanager,"+
         "io.mosip.kernel.cryptomanager.util," +
         "io.mosip.kernel.keymanagerservice.helper," +
         "io.mosip.kernel.keymanagerservice.repository," +

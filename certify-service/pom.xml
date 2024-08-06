@@ -44,7 +44,7 @@
         <dependency>
             <groupId>io.mosip.kernel</groupId>
             <artifactId>kernel-keymanager-service</artifactId>
-            <version>1.2.1-java21-SNAPSHOT</version>
+            <version>${kernel.keymanager.version}</version>
             <classifier>lib</classifier>
             <exclusions>
                 <exclusion>

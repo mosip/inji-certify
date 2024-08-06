@@ -75,10 +75,14 @@ public class AppConfig implements ApplicationRunner {
         String objectType = "CSR";
         KeyPairGenerateRequestDto rootKeyRequest = new KeyPairGenerateRequestDto();
         rootKeyRequest.setApplicationId(Constants.ROOT_KEY);
+        // Set the reference id to empty string, as keymanager is expecting the same for initialization
+        rootKeyRequest.setReferenceId(org.apache.commons.lang3.StringUtils.EMPTY);
         keymanagerService.generateMasterKey(objectType, rootKeyRequest);
         log.info("===================== CERTIFY_SERVICE MASTER KEY CHECK ========================");
         KeyPairGenerateRequestDto masterKeyRequest = new KeyPairGenerateRequestDto();
         masterKeyRequest.setApplicationId(Constants.CERTIFY_SERVICE_APP_ID);
+        // Set the reference id to empty string, as keymanager is expecting the same for initialization
+        masterKeyRequest.setReferenceId(org.apache.commons.lang3.StringUtils.EMPTY);
         keymanagerService.generateMasterKey(objectType, masterKeyRequest);
 
         if(!StringUtils.isEmpty(cacheSecretKeyRefId)) {
@@ -93,6 +97,8 @@ public class AppConfig implements ApplicationRunner {
         log.info("===================== CERTIFY_PARTNER MASTER KEY CHECK ========================");
         KeyPairGenerateRequestDto partnerMasterKeyRequest = new KeyPairGenerateRequestDto();
         partnerMasterKeyRequest.setApplicationId(Constants.CERTIFY_PARTNER_APP_ID);
+        // Set the reference id to empty string, as keymanager is expecting the same for initialization
+        partnerMasterKeyRequest.setReferenceId(org.apache.commons.lang3.StringUtils.EMPTY);
         keymanagerService.generateMasterKey(objectType, partnerMasterKeyRequest);
         log.info("===================== CERTIFY KEY SETUP COMPLETED ========================");
     }
