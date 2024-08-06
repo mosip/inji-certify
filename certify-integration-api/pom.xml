@@ -21,11 +21,6 @@
             <artifactId>jsonld-common-java</artifactId>
             <version>${jsonld.common.java.version}</version>
         </dependency>
-      <!--  <dependency>
-            <groupId>io.mosip.certify</groupId>
-            <artifactId>mock-certify-plugin</artifactId>
-            <version>0.2.3-SNAPSHOT</version>
-        </dependency>-->
     </dependencies>
 
 
