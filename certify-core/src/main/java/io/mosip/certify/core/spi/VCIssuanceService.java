@@ -7,14 +7,10 @@ package io.mosip.certify.core.spi;
 
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
-import io.mosip.certify.core.dto.MsoMdocVcCredentialRequest;
 
 import java.util.Map;
 
 public interface VCIssuanceService {
-
-    <T> CredentialResponse<T> getMsoMdocCredential(MsoMdocVcCredentialRequest msoMdocVcCredentialRequest);
-
     /**
      *
      * @param credentialRequest
