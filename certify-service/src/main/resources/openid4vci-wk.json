@@ -1,5 +1,5 @@
 {
-    "v11" : {
+    "vd11" : {
         "credential_issuer": "${mosipbox.public.url}",   
         "authorization_server": "http://esignet:8088/", 
         "credential_endpoint": "${mosipbox.public.url}${server.servlet.path}/issuance/vd11/credential", 
@@ -61,7 +61,7 @@
                     "order" : ["fullName","policyName","policyExpiresOn","policyIssuedOn","policyNumber","mobile","dob","gender","benefits","email"]
         }]
     },
-    "v12" : {
+    "vd12" : {
         "credential_issuer": "${mosipbox.public.url}",   
         "authorization_servers": ["http://esignet:8088/"],
         "credential_endpoint": "${mosipbox.public.url}${server.servlet.path}/issuance/vd12/credential", 
