@@ -56,13 +56,12 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     private static final String TYPE_VERIFIABLE_CREDENTIAL = "VerifiableCredential";
 
-    @Value("${mosip.certify.well-known.file.uri}")
-    private String metadataURL;
+    @Value("${mosip.certify.issuer-metadata.config-url}")
+    private String issuerMetadataConfigURL;
 
     @Autowired
     private RestTemplate restTemplate;
 
-    @Value("#{${mosip.certify.key-values}}")
     private LinkedHashMap<String, LinkedHashMap<String, Object>> issuerMetadata;
 
     @Value("${mosip.certify.cnonce-expire-seconds:300}")
@@ -91,9 +90,9 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     @PostConstruct
     public void postConstructMetadata() {
-        String issuer = restTemplate.getForObject(metadataURL, String.class);
+        String issuerMetadataString = restTemplate.getForObject(issuerMetadataConfigURL, String.class);
         try {
-            issuerMetadata = objectMapper.readValue(issuer, LinkedHashMap.class);
+            issuerMetadata = objectMapper.readValue(issuerMetadataString, LinkedHashMap.class);
         } catch (JsonProcessingException e) {
             throw new CertifyException(ErrorConstants.MISSING_WELLKNOWN_CONFIG);
         }
