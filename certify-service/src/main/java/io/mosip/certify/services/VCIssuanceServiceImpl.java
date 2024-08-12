@@ -77,7 +77,6 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         if(!isValidCredentialRequest) {
             throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
         }
-        System.out.println("getCredential parsedAccessToken "+parsedAccessToken);
 
         if(!parsedAccessToken.isActive())
             throw new NotAuthenticatedException();
