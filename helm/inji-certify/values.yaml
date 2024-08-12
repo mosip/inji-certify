@@ -246,8 +246,9 @@ extraEnvVars: []
 ##
 extraEnvVarsCM:
   - global
-  - config-server-share
-  - artifactory-share
+  - inji-config-server-share
+  - artifactory-inji-certify-share
+  - softhsm-certitfy-share
 
 ## Secret with extra environment variables
 ##
@@ -289,9 +290,6 @@ initContainers:
     env:
       - name: ENABLE_INSECURE
         value: "true"
-    envFrom:
-      - configMapRef:
-          name: global
     image: docker.io/openjdk:11-jre
     imagePullPolicy: Always
     name: cacerts
