@@ -83,19 +83,17 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
         String scopeClaim = (String) parsedAccessToken.getClaims().getOrDefault("scope", "");
         CredentialMetadata credentialMetadata = null;
-        if(!credentialRequest.getFormat().equals(VCFormats.MSO_MDOC)){
-            for(String scope : scopeClaim.split(Constants.SPACE)) {
-                Optional<CredentialMetadata> result = getScopeCredentialMapping(scope);
-                if(result.isPresent()) {
-                    credentialMetadata = result.get(); //considering only first credential scope
-                    break;
-                }
+        for(String scope : scopeClaim.split(Constants.SPACE)) {
+            Optional<CredentialMetadata> result = getScopeCredentialMapping(scope, credentialRequest.getFormat());
+            if(result.isPresent()) {
+                credentialMetadata = result.get(); //considering only first credential scope
+                break;
             }
+        }
 
-            if(credentialMetadata == null) {
-                log.error("No credential mapping found for the provided scope {}", scopeClaim);
-                throw new CertifyException(ErrorConstants.INVALID_SCOPE);
-            }
+        if(credentialMetadata == null) {
+            log.error("No credential mapping found for the provided scope {}", scopeClaim);
+            throw new CertifyException(ErrorConstants.INVALID_SCOPE);
         }
 
         ProofValidator proofValidator = proofValidatorFactory.getProofValidator(credentialRequest.getProof().getProof_type());
@@ -187,7 +185,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
     }
 
-    private Optional<CredentialMetadata>  getScopeCredentialMapping(String scope) {
+    private Optional<CredentialMetadata>  getScopeCredentialMapping(String scope, String format) {
         Map<String, Object> vciMetadata = getCredentialIssuerMetadata("latest");
         LinkedHashMap<String, Object> supportedCredentials = (LinkedHashMap<String, Object>) vciMetadata.get("credential_configurations_supported");
         Optional<Map.Entry<String, Object>> result = supportedCredentials.entrySet().stream()
@@ -199,8 +197,10 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
             credentialMetadata.setFormat((String) metadata.get("format"));
             credentialMetadata.setScope((String) metadata.get("scope"));
             credentialMetadata.setId(result.get().getKey());
-            LinkedHashMap<String, Object> credentialDefinition = (LinkedHashMap<String, Object>) metadata.get("credential_definition");
-            credentialMetadata.setTypes((List<String>) credentialDefinition.get("type"));
+            if(format.equals(VCFormats.LDP_VC)){
+                LinkedHashMap<String, Object> credentialDefinition = (LinkedHashMap<String, Object>) metadata.get("credential_definition");
+                credentialMetadata.setTypes((List<String>) credentialDefinition.get("type"));
+            }
             return Optional.of(credentialMetadata);
         }
         return Optional.empty();
