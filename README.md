@@ -3,6 +3,11 @@
 INJI Certify enables an issuer to connect with an existing Credential Registry to issue verifiable credentials.
 Issuer can configure their respective credential schema for various types of certificates they wish to issue. Certificates are generated in JSON-LD as per W3C VC v1.1.
 
+
+# API docs
+
+- Link to [Stoplight](https://mosip.stoplight.io/docs/inji-certify/25f435617408e-inji-certify)
+
 # Requirements to run it locally (without docker)
 
 - Java SE 21
@@ -36,16 +41,18 @@ The following steps will help you to setup Sunbird RC and Esignet services using
 
 ### Steps to setup Mock credential use case
 
-1. Clone the repository and navigate to its directory:
-   NOTE(Apple Silicon Mac users): need to run the containers in amd64 mode before running the script, `export DOCKER_DEFAULT_PLATFORM=linux/amd64`
-   NOTE(windows users only): need to run the script in `git bash` shell
+1. Clone this repository and navigate to its directory:
+
+   NOTE(Apple Silicon Mac users): need to run the containers in linux/amd64 mode; prior to running the script run, `export DOCKER_DEFAULT_PLATFORM=linux/amd64`
+
+   NOTE(windows users only): need to run the commands only in `git bash` shell
 
     ```bash
-    cd inji-certify/docker-compose/docker-compose-certify
+    cd inji-certify/docker-compose
     ```
 
 2. Change the variable `active_profile_env` in [esignet](docker-compose/docker-compose-certify/docker-compose.yml#L80) and [certify](docker-compose/docker-compose-certify/docker-compose.yml#L104) to `active_profile_env=default,mock-identity`
-3. Esignet and Certify takes the required plugin from artifactory server by default, in case there is a custom use case where plugin is to be added manually follow the below steps:
+3. Esignet and Certify takes the required plugin from artifactory server by default, in case there is a custom use case where plugin is to be added manually should a need arise for trying out their own plugins
     * Create a folder with name loader_path [here](docker-compose/docker-compose-certify).
     * Add the jar file of Digital Credential Stack(DCS) plugin implementations for eSignet and certify:
       * For eSignet:
@@ -54,9 +61,9 @@ The following steps will help you to setup Sunbird RC and Esignet services using
         *  JAR file for mock identity can be downloaded [here](https://repo1.maven.org/maven2/io/mosip/esignet/mock/mock-esignet-integration-impl/0.9.2/mock-esignet-integration-impl-0.9.2.jar)
       * For certify:
         * In the [docker compose file](docker-compose/docker-compose-certify/docker-compose.yml) uncomment the [enable_certify_artifactory](docker-compose/docker-compose-certify/docker-compose.yml#L107) and [volume](docker-compose/docker-compose-certify/docker-compose.yml#L114)
-        * create a folder with name certify inside loader_path folder created in the above step and add the jar file inside the folder. 
+        * create a folder with name certify inside loader_path folder created in the above step and add the jar file inside the folder.
         * The JAR can be built [from source](https://github.com/mosip/digital-credential-plugins/tree/develop/mock-certify-plugin).
-4. Execute the installation script located inside the [docker-compose](./docker-compose/) directory
+4. Execute the installation script located inside the [docker-compose](./docker-compose/) directory to install the Registry & Credentialling Service.
 
     ```bash
     ./install.sh
@@ -127,7 +134,7 @@ Execute installation script
           * create a folder with name certify inside loader_path folder created in the above step and add the jar file inside the folder.
           * The JAR can be built [from source](https://github.com/mosip/digital-credential-plugins/tree/develop/sunbird-rc-certify-integration-impl).
 8. Modify the properties of the Esignet and Certify services located in the [esignet-sunbird-insurance.properties](docker-compose/docker-compose-certify/config/esignet-sunbird-insurance.properties) and [certify-sunbird-insurance.properties](docker-compose/docker-compose-certify/config/certify-sunbird-insurance.properties) files respectively.
-   - Include Issuer ID and credential schema ID for the following properties: 
+   - Include Issuer ID and credential schema ID for the following properties:
      - esignet-default-properties:
        - `mosip.esignet.vciplugin.sunbird-rc.credential-type.{credential type}.static-value-map.issuerId`.
        - `mosip.esignet.vciplugin.sunbird-rc.credential-type.{credential-type}.cred-schema-id`.
@@ -191,6 +198,7 @@ Execute installation script
 
 - `invalid_proof` error while downloading credentials --> check the `audUrl` value, it should be the hostname of the injicertify instance
 - `invalid_assertion` at the token endpoint of eSignet --> check the `aud` env value
+- while using Postman do check if an Environment is set for the pre & post request scripts to be able to carry forward & override the variables; and set the correct Hostnames and other entities correctly via the Variables section for a Postman collection
 
 ## Helm Deployments
 
