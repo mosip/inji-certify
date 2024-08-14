@@ -1,0 +1,971 @@
+openapi: 3.0.1
+info:
+  title: inji certify
+  description: inji certify
+  license:
+    name: Mosip
+    url: 'https://docs.mosip.io/platform/license'
+  version: '1.0'
+servers:
+  - url: 'http://localhost:8090/v1/certify'
+    description: for swagger
+paths:
+  /issuance/.well-known/openid-credential-issuer:
+    get:
+      operationId: getMetadata
+      parameters:
+        - name: version
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - vd11
+              - vd12
+              - latest
+            default: latest
+      description: ''
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  property1: object
+                  property2: object
+              x-examples:
+                Example 1:
+                  credential_issuer: 'http://localhost:8090'
+                  credential_endpoint: 'http://localhost:8090/v1/certify/issuance/credential?version=vd11'
+                  authorization_servers:
+                    - 'http://localhost:8080'
+                  display:
+                    - name: Insurance
+                      locale: en
+                  credential_configurations_supported:
+                    InsuranceCredential:
+                      format: ldp_vc
+                      scope: sunbird_rc_insurance_vc_ldp
+                      cryptographic_binding_methods_supported:
+                        - 'did:jwk'
+                      credential_signing_alg_values_supported:
+                        - Ed25519Signature2020
+                      proof_types_supported:
+                        type: object
+                        properties:
+                          proof_signing_alg_values_supported:
+                            type: array
+                            examples:
+                              - RS256
+                              - PS256
+                      credential_definition:
+                        type:
+                          - VerifiableCredential
+                          - InsuranceCredential
+                        credentialSubject:
+                          fullName:
+                            display:
+                              - name: Name
+                                locale: en
+                          mobile:
+                            display:
+                              - name: Phone Number
+                                locale: en
+                          dob:
+                            display:
+                              - name: Date of Birth
+                                locale: en
+                          gender:
+                            display:
+                              - name: Gender
+                                locale: en
+                          benefits:
+                            display:
+                              - name: Benefits
+                                locale: en
+                          email:
+                            display:
+                              - name: Email Id
+                                locale: en
+                          policyIssuedOn:
+                            display:
+                              - name: Policy Issued On
+                                locale: en
+                          policyExpiresOn:
+                            display:
+                              - name: Policy Expires On
+                                locale: en
+                          policyName:
+                            display:
+                              - name: Policy Name
+                                locale: en
+                          policyNumber:
+                            display:
+                              - name: Policy Number
+                                locale: en
+                      display:
+                        - name: Sunbird RC Insurance Verifiable Credential
+                          locale: en
+                          logo:
+                            url: 'https://sunbird.org/images/sunbird-logo-new.png'
+                            alt_text: a square logo of a Sunbird
+                          background_color: '#FDFAF9'
+                          text_color: '#7C4616'
+                      order:
+                        - fullName
+                        - policyName
+                        - policyExpiresOn
+                        - policyIssuedOn
+                        - policyNumber
+                        - mobile
+                        - dob
+                        - gender
+                        - benefits
+                        - email
+                    LifeInsuranceCredential:
+                      format: ldp_vc
+                      scope: life_insurance_vc_ldp
+                      cryptographic_binding_methods_supported:
+                        - 'did:jwk'
+                      cryptographic_suites_supported:
+                        - Ed25519Signature2020
+                      proof_types_supported:
+                        - jwt
+                      credential_definition:
+                        type:
+                          - VerifiableCredential
+                        credentialSubject:
+                          fullName:
+                            display:
+                              - name: Name
+                                locale: en
+                          mobile:
+                            display:
+                              - name: Phone Number
+                                locale: en
+                          dob:
+                            display:
+                              - name: Date of Birth
+                                locale: en
+                          gender:
+                            display:
+                              - name: Gender
+                                locale: en
+                          benefits:
+                            display:
+                              - name: Benefits
+                                locale: en
+                          email:
+                            display:
+                              - name: Email Id
+                                locale: en
+                          policyIssuedOn:
+                            display:
+                              - name: Policy Issued On
+                                locale: en
+                          policyExpiresOn:
+                            display:
+                              - name: Policy Expires On
+                                locale: en
+                          policyName:
+                            display:
+                              - name: Policy Name
+                                locale: en
+                          policyNumber:
+                            display:
+                              - name: Policy Number
+                                locale: en
+                      display:
+                        - name: Life Insurance Verifiable Credential
+                          locale: en
+                          logo:
+                            url: 'https://sunbird.org/images/sunbird-logo-new.png'
+                            alt_text: a square logo of a Sunbird
+                          background_color: '#FDFAF9'
+                          text_color: '#7C4616'
+                      order:
+                        - fullName
+                        - policyName
+                        - policyExpiresOn
+                        - policyIssuedOn
+                        - policyNumber
+                        - mobile
+                        - dob
+                        - gender
+                        - benefits
+                        - email
+                Example 2:
+                  credential_issuer: 'http://localhost:8090'
+                  credential_endpoint: 'http://localhost:8090/v1/certify/issuance/credential'
+                  display:
+                    - name: Insurance
+                      locale: en
+                  credentials_supported:
+                    InsuranceCredential:
+                      format: ldp_vc
+                      scope: sunbird_rc_insurance_vc_ldp
+                      cryptographic_binding_methods_supported:
+                        - 'did:jwk'
+                      cryptographic_suites_supported:
+                        - Ed25519Signature2020
+                      proof_types_supported:
+                        - jwt
+                      credential_definition:
+                        type:
+                          - VerifiableCredential
+                          - InsuranceCredential
+                        credentialSubject:
+                          fullName:
+                            display:
+                              - name: Name
+                                locale: en
+                          mobile:
+                            display:
+                              - name: Phone Number
+                                locale: en
+                          dob:
+                            display:
+                              - name: Date of Birth
+                                locale: en
+                          gender:
+                            display:
+                              - name: Gender
+                                locale: en
+                          benefits:
+                            display:
+                              - name: Benefits
+                                locale: en
+                          email:
+                            display:
+                              - name: Email Id
+                                locale: en
+                          policyIssuedOn:
+                            display:
+                              - name: Policy Issued On
+                                locale: en
+                          policyExpiresOn:
+                            display:
+                              - name: Policy Expires On
+                                locale: en
+                          policyName:
+                            display:
+                              - name: Policy Name
+                                locale: en
+                          policyNumber:
+                            display:
+                              - name: Policy Number
+                                locale: en
+                      display:
+                        - name: Sunbird RC Insurance Verifiable Credential
+                          locale: en
+                          logo:
+                            url: 'https://sunbird.org/images/sunbird-logo-new.png'
+                            alt_text: a square logo of a Sunbird
+                          background_color: '#FDFAF9'
+                          text_color: '#7C4616'
+                      order:
+                        - fullName
+                        - policyName
+                        - policyExpiresOn
+                        - policyIssuedOn
+                        - policyNumber
+                        - mobile
+                        - dob
+                        - gender
+                        - benefits
+                        - email
+                    LifeInsuranceCredential:
+                      format: ldp_vc
+                      scope: life_insurance_vc_ldp
+                      cryptographic_binding_methods_supported:
+                        - 'did:jwk'
+                      cryptographic_suites_supported:
+                        - Ed25519Signature2020
+                      proof_types_supported:
+                        - jwt
+                      credential_definition:
+                        type:
+                          - VerifiableCredential
+                        credentialSubject:
+                          fullName:
+                            display:
+                              - name: Name
+                                locale: en
+                          mobile:
+                            display:
+                              - name: Phone Number
+                                locale: en
+                          dob:
+                            display:
+                              - name: Date of Birth
+                                locale: en
+                          gender:
+                            display:
+                              - name: Gender
+                                locale: en
+                          benefits:
+                            display:
+                              - name: Benefits
+                                locale: en
+                          email:
+                            display:
+                              - name: Email Id
+                                locale: en
+                          policyIssuedOn:
+                            display:
+                              - name: Policy Issued On
+                                locale: en
+                          policyExpiresOn:
+                            display:
+                              - name: Policy Expires On
+                                locale: en
+                          policyName:
+                            display:
+                              - name: Policy Name
+                                locale: en
+                          policyNumber:
+                            display:
+                              - name: Policy Number
+                                locale: en
+                      display:
+                        - name: Life Insurance Verifiable Credential
+                          locale: en
+                          logo:
+                            url: 'https://sunbird.org/images/sunbird-logo-new.png'
+                            alt_text: a square logo of a Sunbird
+                          background_color: '#FDFAF9'
+                          text_color: '#7C4616'
+                      order:
+                        - fullName
+                        - policyName
+                        - policyExpiresOn
+                        - policyIssuedOn
+                        - policyNumber
+                        - mobile
+                        - dob
+                        - gender
+                        - benefits
+                        - email
+              examples:
+                Success response:
+                  value:
+                    credential_issuer: 'http://localhost:8090'
+                    credential_endpoint: 'http://localhost:8090/v1/certify/issuance/credential'
+                    display:
+                      - name: Insurance
+                        locale: en
+                    credentials_supported:
+                      InsuranceCredential:
+                        format: ldp_vc
+                        scope: sunbird_rc_insurance_vc_ldp
+                        cryptographic_binding_methods_supported:
+                          - 'did:jwk'
+                        cryptographic_suites_supported:
+                          - Ed25519Signature2020
+                        proof_types_supported:
+                          - jwt
+                        credential_definition:
+                          type:
+                            - VerifiableCredential
+                            - InsuranceCredential
+                          credentialSubject:
+                            fullName:
+                              display:
+                                - name: Name
+                                  locale: en
+                            mobile:
+                              display:
+                                - name: Phone Number
+                                  locale: en
+                            dob:
+                              display:
+                                - name: Date of Birth
+                                  locale: en
+                            gender:
+                              display:
+                                - name: Gender
+                                  locale: en
+                            benefits:
+                              display:
+                                - name: Benefits
+                                  locale: en
+                            email:
+                              display:
+                                - name: Email Id
+                                  locale: en
+                            policyIssuedOn:
+                              display:
+                                - name: Policy Issued On
+                                  locale: en
+                            policyExpiresOn:
+                              display:
+                                - name: Policy Expires On
+                                  locale: en
+                            policyName:
+                              display:
+                                - name: Policy Name
+                                  locale: en
+                            policyNumber:
+                              display:
+                                - name: Policy Number
+                                  locale: en
+                        display:
+                          - name: Sunbird RC Insurance Verifiable Credential
+                            locale: en
+                            logo:
+                              url: 'https://sunbird.org/images/sunbird-logo-new.png'
+                              alt_text: a square logo of a Sunbird
+                            background_color: '#FDFAF9'
+                            text_color: '#7C4616'
+                        order:
+                          - fullName
+                          - policyName
+                          - policyExpiresOn
+                          - policyIssuedOn
+                          - policyNumber
+                          - mobile
+                          - dob
+                          - gender
+                          - benefits
+                          - email
+                      LifeInsuranceCredential:
+                        format: ldp_vc
+                        scope: life_insurance_vc_ldp
+                        cryptographic_binding_methods_supported:
+                          - 'did:jwk'
+                        cryptographic_suites_supported:
+                          - Ed25519Signature2020
+                        proof_types_supported:
+                          - jwt
+                        credential_definition:
+                          type:
+                            - VerifiableCredential
+                          credentialSubject:
+                            fullName:
+                              display:
+                                - name: Name
+                                  locale: en
+                            mobile:
+                              display:
+                                - name: Phone Number
+                                  locale: en
+                            dob:
+                              display:
+                                - name: Date of Birth
+                                  locale: en
+                            gender:
+                              display:
+                                - name: Gender
+                                  locale: en
+                            benefits:
+                              display:
+                                - name: Benefits
+                                  locale: en
+                            email:
+                              display:
+                                - name: Email Id
+                                  locale: en
+                            policyIssuedOn:
+                              display:
+                                - name: Policy Issued On
+                                  locale: en
+                            policyExpiresOn:
+                              display:
+                                - name: Policy Expires On
+                                  locale: en
+                            policyName:
+                              display:
+                                - name: Policy Name
+                                  locale: en
+                            policyNumber:
+                              display:
+                                - name: Policy Number
+                                  locale: en
+                        display:
+                          - name: Life Insurance Verifiable Credential
+                            locale: en
+                            logo:
+                              url: 'https://sunbird.org/images/sunbird-logo-new.png'
+                              alt_text: a square logo of a Sunbird
+                            background_color: '#FDFAF9'
+                            text_color: '#7C4616'
+                        order:
+                          - fullName
+                          - policyName
+                          - policyExpiresOn
+                          - policyIssuedOn
+                          - policyNumber
+                          - mobile
+                          - dob
+                          - gender
+                          - benefits
+                          - email
+    parameters: []
+  /issuance/credential:
+    post:
+      summary: Credential Issuance endpoint
+      description: 'Once the access token is received via the token endpoint, Wallet should invoke this endpoint to get the verifiable credential.'
+      operationId: post-vci-credential
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                format:
+                  type: string
+                  enum:
+                    - ldp_vc
+                    - jwt_vc_json
+                    - jwt_vc_json-ld
+                  description: Format of the Credential to be issued.
+                proof:
+                  $ref: '#/components/schemas/CredentialProof'
+                credential_definition:
+                  $ref: '#/components/schemas/CredentialDefinition'
+                  description: |-
+                    JSON object containing (and isolating) the detailed description of the credential type.
+                         * This object MUST be processed using full JSON-LD processing.
+                         If it consists of the following sub claims:
+                         * @context: REQUIRED. JSON array
+              required:
+                - format
+                - proof
+                - credential_definition
+            examples:
+              Example 1:
+                value:
+                  format: ldp_vc
+                  credential_definition:
+                    type:
+                      - VerifiableCredential
+                      - SampleVerifiableCredential_ldp
+                    '@context':
+                      - 'https://www.w3.org/2018/credentials/v1'
+                  proof:
+                    proof_type: jwt
+                    jwt: eyJ0eXAiOiJvcGVuaWQ0dmNpLXByb29mK2p3dCIsImFsZyI6IlJTMjU2IiwiandrIjp7Imt0eSI6IlJTQSIsIm4iOiJtYzdzbWdHd0N6ZzZ5WENoM2ZYc3hTc2ROZlFzM3BTZGdZZUstdnpnYWZCQkNBTnZ2YWxqeUJ2YTlYZzA5YWhLMG9KV0hZY2p3Rm5QeU5uX0dkSjJValZPRlJDbllZNWZvejUxbmt0NUJod2l1V1IteWpZN2NZaXI5MjAySlI2RldaNExpamVVNm54WUVrbnFxZ1B6LXZmU0pSa2M5b2t6VEJ4LW9qb0FaOWJTaUJqMm9XNzVsWkhrMlBoU0NkTDNtQzUyaVRkUWpra2NFNHY0ZVpzWVBrZVROSmlmWE1sQ1J3Mlg0X1N6d2N3YkNNWUJqWlhRUFJ1OXdudEJqd0NUOGZTaDJjZVlCdUs4YlViQXBLelhDSGotUnAwZHMyMDdtbEFhcnRlRURhMS1qbW5ZYWxxS2lfQ2tzU1ZuNEQyMThXOWZHSElYcEJlSXBTWjlHc3hHdXciLCJlIjoiQVFBQiIsImtpZCI6IkY1R0hPai1STHF0S19TSUtabmx4ckpoTFN4MFAyVlZsNFVzTXpuT1ByNW8iLCJhbGciOiJSUzI1NiIsInVzZSI6InNpZyJ9fQ.eyJpYXQiOjE2OTg2NDY2NDMsIm5iZiI6MTY5ODY0NjY0MywiZXhwIjoxNjk4NjQ3MjQ4LCJqdGkiOiJPR0J3RjRCNGNsSWJzWUxGT3ZWM2IiLCJhdWQiOiJodHRwczovL2VzaWduZXQtbW9jay5jb2xsYWIubW9zaXAubmV0L3YxL2VzaWduZXQiLCJub25jZSI6IllXZUluR2MwdVljcHQ1TlZLcTVYIiwiaXNzIjoiODhWanQzNGM1VHd6MW9KIn0.MMVBHdIpvmRwBw4-MY6LaE4p-k5NwCRcwktKCK3MvNiJ5LNqx_Z4lJ23x359IxFtpMNbH0xnC0ajU-mYLJRJ7WsbKWemENmHp3e7nRDzDlDufu92vzh_dmHvxmcxQQKEEr_xH5c8vypUANsAbg8Ltas6eoe5jFoSrS-Oi4TNplw8aoS4cdH16ezEdb1RtluSKi5tajM9eS2reREj3sFXyVphxIxCUD6VbwuvByPPOWhSVf4bW_pCAoztiRJ9Fc_WXR7XLTIn3i46QczopaBIp8xPwEbBE_cl3Lo9etA0oLOxnRz6bzk5sa-ZtvVnsW4vOusy3mzSjVe10oHxWgw2CQ
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - credential
+                properties:
+                  credential:
+                    description: 'Contains issued Credential. MUST be present when acceptance_token is not returned. MAY be a JSON string or a JSON object, depending on the Credential format.'
+                    oneOf:
+                      - type: object
+                      - type: string
+              examples:
+                Example 1:
+                  value:
+                    credential:
+                      issuanceDate: '2023-10-30T06:17:28.025Z'
+                      credentialSubject:
+                        gender: Male
+                        name: John Doe
+                        id: 'did:jwk:eyJrdHkiOiJSU0EiLCJlIjoiQVFBQiIsInVzZSI6InNpZyIsImtpZCI6IkY1R0hPai1STHF0S19TSUtabmx4ckpoTFN4MFAyVlZsNFVzTXpuT1ByNW8iLCJhbGciOiJSUzI1NiIsIm4iOiJtYzdzbWdHd0N6ZzZ5WENoM2ZYc3hTc2ROZlFzM3BTZGdZZUstdnpnYWZCQkNBTnZ2YWxqeUJ2YTlYZzA5YWhLMG9KV0hZY2p3Rm5QeU5uX0dkSjJValZPRlJDbllZNWZvejUxbmt0NUJod2l1V1IteWpZN2NZaXI5MjAySlI2RldaNExpamVVNm54WUVrbnFxZ1B6LXZmU0pSa2M5b2t6VEJ4LW9qb0FaOWJTaUJqMm9XNzVsWkhrMlBoU0NkTDNtQzUyaVRkUWpra2NFNHY0ZVpzWVBrZVROSmlmWE1sQ1J3Mlg0X1N6d2N3YkNNWUJqWlhRUFJ1OXdudEJqd0NUOGZTaDJjZVlCdUs4YlViQXBLelhDSGotUnAwZHMyMDdtbEFhcnRlRURhMS1qbW5ZYWxxS2lfQ2tzU1ZuNEQyMThXOWZHSElYcEJlSXBTWjlHc3hHdXcifQ=='
+                        email: john.doe@mail.com
+                      id: 'urn:uuid:3978344f-8596-4c3a-a978-8fcaba3903c5'
+                      proof:
+                        type: RsaSignature2018
+                        created: '2023-10-30T06:17:28Z'
+                        proofPurpose: assertionMethod
+                        verificationMethod: 'https://esignet-mock.collab.mosip.net/v1/esignet/oauth/.well-known/jwks.json'
+                        jws: eyJ4NWMiOlsiTUlJRHZUQ0NBcVdnQXdJQkFnSUk1VHhveEYydjhRQXdEUVlKS29aSWh2Y05BUUVMQlFBd2R6RUxNQWtHQTFVRUJoTUNTVTR4Q3pBSkJnTlZCQWdNQWt0Qk1SSXdFQVlEVlFRSERBbENRVTVIUVV4UFVrVXhEVEFMQmdOVkJBb01CRWxKVkVJeEdqQVlCZ05WQkFzTUVVMVBVMGxRTFZSRlEwZ3RRMFZPVkVWU01Sd3dHZ1lEVlFRRERCTjNkM2N1Ylc5emFYQXVhVzhnS0ZKUFQxUXBNQjRYRFRJek1ETXlOVEV3TWpFeE1Wb1hEVEkyTURNeU5ERXdNakV4TVZvd2Z6RUxNQWtHQTFVRUJoTUNTVTR4Q3pBSkJnTlZCQWdNQWt0Qk1SSXdFQVlEVlFRSERBbENRVTVIUVV4UFVrVXhEVEFMQmdOVkJBb01CRWxKVkVJeEdqQVlCZ05WQkFzTUVVMVBVMGxRTFZSRlEwZ3RRMFZPVkVWU01TUXdJZ1lEVlFRRERCdDNkM2N1Ylc5emFYQXVhVzhnS0U5SlJFTmZVMFZTVmtsRFJTa3dnZ0VpTUEwR0NTcUdTSWIzRFFFQkFRVUFBNElCRHdBd2dnRUtBb0lCQVFDeGJpYUt3M082dlI0SHczaExDc3FiQ1czRkc4UEthQ0RabDZNTUlEblVlbCtJa1FDMmxscTgrWlRMcmE3S1ViT294UHVxVzhwNDFmdVRqSlNzK0x3aEpRV3J2S2htbDB5THRSVkJCOUVTR2l5NVFYaWNSODBxVWRScjN3eVhRZkJGTFFEN1lRb1l4MUZMTUxaR21IYmd2N3Rnc3hxY2k1NEFjTTZmb1BXaUd0Z2NZbjJRenRsbTRjZ3FuWVNmcThDc3dtZ3o5N052ckxDRXF3bFhRZkpGQVZlRFF2SXFxNk00dkNkcXFLaldtNjlRVjlCUXUrczdCYkpFbUtGRDVtRTRhdWFwWW4zbWZLeXJWaGFGUGpFUW5iMHA0V3dGR3YzYTROTEFPRXVqVkJlVjUzZjJmdUZqSUxzZnBMK3MzRERRYUlYbEJKa3p3dWdjdWZ5Z1MzRm5BZ01CQUFHalJUQkRNQklHQTFVZEV3RUIvd1FJTUFZQkFmOENBUUV3SFFZRFZSME9CQllFRkg4dXN2ME52ekZHaWx4Sko2dExBYkVLSUJMQk1BNEdBMVVkRHdFQi93UUVBd0lDaERBTkJna3Foa2lHOXcwQkFRc0ZBQU9DQVFFQWQ2ZVJmTzFZbHN2YXRMSktWZGVNcStzclhlYjNTblZJM0ZQSWlQa3d2STNsM1pmUVQ1ZzE0NWc2ajEzQisvOFZUNGFWZXBDZU5PbWNIczc3Y2g0OWxIUmg4anF3UXlqUFBsc1NmcW5Kd0JGUmRvNStkRnB5elZNeFdDUzBFRWJqb3RkZ2pvci9YaVVoRmFGMkhkZThyeHNnZWNmaUFZZS9nWnFZZjYzOFRxRi9RTnFCaTRhbitGQmNtT0FDalR6THE5Z01tSnJYa2h3V3V5dm5Sc0hKM2g2ZXd0b0RMN2gycm5QK2hBT1o3ckd1SEhDaVVXayt6eUcxdjdKT0NwSUJ2TEJyalpVbzNDRmxacEs3NERkbHBSVU1nK3JvcVdDNnFkTmZuemc5dFZBb1ZlVy9uUHAweit1QUtmb2w2NENlRUJmUmsrUXV2SmRyKzhCL1JaOHp4QT09Il0sIng1dCNTMjU2IjoiZkxnNTQ5dGFabmViUGZ6OTVlRzhyZXZuX2lSU2luMTFKZGxteFhOaUE5RSIsImtpZCI6IktPX21UcF9zVDB6bEZFVWRfblR0aGZvOXRFOVNfbUZCcno5MXBmN3lEUUEiLCJhbGciOiJSUzI1NiJ9..pZkf21YoT2mqzYlEJy9fkBartMTvEMMOUZPXw4-HIc6DeDUTqAMcRSkEfP1_ozvBE1ukxzqM2_IYpdQCVbYXEsCQLAXUmDQTfbdf8GImWBkRV7hXpCAJCN14A69trZCLvsW0jhIkIoSwPSszGk4MZ9rW7fBRpG9kbCF4nWajP5nRsPdC6tSckHWlHAWus0IhsYhSh85y2VYtBHTZ9g_NaB5S2pSp4MR_BBFdlpSfrgoepr7D9EY1hhU-b8vbjve9QnGSesqfPXUOKMwNA5UZ7tUYStWX8y9-19wwC3e_FjKhnKXMZrlAhCOLSL5O81r3ZWI3bpfOufHFZIZ7_gdvnQ
+                      type:
+                        - VerifiableCredential
+                        - Person
+                      '@context':
+                        - 'https://www.w3.org/2018/credentials/v1'
+                        - 'https://schema.org/'
+                      issuer: 'did:example:123456789'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    enum:
+                      - invalid_vc_format
+                      - invalid_proof
+                      - invalid_request
+                      - unknown_error
+                      - invalid_scope
+                      - proof_header_invalid_key
+                      - vc_issuance_failed
+                      - unsupported_credential_format
+                      - unsupported_credential_type
+                      - proof_invalid_nonce
+                      - not_implemented
+                  error_description:
+                    type: string
+                  c_nonce:
+                    type: string
+                    description: This will have the value only when the error is "proof_invalid_nonce".
+                  c_nonce_expires_in:
+                    type: integer
+                    description: This will have the value only when the error is "proof_invalid_nonce".
+                required:
+                  - error
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    const: invalid_token
+                  error_description:
+                    type: string
+                required:
+                  - error
+      security:
+        - Authorization-access_token: []
+  /issuance/vd12/credential:
+    post:
+      summary: Credential Issuance endpoint - Draft 12
+      description: 'Once the access token is received via the token endpoint, Wallet should invoke this endpoint to get the verifiable credential.'
+      operationId: post-vci-credential-v12
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                format:
+                  type: string
+                  enum:
+                    - ldp_vc
+                    - jwt_vc_json
+                    - jwt_vc_json-ld
+                  description: Format of the Credential to be issued.
+                proof:
+                  $ref: '#/components/schemas/CredentialProof'
+                credential_definition:
+                  $ref: '#/components/schemas/CredentialDefinition'
+                  description: |-
+                    JSON object containing (and isolating) the detailed description of the credential type.
+                         * This object MUST be processed using full JSON-LD processing.
+                         If it consists of the following sub claims:
+                         * @context: REQUIRED. JSON array
+              required:
+                - format
+                - proof
+                - credential_definition
+            examples:
+              Example 1:
+                value:
+                  format: ldp_vc
+                  credential_definition:
+                    type:
+                      - VerifiableCredential
+                      - SampleVerifiableCredential_ldp
+                    '@context':
+                      - 'https://www.w3.org/2018/credentials/v1'
+                  proof:
+                    proof_type: jwt
+                    jwt: eyJ0eXAiOiJvcGVuaWQ0dmNpLXByb29mK2p3dCIsImFsZyI6IlJTMjU2IiwiandrIjp7Imt0eSI6IlJTQSIsIm4iOiJtYzdzbWdHd0N6ZzZ5WENoM2ZYc3hTc2ROZlFzM3BTZGdZZUstdnpnYWZCQkNBTnZ2YWxqeUJ2YTlYZzA5YWhLMG9KV0hZY2p3Rm5QeU5uX0dkSjJValZPRlJDbllZNWZvejUxbmt0NUJod2l1V1IteWpZN2NZaXI5MjAySlI2RldaNExpamVVNm54WUVrbnFxZ1B6LXZmU0pSa2M5b2t6VEJ4LW9qb0FaOWJTaUJqMm9XNzVsWkhrMlBoU0NkTDNtQzUyaVRkUWpra2NFNHY0ZVpzWVBrZVROSmlmWE1sQ1J3Mlg0X1N6d2N3YkNNWUJqWlhRUFJ1OXdudEJqd0NUOGZTaDJjZVlCdUs4YlViQXBLelhDSGotUnAwZHMyMDdtbEFhcnRlRURhMS1qbW5ZYWxxS2lfQ2tzU1ZuNEQyMThXOWZHSElYcEJlSXBTWjlHc3hHdXciLCJlIjoiQVFBQiIsImtpZCI6IkY1R0hPai1STHF0S19TSUtabmx4ckpoTFN4MFAyVlZsNFVzTXpuT1ByNW8iLCJhbGciOiJSUzI1NiIsInVzZSI6InNpZyJ9fQ.eyJpYXQiOjE2OTg2NDY2NDMsIm5iZiI6MTY5ODY0NjY0MywiZXhwIjoxNjk4NjQ3MjQ4LCJqdGkiOiJPR0J3RjRCNGNsSWJzWUxGT3ZWM2IiLCJhdWQiOiJodHRwczovL2VzaWduZXQtbW9jay5jb2xsYWIubW9zaXAubmV0L3YxL2VzaWduZXQiLCJub25jZSI6IllXZUluR2MwdVljcHQ1TlZLcTVYIiwiaXNzIjoiODhWanQzNGM1VHd6MW9KIn0.MMVBHdIpvmRwBw4-MY6LaE4p-k5NwCRcwktKCK3MvNiJ5LNqx_Z4lJ23x359IxFtpMNbH0xnC0ajU-mYLJRJ7WsbKWemENmHp3e7nRDzDlDufu92vzh_dmHvxmcxQQKEEr_xH5c8vypUANsAbg8Ltas6eoe5jFoSrS-Oi4TNplw8aoS4cdH16ezEdb1RtluSKi5tajM9eS2reREj3sFXyVphxIxCUD6VbwuvByPPOWhSVf4bW_pCAoztiRJ9Fc_WXR7XLTIn3i46QczopaBIp8xPwEbBE_cl3Lo9etA0oLOxnRz6bzk5sa-ZtvVnsW4vOusy3mzSjVe10oHxWgw2CQ
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  format:
+                    type: string
+                    description: JSON string denoting the format of the issued Credential.
+                  credential:
+                    description: 'Contains issued Credential. MUST be present when acceptance_token is not returned. MAY be a JSON string or a JSON object, depending on the Credential format.'
+                    oneOf:
+                      - type: object
+                      - type: string
+                required:
+                  - format
+                  - credential
+              examples:
+                Example 1:
+                  value:
+                    format: ldp_vc
+                    credential:
+                      issuanceDate: '2023-10-30T06:17:28.025Z'
+                      credentialSubject:
+                        gender: Male
+                        name: John Doe
+                        id: 'did:jwk:eyJrdHkiOiJSU0EiLCJlIjoiQVFBQiIsInVzZSI6InNpZyIsImtpZCI6IkY1R0hPai1STHF0S19TSUtabmx4ckpoTFN4MFAyVlZsNFVzTXpuT1ByNW8iLCJhbGciOiJSUzI1NiIsIm4iOiJtYzdzbWdHd0N6ZzZ5WENoM2ZYc3hTc2ROZlFzM3BTZGdZZUstdnpnYWZCQkNBTnZ2YWxqeUJ2YTlYZzA5YWhLMG9KV0hZY2p3Rm5QeU5uX0dkSjJValZPRlJDbllZNWZvejUxbmt0NUJod2l1V1IteWpZN2NZaXI5MjAySlI2RldaNExpamVVNm54WUVrbnFxZ1B6LXZmU0pSa2M5b2t6VEJ4LW9qb0FaOWJTaUJqMm9XNzVsWkhrMlBoU0NkTDNtQzUyaVRkUWpra2NFNHY0ZVpzWVBrZVROSmlmWE1sQ1J3Mlg0X1N6d2N3YkNNWUJqWlhRUFJ1OXdudEJqd0NUOGZTaDJjZVlCdUs4YlViQXBLelhDSGotUnAwZHMyMDdtbEFhcnRlRURhMS1qbW5ZYWxxS2lfQ2tzU1ZuNEQyMThXOWZHSElYcEJlSXBTWjlHc3hHdXcifQ=='
+                        email: john.doe@mail.com
+                      id: 'urn:uuid:3978344f-8596-4c3a-a978-8fcaba3903c5'
+                      proof:
+                        type: RsaSignature2018
+                        created: '2023-10-30T06:17:28Z'
+                        proofPurpose: assertionMethod
+                        verificationMethod: 'https://esignet-mock.collab.mosip.net/v1/esignet/oauth/.well-known/jwks.json'
+                        jws: eyJ4NWMiOlsiTUlJRHZUQ0NBcVdnQXdJQkFnSUk1VHhveEYydjhRQXdEUVlKS29aSWh2Y05BUUVMQlFBd2R6RUxNQWtHQTFVRUJoTUNTVTR4Q3pBSkJnTlZCQWdNQWt0Qk1SSXdFQVlEVlFRSERBbENRVTVIUVV4UFVrVXhEVEFMQmdOVkJBb01CRWxKVkVJeEdqQVlCZ05WQkFzTUVVMVBVMGxRTFZSRlEwZ3RRMFZPVkVWU01Sd3dHZ1lEVlFRRERCTjNkM2N1Ylc5emFYQXVhVzhnS0ZKUFQxUXBNQjRYRFRJek1ETXlOVEV3TWpFeE1Wb1hEVEkyTURNeU5ERXdNakV4TVZvd2Z6RUxNQWtHQTFVRUJoTUNTVTR4Q3pBSkJnTlZCQWdNQWt0Qk1SSXdFQVlEVlFRSERBbENRVTVIUVV4UFVrVXhEVEFMQmdOVkJBb01CRWxKVkVJeEdqQVlCZ05WQkFzTUVVMVBVMGxRTFZSRlEwZ3RRMFZPVkVWU01TUXdJZ1lEVlFRRERCdDNkM2N1Ylc5emFYQXVhVzhnS0U5SlJFTmZVMFZTVmtsRFJTa3dnZ0VpTUEwR0NTcUdTSWIzRFFFQkFRVUFBNElCRHdBd2dnRUtBb0lCQVFDeGJpYUt3M082dlI0SHczaExDc3FiQ1czRkc4UEthQ0RabDZNTUlEblVlbCtJa1FDMmxscTgrWlRMcmE3S1ViT294UHVxVzhwNDFmdVRqSlNzK0x3aEpRV3J2S2htbDB5THRSVkJCOUVTR2l5NVFYaWNSODBxVWRScjN3eVhRZkJGTFFEN1lRb1l4MUZMTUxaR21IYmd2N3Rnc3hxY2k1NEFjTTZmb1BXaUd0Z2NZbjJRenRsbTRjZ3FuWVNmcThDc3dtZ3o5N052ckxDRXF3bFhRZkpGQVZlRFF2SXFxNk00dkNkcXFLaldtNjlRVjlCUXUrczdCYkpFbUtGRDVtRTRhdWFwWW4zbWZLeXJWaGFGUGpFUW5iMHA0V3dGR3YzYTROTEFPRXVqVkJlVjUzZjJmdUZqSUxzZnBMK3MzRERRYUlYbEJKa3p3dWdjdWZ5Z1MzRm5BZ01CQUFHalJUQkRNQklHQTFVZEV3RUIvd1FJTUFZQkFmOENBUUV3SFFZRFZSME9CQllFRkg4dXN2ME52ekZHaWx4Sko2dExBYkVLSUJMQk1BNEdBMVVkRHdFQi93UUVBd0lDaERBTkJna3Foa2lHOXcwQkFRc0ZBQU9DQVFFQWQ2ZVJmTzFZbHN2YXRMSktWZGVNcStzclhlYjNTblZJM0ZQSWlQa3d2STNsM1pmUVQ1ZzE0NWc2ajEzQisvOFZUNGFWZXBDZU5PbWNIczc3Y2g0OWxIUmg4anF3UXlqUFBsc1NmcW5Kd0JGUmRvNStkRnB5elZNeFdDUzBFRWJqb3RkZ2pvci9YaVVoRmFGMkhkZThyeHNnZWNmaUFZZS9nWnFZZjYzOFRxRi9RTnFCaTRhbitGQmNtT0FDalR6THE5Z01tSnJYa2h3V3V5dm5Sc0hKM2g2ZXd0b0RMN2gycm5QK2hBT1o3ckd1SEhDaVVXayt6eUcxdjdKT0NwSUJ2TEJyalpVbzNDRmxacEs3NERkbHBSVU1nK3JvcVdDNnFkTmZuemc5dFZBb1ZlVy9uUHAweit1QUtmb2w2NENlRUJmUmsrUXV2SmRyKzhCL1JaOHp4QT09Il0sIng1dCNTMjU2IjoiZkxnNTQ5dGFabmViUGZ6OTVlRzhyZXZuX2lSU2luMTFKZGxteFhOaUE5RSIsImtpZCI6IktPX21UcF9zVDB6bEZFVWRfblR0aGZvOXRFOVNfbUZCcno5MXBmN3lEUUEiLCJhbGciOiJSUzI1NiJ9..pZkf21YoT2mqzYlEJy9fkBartMTvEMMOUZPXw4-HIc6DeDUTqAMcRSkEfP1_ozvBE1ukxzqM2_IYpdQCVbYXEsCQLAXUmDQTfbdf8GImWBkRV7hXpCAJCN14A69trZCLvsW0jhIkIoSwPSszGk4MZ9rW7fBRpG9kbCF4nWajP5nRsPdC6tSckHWlHAWus0IhsYhSh85y2VYtBHTZ9g_NaB5S2pSp4MR_BBFdlpSfrgoepr7D9EY1hhU-b8vbjve9QnGSesqfPXUOKMwNA5UZ7tUYStWX8y9-19wwC3e_FjKhnKXMZrlAhCOLSL5O81r3ZWI3bpfOufHFZIZ7_gdvnQ
+                      type:
+                        - VerifiableCredential
+                        - Person
+                      '@context':
+                        - 'https://www.w3.org/2018/credentials/v1'
+                        - 'https://schema.org/'
+                      issuer: 'did:example:123456789'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    enum:
+                      - invalid_vc_format
+                      - invalid_proof
+                      - invalid_request
+                      - unknown_error
+                      - invalid_scope
+                      - proof_header_invalid_key
+                      - vc_issuance_failed
+                      - unsupported_credential_format
+                      - unsupported_credential_type
+                      - proof_invalid_nonce
+                      - not_implemented
+                  error_description:
+                    type: string
+                  c_nonce:
+                    type: string
+                    description: This will have the value only when the error is "proof_invalid_nonce".
+                  c_nonce_expires_in:
+                    type: integer
+                    description: This will have the value only when the error is "proof_invalid_nonce".
+                required:
+                  - error
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    const: invalid_token
+                  error_description:
+                    type: string
+                required:
+                  - error
+      security:
+        - Authorization-access_token: []
+  /issuance/vd11/credential:
+    post:
+      summary: Credential Issuance endpoint - Draft 11
+      description: 'Once the access token is received via the token endpoint, Wallet should invoke this endpoint to get the verifiable credential.'
+      operationId: post-vci-credential-v11
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                format:
+                  type: string
+                  enum:
+                    - ldp_vc
+                    - jwt_vc_json
+                    - jwt_vc_json-ld
+                  description: Format of the Credential to be issued.
+                proof:
+                  $ref: '#/components/schemas/CredentialProof'
+                credential_definition:
+                  $ref: '#/components/schemas/CredentialDefinition'
+                  description: |-
+                    JSON object containing (and isolating) the detailed description of the credential type.
+                         * This object MUST be processed using full JSON-LD processing.
+                         If it consists of the following sub claims:
+                         * @context: REQUIRED. JSON array
+              required:
+                - format
+                - proof
+                - credential_definition
+            examples:
+              Example 1:
+                value:
+                  format: ldp_vc
+                  credential_definition:
+                    type:
+                      - VerifiableCredential
+                      - SampleVerifiableCredential_ldp
+                    '@context':
+                      - 'https://www.w3.org/2018/credentials/v1'
+                  proof:
+                    proof_type: jwt
+                    jwt: eyJ0eXAiOiJvcGVuaWQ0dmNpLXByb29mK2p3dCIsImFsZyI6IlJTMjU2IiwiandrIjp7Imt0eSI6IlJTQSIsIm4iOiJtYzdzbWdHd0N6ZzZ5WENoM2ZYc3hTc2ROZlFzM3BTZGdZZUstdnpnYWZCQkNBTnZ2YWxqeUJ2YTlYZzA5YWhLMG9KV0hZY2p3Rm5QeU5uX0dkSjJValZPRlJDbllZNWZvejUxbmt0NUJod2l1V1IteWpZN2NZaXI5MjAySlI2RldaNExpamVVNm54WUVrbnFxZ1B6LXZmU0pSa2M5b2t6VEJ4LW9qb0FaOWJTaUJqMm9XNzVsWkhrMlBoU0NkTDNtQzUyaVRkUWpra2NFNHY0ZVpzWVBrZVROSmlmWE1sQ1J3Mlg0X1N6d2N3YkNNWUJqWlhRUFJ1OXdudEJqd0NUOGZTaDJjZVlCdUs4YlViQXBLelhDSGotUnAwZHMyMDdtbEFhcnRlRURhMS1qbW5ZYWxxS2lfQ2tzU1ZuNEQyMThXOWZHSElYcEJlSXBTWjlHc3hHdXciLCJlIjoiQVFBQiIsImtpZCI6IkY1R0hPai1STHF0S19TSUtabmx4ckpoTFN4MFAyVlZsNFVzTXpuT1ByNW8iLCJhbGciOiJSUzI1NiIsInVzZSI6InNpZyJ9fQ.eyJpYXQiOjE2OTg2NDY2NDMsIm5iZiI6MTY5ODY0NjY0MywiZXhwIjoxNjk4NjQ3MjQ4LCJqdGkiOiJPR0J3RjRCNGNsSWJzWUxGT3ZWM2IiLCJhdWQiOiJodHRwczovL2VzaWduZXQtbW9jay5jb2xsYWIubW9zaXAubmV0L3YxL2VzaWduZXQiLCJub25jZSI6IllXZUluR2MwdVljcHQ1TlZLcTVYIiwiaXNzIjoiODhWanQzNGM1VHd6MW9KIn0.MMVBHdIpvmRwBw4-MY6LaE4p-k5NwCRcwktKCK3MvNiJ5LNqx_Z4lJ23x359IxFtpMNbH0xnC0ajU-mYLJRJ7WsbKWemENmHp3e7nRDzDlDufu92vzh_dmHvxmcxQQKEEr_xH5c8vypUANsAbg8Ltas6eoe5jFoSrS-Oi4TNplw8aoS4cdH16ezEdb1RtluSKi5tajM9eS2reREj3sFXyVphxIxCUD6VbwuvByPPOWhSVf4bW_pCAoztiRJ9Fc_WXR7XLTIn3i46QczopaBIp8xPwEbBE_cl3Lo9etA0oLOxnRz6bzk5sa-ZtvVnsW4vOusy3mzSjVe10oHxWgw2CQ
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  format:
+                    type: string
+                    description: JSON string denoting the format of the issued Credential.
+                  credential:
+                    description: 'Contains issued Credential. MUST be present when acceptance_token is not returned. MAY be a JSON string or a JSON object, depending on the Credential format.'
+                    oneOf:
+                      - type: object
+                      - type: string
+                required:
+                  - format
+                  - credential
+              examples:
+                Example 1:
+                  value:
+                    format: ldp_vc
+                    credential:
+                      issuanceDate: '2023-10-30T06:17:28.025Z'
+                      credentialSubject:
+                        gender: Male
+                        name: John Doe
+                        id: 'did:jwk:eyJrdHkiOiJSU0EiLCJlIjoiQVFBQiIsInVzZSI6InNpZyIsImtpZCI6IkY1R0hPai1STHF0S19TSUtabmx4ckpoTFN4MFAyVlZsNFVzTXpuT1ByNW8iLCJhbGciOiJSUzI1NiIsIm4iOiJtYzdzbWdHd0N6ZzZ5WENoM2ZYc3hTc2ROZlFzM3BTZGdZZUstdnpnYWZCQkNBTnZ2YWxqeUJ2YTlYZzA5YWhLMG9KV0hZY2p3Rm5QeU5uX0dkSjJValZPRlJDbllZNWZvejUxbmt0NUJod2l1V1IteWpZN2NZaXI5MjAySlI2RldaNExpamVVNm54WUVrbnFxZ1B6LXZmU0pSa2M5b2t6VEJ4LW9qb0FaOWJTaUJqMm9XNzVsWkhrMlBoU0NkTDNtQzUyaVRkUWpra2NFNHY0ZVpzWVBrZVROSmlmWE1sQ1J3Mlg0X1N6d2N3YkNNWUJqWlhRUFJ1OXdudEJqd0NUOGZTaDJjZVlCdUs4YlViQXBLelhDSGotUnAwZHMyMDdtbEFhcnRlRURhMS1qbW5ZYWxxS2lfQ2tzU1ZuNEQyMThXOWZHSElYcEJlSXBTWjlHc3hHdXcifQ=='
+                        email: john.doe@mail.com
+                      id: 'urn:uuid:3978344f-8596-4c3a-a978-8fcaba3903c5'
+                      proof:
+                        type: RsaSignature2018
+                        created: '2023-10-30T06:17:28Z'
+                        proofPurpose: assertionMethod
+                        verificationMethod: 'https://esignet-mock.collab.mosip.net/v1/esignet/oauth/.well-known/jwks.json'
+                        jws: eyJ4NWMiOlsiTUlJRHZUQ0NBcVdnQXdJQkFnSUk1VHhveEYydjhRQXdEUVlKS29aSWh2Y05BUUVMQlFBd2R6RUxNQWtHQTFVRUJoTUNTVTR4Q3pBSkJnTlZCQWdNQWt0Qk1SSXdFQVlEVlFRSERBbENRVTVIUVV4UFVrVXhEVEFMQmdOVkJBb01CRWxKVkVJeEdqQVlCZ05WQkFzTUVVMVBVMGxRTFZSRlEwZ3RRMFZPVkVWU01Sd3dHZ1lEVlFRRERCTjNkM2N1Ylc5emFYQXVhVzhnS0ZKUFQxUXBNQjRYRFRJek1ETXlOVEV3TWpFeE1Wb1hEVEkyTURNeU5ERXdNakV4TVZvd2Z6RUxNQWtHQTFVRUJoTUNTVTR4Q3pBSkJnTlZCQWdNQWt0Qk1SSXdFQVlEVlFRSERBbENRVTVIUVV4UFVrVXhEVEFMQmdOVkJBb01CRWxKVkVJeEdqQVlCZ05WQkFzTUVVMVBVMGxRTFZSRlEwZ3RRMFZPVkVWU01TUXdJZ1lEVlFRRERCdDNkM2N1Ylc5emFYQXVhVzhnS0U5SlJFTmZVMFZTVmtsRFJTa3dnZ0VpTUEwR0NTcUdTSWIzRFFFQkFRVUFBNElCRHdBd2dnRUtBb0lCQVFDeGJpYUt3M082dlI0SHczaExDc3FiQ1czRkc4UEthQ0RabDZNTUlEblVlbCtJa1FDMmxscTgrWlRMcmE3S1ViT294UHVxVzhwNDFmdVRqSlNzK0x3aEpRV3J2S2htbDB5THRSVkJCOUVTR2l5NVFYaWNSODBxVWRScjN3eVhRZkJGTFFEN1lRb1l4MUZMTUxaR21IYmd2N3Rnc3hxY2k1NEFjTTZmb1BXaUd0Z2NZbjJRenRsbTRjZ3FuWVNmcThDc3dtZ3o5N052ckxDRXF3bFhRZkpGQVZlRFF2SXFxNk00dkNkcXFLaldtNjlRVjlCUXUrczdCYkpFbUtGRDVtRTRhdWFwWW4zbWZLeXJWaGFGUGpFUW5iMHA0V3dGR3YzYTROTEFPRXVqVkJlVjUzZjJmdUZqSUxzZnBMK3MzRERRYUlYbEJKa3p3dWdjdWZ5Z1MzRm5BZ01CQUFHalJUQkRNQklHQTFVZEV3RUIvd1FJTUFZQkFmOENBUUV3SFFZRFZSME9CQllFRkg4dXN2ME52ekZHaWx4Sko2dExBYkVLSUJMQk1BNEdBMVVkRHdFQi93UUVBd0lDaERBTkJna3Foa2lHOXcwQkFRc0ZBQU9DQVFFQWQ2ZVJmTzFZbHN2YXRMSktWZGVNcStzclhlYjNTblZJM0ZQSWlQa3d2STNsM1pmUVQ1ZzE0NWc2ajEzQisvOFZUNGFWZXBDZU5PbWNIczc3Y2g0OWxIUmg4anF3UXlqUFBsc1NmcW5Kd0JGUmRvNStkRnB5elZNeFdDUzBFRWJqb3RkZ2pvci9YaVVoRmFGMkhkZThyeHNnZWNmaUFZZS9nWnFZZjYzOFRxRi9RTnFCaTRhbitGQmNtT0FDalR6THE5Z01tSnJYa2h3V3V5dm5Sc0hKM2g2ZXd0b0RMN2gycm5QK2hBT1o3ckd1SEhDaVVXayt6eUcxdjdKT0NwSUJ2TEJyalpVbzNDRmxacEs3NERkbHBSVU1nK3JvcVdDNnFkTmZuemc5dFZBb1ZlVy9uUHAweit1QUtmb2w2NENlRUJmUmsrUXV2SmRyKzhCL1JaOHp4QT09Il0sIng1dCNTMjU2IjoiZkxnNTQ5dGFabmViUGZ6OTVlRzhyZXZuX2lSU2luMTFKZGxteFhOaUE5RSIsImtpZCI6IktPX21UcF9zVDB6bEZFVWRfblR0aGZvOXRFOVNfbUZCcno5MXBmN3lEUUEiLCJhbGciOiJSUzI1NiJ9..pZkf21YoT2mqzYlEJy9fkBartMTvEMMOUZPXw4-HIc6DeDUTqAMcRSkEfP1_ozvBE1ukxzqM2_IYpdQCVbYXEsCQLAXUmDQTfbdf8GImWBkRV7hXpCAJCN14A69trZCLvsW0jhIkIoSwPSszGk4MZ9rW7fBRpG9kbCF4nWajP5nRsPdC6tSckHWlHAWus0IhsYhSh85y2VYtBHTZ9g_NaB5S2pSp4MR_BBFdlpSfrgoepr7D9EY1hhU-b8vbjve9QnGSesqfPXUOKMwNA5UZ7tUYStWX8y9-19wwC3e_FjKhnKXMZrlAhCOLSL5O81r3ZWI3bpfOufHFZIZ7_gdvnQ
+                      type:
+                        - VerifiableCredential
+                        - Person
+                      '@context':
+                        - 'https://www.w3.org/2018/credentials/v1'
+                        - 'https://schema.org/'
+                      issuer: 'did:example:123456789'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    enum:
+                      - invalid_vc_format
+                      - invalid_proof
+                      - invalid_request
+                      - unknown_error
+                      - invalid_scope
+                      - proof_header_invalid_key
+                      - vc_issuance_failed
+                      - unsupported_credential_format
+                      - unsupported_credential_type
+                      - proof_invalid_nonce
+                      - not_implemented
+                  error_description:
+                    type: string
+                  c_nonce:
+                    type: string
+                    description: This will have the value only when the error is "proof_invalid_nonce".
+                  c_nonce_expires_in:
+                    type: integer
+                    description: This will have the value only when the error is "proof_invalid_nonce".
+                required:
+                  - error
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    const: invalid_token
+                  error_description:
+                    type: string
+                required:
+                  - error
+      security:
+        - Authorization-access_token: []
+components:
+  schemas:
+    VCError:
+      type: object
+      properties:
+        error:
+          type: string
+        error_description:
+          type: string
+        c_nonce:
+          type: string
+        c_nonce_expires_in:
+          type: integer
+          format: int32
+    CredentialDefinition:
+      required:
+        - type
+      type: object
+      properties:
+        type:
+          type: array
+          items:
+            type: string
+        credentialSubject:
+          type: object
+          additionalProperties:
+            type: object
+        '@context':
+          type: array
+          items:
+            type: string
+    CredentialProof:
+      required:
+        - proof_type
+      type: object
+      properties:
+        proof_type:
+          type: string
+        jwt:
+          type: string
+        cwt:
+          type: string
+    CredentialRequest:
+      required:
+        - credential_definition
+        - format
+        - proof
+      type: object
+      properties:
+        format:
+          type: string
+        proof:
+          $ref: '#/components/schemas/CredentialProof'
+        credential_definition:
+          $ref: '#/components/schemas/CredentialDefinition'
+    CredentialResponse:
+      type: object
+      properties:
+        format:
+          type: string
+        credential:
+          type: object
+        acceptance_token:
+          type: string
+        c_nonce:
+          type: string
+        c_nonce_expires_in:
+          type: integer
+          format: int32
