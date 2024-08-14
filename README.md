@@ -82,7 +82,7 @@ The following steps will help you to setup Sunbird RC and Esignet services using
 7. The installation of Certify will encompass the following services:
     * [Esignet Service](https://github.com/mosip/esignet)
     * [Certify Service](https://github.com/mosip/inji-certify)
-8. Download the postman collection and environment for mock use case from [here](docker-compose/docker-compose-certify/postman-collections/mock).
+8. Download the postman collection and environment for mock use case from [here](docs/postman-collections/mock).
 9. Create Client from Create OIDC client API.
 10. Create a mock identity with Create Mock Identity API in the Mock Identity System folder.
 11. Change the `individualId` variable in environment to the above created mock identity identifier.
@@ -146,7 +146,7 @@ Execute installation script
 10. The installation of Certify will encompass the following services:
     * [Esignet Service](https://github.com/mosip/esignet)
     * [Certify Service](https://github.com/mosip/inji-certify)
-11. Download the postman collection and environment for sunbird use case from [here](docker-compose/docker-compose-certify/postman-collections/sunbird).
+11. Download the postman collection and environment for sunbird use case from [here](docs/postman-collections/sunbird).
     * Change `aud` variable in environment to the token endpoint of your Authorization service which is 'http://localhost:8088/v1/esignet/oauth/v2/token' if eSignet is setup locally and set `audUrl` to the URL of Certify container which is http://localhost:8090 if setup locally.
 12. Create Client from Create OIDC client API, and set redirect-url to 'http://localhost:3001' or the URL of OIDC-UI service, set auth-factor 'mosip:idp:acr:knowledge' to the request body.
 13. Perform a Knowledge based authentication(KBA) as specified in the Postman collection.
