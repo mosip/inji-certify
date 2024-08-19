@@ -86,27 +86,16 @@ public class MosipTestRunner {
 
 			List<String> localLanguageList = new ArrayList<>(BaseTestCase.getLanguageList());
 			AdminTestUtil.getLocationData();
-
-			String partnerKeyURL = "";
-			String updatedPartnerKeyURL = "";
-			String ekycPartnerKeyURL = "";
-
+			
+			// Generate device certificates to be consumed by Mock-MDS
 			PartnerRegistration.deleteCertificates();
-			CertificateGenerationUtil.getThumbprints();
 			AdminTestUtil.createAndPublishPolicy();
 			AdminTestUtil.createEditAndPublishPolicy();
-			partnerKeyURL = PartnerRegistration.generateAndGetPartnerKeyUrl();
-			updatedPartnerKeyURL = PartnerRegistration.generateAndGetUpdatedPartnerKeyUrl();
-
-			AdminTestUtil.createAndPublishPolicyForKyc();
-			ekycPartnerKeyURL = PartnerRegistration.generateAndGetEkycPartnerKeyUrl();
+			PartnerRegistration.deviceGeneration();
 
 			BiometricDataProvider.generateBiometricTestData("Registration");
 
-			if (partnerKeyURL.isEmpty() || ekycPartnerKeyURL.isEmpty()) {
-				LOGGER.error("partnerKeyURL is null");
-			} else
-				startTestRunner();
+			startTestRunner();
 		} catch (Exception e) {
 			LOGGER.error("Exception " + e.getMessage());
 		}
