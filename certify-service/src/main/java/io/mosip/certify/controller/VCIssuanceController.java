@@ -5,7 +5,9 @@
  */
 package io.mosip.certify.controller;
 
-import io.mosip.certify.core.dto.*;
+import io.mosip.certify.core.dto.CredentialRequest;
+import io.mosip.certify.core.dto.CredentialResponse;
+import io.mosip.certify.core.dto.VCError;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.exception.InvalidNonceException;
