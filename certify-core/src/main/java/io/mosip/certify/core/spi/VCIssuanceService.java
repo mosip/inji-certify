@@ -11,6 +11,7 @@ import io.mosip.certify.core.dto.CredentialResponse;
 import java.util.Map;
 
 public interface VCIssuanceService {
+
     /**
      *
      * @param credentialRequest
