@@ -146,12 +146,10 @@ public class SimplePost extends AdminTestUtil implements ITest {
 					response = postWithBodyAndCookie(tempUrl + testCaseDTO.getEndPoint(), inputJson, auditLogCheck,
 							COOKIENAME, testCaseDTO.getRole(), testCaseDTO.getTestCaseName(), sendEsignetToken);
 
-				}else if (testCaseDTO.getEndPoint().startsWith("$INJICERTIFYBASEURL$")
+				}else if (testCaseDTO.getEndPoint().startsWith("$INJICERTIFYINSURANCEBASEURL$")
 						&& testCaseName.contains("GetCredentialSunBirdC")) {
-					tempUrl = ApplnURI.replace("api-internal", "injicertify");
-					testCaseDTO.setEndPoint(testCaseDTO.getEndPoint().replace("$INJICERTIFYBASEURL$", ""));
-					
-//					https://injicertify.qa-inji.mosip.net/v1/certify
+					tempUrl = ApplnURI.replace("api-internal", "injicertify-insurance");
+					testCaseDTO.setEndPoint(testCaseDTO.getEndPoint().replace("$INJICERTIFYINSURANCEBASEURL$", ""));
 				}
 				
 				if (testCaseName.contains("ESignet_SendBindingOtp")) {

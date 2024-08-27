@@ -1,0 +1,26 @@
+OAuthDetailsRequestSunBirdCForVd11:
+   InjiCertify_ESignet_OAuthDetailsRequest_SunBirdCForVd11_all_Valid_Smoke_sid:
+      endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/authorization/v2/oauth-details
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      inputTemplate: injicertify/SunBirdCForVd11/OAuthDetailsRequestSunBirdCForVd11/OAuthDetailsRequestSunBirdCForVd11
+      outputTemplate: injicertify/SunBirdCForVd11/OAuthDetailsRequestSunBirdCForVd11/OAuthDetailsRequestSunBirdCForVd11Result
+      input: '{
+      	"requestTime": "$TIMESTAMP$",
+      	"clientId": "$ID:ESignet_CreateOIDCClientV2SunBirdC_all_Valid_Smoke_sid_clientId$",
+      	"scope": "sunbird_rc_insurance_vc_ldp",
+      	"responseType": "code",
+      	"redirectUri": "$IDPREDIRECTURI$",
+      	"display": "popup",
+	    "prompt": "login",
+	    "acrValues": "mosip:idp:acr:knowledge",
+	    "nonce": "973eieljzng",
+	    "state": "eree2311",
+	    "claimsLocales": "en",
+	    "codeChallenge": "$CODECHALLENGE$",
+        "codeChallengeMethod": "S256"
+}'
+      output: '{
+       
+}'

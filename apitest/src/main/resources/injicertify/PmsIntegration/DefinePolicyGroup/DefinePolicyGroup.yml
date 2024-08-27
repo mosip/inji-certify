@@ -1,0 +1,18 @@
+definePolicyGroup:
+   InjiCertify_DefinePolicyGroup_All_Valid_Smoke_sid:
+      endPoint: /v1/policymanager/policies/group/new
+      role: partner
+      restMethod: post
+      inputTemplate: injicertify/PmsIntegration/DefinePolicyGroup/definePolicyGroup
+      outputTemplate: injicertify/PmsIntegration/DefinePolicyGroup/definePolicyGroupResult
+      input: '{
+    "desc": "$POLICYGROUPDESC$",
+    "name": "$POLICYGROUPNAME$",
+    "requesttime": "$TIMESTAMP$"
+  }'
+      output: ' {
+      "id": "$IGNORE$",
+        "name": "$IGNORE$",
+        "desc": "$IGNORE$",
+        "is_Active": true
+}'

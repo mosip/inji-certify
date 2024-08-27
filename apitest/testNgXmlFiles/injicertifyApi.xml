@@ -1,117 +1,223 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 
-	<suite name="Inji-Certify Suite">
+<suite name="Inji-Certify Suite">
 	<!-- Passing Group as parmeter unsing "testType" Possible Groups are: smoke 
 		regression smokeAndRegression -->
 	<listeners>
-		<listener class-name="io.mosip.testrig.apirig.report.EmailableReport"/>
+		<listener class-name="io.mosip.testrig.apirig.report.EmailableReport" />
 	</listeners>
-		
+
 <!--	<test name="AddIdentity">
-		<parameter name="ymlFile"
-			value="injicertify/AddIdentity/AddIdentity.yml" />
+		<parameter name="ymlFile" value="injicertify/AddIdentity/AddIdentity.yml" />
+		<parameter name="prerequisite" value="Yes" />
 		<classes>
 			<class name="io.mosip.testrig.apirig.testscripts.AddIdentity" />
 		</classes>
 	</test>
 	<test name="GenerateVID">
-		<parameter name="ymlFile"
-			value="injicertify/GenerateVID/createGenerateVID.yml" />
-			<parameter name="idKeyName"	value="vid" />
+		<parameter name="ymlFile" value="injicertify/GenerateVID/createGenerateVID.yml" />
+		<parameter name="idKeyName" value="vid" />
+		<parameter name="prerequisite" value="Yes" />
 		<classes>
 			<class name="io.mosip.testrig.apirig.testscripts.PostWithAutogenIdWithOtpGenerate" />
 		</classes>
-	</test>
-	<test name="CreateVID">
-		<parameter name="ymlFile" value="injicertify/CreateVID/CreateVid.yml" />
-		<parameter name="idKeyName" value="VID" />
-		<classes>
-			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
-		</classes>
 	</test>-->
 	<test name="CreateOIDCClientV2SunBirdC">
-		<parameter name="ymlFile"
-			value="injicertify/SunBirdC/CreateOIDCClientV2SunBirdC/CreateOIDCClientV2SunBirdC.yml" />
-			<parameter name="idKeyName"	value="clientId" />
+		<parameter name="ymlFile" value="injicertify/SunBirdC/CreateOIDCClientV2SunBirdC/CreateOIDCClientV2SunBirdC.yml" />
+		<parameter name="idKeyName" value="clientId" />
+		<parameter name="prerequisite" value="Yes" />
 		<classes>
 			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
 		</classes>
 	</test>
 	<test name="OAuthDetailsRequestSunBirdC">
-		<parameter name="ymlFile"
-			value="injicertify/SunBirdC/OAuthDetailsRequestSunBirdC/OAuthDetailsRequestSunBirdC.yml" />
-			<parameter name="idKeyName"	value="transactionId,encodedResp" />
+		<parameter name="ymlFile" value="injicertify/SunBirdC/OAuthDetailsRequestSunBirdC/OAuthDetailsRequestSunBirdC.yml" />
+		<parameter name="idKeyName" value="transactionId,encodedResp" />
+		<parameter name="prerequisite" value="Yes" />
 		<classes>
 			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
 		</classes>
 	</test>
 	<test name="AuthenticateUserSunBirdC">
-		<parameter name="ymlFile"
-			value="injicertify/SunBirdC/AuthenticateUserSunBirdC/AuthenticateUserSunBirdC.yml" />
+		<parameter name="ymlFile" value="injicertify/SunBirdC/AuthenticateUserSunBirdC/AuthenticateUserSunBirdC.yml" />
+		<parameter name="prerequisite" value="Yes" />
 		<classes>
 			<class name="io.mosip.testrig.apirig.testscripts.SimplePost" />
 		</classes>
 	</test>
 	<test name="AuthorizationCodeSunBirdC">
-		<parameter name="ymlFile"
-			value="injicertify/SunBirdC/AuthorizationCodeSunBirdC/AuthorizationCodeSunBirdC.yml" />
-			<parameter name="idKeyName"	value="code" />
+		<parameter name="ymlFile" value="injicertify/SunBirdC/AuthorizationCodeSunBirdC/AuthorizationCodeSunBirdC.yml" />
+		<parameter name="idKeyName" value="code" />
+		<parameter name="prerequisite" value="Yes" />
 		<classes>
 			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
 		</classes>
 	</test>
 	<test name="GenerateTokenSunBirdC">
-		<parameter name="ymlFile"
-			value="injicertify/SunBirdC/GenerateTokenSunBirdC/GenerateTokenSunBirdC.yml" />
-			<parameter name="idKeyName"	value="access_token" />
+		<parameter name="ymlFile" value="injicertify/SunBirdC/GenerateTokenSunBirdC/GenerateTokenSunBirdC.yml" />
+		<parameter name="idKeyName" value="access_token" />
+		<parameter name="prerequisite" value="Yes" />
 		<classes>
 			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenIdForUrlEncoded" />
 		</classes>
 	</test>
 	<test name="GetCredentialSunBirdC">
-		<parameter name="ymlFile"
-			value="injicertify/SunBirdC/GetCredentialSunBirdC/GetCredentialSunBirdC.yml" />
+		<parameter name="ymlFile" value="injicertify/SunBirdC/GetCredentialSunBirdC/GetCredentialSunBirdC.yml" />
 		<classes>
 			<class name="io.mosip.testrig.apirig.testscripts.SimplePost" />
 		</classes>
 	</test>
-<!--	<test name="OAuthDetailsRequestSunBirdCNegTC">
-		<parameter name="ymlFile"
-			value="injicertify/SunBirdCNegTC/OAuthDetailsRequestSunBirdCNegTC/OAuthDetailsRequestSunBirdCNegTC.yml" />
-			<parameter name="idKeyName"	value="transactionId,encodedResp" />
+	<test name="OAuthDetailsRequestSunBirdCForVd11">
+		<parameter name="ymlFile" value="injicertify/SunBirdCForVd11/OAuthDetailsRequestSunBirdCForVd11/OAuthDetailsRequestSunBirdCForVd11.yml" />
+		<parameter name="idKeyName" value="transactionId,encodedResp" />
+		<parameter name="prerequisite" value="Yes" />
 		<classes>
 			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
 		</classes>
 	</test>
-	<test name="AuthenticateUserSunBirdCNegTC">
-		<parameter name="ymlFile"
-			value="injicertify/SunBirdCNegTC/AuthenticateUserSunBirdCNegTC/AuthenticateUserSunBirdCNegTC.yml" />
+	<test name="AuthenticateUserSunBirdCForVd11">
+		<parameter name="ymlFile" value="injicertify/SunBirdCForVd11/AuthenticateUserSunBirdCForVd11/AuthenticateUserSunBirdCForVd11.yml" />
+		<parameter name="prerequisite" value="Yes" />
 		<classes>
 			<class name="io.mosip.testrig.apirig.testscripts.SimplePost" />
 		</classes>
 	</test>
-	<test name="AuthorizationCodeSunBirdCNegTC">
-		<parameter name="ymlFile"
-			value="injicertify/SunBirdCNegTC/AuthorizationCodeSunBirdCNegTC/AuthorizationCodeSunBirdCNegTC.yml" />
-			<parameter name="idKeyName"	value="code" />
+	<test name="AuthorizationCodeSunBirdCForVd11">
+		<parameter name="ymlFile" value="injicertify/SunBirdCForVd11/AuthorizationCodeSunBirdCForVd11/AuthorizationCodeSunBirdCForVd11.yml" />
+		<parameter name="idKeyName" value="code" />
+		<parameter name="prerequisite" value="Yes" />
 		<classes>
 			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
 		</classes>
 	</test>
-	<test name="GenerateTokenSunBirdCNegTC">
-		<parameter name="ymlFile"
-			value="injicertify/SunBirdCNegTC/GenerateTokenSunBirdCNegTC/GenerateTokenSunBirdCNegTC.yml" />
-			<parameter name="idKeyName"	value="access_token" />
+	<test name="GenerateTokenSunBirdCForVd11">
+		<parameter name="ymlFile" value="injicertify/SunBirdCForVd11/GenerateTokenSunBirdCForVd11/GenerateTokenSunBirdCForVd11.yml" />
+		<parameter name="idKeyName" value="access_token" />
+		<parameter name="prerequisite" value="Yes" />
 		<classes>
 			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenIdForUrlEncoded" />
 		</classes>
 	</test>
-	<test name="GetCredentialSunBirdCNegTC">
-		<parameter name="ymlFile"
-			value="injicertify/SunBirdCNegTC/GetCredentialSunBirdCNegTC/GetCredentialSunBirdCNegTC.yml" />
+	<test name="GetCredentialSunBirdCForVd11">
+		<parameter name="ymlFile" value="injicertify/SunBirdCForVd11/GetCredentialSunBirdCForVd11/GetCredentialSunBirdCForVd11.yml" />
 		<classes>
 			<class name="io.mosip.testrig.apirig.testscripts.SimplePost" />
+		</classes>
+	</test>
+	<test name="OAuthDetailsRequestSunBirdCForVd12">
+		<parameter name="ymlFile" value="injicertify/SunBirdCForVd12/OAuthDetailsRequestSunBirdCForVd12/OAuthDetailsRequestSunBirdCForVd12.yml" />
+		<parameter name="idKeyName" value="transactionId,encodedResp" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="AuthenticateUserSunBirdCForVd12">
+		<parameter name="ymlFile" value="injicertify/SunBirdCForVd12/AuthenticateUserSunBirdCForVd12/AuthenticateUserSunBirdCForVd12.yml" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePost" />
+		</classes>
+	</test>
+	<test name="AuthorizationCodeSunBirdCForVd12">
+		<parameter name="ymlFile" value="injicertify/SunBirdCForVd12/AuthorizationCodeSunBirdCForVd12/AuthorizationCodeSunBirdCForVd12.yml" />
+		<parameter name="idKeyName" value="code" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="GenerateTokenSunBirdCForVd12">
+		<parameter name="ymlFile" value="injicertify/SunBirdCForVd12/GenerateTokenSunBirdCForVd12/GenerateTokenSunBirdCForVd12.yml" />
+		<parameter name="idKeyName" value="access_token" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenIdForUrlEncoded" />
+		</classes>
+	</test>
+	<test name="GetCredentialSunBirdCForVd12">
+		<parameter name="ymlFile" value="injicertify/SunBirdCForVd12/GetCredentialSunBirdCForVd12/GetCredentialSunBirdCForVd12.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePost" />
+		</classes>
+	</test>
+<!--	<test name="CreatePolicyGroup">
+		<parameter name="ymlFile" value="injicertify/PmsIntegration/DefinePolicyGroup/DefinePolicyGroup.yml" />
+		<parameter name="idKeyName" value="id,name" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+
+	<test name="DefinePolicy">
+		<parameter name="ymlFile" value="injicertify/PmsIntegration/DefinePolicy/DefinePolicy.yml" />
+		<parameter name="idKeyName" value="id,name" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+
+	<test name="PublishPolicy">
+		<parameter name="ymlFile" value="injicertify/PmsIntegration/PublishPolicy/PublishPolicy.yml" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.PostWithOnlyPathParam" />
+		</classes>
+	</test>
+
+	<test name="CreatePartner">
+		<parameter name="ymlFile" value="injicertify/PmsIntegration/CreatePartner/CreatePartner.yml" />
+		<parameter name="idKeyName" value="partnerId" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+
+	<test name="UploadCACertificate">
+		<parameter name="ymlFile" value="injicertify/PmsIntegration/UploadCertificate/UploadCertificate.yml" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePost" />
+		</classes>
+	</test>
+
+	<test name="UploadPartnerCertificate">
+		<parameter name="ymlFile" value="injicertify/PmsIntegration/UploadCert/UploadCert.yml" />
+		<parameter name="idKeyName" value="signedCertificateData" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+
+	<test name="updatePartnerCertificate">
+		<parameter name="ymlFile" value="injicertify/PmsIntegration/UpdatePartnerCertificate/UpdatePartnerCertificate.yml" />
+		<parameter name="queryParams" value="partnerType,partnerName,keyFileNameByPartnerName,moduleName" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.PostWithBodyAndQueryParamsForAutoGenId" />
+		</classes>
+	</test>
+
+	<test name="RequestAPIKeyForAuthPartner">
+		<parameter name="ymlFile" value="injicertify/PmsIntegration/RequestAPIKey/RequestAPIKey.yml" />
+		<parameter name="idKeyName" value="mappingkey" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+
+	<test name="ApproveAPIKey">
+		<parameter name="ymlFile" value="injicertify/PmsIntegration/ApproveAPIKey/ApproveAPIKey.yml" />
+		<parameter name="pathParams" value="mappingkey" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.PutWithPathParamsAndBody" />
 		</classes>
 	</test>-->
 
