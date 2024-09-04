@@ -2,11 +2,11 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>io.mosip.inji.certify</groupId>
-	<artifactId>apitest-inji-certify</artifactId>
+	<groupId>io.mosip.injicertify</groupId>
+	<artifactId>apitest-injicertify</artifactId>
 	<packaging>jar</packaging>
-	<name>apitest-inji-certify</name>
-	<description>Parent project of apitest-inji-certify</description>
+	<name>apitest-injicertify</name>
+	<description>Parent project of apitest-injicertify</description>
 	<url>https://github.com/mosip/inji-certify</url>
 	<version>1.2.1-SNAPSHOT</version>
 
@@ -176,7 +176,7 @@
 		<rest.assured.version>3.0.7</rest.assured.version>
 		<testng.version>6.11</testng.version>
 		<zt.zip.version>1.13</zt.zip.version>
-		<fileName>apitest-inji-certify-1.2.0.1-SNAPSHOT-jar-with-dependencies</fileName>
+		<fileName>apitest-inji-certify-1.2.1-SNAPSHOT-jar-with-dependencies</fileName>
 		
 		</properties>
 	<build>
