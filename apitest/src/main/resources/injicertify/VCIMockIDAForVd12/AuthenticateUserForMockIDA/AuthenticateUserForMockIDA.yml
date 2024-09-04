@@ -1,0 +1,34 @@
+AuthenticateUserVCIForMockIDA:
+   InjiCertify_ESignet_AuthenticateUserVCI_ForMockIDA_Vd12_uin_Otp_Valid_Smoke:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/VCIMockIDAForVd12/AuthenticateUserForMockIDA/AuthenticateUserForMockIDA
+      outputTemplate: injicertify/VCIMockIDAForVd12/AuthenticateUserForMockIDA/AuthenticateUserForMockIDAResult
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_ForMockIDA_Vd12_uin_all_Valid_Smoke_sid_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_ForMockIDA_Vd12_uin_all_Valid_Smoke_sid_transactionId$",
+      	"individualId": "6553455",
+      	"authFactorType" : "OTP",
+      	"challenge" : "111111",
+        "format": "alpha-numeric",
+        "sendOtp":{
+    "encodedHash": "$ID:ESignet_OAuthDetailsRequest_ForMockIDA_Vd12_uin_all_Valid_Smoke_sid_encodedResp$",
+    "requestTime": "$TIMESTAMP$",
+    "transactionId": "$ID:ESignet_OAuthDetailsRequest_ForMockIDA_Vd12_uin_all_Valid_Smoke_sid_transactionId$",
+	"individualId": "6553455",
+    "otpChannels": [{channel: "email"},{channel: "phone"}],
+    "sendOtpReqTemplate": "injicertify/SendOtp/SendOtp",
+    "sendOtpEndPoint": "$ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/send-otp"
+    }
+    }'
+      output: '{
+  "sendOtpResp":{
+        "maskedMobile": "$IGNORE$",
+        "sendOtpResTemplate":"injicertify/SendOtp/SendOtpResult",
+        "maskedEmail": "$IGNORE$"
+    }
+}'

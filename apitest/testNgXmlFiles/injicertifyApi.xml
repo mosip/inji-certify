@@ -8,14 +8,14 @@
 		<listener class-name="io.mosip.testrig.apirig.report.EmailableReport" />
 	</listeners>
 
-<!--	<test name="AddIdentity">
+	<test name="AddIdentity">
 		<parameter name="ymlFile" value="injicertify/AddIdentity/AddIdentity.yml" />
 		<parameter name="prerequisite" value="Yes" />
 		<classes>
 			<class name="io.mosip.testrig.apirig.testscripts.AddIdentity" />
 		</classes>
 	</test>
-	<test name="GenerateVID">
+<!--	<test name="GenerateVID">
 		<parameter name="ymlFile" value="injicertify/GenerateVID/createGenerateVID.yml" />
 		<parameter name="idKeyName" value="vid" />
 		<parameter name="prerequisite" value="Yes" />
@@ -142,7 +142,7 @@
 			<class name="io.mosip.testrig.apirig.testscripts.SimplePost" />
 		</classes>
 	</test>
-<!--	<test name="CreatePolicyGroup">
+	<test name="CreatePolicyGroup">
 		<parameter name="ymlFile" value="injicertify/PmsIntegration/DefinePolicyGroup/DefinePolicyGroup.yml" />
 		<parameter name="idKeyName" value="id,name" />
 		<parameter name="prerequisite" value="Yes" />
@@ -194,15 +194,6 @@
 		</classes>
 	</test>
 
-	<test name="updatePartnerCertificate">
-		<parameter name="ymlFile" value="injicertify/PmsIntegration/UpdatePartnerCertificate/UpdatePartnerCertificate.yml" />
-		<parameter name="queryParams" value="partnerType,partnerName,keyFileNameByPartnerName,moduleName" />
-		<parameter name="prerequisite" value="Yes" />
-		<classes>
-			<class name="io.mosip.testrig.apirig.testscripts.PostWithBodyAndQueryParamsForAutoGenId" />
-		</classes>
-	</test>
-
 	<test name="RequestAPIKeyForAuthPartner">
 		<parameter name="ymlFile" value="injicertify/PmsIntegration/RequestAPIKey/RequestAPIKey.yml" />
 		<parameter name="idKeyName" value="mappingkey" />
@@ -219,6 +210,272 @@
 		<classes>
 			<class name="io.mosip.testrig.apirig.testscripts.PutWithPathParamsAndBody" />
 		</classes>
-	</test>-->
+	</test>
+	<test name="OIDCClient">
+		<parameter name="ymlFile"
+			value="injicertify/OidcClient/OIDCClient.yml" />
+			<parameter name="idKeyName"	value="clientId" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="OAuthDetailsRequestVCIMosipID">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMosipID/OAuthDetailsRequestVCI/OAuthDetailsRequestVCI.yml" />
+			<parameter name="idKeyName"	value="transactionId,encodedResp" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="AuthenticateUserVCIMosipID">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMosipID/AuthenticateUserVCI/AuthenticateUserVCI.yml" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.PostWithAutogenIdWithOtpGenerate" />
+		</classes>
+	</test>
+	<test name="AuthorizationCodeVCIMosipID">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMosipID/AuthorizationCodeVCI/AuthorizationCodeVCI.yml" />
+			<parameter name="idKeyName"	value="code" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="GenerateTokenVCIMosipID">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMosipID/GenerateTokenVCI/GenerateTokenVCI.yml" />
+			<parameter name="idKeyName"	value="access_token" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenIdForUrlEncoded" />
+		</classes>
+	</test>
+	<test name="GetCredentialMosipID">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMosipID/GetCredentialMosipID/GetCredentialMosipID.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePost" />
+		</classes>
+	</test>
+	<test name="OAuthDetailsRequestVCIMosipIDForVd11">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMosipIDForVD11/OAuthDetailsRequestVCI/OAuthDetailsRequestVCI.yml" />
+			<parameter name="idKeyName"	value="transactionId,encodedResp" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="AuthenticateUserVCIMosipIDForVd11">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMosipIDForVD11/AuthenticateUserVCI/AuthenticateUserVCI.yml" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.PostWithAutogenIdWithOtpGenerate" />
+		</classes>
+	</test>
+	<test name="AuthorizationCodeVCIMosipIDForVd11">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMosipIDForVD11/AuthorizationCodeVCI/AuthorizationCodeVCI.yml" />
+			<parameter name="idKeyName"	value="code" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="GenerateTokenVCIMosipIDForVd11">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMosipIDForVD11/GenerateTokenVCI/GenerateTokenVCI.yml" />
+			<parameter name="idKeyName"	value="access_token" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenIdForUrlEncoded" />
+		</classes>
+	</test>
+	<test name="GetCredentialMosipIDForVd11">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMosipIDForVD11/GetCredentialMosipID/GetCredentialMosipID.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePost" />
+		</classes>
+	</test>
+	<test name="OAuthDetailsRequestVCIMosipIDForVd12">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMosipIDForVD12/OAuthDetailsRequestVCI/OAuthDetailsRequestVCI.yml" />
+			<parameter name="idKeyName"	value="transactionId,encodedResp" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="AuthenticateUserVCIMosipIDForVd12">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMosipIDForVD12/AuthenticateUserVCI/AuthenticateUserVCI.yml" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.PostWithAutogenIdWithOtpGenerate" />
+		</classes>
+	</test>
+	<test name="AuthorizationCodeVCIMosipIDForVd12">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMosipIDForVD12/AuthorizationCodeVCI/AuthorizationCodeVCI.yml" />
+			<parameter name="idKeyName"	value="code" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="GenerateTokenVCIMosipIDForVd12">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMosipIDForVD12/GenerateTokenVCI/GenerateTokenVCI.yml" />
+			<parameter name="idKeyName"	value="access_token" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenIdForUrlEncoded" />
+		</classes>
+	</test>
+	<test name="GetCredentialMosipIDForVd12">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMosipIDForVD12/GetCredentialMosipID/GetCredentialMosipID.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePost" />
+		</classes>
+	</test>
+	<test name="CreateOIDCClientV2ForMockIDA">
+		<parameter name="ymlFile" value="injicertify/VCIMockIDA/CreateOIDCClientV2ForMockIDA/CreateOIDCClientV2ForMockIDA.yml" />
+		<parameter name="idKeyName" value="clientId" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="OAuthDetailsRequestVCIForMockIDA">
+		<parameter name="ymlFile" value="injicertify/VCIMockIDA/OAuthDetailsRequestForMockIDA/OAuthDetailsRequestForMockIDA.yml" />
+		<parameter name="idKeyName" value="transactionId,encodedResp" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="AuthenticateUserVCIForMockIDA">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMockIDA/AuthenticateUserForMockIDA/AuthenticateUserForMockIDA.yml" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.PostWithAutogenIdWithOtpGenerate" />
+		</classes>
+	</test>
+	<test name="AuthorizationCodeVCIForMockIDA">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMockIDA/AuthorizationCodeForMockIDA/AuthorizationCodeForMockIDA.yml" />
+			<parameter name="idKeyName"	value="code" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="GenerateTokenVCIForMockIDA">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMockIDA/GenerateTokenForMockIDA/GenerateTokenForMockIDA.yml" />
+			<parameter name="idKeyName"	value="access_token" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenIdForUrlEncoded" />
+		</classes>
+	</test>
+	<test name="GetCredentialForMockIDA">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMockIDA/GetCredentialForMockIDA/GetCredentialForMockIDA.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePost" />
+		</classes>
+	</test>
+		<test name="OAuthDetailsRequestVCIForMockIDAForVd11">
+		<parameter name="ymlFile" value="injicertify/VCIMockIDAForVd11/OAuthDetailsRequestForMockIDA/OAuthDetailsRequestForMockIDA.yml" />
+		<parameter name="idKeyName" value="transactionId,encodedResp" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="AuthenticateUserVCIForMockIDAForVd11">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMockIDAForVd11/AuthenticateUserForMockIDA/AuthenticateUserForMockIDA.yml" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.PostWithAutogenIdWithOtpGenerate" />
+		</classes>
+	</test>
+	<test name="AuthorizationCodeVCIForMockIDAForVd11">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMockIDAForVd11/AuthorizationCodeForMockIDA/AuthorizationCodeForMockIDA.yml" />
+			<parameter name="idKeyName"	value="code" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="GenerateTokenVCIForMockIDAForVd11">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMockIDAForVd11/GenerateTokenForMockIDA/GenerateTokenForMockIDA.yml" />
+			<parameter name="idKeyName"	value="access_token" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenIdForUrlEncoded" />
+		</classes>
+	</test>
+	<test name="GetCredentialForMockIDAForVd11">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMockIDAForVd11/GetCredentialForMockIDA/GetCredentialForMockIDA.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePost" />
+		</classes>
+	</test>
+		<test name="OAuthDetailsRequestVCIForMockIDAForVd12">
+		<parameter name="ymlFile" value="injicertify/VCIMockIDAForVd12/OAuthDetailsRequestForMockIDA/OAuthDetailsRequestForMockIDA.yml" />
+		<parameter name="idKeyName" value="transactionId,encodedResp" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="AuthenticateUserVCIForMockIDAForVd12">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMockIDAForVd12/AuthenticateUserForMockIDA/AuthenticateUserForMockIDA.yml" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.PostWithAutogenIdWithOtpGenerate" />
+		</classes>
+	</test>
+	<test name="AuthorizationCodeVCIForMockIDAForVd12">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMockIDAForVd12/AuthorizationCodeForMockIDA/AuthorizationCodeForMockIDA.yml" />
+			<parameter name="idKeyName"	value="code" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="GenerateTokenVCIForMockIDAForVd12">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMockIDAForVd12/GenerateTokenForMockIDA/GenerateTokenForMockIDA.yml" />
+			<parameter name="idKeyName"	value="access_token" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenIdForUrlEncoded" />
+		</classes>
+	</test>
+	<test name="GetCredentialForMockIDAForVd12">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMockIDAForVd12/GetCredentialForMockIDA/GetCredentialForMockIDA.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePost" />
+		</classes>
+	</test>
 
 </suite>

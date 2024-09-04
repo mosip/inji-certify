@@ -1,0 +1,20 @@
+GenerateTokenForMockIDA:
+   InjiCertify_ESignet_GenerateToken_ForMockIDA_Valid_Smoke_sid:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/oauth/v2/token
+      role: resident
+      restMethod: post
+      validityCheckRequired: true
+      inputTemplate: injicertify/VCIMockIDA/GenerateTokenForMockIDA/GenerateTokenForMockIDA
+      outputTemplate: injicertify/VCIMockIDA/GenerateTokenForMockIDA/GenerateTokenForMockIDAResult
+      input: '{
+		  "grant_type": "authorization_code",
+		  "code": "$ID:ESignet_AuthorizationCode_ForMockIDA_All_Valid_Smoke_sid_code$",
+		  "client_id": "$ID:ESignet_CreateOIDCClientV2_ForMockIDA_all_Valid_Smoke_sid_clientId$",
+		  "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+		  "client_assertion": "$CLIENT_ASSERTION_USER4_JWT$",
+		  "redirect_uri": "$IDPREDIRECTURI$",
+  		  "code_verifier": "$CODEVERIFIER$"
+}'
+      output: '{
+   		"token_type": "Bearer"
+}'

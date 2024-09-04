@@ -1,0 +1,16 @@
+AuthorizationCodeForMockIDA:
+   InjiCertify_ESignet_AuthorizationCode_ForMockIDA_All_Valid_Smoke_sid:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/VCIMockIDA/AuthorizationCodeForMockIDA/AuthorizationCodeForMockIDA
+      outputTemplate: injicertify/VCIMockIDA/AuthorizationCodeForMockIDA/AuthorizationCodeForMockIDAResult
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_ForMockIDA_uin_all_Valid_Smoke_sid_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_ForMockIDA_uin_all_Valid_Smoke_sid_transactionId$"
+}'
+      output: '{
+}'
