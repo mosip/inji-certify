@@ -70,7 +70,7 @@ services:
     networks:
       - network
   esignet:
-    image: 'mosipid/esignet:1.4.0'
+    image: 'mosipid/esignet:1.4.1'
     user: root
     ports:
       - 8088:8088
@@ -117,7 +117,7 @@ services:
     networks:
       - network
   esignet-ui:
-    image: 'mosipid/oidc-ui:1.4.0'
+    image: 'mosipid/oidc-ui:1.4.1'
     user: root
     ports:
       - 3001:3000
