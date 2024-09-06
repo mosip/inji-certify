@@ -1,0 +1,26 @@
+OAuthDetailsRequestVCI:
+   InjiCertify_ESignet_OAuthDetailsRequest_VCI_ForVD11_uin_all_Valid_Smoke_sid:
+      endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/v2/oauth-details
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      inputTemplate: injicertify/VCIMosipIDForVD11/OAuthDetailsRequestVCI/OAuthDetailsRequestVCI
+      outputTemplate: injicertify/VCIMosipIDForVD11/OAuthDetailsRequestVCI/OAuthDetailsRequestVCIResult
+      input: '{
+      	"requestTime": "$TIMESTAMP$",
+      	"clientId": "$ID:CreateOIDCClient_all_Valid_Smoke_sid_clientId$",
+      	"scope": "mosip_identity_vc_ldp",
+      	"responseType": "code",
+      	"redirectUri": "$IDPREDIRECTURI$",
+      	"display": "popup",
+	    "prompt": "login",
+	    "acrValues": "mosip:idp:acr:generated-code mosip:idp:acr:linked-wallet mosip:idp:acr:biometrics",
+	    "nonce": "973eieljzng",
+	    "state": "eree2311",
+	    "claimsLocales": "en",
+	    "codeChallenge": "$CODECHALLENGE$",
+        "codeChallengeMethod": "S256"
+}'
+      output: '{
+       
+}'

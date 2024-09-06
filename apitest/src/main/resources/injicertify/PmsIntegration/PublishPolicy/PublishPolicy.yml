@@ -1,0 +1,27 @@
+createPublishPolicy:
+   InjiCertify_PublishPolicy_All_Valid_Smoke:
+      endPoint: /v1/policymanager/policies/{policyId}/group/{policygroupId}/publish
+      role: partner
+      restMethod: post
+      inputTemplate: injicertify/PmsIntegration/PublishPolicy/publishPolicy
+      outputTemplate: injicertify/PmsIntegration/PublishPolicy/publishPolicyResult
+      input: '{
+		"policygroupId": "$ID:DefinePolicyGroup_All_Valid_Smoke_sid_id$",
+		"policyId": "$ID:DefinePolicy_All_Valid_Smoke_sid_id$",
+		"requesttime": "$TIMESTAMP$"
+}'
+      output: '{
+        "policyGroupName": "$IGNORE$",
+        "policyGroupDesc": "$IGNORE$",
+        "policyGroupStatus": "true",
+        "policyName": "$IGNORE$",
+        "policyDesc": "$IGNORE$",
+        "policyType": "Auth",
+        "status": "PUBLISHED",
+        "is_Active": "true",
+        "authType": "bio",
+        "authSubType": "$IGNORE$",
+		"mandatory": "$IGNORE$",
+        "attributeName": "$IGNORE$",
+        "authTokenType": "$IGNORE$"
+}'

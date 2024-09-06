@@ -1,0 +1,21 @@
+createPartnerSelfRegistration:
+   InjiCertify_PartnerSelfRegistration_All_Valid_Smoke_sid:
+      endPoint: /v1/partnermanager/partners
+      role: partner
+      restMethod: post
+      inputTemplate: injicertify/PmsIntegration/CreatePartner/createPartner
+      outputTemplate: injicertify/PmsIntegration/CreatePartner/createPartnerResult
+      input: '{
+    "address": "Bangalore",
+    "contactNumber": "8553967372",
+    "emailId": "$PARTNEREMAIL$",
+    "organizationName": "$PARTNERID$",
+    "partnerId": "$PARTNERID$",
+    "partnerType": "Auth_Partner",
+    "policyGroup": "$ID:DefinePolicyGroup_All_Valid_Smoke_sid_name$",
+    "requesttime": "$TIMESTAMP$"
+  }'
+      output: ' {
+        "partnerId": "$IGNORE$",
+        "status": "InProgress"
+}'

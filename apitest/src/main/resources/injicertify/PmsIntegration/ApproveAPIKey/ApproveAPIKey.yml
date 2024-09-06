@@ -1,0 +1,15 @@
+ApproveAPIKey:
+   InjiCertify_ApproveRejectPartnerAPIKeyReq_All_Valid_Smoke:
+      endPoint: /v1/partnermanager/partners/policy/{mappingkey}
+      role: partner
+      restMethod: put
+      inputTemplate: injicertify/PmsIntegration/ApproveAPIKey/approveAPIKey
+      outputTemplate: injicertify/PmsIntegration/ApproveAPIKey/approveAPIKeyResult
+      input: '{
+      "status": "Approved",
+      "mappingkey": "$ID:SubmitPartnerApiKeyRequest_Rejection_All_Valid_Smoke_sid_mappingkey$",
+	  "requesttime": "$TIMESTAMP$"
+  }'
+      output: '{
+        "response": "Policy mapping approved successfully"
+}'

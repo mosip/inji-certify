@@ -1,0 +1,16 @@
+RequestAPIKeyForAuthPartner:
+   InjiCertify_SubmitPartnerApiKeyRequest_Rejection_All_Valid_Smoke_sid:
+      endPoint: /v1/partnermanager/partners/$ID:PartnerSelfRegistration_All_Valid_Smoke_sid_partnerId$/policy/map
+      role: partner
+      restMethod: post 
+      inputTemplate: injicertify/PmsIntegration/RequestAPIKey/requestApiKey
+      outputTemplate: injicertify/PmsIntegration/RequestAPIKey/requestAPIKeyResult
+      input: '{
+        "policyName": "$ID:DefinePolicy_All_Valid_Smoke_sid_name$",
+        "useCaseDescription": "Need to submit the payment",
+        "requesttime": "$TIMESTAMP$"
+    }'
+      output: '{
+        "mappingkey": "$IGNORE$",
+        "message": "Policy mapping request submitted successfully."
+}'

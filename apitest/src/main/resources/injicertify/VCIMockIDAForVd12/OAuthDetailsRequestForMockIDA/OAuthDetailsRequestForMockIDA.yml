@@ -1,0 +1,26 @@
+OAuthDetailsRequestForMockIDA:
+   InjiCertify_ESignet_OAuthDetailsRequest_ForMockIDA_Vd12_uin_all_Valid_Smoke_sid:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      inputTemplate: injicertify/VCIMockIDAForVd12/OAuthDetailsRequestForMockIDA/OAuthDetailsRequestForMockIDA
+      outputTemplate: injicertify/VCIMockIDAForVd12/OAuthDetailsRequestForMockIDA/OAuthDetailsRequestForMockIDAResult
+      input: '{
+      	"requestTime": "$TIMESTAMP$",
+      	"clientId": "$ID:ESignet_CreateOIDCClientV2_ForMockIDA_all_Valid_Smoke_sid_clientId$",
+      	"scope": "mock_identity_vc_ldp",
+      	"responseType": "code",
+      	"redirectUri": "$IDPREDIRECTURI$",
+      	"display": "popup",
+	    "prompt": "login",
+	    "acrValues": "mosip:idp:acr:generated-code",
+	    "nonce": "973eieljzng",
+	    "state": "eree2311",
+	    "claimsLocales": "en",
+	    "codeChallenge": "$CODECHALLENGE$",
+        "codeChallengeMethod": "S256"
+}'
+      output: '{
+       
+}'

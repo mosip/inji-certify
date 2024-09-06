@@ -1,0 +1,17 @@
+AuthorizationCodeSunBirdCForVd12:
+   InjiCertify_ESignet_AuthorizationCode_SunBirdCForVd12_All_Valid_Smoke_sid:
+      endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/authorization/auth-code
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/SunBirdCForVd12/AuthorizationCodeSunBirdCForVd12/AuthorizationCodeSunBirdCForVd12
+      outputTemplate: injicertify/SunBirdCForVd12/AuthorizationCodeSunBirdCForVd12/AuthorizationCodeSunBirdCForVd12Result
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_SunBirdCForVd12_all_Valid_Smoke_sid_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_SunBirdCForVd12_all_Valid_Smoke_sid_transactionId$",
+      	"permittedAuthorizeScopes": [{scope: "sunbird_rc_insurance_vc_ldp"}]
+}'
+      output: '{
+}'

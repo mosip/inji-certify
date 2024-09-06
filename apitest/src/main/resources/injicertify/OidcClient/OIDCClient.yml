@@ -1,0 +1,21 @@
+CreateOIDCClient:
+   Injicertify_CreateOIDCClient_all_Valid_Smoke_sid:
+      endPoint: /v1/partnermanager/oidc/client
+      role: partner
+      restMethod: post
+      inputTemplate: injicertify/OidcClient/OIDCClient
+      outputTemplate: injicertify/OidcClient/OIDCClientResult
+      input: '{
+        "name": "$RANDOMID$",
+        "policyId": "$ID:DefinePolicy_All_Valid_Smoke_sid_id$",
+        "publicKey": "$OIDCJWKKEY$",
+        "authPartnerId": "$ID:PartnerSelfRegistration_All_Valid_Smoke_sid_partnerId$",
+        "logoUri": "https://health-services.com/logo.png",
+        "redirectUris": "$IDPREDIRECTURI$",
+        "grantTypes": "authorization_code",
+        "clientAuthMethods": "private_key_jwt"
+}'
+      output: '{
+        "clientId": "$IGNORE$",
+        "status": "ACTIVE"
+}'

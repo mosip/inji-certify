@@ -1,0 +1,16 @@
+AuthorizationCodeVCI:
+   InjiCertify_ESignet_AuthorizationCode_VCI_ForVD11_uin_All_Valid_Smoke_sid:
+      endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/auth-code
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/VCIMosipIDForVD11/AuthorizationCodeVCI/AuthorizationCodeVCI
+      outputTemplate: injicertify/VCIMosipIDForVD11/AuthorizationCodeVCI/AuthorizationCodeVCIResult
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_VCI_ForVD11_uin_all_Valid_Smoke_sid_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_VCI_ForVD11_uin_all_Valid_Smoke_sid_transactionId$"
+}'
+      output: '{
+}'
