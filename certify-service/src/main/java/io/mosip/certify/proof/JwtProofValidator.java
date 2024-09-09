@@ -9,6 +9,8 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.crypto.ECDSAVerifier;
+import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
@@ -90,9 +92,15 @@ public class JwtProofValidator implements ProofValidator {
                     .claim("nonce", cNonce)
                     .build(), REQUIRED_CLAIMS);
             claimsSetVerifier.setMaxClockSkew(0);
-
-            JWSKeySelector keySelector = new JWSVerificationKeySelector(allowedSignatureAlgorithms,
-                    new ImmutableJWKSet(new JWKSet(jwk)));
+            JWSKeySelector keySelector;
+            if(jwk instanceof com.nimbusds.jose.jwk.ECKey) {
+                ECDSAVerifier verifier = new ECDSAVerifier((com.nimbusds.jose.jwk.ECKey) jwk);
+                verifier.getJCAContext().setProvider(BouncyCastleProviderSingleton.getInstance());
+                keySelector = new JWSVerificationKeySelector<>(JWSAlgorithm.ES256K, new ImmutableJWKSet<>(new JWKSet(jwk)));
+            } else {
+                keySelector = new JWSVerificationKeySelector(allowedSignatureAlgorithms,
+                        new ImmutableJWKSet(new JWKSet(jwk)));
+            }
             ConfigurableJWTProcessor jwtProcessor = new DefaultJWTProcessor();
             jwtProcessor.setJWSKeySelector(keySelector);
             jwtProcessor.setJWSTypeVerifier(new DefaultJOSEObjectTypeVerifier(new JOSEObjectType(HEADER_TYP)));
@@ -101,7 +109,7 @@ public class JwtProofValidator implements ProofValidator {
             return true;
         } catch (InvalidRequestException e) {
             log.error("Invalid proof : {}", e.getErrorCode());
-        }  catch (ParseException e) {
+        } catch (ParseException e) {
             log.error("Failed to parse jwt in the credential proof", e);
         } catch (BadJOSEException | JOSEException e) {
             log.error("JWT proof verification failed", e);
