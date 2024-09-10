@@ -94,7 +94,7 @@ services:
     networks:
       - network
   certify:
-    image: mosipqa/inji-certify:0.9.1
+    image: mosipqa/inji-certify:0.9.x
     user: root
     ports:
       - 8090:8090
