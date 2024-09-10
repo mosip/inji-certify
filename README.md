@@ -189,7 +189,7 @@ Execute installation script
    * Add the private key from the OIDC client created in eSignet(collection to create a client can be found [here](docker-compose/docker-compose-certify/postman-collections)) to the p12 file in mimoto.
    * You will be able to see the newly created issuer in InjiWeb home page to download the credential.
 
- - For this release Mosip ID and Mock plugins are using eSignet DTO's due to shared redis cache dependency to resolve serialization issues, so eSignet image tag version in docker compose should be in consistent with Mock and Mosip ID pom dependency version.As of now we are using eSignet 1.4.0 in docker compose as well as plugins in artifactory
+ - For this release Mosip ID and Mock plugins are using eSignet DTO's due to shared redis cache dependency to resolve serialization issues, so eSignet image tag version in docker compose should be in consistent with Mock and Mosip ID pom dependency version.As of now we are using eSignet 1.4.1 in docker compose as well as plugins in artifactory
    - [Mosip ID](https://github.com/mosip/digital-credential-plugins/blob/a96fada5b8eefa00282cadab1c698f429223c0b3/mosip-identity-certify-plugin/pom.xml#L148)
    - [Mock](https://github.com/mosip/digital-credential-plugins/blob/a96fada5b8eefa00282cadab1c698f429223c0b3/mock-certify-plugin/pom.xml#L75)
 
@@ -207,5 +207,5 @@ Execute installation script
       *  [Registry](https://github.com/challabeehyv/sunbird-devops/tree/main/deploy-as-code/helm/demo-mosip-registry)
       *  [Credential service, Credential schema service & Identity service](https://github.com/Sunbird-RC/devops/tree/main/deploy-as-code/helm/v2)
       *  [Vault](https://github.com/challabeehyv/sunbird-devops/blob/main/deploy-as-code/helm/v2/README.md#vault-deployment)
-   * [Esignet](https://github.com/mosip/esignet/tree/v1.4.0/helm)
+   * [Esignet](https://github.com/mosip/esignet/tree/v1.4.1/helm)
    * [Certify](https://github.com/mosip/inji-certify/tree/v0.9.0/helm/inji-certify)

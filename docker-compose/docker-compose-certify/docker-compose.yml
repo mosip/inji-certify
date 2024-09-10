@@ -15,7 +15,7 @@ services:
     networks:
       - network
   artifactory-server:
-    image: 'mosipid/artifactory-server:0.9.0-INJI'
+    image: 'mosipqa/artifactory-server:0.9.1-INJI'
     ports:
       - 8080:8080
     networks:
@@ -70,7 +70,7 @@ services:
     networks:
       - network
   esignet:
-    image: 'mosipid/esignet:1.4.0'
+    image: 'mosipid/esignet:1.4.1'
     user: root
     ports:
       - 8088:8088
@@ -94,7 +94,7 @@ services:
     networks:
       - network
   certify:
-    image: mosipid/inji-certify:0.9.0
+    image: mosipqa/inji-certify:0.9.1
     user: root
     ports:
       - 8090:8090
@@ -117,7 +117,7 @@ services:
     networks:
       - network
   esignet-ui:
-    image: 'mosipid/oidc-ui:1.4.0'
+    image: 'mosipid/oidc-ui:1.4.1'
     user: root
     ports:
       - 3001:3000
