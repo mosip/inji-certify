@@ -93,7 +93,7 @@ public class JwtProofValidator implements ProofValidator {
                     .build(), REQUIRED_CLAIMS);
             claimsSetVerifier.setMaxClockSkew(0);
             JWSKeySelector keySelector;
-            if(jwk instanceof com.nimbusds.jose.jwk.ECKey) {
+            if(JWSAlgorithm.ES256K.equals(jwt.getHeader().getAlgorithm())) {
                 ECDSAVerifier verifier = new ECDSAVerifier((com.nimbusds.jose.jwk.ECKey) jwk);
                 verifier.getJCAContext().setProvider(BouncyCastleProviderSingleton.getInstance());
                 keySelector = new JWSVerificationKeySelector<>(JWSAlgorithm.ES256K, new ImmutableJWKSet<>(new JWKSet(jwk)));
