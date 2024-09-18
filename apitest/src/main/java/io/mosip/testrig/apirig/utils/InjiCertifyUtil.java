@@ -232,4 +232,13 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		return "";
 	}
 	
+	public static String isTestCaseValidForExecution(TestCaseDTO testCaseDTO) {
+		String testCaseName = testCaseDTO.getTestCaseName();
+
+		if (SkipTestCaseHandler.isTestCaseInSkippedList(testCaseName)) {
+			throw new SkipException(GlobalConstants.KNOWN_ISSUES);
+		}
+		return testCaseName;
+	}
+	
 }

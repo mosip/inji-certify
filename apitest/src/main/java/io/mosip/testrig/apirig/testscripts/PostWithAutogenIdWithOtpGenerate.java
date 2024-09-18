@@ -85,6 +85,7 @@ public class PostWithAutogenIdWithOtpGenerate extends AdminTestUtil implements I
 	public void test(TestCaseDTO testCaseDTO)
 			throws AuthenticationTestException, AdminTestException, NumberFormatException, InterruptedException {
 		testCaseName = testCaseDTO.getTestCaseName();
+		testCaseName = InjiCertifyUtil.isTestCaseValidForExecution(testCaseDTO);
 		if (HealthChecker.signalTerminateExecution) {
 			throw new SkipException(
 					GlobalConstants.TARGET_ENV_HEALTH_CHECK_FAILED + HealthChecker.healthCheckFailureMapS);
