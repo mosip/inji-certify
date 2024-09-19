@@ -12,4 +12,3 @@ import java.util.Map;
 public interface DataProviderPlugin {
     Map<String, Object> fetchData(Map<String, Object> identityDetails) throws DataProviderExchangeException;
 }
-
