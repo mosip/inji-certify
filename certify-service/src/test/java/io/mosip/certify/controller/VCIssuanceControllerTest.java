@@ -73,12 +73,12 @@ public class VCIssuanceControllerTest {
         issuerMetadata.put("credential_endpoint", "https://localhost:9090/v1/certify/issuance/credential");
         issuerMetadata.put("credentials_supported", Arrays.asList());
 
-        Mockito.when(vcIssuanceService.getCredentialIssuerMetadata("v11")).thenReturn(issuerMetadata);
+        Mockito.when(vcIssuanceService.getCredentialIssuerMetadata("vd11")).thenReturn(issuerMetadata);
 
         mockMvc.perform(get("/issuance/.well-known/openid-credential-issuer?version=vd11"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.credential_issuer").exists())
-                .andExpect(jsonPath("$.credential_issuer").exists())
+                .andExpect(jsonPath("$.credential_endpoint").exists())
                 .andExpect(jsonPath("$.credentials_supported").exists())
                 .andExpect(header().string("Content-Type", "application/json"));
 
