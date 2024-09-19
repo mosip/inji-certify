@@ -11,12 +11,41 @@ services:
     volumes:
       - ./esignet_init.sql:/docker-entrypoint-initdb.d/esignet_init.sql
       - ./certify_init.sql:/docker-entrypoint-initdb.d/certify_init.sql
+      - ./mock_identity_init.sql:/docker-entrypoint-initdb.d/mock_identity_init.sql
     networks:
       - network
   artifactory-server:
-    image: 'mosipdev/artifactory-server:release-0.9.0-INJI'
+    image: 'mosipqa/artifactory-server:0.9.1-INJI'
     ports:
       - 8080:8080
+    networks:
+      - network
+  mock-identity-system:
+    image: 'mosipid/mock-identity-system:0.9.3'
+    user: root
+    ports:
+      - 8082:8082
+    environment:
+      - artifactory_url_env=http://artifactory-server:8080/
+      - container_user=mosip
+      - active_profile_env=default
+      - SPRING_CONFIG_NAME=mock-identity-system
+      - SPRING_CONFIG_LOCATION=/home/mosip/mock-identity-system-default.properties
+    depends_on:
+      - database
+      - artifactory-server
+    volumes:
+      - ./config/mock-identity-system-default.properties:/home/mosip/mock-identity-system-default.properties
+    networks:
+      - network
+  cache:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning --requirepass redis
+    volumes:
+      - cache:/data
     networks:
       - network
   zookeeper:
@@ -41,42 +70,46 @@ services:
     networks:
       - network
   esignet:
-    image: 'mosipid/esignet:1.4.0'
+    image: 'mosipid/esignet:1.4.1'
     user: root
     ports:
       - 8088:8088
     environment:
       - artifactory_url_env=http://artifactory-server:8080/
       - container_user=mosip
-      - active_profile_env=default
+      - active_profile_env=default,mock-identity
       - SPRING_CONFIG_NAME=esignet
-      - SPRING_CONFIG_LOCATION=/home/mosip/esignet-default.properties
+      - SPRING_CONFIG_LOCATION=/home/mosip/config/
+      - esignet_wrapper_url_env=http://artifactory-server:8080/artifactory/libs-release-local/esignet/esignet-wrapper.zip
     depends_on:
       - database
       - artifactory-server
       - kafka
     volumes:
-      - ./config/esignet-default.properties:/home/mosip/esignet-default.properties
-      - ./loader_path/esignet/:/home/mosip/additional_jars/
+      - ./config/esignet-default.properties:/home/mosip/config/esignet-default.properties
+      - ./config/esignet-sunbird-insurance.properties:/home/mosip/config/esignet-sunbird-insurance.properties
+      - ./config/esignet-mock-identity.properties:/home/mosip/config/esignet-mock-identity.properties
       - ./data/ESIGNET_PKCS12:/home/mosip/ESIGNET_PKCS12
+#      - ./loader_path/esignet/:/home/mosip/additional_jars/
     networks:
       - network
   certify:
-    image: mosipdev/inji-certify:develop
+    image: mosipqa/inji-certify:0.9.x
     user: root
     ports:
       - 8090:8090
     environment:
       - artifactory_url_env=http://artifactory-server:8080
       - container_user=mosip
-      - active_profile_env=default
-      - SPRING_CONFIG_NAME=certify,certify-plugin
-      - SPRING_CONFIG_LOCATION=/home/mosip/certify-default.properties,/home/mosip/certify-plugin-default.properties
+      - active_profile_env=default,mock-identity
+      - SPRING_CONFIG_NAME=certify
+      - SPRING_CONFIG_LOCATION=/home/mosip/config/
 #      - enable_certify_artifactory=false
-      - download_hsm_client=false
+#      - download_hsm_client=true
     volumes:
-      - ./config/certify-default.properties:/home/mosip/certify-default.properties
-      - ./config/certify-plugin-default.properties:/home/mosip/certify-plugin-default.properties
+      - ./config/certify-default.properties:/home/mosip/config/certify-default.properties
+      - ./config/certify-sunbird-insurance.properties:/home/mosip/config/certify-sunbird-insurance.properties
+      - ./config/certify-mock-identity.properties:/home/mosip/config/certify-mock-identity.properties
       - ./data/CERTIFY_PKCS12:/home/mosip/CERTIFY_PKCS12
 #      - ./loader_path/certify/:/home/mosip/additional_jars/
     depends_on:
@@ -84,7 +117,7 @@ services:
     networks:
       - network
   esignet-ui:
-    image: 'mosipid/oidc-ui:1.4.0'
+    image: 'mosipid/oidc-ui:1.4.1'
     user: root
     ports:
       - 3001:3000
@@ -105,3 +138,7 @@ networks:
   network:
     name: mosip_network
     external: true
+
+volumes:
+  cache:
+    driver: local

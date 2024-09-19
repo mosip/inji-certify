@@ -75,14 +75,14 @@ public class VCIssuanceControllerTest {
 
         Mockito.when(vcIssuanceService.getCredentialIssuerMetadata("v11")).thenReturn(issuerMetadata);
 
-        mockMvc.perform(get("/issuance/.well-known/openid-credential-issuer?version=v11"))
+        mockMvc.perform(get("/issuance/.well-known/openid-credential-issuer?version=vd11"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.credential_issuer").exists())
                 .andExpect(jsonPath("$.credential_issuer").exists())
                 .andExpect(jsonPath("$.credentials_supported").exists())
                 .andExpect(header().string("Content-Type", "application/json"));
 
-        Mockito.verify(vcIssuanceService).getCredentialIssuerMetadata("v11");
+        Mockito.verify(vcIssuanceService).getCredentialIssuerMetadata("vd11");
     }
 
     @Test
@@ -201,7 +201,7 @@ public class VCIssuanceControllerTest {
     }
 
     @Test
-    public void getVerifiableCredential_v11() throws Exception {
+    public void getVerifiableCredential_vd11() throws Exception {
         CredentialDefinition credentialDefinition = new CredentialDefinition();
         credentialDefinition.setType(Arrays.asList("VerifiableCredential", "SampleVerifiableCredential_ldp"));
         credentialDefinition.setContext(Arrays.asList("https://www.w3.org/2018/credentials/v1"));
@@ -227,7 +227,7 @@ public class VCIssuanceControllerTest {
     }
 
     @Test
-    public void getVerifiableCredential_v12() throws Exception {
+    public void getVerifiableCredential_vd12() throws Exception {
         CredentialDefinition credentialDefinition = new CredentialDefinition();
         credentialDefinition.setType(Arrays.asList("VerifiableCredential", "SampleVerifiableCredential_ldp"));
         credentialDefinition.setContext(Arrays.asList("https://www.w3.org/2018/credentials/v1"));
