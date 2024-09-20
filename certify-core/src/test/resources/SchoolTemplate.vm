@@ -1,0 +1,38 @@
+#set($validFrom = $validFrom) ## Assume $validFrom might be null or undefined
+#set($validUntil = $validUntil) ## Assume $validFrom might be null or undefined
+
+{
+"@context": [
+"https://www.w3.org/ns/credentials/v2",
+"${context}"
+],
+"type": [
+"VerifiableCredential",
+"SchoolCertificate"
+],
+"validFrom": "${validFrom}",
+"issuer": "${issuer}",
+#if($validUntil)
+"validUntil": "${validUntil}",
+#end
+"credentialSubject": {
+    "foundingDate": "${dob}",
+    "city": "${city}",
+#if($amenities)
+    "amenities": #if($amenities)$amenities#else#set($amenities = '"[]"') $amenities#end,
+#end
+    "name": "${name}",
+    "principalName": "${principalName}",
+    "schoolType": "${schoolType}",
+    "country": "${country}",
+    "schoolRegistrationNumber": "${policyName}"
+},
+"renderMethod": [{
+"id": "https://vharsh.github.io/DID/insurance_svg_template.svg",
+"type": "SvgRenderingTemplate",
+"name": "Portrait Mode",
+"css3MediaQuery": "@media (orientation: portrait)",
+"digestMultibase": "zQmAPdhyxzznFCwYxAp2dRerWC85Wg6wFl9G270iEu5h6JqW"
+}]
+}
+

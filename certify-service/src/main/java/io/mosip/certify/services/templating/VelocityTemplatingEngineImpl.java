@@ -29,7 +29,6 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
 
     @PostConstruct
     public void initialize() {
-        // TODO: Get the template as a String from the DB
         engine = new VelocityEngine();
         // DataSourceResourceLoader ds = new DataSourceResourceLoader();
         // TODO: The DataSourceResourceLoader can be used instead if there's a
@@ -57,14 +56,13 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
      */
     @Override
     public String format(Map<String, Object> templateInput, Map<String, Object> defaultSettings) {
-        String templateName = templateInput.get("templateName").toString();
-        // TODO: right now any name will work
+        // TODO: Isn't template name becoming too complex with VC_CONTEXTS & CREDENTIAL_TYPES both?
+        String templateName = defaultSettings.get("templateName").toString();
         String t = templateCache.get(templateName);
         StringWriter writer = new StringWriter();
         VelocityContext context = new VelocityContext(templateInput);
-        // TODO: Check config for templateName.* fields and apply those configs as well
+        // TODO: Check config for templateName.* fields and apply those configs as well, e.g. auto-fill validFrom & validUntil
         InputStream is = new ByteArrayInputStream(t.toString().getBytes(StandardCharsets.UTF_8));
-        // TODO: pass a Reader to engine.evaluate
         engine.evaluate(context, writer, /*logTag */ templateName,t.toString());
         return writer.toString();
     }

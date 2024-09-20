@@ -33,7 +33,7 @@ public class KeymanagerLibSigner implements VCSigner {
     SignatureService signatureService;
     @Override
     public VCResult<JsonLDObject> perform(String templatedVC, Map<String, String> keyMgrInput) {
-        // TODO: Can the below lines be done at Templating side itself?
+        // TODO: Can the below lines be done at Templating side itself? Ask Hitesh.
         VCResult<JsonLDObject> VC = null;
         JsonLDObject j = JsonLDObject.fromJson(templatedVC);
         j.setDocumentLoader(null);

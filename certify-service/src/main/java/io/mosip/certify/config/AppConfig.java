@@ -84,7 +84,7 @@ public class AppConfig implements ApplicationRunner {
         // Set the reference id to empty string, as keymanager is expecting the same for initialization
         masterKeyRequest.setReferenceId(org.apache.commons.lang3.StringUtils.EMPTY);
         keymanagerService.generateMasterKey(objectType, masterKeyRequest);
-
+        // TODO: Generate an EC & ED key. Ask Taheer.
         if(!StringUtils.isEmpty(cacheSecretKeyRefId)) {
             SymmetricKeyGenerateRequestDto symmetricKeyGenerateRequestDto = new SymmetricKeyGenerateRequestDto();
             symmetricKeyGenerateRequestDto.setApplicationId(Constants.CERTIFY_SERVICE_APP_ID);
