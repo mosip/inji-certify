@@ -8,9 +8,7 @@ import org.apache.velocity.runtime.RuntimeConstants;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
-import java.io.FileWriter;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;

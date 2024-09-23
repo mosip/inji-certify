@@ -1,5 +1,9 @@
 package io.mosip.certify.services.templating;
 
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+
 import io.mosip.certify.api.spi.VCFormatter;
 import io.mosip.certify.core.repository.TemplateRepository;
 import jakarta.annotation.PostConstruct;
@@ -7,13 +11,9 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeConstants;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-
-@Component
+@Service
 public class VelocityTemplatingEngineImpl implements VCFormatter {
     VelocityEngine engine;
     public static final String DELIMITER = ":";

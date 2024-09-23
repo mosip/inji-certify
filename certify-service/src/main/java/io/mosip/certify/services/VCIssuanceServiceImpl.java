@@ -5,11 +5,7 @@
  */
 package io.mosip.certify.services;
 
-import foundation.identity.jsonld.JsonLDException;
 import foundation.identity.jsonld.JsonLDObject;
-
-import info.weboftrust.ldsignatures.LdProof;
-import info.weboftrust.ldsignatures.canonicalizer.URDNA2015Canonicalizer;
 import io.mosip.certify.api.dto.VCRequestDto;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.api.exception.DataProviderExchangeException;
@@ -18,8 +14,6 @@ import io.mosip.certify.api.spi.*;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
 import io.mosip.certify.core.constants.VCFormats;
-import io.mosip.certify.core.constants.SignatureAlg;
-import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.dto.CredentialMetadata;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
@@ -38,23 +32,15 @@ import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
 import io.mosip.certify.utils.CredentialUtils;
-import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
-import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import io.mosip.kernel.signature.service.SignatureService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.stereotype.Service;
-
-import java.io.IOException;
-import java.net.URI;
-import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Slf4j
@@ -162,20 +148,16 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
                     vcRequestDto.setCredentialSubject(credentialRequest.getCredential_definition().getCredentialSubject());
                     validateLdpVcFormatRequest(credentialRequest, credentialMetadata);
                     if (CredentialUtils.isVC2_0Request(vcRequestDto)) {
-                        // 1. Envoke the DataProvider Interface implementation
                         try {
                             Map<String, Object> identityData = dataModelService.fetchData(parsedAccessToken.getClaims());
-                            // 2. Pass the DataProvider result impl to the Template impl
                             String templatedVC = vcFormatter.format(identityData, null);
-                            // 3. Sign
                             vcResult = vcSigner.perform(templatedVC, null);
-                            // 4. Attach
                         } catch(DataProviderExchangeException e) {
                             throw new CertifyException(e.getErrorCode());
                         }
                     } else {
                         vcResult = vcIssuancePlugin.getVerifiableCredentialWithLinkedDataProof(vcRequestDto, holderId,
-                                parsedAccessToken.getClaims());
+                               parsedAccessToken.getClaims());
                     }
                     break;
 
@@ -192,13 +174,13 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
                     vcRequestDto.setClaims(credentialRequest.getClaims());
                     vcRequestDto.setDoctype( credentialRequest.getDoctype());
                     vcResult = vcIssuancePlugin.getVerifiableCredential(vcRequestDto, holderId,
-                            parsedAccessToken.getClaims());
+                          parsedAccessToken.getClaims());
                     break;
                 default:
                     throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
             }
         } catch (VCIExchangeException e) {
-            throw new CertifyException(e.getErrorCode());
+            throw new CertifyException(e.getMessage());
         }
 
         if(vcResult != null && vcResult.getCredential() != null)
