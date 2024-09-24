@@ -1,6 +1,5 @@
 package io.mosip.certify.services;
 
-import com.apicatalog.jsonld.JsonLd;
 import foundation.identity.jsonld.JsonLDException;
 import foundation.identity.jsonld.JsonLDObject;
 import info.weboftrust.ldsignatures.LdProof;
@@ -64,8 +63,8 @@ public class KeymanagerLibSigner implements VCSigner {
         JWSSignatureRequestDto payload = new JWSSignatureRequestDto();
         // TODO: Set the alg
         payload.setDataToSign(vcEncodedData);
-        payload.setApplicationId(""); // set the key name
-        payload.setReferenceId(""); // alg
+        payload.setApplicationId(Constants.CERTIFY_MOCK_RSA);
+        payload.setReferenceId(""); // alg, empty = RSA
         payload.setIncludePayload(false);
         payload.setIncludeCertificate(false);
         payload.setIncludeCertHash(true);

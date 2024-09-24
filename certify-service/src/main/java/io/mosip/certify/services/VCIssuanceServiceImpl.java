@@ -150,7 +150,9 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
                     if (CredentialUtils.isVC2_0Request(vcRequestDto)) {
                         try {
                             Map<String, Object> identityData = dataModelService.fetchData(parsedAccessToken.getClaims());
-                            String templatedVC = vcFormatter.format(identityData, null);
+                            Map<String, Object> templateParams = new HashMap<>();
+                            templateParams.put("templateName", CredentialUtils.getTemplateName(vcRequestDto));
+                            String templatedVC = vcFormatter.format(identityData, templateParams);
                             vcResult = vcSigner.perform(templatedVC, null);
                         } catch(DataProviderExchangeException e) {
                             throw new CertifyException(e.getErrorCode());

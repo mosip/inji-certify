@@ -1,16 +1,17 @@
 package io.mosip.certify.core.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.util.Objects;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class TemplateId implements Serializable {
     private String context;
     private String credentialType;
-
-    public TemplateId(String context, String credentialType) {
-        this.context = context;
-        this.credentialType = credentialType;
-    }
 
     @Override
     public boolean equals(Object o) {
