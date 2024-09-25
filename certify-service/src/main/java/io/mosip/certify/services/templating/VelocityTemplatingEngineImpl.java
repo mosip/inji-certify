@@ -1,16 +1,23 @@
 package io.mosip.certify.services.templating;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
-
 import io.mosip.certify.api.spi.VCFormatter;
+import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.repository.TemplateRepository;
 import jakarta.annotation.PostConstruct;
+import lombok.SneakyThrows;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeConstants;
+import org.apache.velocity.tools.generic.DateTool;
+import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,12 +27,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     Map<String, String> templateCache;
     @Autowired
     TemplateRepository templateRepository;
-    // DATA to be fetched from DB
-
-    @Autowired
-    public void setTemplateRepository(TemplateRepository templateRepository) {
-        this.templateRepository = templateRepository;
-    }
+    @Value("${mosip.certify.vcformat.vc.expiry:true}")
+    boolean shouldHaveDates;
 
     @PostConstruct
     public void initialize() {
@@ -60,9 +63,29 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         String templateName = defaultSettings.get("templateName").toString();
         String t = templateCache.get(templateName);
         StringWriter writer = new StringWriter();
-        VelocityContext context = new VelocityContext(templateInput);
-        // TODO: Check config for templateName.* fields and apply those configs as well, e.g. auto-fill validFrom & validUntil
-        InputStream is = new ByteArrayInputStream(t.toString().getBytes(StandardCharsets.UTF_8));
+        // 1. Prepare map
+        Map<String, Object> finalTemplate = new HashMap<>();
+        for (String key : templateInput.keySet()) {
+            Object value = templateInput.get(key);
+            if (value instanceof List) {
+                // TODO(problem area): handle field values with unescaped JSON
+                //  reserved literals such as " or ,
+                // (Q) Should Object always be a JSONObject?
+                finalTemplate.put(key, new JSONArray((List<Object>) value));
+            } else {
+                finalTemplate.put(key, value);
+            }
+        }
+        if (shouldHaveDates && !(templateInput.containsKey(VCDM2Constants.VALID_FROM)
+                && templateInput.containsKey(VCDM2Constants.VALID_UNITL))) {
+            templateInput.put("_dateTool", new DateTool());
+            ZonedDateTime z = ZonedDateTime.now(ZoneOffset.UTC);
+            String time = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
+            // TODO: get the time created using DateTool
+            finalTemplate.put(VCDM2Constants.VALID_FROM, time);
+            finalTemplate.put(VCDM2Constants.VALID_UNITL, time);
+        }
+        VelocityContext context = new VelocityContext(finalTemplate);
         engine.evaluate(context, writer, /*logTag */ templateName,t.toString());
         return writer.toString();
     }

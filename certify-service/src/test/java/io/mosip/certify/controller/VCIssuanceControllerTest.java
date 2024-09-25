@@ -3,6 +3,9 @@ package io.mosip.certify.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.spi.AuditPlugin;
+import io.mosip.certify.api.spi.DataProviderPlugin;
+import io.mosip.certify.api.spi.VCFormatter;
+import io.mosip.certify.api.spi.VCSigner;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.InvalidRequestException;
@@ -37,9 +40,17 @@ public class VCIssuanceControllerTest {
     @MockBean
     AuditPlugin auditWrapper;
 
-
     @MockBean
     ParsedAccessToken parsedAccessToken;
+
+    @MockBean
+    DataProviderPlugin dataProviderPlugin;
+
+    @MockBean
+    VCFormatter vcFormatter;
+
+    @MockBean
+    VCSigner vcSigner;
 
     @MockBean
     VCIssuanceService vcIssuanceService;

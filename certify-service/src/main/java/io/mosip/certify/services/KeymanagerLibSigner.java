@@ -33,15 +33,16 @@ public class KeymanagerLibSigner implements VCSigner {
     @Override
     public VCResult<JsonLDObject> perform(String templatedVC, Map<String, String> keyMgrInput) {
         // TODO: Can the below lines be done at Templating side itself? Ask Hitesh.
-        VCResult<JsonLDObject> VC = null;
+        VCResult<JsonLDObject> VC = new VCResult<>();
         JsonLDObject j = JsonLDObject.fromJson(templatedVC);
         j.setDocumentLoader(null);
+        // NOTE: other aspects can be configured via keyMgrInput map
         Date validFrom = Date
                 .from(LocalDateTime
                         .parse((String) j.getJsonObject().get(VCDM2Constants.VALID_FROM),
                                 DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN))
                         .atZone(ZoneId.systemDefault()).toInstant());
-        LdProof vcLdProof = LdProof.builder().defaultContexts(false).defaultTypes(false).type(SignatureAlg.RSA_SIGNATURE_2018)
+        LdProof vcLdProof = LdProof.builder().defaultContexts(false).defaultTypes(false).type(SignatureAlg.RSA_SIGNATURE_SUITE)
                 .created(validFrom).proofPurpose(VCDM2Constants.ASSERTION_METHOD)
                 .verificationMethod(URI.create("https://vharsh.github.io/DID/mock-public-key.json"))
                 // ^^ Why is this pointing to JWKS URL of eSignet??
