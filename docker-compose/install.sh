@@ -25,6 +25,9 @@ display_menu() {
 
 # Function to handle user input
 handle_input() {
+    docker network inspect mosip_network >/dev/null 2>&1 || \
+        docker network create --driver bridge mosip_network
+
     display_menu
     read -p "Select: " choice
     case $choice in

@@ -117,8 +117,8 @@ CREATE TABLE esignet.key_store(
 );
 
 CREATE TABLE esignet.public_key_registry(
-    id_hash character varying(100) NOT NULL,
-    auth_factor character varying(25) NOT NULL,
+  id_hash character varying(100) NOT NULL,
+  auth_factor character varying(25) NOT NULL,
   psu_token character varying(256) NOT NULL,
   public_key character varying NOT NULL,
   expire_dtimes timestamp NOT NULL,
@@ -135,4 +135,4 @@ INSERT INTO esignet.KEY_POLICY_DEF(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,
 INSERT INTO esignet.KEY_POLICY_DEF(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('OIDC_SERVICE', 1095, 50, 'NA', true, 'mosipadmin', now());
 INSERT INTO esignet.KEY_POLICY_DEF(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('OIDC_PARTNER', 1095, 50, 'NA', true, 'mosipadmin', now());
 INSERT INTO esignet.KEY_POLICY_DEF(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('BINDING_SERVICE', 1095, 50, 'NA', true, 'mosipadmin', now());
-
+INSERT INTO esignet.KEY_POLICY_DEF(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('MOCK_BINDING_SERVICE', 1095, 50, 'NA', true, 'mosipadmin', now());

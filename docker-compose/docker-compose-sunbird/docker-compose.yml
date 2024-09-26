@@ -160,7 +160,7 @@ services:
       retries: 10
     networks:
       - network
-  nginx:
+  sunbird-registry:
     image: nginx:stable-alpine
     volumes:
       - ./imports/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
@@ -179,5 +179,5 @@ services:
       - network
 networks:
   network:
-    driver: bridge
     name: mosip_network
+    external: true
