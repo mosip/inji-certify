@@ -248,7 +248,7 @@ extraEnvVarsCM:
   - global
   - inji-config-server-share
   - artifactory-share
-  - softhsm-certitfy-share
+  - softhsm-certify-share
 
 ## Secret with extra environment variables
 ##

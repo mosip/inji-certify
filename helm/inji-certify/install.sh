@@ -35,8 +35,8 @@ function installing_inji-certify() {
   echo Copy secrets
   ./copy_cm_func.sh secret softhsm-certify softhsm config-server
 
-  kubectl -n config-server set env --keys=mosip-injicertify-host --from configmap/global deployment/config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_
-  kubectl -n config-server set env --keys=security-pin --from secret/softhsm-certify deployment/config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_SOFTHSM_CERTIFY_
+  kubectl -n config-server set env --keys=mosip-injicertify-host --from configmap/global deployment/inji-config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_
+  kubectl -n config-server set env --keys=security-pin --from secret/softhsm-certify deployment/inji-config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_SOFTHSM_CERTIFY_
   kubectl -n config-server get deploy -o name |  xargs -n1 -t  kubectl -n config-server rollout status
 
   echo Copy configmaps
