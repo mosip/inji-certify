@@ -13,7 +13,7 @@ echo Create $SOFTHSM_NS namespace
 kubectl create ns $SOFTHSM_NS
 
 NS=inji-certify
-CHART_VERSION=0.9.1-develop
+CHART_VERSION=0.9.1
 
 echo Create $NS namespace
 kubectl create ns $NS
@@ -59,7 +59,7 @@ function installing_inji-certify() {
   fi
 
   echo Running inji-certify
-  helm -n $NS install inji-certify mosip/inji-certify --set image.repository=mosipqa/inji-certify --set image.tag=0.9.x --set istio.hosts\[0\]=$INJICERTIFY_HOST --version $CHART_VERSION $ENABLE_INSECURE
+  helm -n $NS install inji-certify mosip/inji-certify  --set istio.hosts\[0\]=$INJICERTIFY_HOST --version $CHART_VERSION $ENABLE_INSECURE
 
   kubectl -n $NS  get deploy -o name |  xargs -n1 -t  kubectl -n $NS rollout status
 
