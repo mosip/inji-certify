@@ -7,8 +7,7 @@ import org.testng.SkipException;
 import com.nimbusds.jose.jwk.RSAKey;
 
 import io.mosip.testrig.apirig.dto.TestCaseDTO;
-import io.mosip.testrig.apirig.testrunner.BaseTestCase;
-import io.mosip.testrig.apirig.testrunner.MockSMTPListener;
+import io.mosip.testrig.apirig.testrunner.OTPListener;
 
 public class InjiCertifyUtil extends AdminTestUtil {
 
@@ -27,7 +26,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 				if (emailId.endsWith(GlobalConstants.OTP_AS_PHONE))
 					emailId = emailId.replace(GlobalConstants.OTP_AS_PHONE, "");
 				logger.info(emailId);
-				otp = MockSMTPListener.getOtp(emailId);
+				otp = OTPListener.getOtp(emailId);
 				request.put("otp", otp);
 				inputJson = request.toString();
 				return inputJson;
@@ -41,7 +40,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 					if (emailId.endsWith(GlobalConstants.OTP_AS_PHONE))
 						emailId = emailId.replace(GlobalConstants.OTP_AS_PHONE, "");
 					logger.info(emailId);
-					otp = MockSMTPListener.getOtp(emailId);
+					otp = OTPListener.getOtp(emailId);
 					request.getJSONObject(GlobalConstants.REQUEST).put("otp", otp);
 					inputJson = request.toString();
 					return inputJson;
@@ -62,7 +61,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 							if (emailId.endsWith(GlobalConstants.OTP_AS_PHONE))
 								emailId = emailId.replace(GlobalConstants.OTP_AS_PHONE, "");
 							logger.info(emailId);
-							otp = MockSMTPListener.getOtp(emailId);
+							otp = OTPListener.getOtp(emailId);
 							request.getJSONObject(GlobalConstants.REQUEST).getJSONArray(GlobalConstants.CHALLENGELIST)
 									.getJSONObject(0).put(GlobalConstants.CHALLENGE, otp);
 							inputJson = request.toString();
@@ -99,7 +98,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 				accessToken = request.getString("idpAccessToken");
 			}
 			jsonString = request.toString();
-			tempUrl = getBaseURL(testCaseName, ConfigManager.getInjiCertifyBaseUrl());
+			tempUrl = getBaseURL(testCaseName, InjiCertifyConfigManager.getInjiCertifyBaseUrl());
 
 			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_3$",
 					signJWKForMock(clientId, accessToken, oidcJWKKey4, testCaseName, tempUrl));
@@ -119,7 +118,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			if (request.has("client_id")) {
 				clientId = request.get("client_id").toString();
 			}
-			String tempUrl = getBaseURL(testCaseName, ConfigManager.getInjiCertifyBaseUrl());
+			String tempUrl = getBaseURL(testCaseName, InjiCertifyConfigManager.getInjiCertifyBaseUrl());
 			jsonString = replaceKeywordValue(jsonString, "$CLIENT_ASSERTION_JWT$",
 					signJWKKey(clientId, oidcJWKKey1, tempUrl));
 		}
@@ -138,7 +137,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			if (request.has("client_id")) {
 				clientId = request.get("client_id").toString();
 			}
-			String tempUrl = getBaseURL(testCaseName, ConfigManager.getInjiCertifyBaseUrl());
+			String tempUrl = getBaseURL(testCaseName, InjiCertifyConfigManager.getInjiCertifyBaseUrl());
 			
 			jsonString = replaceKeywordValue(jsonString, "$CLIENT_ASSERTION_USER4_JWT$",
 					signJWKKey(clientId, oidcJWKKey4, tempUrl));
@@ -186,10 +185,10 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		String testCaseName = testCaseDTO.getTestCaseName();
 
 		if (testCaseDTO.getEndPoint().startsWith("$ESIGNETMOCKBASEURL$") && testCaseName.contains("SunBirdC")) {
-			if (ConfigManager.isInServiceNotDeployedList("sunbirdrc"))
+			if (InjiCertifyConfigManager.isInServiceNotDeployedList("sunbirdrc"))
 				throw new SkipException(GlobalConstants.SERVICE_NOT_DEPLOYED_MESSAGE);
-			if (ConfigManager.getEsignetMockBaseURL() != null && !ConfigManager.getEsignetMockBaseURL().isBlank())
-				return ApplnURI.replace("api-internal.", ConfigManager.getEsignetMockBaseURL());
+			if (InjiCertifyConfigManager.getEsignetMockBaseURL() != null && !InjiCertifyConfigManager.getEsignetMockBaseURL().isBlank())
+				return ApplnURI.replace("api-internal.", InjiCertifyConfigManager.getEsignetMockBaseURL());
 		} else if (testCaseDTO.getEndPoint().startsWith("$ESIGNETMOSIPIDBASEURL$")) {
 			return ApplnURI.replace("api-internal", "esignet-mosipid");
 		} else if (testCaseDTO.getEndPoint().startsWith("$ESIGNETMOCKIDABASEURL$")) {
