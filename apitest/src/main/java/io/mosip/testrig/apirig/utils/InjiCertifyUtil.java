@@ -8,7 +8,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 
 import io.mosip.testrig.apirig.dto.TestCaseDTO;
 import io.mosip.testrig.apirig.testrunner.BaseTestCase;
-import io.mosip.testrig.apirig.testrunner.MockSMTPListener;
+import io.mosip.testrig.apirig.testrunner.OTPListener;
 
 public class InjiCertifyUtil extends AdminTestUtil {
 
@@ -27,7 +27,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 				if (emailId.endsWith(GlobalConstants.OTP_AS_PHONE))
 					emailId = emailId.replace(GlobalConstants.OTP_AS_PHONE, "");
 				logger.info(emailId);
-				otp = MockSMTPListener.getOtp(emailId);
+				otp = OTPListener.getOtp(emailId);
 				request.put("otp", otp);
 				inputJson = request.toString();
 				return inputJson;
@@ -41,7 +41,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 					if (emailId.endsWith(GlobalConstants.OTP_AS_PHONE))
 						emailId = emailId.replace(GlobalConstants.OTP_AS_PHONE, "");
 					logger.info(emailId);
-					otp = MockSMTPListener.getOtp(emailId);
+					otp = OTPListener.getOtp(emailId);
 					request.getJSONObject(GlobalConstants.REQUEST).put("otp", otp);
 					inputJson = request.toString();
 					return inputJson;
@@ -62,7 +62,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 							if (emailId.endsWith(GlobalConstants.OTP_AS_PHONE))
 								emailId = emailId.replace(GlobalConstants.OTP_AS_PHONE, "");
 							logger.info(emailId);
-							otp = MockSMTPListener.getOtp(emailId);
+							otp = OTPListener.getOtp(emailId);
 							request.getJSONObject(GlobalConstants.REQUEST).getJSONArray(GlobalConstants.CHALLENGELIST)
 									.getJSONObject(0).put(GlobalConstants.CHALLENGE, otp);
 							inputJson = request.toString();
