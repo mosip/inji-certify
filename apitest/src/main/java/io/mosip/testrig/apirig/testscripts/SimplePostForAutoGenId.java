@@ -46,7 +46,7 @@ public class SimplePostForAutoGenId extends AdminTestUtil implements ITest {
 
 	@BeforeClass
 	public static void setLogLevel() {
-		if (ConfigManager.IsDebugEnabled())
+		if (InjiCertifyConfigManager.IsDebugEnabled())
 			logger.setLevel(Level.ALL);
 		else
 			logger.setLevel(Level.ERROR);
@@ -101,7 +101,7 @@ public class SimplePostForAutoGenId extends AdminTestUtil implements ITest {
 		}
 
 		if (BaseTestCase.isTargetEnvLTS()) {
-			if (!ConfigManager.isInServiceNotDeployedList(GlobalConstants.RESIDENT)) {
+			if (!InjiCertifyConfigManager.isInServiceNotDeployedList(GlobalConstants.RESIDENT)) {
 				if ((BaseTestCase.currentModule.equals("esignet") && testCaseName.startsWith("ESignetIdR_Generate"))) {
 					throw new SkipException(
 							GlobalConstants.VID_GENERATED_USING_RESIDENT_API_SO_FEATURE_NOT_SUPPORTED_OR_NEEDED_MESSAGE);
@@ -143,10 +143,10 @@ public class SimplePostForAutoGenId extends AdminTestUtil implements ITest {
 			}
 		} else {
 			if (testCaseName.contains("ESignet_")) {
-				if (ConfigManager.isInServiceNotDeployedList(GlobalConstants.ESIGNET)) {
+				if (InjiCertifyConfigManager.isInServiceNotDeployedList(GlobalConstants.ESIGNET)) {
 					throw new SkipException("esignet is not deployed hence skipping the testcase");
 				}
-				String tempUrl = ConfigManager.getEsignetBaseUrl();
+				String tempUrl = InjiCertifyConfigManager.getEsignetBaseUrl();
 				String endPointKeyWord = "";
 				
 				if (testCaseDTO.getEndPoint().contains("BASEURL$")) {

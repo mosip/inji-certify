@@ -50,7 +50,7 @@ public class PostWithBodyAndQueryParamsForAutoGenId extends AdminTestUtil implem
 
 	@BeforeClass
 	public static void setLogLevel() {
-		if (ConfigManager.IsDebugEnabled())
+		if (InjiCertifyConfigManager.IsDebugEnabled())
 			logger.setLevel(Level.ALL);
 		else
 			logger.setLevel(Level.ERROR);

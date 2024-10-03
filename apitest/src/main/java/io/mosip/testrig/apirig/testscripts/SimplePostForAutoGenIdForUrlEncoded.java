@@ -43,7 +43,7 @@ public class SimplePostForAutoGenIdForUrlEncoded extends AdminTestUtil implement
 
 	@BeforeClass
 	public static void setLogLevel() {
-		if (ConfigManager.IsDebugEnabled())
+		if (InjiCertifyConfigManager.IsDebugEnabled())
 			logger.setLevel(Level.ALL);
 		else
 			logger.setLevel(Level.ERROR);
@@ -91,7 +91,7 @@ public class SimplePostForAutoGenIdForUrlEncoded extends AdminTestUtil implement
 		}
 
 		if (testCaseDTO.getEndPoint().startsWith("$ESIGNETMOCKBASEURL$") && testCaseName.contains("SunBirdRC")) {
-			if (ConfigManager.isInServiceNotDeployedList("sunbirdrc"))
+			if (InjiCertifyConfigManager.isInServiceNotDeployedList("sunbirdrc"))
 				throw new SkipException(GlobalConstants.SERVICE_NOT_DEPLOYED_MESSAGE);
 		}
 
@@ -102,7 +102,7 @@ public class SimplePostForAutoGenIdForUrlEncoded extends AdminTestUtil implement
 			}
 		}
 
-		if (ConfigManager.isInServiceNotDeployedList(GlobalConstants.ESIGNET)) {
+		if (InjiCertifyConfigManager.isInServiceNotDeployedList(GlobalConstants.ESIGNET)) {
 			throw new SkipException("esignet is not deployed hence skipping the testcase");
 		}
 		testCaseName = isTestCaseValidForExecution(testCaseDTO);
@@ -139,7 +139,7 @@ public class SimplePostForAutoGenIdForUrlEncoded extends AdminTestUtil implement
 			jsonInput = InjiCertifyUtil.reqJsonKeyWordHandeler(jsonInput, testCaseName);
 
 			if (testCaseName.contains("ESignet_")) {
-				String tempUrl = ConfigManager.getEsignetBaseUrl();
+				String tempUrl = InjiCertifyConfigManager.getEsignetBaseUrl();
 				String endPointKeyWord = "";
 
 				if (testCaseDTO.getEndPoint().contains("BASEURL$")) {

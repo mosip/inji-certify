@@ -99,7 +99,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 				accessToken = request.getString("idpAccessToken");
 			}
 			jsonString = request.toString();
-			tempUrl = getBaseURL(testCaseName, ConfigManager.getInjiCertifyBaseUrl());
+			tempUrl = getBaseURL(testCaseName, InjiCertifyConfigManager.getInjiCertifyBaseUrl());
 
 			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_3$",
 					signJWKForMock(clientId, accessToken, oidcJWKKey4, testCaseName, tempUrl));
@@ -119,7 +119,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			if (request.has("client_id")) {
 				clientId = request.get("client_id").toString();
 			}
-			String tempUrl = getBaseURL(testCaseName, ConfigManager.getInjiCertifyBaseUrl());
+			String tempUrl = getBaseURL(testCaseName, InjiCertifyConfigManager.getInjiCertifyBaseUrl());
 			jsonString = replaceKeywordValue(jsonString, "$CLIENT_ASSERTION_JWT$",
 					signJWKKey(clientId, oidcJWKKey1, tempUrl));
 		}
@@ -138,7 +138,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			if (request.has("client_id")) {
 				clientId = request.get("client_id").toString();
 			}
-			String tempUrl = getBaseURL(testCaseName, ConfigManager.getInjiCertifyBaseUrl());
+			String tempUrl = getBaseURL(testCaseName, InjiCertifyConfigManager.getInjiCertifyBaseUrl());
 			
 			jsonString = replaceKeywordValue(jsonString, "$CLIENT_ASSERTION_USER4_JWT$",
 					signJWKKey(clientId, oidcJWKKey4, tempUrl));
@@ -186,10 +186,10 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		String testCaseName = testCaseDTO.getTestCaseName();
 
 		if (testCaseDTO.getEndPoint().startsWith("$ESIGNETMOCKBASEURL$") && testCaseName.contains("SunBirdC")) {
-			if (ConfigManager.isInServiceNotDeployedList("sunbirdrc"))
+			if (InjiCertifyConfigManager.isInServiceNotDeployedList("sunbirdrc"))
 				throw new SkipException(GlobalConstants.SERVICE_NOT_DEPLOYED_MESSAGE);
-			if (ConfigManager.getEsignetMockBaseURL() != null && !ConfigManager.getEsignetMockBaseURL().isBlank())
-				return ApplnURI.replace("api-internal.", ConfigManager.getEsignetMockBaseURL());
+			if (InjiCertifyConfigManager.getEsignetMockBaseURL() != null && !InjiCertifyConfigManager.getEsignetMockBaseURL().isBlank())
+				return ApplnURI.replace("api-internal.", InjiCertifyConfigManager.getEsignetMockBaseURL());
 		} else if (testCaseDTO.getEndPoint().startsWith("$ESIGNETMOSIPIDBASEURL$")) {
 			return ApplnURI.replace("api-internal", "esignet-mosipid");
 		} else if (testCaseDTO.getEndPoint().startsWith("$ESIGNETMOCKIDABASEURL$")) {

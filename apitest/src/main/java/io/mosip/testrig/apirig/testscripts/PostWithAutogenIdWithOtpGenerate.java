@@ -43,7 +43,7 @@ public class PostWithAutogenIdWithOtpGenerate extends AdminTestUtil implements I
 
 	@BeforeClass
 	public static void setLogLevel() {
-		if (ConfigManager.IsDebugEnabled())
+		if (InjiCertifyConfigManager.IsDebugEnabled())
 			logger.setLevel(Level.ALL);
 		else
 			logger.setLevel(Level.ERROR);
@@ -99,7 +99,7 @@ public class PostWithAutogenIdWithOtpGenerate extends AdminTestUtil implements I
 		}
 
 		if (BaseTestCase.isTargetEnvLTS()) {
-			if (ConfigManager.isInServiceNotDeployedList(GlobalConstants.RESIDENT)
+			if (InjiCertifyConfigManager.isInServiceNotDeployedList(GlobalConstants.RESIDENT)
 					&& (BaseTestCase.currentModule.equals("esignet")
 							&& testCaseName.startsWith("ESignetRes_Generate"))) {
 				throw new SkipException("Generating VID using IdRepo API. Hence skipping this test case");
@@ -132,10 +132,10 @@ public class PostWithAutogenIdWithOtpGenerate extends AdminTestUtil implements I
 		int currLoopCount = 0;
 		while (currLoopCount < maxLoopCount) {
 			if (testCaseName.contains(GlobalConstants.ESIGNET_)) {
-				if (ConfigManager.isInServiceNotDeployedList(GlobalConstants.ESIGNET)) {
+				if (InjiCertifyConfigManager.isInServiceNotDeployedList(GlobalConstants.ESIGNET)) {
 					throw new SkipException("esignet is not deployed hence skipping the testcase");
 				}
-				String tempUrl = ConfigManager.getEsignetBaseUrl();
+				String tempUrl = InjiCertifyConfigManager.getEsignetBaseUrl();
 				String endPointKeyWord = "";
 				if (sendOtpEndPoint.contains("BASEURL$")) {
 					tempUrl = InjiCertifyUtil.getTempURL(testCaseDTO);
@@ -204,10 +204,10 @@ public class PostWithAutogenIdWithOtpGenerate extends AdminTestUtil implements I
 		reqJson = InjiCertifyUtil.smtpOtpHandler(reqJson, testCaseDTO);
 
 		if (testCaseName.contains(GlobalConstants.ESIGNET_)) {
-			if (ConfigManager.isInServiceNotDeployedList(GlobalConstants.ESIGNET)) {
+			if (InjiCertifyConfigManager.isInServiceNotDeployedList(GlobalConstants.ESIGNET)) {
 				throw new SkipException("esignet is not deployed hence skipping the testcase");
 			}
-			String tempUrl = ConfigManager.getEsignetBaseUrl();
+			String tempUrl = InjiCertifyConfigManager.getEsignetBaseUrl();
 			String endPointKeyWord = "";
 			if (testCaseDTO.getEndPoint().contains("BASEURL$")) {
 				tempUrl = InjiCertifyUtil.getTempURL(testCaseDTO);
