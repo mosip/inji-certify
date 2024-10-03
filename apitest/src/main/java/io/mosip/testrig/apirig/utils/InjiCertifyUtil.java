@@ -7,7 +7,6 @@ import org.testng.SkipException;
 import com.nimbusds.jose.jwk.RSAKey;
 
 import io.mosip.testrig.apirig.dto.TestCaseDTO;
-import io.mosip.testrig.apirig.testrunner.BaseTestCase;
 import io.mosip.testrig.apirig.testrunner.OTPListener;
 
 public class InjiCertifyUtil extends AdminTestUtil {
