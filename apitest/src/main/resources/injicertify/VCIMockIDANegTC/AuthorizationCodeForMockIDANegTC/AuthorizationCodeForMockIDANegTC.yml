@@ -1,4 +1,4 @@
-AuthorizationCodeForMockIDA:
+AuthorizationCodeForMockIDANegTC:
    InjiCertify_ESignet_AuthorizationCode_ForMockIDA_All_Valid_Smoke_sid_For_Neg_Flow:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
       role: resident
