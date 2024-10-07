@@ -477,5 +477,49 @@
 			<class name="io.mosip.testrig.apirig.testscripts.SimplePost" />
 		</classes>
 	</test>
+	
+		<test name="OAuthDetailsRequestVCIForMockIDANegTC">
+		<parameter name="ymlFile" value="injicertify/VCIMockIDANegTC/OAuthDetailsRequestForMockIDANegTC/OAuthDetailsRequestForMockIDANegTC.yml" />
+		<parameter name="idKeyName" value="transactionId,encodedResp" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="AuthenticateUserVCIForMockIDANegTC">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMockIDANegTC/AuthenticateUserForMockIDANegTC/AuthenticateUserForMockIDANegTC.yml" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.PostWithAutogenIdWithOtpGenerate" />
+		</classes>
+	</test>
+	<test name="AuthorizationCodeVCIForMockIDANegTC">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMockIDANegTC/AuthorizationCodeForMockIDANegTC/AuthorizationCodeForMockIDANegTC.yml" />
+			<parameter name="idKeyName"	value="code" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="GenerateTokenVCIForMockIDANegTC">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMockIDANegTC/GenerateTokenForMockIDANegTC/GenerateTokenForMockIDANegTC.yml" />
+			<parameter name="idKeyName"	value="access_token" />
+			<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenIdForUrlEncoded" />
+		</classes>
+	</test>
+	<test name="GetCredentialForMockIDANegTC">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMockIDANegTC/GetCredentialForMockIDANegTC/GetCredentialForMockIDANegTC.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePost" />
+		</classes>
+	</test>
+
+
 
 </suite>
