@@ -208,4 +208,4 @@ Execute installation script
       *  [Credential service, Credential schema service & Identity service](https://github.com/Sunbird-RC/devops/tree/main/deploy-as-code/helm/v2)
       *  [Vault](https://github.com/challabeehyv/sunbird-devops/blob/main/deploy-as-code/helm/v2/README.md#vault-deployment)
    * [Esignet](https://github.com/mosip/esignet/tree/v1.4.1/helm)
-   * [Certify](https://github.com/mosip/inji-certify/tree/v0.9.0/helm/inji-certify)
+   * [Certify](https://github.com/mosip/inji-certify/tree/v0.9.1/helm/inji-certify)
