@@ -13,7 +13,7 @@ echo Create $SOFTHSM_NS namespace
 kubectl create ns $SOFTHSM_NS
 
 NS=inji-certify
-CHART_VERSION=0.9.0-develop
+CHART_VERSION=0.10.0-develop
 
 echo Create $NS namespace
 kubectl create ns $NS
@@ -35,8 +35,8 @@ function installing_inji-certify() {
   echo Copy secrets
   ./copy_cm_func.sh secret softhsm-certify softhsm config-server
 
-  kubectl -n config-server set env --keys=mosip-injicertify-host --from configmap/global deployment/config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_
-  kubectl -n config-server set env --keys=security-pin --from secret/softhsm-certify deployment/config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_SOFTHSM_CERTIFY_
+  kubectl -n config-server set env --keys=mosip-injicertify-host --from configmap/global deployment/inji-config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_
+  kubectl -n config-server set env --keys=security-pin --from secret/softhsm-certify deployment/inji-config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_SOFTHSM_CERTIFY_
   kubectl -n config-server get deploy -o name |  xargs -n1 -t  kubectl -n config-server rollout status
 
   echo Copy configmaps
@@ -59,7 +59,7 @@ function installing_inji-certify() {
   fi
 
   echo Running inji-certify
-  helm -n $NS install inji-certify mosip/inji-certify --set image.repository=mosipqa/inji-certify --set image.tag=0.9.x --set istio.hosts\[0\]=$INJICERTIFY_HOST --version $CHART_VERSION $ENABLE_INSECURE
+  helm -n $NS install inji-certify mosip/inji-certify --set istio.hosts\[0\]=$INJICERTIFY_HOST --version $CHART_VERSION $ENABLE_INSECURE
 
   kubectl -n $NS  get deploy -o name |  xargs -n1 -t  kubectl -n $NS rollout status
 
