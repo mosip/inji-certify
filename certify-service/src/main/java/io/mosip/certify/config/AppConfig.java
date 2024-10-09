@@ -30,8 +30,8 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
-@EnableJpaRepositories(basePackages = {"io.mosip.kernel.keymanagerservice.repository"})
-@EntityScan(basePackages = {"io.mosip.kernel.keymanagerservice.entity"})
+@EnableJpaRepositories(basePackages = {"io.mosip.certify.core.repository", "io.mosip.kernel.keymanagerservice.repository"})
+@EntityScan(basePackages = {"io.mosip.certify.core.entity", "io.mosip.kernel.keymanagerservice.entity"})
 @Slf4j
 public class AppConfig implements ApplicationRunner {
 
