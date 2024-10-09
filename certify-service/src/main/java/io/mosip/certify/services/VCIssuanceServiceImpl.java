@@ -14,6 +14,7 @@ import io.mosip.certify.api.spi.AuditPlugin;
 import io.mosip.certify.api.spi.VCIssuancePlugin;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
+import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.CredentialMetadata;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
@@ -27,6 +28,7 @@ import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.core.util.AuditHelper;
 import io.mosip.certify.core.util.SecurityHelperService;
+import io.mosip.certify.core.validators.CredentialRequestValidatorFactory;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
@@ -75,13 +77,18 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
+        boolean isValidCredentialRequest = new CredentialRequestValidatorFactory().isValid(credentialRequest);
+        if(!isValidCredentialRequest) {
+            throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
+        }
+
         if(!parsedAccessToken.isActive())
             throw new NotAuthenticatedException();
 
         String scopeClaim = (String) parsedAccessToken.getClaims().getOrDefault("scope", "");
         CredentialMetadata credentialMetadata = null;
         for(String scope : scopeClaim.split(Constants.SPACE)) {
-            Optional<CredentialMetadata> result = getScopeCredentialMapping(scope);
+            Optional<CredentialMetadata> result = getScopeCredentialMapping(scope, credentialRequest.getFormat());
             if(result.isPresent()) {
                 credentialMetadata = result.get(); //considering only first credential scope
                 break;
@@ -120,14 +127,15 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         parsedAccessToken.getClaims().put("accessTokenHash", parsedAccessToken.getAccessTokenHash());
         VCRequestDto vcRequestDto = new VCRequestDto();
         vcRequestDto.setFormat(credentialRequest.getFormat());
-        vcRequestDto.setContext(credentialRequest.getCredential_definition().getContext());
-        vcRequestDto.setType(credentialRequest.getCredential_definition().getType());
-        vcRequestDto.setCredentialSubject(credentialRequest.getCredential_definition().getCredentialSubject());
+
 
         VCResult<?> vcResult = null;
         try {
             switch (credentialRequest.getFormat()) {
                 case "ldp_vc" :
+                    vcRequestDto.setContext(credentialRequest.getCredential_definition().getContext());
+                    vcRequestDto.setType(credentialRequest.getCredential_definition().getType());
+                    vcRequestDto.setCredentialSubject(credentialRequest.getCredential_definition().getCredentialSubject());
                     validateLdpVcFormatRequest(credentialRequest, credentialMetadata);
                     vcResult = vcIssuancePlugin.getVerifiableCredentialWithLinkedDataProof(vcRequestDto, holderId,
                             parsedAccessToken.getClaims());
@@ -136,6 +144,15 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
                 // jwt_vc_json & jwt_vc_json-ld cases are merged
                 case "jwt_vc_json-ld" :
                 case "jwt_vc_json" :
+                    vcRequestDto.setContext(credentialRequest.getCredential_definition().getContext());
+                    vcRequestDto.setType(credentialRequest.getCredential_definition().getType());
+                    vcRequestDto.setCredentialSubject(credentialRequest.getCredential_definition().getCredentialSubject());
+                    vcResult = vcIssuancePlugin.getVerifiableCredential(vcRequestDto, holderId,
+                            parsedAccessToken.getClaims());
+                    break;
+                case VCFormats.MSO_MDOC :
+                    vcRequestDto.setClaims(credentialRequest.getClaims());
+                    vcRequestDto.setDoctype( credentialRequest.getDoctype());
                     vcResult = vcIssuancePlugin.getVerifiableCredential(vcRequestDto, holderId,
                             parsedAccessToken.getClaims());
                     break;
@@ -164,6 +181,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
             case "jwt_vc_json-ld":
             case "jwt_vc_json":
+            case VCFormats.MSO_MDOC :
                 CredentialResponse<String> jsonResponse = new CredentialResponse<>();
                 jsonResponse.setCredential((String)vcResult.getCredential());
                 return jsonResponse;
@@ -171,7 +189,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
     }
 
-    private Optional<CredentialMetadata>  getScopeCredentialMapping(String scope) {
+    private Optional<CredentialMetadata>  getScopeCredentialMapping(String scope, String format) {
         Map<String, Object> vciMetadata = getCredentialIssuerMetadata("latest");
         LinkedHashMap<String, Object> supportedCredentials = (LinkedHashMap<String, Object>) vciMetadata.get("credential_configurations_supported");
         Optional<Map.Entry<String, Object>> result = supportedCredentials.entrySet().stream()
@@ -183,15 +201,17 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
             credentialMetadata.setFormat((String) metadata.get("format"));
             credentialMetadata.setScope((String) metadata.get("scope"));
             credentialMetadata.setId(result.get().getKey());
-            LinkedHashMap<String, Object> credentialDefinition = (LinkedHashMap<String, Object>) metadata.get("credential_definition");
-            credentialMetadata.setTypes((List<String>) credentialDefinition.get("type"));
+            if(format.equals(VCFormats.LDP_VC)){
+                LinkedHashMap<String, Object> credentialDefinition = (LinkedHashMap<String, Object>) metadata.get("credential_definition");
+                credentialMetadata.setTypes((List<String>) credentialDefinition.get("type"));
+            }
             return Optional.of(credentialMetadata);
         }
         return Optional.empty();
     }
 
     private void validateLdpVcFormatRequest(CredentialRequest credentialRequest,
-                                               CredentialMetadata credentialMetadata) {
+                                            CredentialMetadata credentialMetadata) {
         if(!credentialRequest.getCredential_definition().getType().containsAll(credentialMetadata.getTypes()))
              throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_VC_TYPE);
 

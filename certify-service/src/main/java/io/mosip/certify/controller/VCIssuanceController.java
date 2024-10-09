@@ -44,6 +44,7 @@ public class VCIssuanceController {
     }
 
 
+
     /**
      * 1. The credential Endpoint MUST accept Access Tokens
      * @param credentialRequest VC credential request

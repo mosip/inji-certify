@@ -12,9 +12,10 @@ import java.util.Map;
 
 @Data
 public class VCRequestDto {
-
     private List<String> context; //holds @context values
     private List<String> type;
     private String format;
     private Map<String, Object> credentialSubject;
+    private String doctype;
+    private Map<String, Object> claims;
 }
