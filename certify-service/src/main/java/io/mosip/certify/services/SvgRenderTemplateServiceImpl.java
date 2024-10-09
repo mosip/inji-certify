@@ -22,11 +22,15 @@ public class SvgRenderTemplateServiceImpl implements SvgRenderTemplateService {
 
 
     @Override
-    public String getSvgTemplate(UUID id) {
+    public SvgRenderTemplate getSvgTemplate(UUID id) {
         Optional<SvgRenderTemplate> optional = svgRenderTemplateRepository.findById(id);
         SvgRenderTemplate svgRenderTemplate = optional.orElseThrow(() -> new CertifyException("No template found against provided id."));
 
-        return svgRenderTemplate.getSvgTemplate();
+        if(svgRenderTemplate.getSvgTemplate().isEmpty()) {
+            throw  new CertifyException("Empty template found.");
+        }
+
+        return svgRenderTemplate;
 
     }
 }

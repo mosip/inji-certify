@@ -1,10 +1,9 @@
 package io.mosip.certify.core.spi;
 
-import io.mosip.certify.api.exception.VCIExchangeException;
+import io.mosip.certify.core.entity.SvgRenderTemplate;
 
-import java.io.IOException;
 import java.util.UUID;
 
 public interface SvgRenderTemplateService {
-    String getSvgTemplate(UUID id);
+    SvgRenderTemplate getSvgTemplate(UUID id);
 }
