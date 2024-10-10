@@ -12,6 +12,8 @@ import lombok.Data;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import java.util.Map;
+
 @Data
 public class CredentialRequest {
 
@@ -40,6 +42,9 @@ public class CredentialRequest {
      * in the subsequent Credential Request.
      */
     @Valid
-    @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private CredentialDefinition credential_definition;
+
+    private String doctype;
+
+    private Map<String,Object> claims;
 }
