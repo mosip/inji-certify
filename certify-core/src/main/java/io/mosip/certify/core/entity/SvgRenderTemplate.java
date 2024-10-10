@@ -22,7 +22,6 @@ public class SvgRenderTemplate {
     @Column(name = "svg_template")
     private String svgTemplate;
 
-    @NotBlank(message = "Last modified value should not be empty")
     @Column(name = "last_modified")
     private LocalDateTime lastModified;
 }
