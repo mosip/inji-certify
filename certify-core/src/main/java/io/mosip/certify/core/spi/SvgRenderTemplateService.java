@@ -1,9 +1,9 @@
 package io.mosip.certify.core.spi;
 
-import io.mosip.certify.core.entity.SvgRenderTemplate;
+import io.mosip.certify.core.dto.SvgRenderTemplateDto;
 
 import java.util.UUID;
 
 public interface SvgRenderTemplateService {
-    SvgRenderTemplate getSvgTemplate(UUID id);
+    SvgRenderTemplateDto getSvgTemplate(UUID id);
 }

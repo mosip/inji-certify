@@ -45,3 +45,10 @@ CREATE TABLE  IF NOT EXISTS key_store(
 	del_dtimes timestamp,
 	CONSTRAINT pk_keystr_id PRIMARY KEY (id)
 );
+
+CREATE TABLE IF NOT EXISTS svg_render_template (
+    id UUID NOT NULL,
+    svg_template VARCHAR NOT NULL,
+    last_modified TIMESTAMP DEFAULT NOW() NOT NULL,
+    CONSTRAINT pk_svgrndrtmp_id PRIMARY KEY (id)
+);

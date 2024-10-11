@@ -1,13 +1,13 @@
 package io.mosip.certify.services;
 
-import io.mosip.certify.api.exception.VCIExchangeException;
+import io.mosip.certify.core.constants.ErrorConstants;
+import io.mosip.certify.core.dto.SvgRenderTemplateDto;
 import io.mosip.certify.core.entity.SvgRenderTemplate;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.repository.SvgRenderTemplateRepository;
 import io.mosip.certify.core.spi.SvgRenderTemplateService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Files;
@@ -22,15 +22,16 @@ public class SvgRenderTemplateServiceImpl implements SvgRenderTemplateService {
 
 
     @Override
-    public SvgRenderTemplate getSvgTemplate(UUID id) {
+    public SvgRenderTemplateDto getSvgTemplate(UUID id) {
         Optional<SvgRenderTemplate> optional = svgRenderTemplateRepository.findById(id);
-        SvgRenderTemplate svgRenderTemplate = optional.orElseThrow(() -> new CertifyException("No template found against provided id."));
+        SvgRenderTemplate svgRenderTemplate = optional.orElseThrow(() -> new CertifyException(ErrorConstants.INVALID_TEMPLATE_ID));
 
-        if(svgRenderTemplate.getSvgTemplate().isEmpty()) {
-            throw  new CertifyException("Empty template found.");
-        }
+        SvgRenderTemplateDto svgRenderTemplateDto = new SvgRenderTemplateDto();
+        svgRenderTemplateDto.setId(svgRenderTemplate.getId());
+        svgRenderTemplateDto.setSvgTemplate(svgRenderTemplate.getSvgTemplate());
+        svgRenderTemplateDto.setLastModified(svgRenderTemplate.getLastModified());
 
-        return svgRenderTemplate;
+        return svgRenderTemplateDto;
 
     }
 }

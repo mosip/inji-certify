@@ -1,5 +1,6 @@
 package io.mosip.certify.controller;
 
+import io.mosip.certify.core.dto.SvgRenderTemplateDto;
 import io.mosip.certify.core.entity.SvgRenderTemplate;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.SvgRenderTemplateService;
@@ -26,7 +27,7 @@ public class SvgRenderTemplateController {
 
     @GetMapping("/svg-template/{id}")
     public ResponseEntity<String> serveSvgTemplate(@PathVariable UUID id) throws CertifyException {
-        SvgRenderTemplate template = svgRenderTemplateService.getSvgTemplate(id);
+        SvgRenderTemplateDto template = svgRenderTemplateService.getSvgTemplate(id);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, "image/svg")
                 .cacheControl(CacheControl.maxAge(1, TimeUnit.DAYS).cachePublic())
