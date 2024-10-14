@@ -1,7 +1,7 @@
 package io.mosip.certify.core.spi;
 
-import io.mosip.certify.core.dto.SvgRenderTemplateDto;
+import io.mosip.certify.core.entity.SvgRenderTemplate;
 
 public interface SvgRenderTemplateService {
-    SvgRenderTemplateDto getSvgTemplate(String id);
+    SvgRenderTemplate getSvgTemplate(String id);
 }

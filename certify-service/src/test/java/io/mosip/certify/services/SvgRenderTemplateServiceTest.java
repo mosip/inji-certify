@@ -1,7 +1,6 @@
 package io.mosip.certify.services;
 
 import io.mosip.certify.core.constants.ErrorConstants;
-import io.mosip.certify.core.dto.SvgRenderTemplateDto;
 import io.mosip.certify.core.entity.SvgRenderTemplate;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.repository.SvgRenderTemplateRepository;
@@ -16,7 +15,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.UUID;
 
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
@@ -30,7 +28,6 @@ public class SvgRenderTemplateServiceTest {
     @Test
     public void getSvgTemplate_withValidDetail_thenPass() {
         SvgRenderTemplate svgRenderTemplate = new SvgRenderTemplate();
-        UUID id = UUID.randomUUID();
         svgRenderTemplate.setId("TestSvgTemplate");
         String svgTemplate = """
                     <svg xmlns=\\"http://www.w3.org/2000/svg\\" width=\\"200\\" height=\\"200\\">
@@ -43,7 +40,7 @@ public class SvgRenderTemplateServiceTest {
         svgRenderTemplate.setLastModified(LocalDateTime.now());
         Optional<SvgRenderTemplate> optional = Optional.of(svgRenderTemplate);
         Mockito.when(svgRenderTemplateRepository.findById(Mockito.any())).thenReturn(optional);
-        SvgRenderTemplateDto svgRenderTemplateResponse = svgRenderTemplateService.getSvgTemplate("TestSvgTemplate");
+        SvgRenderTemplate svgRenderTemplateResponse = svgRenderTemplateService.getSvgTemplate("TestSvgTemplate");
         Assert.assertNotNull(svgRenderTemplateResponse);
         Assert.assertEquals(svgRenderTemplate.getId(), svgRenderTemplateResponse.getId());
         Assert.assertEquals(svgTemplate, optional.get().getSvgTemplate());

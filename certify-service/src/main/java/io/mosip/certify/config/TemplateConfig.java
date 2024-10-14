@@ -1,3 +1,5 @@
+/* This is for temporary purpose till an API isn’t added to simplify Issuer onboarding. */
+
 package io.mosip.certify.config;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,21 +16,11 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 
 @Component
@@ -57,32 +49,28 @@ public class TemplateConfig  implements CommandLineRunner {
         try {
             svgTemplateContent = (Files.readString(resource.getFile().toPath()));
         } catch (IOException e) {
-            throw new FileNotFoundException("missing local svg template data file " + e.getMessage());
+            throw new FileNotFoundException("Missing local json file for referring svg templates " + e.getMessage());
         }
 
         try {
             svgTemplateMap = objectMapper.readValue(svgTemplateContent, LinkedHashMap.class);
         } catch (JsonProcessingException e) {
-            throw new CertifyException("Missing well known config");
+            throw new CertifyException("Missing configuration for svg template content " + e.getMessage());
         }
 
-//        List<SvgRenderTemplate> svgRenderTemplateList = svgRenderTemplateRepository.findAll();
-
-//        if(svgRenderTemplateList.isEmpty()) {
-            svgTemplateMap.forEach((key, value) -> {
-                SvgRenderTemplate svgRenderTemplate = new SvgRenderTemplate();
-                svgRenderTemplate.setId(key);
-                if(domainUrl.startsWith("https")) {
-                    String svgTemplate = restTemplate.getForObject(value.toString(), String.class);
-                    svgRenderTemplate.setSvgTemplate(svgTemplate);
-                } else {
-                    svgRenderTemplate.setSvgTemplate(value.toString());
-                }
-                svgRenderTemplate.setLastModified(LocalDateTime.now());
-                log.info("Template inserted in svg template table.");
-                svgRenderTemplateRepository.save(svgRenderTemplate);
-            });
-//        }
+         svgTemplateMap.forEach((key, value) -> {
+            SvgRenderTemplate svgRenderTemplate = new SvgRenderTemplate();
+            svgRenderTemplate.setId(key);
+            if(domainUrl.startsWith("http")) {
+                svgRenderTemplate.setSvgTemplate(value.toString());
+            } else {
+                String svgTemplate = restTemplate.getForObject(value.toString(), String.class);
+                svgRenderTemplate.setSvgTemplate(svgTemplate);
+            }
+            svgRenderTemplate.setLastModified(LocalDateTime.now());
+            log.info("Template inserted in svg template table.");
+            svgRenderTemplateRepository.save(svgRenderTemplate);
+        });
 
         log.info("=============== CERTIFY TEMPLATE SETUP COMPLETED ===============");
     }
