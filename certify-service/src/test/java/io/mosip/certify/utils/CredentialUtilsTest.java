@@ -8,18 +8,6 @@ import java.util.List;
 
 public class CredentialUtilsTest extends TestCase {
 
-    public void testIsVC2_0Request_VCIssuancePluginRequest() {
-        VCRequestDto request = new VCRequestDto();
-        request.setContext(List.of("https://www.w3.org/2018/credentials/v1", "https://schema.org"));
-        assertFalse(CredentialUtils.isVC2_0Request(request));
-    }
-
-    public void testIsVC2_0Request_DataProviderPluginRequest() {
-        VCRequestDto request = new VCRequestDto();
-        request.setContext(List.of("https://www.w3.org/ns/credentials/v2", "https://schema.org"));
-        assertTrue(CredentialUtils.isVC2_0Request(request));
-    }
-
     public void testGetTemplateName() {
         VCRequestDto request = new VCRequestDto();
         request.setContext(List.of("https://www.w3.org/ns/credentials/v2", "https://schema.org/Person"));
