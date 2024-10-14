@@ -12,10 +12,10 @@
 -- ------------------------------------------------------------------------------------------
 
 create table svg_render_template (
-    id UUID NOT NULL,
+    id VARCHAR NOT NULL,
     svg_template VARCHAR NOT NULL,
     last_modified TIMESTAMP DEFAULT NOW() NOT NULL,
-    CONSTRAINT pk_svgrndrtmp_id PRIMARY KEY (id),
+    CONSTRAINT pk_svgrndrtmp_id PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE svg_render_template IS 'SVG Render Template: Contains svg render image for VC.';

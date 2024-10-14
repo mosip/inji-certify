@@ -26,7 +26,7 @@ public class SvgRenderTemplateController {
     SvgRenderTemplateService svgRenderTemplateService;
 
     @GetMapping("/svg-template/{id}")
-    public ResponseEntity<String> serveSvgTemplate(@PathVariable UUID id) throws CertifyException {
+    public ResponseEntity<String> serveSvgTemplate(@PathVariable String id) throws CertifyException {
         SvgRenderTemplateDto template = svgRenderTemplateService.getSvgTemplate(id);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, "image/svg")

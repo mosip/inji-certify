@@ -66,12 +66,12 @@ public class TemplateConfig  implements CommandLineRunner {
             throw new CertifyException("Missing well known config");
         }
 
-        List<SvgRenderTemplate> svgRenderTemplateList = svgRenderTemplateRepository.findAll();
+//        List<SvgRenderTemplate> svgRenderTemplateList = svgRenderTemplateRepository.findAll();
 
-        if(svgRenderTemplateList.isEmpty()) {
+//        if(svgRenderTemplateList.isEmpty()) {
             svgTemplateMap.forEach((key, value) -> {
                 SvgRenderTemplate svgRenderTemplate = new SvgRenderTemplate();
-                svgRenderTemplate.setId(UUID.randomUUID());
+                svgRenderTemplate.setId(key);
                 if(domainUrl.startsWith("https")) {
                     String svgTemplate = restTemplate.getForObject(value.toString(), String.class);
                     svgRenderTemplate.setSvgTemplate(svgTemplate);
@@ -82,7 +82,7 @@ public class TemplateConfig  implements CommandLineRunner {
                 log.info("Template inserted in svg template table.");
                 svgRenderTemplateRepository.save(svgRenderTemplate);
             });
-        }
+//        }
 
         log.info("=============== CERTIFY TEMPLATE SETUP COMPLETED ===============");
     }

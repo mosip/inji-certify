@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Data
 @Entity
@@ -15,8 +14,8 @@ import java.util.UUID;
 @NoArgsConstructor
 public class SvgRenderTemplate {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    @NotBlank
+    private String id;
 
     @NotBlank(message = "Template should not be empty")
     @Column(name = "svg_template")

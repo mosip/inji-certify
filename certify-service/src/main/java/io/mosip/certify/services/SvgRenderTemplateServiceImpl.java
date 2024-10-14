@@ -22,7 +22,7 @@ public class SvgRenderTemplateServiceImpl implements SvgRenderTemplateService {
 
 
     @Override
-    public SvgRenderTemplateDto getSvgTemplate(UUID id) {
+    public SvgRenderTemplateDto getSvgTemplate(String id) {
         Optional<SvgRenderTemplate> optional = svgRenderTemplateRepository.findById(id);
         SvgRenderTemplate svgRenderTemplate = optional.orElseThrow(() -> new CertifyException(ErrorConstants.INVALID_TEMPLATE_ID));
 
