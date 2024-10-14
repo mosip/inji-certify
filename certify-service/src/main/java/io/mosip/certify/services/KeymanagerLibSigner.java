@@ -3,12 +3,11 @@ package io.mosip.certify.services;
 import foundation.identity.jsonld.JsonLDException;
 import foundation.identity.jsonld.JsonLDObject;
 import info.weboftrust.ldsignatures.LdProof;
+import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
 import info.weboftrust.ldsignatures.canonicalizer.URDNA2015Canonicalizer;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.api.spi.VCSigner;
-import io.mosip.certify.core.constants.Constants;
-import io.mosip.certify.core.constants.SignatureAlg;
-import io.mosip.certify.core.constants.VCDM2Constants;
+import io.mosip.certify.core.constants.*;
 import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import io.mosip.kernel.signature.service.SignatureService;
@@ -20,36 +19,62 @@ import java.net.URI;
 import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
 
+/**
+ * KeymanagerLibSigner is a VCSigner which uses the Certify embedded
+ * keymanager to perform VC signing tasks for JSON LD VCs.
+ * These are the known external requirements:
+ * - the public key must be pre-hosted for the VC & should be available
+ *    so long that VC should be verifiable
+ * - the VC should have a validFrom or issuanceDate in a specific UTC format
+ */
 @Component
 public class KeymanagerLibSigner implements VCSigner {
 
     @Autowired
     SignatureService signatureService;
+
     @Override
     public VCResult<JsonLDObject> perform(String templatedVC, Map<String, String> keyMgrInput) {
-        // TODO: Can the below lines be done at Templating side itself? Ask Hitesh.
+        // Can the below lines be done at Templating side itself ?
         VCResult<JsonLDObject> VC = new VCResult<>();
         JsonLDObject j = JsonLDObject.fromJson(templatedVC);
         j.setDocumentLoader(null);
         // NOTE: other aspects can be configured via keyMgrInput map
-        Date validFrom = Date
+        String validFrom;
+        String signatureAlgorithm = keyMgrInput.getOrDefault(KeyManagerConstants.VC_SIGN_ALGO,
+                SignatureAlg.RSA_SIGNATURE_SUITE);
+        String publicKeyURL = keyMgrInput.get(KeyManagerConstants.PUBLIC_KEY_URL);
+        String keyAppId = keyMgrInput.get(KeyManagerConstants.KEY_APP_ID);
+        String keyRefId = keyMgrInput.get(KeyManagerConstants.KEY_REF_ID);
+        String keyManagerSignAlgo = keyMgrInput.get(KeyManagerConstants.KEYMGR_SIGN_ALGO);
+        if (j.getJsonObject().containsKey(VCDM1Constants.ISSUANCE_DATE)) {
+            validFrom = j.getJsonObject().get(VCDM1Constants.ISSUANCE_DATE).toString();
+        } else if (j.getJsonObject().containsKey(VCDM2Constants.VALID_FROM)){
+            validFrom = j.getJsonObject().get(VCDM2Constants.VALID_FROM).toString();
+        } else {
+            validFrom = ZonedDateTime.now(ZoneOffset.UTC)
+                    .format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
+        }
+        // TODO: VC Data Model spec doesn't specify a single date format or a
+        //  timezone restriction, this will have to be supported timely.
+        Date createDate = Date
                 .from(LocalDateTime
-                        .parse((String) j.getJsonObject().get(VCDM2Constants.VALID_FROM),
+                        .parse(validFrom,
                                 DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN))
                         .atZone(ZoneId.systemDefault()).toInstant());
-        LdProof vcLdProof = LdProof.builder().defaultContexts(false).defaultTypes(false).type(SignatureAlg.RSA_SIGNATURE_SUITE)
-                .created(validFrom).proofPurpose(VCDM2Constants.ASSERTION_METHOD)
-                .verificationMethod(URI.create("https://vharsh.github.io/DID/mock-public-key.json"))
-                // ^^ Why is this pointing to JWKS URL of eSignet??
+        LdProof vcLdProof = LdProof.builder().defaultContexts(false).defaultTypes(false).type(signatureAlgorithm)
+                .created(createDate).proofPurpose(VCDMConstants.ASSERTION_METHOD)
+                .verificationMethod(URI.create(publicKeyURL))
                 .build();
         // 1. Canonicalize
         URDNA2015Canonicalizer canonicalizer = new URDNA2015Canonicalizer();
-        // VC Sign
         byte[] vcSignBytes = null;
         try {
             vcSignBytes = canonicalizer.canonicalize(vcLdProof, j);
@@ -58,21 +83,24 @@ public class KeymanagerLibSigner implements VCSigner {
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         } catch (JsonLDException e) {
+            // TODO: Should an issuer context not accessible error be wrapped inside a CertifyException
             throw new RuntimeException(e);
         }
+
+        // 2. VC Sign
         String vcEncodedData = Base64.getUrlEncoder().encodeToString(vcSignBytes);
         JWSSignatureRequestDto payload = new JWSSignatureRequestDto();
-        // TODO: Set the alg
         payload.setDataToSign(vcEncodedData);
-        payload.setApplicationId(Constants.CERTIFY_MOCK_RSA);
-        payload.setReferenceId(""); // alg, empty = RSA
+        payload.setApplicationId(keyAppId);
+        payload.setReferenceId(keyRefId); // alg, empty = RSA
         payload.setIncludePayload(false);
         payload.setIncludeCertificate(false);
         payload.setIncludeCertHash(true);
         payload.setValidateJson(false);
         payload.setB64JWSHeaderParam(false);
         payload.setCertificateUrl("");
-        payload.setSignAlgorithm("RS256"); // RSSignature2018 --> RS256, PS256, ES256
+        payload.setSignAlgorithm(keyManagerSignAlgo); // RSSignature2018 --> RS256, PS256, ES256
+        // TODO: Should this be a well defined Certify Exception for better comms b/w Certify & Support team?
         JWTSignatureResponseDto jwsSignedData = signatureService.jwsSign(payload);
         String sign = jwsSignedData.getJwtSignedData();
         LdProof ldProofWithJWS = LdProof.builder().base(vcLdProof).defaultContexts(false)

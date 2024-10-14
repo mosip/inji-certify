@@ -72,6 +72,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
                 //  reserved literals such as " or ,
                 // (Q) Should Object always be a JSONObject?
                 finalTemplate.put(key, new JSONArray((List<Object>) value));
+            } else if (value.getClass().isArray()) {
+                finalTemplate.put(key, new JSONArray(List.of(value)));
             } else {
                 finalTemplate.put(key, value);
             }
@@ -79,11 +81,11 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         if (shouldHaveDates && !(templateInput.containsKey(VCDM2Constants.VALID_FROM)
                 && templateInput.containsKey(VCDM2Constants.VALID_UNITL))) {
             templateInput.put("_dateTool", new DateTool());
-            ZonedDateTime z = ZonedDateTime.now(ZoneOffset.UTC);
             String time = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            // TODO: get the time created using DateTool
+            // hardcoded time
+            String expiryTime = ZonedDateTime.now(ZoneOffset.UTC).plusYears(2).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
             finalTemplate.put(VCDM2Constants.VALID_FROM, time);
-            finalTemplate.put(VCDM2Constants.VALID_UNITL, time);
+            finalTemplate.put(VCDM2Constants.VALID_UNITL, expiryTime);
         }
         VelocityContext context = new VelocityContext(finalTemplate);
         engine.evaluate(context, writer, /*logTag */ templateName,t.toString());

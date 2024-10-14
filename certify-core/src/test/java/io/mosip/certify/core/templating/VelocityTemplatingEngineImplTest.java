@@ -27,12 +27,11 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class VelocityTemplatingEngineImplTest extends TestCase {
     private VelocityEngine engine;
-    private final Map<String, Template> templateCache = new ConcurrentHashMap<>();
     @MockBean
     private TemplateRepository templateRepository;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         engine = new VelocityEngine();
         engine.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
         engine.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
@@ -46,35 +45,34 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
     @Test
     public void testTemplating() {
         // 1. setup template
-        Template t = engine.getTemplate("MockCredential.vm");
+        Template t = engine.getTemplate("MockCredential1.vm");
         assert t != null;
         VelocityContext c = new VelocityContext();
         StringWriter writer = new StringWriter();
         engine.evaluate(c, writer, "SchoolTemplateTest", t.toString());
         String out = writer.toString();
-        Map<String, Object> res = new RestTemplate().getForObject(
-                "https://api.dev1.mosip.net/v1/mock-identity-system/identity/34455445765",
-                HashMap.class);
-        res = (Map<String, Object>) res.get("response");
         Map<String, Object> ret = new HashMap<>();
         ret.put("vcVer", "VC-V1");
-        ret.put("name", res.get("name"));
-        ret.put("fullName", res.get("fullName"));
-        ret.put("gender", res.get("gender"));
-        ret.put("dateOfBirth", res.get("dateOfBirth"));
-        ret.put("email", res.get("email"));
-        ret.put("UIN", "34455445765");
-        ret.put("phone", res.get("phone"));
-        ret.put("addressLine1", res.get("streetAddress"));
-        ret.put("province", res.get("locality"));
-        ret.put("region", res.get("region"));
-        ret.put("postalCode", res.get("postalCode"));
-        ret.put("face", res.get("encodedPhoto"));
+        ret.put("fullName", "Amit Developer");
+        ret.put("gender", "female");
+        ret.put("dateOfBirth", "01/01/2022");
+        ret.put("email", "amit@fakemail.com");
+        ret.put("UIN", "1234567890");
+        ret.put("phone", "1234567890");
+        // both of the below work
+        ret.put("addressLine1", List.of("1", "Fake building", "Fake Area", "Fake City", "Near Fake Landmark"));
+        // ret.put("addressLine1", new String[]{"1", "Fake building", "Fake Area", "Fake City", "Near Fake Landmark"});
+        ret.put("province", "Fake Area");
+        ret.put("region", "FakeRegion");
+        ret.put("postalCode", "123");
+        ret.put("face", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII");
         Map<String, Object> finalTemplate = new HashMap<>();
         for (String key : ret.keySet()) {
             Object value = ret.get(key);
             if (value instanceof List) {
                 finalTemplate.put(key, new JSONArray((List<String>) value));
+            } else if (value.getClass().isArray()) {
+                finalTemplate.put(key, new JSONArray(List.of(value)));
             } else if (value instanceof JSONArray) {
                 finalTemplate.put(key, new JSONArray(value));
             } else {
@@ -82,7 +80,9 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
             }
         }
         VelocityContext context = new VelocityContext(finalTemplate);
+        engine.evaluate(context, writer, /*logTag */ "MockTemplate test logTag", t.toString());
         InputStream is = new ByteArrayInputStream(t.toString().getBytes(StandardCharsets.UTF_8));
         t.merge(context, writer);
+        assert writer.toString().contains("Fake building");
     }
 }
