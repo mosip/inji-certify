@@ -5,6 +5,7 @@
  */
 package io.mosip.certify.services;
 
+import com.nimbusds.jose.JWSAlgorithm;
 import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.dto.VCRequestDto;
 import io.mosip.certify.api.dto.VCResult;
@@ -14,6 +15,7 @@ import io.mosip.certify.api.spi.*;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
 import io.mosip.certify.core.constants.VCFormats;
+import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.certify.core.dto.CredentialMetadata;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
@@ -73,6 +75,11 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
     @Autowired
     private SignatureService signatureService;
 
+    @Autowired
+    private VCIPluginSelecter vciPluginSelecter;
+
+    @Value("${mosip.certify.pub.key}")
+    private String hostedKey;
     @Autowired
     private ProofValidatorFactory proofValidatorFactory;
 
@@ -147,13 +154,22 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
                     vcRequestDto.setType(credentialRequest.getCredential_definition().getType());
                     vcRequestDto.setCredentialSubject(credentialRequest.getCredential_definition().getCredentialSubject());
                     validateLdpVcFormatRequest(credentialRequest, credentialMetadata);
-                    if (CredentialUtils.isVC2_0Request(vcRequestDto)) {
+                    if (vciPluginSelecter.choosePlugin(vcRequestDto).equals(PluginType.DataProviderPlugin)) {
                         try {
+                            // TODO(multitenancy): later decide which plugin out of n plugins is the correct one
                             Map<String, Object> identityData = dataModelService.fetchData(parsedAccessToken.getClaims());
                             Map<String, Object> templateParams = new HashMap<>();
                             templateParams.put("templateName", CredentialUtils.getTemplateName(vcRequestDto));
                             String templatedVC = vcFormatter.format(identityData, templateParams);
-                            vcResult = vcSigner.perform(templatedVC, null);
+                            Map<String, String> vcSignerParams = new HashMap<>();
+                            // TODO: Collate this into simpler APIs where just key-type is specified
+                            vcSignerParams.put(KeyManagerConstants.VC_SIGN_ALGO,
+                                    SignatureAlg.RSA_SIGNATURE_SUITE);
+                            vcSignerParams.put(KeyManagerConstants.PUBLIC_KEY_URL, hostedKey);
+                            vcSignerParams.put(KeyManagerConstants.KEY_APP_ID, Constants.CERTIFY_MOCK_RSA);
+                            vcSignerParams.put(KeyManagerConstants.KEY_REF_ID, Constants.EMPTY_REF_ID);
+                            vcSignerParams.put(KeyManagerConstants.KEYMGR_SIGN_ALGO, JWSAlgorithm.RS256.getName());
+                            vcResult = vcSigner.perform(templatedVC, vcSignerParams);
                         } catch(DataProviderExchangeException e) {
                             throw new CertifyException(e.getErrorCode());
                         }
