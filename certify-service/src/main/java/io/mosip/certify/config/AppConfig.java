@@ -87,6 +87,7 @@ public class AppConfig implements ApplicationRunner {
         // TODO: Generate an EC & ED key via K8s Job(INJICERT-469)
         KeyPairGenerateRequestDto rsaKeyRequest = new KeyPairGenerateRequestDto();
         rsaKeyRequest.setApplicationId(Constants.CERTIFY_MOCK_RSA);
+        rsaKeyRequest.setReferenceId(Constants.EMPTY_REF_ID);
         rsaKeyRequest.setForce(false);
         keymanagerService.generateMasterKey("certificate", rsaKeyRequest);
         if(!StringUtils.isEmpty(cacheSecretKeyRefId)) {
