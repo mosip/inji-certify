@@ -12,8 +12,9 @@
 -- ------------------------------------------------------------------------------------------
 
 create table svg_render_template (
-    id VARCHAR NOT NULL,
+    id UUID NOT NULL,
     svg_template VARCHAR NOT NULL,
+    template_name VARCHAR NOT NULL,
     last_modified TIMESTAMP DEFAULT NOW() NOT NULL,
     CONSTRAINT pk_svgrndrtmp_id PRIMARY KEY (id)
 );
