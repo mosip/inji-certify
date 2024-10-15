@@ -27,10 +27,6 @@ public class SvgRenderTemplate {
     @Column(name = "svg_template")
     private String svgTemplate;
 
-    @NotBlank(message = ErrorConstants.EMPTY_TEMPLATE_NAME)
-    @Column(name = "template_name")
-    private String templateName;
-
     @Column(name = "cr_dtimes")
     private LocalDateTime createdtimes;
 

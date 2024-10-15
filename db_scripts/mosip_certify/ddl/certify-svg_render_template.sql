@@ -14,7 +14,6 @@
 create table svg_render_template (
     id UUID NOT NULL,
     svg_template VARCHAR NOT NULL,
-    template_name VARCHAR NOT NULL,
     cr_dtimes timestamp NOT NULL,
     upd_dtimes timestamp,
     CONSTRAINT pk_svgrndrtmp_id PRIMARY KEY (id)

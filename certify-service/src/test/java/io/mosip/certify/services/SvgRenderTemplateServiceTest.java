@@ -39,7 +39,6 @@ public class SvgRenderTemplateServiceTest {
                     </text></svg>
                 """;
         svgRenderTemplate.setSvgTemplate(svgTemplate);
-        svgRenderTemplate.setTemplateName("TestSvgTemplate");
         svgRenderTemplate.setCreatedtimes(LocalDateTime.now());
         Optional<SvgRenderTemplate> optional = Optional.of(svgRenderTemplate);
         Mockito.when(svgRenderTemplateRepository.findById(Mockito.any())).thenReturn(optional);
