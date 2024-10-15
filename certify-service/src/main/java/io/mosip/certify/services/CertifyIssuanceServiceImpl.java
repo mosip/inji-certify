@@ -5,14 +5,16 @@
  */
 package io.mosip.certify.services;
 
+import com.nimbusds.jose.JWSAlgorithm;
 import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.dto.VCRequestDto;
 import io.mosip.certify.api.dto.VCResult;
-import io.mosip.certify.api.exception.VCIExchangeException;
+import io.mosip.certify.api.exception.DataProviderExchangeException;
 import io.mosip.certify.api.spi.*;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
 import io.mosip.certify.core.constants.VCFormats;
+import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.certify.core.dto.CredentialMetadata;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
@@ -30,6 +32,7 @@ import io.mosip.certify.core.validators.CredentialRequestValidatorFactory;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
+import io.mosip.certify.utils.CredentialUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,8 +46,8 @@ import java.util.*;
 
 @Slf4j
 @Service
-@ConditionalOnProperty(value = "mosip.certify.issuer", havingValue = "PluginIssuer")
-public class VCIssuanceServiceImpl implements VCIssuanceService {
+@ConditionalOnProperty(value = "mosip.certify.issuer", havingValue = "CertifyIssuer")
+public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     @Value("#{${mosip.certify.key-values}}")
     private LinkedHashMap<String, LinkedHashMap<String, Object>> issuerMetadata;
@@ -56,7 +59,16 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
     private ParsedAccessToken parsedAccessToken;
 
     @Autowired
-    private VCIssuancePlugin vcIssuancePlugin;
+    private VCFormatter vcFormatter;
+
+    @Autowired
+    private VCSigner vcSigner;
+
+    @Autowired
+    private DataProviderPlugin dataModelService;
+
+    @Value("${mosip.certify.pub.key}")
+    private String hostedKey;
 
     @Autowired
     private ProofValidatorFactory proofValidatorFactory;
@@ -72,6 +84,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
+        // 1. Credential Request validation
         boolean isValidCredentialRequest = new CredentialRequestValidatorFactory().isValid(credentialRequest);
         if(!isValidCredentialRequest) {
             throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
@@ -79,7 +92,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
         if(!parsedAccessToken.isActive())
             throw new NotAuthenticatedException();
-
+        // 2. Scope Validation
         String scopeClaim = (String) parsedAccessToken.getClaims().getOrDefault("scope", "");
         CredentialMetadata credentialMetadata = null;
         for(String scope : scopeClaim.split(Constants.SPACE)) {
@@ -95,13 +108,14 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
             throw new CertifyException(ErrorConstants.INVALID_SCOPE);
         }
 
+        // 3. Proof Validation
         ProofValidator proofValidator = proofValidatorFactory.getProofValidator(credentialRequest.getProof().getProof_type());
         if(!proofValidator.validate((String)parsedAccessToken.getClaims().get(Constants.CLIENT_ID), getValidClientNonce(),
                 credentialRequest.getProof())) {
             throw new CertifyException(ErrorConstants.INVALID_PROOF);
         }
 
-        //Get VC from configured plugin implementation
+        // 4. Get VC from configured plugin implementation
         VCResult<?> vcResult = getVerifiableCredential(credentialRequest, credentialMetadata,
                 proofValidator.getKeyMaterial(credentialRequest.getProof()));
 
@@ -125,37 +139,33 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
 
         VCResult<?> vcResult = null;
-        try {
-            switch (credentialRequest.getFormat()) {
-                case "ldp_vc" :
-                    vcRequestDto.setContext(credentialRequest.getCredential_definition().getContext());
-                    vcRequestDto.setType(credentialRequest.getCredential_definition().getType());
-                    vcRequestDto.setCredentialSubject(credentialRequest.getCredential_definition().getCredentialSubject());
-                    validateLdpVcFormatRequest(credentialRequest, credentialMetadata);
-                    vcResult = vcIssuancePlugin.getVerifiableCredentialWithLinkedDataProof(vcRequestDto, holderId,
-                               parsedAccessToken.getClaims());
-                    break;
-
-                // jwt_vc_json & jwt_vc_json-ld cases are merged
-                case "jwt_vc_json-ld" :
-                case "jwt_vc_json" :
-                    vcRequestDto.setContext(credentialRequest.getCredential_definition().getContext());
-                    vcRequestDto.setType(credentialRequest.getCredential_definition().getType());
-                    vcRequestDto.setCredentialSubject(credentialRequest.getCredential_definition().getCredentialSubject());
-                    vcResult = vcIssuancePlugin.getVerifiableCredential(vcRequestDto, holderId,
-                            parsedAccessToken.getClaims());
-                    break;
-                case VCFormats.MSO_MDOC :
-                    vcRequestDto.setClaims(credentialRequest.getClaims());
-                    vcRequestDto.setDoctype( credentialRequest.getDoctype());
-                    vcResult = vcIssuancePlugin.getVerifiableCredential(vcRequestDto, holderId,
-                          parsedAccessToken.getClaims());
-                    break;
-                default:
-                    throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
-            }
-        } catch (VCIExchangeException e) {
-            throw new CertifyException(e.getMessage());
+        switch (credentialRequest.getFormat()) {
+            case "ldp_vc" :
+                vcRequestDto.setContext(credentialRequest.getCredential_definition().getContext());
+                vcRequestDto.setType(credentialRequest.getCredential_definition().getType());
+                vcRequestDto.setCredentialSubject(credentialRequest.getCredential_definition().getCredentialSubject());
+                validateLdpVcFormatRequest(credentialRequest, credentialMetadata);
+                try {
+                    // TODO(multitenancy): later decide which plugin out of n plugins is the correct one
+                    Map<String, Object> identityData = dataModelService.fetchData(parsedAccessToken.getClaims());
+                    Map<String, Object> templateParams = new HashMap<>();
+                    templateParams.put("templateName", CredentialUtils.getTemplateName(vcRequestDto));
+                    String templatedVC = vcFormatter.format(identityData, templateParams);
+                    Map<String, String> vcSignerParams = new HashMap<>();
+                    // TODO: Collate this into simpler APIs where just key-type is specified
+                    vcSignerParams.put(KeyManagerConstants.VC_SIGN_ALGO,
+                            SignatureAlg.RSA_SIGNATURE_SUITE);
+                    vcSignerParams.put(KeyManagerConstants.PUBLIC_KEY_URL, hostedKey);
+                    vcSignerParams.put(KeyManagerConstants.KEY_APP_ID, Constants.CERTIFY_MOCK_RSA);
+                    vcSignerParams.put(KeyManagerConstants.KEY_REF_ID, Constants.EMPTY_REF_ID);
+                    vcSignerParams.put(KeyManagerConstants.KEYMGR_SIGN_ALGO, JWSAlgorithm.RS256.getName());
+                    vcResult = vcSigner.perform(templatedVC, vcSignerParams);
+                } catch(DataProviderExchangeException e) {
+                    throw new CertifyException(e.getErrorCode());
+                }
+                break;
+            default:
+                throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
         }
 
         if(vcResult != null && vcResult.getCredential() != null)
@@ -173,13 +183,6 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
                 CredentialResponse<JsonLDObject> ldpVcResponse = new CredentialResponse<>();
                 ldpVcResponse.setCredential((JsonLDObject)vcResult.getCredential());
                 return ldpVcResponse;
-
-            case "jwt_vc_json-ld":
-            case "jwt_vc_json":
-            case VCFormats.MSO_MDOC :
-                CredentialResponse<String> jsonResponse = new CredentialResponse<>();
-                jsonResponse.setCredential((String)vcResult.getCredential());
-                return jsonResponse;
         }
         throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
     }

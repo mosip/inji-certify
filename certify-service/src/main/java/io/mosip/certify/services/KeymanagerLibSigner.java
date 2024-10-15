@@ -1,9 +1,13 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 package io.mosip.certify.services;
 
 import foundation.identity.jsonld.JsonLDException;
 import foundation.identity.jsonld.JsonLDObject;
 import info.weboftrust.ldsignatures.LdProof;
-import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
 import info.weboftrust.ldsignatures.canonicalizer.URDNA2015Canonicalizer;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.api.spi.VCSigner;
@@ -12,7 +16,7 @@ import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import io.mosip.kernel.signature.service.SignatureService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.URI;
@@ -34,7 +38,7 @@ import java.util.Map;
  *    so long that VC should be verifiable
  * - the VC should have a validFrom or issuanceDate in a specific UTC format
  */
-@Component
+@Service
 public class KeymanagerLibSigner implements VCSigner {
 
     @Autowired

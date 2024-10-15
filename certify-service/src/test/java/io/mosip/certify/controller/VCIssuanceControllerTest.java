@@ -44,15 +44,6 @@ public class VCIssuanceControllerTest {
     ParsedAccessToken parsedAccessToken;
 
     @MockBean
-    DataProviderPlugin dataProviderPlugin;
-
-    @MockBean
-    VCFormatter vcFormatter;
-
-    @MockBean
-    VCSigner vcSigner;
-
-    @MockBean
     VCIssuanceService vcIssuanceService;
 
     @MockBean

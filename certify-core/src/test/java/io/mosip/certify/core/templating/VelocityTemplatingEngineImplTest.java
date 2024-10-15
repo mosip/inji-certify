@@ -12,8 +12,7 @@ import org.json.JSONArray;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -22,13 +21,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-@Component
+@Service
 public class VelocityTemplatingEngineImplTest extends TestCase {
     private VelocityEngine engine;
-    @MockBean
-    private TemplateRepository templateRepository;
 
     @Before
     public void setUp() {

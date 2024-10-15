@@ -1,6 +1,5 @@
 package io.mosip.certify.api.spi;
 
-import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.dto.VCResult;
 import java.util.Map;
 

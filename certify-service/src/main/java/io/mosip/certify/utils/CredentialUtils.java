@@ -12,14 +12,6 @@ public class CredentialUtils {
         return r.getContext().get(0).equals("https://www.w3.org/ns/credentials/v2");
     }
 
-    // DO NOT USE NOW
-    public static boolean isNextGenPluginRequest(VCRequestDto r) {
-        // TODO: Check the Spring Config values and verify if request should be handled by
-        //  VCIssuancePlugin or the newer type of plugin.
-        // TODO: use the Host header + credential.type
-        return true;
-    }
-
     /**
      * get the template name for a VCRequest for VCFormatter lib
      * @param vcRequestDto
