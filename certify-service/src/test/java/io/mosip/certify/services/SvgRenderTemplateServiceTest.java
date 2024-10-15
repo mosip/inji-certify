@@ -15,6 +15,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
@@ -28,7 +29,8 @@ public class SvgRenderTemplateServiceTest {
     @Test
     public void getSvgTemplate_withValidDetail_thenPass() {
         SvgRenderTemplate svgRenderTemplate = new SvgRenderTemplate();
-        svgRenderTemplate.setId("TestSvgTemplate");
+        UUID id = UUID.randomUUID();
+        svgRenderTemplate.setId(id);
         String svgTemplate = """
                     <svg xmlns=\\"http://www.w3.org/2000/svg\\" width=\\"200\\" height=\\"200\\">
                     <rect width=\\"200\\" height=\\"200\\" fill=\\"#ff6347\\"/>
@@ -37,10 +39,11 @@ public class SvgRenderTemplateServiceTest {
                     </text></svg>
                 """;
         svgRenderTemplate.setSvgTemplate(svgTemplate);
-        svgRenderTemplate.setLastModified(LocalDateTime.now());
+        svgRenderTemplate.setTemplateName("TestSvgTemplate");
+        svgRenderTemplate.setCreatedtimes(LocalDateTime.now());
         Optional<SvgRenderTemplate> optional = Optional.of(svgRenderTemplate);
         Mockito.when(svgRenderTemplateRepository.findById(Mockito.any())).thenReturn(optional);
-        SvgRenderTemplate svgRenderTemplateResponse = svgRenderTemplateService.getSvgTemplate("TestSvgTemplate");
+        SvgRenderTemplate svgRenderTemplateResponse = svgRenderTemplateService.getSvgTemplate(UUID.randomUUID());
         Assert.assertNotNull(svgRenderTemplateResponse);
         Assert.assertEquals(svgRenderTemplate.getId(), svgRenderTemplateResponse.getId());
         Assert.assertEquals(svgTemplate, optional.get().getSvgTemplate());
@@ -50,7 +53,7 @@ public class SvgRenderTemplateServiceTest {
     public void getSvgTemplate_withInvalidId_thenFail() {
         Mockito.when(svgRenderTemplateRepository.findById(Mockito.any())).thenReturn(Optional.empty());
         CertifyException certifyException = Assert.assertThrows(CertifyException.class, () -> {
-            svgRenderTemplateService.getSvgTemplate("RandomSvgTemplate");
+            svgRenderTemplateService.getSvgTemplate(UUID.randomUUID());
         });
         Assert.assertEquals(ErrorConstants.INVALID_TEMPLATE_ID, certifyException.getErrorCode());
     }

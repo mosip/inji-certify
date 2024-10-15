@@ -49,6 +49,8 @@ CREATE TABLE  IF NOT EXISTS key_store(
 CREATE TABLE IF NOT EXISTS svg_render_template (
     id VARCHAR NOT NULL,
     svg_template VARCHAR NOT NULL,
-    last_modified TIMESTAMP DEFAULT NOW() NOT NULL,
+    template_name VARCHAR NOT NULL,
+    cr_dtimes timestamp NOT NULL,
+    upd_dtimes timestamp,
     CONSTRAINT pk_svgrndrtmp_id PRIMARY KEY (id)
 );

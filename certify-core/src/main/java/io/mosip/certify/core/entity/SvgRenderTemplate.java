@@ -1,5 +1,11 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 package io.mosip.certify.core.entity;
 
+import io.mosip.certify.core.constants.ErrorConstants;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -7,6 +13,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @Entity
@@ -14,13 +21,19 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class SvgRenderTemplate {
     @Id
-    @NotBlank
-    private String id;
+    private UUID id;
 
-    @NotBlank(message = "Template should not be empty")
+    @NotBlank(message = ErrorConstants.EMPTY_TEMPLATE_CONTENT)
     @Column(name = "svg_template")
     private String svgTemplate;
 
-    @Column(name = "last_modified")
-    private LocalDateTime lastModified;
+    @NotBlank(message = ErrorConstants.EMPTY_TEMPLATE_NAME)
+    @Column(name = "template_name")
+    private String templateName;
+
+    @Column(name = "cr_dtimes")
+    private LocalDateTime createdtimes;
+
+    @Column(name = "upd_dtimes")
+    private LocalDateTime updatedtimes;
 }

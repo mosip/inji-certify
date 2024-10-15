@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 /* This is for temporary purpose till an API isn’t added to simplify Issuer onboarding. */
 
 package io.mosip.certify.config;
@@ -21,6 +27,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.UUID;
 
 
 @Component
@@ -43,34 +51,46 @@ public class TemplateConfig  implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        String svgTemplateContent;
+        String svgTemplateContent = "";
         LinkedHashMap<String, Object> svgTemplateMap;
         Resource resource = new ClassPathResource(svgTemplateJson);
         try {
             svgTemplateContent = (Files.readString(resource.getFile().toPath()));
         } catch (IOException e) {
-            throw new FileNotFoundException("Missing local json file for referring svg templates " + e.getMessage());
+            log.error("Missing local json file for referring svg templates", e);
         }
 
-        try {
-            svgTemplateMap = objectMapper.readValue(svgTemplateContent, LinkedHashMap.class);
-        } catch (JsonProcessingException e) {
-            throw new CertifyException("Missing configuration for svg template content " + e.getMessage());
-        }
-
-         svgTemplateMap.forEach((key, value) -> {
-            SvgRenderTemplate svgRenderTemplate = new SvgRenderTemplate();
-            svgRenderTemplate.setId(key);
-            if(domainUrl.startsWith("http")) {
-                svgRenderTemplate.setSvgTemplate(value.toString());
-            } else {
-                String svgTemplate = restTemplate.getForObject(value.toString(), String.class);
-                svgRenderTemplate.setSvgTemplate(svgTemplate);
+        if(!svgTemplateContent.isEmpty()) {
+            try {
+                svgTemplateMap = objectMapper.readValue(svgTemplateContent, LinkedHashMap.class);
+            } catch (JsonProcessingException e) {
+                throw new CertifyException("Missing configuration for svg template content " + e.getMessage());
             }
-            svgRenderTemplate.setLastModified(LocalDateTime.now());
-            log.info("Template inserted in svg template table.");
-            svgRenderTemplateRepository.save(svgRenderTemplate);
-        });
+
+            List<SvgRenderTemplate> svgRenderTemplates = svgRenderTemplateRepository.findAll();
+
+            if(svgRenderTemplates.isEmpty()) {
+                svgTemplateMap.forEach((key, value) -> {
+                    LinkedHashMap<String, Object> templateObject = ((LinkedHashMap<String, Object>)  value);
+                    SvgRenderTemplate svgRenderTemplate = new SvgRenderTemplate();
+                    UUID id = UUID.fromString(templateObject.get("id").toString());
+                    svgRenderTemplate.setId(id);
+                    if(domainUrl.startsWith("http")) {
+                        svgRenderTemplate.setSvgTemplate(templateObject.get("content").toString());
+                    } else {
+                        String svgTemplate = restTemplate.getForObject(templateObject.get("content").toString(), String.class);
+                        svgRenderTemplate.setSvgTemplate(svgTemplate);
+                    }
+                    svgRenderTemplate.setTemplateName(key);
+                    LocalDateTime localDateTime = LocalDateTime.now();
+                    svgRenderTemplate.setCreatedtimes(localDateTime);
+                    svgRenderTemplate.setUpdatedtimes(localDateTime);
+                    log.info("Template inserted in svg template table.");
+                    svgRenderTemplateRepository.save(svgRenderTemplate);
+                });
+            }
+        }
+
 
         log.info("=============== CERTIFY TEMPLATE SETUP COMPLETED ===============");
     }

@@ -1,3 +1,8 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 package io.mosip.certify.controller;
 
 import io.mosip.certify.core.entity.SvgRenderTemplate;
@@ -14,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.ZoneId;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -24,12 +30,12 @@ public class SvgRenderTemplateController {
     SvgRenderTemplateService svgRenderTemplateService;
 
     @GetMapping("/svg-template/{id}")
-    public ResponseEntity<String> serveSvgTemplate(@PathVariable String id) throws CertifyException {
+    public ResponseEntity<String> serveSvgTemplate(@PathVariable UUID id) throws CertifyException {
         SvgRenderTemplate template = svgRenderTemplateService.getSvgTemplate(id);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, "image/svg")
                 .cacheControl(CacheControl.maxAge(1, TimeUnit.DAYS).cachePublic())
-                .lastModified(template.getLastModified().atZone(ZoneId.systemDefault()).toInstant())
+                .lastModified(template.getUpdatedtimes().atZone(ZoneId.systemDefault()).toInstant())
                 .body(template.getSvgTemplate());
     }
 }
