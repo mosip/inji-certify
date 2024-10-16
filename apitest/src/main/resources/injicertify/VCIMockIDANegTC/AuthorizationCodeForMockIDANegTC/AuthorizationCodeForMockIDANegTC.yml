@@ -1,0 +1,16 @@
+AuthorizationCodeForMockIDANegTC:
+   InjiCertify_ESignet_AuthorizationCode_ForMockIDA_All_Valid_Smoke_sid_For_Neg_Flow:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/VCIMockIDANegTC/AuthorizationCodeForMockIDANegTC/AuthorizationCodeForMockIDANegTC
+      outputTemplate: injicertify/VCIMockIDANegTC/AuthorizationCodeForMockIDANegTC/AuthorizationCodeForMockIDANegTCResult
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_ForMockIDA_uin_all_Valid_Smoke_sid_For_Neg_Flow_encodedResp$",
+        "requestTime": "$TIMESTAMP$",
+        "transactionId": "$ID:ESignet_OAuthDetailsRequest_ForMockIDA_uin_all_Valid_Smoke_sid_For_Neg_Flow_transactionId$"
+}'
+      output: '{
+}'
