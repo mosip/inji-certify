@@ -10,9 +10,9 @@ public class CredentialUtilsTest extends TestCase {
 
     public void testGetTemplateName() {
         VCRequestDto request = new VCRequestDto();
-        request.setContext(List.of("https://www.w3.org/ns/credentials/v2", "https://schema.org/Person"));
+        request.setContext(List.of("https://www.w3.org/ns/credentials/v2", "https://example.org/Person.json"));
         request.setType(List.of("VerifiableCredential", "UniversityCredential"));
-        String expected = "UniversityCredential,VerifiableCredential:https://schema.org/Person,https://www.w3.org/ns/credentials/v2";
+        String expected = "UniversityCredential,VerifiableCredential:https://example.org/Person.json,https://www.w3.org/ns/credentials/v2";
         assertEquals(expected, CredentialUtils.getTemplateName(request));
     }
 }

@@ -158,6 +158,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     vcSignerParams.put(KeyManagerConstants.PUBLIC_KEY_URL, hostedKey);
                     vcSignerParams.put(KeyManagerConstants.KEY_APP_ID, Constants.CERTIFY_MOCK_RSA);
                     vcSignerParams.put(KeyManagerConstants.KEY_REF_ID, Constants.EMPTY_REF_ID);
+                    // Change it to PS256 as per --> https://w3c.github.io/vc-jws-2020/#dfn-jsonwebsignature2020
                     vcSignerParams.put(KeyManagerConstants.KEYMGR_SIGN_ALGO, JWSAlgorithm.RS256.getName());
                     vcResult = vcSigner.perform(templatedVC, vcSignerParams);
                 } catch(DataProviderExchangeException e) {

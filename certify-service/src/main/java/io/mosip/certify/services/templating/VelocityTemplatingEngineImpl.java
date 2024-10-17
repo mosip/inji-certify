@@ -15,7 +15,6 @@ import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.repository.TemplateRepository;
 import jakarta.annotation.PostConstruct;
-import lombok.SneakyThrows;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeConstants;
@@ -38,12 +37,11 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     @PostConstruct
     public void initialize() {
         engine = new VelocityEngine();
-        // DataSourceResourceLoader ds = new DataSourceResourceLoader();
         // TODO: The DataSourceResourceLoader can be used instead if there's a
         //  single primary key column and the table has a last modified date.
         templateCache = new HashMap<>();
         templateRepository.findAll().stream().forEach((template -> {
-            templateCache.put(String.join(DELIMITER, template.getContext(), template.getCredentialType()), template.getTemplate());
+            templateCache.put(String.join(DELIMITER, template.getCredentialType(), template.getContext()), template.getTemplate());
         }));
         engine.setProperty(RuntimeConstants.INPUT_ENCODING, "UTF-8");
         engine.setProperty(RuntimeConstants.OUTPUT_ENCODING, "UTF-8");
