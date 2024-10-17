@@ -183,6 +183,7 @@ public class MosipTestRunner {
 					}
 					BaseTestCase.setReportName(GlobalConstants.INJICERTIFY);
 				}
+				suitefiles.add(file.getAbsolutePath());
 				runner.setTestSuites(suitefiles);
 				System.getProperties().setProperty("testng.outpur.dir", "testng-report");
 				runner.setOutputDirectory("testng-report");
