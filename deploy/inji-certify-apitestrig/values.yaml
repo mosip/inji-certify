@@ -1,0 +1,7 @@
+modules:
+  injicertify:
+    enabled: true
+    image:
+      repository: mosipqa/apitest-injicertify
+      tag: develop
+      pullPolicy: Always
