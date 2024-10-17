@@ -40,9 +40,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         // TODO: The DataSourceResourceLoader can be used instead if there's a
         //  single primary key column and the table has a last modified date.
         templateCache = new HashMap<>();
-        templateRepository.findAll().stream().forEach((template -> {
-            templateCache.put(String.join(DELIMITER, template.getCredentialType(), template.getContext()), template.getTemplate());
-        }));
+        templateRepository.findAll().stream().forEach((template -> templateCache.put(String.join(DELIMITER, template.getCredentialType(), template.getContext()), template.getTemplate())));
         engine.setProperty(RuntimeConstants.INPUT_ENCODING, "UTF-8");
         engine.setProperty(RuntimeConstants.OUTPUT_ENCODING, "UTF-8");
         engine.init();
@@ -53,7 +51,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     /**
      * performs the templating
      * NOTE: the defaultSettings map should have the "templateName" key set to
-     *  "${VC_CONTEXT1,VC_CONTENXT2,VC_CONTEXT3...}:${CREDENTIALTYPE1,CREDENTIALTYPE2,CREDENTIALTYPE3...}"
+     *  "${sort(CREDENTIALTYPE1,CREDENTIALTYPE2,CREDENTIALTYPE3...)}:${sort(VC_CONTEXT1,VC_CONTENXT2,VC_CONTEXT3...)}"
      *
      * @param templateInput is the input from the DataProvider plugin
      * @param defaultSettings has some sensible defaults from Certify for
