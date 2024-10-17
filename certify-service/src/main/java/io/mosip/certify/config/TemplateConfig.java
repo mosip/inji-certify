@@ -84,30 +84,6 @@ public class TemplateConfig  implements CommandLineRunner {
                 });
             }
         }
-//        String svgTemplateContent = "";
-//        if(svgTemplateURI.startsWith("http")) {
-//            svgTemplateContent = restTemplate.getForObject(svgTemplateContent, String.class);
-//        } else {
-//            Resource resource = new ClassPathResource(svgTemplateURI);
-//            try {
-//                svgTemplateContent = (Files.readString(resource.getFile().toPath()));
-//            } catch (IOException e) {
-//                log.error("Missing local json file for referring svg templates", e);
-//            }
-//        }
-//
-//        List<SvgTemplate> svgRenderTemplates = svgRenderTemplateRepository.findAll();
-//        if(svgRenderTemplates.isEmpty()) {
-//            SvgTemplate svgRenderTemplate = new SvgTemplate();
-//            UUID id = UUID.fromString(svgTemplateURI);
-//            svgRenderTemplate.setId(id);
-//            svgRenderTemplate.setTemplate(svgTemplateContent);
-//            LocalDateTime localDateTime = LocalDateTime.now();
-//            svgRenderTemplate.setCreatedtimes(localDateTime);
-//            svgRenderTemplate.setUpdatedtimes(localDateTime);
-//            log.info("Template inserted in svg template table.");
-//            svgRenderTemplateRepository.save(svgRenderTemplate);
-//        }
         log.info("=============== CERTIFY TEMPLATE SETUP COMPLETED ===============");
     }
 }
