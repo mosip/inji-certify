@@ -1,7 +1,7 @@
 package io.mosip.certify.repository;
 
-import io.mosip.certify.core.entity.SvgRenderTemplate;
-import io.mosip.certify.core.repository.SvgRenderTemplateRepository;
+import io.mosip.certify.core.entity.SvgTemplate;
+import io.mosip.certify.core.repository.SvgTemplateRepository;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -19,12 +19,12 @@ import java.util.UUID;
 @DataJpaTest
 public class SvgRenderTemplateRepositoryTest {
     @Autowired
-    private SvgRenderTemplateRepository svgRenderTemplateRepository;
+    private SvgTemplateRepository svgRenderTemplateRepository;
 
     @Test
     public void insertSvgTemplate_withValidDetail_thenPass() {
-        SvgRenderTemplate svgRenderTemplate = new SvgRenderTemplate();
-        String svgTemplate = """
+        SvgTemplate svgRenderTemplate = new SvgTemplate();
+        String template = """
                     <svg xmlns=\\"http://www.w3.org/2000/svg\\" width=\\"200\\" height=\\"200\\">
                     <rect width=\\"200\\" height=\\"200\\" fill=\\"#ff6347\\"/>
                     <text x=\\"100\\" y=\\"100\\" font-size=\\"30\\" text-anchor=\\"middle\\" fill=\\"white\\">
@@ -33,22 +33,22 @@ public class SvgRenderTemplateRepositoryTest {
                 """;
         UUID id = UUID.randomUUID();
         svgRenderTemplate.setId(id);
-        svgRenderTemplate.setSvgTemplate(svgTemplate);
+        svgRenderTemplate.setTemplate(template);
         svgRenderTemplate.setCreatedtimes(LocalDateTime.now());
 
         svgRenderTemplate = svgRenderTemplateRepository.saveAndFlush(svgRenderTemplate);
         Assert.assertNotNull(svgRenderTemplate);
 
-        Optional<SvgRenderTemplate> optional = svgRenderTemplateRepository.findById(svgRenderTemplate.getId());
+        Optional<SvgTemplate> optional = svgRenderTemplateRepository.findById(svgRenderTemplate.getId());
         Assert.assertTrue(optional.isPresent());
-        Assert.assertEquals(svgRenderTemplate.getSvgTemplate(), optional.get().getSvgTemplate());
+        Assert.assertEquals(svgRenderTemplate.getTemplate(), optional.get().getTemplate());
     }
 
     @Test
     public void insertSvgTemplate_withEmptyTemplate_thenFail() {
-        SvgRenderTemplate svgRenderTemplate = new SvgRenderTemplate();
+        SvgTemplate svgRenderTemplate = new SvgTemplate();
         svgRenderTemplate.setId(UUID.randomUUID());
-        svgRenderTemplate.setSvgTemplate("");
+        svgRenderTemplate.setTemplate("");
         svgRenderTemplate.setCreatedtimes(LocalDateTime.now());
 
         ConstraintViolationException e = Assertions.assertThrows(
@@ -56,6 +56,6 @@ public class SvgRenderTemplateRepositoryTest {
         );
 
         Assert.assertTrue(e.getConstraintViolations().stream()
-                .anyMatch( v -> v.getPropertyPath().toString().equals("svgTemplate")));
+                .anyMatch( v -> v.getPropertyPath().toString().equals("template")));
     }
 }

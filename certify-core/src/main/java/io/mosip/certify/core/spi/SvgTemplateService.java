@@ -5,10 +5,10 @@
  */
 package io.mosip.certify.core.spi;
 
-import io.mosip.certify.core.entity.SvgRenderTemplate;
+import io.mosip.certify.core.entity.SvgTemplate;
 
 import java.util.UUID;
 
-public interface SvgRenderTemplateService {
-    SvgRenderTemplate getSvgTemplate(UUID id);
+public interface SvgTemplateService {
+    SvgTemplate getSvgTemplate(UUID id);
 }

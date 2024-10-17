@@ -19,13 +19,13 @@ import java.util.UUID;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-public class SvgRenderTemplate {
+public class SvgTemplate {
     @Id
     private UUID id;
 
     @NotBlank(message = ErrorConstants.EMPTY_TEMPLATE_CONTENT)
-    @Column(name = "svg_template")
-    private String svgTemplate;
+    @Column(name = "template")
+    private String template;
 
     @Column(name = "cr_dtimes")
     private LocalDateTime createdtimes;

@@ -10,9 +10,9 @@ package io.mosip.certify.config;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.mosip.certify.core.entity.SvgRenderTemplate;
+import io.mosip.certify.core.entity.SvgTemplate;
 import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.core.repository.SvgRenderTemplateRepository;
+import io.mosip.certify.core.repository.SvgTemplateRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,23 +20,19 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 
 @Configuration
 @Slf4j
 public class TemplateConfig  implements CommandLineRunner {
     @Autowired
-    SvgRenderTemplateRepository svgRenderTemplateRepository;
+    SvgTemplateRepository svgRenderTemplateRepository;
 
     @Value("${mosip.certify.svg-templates}")
     private String svgTemplateJson;
@@ -50,65 +46,68 @@ public class TemplateConfig  implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         String svgTemplateContent = "";
-        LinkedHashMap<String, Object> svgTemplateMap;
-        if(svgTemplateJson.startsWith("https")) {
-            svgTemplateContent = restTemplate.getForObject(svgTemplateContent, String.class);
-        } else {
-            Resource resource = new ClassPathResource(svgTemplateJson);
+        List<Object> svgTemplateMap;
+        Resource resource = new ClassPathResource(svgTemplateJson);
+        try {
+            svgTemplateContent = (Files.readString(resource.getFile().toPath()));
+        } catch (IOException e) {
+            log.error("Missing local json file for referring svg templates", e);
+        }
+
+        if(!svgTemplateContent.isEmpty()) {
             try {
-                svgTemplateContent = (Files.readString(resource.getFile().toPath()));
-            } catch (IOException e) {
-                log.error("Missing local json file for referring svg templates", e);
+                svgTemplateMap = objectMapper.readValue(svgTemplateContent, List.class);
+            } catch (JsonProcessingException e) {
+                throw new CertifyException("Missing configuration for svg template content " + e.getMessage());
+            }
+
+            List<SvgTemplate> svgRenderTemplates = svgRenderTemplateRepository.findAll();
+
+            if(svgRenderTemplates.isEmpty()) {
+                svgTemplateMap.forEach((value) -> {
+                    SvgTemplate svgRenderTemplate = new SvgTemplate();
+                    LinkedHashMap<String, Object> valueMap = (LinkedHashMap<String, Object>) value;
+                    UUID id = UUID.fromString(valueMap.get("id").toString());
+                    svgRenderTemplate.setId(id);
+                    String templateURI = valueMap.get("content").toString();
+                    if(templateURI.startsWith("http")) {
+                        String templateFromUrl = restTemplate.getForObject(templateURI, String.class);
+                        svgRenderTemplate.setTemplate(templateFromUrl);
+                    } else {
+                        svgRenderTemplate.setTemplate(templateURI);
+                    }
+                    LocalDateTime localDateTime = LocalDateTime.now();
+                    svgRenderTemplate.setCreatedtimes(localDateTime);
+                    svgRenderTemplate.setUpdatedtimes(localDateTime);
+                    log.info("Template inserted in svg template table.");
+                    svgRenderTemplateRepository.save(svgRenderTemplate);
+                });
             }
         }
-
-        List<SvgRenderTemplate> svgRenderTemplates = svgRenderTemplateRepository.findAll();
-        if(svgRenderTemplates.isEmpty()) {
-            SvgRenderTemplate svgRenderTemplate = new SvgRenderTemplate();
-            UUID id = UUID.fromString(svgTemplateJson);
-            svgRenderTemplate.setId(id);
-            svgRenderTemplate.setSvgTemplate(svgTemplateContent);
-            LocalDateTime localDateTime = LocalDateTime.now();
-            svgRenderTemplate.setCreatedtimes(localDateTime);
-            svgRenderTemplate.setUpdatedtimes(localDateTime);
-            log.info("Template inserted in svg template table.");
-            svgRenderTemplateRepository.save(svgRenderTemplate);
-        }
-
-
-//        if(!svgTemplateContent.isEmpty()) {
+//        String svgTemplateContent = "";
+//        if(svgTemplateURI.startsWith("http")) {
+//            svgTemplateContent = restTemplate.getForObject(svgTemplateContent, String.class);
+//        } else {
+//            Resource resource = new ClassPathResource(svgTemplateURI);
 //            try {
-//                svgTemplateMap = objectMapper.readValue(svgTemplateContent, LinkedHashMap.class);
-//            } catch (JsonProcessingException e) {
-//                throw new CertifyException("Missing configuration for svg template content " + e.getMessage());
-//            }
-//
-//            List<SvgRenderTemplate> svgRenderTemplates = svgRenderTemplateRepository.findAll();
-//
-//            if(svgRenderTemplates.isEmpty()) {
-//                svgTemplateMap.forEach((key, value) -> {
-//                    LinkedHashMap<String, Object> templateObject = ((LinkedHashMap<String, Object>)  value);
-//                    SvgRenderTemplate svgRenderTemplate = new SvgRenderTemplate();
-//                    UUID id = UUID.fromString(templateObject.get("id").toString());
-//                    String content = templateObject.get("content").toString();
-//                    svgRenderTemplate.setId(id);
-//                    if(content.startsWith("https")) {
-//                        String svgTemplate = restTemplate.getForObject(content, String.class);
-//                        svgRenderTemplate.setSvgTemplate(svgTemplate);
-//                    } else {
-//                        svgRenderTemplate.setSvgTemplate(content);
-//                    }
-//                    svgRenderTemplate.setTemplateName(key);
-//                    LocalDateTime localDateTime = LocalDateTime.now();
-//                    svgRenderTemplate.setCreatedtimes(localDateTime);
-//                    svgRenderTemplate.setUpdatedtimes(localDateTime);
-//                    log.info("Template inserted in svg template table.");
-//                    svgRenderTemplateRepository.save(svgRenderTemplate);
-//                });
+//                svgTemplateContent = (Files.readString(resource.getFile().toPath()));
+//            } catch (IOException e) {
+//                log.error("Missing local json file for referring svg templates", e);
 //            }
 //        }
-
-
+//
+//        List<SvgTemplate> svgRenderTemplates = svgRenderTemplateRepository.findAll();
+//        if(svgRenderTemplates.isEmpty()) {
+//            SvgTemplate svgRenderTemplate = new SvgTemplate();
+//            UUID id = UUID.fromString(svgTemplateURI);
+//            svgRenderTemplate.setId(id);
+//            svgRenderTemplate.setTemplate(svgTemplateContent);
+//            LocalDateTime localDateTime = LocalDateTime.now();
+//            svgRenderTemplate.setCreatedtimes(localDateTime);
+//            svgRenderTemplate.setUpdatedtimes(localDateTime);
+//            log.info("Template inserted in svg template table.");
+//            svgRenderTemplateRepository.save(svgRenderTemplate);
+//        }
         log.info("=============== CERTIFY TEMPLATE SETUP COMPLETED ===============");
     }
 }

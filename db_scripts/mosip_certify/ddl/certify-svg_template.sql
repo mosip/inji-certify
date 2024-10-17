@@ -11,18 +11,18 @@
 -- ------------------------------------------------------------------------------------------
 -- ------------------------------------------------------------------------------------------
 
-create table svg_render_template (
+CREATE TABLE svg_template (
     id UUID NOT NULL,
-    svg_template VARCHAR NOT NULL,
+    template VARCHAR NOT NULL,
     cr_dtimes timestamp NOT NULL,
     upd_dtimes timestamp,
-    CONSTRAINT pk_svgrndrtmp_id PRIMARY KEY (id)
+    CONSTRAINT pk_svgtmp_id PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE svg_render_template IS 'SVG Render Template: Contains svg render image for VC.';
+COMMENT ON TABLE svg_template IS 'SVG Render Template: Contains svg render image for VC.';
 
-COMMENT ON COLUMN svg_render_template.id IS 'Template Id: Unique id assigned to save and identify template.';
-COMMENT ON COLUMN svg_render_template.svg_template IS 'SVG Template Content: SVG Render Image for the VC details.';
-COMMENT ON COLUMN svg_render_template.last_modified IS 'Last date when the template was modified.';
+COMMENT ON COLUMN svg_template.id IS 'Template Id: Unique id assigned to save and identify template.';
+COMMENT ON COLUMN svg_template.template IS 'SVG Template Content: SVG Render Image for the VC details.';
+COMMENT ON COLUMN svg_template.last_modified IS 'Last date when the template was modified.';
 
 

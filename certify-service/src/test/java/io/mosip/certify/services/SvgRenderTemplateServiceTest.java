@@ -1,9 +1,9 @@
 package io.mosip.certify.services;
 
 import io.mosip.certify.core.constants.ErrorConstants;
-import io.mosip.certify.core.entity.SvgRenderTemplate;
+import io.mosip.certify.core.entity.SvgTemplate;
 import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.core.repository.SvgRenderTemplateRepository;
+import io.mosip.certify.core.repository.SvgTemplateRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
@@ -21,14 +21,14 @@ import java.util.UUID;
 @RunWith(MockitoJUnitRunner.class)
 public class SvgRenderTemplateServiceTest {
     @InjectMocks
-    SvgRenderTemplateServiceImpl svgRenderTemplateService;
+    SvgTemplateServiceImpl svgRenderTemplateService;
 
     @Mock
-    SvgRenderTemplateRepository svgRenderTemplateRepository;
+    SvgTemplateRepository svgRenderTemplateRepository;
 
     @Test
     public void getSvgTemplate_withValidDetail_thenPass() {
-        SvgRenderTemplate svgRenderTemplate = new SvgRenderTemplate();
+        SvgTemplate svgRenderTemplate = new SvgTemplate();
         UUID id = UUID.randomUUID();
         svgRenderTemplate.setId(id);
         String svgTemplate = """
@@ -38,14 +38,14 @@ public class SvgRenderTemplateServiceTest {
                     Hello, SVG!
                     </text></svg>
                 """;
-        svgRenderTemplate.setSvgTemplate(svgTemplate);
+        svgRenderTemplate.setTemplate(svgTemplate);
         svgRenderTemplate.setCreatedtimes(LocalDateTime.now());
-        Optional<SvgRenderTemplate> optional = Optional.of(svgRenderTemplate);
+        Optional<SvgTemplate> optional = Optional.of(svgRenderTemplate);
         Mockito.when(svgRenderTemplateRepository.findById(Mockito.any())).thenReturn(optional);
-        SvgRenderTemplate svgRenderTemplateResponse = svgRenderTemplateService.getSvgTemplate(UUID.randomUUID());
+        SvgTemplate svgRenderTemplateResponse = svgRenderTemplateService.getSvgTemplate(UUID.randomUUID());
         Assert.assertNotNull(svgRenderTemplateResponse);
         Assert.assertEquals(svgRenderTemplate.getId(), svgRenderTemplateResponse.getId());
-        Assert.assertEquals(svgTemplate, optional.get().getSvgTemplate());
+        Assert.assertEquals(svgTemplate, optional.get().getTemplate());
     }
 
     @Test
