@@ -12,9 +12,12 @@ import info.weboftrust.ldsignatures.canonicalizer.URDNA2015Canonicalizer;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.api.spi.VCSigner;
 import io.mosip.certify.core.constants.*;
+import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import io.mosip.kernel.signature.service.SignatureService;
+import lombok.extern.slf4j.Slf4j;
+import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -38,6 +41,7 @@ import java.util.Map;
  *    so long that VC should be verifiable
  * - the VC should have a validFrom or issuanceDate in a specific UTC format
  */
+@Slf4j
 @Service
 public class KeymanagerLibSigner implements VCSigner {
 
@@ -82,13 +86,9 @@ public class KeymanagerLibSigner implements VCSigner {
         byte[] vcSignBytes = null;
         try {
             vcSignBytes = canonicalizer.canonicalize(vcLdProof, j);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (GeneralSecurityException e) {
-            throw new RuntimeException(e);
-        } catch (JsonLDException e) {
-            // TODO: Should an issuer context not accessible error be wrapped inside a CertifyException
-            throw new RuntimeException(e);
+        } catch (IOException | GeneralSecurityException | JsonLDException e) {
+            log.error("Error during canonicalization", e.getMessage());
+            throw new CertifyException("Error during canonicalization");
         }
 
         // 2. VC Sign
