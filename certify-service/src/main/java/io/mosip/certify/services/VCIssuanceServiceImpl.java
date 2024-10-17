@@ -6,10 +6,12 @@
 package io.mosip.certify.services;
 
 import foundation.identity.jsonld.JsonLDObject;
+
 import io.mosip.certify.api.dto.VCRequestDto;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.api.exception.VCIExchangeException;
-import io.mosip.certify.api.spi.*;
+import io.mosip.certify.api.spi.AuditPlugin;
+import io.mosip.certify.api.spi.VCIssuancePlugin;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
 import io.mosip.certify.core.constants.VCFormats;
@@ -39,12 +41,17 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
 @ConditionalOnProperty(value = "mosip.certify.issuer", havingValue = "PluginIssuer")
 public class VCIssuanceServiceImpl implements VCIssuanceService {
+
+    private static final String TYPE_VERIFIABLE_CREDENTIAL = "VerifiableCredential";
 
     @Value("#{${mosip.certify.key-values}}")
     private LinkedHashMap<String, LinkedHashMap<String, Object>> issuerMetadata;
@@ -112,9 +119,9 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     @Override
     public Map<String, Object> getCredentialIssuerMetadata(String version) {
-       if(issuerMetadata.containsKey(version))
-           return issuerMetadata.get(version);
-       throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_OPENID_VERSION);
+        if(issuerMetadata.containsKey(version))
+            return issuerMetadata.get(version);
+        throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_OPENID_VERSION);
     }
 
     private VCResult<?> getVerifiableCredential(CredentialRequest credentialRequest, CredentialMetadata credentialMetadata,
@@ -133,7 +140,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
                     vcRequestDto.setCredentialSubject(credentialRequest.getCredential_definition().getCredentialSubject());
                     validateLdpVcFormatRequest(credentialRequest, credentialMetadata);
                     vcResult = vcIssuancePlugin.getVerifiableCredentialWithLinkedDataProof(vcRequestDto, holderId,
-                               parsedAccessToken.getClaims());
+                            parsedAccessToken.getClaims());
                     break;
 
                 // jwt_vc_json & jwt_vc_json-ld cases are merged
@@ -149,13 +156,13 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
                     vcRequestDto.setClaims(credentialRequest.getClaims());
                     vcRequestDto.setDoctype( credentialRequest.getDoctype());
                     vcResult = vcIssuancePlugin.getVerifiableCredential(vcRequestDto, holderId,
-                          parsedAccessToken.getClaims());
+                            parsedAccessToken.getClaims());
                     break;
                 default:
                     throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
             }
         } catch (VCIExchangeException e) {
-            throw new CertifyException(e.getMessage());
+            throw new CertifyException(e.getErrorCode());
         }
 
         if(vcResult != null && vcResult.getCredential() != null)
@@ -208,7 +215,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
     private void validateLdpVcFormatRequest(CredentialRequest credentialRequest,
                                             CredentialMetadata credentialMetadata) {
         if(!credentialRequest.getCredential_definition().getType().containsAll(credentialMetadata.getTypes()))
-             throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_VC_TYPE);
+            throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_VC_TYPE);
 
         //TODO need to validate Credential_definition as JsonLD document, if invalid throw exception
     }
