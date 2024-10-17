@@ -179,7 +179,7 @@ Execute installation script
     * Registry Url `mosip.certify.vciplugin.sunbird-rc.credential-type.{credential type}.registry-get-url`
     * Template Url `mosip.certify.vciplugin.sunbird-rc.credential-type.{credential type}.template-url`
     * Credential schema version  `mosip.certify.vciplugin.sunbird-rc.credential-type.{credential type}.cred-schema-version`
-    * Change these properties for different credential types supported `mosip.certify.key-values` based on OID4VCI version.
+    * Change these properties for different credential types supported `mosip.certify.issuer-metadata.config-url` based on OID4VCI version.
 
 ## Web interface for VC Issuance (optional)
 
@@ -209,3 +209,4 @@ Execute installation script
       *  [Vault](https://github.com/challabeehyv/sunbird-devops/blob/main/deploy-as-code/helm/v2/README.md#vault-deployment)
    * [Esignet](https://github.com/mosip/esignet/tree/v1.4.1/helm)
    * [Certify](https://github.com/mosip/inji-certify/tree/v0.9.1/helm/inji-certify)
+
