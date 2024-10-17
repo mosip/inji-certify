@@ -8,21 +8,6 @@
 		<listener class-name="io.mosip.testrig.apirig.report.EmailableReport" />
 	</listeners>
 
-	<test name="AddIdentity">
-		<parameter name="ymlFile" value="injicertify/AddIdentity/AddIdentity.yml" />
-		<parameter name="prerequisite" value="Yes" />
-		<classes>
-			<class name="io.mosip.testrig.apirig.testscripts.AddIdentity" />
-		</classes>
-	</test>
-<!--<test name="GenerateVID">
-		<parameter name="ymlFile" value="injicertify/GenerateVID/createGenerateVID.yml" />
-		<parameter name="idKeyName" value="vid" />
-		<parameter name="prerequisite" value="Yes" />
-		<classes>
-			<class name="io.mosip.testrig.apirig.testscripts.PostWithAutogenIdWithOtpGenerate" />
-		</classes>
-	</test>-->
 	<test name="CreateOIDCClientV2SunBirdC">
 		<parameter name="ymlFile" value="injicertify/SunBirdC/CreateOIDCClientV2SunBirdC/CreateOIDCClientV2SunBirdC.yml" />
 		<parameter name="idKeyName" value="clientId" />

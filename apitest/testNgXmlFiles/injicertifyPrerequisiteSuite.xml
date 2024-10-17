@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="Inji-Certify Prerequisite Suite">
+	<!-- Passing Group as parmeter unsing "testType" Possible Groups are: smoke 
+		regression smokeAndRegression -->
+	<listeners>
+		<listener class-name="io.mosip.testrig.apirig.report.EmailableReport" />
+	</listeners>
+
+	<test name="AddIdentity">
+		<parameter name="ymlFile" value="injicertify/AddIdentity/AddIdentity.yml" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.AddIdentity" />
+		</classes>
+	</test>
+</suite>
