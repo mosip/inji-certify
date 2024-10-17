@@ -15,5 +15,7 @@ public class Constants {
     public static final String CLIENT_ID = "client_id";
     public static final String CERTIFY_PARTNER_APP_ID = "CERTIFY_PARTNER";
     public static final String CERTIFY_SERVICE_APP_ID = "CERTIFY_SERVICE";
+    public static final String CERTIFY_MOCK_RSA = "CERTIFY_MOCK_RSA";
     public static final String ROOT_KEY = "ROOT";
+    public static final String EMPTY_REF_ID = "";
 }
