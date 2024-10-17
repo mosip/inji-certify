@@ -67,8 +67,11 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Autowired
     private DataProviderPlugin dataModelService;
 
-    @Value("${mosip.certify.pub.key}")
+    @Value("${mosip.certify.issuer.pub.key}")
     private String hostedKey;
+
+    @Value("${mosip.certify.issuer.uri}")
+    private String issuerURI;
 
     @Autowired
     private ProofValidatorFactory proofValidatorFactory;
@@ -150,6 +153,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     Map<String, Object> identityData = dataModelService.fetchData(parsedAccessToken.getClaims());
                     Map<String, Object> templateParams = new HashMap<>();
                     templateParams.put("templateName", CredentialUtils.getTemplateName(vcRequestDto));
+                    templateParams.put("issuerURI", issuerURI);
                     String templatedVC = vcFormatter.format(identityData, templateParams);
                     Map<String, String> vcSignerParams = new HashMap<>();
                     // TODO: Collate this into simpler APIs where just key-type is specified

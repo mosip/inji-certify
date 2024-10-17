@@ -62,6 +62,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     public String format(Map<String, Object> templateInput, Map<String, Object> defaultSettings) {
         // TODO: Isn't template name becoming too complex with VC_CONTEXTS & CREDENTIAL_TYPES both?
         String templateName = defaultSettings.get("templateName").toString();
+        String issuer = defaultSettings.get("issuerURI").toString();
         String t = templateCache.get(templateName);
         StringWriter writer = new StringWriter();
         // 1. Prepare map
@@ -79,6 +80,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
                 finalTemplate.put(key, value);
             }
         }
+        // add the issuer value
+        finalTemplate.put("issuer", issuer);
         if (shouldHaveDates && !(templateInput.containsKey(VCDM2Constants.VALID_FROM)
                 && templateInput.containsKey(VCDM2Constants.VALID_UNITL))) {
             templateInput.put("_dateTool", new DateTool());

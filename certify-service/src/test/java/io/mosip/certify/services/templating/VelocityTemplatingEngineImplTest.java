@@ -118,7 +118,7 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
         assert t != null;
         Map<String, Object> ret = new HashMap<>();
         ret.put("vcVer", "VC-V1");
-        ret.put("issuer", "https://example.com/fake-issuer");
+        // ret.put("issuer", "https://example.com/fake-issuer");
         ret.put("fullName", "Amit Developer");
         ret.put("validFrom", "01/01/2022");
         ret.put("validUntil", "02/02/2122");
@@ -134,7 +134,8 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
         ret.put("region", "FakeRegion");
         ret.put("postalCode", "123");
         ret.put("face", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII");
-        Map<String, Object> templateMap = Map.of("templateName", "MockVerifiableCredential,VerifiableCredential:https://example.org/Person.json,https://www.w3.org/ns/credentials/v2");
+        Map<String, Object> templateMap = Map.of("templateName", "MockVerifiableCredential,VerifiableCredential:https://example.org/Person.json,https://www.w3.org/ns/credentials/v2",
+                "issuerURI", "https://example.com/fake-issuer");
         String actualJSON = formatter.format(ret, templateMap);
         String expectedJSON = """
                 {"credentialSubject":{"face":"data:image\\/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX\\/\\/\\/+\\/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD\\/aNpbtEAAAAASUVORK5CYII","gender":"female","province":"Fake Area","phone":"1234567890","postalCode":123,"fullName":"Amit Developer","addressLine1":["1","Fake building","Fake Area","Fake City","Near Fake Landmark"],"dateOfBirth":"01\\/01\\/2022","vcVer":"VC-V1","UIN":123456,"region":"FakeRegion","email":"amit@fakemail.com"},"validUntil":"02\\/02\\/2122","validFrom":"01\\/01\\/2022","type":["VerifiableCredential","MockVerifiableCredential"],"@context":["https:\\/\\/www.w3.org\\/ns\\/credentials\\/v2"],"issuer":"https:\\/\\/example.com\\/fake-issuer"}
