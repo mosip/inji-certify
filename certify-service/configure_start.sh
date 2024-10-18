@@ -25,6 +25,9 @@ download_and_extract() {
 
 if [ "$enable_certify_artifactory" = "true" ]; then
   download_and_extract "${artifactory_url_env}/artifactory/libs-release-local/certify/certify-plugin.zip" "${loader_path_env}"
+  echo "Please patch plugin JAR now"
+  sleep 60
+  echo "Plugin JAR patching not posssible now"
 fi
 
 #installs the pkcs11 libraries.

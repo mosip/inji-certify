@@ -30,8 +30,8 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
-@EnableJpaRepositories(basePackages = {"io.mosip.kernel.keymanagerservice.repository"})
-@EntityScan(basePackages = {"io.mosip.kernel.keymanagerservice.entity"})
+@EnableJpaRepositories(basePackages = {"io.mosip.kernel.keymanagerservice.repository", "io.mosip.certify.core.repository"})
+@EntityScan(basePackages = {"io.mosip.kernel.keymanagerservice.entity, io.mosip.certify.core.entity"})
 @Slf4j
 public class AppConfig implements ApplicationRunner {
 
@@ -84,7 +84,12 @@ public class AppConfig implements ApplicationRunner {
         // Set the reference id to empty string, as keymanager is expecting the same for initialization
         masterKeyRequest.setReferenceId(org.apache.commons.lang3.StringUtils.EMPTY);
         keymanagerService.generateMasterKey(objectType, masterKeyRequest);
-
+        // TODO: Generate an EC & ED key via K8s Job(INJICERT-469)
+        KeyPairGenerateRequestDto rsaKeyRequest = new KeyPairGenerateRequestDto();
+        rsaKeyRequest.setApplicationId(Constants.CERTIFY_MOCK_RSA);
+        rsaKeyRequest.setReferenceId(Constants.EMPTY_REF_ID);
+        rsaKeyRequest.setForce(false);
+        keymanagerService.generateMasterKey("certificate", rsaKeyRequest);
         if(!StringUtils.isEmpty(cacheSecretKeyRefId)) {
             SymmetricKeyGenerateRequestDto symmetricKeyGenerateRequestDto = new SymmetricKeyGenerateRequestDto();
             symmetricKeyGenerateRequestDto.setApplicationId(Constants.CERTIFY_SERVICE_APP_ID);
