@@ -1,6 +1,8 @@
 AuthorizationCodeSunBirdC:
    InjiCertify_ESignet_AuthorizationCode_SunBirdC_All_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/authorization/auth-code
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCodeNeg      
+      description: Authorization Code      
       role: resident
       restMethod: post
       checkErrorsOnlyInResponse: true
