@@ -1,4 +1,4 @@
-AuthenticateUserSunBirdC:
+AuthenticateUserSunBirdCNeg:
    InjiCertify_ESignet_AuthenticateUserSunBirdC_Valid_Smoke:
       endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/authorization/authenticate
       uniqueIdentifier: TC_esignetDependent_AuthenticateUserNeg      
@@ -7,8 +7,8 @@ AuthenticateUserSunBirdC:
       restMethod: post
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
-      inputTemplate: injicertify/SunBirdC/AuthenticateUserSunBirdC/AuthenticateUserSunBirdC
-      outputTemplate: injicertify/SunBirdC/AuthenticateUserSunBirdC/AuthenticateUserSunBirdCResult
+      inputTemplate: injicertify/SunBirdCNegative/AuthenticateUserSunBirdCNeg/AuthenticateUserSunBirdCNeg
+      outputTemplate: injicertify/SunBirdCNegative/AuthenticateUserSunBirdCNeg/AuthenticateUserSunBirdCResultNeg
       input: '{
         "encodedHash": "$ID:ESignet_OAuthDetailsRequest_SunBirdC_all_Valid_Smoke_sid_encodedResp$",
       	"requestTime": "$TIMESTAMP$",

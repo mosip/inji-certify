@@ -1,4 +1,4 @@
-GenerateTokenSunBirdC:
+GenerateTokenSunBirdCNeg:
    InjiCertify_ESignet_GenerateTokenSunBirdC_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/oauth/v2/token
       uniqueIdentifier: TC_esignetDependent_GenerateTokenNeg      
@@ -6,8 +6,8 @@ GenerateTokenSunBirdC:
       role: resident
       restMethod: post
       validityCheckRequired: true
-      inputTemplate: injicertify/SunBirdC/GenerateTokenSunBirdC/GenerateTokenSunBirdC
-      outputTemplate: injicertify/SunBirdC/GenerateTokenSunBirdC/GenerateTokenSunBirdCResult
+      inputTemplate: injicertify/SunBirdCNegative/GenerateTokenSunBirdCNeg/GenerateTokenSunBirdCNeg
+      outputTemplate: injicertify/SunBirdCNegative/GenerateTokenSunBirdCNeg/GenerateTokenSunBirdCResultNeg
       input: '{
 		  "grant_type": "authorization_code",
 		  "code": "$ID:ESignet_AuthorizationCode_SunBirdC_All_Valid_Smoke_sid_code$",
