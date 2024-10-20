@@ -10,16 +10,20 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+
 import io.mosip.certify.api.spi.VCFormatter;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.repository.TemplateRepository;
 import jakarta.annotation.PostConstruct;
+import lombok.SneakyThrows;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeConstants;
 import org.apache.velocity.tools.generic.DateTool;
+import org.apache.velocity.tools.generic.EscapeTool;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -58,6 +62,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
      *                        internal work such as locating the appropriate template
      * @return templated VC as a String
      */
+    @SneakyThrows
     @Override
     public String format(Map<String, Object> templateInput, Map<String, Object> defaultSettings) {
         // TODO: Isn't template name becoming too complex with VC_CONTEXTS & CREDENTIAL_TYPES both?
@@ -66,6 +71,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         String t = templateCache.get(templateName);
         StringWriter writer = new StringWriter();
         // 1. Prepare map
+        // TODO: Eventually, the credentialSubject from the plugin will be templated as-is
         Map<String, Object> finalTemplate = new HashMap<>();
         for (String key : templateInput.keySet()) {
             Object value = templateInput.get(key);
@@ -76,15 +82,22 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
                 finalTemplate.put(key, new JSONArray((List<Object>) value));
             } else if (value.getClass().isArray()) {
                 finalTemplate.put(key, new JSONArray(List.of(value)));
-            } else {
+            } else if (value instanceof Integer | value instanceof Float | value instanceof Long | value instanceof Double) {
+                // entities which don't need to be quoted
                 finalTemplate.put(key, value);
+            } else if (value instanceof String){
+                // entities which need to be quoted
+                finalTemplate.put(key, JSONObject.wrap(value));
             }
         }
+        // Date: https://velocity.apache.org/tools/3.1/apidocs/org/apache/velocity/tools/generic/DateTool.html
+        finalTemplate.put("_dateTool", new DateTool());
+        // Escape: https://velocity.apache.org/tools/3.1/apidocs/org/apache/velocity/tools/generic/EscapeTool.html
+        finalTemplate.put("_esc", new EscapeTool());
         // add the issuer value
         finalTemplate.put("issuer", issuer);
         if (shouldHaveDates && !(templateInput.containsKey(VCDM2Constants.VALID_FROM)
                 && templateInput.containsKey(VCDM2Constants.VALID_UNITL))) {
-            templateInput.put("_dateTool", new DateTool());
             String time = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
             // hardcoded time
             String expiryTime = ZonedDateTime.now(ZoneOffset.UTC).plusYears(2).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
