@@ -1,6 +1,8 @@
 CreateOIDCClientV2SunBirdC:
    InjiCertify_ESignet_CreateOIDCClientV2SunBirdC_all_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/client-mgmt/oauth-client
+      uniqueIdentifier: TC_esignetDependent_CreateOidc      
+      description: Create OIDC client      
       role: partner
       restMethod: post
       inputTemplate: injicertify/SunBirdC/CreateOIDCClientV2SunBirdC/CreateOIDCClientV2SunBirdC
