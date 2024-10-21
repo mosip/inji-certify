@@ -1,8 +1,8 @@
 OAuthDetailsRequestSunBirdCNeg:
    InjiCertify_ESignet_OAuthDetailsRequest_SunBirdC_all_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/authorization/v2/oauth-details
-      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequestNeg      
-      description: OAuth details request      
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequestNeg
+      description: OAuth details request
       role: resident
       restMethod: post
       checkErrorsOnlyInResponse: true
