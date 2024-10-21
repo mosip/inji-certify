@@ -7,6 +7,7 @@ package io.mosip.certify.controller;
 
 import io.mosip.certify.core.entity.SvgTemplate;
 import io.mosip.certify.core.exception.CertifyException;
+import io.mosip.certify.core.exception.TemplateException;
 import io.mosip.certify.core.spi.SvgTemplateService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,10 +31,10 @@ public class SvgTemplateController {
     SvgTemplateService svgTemplateService;
 
     @GetMapping("/svg-template/{id}")
-    public ResponseEntity<String> serveSvgTemplate(@PathVariable UUID id) throws CertifyException {
+    public ResponseEntity<String> serveSvgTemplate(@PathVariable UUID id) throws TemplateException {
         SvgTemplate template = svgTemplateService.getSvgTemplate(id);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_TYPE, "image/svg")
+                .header(HttpHeaders.CONTENT_TYPE, "image/svg+xml")
                 .cacheControl(CacheControl.maxAge(1, TimeUnit.DAYS).cachePublic())
                 .lastModified(template.getUpdatedtimes().atZone(ZoneId.systemDefault()).toInstant())
                 .body(template.getTemplate());
