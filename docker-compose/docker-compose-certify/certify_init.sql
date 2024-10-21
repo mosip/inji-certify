@@ -72,6 +72,15 @@ CREATE TABLE certify.svg_template (
                                     CONSTRAINT pk_svgtmp_id PRIMARY KEY (id)
 );
 
+CREATE TABLE certify.template_data(
+                                    context character varying(1024) NOT NULL,
+                                    credential_type character varying(512) NOT NULL,
+                                    template VARCHAR NOT NULL,
+                                    cr_dtimes timestamp NOT NULL default now(),
+                                    upd_dtimes timestamp,
+                                    CONSTRAINT pk_template PRIMARY KEY (context, credential_type)
+);
+
 
 
 INSERT INTO certify.KEY_POLICY_DEF(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('ROOT', 2920, 1125, 'NA', true, 'mosipadmin', now());

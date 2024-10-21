@@ -3,8 +3,8 @@
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -- -------------------------------------------------------------------------------------------------
 -- Database Name: inji_certify
--- Table Name : svg_render_template
--- Purpose    : Svg Render Template table
+-- Table Name : svg_template
+-- Purpose    : Svg Template table
 --
 --
 -- Modified Date        Modified By         Comments / Remarks
@@ -23,6 +23,5 @@ COMMENT ON TABLE svg_template IS 'SVG Render Template: Contains svg render image
 
 COMMENT ON COLUMN svg_template.id IS 'Template Id: Unique id assigned to save and identify template.';
 COMMENT ON COLUMN svg_template.template IS 'SVG Template Content: SVG Render Image for the VC details.';
-COMMENT ON COLUMN svg_template.last_modified IS 'Last date when the template was modified.';
-
-
+COMMENT ON COLUMN svg_template.cr_dtimes IS 'Date when the template was inserted in table.';
+COMMENT ON COLUMN svg_template.upd_dtimes IS 'Date when the template was last updated in table.';
