@@ -8,6 +8,7 @@ package io.mosip.certify.services;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.entity.SvgTemplate;
 import io.mosip.certify.core.exception.CertifyException;
+import io.mosip.certify.core.exception.TemplateException;
 import io.mosip.certify.core.repository.SvgTemplateRepository;
 import io.mosip.certify.core.spi.SvgTemplateService;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,7 @@ public class SvgTemplateServiceImpl implements SvgTemplateService {
     @Override
     public SvgTemplate getSvgTemplate(UUID id) {
         Optional<SvgTemplate> optional = svgRenderTemplateRepository.findById(id);
-        SvgTemplate svgRenderTemplate = optional.orElseThrow(() -> new CertifyException(ErrorConstants.INVALID_TEMPLATE_ID));
+        SvgTemplate svgRenderTemplate = optional.orElseThrow(() -> new TemplateException(ErrorConstants.INVALID_TEMPLATE_ID));
 
         return svgRenderTemplate;
 
