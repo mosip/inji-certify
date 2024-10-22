@@ -3,7 +3,6 @@ package io.mosip.certify.services;
 import com.nimbusds.jose.JWSAlgorithm;
 import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.dto.VCResult;
-import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.certify.core.constants.VCDMConstants;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
@@ -71,8 +70,8 @@ public class KeymanagerLibSignerTest {
 
             Map<String, String> keyMgrInput = new HashMap<>();
             keyMgrInput.put(KeyManagerConstants.PUBLIC_KEY_URL, "https://example.com/sample.pub.key.json/");
-            keyMgrInput.put(KeyManagerConstants.KEY_APP_ID, Constants.CERTIFY_MOCK_RSA);
-            keyMgrInput.put(KeyManagerConstants.KEY_REF_ID, Constants.EMPTY_REF_ID);
+            keyMgrInput.put(KeyManagerConstants.KEY_APP_ID, KeyManagerConstants.CERTIFY_MOCK_RSA);
+            keyMgrInput.put(KeyManagerConstants.KEY_REF_ID, KeyManagerConstants.EMPTY_REF_ID);
             keyMgrInput.put(KeyManagerConstants.VC_SIGN_ALGO, SignatureAlg.RSA_SIGNATURE_SUITE);
             keyMgrInput.put(KeyManagerConstants.KEYMGR_SIGN_ALGO, JWSAlgorithm.RS256.getName());
 

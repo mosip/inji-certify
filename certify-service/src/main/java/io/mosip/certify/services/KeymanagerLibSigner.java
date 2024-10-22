@@ -56,8 +56,7 @@ public class KeymanagerLibSigner implements VCSigner {
         j.setDocumentLoader(null);
         // NOTE: other aspects can be configured via keyMgrInput map
         String validFrom;
-        String signatureAlgorithm = keyMgrInput.getOrDefault(KeyManagerConstants.VC_SIGN_ALGO,
-                SignatureAlg.RSA_SIGNATURE_SUITE);
+        String signatureAlgorithm = keyMgrInput.get(KeyManagerConstants.VC_SIGN_ALGO);
         String publicKeyURL = keyMgrInput.get(KeyManagerConstants.PUBLIC_KEY_URL);
         String keyAppId = keyMgrInput.get(KeyManagerConstants.KEY_APP_ID);
         String keyRefId = keyMgrInput.get(KeyManagerConstants.KEY_REF_ID);
