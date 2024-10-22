@@ -53,3 +53,12 @@ CREATE TABLE IF NOT EXISTS svg_template (
     upd_dtimes timestamp,
     CONSTRAINT pk_svgtmp_id PRIMARY KEY (id)
 );
+
+CREATE TABLE  IF NOT EXISTS template_data(
+    context character varying(1024) NOT NULL,
+    credential_type character varying(512) NOT NULL,
+    template VARCHAR NOT NULL,
+    cr_dtimes TIMESTAMP DEFAULT NOW() NOT NULL,
+    upd_dtimes TIMESTAMP,
+    CONSTRAINT pk_template PRIMARY KEY (context, credential_type)
+);

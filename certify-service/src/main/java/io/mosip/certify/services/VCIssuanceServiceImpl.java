@@ -35,6 +35,7 @@ import io.mosip.certify.proof.ProofValidatorFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.stereotype.Service;
 import java.time.Instant;
@@ -47,6 +48,7 @@ import java.util.Optional;
 
 @Slf4j
 @Service
+@ConditionalOnProperty(value = "mosip.certify.issuer", havingValue = "PluginIssuer")
 public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     private static final String TYPE_VERIFIABLE_CREDENTIAL = "VerifiableCredential";
@@ -117,9 +119,9 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     @Override
     public Map<String, Object> getCredentialIssuerMetadata(String version) {
-       if(issuerMetadata.containsKey(version))
-           return issuerMetadata.get(version);
-       throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_OPENID_VERSION);
+        if(issuerMetadata.containsKey(version))
+            return issuerMetadata.get(version);
+        throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_OPENID_VERSION);
     }
 
     private VCResult<?> getVerifiableCredential(CredentialRequest credentialRequest, CredentialMetadata credentialMetadata,
@@ -213,7 +215,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
     private void validateLdpVcFormatRequest(CredentialRequest credentialRequest,
                                             CredentialMetadata credentialMetadata) {
         if(!credentialRequest.getCredential_definition().getType().containsAll(credentialMetadata.getTypes()))
-             throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_VC_TYPE);
+            throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_VC_TYPE);
 
         //TODO need to validate Credential_definition as JsonLD document, if invalid throw exception
     }

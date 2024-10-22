@@ -47,12 +47,18 @@ public class TemplateConfig  implements CommandLineRunner {
     public void run(String... args) throws Exception {
         String svgTemplateContent = "";
         List<Object> svgTemplateMap;
-        Resource resource = new ClassPathResource(svgTemplateJson);
-        try {
-            svgTemplateContent = (Files.readString(resource.getFile().toPath()));
-        } catch (IOException e) {
-            log.error("Missing local json file for referring svg templates", e);
+
+        if(svgTemplateJson.startsWith("http")) {
+            svgTemplateContent = restTemplate.getForObject(svgTemplateJson, String.class);
+        } else {
+            Resource resource = new ClassPathResource(svgTemplateJson);
+            try {
+                svgTemplateContent = (Files.readString(resource.getFile().toPath()));
+            } catch (IOException e) {
+                log.error("Missing local json file for referring svg templates", e);
+            }
         }
+
 
         if(!svgTemplateContent.isEmpty()) {
             try {
