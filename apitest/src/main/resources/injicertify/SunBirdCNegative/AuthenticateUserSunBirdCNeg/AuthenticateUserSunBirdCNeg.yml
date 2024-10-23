@@ -1,5 +1,5 @@
 AuthenticateUserSunBirdCNeg:
-   InjiCertify_ESignet_AuthenticateUserSunBirdC_Valid_Smoke:
+   InjiCertify_ESignet_AuthenticateUserSunBirdC_Valid_Smoke_Neg:
       endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/authorization/authenticate
       uniqueIdentifier: TC_esignetDependent_AuthenticateUserNeg      
       description: Authenticate User      
