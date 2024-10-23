@@ -2,7 +2,7 @@ package io.mosip.certify.services;
 
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.entity.SvgTemplate;
-import io.mosip.certify.core.exception.CertifyException;
+import io.mosip.certify.core.exception.TemplateException;
 import io.mosip.certify.core.repository.SvgTemplateRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -51,10 +51,10 @@ public class SvgRenderTemplateServiceTest {
     @Test
     public void getSvgTemplate_withInvalidId_thenFail() {
         Mockito.when(svgRenderTemplateRepository.findById(Mockito.any())).thenReturn(Optional.empty());
-        CertifyException certifyException = Assert.assertThrows(CertifyException.class, () -> {
+        TemplateException templateException = Assert.assertThrows(TemplateException.class, () -> {
             svgRenderTemplateService.getSvgTemplate(UUID.randomUUID());
         });
-        Assert.assertEquals(ErrorConstants.INVALID_TEMPLATE_ID, certifyException.getErrorCode());
+        Assert.assertEquals(ErrorConstants.INVALID_TEMPLATE_ID, templateException.getErrorCode());
     }
 
 }
