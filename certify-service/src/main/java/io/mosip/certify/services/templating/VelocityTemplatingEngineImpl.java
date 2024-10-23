@@ -74,7 +74,6 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         // TODO: Eventually, the credentialSubject from the plugin will be templated as-is
         Map<String, Object> finalTemplate = new HashMap<>();
         Iterator<String> keys = templateInput.keys();
-//        for (String key : templateInput.keySet()) {
         while(keys.hasNext()) {
             String key = keys.next();
             Object value = templateInput.get(key);
