@@ -154,7 +154,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 try {
                     // TODO(multitenancy): later decide which plugin out of n plugins is the correct one
                     JSONObject jsonObject = dataModelService.fetchData(parsedAccessToken.getClaims());
-//                    Map<String, Object> identityData = objectMapper.readValue(jsonObject.toString(), HashMap.class);
                     Map<String, Object> templateParams = new HashMap<>();
                     templateParams.put("templateName", CredentialUtils.getTemplateName(vcRequestDto));
                     templateParams.put("issuerURI", issuerURI);
