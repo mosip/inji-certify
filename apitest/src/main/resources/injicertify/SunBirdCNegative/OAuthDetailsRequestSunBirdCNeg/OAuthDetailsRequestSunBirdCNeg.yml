@@ -21,7 +21,7 @@ OAuthDetailsRequestSunBirdCNeg:
 	    "state": "eree2311",
 	    "claimsLocales": "en",
 	    "codeChallenge": "$CODECHALLENGE$",
-        "codeChallengeMethod": "S256"
+	    "codeChallengeMethod": "S256"
 }'
       output: '{
        
