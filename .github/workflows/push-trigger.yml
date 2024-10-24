@@ -195,3 +195,15 @@ jobs:
       OSSRH_TOKEN: ${{ secrets.OSSRH_TOKEN }}
       GPG_SECRET: ${{ secrets.GPG_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+  trivy-scan:
+     needs: build-dockers
+     uses: mosip/kattu/.github/workflows/trivy.yml@develop
+     strategy:
+      matrix:
+       include:
+        - SERVICE_NAME: 'inji-certify'
+
+     with:
+      service_name: ${{ matrix.SERVICE_NAME }}
+      version: ${{ github.event.pull_request.base.ref }}
+
