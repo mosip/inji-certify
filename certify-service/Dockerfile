@@ -104,7 +104,7 @@ USER ${container_user_uid}:${container_user_gid}
 EXPOSE 8090
 EXPOSE 9010
 
-ENTRYPOINT [ "./configure_start.sh" ]
+#ENTRYPOINT [ "./configure_start.sh" ]
 
 CMD if [ "$is_glowroot_env" = "present" ]; then \
     wget -q "${artifactory_url_env}"/artifactory/libs-release-local/io/mosip/testing/glowroot.zip ; \
