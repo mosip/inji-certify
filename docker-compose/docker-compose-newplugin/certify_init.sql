@@ -240,7 +240,7 @@ INSERT INTO certify.template_data (context, credential_type, template, cr_dtimes
         "face": "${face}"
     }
 }', '2024-10-22 17:08:17.826851', NULL);
-INSERT INTO certify.template_data (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://vharsh.github.io/DID/farmer.json,https://www.w3.org/2018/credentials/v1', 'FarmerProfileCredential,VerifiableCredential', '{
+INSERT INTO certify.template_data (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/2018/credentials/v1', 'FarmerProfileCredential,VerifiableCredential', '{
     "@context": [
             "https://www.w3.org/2018/credentials/v1",
             "https://vharsh.github.io/DID/farmer.json"
