@@ -106,7 +106,7 @@ INSERT INTO certify.farmer_identity (individual_id, farmer_name, phone_number, d
         "postalCode": "12345",
         "addressCountry": "United States"
     },
-    "knowsLanguage": "English",
+    "knowsLanguage": ["English"],
     "works": "Full-time",
     "farmingTypes": "Organic",
     "landArea": 50.5,
