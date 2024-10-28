@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS certify.farmer_identity
 
 
 
-INSERT INTO certify.farmer_identity (individual_id, farmer_name, phone_number, dob, identity_json) VALUES ('4567538768', 'John Doe', '989898999', '1980-05-15', '{
+INSERT INTO certify.farmer_identity (individual_id, farmer_name, phone_number, dob, identity_json) VALUES ('1234', 'John Doe', '989898999', '1980-05-15', '{
     "highestEducation": "Bachelor''s Degree",
     "maritalStatus": "Married",
     "typeOfHouse": "Farmhouse",
@@ -114,7 +114,7 @@ INSERT INTO certify.farmer_identity (individual_id, farmer_name, phone_number, d
     "primaryCropType": "Wheat",
     "secondaryCropType": "Vegetables"
 }');
-INSERT INTO certify.farmer_identity (individual_id, farmer_name, phone_number, dob, identity_json) VALUES ('4567538771', 'Abhishek', '7896543210', '1990-06-25', '{
+INSERT INTO certify.farmer_identity (individual_id, farmer_name, phone_number, dob, identity_json) VALUES ('12345', 'Abhishek', '7896543210', '1990-06-25', '{
     "highestEducation": "Master''s Degree",
     "maritalStatus": "Divorced",
     "typeOfHouse": "Cottage",
@@ -134,7 +134,7 @@ INSERT INTO certify.farmer_identity (individual_id, farmer_name, phone_number, d
     "primaryCropType": "Rice",
     "secondaryCropType": "Vegetables"
 }');
-INSERT INTO certify.farmer_identity (individual_id, farmer_name, phone_number, dob, identity_json) VALUES ('4567538772', 'Alheri Bobby', '9876543210', '1985-10-25', '{
+INSERT INTO certify.farmer_identity (individual_id, farmer_name, phone_number, dob, identity_json) VALUES ('1234567', 'Alheri Bobby', '9876543210', '1985-10-25', '{
     "highestEducation": "Bachelor''s Degree",
     "maritalStatus": "Married",
     "typeOfHouse": "Ranch",
