@@ -1,0 +1,101 @@
+"individual_id","farmer_name","phone_number","dob","identity_json"
+"4567538768","John Doe","989898999","1980-05-15","{
+    ""highestEducation"": ""Bachelor's Degree"",
+    ""maritalStatus"": ""Married"",
+    ""typeOfHouse"": ""Farmhouse"",
+    ""numberOfDependents"": 3,
+    ""address"": {
+        ""streetAddress"": ""123 Farm Road"",
+        ""addressLocality"": ""Farmville"",
+        ""addressRegion"": ""Rural State"",
+        ""postalCode"": ""12345"",
+        ""addressCountry"": ""United States""
+    },
+    ""knowsLanguage"": ""English"",
+    ""works"": ""Full-time"",
+    ""farmingTypes"": ""Organic"",
+    ""landArea"": 50.5,
+    ""landOwnershipType"": ""Self-owned"",
+    ""primaryCropType"": ""Wheat"",
+    ""secondaryCropType"": ""Vegetables""
+}"
+"4567538771","Abhishek","7896543210","1990-06-25","{
+    ""highestEducation"": ""Master's Degree"",
+    ""maritalStatus"": ""Divorced"",
+    ""typeOfHouse"": ""Cottage"",
+    ""numberOfDependents"": 1,
+    ""address"": {
+        ""streetAddress"": ""234 River View Road"",
+        ""addressLocality"": ""Harvest Springs"",
+        ""addressRegion"": ""Western State"",
+        ""postalCode"": ""12345"",
+        ""addressCountry"": ""United States""
+    },
+    ""knowsLanguage"": [""English"", ""German"", ""French""],
+    ""works"": ""Seasonal"",
+    ""farmingTypes"": [""Aquaculture"", ""Sedentary""],
+    ""landArea"": 120.3,
+    ""landOwnershipType"": ""Leased"",
+    ""primaryCropType"": ""Rice"",
+    ""secondaryCropType"": ""Vegetables""
+}"
+"4567538772","Alheri Bobby","9876543210","1985-10-25","{
+    ""highestEducation"": ""Bachelor's Degree"",
+    ""maritalStatus"": ""Married"",
+    ""typeOfHouse"": ""Ranch"",
+    ""numberOfDependents"": 3,
+    ""address"": {
+        ""streetAddress"": ""789 Valley Lane"",
+        ""addressLocality"": ""Greenfield"",
+        ""addressRegion"": ""Midwest State"",
+        ""postalCode"": ""67890"",
+        ""addressCountry"": ""United States""
+    },
+    ""knowsLanguage"": [""English"", ""Spanish"", ""Portuguese""],
+    ""works"": ""Part-time"",
+    ""farmingTypes"": [""Nomadic"", ""Pastoral""],
+    ""landArea"": 75.8,
+    ""landOwnershipType"": ""Self-owned"",
+    ""primaryCropType"": ""Soybeans"",
+    ""secondaryCropType"": ""Wheat""
+}"
+"8267411572","John","9753186520","1987-03-20","{
+    ""highestEducation"": ""Master's Degree"",
+    ""maritalStatus"": ""Divorced"",
+    ""typeOfHouse"": ""Cottage"",
+    ""numberOfDependents"": 1,
+    ""address"": {
+        ""streetAddress"": ""234 River View Road"",
+        ""addressLocality"": ""Harvest Springs"",
+        ""addressRegion"": ""Western State"",
+        ""postalCode"": ""12345"",
+        ""addressCountry"": ""United States""
+    },
+    ""knowsLanguage"": [""English"", ""German"", ""French""],
+    ""works"": ""Seasonal"",
+    ""farmingTypes"": [""Aquaculture"", ""Sedentary""],
+    ""landArea"": 120.3,
+    ""landOwnershipType"": ""Leased"",
+    ""primaryCropType"": ""Rice"",
+    ""secondaryCropType"": ""Vegetables""
+}"
+"sEaaNFRcmPMxLM9Itv_iFqDkWthO2-kFGYA6btP6y8M","Doe","6789012345","1975-10-28","{
+    ""highestEducation"": ""Bachelor's Degree"",
+    ""maritalStatus"": ""Married"",
+    ""typeOfHouse"": ""Ranch"",
+    ""numberOfDependents"": 3,
+    ""address"": {
+        ""streetAddress"": ""789 Valley Lane"",
+        ""addressLocality"": ""Greenfield"",
+        ""addressRegion"": ""Midwest State"",
+        ""postalCode"": ""67890"",
+        ""addressCountry"": ""United States""
+    },
+    ""knowsLanguage"": [""English"", ""Spanish"", ""Portuguese""],
+    ""works"": ""Part-time"",
+    ""farmingTypes"": [""Nomadic"", ""Pastoral""],
+    ""landArea"": 75.8,
+    ""landOwnershipType"": ""Self-owned"",
+    ""primaryCropType"": ""Soybeans"",
+    ""secondaryCropType"": ""Wheat""
+}"

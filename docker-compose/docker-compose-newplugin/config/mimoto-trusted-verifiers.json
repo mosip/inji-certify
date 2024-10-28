@@ -1,0 +1,10 @@
+{
+  "verifiers": [
+    {
+      "client_id": "https://injiverify.collab.mosip.net",
+      "redirect_uri": [
+        "https://injiverify.collab.mosip.net/redirect"
+      ]
+    }
+  ]
+}

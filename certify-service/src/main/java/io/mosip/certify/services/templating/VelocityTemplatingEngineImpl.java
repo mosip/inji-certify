@@ -64,7 +64,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
      */
     @SneakyThrows
     @Override
-    public String format(Map<String, Object> templateInput, Map<String, Object> defaultSettings) {
+    public String format(JSONObject templateInput, Map<String, Object> defaultSettings) {
         // TODO: Isn't template name becoming too complex with VC_CONTEXTS & CREDENTIAL_TYPES both?
         String templateName = defaultSettings.get("templateName").toString();
         String issuer = defaultSettings.get("issuerURI").toString();
@@ -73,7 +73,9 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         // 1. Prepare map
         // TODO: Eventually, the credentialSubject from the plugin will be templated as-is
         Map<String, Object> finalTemplate = new HashMap<>();
-        for (String key : templateInput.keySet()) {
+        Iterator<String> keys = templateInput.keys();
+        while(keys.hasNext()) {
+            String key = keys.next();
             Object value = templateInput.get(key);
             if (value instanceof List) {
                 // TODO(problem area): handle field values with unescaped JSON
@@ -88,6 +90,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
             } else if (value instanceof String){
                 // entities which need to be quoted
                 finalTemplate.put(key, JSONObject.wrap(value));
+            } else {
+                finalTemplate.put(key, value);
             }
         }
         // Date: https://velocity.apache.org/tools/3.1/apidocs/org/apache/velocity/tools/generic/DateTool.html
@@ -96,8 +100,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         finalTemplate.put("_esc", new EscapeTool());
         // add the issuer value
         finalTemplate.put("issuer", issuer);
-        if (shouldHaveDates && !(templateInput.containsKey(VCDM2Constants.VALID_FROM)
-                && templateInput.containsKey(VCDM2Constants.VALID_UNITL))) {
+        if (shouldHaveDates && !(templateInput.has(VCDM2Constants.VALID_FROM)
+                && templateInput.has(VCDM2Constants.VALID_UNITL))) {
             String time = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
             // hardcoded time
             String expiryTime = ZonedDateTime.now(ZoneOffset.UTC).plusYears(2).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));

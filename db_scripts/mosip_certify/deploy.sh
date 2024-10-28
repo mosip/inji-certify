@@ -1,19 +1,12 @@
 
 ## Properties file
-set -e
-properties_file="$1"
-echo `date "+%m/%d/%Y %H:%M:%S"` ": $properties_file"
-if [ -f "$properties_file" ]
-then
-     echo `date "+%m/%d/%Y %H:%M:%S"` ": Property file \"$properties_file\" found."
-    while IFS='=' read -r key value
-    do
-        key=$(echo $key | tr '.' '_')
-         eval ${key}=\${value}
-    done < "$properties_file"
-else
-     echo `date "+%m/%d/%Y %H:%M:%S"` ": Property file not found, Pass property file name as argument."
-fi
+DB_SERVERIP=localhost
+DB_PORT=5432
+SU_USER=postgres
+DEFAULT_DB_NAME=postgres
+MOSIP_DB_NAME=mosip_certify
+DML_FLAG=1
+SU_USER_PWD=postgres
 
 ## Terminate existing connections
 echo "Terminating active connections" 
