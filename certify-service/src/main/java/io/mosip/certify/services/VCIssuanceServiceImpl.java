@@ -5,7 +5,6 @@
  */
 package io.mosip.certify.services;
 
-import ch.qos.logback.core.net.SyslogOutputStream;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.jsonld.JsonLDObject;
@@ -40,10 +39,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -88,9 +92,24 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Value("${spring.profiles.active}")
+    private String activeProfile;
+
+
     @PostConstruct
-    public void postConstructMetadata() {
-        String issuerMetadataString = restTemplate.getForObject(issuerMetadataConfigURL, String.class);
+    public void postConstructMetadata() throws FileNotFoundException {
+        String issuerMetadataString;
+        if (activeProfile.equals("local") || activeProfile.equals("test")) {
+            Resource resource = new ClassPathResource(issuerMetadataConfigURL);
+            try {
+                issuerMetadataString = (Files.readString(resource.getFile().toPath()));
+            } catch (IOException e) {
+                throw new FileNotFoundException("missing local issuer metadata file " + e.getMessage());
+            }
+        } else {
+            issuerMetadataString = restTemplate.getForObject(issuerMetadataConfigURL, String.class);
+        }
+
         try {
             issuerMetadata = objectMapper.readValue(issuerMetadataString, LinkedHashMap.class);
         } catch (JsonProcessingException e) {
