@@ -5,6 +5,8 @@
  */
 package io.mosip.certify.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JWSAlgorithm;
 import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.dto.VCRequestDto;
@@ -34,6 +36,7 @@ import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
 import io.mosip.certify.utils.CredentialUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -150,11 +153,11 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 validateLdpVcFormatRequest(credentialRequest, credentialMetadata);
                 try {
                     // TODO(multitenancy): later decide which plugin out of n plugins is the correct one
-                    Map<String, Object> identityData = dataModelService.fetchData(parsedAccessToken.getClaims());
+                    JSONObject jsonObject = dataModelService.fetchData(parsedAccessToken.getClaims());
                     Map<String, Object> templateParams = new HashMap<>();
                     templateParams.put("templateName", CredentialUtils.getTemplateName(vcRequestDto));
                     templateParams.put("issuerURI", issuerURI);
-                    String templatedVC = vcFormatter.format(identityData, templateParams);
+                    String templatedVC = vcFormatter.format(jsonObject, templateParams);
                     Map<String, String> vcSignerParams = new HashMap<>();
                     // TODO: Collate this into simpler APIs where just key-type is specified
                     vcSignerParams.put(KeyManagerConstants.VC_SIGN_ALGO,
