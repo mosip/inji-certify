@@ -15,6 +15,8 @@ import io.mosip.certify.api.spi.VCFormatter;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.repository.TemplateRepository;
+import io.mosip.certify.core.spi.SvgTemplateService;
+import io.mosip.certify.services.SVGRenderUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import org.apache.velocity.VelocityContext;
@@ -28,6 +30,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import static io.mosip.certify.services.templating.VelocityTemplatingConstants.*;
+
 @Service
 public class VelocityTemplatingEngineImpl implements VCFormatter {
     VelocityEngine engine;
@@ -35,6 +39,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     Map<String, String> templateCache;
     @Autowired
     TemplateRepository templateRepository;
+    @Autowired
+    SvgTemplateService svgTemplateService;
     @Value("${mosip.certify.vcformat.vc.expiry:true}")
     boolean shouldHaveDates;
 
@@ -66,8 +72,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     @Override
     public String format(JSONObject templateInput, Map<String, Object> defaultSettings) {
         // TODO: Isn't template name becoming too complex with VC_CONTEXTS & CREDENTIAL_TYPES both?
-        String templateName = defaultSettings.get("templateName").toString();
-        String issuer = defaultSettings.get("issuerURI").toString();
+        String templateName = defaultSettings.get(TEMPLATE_NAME).toString();
+        String issuer = defaultSettings.get(ISSUER_URI).toString();
         String t = templateCache.get(templateName);
         StringWriter writer = new StringWriter();
         // 1. Prepare map
@@ -98,6 +104,11 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         finalTemplate.put("_esc", new EscapeTool());
         // add the issuer value
         finalTemplate.put("issuer", issuer);
+        if (defaultSettings.containsKey(SVG_TEMPLATE)) {
+            finalTemplate.put("_renderMethodSVGdigest",
+                    SVGRenderUtils.getDigestMultibase(svgTemplateService.getSvgTemplate(
+                    UUID.fromString((String) defaultSettings.get(SVG_TEMPLATE))).getTemplate()));
+        }
         if (shouldHaveDates && !(templateInput.has(VCDM2Constants.VALID_FROM)
                 && templateInput.has(VCDM2Constants.VALID_UNITL))) {
             String time = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));

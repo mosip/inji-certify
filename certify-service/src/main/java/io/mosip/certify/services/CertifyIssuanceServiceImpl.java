@@ -5,8 +5,6 @@
  */
 package io.mosip.certify.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JWSAlgorithm;
 import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.dto.VCRequestDto;
@@ -34,6 +32,7 @@ import io.mosip.certify.core.validators.CredentialRequestValidatorFactory;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
+import io.mosip.certify.services.templating.VelocityTemplatingConstants;
 import io.mosip.certify.utils.CredentialUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
@@ -87,6 +86,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     @Value("${mosip.certify.issuer.vc-sign-algo:Ed25519Signature2018}")
     private String VCSignAlgo;
+
+    @Value("${mosip.certify.issuer.svg.template.id}")
+    private String svg;
 
     @Autowired
     private AuditPlugin auditWrapper;
@@ -158,8 +160,11 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     // TODO(multitenancy): later decide which plugin out of n plugins is the correct one
                     JSONObject jsonObject = dataModelService.fetchData(parsedAccessToken.getClaims());
                     Map<String, Object> templateParams = new HashMap<>();
-                    templateParams.put("templateName", CredentialUtils.getTemplateName(vcRequestDto));
-                    templateParams.put("issuerURI", issuerURI);
+                    templateParams.put(VelocityTemplatingConstants.TEMPLATE_NAME, CredentialUtils.getTemplateName(vcRequestDto));
+                    templateParams.put(VelocityTemplatingConstants.ISSUER_URI, issuerURI);
+                    if (svg != null) {
+                        templateParams.put(VelocityTemplatingConstants.SVG_TEMPLATE, svg);
+                    }
                     String templatedVC = vcFormatter.format(jsonObject, templateParams);
                     Map<String, String> vcSignerParams = new HashMap<>();
                     // TODO: Collate this into simpler APIs where just key-type is specified
