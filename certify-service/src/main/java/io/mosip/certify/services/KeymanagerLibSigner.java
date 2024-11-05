@@ -8,7 +8,7 @@ package io.mosip.certify.services;
 import foundation.identity.jsonld.JsonLDException;
 import foundation.identity.jsonld.JsonLDObject;
 import info.weboftrust.ldsignatures.LdProof;
-import info.weboftrust.ldsignatures.canonicalizer.URDNA2015Canonicalizer;
+import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.api.spi.VCSigner;
 import io.mosip.certify.core.constants.*;
@@ -17,8 +17,8 @@ import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import io.mosip.kernel.signature.service.SignatureService;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -47,20 +47,19 @@ public class KeymanagerLibSigner implements VCSigner {
 
     @Autowired
     SignatureService signatureService;
+    @Autowired
+    SignatureChooser signProps;
+    @Value("${mosip.certify.issuer.pub.key}")
+    private String hostedKey;
 
     @Override
-    public VCResult<JsonLDObject> perform(String templatedVC, Map<String, String> keyMgrInput) {
+    public VCResult<JsonLDObject> perform(String templatedVC) {
         // Can the below lines be done at Templating side itself ?
         VCResult<JsonLDObject> VC = new VCResult<>();
         JsonLDObject j = JsonLDObject.fromJson(templatedVC);
         j.setDocumentLoader(null);
         // NOTE: other aspects can be configured via keyMgrInput map
         String validFrom;
-        String signatureAlgorithm = keyMgrInput.get(KeyManagerConstants.VC_SIGN_ALGO);
-        String publicKeyURL = keyMgrInput.get(KeyManagerConstants.PUBLIC_KEY_URL);
-        String keyAppId = keyMgrInput.get(KeyManagerConstants.KEY_APP_ID);
-        String keyRefId = keyMgrInput.get(KeyManagerConstants.KEY_REF_ID);
-        String keyManagerSignAlgo = keyMgrInput.get(KeyManagerConstants.KEYMGR_SIGN_ALGO);
         if (j.getJsonObject().containsKey(VCDM1Constants.ISSUANCE_DATE)) {
             validFrom = j.getJsonObject().get(VCDM1Constants.ISSUANCE_DATE).toString();
         } else if (j.getJsonObject().containsKey(VCDM2Constants.VALID_FROM)){
@@ -76,12 +75,17 @@ public class KeymanagerLibSigner implements VCSigner {
                         .parse(validFrom,
                                 DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN))
                         .atZone(ZoneId.systemDefault()).toInstant());
+        Map<String, String> props = signProps.getProperties();
+        String signatureAlgorithm = props.get(KeyManagerConstants.VC_SIGN_ALGO);
+        String keyAppId = props.get(KeyManagerConstants.KEY_APP_ID);
+        String keyRefId = props.get(KeyManagerConstants.KEY_REF_ID);
+        String keyManagerSignAlgo = props.get(KeyManagerConstants.KEYMGR_SIGN_ALGO);
         LdProof vcLdProof = LdProof.builder().defaultContexts(false).defaultTypes(false).type(signatureAlgorithm)
                 .created(createDate).proofPurpose(VCDMConstants.ASSERTION_METHOD)
-                .verificationMethod(URI.create(publicKeyURL))
+                .verificationMethod(URI.create(hostedKey))
                 .build();
         // 1. Canonicalize
-        URDNA2015Canonicalizer canonicalizer = new URDNA2015Canonicalizer();
+        Canonicalizer canonicalizer = signProps.getCanonicalizer();
         byte[] vcSignBytes = null;
         try {
             vcSignBytes = canonicalizer.canonicalize(vcLdProof, j);
@@ -106,8 +110,7 @@ public class KeymanagerLibSigner implements VCSigner {
         // TODO: Should this be a well defined Certify Exception for better comms b/w Certify & Support team?
         JWTSignatureResponseDto jwsSignedData = signatureService.jwsSign(payload);
         String sign = jwsSignedData.getJwtSignedData();
-        LdProof ldProofWithJWS = LdProof.builder().base(vcLdProof).defaultContexts(false)
-                .jws(sign).build();
+        LdProof ldProofWithJWS = signProps.getProof(vcLdProof, sign) ;
         ldProofWithJWS.addToJsonLDObject(j);
         VC.setCredential(j);
         return VC;
