@@ -58,7 +58,7 @@ public class KeymanagerLibSignerTest {
     @Before
     public void setup() {
         ReflectionTestUtils.setField(signer, "hostedKey", "https://example.com/sample.pub.key.json/");
-        ReflectionTestUtils.setField(signer, "signProps", new RsaSignature2018());
+        ReflectionTestUtils.setField(signer, "signProps", new RsaProofSignature2018());
     }
 
     @Test

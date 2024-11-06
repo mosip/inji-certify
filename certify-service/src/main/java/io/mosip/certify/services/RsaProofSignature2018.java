@@ -12,7 +12,7 @@ import java.util.Map;
 
 @Component
 @ConditionalOnProperty(name = "mosip.certify.issuer.vc-sign-algo", havingValue = SignatureAlg.RSA_SIGNATURE_SUITE)
-public class RsaSignature2018 implements SignatureChooser {
+public class RsaProofSignature2018 implements ProofSignatureStrategy {
 
     @Override
     public String getName() {
