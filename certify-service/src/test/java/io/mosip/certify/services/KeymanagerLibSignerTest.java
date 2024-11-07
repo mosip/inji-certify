@@ -3,6 +3,7 @@ package io.mosip.certify.services;
 import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.core.constants.VCDMConstants;
+import io.mosip.certify.services.ldsigner.RsaProofSignature2018;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import org.junit.Assert;
 import org.junit.Before;

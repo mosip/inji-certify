@@ -1,4 +1,4 @@
-package io.mosip.certify.services;
+package io.mosip.certify.services.ldsigner;
 
 import com.nimbusds.jose.JWSAlgorithm;
 import info.weboftrust.ldsignatures.LdProof;
@@ -6,6 +6,7 @@ import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
 import info.weboftrust.ldsignatures.canonicalizer.URDNA2015Canonicalizer;
 import io.ipfs.multibase.Multibase;
 import io.mosip.certify.core.constants.SignatureAlg;
+import io.mosip.certify.services.KeyManagerConstants;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -15,10 +16,14 @@ import java.util.Map;
 /**
  * Ed25519SignatureAlgorithm2020 as per
  *  https://www.w3.org/community/reports/credentials/CG-FINAL-di-eddsa-2020-20220724/
+ * NOTE: DO-NOT-USE-NOW. This does not work correctly as per the spec and using this
+ *  will result in improperly signed VCs until Keymanager supports the 2020 signature.
  */
 @Component
 @ConditionalOnProperty(name = "mosip.certify.issuer.vc-sign-algo", havingValue = SignatureAlg.ED25519_SIGNATURE_SUITE_2020)
 public class Ed25519ProofSignature2020 implements ProofSignatureStrategy {
+
+    Canonicalizer canonicalizer = new URDNA2015Canonicalizer();
 
     @Override
     public String getName() {
@@ -27,7 +32,7 @@ public class Ed25519ProofSignature2020 implements ProofSignatureStrategy {
 
     @Override
     public Canonicalizer getCanonicalizer() {
-        return new URDNA2015Canonicalizer();
+        return canonicalizer;
     }
 
     @Override

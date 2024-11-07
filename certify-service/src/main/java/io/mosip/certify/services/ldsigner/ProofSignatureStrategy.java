@@ -1,4 +1,4 @@
-package io.mosip.certify.services;
+package io.mosip.certify.services.ldsigner;
 
 import info.weboftrust.ldsignatures.LdProof;
 import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;

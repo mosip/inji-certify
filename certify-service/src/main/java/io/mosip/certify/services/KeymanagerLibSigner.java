@@ -13,6 +13,7 @@ import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.api.spi.VCSigner;
 import io.mosip.certify.core.constants.*;
 import io.mosip.certify.core.exception.CertifyException;
+import io.mosip.certify.services.ldsigner.ProofSignatureStrategy;
 import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import io.mosip.kernel.signature.service.SignatureService;
