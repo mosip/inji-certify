@@ -6,6 +6,7 @@ package io.mosip.certify.core.constants;
  * ref:
  */
 public class VCDM2Constants {
+    public static final String URL = "https://www.w3.org/ns/credentials/v2";
     public static final String VALID_UNITL = "validUntil";
     public static final String VALID_FROM = "validFrom";
 }

@@ -14,11 +14,13 @@ import java.util.*;
 import io.mosip.certify.api.spi.VCFormatter;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCDM2Constants;
+import io.mosip.certify.core.exception.TemplateException;
 import io.mosip.certify.core.repository.TemplateRepository;
 import io.mosip.certify.core.spi.SvgTemplateService;
 import io.mosip.certify.services.SVGRenderUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeConstants;
@@ -32,6 +34,7 @@ import org.springframework.stereotype.Service;
 
 import static io.mosip.certify.services.templating.VelocityTemplatingConstants.*;
 
+@Slf4j
 @Service
 public class VelocityTemplatingEngineImpl implements VCFormatter {
     VelocityEngine engine;
@@ -104,10 +107,14 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         finalTemplate.put("_esc", new EscapeTool());
         // add the issuer value
         finalTemplate.put("issuer", issuer);
-        if (defaultSettings.containsKey(SVG_TEMPLATE)) {
-            finalTemplate.put("_renderMethodSVGdigest",
-                    SVGRenderUtils.getDigestMultibase(svgTemplateService.getSvgTemplate(
-                    UUID.fromString((String) defaultSettings.get(SVG_TEMPLATE))).getTemplate()));
+        if (defaultSettings.containsKey(SVG_TEMPLATE) && templateName.contains(VCDM2Constants.URL)) {
+            try {
+                finalTemplate.put("_renderMethodSVGdigest",
+                        SVGRenderUtils.getDigestMultibase(svgTemplateService.getSvgTemplate(
+                                UUID.fromString((String) defaultSettings.get(SVG_TEMPLATE))).getTemplate()));
+            } catch (TemplateException e) {
+                log.error("SVG Template: " + defaultSettings.get(SVG_TEMPLATE) + " not available in DB", e);
+            }
         }
         if (shouldHaveDates && !(templateInput.has(VCDM2Constants.VALID_FROM)
                 && templateInput.has(VCDM2Constants.VALID_UNITL))) {
