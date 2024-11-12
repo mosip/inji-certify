@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -40,7 +41,8 @@ import java.util.Map;
  * These are the known external requirements:
  * - the public key must be pre-hosted for the VC & should be available
  *    so long that VC should be verifiable
- * - the VC should have a validFrom or issuanceDate in a specific UTC format
+ * - the VC should have a validFrom or issuanceDate in a specific UTC format,
+ *  if missing it uses current time for proof creation timestamp.
  */
 @Slf4j
 @Service
@@ -76,12 +78,7 @@ public class KeymanagerLibSigner implements VCSigner {
                         .parse(validFrom,
                                 DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN))
                         .atZone(ZoneId.systemDefault()).toInstant());
-        Map<String, String> props = signProps.getProperties();
-        String signatureAlgorithm = props.get(KeyManagerConstants.VC_SIGN_ALGO);
-        String keyAppId = props.get(KeyManagerConstants.KEY_APP_ID);
-        String keyRefId = props.get(KeyManagerConstants.KEY_REF_ID);
-        String keyManagerSignAlgo = props.get(KeyManagerConstants.KEYMGR_SIGN_ALGO);
-        LdProof vcLdProof = LdProof.builder().defaultContexts(false).defaultTypes(false).type(signatureAlgorithm)
+        LdProof vcLdProof = LdProof.builder().defaultContexts(false).defaultTypes(false).type(signProps.getName())
                 .created(createDate).proofPurpose(VCDMConstants.ASSERTION_METHOD)
                 .verificationMethod(URI.create(hostedKey))
                 .build();
@@ -94,28 +91,12 @@ public class KeymanagerLibSigner implements VCSigner {
             log.error("Error during canonicalization", e.getMessage());
             throw new CertifyException("Error during canonicalization");
         }
-
-        // 2. VC Sign
-        String vcEncodedData = Base64.getUrlEncoder().encodeToString(vcSignBytes);
-        JWSSignatureRequestDto payload = new JWSSignatureRequestDto();
-        payload.setDataToSign(vcEncodedData);
-        payload.setApplicationId(keyAppId);
-        payload.setReferenceId(keyRefId); // alg, empty = RSA
-        payload.setIncludePayload(false);
-        payload.setIncludeCertificate(false);
-        payload.setIncludeCertHash(true);
-        payload.setValidateJson(false);
-        payload.setB64JWSHeaderParam(false);
-        payload.setCertificateUrl("");
-        payload.setSignAlgorithm(keyManagerSignAlgo); // RSSignature2018 --> RS256, PS256, ES256
-        // TODO: Should this be a well defined Certify Exception for better comms b/w Certify & Support team?
-        JWTSignatureResponseDto jwsSignedData = signatureService.jwsSign(payload);
-        String sign = jwsSignedData.getJwtSignedData();
-        LdProof ldProofWithJWS = signProps.getProof(vcLdProof, sign) ;
+        String vcEncodedHash = Base64.getUrlEncoder().encodeToString(vcSignBytes);
+        String sign = signProps.getProof(vcEncodedHash);
+        LdProof ldProofWithJWS = signProps.buildProof(vcLdProof, sign);
         ldProofWithJWS.addToJsonLDObject(j);
         VC.setCredential(j);
         return VC;
-        // TODO: Check if this is really a VC
         // MOSIP ref: https://github.com/mosip/id-authentication/blob/master/authentication/authentication-service/src/main/java/io/mosip/authentication/service/kyc/impl/VciServiceImpl.java#L281
     }
 }

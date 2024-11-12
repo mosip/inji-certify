@@ -6,7 +6,7 @@ import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
 import java.util.Map;
 
 /**
- *  ProofSignatureStrategy is a helper class for {@link KeymanagerLibSigner}
+ *  ProofSignatureStrategy is a helper class for KeymanagerLibSigner
  *  to better deal with multiple signature algorithms for JSON-LD VCs.
  */
 public interface ProofSignatureStrategy {
@@ -21,14 +21,17 @@ public interface ProofSignatureStrategy {
     Canonicalizer getCanonicalizer();
 
     /**
-     * @return the KeyManager properties for VC Signing
+     * getProof takes canonicalized VC hash and returns proof using a competent
+     * SignatureService implementation
+     * @param vcEncodedHash
+     * @return
      */
-    Map<String, String> getProperties();
-
+    String getProof(String vcEncodedHash);
     /**
+     * buildProof takes a proof String and attaches it to a proof object as per algorithm
      * @param vcLdProof the proof object of the VC
      * @param sign should be a string, can be a detached JWS, another proofString based on implementors choice
      * @return
      */
-    LdProof getProof(LdProof vcLdProof, String sign);
+    LdProof buildProof(LdProof vcLdProof, String sign);
 }
