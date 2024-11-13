@@ -166,25 +166,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                         templateParams.put(VelocityTemplatingConstants.SVG_TEMPLATE, svg);
                     }
                     String templatedVC = vcFormatter.format(jsonObject, templateParams);
-                    Map<String, String> vcSignerParams = new HashMap<>();
-                    // TODO: Collate this into simpler APIs where just key-type is specified
-                    if (VCSignAlgo.equals(SignatureAlg.RSA_SIGNATURE_SUITE)) {
-                        vcSignerParams.put(KeyManagerConstants.VC_SIGN_ALGO,
-                                SignatureAlg.RSA_SIGNATURE_SUITE);
-                        vcSignerParams.put(KeyManagerConstants.PUBLIC_KEY_URL, hostedKey);
-                        vcSignerParams.put(KeyManagerConstants.KEY_APP_ID, KeyManagerConstants.CERTIFY_MOCK_RSA);
-                        vcSignerParams.put(KeyManagerConstants.KEY_REF_ID, KeyManagerConstants.EMPTY_REF_ID);
-                        // Change it to PS256 as per --> https://w3c.github.io/vc-jws-2020/#dfn-jsonwebsignature2020
-                        vcSignerParams.put(KeyManagerConstants.KEYMGR_SIGN_ALGO, JWSAlgorithm.RS256.getName());
-                    } else if (VCSignAlgo.equals(SignatureAlg.ED25519_SIGNATURE_SUITE)) {
-                        // https://w3c-ccg.github.io/lds-ed25519-2018/
-                        vcSignerParams.put(KeyManagerConstants.VC_SIGN_ALGO, SignatureAlg.ED25519_SIGNATURE_SUITE);
-                        vcSignerParams.put(KeyManagerConstants.PUBLIC_KEY_URL, hostedKey);
-                        vcSignerParams.put(KeyManagerConstants.KEY_REF_ID, KeyManagerConstants.ED25519_REF_ID);
-                        vcSignerParams.put(KeyManagerConstants.KEY_APP_ID, KeyManagerConstants.CERTIFY_MOCK_ED25519);
-                        vcSignerParams.put(KeyManagerConstants.KEYMGR_SIGN_ALGO, JWSAlgorithm.EdDSA.getName());
-                    }
-                    vcResult = vcSigner.perform(templatedVC, vcSignerParams);
+                    vcResult = vcSigner.perform(templatedVC);
                 } catch(DataProviderExchangeException e) {
                     throw new CertifyException(e.getErrorCode());
                 }
