@@ -14,9 +14,6 @@ import io.mosip.certify.api.spi.VCSigner;
 import io.mosip.certify.core.constants.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.services.ldsigner.ProofSignatureStrategy;
-import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
-import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
-import io.mosip.kernel.signature.service.SignatureService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +21,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -48,8 +44,6 @@ import java.util.Map;
 @Service
 public class KeymanagerLibSigner implements VCSigner {
 
-    @Autowired
-    SignatureService signatureService;
     @Autowired
     ProofSignatureStrategy signProps;
     @Value("${mosip.certify.issuer.pub.key}")
