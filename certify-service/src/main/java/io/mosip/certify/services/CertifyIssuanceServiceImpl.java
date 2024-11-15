@@ -5,7 +5,6 @@
  */
 package io.mosip.certify.services;
 
-import com.nimbusds.jose.JWSAlgorithm;
 import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.dto.VCRequestDto;
 import io.mosip.certify.api.dto.VCResult;
@@ -14,7 +13,6 @@ import io.mosip.certify.api.spi.*;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
 import io.mosip.certify.core.constants.VCFormats;
-import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.certify.core.dto.CredentialMetadata;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
@@ -35,6 +33,7 @@ import io.mosip.certify.proof.ProofValidatorFactory;
 import io.mosip.certify.services.templating.VelocityTemplatingConstants;
 import io.mosip.certify.utils.CredentialUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,11 +68,11 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Autowired
     private DataProviderPlugin dataModelService;
 
-    @Value("${mosip.certify.issuer.pub.key}")
-    private String hostedKey;
-
     @Value("${mosip.certify.issuer.uri}")
     private String issuerURI;
+
+    @Value("${mosip.certify.issuer.svg.template.id}")
+    private String svg;
 
     @Autowired
     private ProofValidatorFactory proofValidatorFactory;
@@ -83,12 +82,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     @Autowired
     private SecurityHelperService securityHelperService;
-
-    @Value("${mosip.certify.issuer.vc-sign-algo:Ed25519Signature2018}")
-    private String VCSignAlgo;
-
-    @Value("${mosip.certify.issuer.svg.template.id}")
-    private String svg;
 
     @Autowired
     private AuditPlugin auditWrapper;
@@ -162,7 +155,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     Map<String, Object> templateParams = new HashMap<>();
                     templateParams.put(VelocityTemplatingConstants.TEMPLATE_NAME, CredentialUtils.getTemplateName(vcRequestDto));
                     templateParams.put(VelocityTemplatingConstants.ISSUER_URI, issuerURI);
-                    if (svg != null) {
+                    if (!StringUtils.isEmpty(svg)) {
                         templateParams.put(VelocityTemplatingConstants.SVG_TEMPLATE, svg);
                     }
                     String templatedVC = vcFormatter.format(jsonObject, templateParams);
