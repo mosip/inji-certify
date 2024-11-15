@@ -1,11 +1,12 @@
 package io.mosip.certify.services;
 
-import com.nimbusds.jose.JWSAlgorithm;
 import foundation.identity.jsonld.JsonLDObject;
+import info.weboftrust.ldsignatures.LdProof;
+import info.weboftrust.ldsignatures.canonicalizer.URDNA2015Canonicalizer;
 import io.mosip.certify.api.dto.VCResult;
-import io.mosip.certify.core.constants.Constants;
-import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.certify.core.constants.VCDMConstants;
+import io.mosip.certify.services.ldsigner.ProofSignatureStrategy;
+import io.mosip.certify.services.ldsigner.RsaProofSignature2018;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import org.junit.Assert;
 import org.junit.Before;
@@ -15,18 +16,21 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import io.mosip.kernel.signature.service.SignatureService;
 import org.mockito.junit.MockitoJUnitRunner;
-
-import java.util.HashMap;
-import java.util.Map;
-
+import org.springframework.test.util.ReflectionTestUtils;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.sql.Ref;
+import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KeymanagerLibSignerTest {
-
     @Mock
-    private SignatureService signatureService;
+    SignatureService signatureService;
+    @Mock
+    ProofSignatureStrategy signProps;
     @InjectMocks
     private KeymanagerLibSigner signer;
     private static final String VC_1 = """
@@ -35,6 +39,7 @@ public class KeymanagerLibSignerTest {
                                 "https://www.w3.org/ns/credentials/v2"
                             ],
                             "validFrom": "2024-09-22T23:06:22.123Z",
+                            "validUntil": "2034-09-22T23:06:22.123Z",
                             "type": [
                                 "VerifiableCredential",
                                 "MyPrototypeCredential"
@@ -50,6 +55,7 @@ public class KeymanagerLibSignerTest {
                                 "https://www.w3.org/ns/credentials/v2"
                             ],
                             "validFrom": "2024-09-22T23:06:22.123Z",
+                            "validUntil": "2034-09-22T23:06:22.123Z",
                             "type": [
                                 "VerifiableCredential",
                                 "MyPrototypeCredential"
@@ -61,6 +67,7 @@ public class KeymanagerLibSignerTest {
 
     @Before
     public void setup() {
+        ReflectionTestUtils.setField(signer, "hostedKey", "https://example.com/sample.pub.key.json/");
     }
 
     @Test
@@ -68,30 +75,25 @@ public class KeymanagerLibSignerTest {
         // Mock Templated VC and Key Manager Input
         String VCs[] = new String[]{VC_1, VC_2};
         for (String templatedVC : VCs) {
-
-            Map<String, String> keyMgrInput = new HashMap<>();
-            keyMgrInput.put(KeyManagerConstants.PUBLIC_KEY_URL, "https://example.com/sample.pub.key.json/");
-            keyMgrInput.put(KeyManagerConstants.KEY_APP_ID, Constants.CERTIFY_MOCK_RSA);
-            keyMgrInput.put(KeyManagerConstants.KEY_REF_ID, Constants.EMPTY_REF_ID);
-            keyMgrInput.put(KeyManagerConstants.VC_SIGN_ALGO, SignatureAlg.RSA_SIGNATURE_SUITE);
-            keyMgrInput.put(KeyManagerConstants.KEYMGR_SIGN_ALGO, JWSAlgorithm.RS256.getName());
-
-            // Mock Signature Service Response
+            // Prepare a FakeSignature2018 implementation
             JWTSignatureResponseDto jwsSignedData = new JWTSignatureResponseDto();
             jwsSignedData.setJwtSignedData("mocked-jws");
             when(signatureService.jwsSign(any())).thenReturn(jwsSignedData);
-            // Perform the test
-            VCResult<JsonLDObject> vcResult = signer.perform(templatedVC, keyMgrInput);
+            when(signProps.getName()).thenReturn("FakeSignature2018");
+            when(signProps.getCanonicalizer()).thenReturn(new URDNA2015Canonicalizer());
+            when(signProps.getProof(anyString())).thenReturn("fake-jws-proof");
+            LdProof l = LdProof.builder().jws("fake-jws-proof").type("FakeSignature2018").proofPurpose("assertionMethod").build();
+            when(signProps.buildProof(any(), any())).thenReturn(l);
 
-            // Assertions
-            Assert.assertNotNull(vcResult);
+            // invoke
+            VCResult<JsonLDObject> vcResult = signer.perform(templatedVC);
+
+            // test
+            assert vcResult != null;
             JsonLDObject credential = vcResult.getCredential();
-            Assert.assertNotNull(credential);
-            Assert.assertNotNull(credential.getJsonObject().get(VCDMConstants.PROOF));
-            Assert.assertNotNull(vcResult.getCredential().getJsonObject().containsKey("proof"));
+            Assert.assertNotNull(credential.getJsonObject().containsKey("proof"));
             Map<String, Object> proof = (Map<String, Object>) credential.getJsonObject().get("proof");
-            Assert.assertTrue(proof.containsKey("jws"));
-            Assert.assertEquals("mocked-jws", proof.get("jws"));
+            Assert.assertEquals("fake-jws-proof", proof.get("jws"));
         }
     }
 

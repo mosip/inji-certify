@@ -12,7 +12,7 @@
 		<parameter name="ymlFile" value="injicertify/AddIdentity/AddIdentity.yml" />
 		<parameter name="prerequisite" value="Yes" />
 		<classes>
-			<class name="io.mosip.testrig.apirig.testscripts.AddIdentity" />
+			<class name="io.mosip.testrig.apirig.injicertify.testscripts.AddIdentity" />
 		</classes>
 	</test>
 </suite>
