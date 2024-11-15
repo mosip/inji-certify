@@ -141,7 +141,7 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
     @SneakyThrows
     @Test
     public void testTemplating() {
-        Map<String, Object> ret = new HashMap<>();
+        JSONObject ret = new JSONObject();
         ret.put("vcVer", "VC-V1");
         // ret.put("issuer", "https://example.com/fake-issuer");
         ret.put("fullName", "Amit Developer");
@@ -176,19 +176,7 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
         Map<String, Object> x = r.getForObject("http://localhost:8082/v1/mock-identity-system/identity/12345678",
                 HashMap.class);
         Map<String, Object> res = (Map<String, Object>) x.get("response");
-        Map<String, Object> ret = new HashMap<>();
-        ret.put("vcVer", "VC-V1");
-        ret.put("UIN", 1234567);
-        ret.put("fullName", res.get("fullName"));
-        ret.put("gender", res.get("gender"));
-        ret.put("dateOfBirth", res.get("dateOfBirth"));
-        ret.put("email", res.get("email"));
-        ret.put("phone", res.get("phone"));
-        ret.put("addressLine1", res.get("streetAddress"));
-        ret.put("province", res.get("locality"));
-        ret.put("region", res.get("region"));
-        ret.put("postalCode", res.get("postalCode"));
-        ret.put("face", res.get("encodedPhoto"));
+        JSONObject ret = new JSONObject(res);
 
         Map<String, Object> templateMap = Map.of("templateName", "MockVerifiableCredential,VerifiableCredential:https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1",
                 "issuerURI", "https://example.com/fake-issuer");

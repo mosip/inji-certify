@@ -11,5 +11,7 @@ public class SignatureAlg {
 
     public static final String ED25519_SIGNATURE_SUITE = "Ed25519Signature2018";
 
+    public static final String ED25519_SIGNATURE_SUITE_2020 = "Ed25519Signature2020";
+
     // RS256, PS256, ES256 --> JWSAlgorithm.RS256.getName();
 }

@@ -5,7 +5,6 @@
  */
 package io.mosip.certify.services;
 
-import com.nimbusds.jose.JWSAlgorithm;
 import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.dto.VCRequestDto;
 import io.mosip.certify.api.dto.VCResult;
@@ -14,7 +13,6 @@ import io.mosip.certify.api.spi.*;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
 import io.mosip.certify.core.constants.VCFormats;
-import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.certify.core.dto.CredentialMetadata;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
@@ -32,8 +30,11 @@ import io.mosip.certify.core.validators.CredentialRequestValidatorFactory;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
+import io.mosip.certify.services.templating.VelocityTemplatingConstants;
 import io.mosip.certify.utils.CredentialUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -67,11 +68,11 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Autowired
     private DataProviderPlugin dataModelService;
 
-    @Value("${mosip.certify.issuer.pub.key}")
-    private String hostedKey;
-
     @Value("${mosip.certify.issuer.uri}")
     private String issuerURI;
+
+    @Value("${mosip.certify.issuer.svg.template.id}")
+    private String svg;
 
     @Autowired
     private ProofValidatorFactory proofValidatorFactory;
@@ -150,21 +151,15 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 validateLdpVcFormatRequest(credentialRequest, credentialMetadata);
                 try {
                     // TODO(multitenancy): later decide which plugin out of n plugins is the correct one
-                    Map<String, Object> identityData = dataModelService.fetchData(parsedAccessToken.getClaims());
+                    JSONObject jsonObject = dataModelService.fetchData(parsedAccessToken.getClaims());
                     Map<String, Object> templateParams = new HashMap<>();
-                    templateParams.put("templateName", CredentialUtils.getTemplateName(vcRequestDto));
-                    templateParams.put("issuerURI", issuerURI);
-                    String templatedVC = vcFormatter.format(identityData, templateParams);
-                    Map<String, String> vcSignerParams = new HashMap<>();
-                    // TODO: Collate this into simpler APIs where just key-type is specified
-                    vcSignerParams.put(KeyManagerConstants.VC_SIGN_ALGO,
-                            SignatureAlg.RSA_SIGNATURE_SUITE);
-                    vcSignerParams.put(KeyManagerConstants.PUBLIC_KEY_URL, hostedKey);
-                    vcSignerParams.put(KeyManagerConstants.KEY_APP_ID, Constants.CERTIFY_MOCK_RSA);
-                    vcSignerParams.put(KeyManagerConstants.KEY_REF_ID, Constants.EMPTY_REF_ID);
-                    // Change it to PS256 as per --> https://w3c.github.io/vc-jws-2020/#dfn-jsonwebsignature2020
-                    vcSignerParams.put(KeyManagerConstants.KEYMGR_SIGN_ALGO, JWSAlgorithm.RS256.getName());
-                    vcResult = vcSigner.perform(templatedVC, vcSignerParams);
+                    templateParams.put(VelocityTemplatingConstants.TEMPLATE_NAME, CredentialUtils.getTemplateName(vcRequestDto));
+                    templateParams.put(VelocityTemplatingConstants.ISSUER_URI, issuerURI);
+                    if (!StringUtils.isEmpty(svg)) {
+                        templateParams.put(VelocityTemplatingConstants.SVG_TEMPLATE, svg);
+                    }
+                    String templatedVC = vcFormatter.format(jsonObject, templateParams);
+                    vcResult = vcSigner.perform(templatedVC);
                 } catch(DataProviderExchangeException e) {
                     throw new CertifyException(e.getErrorCode());
                 }

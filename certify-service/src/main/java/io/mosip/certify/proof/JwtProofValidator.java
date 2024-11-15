@@ -10,6 +10,7 @@ import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
+import com.nimbusds.jose.crypto.Ed25519Verifier;
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -96,17 +97,24 @@ public class JwtProofValidator implements ProofValidator {
             if(JWSAlgorithm.ES256K.equals(jwt.getHeader().getAlgorithm())) {
                 ECDSAVerifier verifier = new ECDSAVerifier((com.nimbusds.jose.jwk.ECKey) jwk);
                 verifier.getJCAContext().setProvider(BouncyCastleProviderSingleton.getInstance());
-                keySelector = new JWSVerificationKeySelector<>(JWSAlgorithm.ES256K, new ImmutableJWKSet<>(new JWKSet(jwk)));
+                boolean verified = jwt.verify(verifier);
+                claimsSetVerifier.verify(jwt.getJWTClaimsSet(), null);
+                return verified;
+            } else if (JWSAlgorithm.Ed25519.equals(jwt.getHeader().getAlgorithm())) {
+                Ed25519Verifier verifier = new Ed25519Verifier(jwk.toOctetKeyPair());
+                boolean verified = jwt.verify(verifier);
+                claimsSetVerifier.verify(jwt.getJWTClaimsSet(), null);
+                return verified;
             } else {
                 keySelector = new JWSVerificationKeySelector(allowedSignatureAlgorithms,
                         new ImmutableJWKSet(new JWKSet(jwk)));
+                ConfigurableJWTProcessor jwtProcessor = new DefaultJWTProcessor();
+                jwtProcessor.setJWSKeySelector(keySelector);
+                jwtProcessor.setJWSTypeVerifier(new DefaultJOSEObjectTypeVerifier(new JOSEObjectType(HEADER_TYP)));
+                jwtProcessor.setJWTClaimsSetVerifier(claimsSetVerifier);
+                jwtProcessor.process(credentialProof.getJwt(), null);
+                return true;
             }
-            ConfigurableJWTProcessor jwtProcessor = new DefaultJWTProcessor();
-            jwtProcessor.setJWSKeySelector(keySelector);
-            jwtProcessor.setJWSTypeVerifier(new DefaultJOSEObjectTypeVerifier(new JOSEObjectType(HEADER_TYP)));
-            jwtProcessor.setJWTClaimsSetVerifier(claimsSetVerifier);
-            jwtProcessor.process(credentialProof.getJwt(), null);
-            return true;
         } catch (InvalidRequestException e) {
             log.error("Invalid proof : {}", e.getErrorCode());
         } catch (ParseException e) {
