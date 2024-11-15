@@ -63,6 +63,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     private VCFormatter vcFormatter;
 
     @Autowired
+    private VCModifier vcModifier;
+
+    @Autowired
     private VCSigner vcSigner;
 
     @Autowired
@@ -159,7 +162,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                         templateParams.put(VelocityTemplatingConstants.SVG_TEMPLATE, svg);
                     }
                     String templatedVC = vcFormatter.format(jsonObject, templateParams);
-                    vcResult = vcSigner.perform(templatedVC);
+                    JSONObject credential = vcModifier.perform(templatedVC);
+                    // vcFormatter.format()
+                    vcResult = vcSigner.perform(credential);
                 } catch(DataProviderExchangeException e) {
                     throw new CertifyException(e.getErrorCode());
                 }

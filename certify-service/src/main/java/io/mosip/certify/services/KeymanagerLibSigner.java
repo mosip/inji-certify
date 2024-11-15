@@ -15,6 +15,7 @@ import io.mosip.certify.core.constants.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.services.ldsigner.ProofSignatureStrategy;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -50,17 +51,17 @@ public class KeymanagerLibSigner implements VCSigner {
     private String hostedKey;
 
     @Override
-    public VCResult<JsonLDObject> perform(String templatedVC) {
+    public VCResult<JsonLDObject> perform(JSONObject c) {
         // Can the below lines be done at Templating side itself ?
+        JsonLDObject cred = JsonLDObject.fromJson(c.toString());
         VCResult<JsonLDObject> VC = new VCResult<>();
-        JsonLDObject j = JsonLDObject.fromJson(templatedVC);
-        j.setDocumentLoader(null);
+        cred.setDocumentLoader(null);
         // NOTE: other aspects can be configured via keyMgrInput map
         String validFrom;
-        if (j.getJsonObject().containsKey(VCDM1Constants.ISSUANCE_DATE)) {
-            validFrom = j.getJsonObject().get(VCDM1Constants.ISSUANCE_DATE).toString();
-        } else if (j.getJsonObject().containsKey(VCDM2Constants.VALID_FROM)){
-            validFrom = j.getJsonObject().get(VCDM2Constants.VALID_FROM).toString();
+        if (cred.getJsonObject().containsKey(VCDM1Constants.ISSUANCE_DATE)) {
+            validFrom = cred.getJsonObject().get(VCDM1Constants.ISSUANCE_DATE).toString();
+        } else if (cred.getJsonObject().containsKey(VCDM2Constants.VALID_FROM)){
+            validFrom = cred.getJsonObject().get(VCDM2Constants.VALID_FROM).toString();
         } else {
             validFrom = ZonedDateTime.now(ZoneOffset.UTC)
                     .format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
@@ -80,7 +81,7 @@ public class KeymanagerLibSigner implements VCSigner {
         Canonicalizer canonicalizer = signProps.getCanonicalizer();
         byte[] vcSignBytes = null;
         try {
-            vcSignBytes = canonicalizer.canonicalize(vcLdProof, j);
+            vcSignBytes = canonicalizer.canonicalize(vcLdProof, cred);
         } catch (IOException | GeneralSecurityException | JsonLDException e) {
             log.error("Error during canonicalization", e.getMessage());
             throw new CertifyException("Error during canonicalization");
@@ -88,8 +89,8 @@ public class KeymanagerLibSigner implements VCSigner {
         String vcEncodedHash = Base64.getUrlEncoder().encodeToString(vcSignBytes);
         String sign = signProps.getProof(vcEncodedHash);
         LdProof ldProofWithJWS = signProps.buildProof(vcLdProof, sign);
-        ldProofWithJWS.addToJsonLDObject(j);
-        VC.setCredential(j);
+        ldProofWithJWS.addToJsonLDObject(cred);
+        VC.setCredential(cred);
         return VC;
         // MOSIP ref: https://github.com/mosip/id-authentication/blob/master/authentication/authentication-service/src/main/java/io/mosip/authentication/service/kyc/impl/VciServiceImpl.java#L281
     }

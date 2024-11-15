@@ -4,10 +4,10 @@ import foundation.identity.jsonld.JsonLDObject;
 import info.weboftrust.ldsignatures.LdProof;
 import info.weboftrust.ldsignatures.canonicalizer.URDNA2015Canonicalizer;
 import io.mosip.certify.api.dto.VCResult;
-import io.mosip.certify.core.constants.VCDMConstants;
 import io.mosip.certify.services.ldsigner.ProofSignatureStrategy;
-import io.mosip.certify.services.ldsigner.RsaProofSignature2018;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,10 +19,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.sql.Ref;
 import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -71,9 +69,9 @@ public class KeymanagerLibSignerTest {
     }
 
     @Test
-    public void testPerformSuccess_VC2() {
+    public void testPerformSuccess_VC2() throws JSONException {
         // Mock Templated VC and Key Manager Input
-        String VCs[] = new String[]{VC_1, VC_2};
+        String[] VCs = new String[]{VC_1, VC_2};
         for (String templatedVC : VCs) {
             // Prepare a FakeSignature2018 implementation
             JWTSignatureResponseDto jwsSignedData = new JWTSignatureResponseDto();
@@ -84,14 +82,13 @@ public class KeymanagerLibSignerTest {
             when(signProps.getProof(anyString())).thenReturn("fake-jws-proof");
             LdProof l = LdProof.builder().jws("fake-jws-proof").type("FakeSignature2018").proofPurpose("assertionMethod").build();
             when(signProps.buildProof(any(), any())).thenReturn(l);
-
+            JSONObject json = new JSONObject(templatedVC);
             // invoke
-            VCResult<JsonLDObject> vcResult = signer.perform(templatedVC);
+            VCResult<JsonLDObject> vcResult = signer.perform(json);
 
             // test
             assert vcResult != null;
             JsonLDObject credential = vcResult.getCredential();
-            Assert.assertNotNull(credential.getJsonObject().containsKey("proof"));
             Map<String, Object> proof = (Map<String, Object>) credential.getJsonObject().get("proof");
             Assert.assertEquals("fake-jws-proof", proof.get("jws"));
         }
