@@ -1,14 +1,14 @@
-AuthorizationCodeSunBirdC:
-   InjiCertify_ESignet_AuthorizationCode_SunBirdC_All_Valid_Smoke_sid:
+AuthorizationCodeSunBirdCNeg:
+   InjiCertify_ESignet_AuthorizationCode_SunBirdC_All_Valid_Smoke_sid_Neg:
       endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/authorization/auth-code
-      uniqueIdentifier: TC_esignetDependent_AuthorizationCode      
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCodeNeg      
       description: Authorization Code      
       role: resident
       restMethod: post
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
-      inputTemplate: injicertify/SunBirdC/AuthorizationCodeSunBirdC/AuthorizationCodeSunBirdC
-      outputTemplate: injicertify/SunBirdC/AuthorizationCodeSunBirdC/AuthorizationCodeSunBirdCResult
+      inputTemplate: injicertify/SunBirdCNegative/AuthorizationCodeSunBirdCNeg/AuthorizationCodeSunBirdCNeg
+      outputTemplate: injicertify/SunBirdCNegative/AuthorizationCodeSunBirdCNeg/AuthorizationCodeSunBirdCResultNeg
       input: '{
         "encodedHash": "$ID:ESignet_OAuthDetailsRequest_SunBirdC_all_Valid_Smoke_sid_encodedResp$",
       	"requestTime": "$TIMESTAMP$",

@@ -53,6 +53,43 @@
 			<class name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
 		</classes>
 	</test>
+	<test name="OAuthDetailsRequestSunBirdCNeg">
+		<parameter name="ymlFile" value="injicertify/SunBirdCNegative/OAuthDetailsRequestSunBirdCNeg/OAuthDetailsRequestSunBirdCNeg.yml" />
+		<parameter name="idKeyName" value="transactionId,encodedResp" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="AuthenticateUserSunBirdCNeg">
+		<parameter name="ymlFile" value="injicertify/SunBirdCNegative/AuthenticateUserSunBirdCNeg/AuthenticateUserSunBirdCNeg.yml" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePost" />
+		</classes>
+	</test>
+	<test name="AuthorizationCodeSunBirdCNeg">
+		<parameter name="ymlFile" value="injicertify/SunBirdCNegative/AuthorizationCodeSunBirdCNeg/AuthorizationCodeSunBirdCNeg.yml" />
+		<parameter name="idKeyName" value="code" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="GenerateTokenSunBirdCNeg">
+		<parameter name="ymlFile" value="injicertify/SunBirdCNegative/GenerateTokenSunBirdCNeg/GenerateTokenSunBirdCNeg.yml" />
+		<parameter name="idKeyName" value="access_token" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePostForAutoGenIdForUrlEncoded" />
+		</classes>
+	</test>
+	<test name="GetCredentialSunBirdCNeg">
+		<parameter name="ymlFile" value="injicertify/SunBirdCNegative/GetCredentialSunBirdCNeg/GetCredentialSunBirdCNeg.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.testscripts.SimplePost" />
+		</classes>
+	</test>	
 	<test name="OAuthDetailsRequestSunBirdCForVd11">
 		<parameter name="ymlFile" value="injicertify/SunBirdCForVd11/OAuthDetailsRequestSunBirdCForVd11/OAuthDetailsRequestSunBirdCForVd11.yml" />
 		<parameter name="idKeyName" value="transactionId,encodedResp" />

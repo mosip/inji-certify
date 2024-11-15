@@ -1,13 +1,13 @@
-OAuthDetailsRequestSunBirdC:
-   InjiCertify_ESignet_OAuthDetailsRequest_SunBirdC_all_Valid_Smoke_sid:
+OAuthDetailsRequestSunBirdCNeg:
+   InjiCertify_ESignet_OAuthDetailsRequest_SunBirdC_all_Valid_Smoke_sid_Neg:
       endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/authorization/v2/oauth-details
-      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest      
-      description: OAuth details request      
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequestNeg
+      description: OAuth details request
       role: resident
       restMethod: post
       checkErrorsOnlyInResponse: true
-      inputTemplate: injicertify/SunBirdC/OAuthDetailsRequestSunBirdC/OAuthDetailsRequestSunBirdC
-      outputTemplate: injicertify/SunBirdC/OAuthDetailsRequestSunBirdC/OAuthDetailsRequestSunBirdCResult
+      inputTemplate: injicertify/SunBirdCNegative/OAuthDetailsRequestSunBirdCNeg/OAuthDetailsRequestSunBirdCNeg
+      outputTemplate: injicertify/SunBirdCNegative/OAuthDetailsRequestSunBirdCNeg/OAuthDetailsRequestSunBirdCResultNeg
       input: '{
       	"requestTime": "$TIMESTAMP$",
       	"clientId": "$ID:ESignet_CreateOIDCClientV2SunBirdC_all_Valid_Smoke_sid_clientId$",
@@ -21,7 +21,7 @@ OAuthDetailsRequestSunBirdC:
 	    "state": "eree2311",
 	    "claimsLocales": "en",
 	    "codeChallenge": "$CODECHALLENGE$",
-        "codeChallengeMethod": "S256"
+	    "codeChallengeMethod": "S256"
 }'
       output: '{
        
