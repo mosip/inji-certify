@@ -18,9 +18,11 @@ import io.mosip.certify.core.exception.TemplateException;
 import io.mosip.certify.core.repository.TemplateRepository;
 import io.mosip.certify.core.spi.SvgTemplateService;
 import io.mosip.certify.services.SVGRenderUtils;
+import io.mosip.certify.utils.CredentialUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeConstants;
@@ -44,8 +46,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     TemplateRepository templateRepository;
     @Autowired
     SvgTemplateService svgTemplateService;
-    @Value("${mosip.certify.vcformat.vc.expiry:true}")
-    boolean shouldHaveDates;
+    @Value("${mosip.certify.issuer.default.expiry.duration:2y}")
+    String defaultExpiryDuration;
 
     @PostConstruct
     public void initialize() {
@@ -116,16 +118,18 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
                 log.error("SVG Template: " + defaultSettings.get(SVG_TEMPLATE) + " not available in DB", e);
             }
         }
-        if (shouldHaveDates && !(templateInput.has(VCDM2Constants.VALID_FROM)
-                && templateInput.has(VCDM2Constants.VALID_UNITL))) {
+
+        if (!(templateInput.has(VCDM2Constants.VALID_FROM)
+                && templateInput.has(VCDM2Constants.VALID_UNITL)) && StringUtils.isNotEmpty(defaultExpiryDuration)) {
             String time = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            // hardcoded time
-            String expiryTime = ZonedDateTime.now(ZoneOffset.UTC).plusYears(2).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
+            String expiryTime = ZonedDateTime.now(ZoneOffset.UTC)
+                    .plusSeconds(CredentialUtils.toSeconds(defaultExpiryDuration))
+                    .format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
             finalTemplate.put(VCDM2Constants.VALID_FROM, time);
             finalTemplate.put(VCDM2Constants.VALID_UNITL, expiryTime);
         }
         VelocityContext context = new VelocityContext(finalTemplate);
-        engine.evaluate(context, writer, /*logTag */ templateName,t.toString());
+        engine.evaluate(context, writer, /*logTag */ templateName, t.toString());
         return writer.toString();
     }
 }

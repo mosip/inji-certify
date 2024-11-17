@@ -119,7 +119,7 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
                 "https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1"
         );
         when(templateRepository.findAll()).thenReturn(List.of(vc1, vc2, vc3));
-        ReflectionTestUtils.setField(formatter, "shouldHaveDates", true);
+        ReflectionTestUtils.setField(formatter, "defaultExpiryDuration", "2y");
         formatter.initialize();
 //        engine = new VelocityEngine();
 //        engine.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
