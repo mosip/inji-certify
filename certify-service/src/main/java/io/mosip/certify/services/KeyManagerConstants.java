@@ -11,4 +11,8 @@ public class KeyManagerConstants {
     public static final String ROOT_KEY = "ROOT";
     public static final String EMPTY_REF_ID = "";
     public static final String ED25519_REF_ID = "ED25519_SIGN";
+
+    public static final String CERTIFY_ECK1_APPID = "CERTIFY_EC_K1";
+    public static final String EC_SECP256K1_SIGN = "EC_SECP256K1_SIGN";
+    public static final String EC_SECP256R1_SIGN = "EC_SECP256R1_SIGN";
 }

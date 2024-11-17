@@ -118,5 +118,10 @@ public class AppConfig implements ApplicationRunner {
         ed25519Req.setReferenceId(KeyManagerConstants.ED25519_REF_ID);
         keymanagerService.generateECSignKey("certificate", ed25519Req);
         log.info("===================== CERTIFY KEY SETUP COMPLETED ========================");
+        // Generate an EC key
+        KeyPairGenerateRequestDto ecK1Key = new KeyPairGenerateRequestDto();
+        ecK1Key.setApplicationId(KeyManagerConstants.CERTIFY_ECK1_APPID);
+        ecK1Key.setReferenceId(KeyManagerConstants.EC_SECP256K1_SIGN);
+        keymanagerService.generateECSignKey("certificate", ecK1Key);
     }
 }
