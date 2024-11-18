@@ -13,12 +13,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-
+/**
+ * Ed25519SignatureAlgorithm2018 as per https://w3c-ccg.github.io/lds-ed25519-2018/
+ */
 @Component
-@ConditionalOnProperty(name = "mosip.certify.issuer.vc-sign-algo", havingValue = SignatureAlg.RSA_SIGNATURE_SUITE)
-public class RsaProofSignature2018 implements ProofSignatureStrategy {
+@ConditionalOnProperty(name = "mosip.certify.issuer.vc-sign-algo", havingValue = SignatureAlg.EcDSA_SECP_256K1_SIGNATURE_SUITE_2019)
+public class EcdsaSecp256k1ProofSignature2019 implements ProofSignatureStrategy {
     @Autowired
     SignatureService signatureService;
 
@@ -26,7 +26,7 @@ public class RsaProofSignature2018 implements ProofSignatureStrategy {
 
     @Override
     public String getName() {
-        return SignatureAlg.RSA_SIGNATURE_SUITE;
+        return SignatureAlg.EcDSA_SECP_256K1_SIGNATURE_SUITE_2019;
     }
 
     @Override
@@ -36,18 +36,17 @@ public class RsaProofSignature2018 implements ProofSignatureStrategy {
 
     @Override
     public String getProof(String vcEncodedHash) {
-        String vcEncodedData = Base64.getUrlEncoder().encodeToString(vcEncodedHash.getBytes(StandardCharsets.UTF_8));
         JWSSignatureRequestDto payload = new JWSSignatureRequestDto();
-        payload.setDataToSign(vcEncodedData);
-        payload.setApplicationId(KeyManagerConstants.CERTIFY_MOCK_RSA);
-        payload.setReferenceId(KeyManagerConstants.EMPTY_REF_ID);
+        payload.setDataToSign(vcEncodedHash);
+        payload.setApplicationId(KeyManagerConstants.CERTIFY_ECK1_APPID);
+        payload.setReferenceId(KeyManagerConstants.EC_SECP256K1_SIGN); // alg, empty = RSA
         payload.setIncludePayload(false);
         payload.setIncludeCertificate(false);
         payload.setIncludeCertHash(true);
         payload.setValidateJson(false);
         payload.setB64JWSHeaderParam(false);
         payload.setCertificateUrl("");
-        payload.setSignAlgorithm(JWSAlgorithm.RS256);
+        payload.setSignAlgorithm(JWSAlgorithm.ES256K);
         JWTSignatureResponseDto jwsSignedData = signatureService.jwsSign(payload);
         return jwsSignedData.getJwtSignedData();
     }
