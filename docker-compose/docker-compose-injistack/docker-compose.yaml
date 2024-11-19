@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  database:
+    image: 'postgres:latest'
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./certify_init.sql:/docker-entrypoint-initdb.d/certify_init.sql
+    networks:
+      - network
+    ports:
+      - "5433:5432"
+
+  certify:
+    image: mosipdev/inji-certify:develop
+    user: root
+    ports:
+      - 8090:8090
+    environment:
+      - container_user=mosip
+      - active_profile_env=default, mock-identity
+      - SPRING_CONFIG_NAME=certify
+      - SPRING_CONFIG_LOCATION=/home/mosip/config/
+      - enable_certify_artifactory=false
+      - download_hsm_client=false
+    volumes:
+      - ./config/certify-default.properties:/home/mosip/config/certify-default.properties
+      - ./config/certify-mock-identity.properties:/home/mosip/config/certify-mock-identity.properties
+      - ./data/CERTIFY_PKCS12:/home/mosip/CERTIFY_PKCS12
+      - ./loader_path/certify/:/home/mosip/additional_jars/
+    networks:
+      - network
+    depends_on:
+      - database
+
+  nginx:
+    container_name: nginx
+    image: nginx:alpine
+    ports:
+      - '80:80'
+    volumes:
+      - ./config/mimoto-issuers-config.json:/config/server/mimoto-issuers-config.json
+      - ./config/mimoto-trusted-verifiers.json:/config/server/mimoto-trusted-verifiers.json
+      - ./config/credential-template.html:/config/server/credential-template.html
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - network
+  mimoto-service:
+    container_name: 'Mimoto-Service'
+    image: 'mosipid/mimoto:0.14.0'
+    user: root
+    ports:
+      - '8099:8099'
+    environment:
+      - container_user=mosip
+      - active_profile_env=default
+      - SPRING_CONFIG_NAME=mimoto
+      - SPRING_CONFIG_LOCATION=/home/mosip/
+    networks:
+      - network
+    volumes:
+      - ./config/mimoto-default.properties:/home/mosip/mimoto-default.properties
+      - ./config/mimoto-issuers-config.json:/home/mosip/mimoto-issuers-config.json
+      - ./config/mimoto-trusted-verifiers.json:/home/mosip/mimoto-trusted-verifiers.json
+      - ./certs/oidckeystore.p12:/home/mosip/certs/oidckeystore.p12
+    depends_on:
+      - nginx
+
+  inji-web-proxy:
+    container_name: 'inji-web-proxy'
+    image: inji-web-proxy:local
+    ports:
+      - '3010:3010'
+    environment:
+      - MIMOTO_HOST=http://mimoto-service:8099/v1/mimoto
+      - PORT=3010
+    depends_on:
+      - mimoto-service
+    networks:
+      - network
+
+  inji-web:
+    container_name: 'inji-web'
+    image: mosipdev/inji-web:develop
+    ports:
+      - '3001:3004'
+    environment:
+      - MIMOTO_HOST=http://localhost:3010
+      - DEFAULT_LANG=en
+    depends_on:
+      - inji-web-proxy
+    networks:
+      - network
+
+
+networks:
+  network:
+    name: mosip_network
+    external: true
+
+volumes:
+  cache:
+    driver: local

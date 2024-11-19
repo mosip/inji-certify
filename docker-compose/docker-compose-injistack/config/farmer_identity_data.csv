@@ -1,0 +1,8 @@
+id,name,phoneNumber,dateOfBirth,highestEducation,typeOfHouse,numberOfDependents,works,landArea,landOwnershipType,primaryCropType,secondaryCropType,maritalStatus
+4567538768,John Doe,9876543210,1980-05-15,Bachelors Degree,Farmhouse,3,Full-time,50.5,Self-owned,Wheat,Vegetables,Married
+4567538769,Mary Smith,8765432109,1975-08-22,High School,Ranch,4,Full-time,25.75,Leased,Rice,Pulses,Married
+4567538770,Raj Patel,7654321098,1990-03-10,Primary Education,Cottage,2,Part-time,15.25,Family Owned,Cotton,Maize,Married
+4567538771,Sarah Johnson,6543210987,1985-11-30,Diploma,Ranch,1,Full-time,35.5,Self-owned,Sugarcane,Rice,Single
+4567538772,Kumar Swamy,5432109876,1970-04-18,No Formal Education,Cottage,5,Full-time,45.0,Self-owned,Maize,Wheat,Married
+4567538773,Li Wei,4321098765,1988-09-25,Masters Degree,Farmhouse,2,Part-time,20.5,Leased,Vegetables,Fruits,Married
+4567538774,Arun Kumar,9876543211,1987-06-20,Diploma,Cottage,2,Part-time,22.75,Family Owned,Rice,Cotton,Married
