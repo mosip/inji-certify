@@ -14,6 +14,7 @@ import java.util.*;
 import io.mosip.certify.api.spi.VCFormatter;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCDM2Constants;
+import io.mosip.certify.core.constants.VCDMConstants;
 import io.mosip.certify.core.exception.TemplateException;
 import io.mosip.certify.core.repository.TemplateRepository;
 import io.mosip.certify.core.spi.SvgTemplateService;
@@ -21,6 +22,7 @@ import io.mosip.certify.services.SVGRenderUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeConstants;
@@ -46,6 +48,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     SvgTemplateService svgTemplateService;
     @Value("${mosip.certify.vcformat.vc.expiry:true}")
     boolean shouldHaveDates;
+    @Value("${mosip.certify.issuer.id.field.prefix.url:}")
+    String idPrefix;
 
     @PostConstruct
     public void initialize() {
@@ -126,6 +130,11 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         }
         VelocityContext context = new VelocityContext(finalTemplate);
         engine.evaluate(context, writer, /*logTag */ templateName,t.toString());
+        if (StringUtils.isNotEmpty(idPrefix)) {
+            JSONObject j = new JSONObject(writer.toString());
+            j.put(VCDMConstants.ID, idPrefix + UUID.randomUUID());
+            return j.toString();
+        }
         return writer.toString();
     }
 }
