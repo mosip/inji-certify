@@ -11,7 +11,7 @@ Before running the docker-compose, you need to build the inji-web-proxy image:
 
 ```bash
 # Clone the repository
-git clone https://github.com/mosip/inji-web.git -b develop
+git clone https://github.com/mosip/inji-web.git -b release-0.11.x
 cd inji-web/inji-web-proxy
 
 # Build the Docker image
@@ -54,6 +54,8 @@ You have two options for the certify plugin:
 
 ### Option 2: Create Custom Plugin
 You can create your own plugin by implementing the following interface and place the resultant jar in loader_path:
+
+Reference Implementation: [CSVDataProviderPlugin](https://github.com/mosip/digital-credential-plugins/blob/develop/mock-certify-plugin/src/main/java/io.mosip.certify.mock.integration/service/MockCSVDataProviderPlugin.java)
 ```java
 public interface DataProviderPlugin {
     // Implement your custom logic here
@@ -69,6 +71,7 @@ public interface DataProviderPlugin {
   ```
   certs/oidckeystore.p12
   ```
+  [Collab Env OIDCKeystore](https://docs.inji.io/inji-wallet/inji-mobile/customization-overview/credential_providers#onboarding-mimoto-as-oidc-client-for-a-new-issuer)
 
 ### 2. Configuration Files
 Ensure all configuration files are properly updated in the config directory:
@@ -79,6 +82,8 @@ Ensure all configuration files are properly updated in the config directory:
 - mimoto-trusted-verifiers.json
 - credential-template.html
 
+[Mimoto Docker Compose Configuration Docs](https://github.com/mosip/mimoto/tree/release-0.15.x/docker-compose)
+[Inji Certify Configuration Docs](../../README.md)
 ## Running the Application
 
 ### 1. Start the Services
@@ -151,4 +156,4 @@ docker-compose down -v
 
 
 ## Additional Resources
-- [Inji Documentation](https://docs.mosip.io/inji)
+- [Inji Documentation](https://docs.inji.io/)
