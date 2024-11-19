@@ -74,7 +74,7 @@ services:
     ports:
       - '3010:3010'
     environment:
-      - MIMOTO_HOST=http://mimoto-service:8099
+      - MIMOTO_HOST=http://mimoto-service:8099/v1/mimoto
       - PORT=3010
     depends_on:
       - mimoto-service
@@ -87,7 +87,7 @@ services:
     ports:
       - '3001:3004'
     environment:
-      - MIMOTO_HOST=http://localhost:3010/v1/mimoto
+      - MIMOTO_HOST=http://localhost:3010
       - DEFAULT_LANG=en
     depends_on:
       - inji-web-proxy
