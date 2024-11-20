@@ -1,0 +1,19 @@
+SearchPolicySunBirdR:
+   InjiCertify_ESignet_SunBirdR_SearchPolicy_NOAUTH_Valid_Smoke:
+      endPoint: $SUNBIRDBASEURL$/api/v1/Insurance/search
+      description: Searching sunbird policy with valid parameters
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/SunBirdR/SearchPolicySunBirdR/SearchPolicySunBirdR
+      outputTemplate: injicertify/SunBirdR/SearchPolicySunBirdR/SearchPolicySunBirdRResult
+      input: '{
+        "offset": "0",
+      	"limit": "5",
+      	"fullName": "$FULLNAMEFORSUNBIRDRC$",
+      	"dob": "$DOBFORSUNBIRDRC$",
+      	"policyNumber": "$POLICYNUMBERFORSUNBIRDRC$"
+    }'
+      output: '{
+}'

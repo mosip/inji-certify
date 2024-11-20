@@ -10,9 +10,9 @@ AuthenticateUserSunBirdCNeg:
       inputTemplate: injicertify/SunBirdCNegative/AuthenticateUserSunBirdCNeg/AuthenticateUserSunBirdCNeg
       outputTemplate: injicertify/SunBirdCNegative/AuthenticateUserSunBirdCNeg/AuthenticateUserSunBirdCResultNeg
       input: '{
-        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_SunBirdC_all_Valid_Smoke_sid_encodedResp$",
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_SunBirdC_all_Valid_Smoke_sid_Neg_encodedResp$",
       	"requestTime": "$TIMESTAMP$",
-      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_SunBirdC_all_Valid_Smoke_sid_transactionId$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_SunBirdC_all_Valid_Smoke_sid_Neg_transactionId$",
       	"individualId": "$POLICYNUMBERFORSUNBIRDRC$",
       	"authFactorType" : "KBA",
       	"challenge" : "$CHALLENGEVALUEFORSUNBIRDC$",

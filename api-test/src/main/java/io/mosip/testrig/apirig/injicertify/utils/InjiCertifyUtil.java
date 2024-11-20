@@ -211,6 +211,9 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		} else if (testCaseDTO.getEndPoint().startsWith("$INJICERTIFYMOCKIDABASEURL$")
 				&& testCaseName.contains("_GetCredentialForMockIDA")) {
 			return ApplnURI.replace("api-internal", "injicertify-mock");
+		} else if (testCaseDTO.getEndPoint().startsWith("$SUNBIRDBASEURL$")
+				&& testCaseName.contains("Policy_")) {
+			return InjiCertifyConfigManager.getSunBirdBaseURL();
 		}
 		
 		
@@ -232,8 +235,19 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			return "$INJICERTIFYMOSIPIDBASEURL$";
 		if (endPoint.startsWith("$INJICERTIFYMOCKIDABASEURL$"))
 			return "$INJICERTIFYMOCKIDABASEURL$";
+		if (endPoint.startsWith("$SUNBIRDBASEURL$"))
+			return "$SUNBIRDBASEURL$";
 		
 		return "";
+	}
+	
+	public static String inputstringKeyWordHandeler(String jsonString, String testCaseName) {
+		if (jsonString.contains(GlobalConstants.TIMESTAMP))
+			jsonString = replaceKeywordValue(jsonString, GlobalConstants.TIMESTAMP, generateCurrentUTCTimeStamp());
+		
+		
+		return jsonString;
+		
 	}
 	
 	public static String isTestCaseValidForExecution(TestCaseDTO testCaseDTO) {

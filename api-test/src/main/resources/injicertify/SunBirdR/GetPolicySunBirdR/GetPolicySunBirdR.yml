@@ -1,0 +1,16 @@
+GetPolicySunBirdR:
+   InjiCertify_ESignet_SunBirdR_GetPolicy_NOAUTH_Valid_Smoke:
+      endPoint: $SUNBIRDBASEURL$/api/v1/Insurance/{insuranceid}
+      description: Getting sunbird policy with valid parameters
+      role: resident
+      restMethod: get
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/SunBirdR/GetPolicySunBirdR/GetPolicySunBirdR
+      outputTemplate: injicertify/SunBirdR/GetPolicySunBirdR/GetPolicySunBirdRResult
+      input: '{
+        "insuranceid": "$ID:ESignet_SunBirdR_CreatePolicy_NOAUTH_Valid_Smoke_Sid_osid$"
+    }'
+      output: '{
+	"policyNumber": "325698741"
+}'

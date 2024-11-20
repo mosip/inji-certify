@@ -10,7 +10,7 @@ GenerateTokenSunBirdCNeg:
       outputTemplate: injicertify/SunBirdCNegative/GenerateTokenSunBirdCNeg/GenerateTokenSunBirdCResultNeg
       input: '{
 		  "grant_type": "authorization_code",
-		  "code": "$ID:ESignet_AuthorizationCode_SunBirdC_All_Valid_Smoke_sid_code$",
+		  "code": "$ID:ESignet_AuthorizationCode_SunBirdC_All_Valid_Smoke_sid_Neg_code$",
 		  "client_id": "$ID:ESignet_CreateOIDCClientV2SunBirdC_all_Valid_Smoke_sid_clientId$",
 		  "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
 		  "client_assertion": "$CLIENT_ASSERTION_USER4_JWK$",
