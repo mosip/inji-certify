@@ -138,6 +138,12 @@ docker-compose ps
 docker logs [container_name]
 ```
 
+## Hosting a public key in the form of a DID
+
+1. Extract the certificate from the [Ceritfy Endpoint](http://localhost:8090/v1/certify/system-info/certificate?applicationId=CERTIFY_MOCK_ED25519&referenceId=ED25519_SIGN)
+2. Use `openssl x509 -pubkey -noout -in filename.pem`  to convert the certificate to a public key.
+3. Convert the public key to a publicKeyMultibase as per the [spec](https://www.w3.org/community/reports/credentials/CG-FINAL-di-eddsa-2020-20220724/).
+
 ## Stopping the Application
 To stop all services:
 ```bash
