@@ -9,7 +9,17 @@
 	</listeners>
 
 	<test name="AddIdentity">
-		<parameter name="ymlFile" value="injicertify/AddIdentity/AddIdentity.yml" />
+		<parameter name="ymlFile"
+			value="injicertify/AddIdentity/AddIdentity.yml" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.AddIdentity" />
+		</classes>
+	</test>
+	<test name="AddIdentityMock">
+		<parameter name="ymlFile"
+			value="injicertify/AddIdentityMock/AddIdentity.yml" />
 		<parameter name="prerequisite" value="Yes" />
 		<classes>
 			<class name="io.mosip.testrig.apirig.injicertify.testscripts.AddIdentity" />

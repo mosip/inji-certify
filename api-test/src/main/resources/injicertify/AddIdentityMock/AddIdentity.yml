@@ -1,0 +1,19 @@
+AddIdentity:
+   InjiCertify_AddIdentity_For_Mock_Valid_smoke_Pos:
+      endPoint: /v1/mock-identity-system/identity
+      description: Add identity for mock scenario
+      role: idrepo
+      restMethod: post
+      inputTemplate: injicertify/AddIdentityMock/AddIdentity
+      outputTemplate: injicertify/AddIdentityMock/addIdentityResult
+      input: '{
+	  "requesttime": "$TIMESTAMP$",
+	  "individualId": "$RANDOMINDIVIDUALIDFORMOCKIDENTITY$",
+	  "pin": "545411",
+	  "email": "$EMAILIDFORMOCKIDENTITY$",
+	  "password": "$PASSWORDFORMOCKIDENTITY$",
+	  "phone": "$PHONEFORMOCKIDENTITY$"
+}'
+      output: '{
+  "status":"mock identity data created successfully"
+}'

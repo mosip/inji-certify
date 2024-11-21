@@ -11,7 +11,7 @@ AuthenticateUserVCIForMockIDA:
         "encodedHash": "$ID:ESignet_OAuthDetailsRequest_ForMockIDA_Vd12_uin_all_Valid_Smoke_sid_encodedResp$",
       	"requestTime": "$TIMESTAMP$",
       	"transactionId": "$ID:ESignet_OAuthDetailsRequest_ForMockIDA_Vd12_uin_all_Valid_Smoke_sid_transactionId$",
-      	"individualId": "6553455",
+      	"individualId": "$ID:AddIdentity_For_Mock_Valid_smoke_Pos_UIN$",
       	"authFactorType" : "OTP",
       	"challenge" : "111111",
         "format": "alpha-numeric",
@@ -19,7 +19,7 @@ AuthenticateUserVCIForMockIDA:
     "encodedHash": "$ID:ESignet_OAuthDetailsRequest_ForMockIDA_Vd12_uin_all_Valid_Smoke_sid_encodedResp$",
     "requestTime": "$TIMESTAMP$",
     "transactionId": "$ID:ESignet_OAuthDetailsRequest_ForMockIDA_Vd12_uin_all_Valid_Smoke_sid_transactionId$",
-	"individualId": "6553455",
+	"individualId": "$ID:AddIdentity_For_Mock_Valid_smoke_Pos_UIN$",
     "otpChannels": [{channel: "email"},{channel: "phone"}],
     "sendOtpReqTemplate": "injicertify/SendOtp/SendOtp",
     "sendOtpEndPoint": "$ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/send-otp"
