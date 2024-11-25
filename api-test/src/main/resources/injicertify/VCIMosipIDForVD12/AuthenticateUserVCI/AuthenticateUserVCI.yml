@@ -1,5 +1,5 @@
 AuthenticateUserVCI:
-   InjiCertify_ESignet_AuthenticateUserVCI_ForVD12_uin_Otp_Valid_Smoke:
+   InjiCertify_ESignet_AuthenticateUserVCI_ForVD12_MOSIPID_uin_Otp_Valid_Smoke:
       endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/authenticate
       role: resident
       restMethod: post
@@ -8,17 +8,17 @@ AuthenticateUserVCI:
       inputTemplate: injicertify/VCIMosipIDForVD12/AuthenticateUserVCI/AuthenticateUserVCI
       outputTemplate: injicertify/VCIMosipIDForVD12/AuthenticateUserVCI/AuthenticateUserVCIResult
       input: '{
-        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_VCI_ForVD12_uin_all_Valid_Smoke_sid_encodedResp$",
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_VCI_ForVD12_MOSIPID_uin_all_Valid_Smoke_sid_encodedResp$",
       	"requestTime": "$TIMESTAMP$",
-      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_VCI_ForVD12_uin_all_Valid_Smoke_sid_transactionId$",
-      	"individualId": "$ID:AddIdentity_Valid_Params_VCI_uin_smoke_Pos_UIN$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_VCI_ForVD12_MOSIPID_uin_all_Valid_Smoke_sid_transactionId$",
+      	"individualId": "$ID:AddIdentity_Valid_Params_VCI_MOSIPID_uin_smoke_Pos_UIN$",
       	"authFactorType" : "OTP",
-      	"challenge" : "$ID:AddIdentity_Valid_Params_VCI_uin_smoke_Pos_EMAIL$",
+      	"challenge" : "$ID:AddIdentity_Valid_Params_VCI_MOSIPID_uin_smoke_Pos_EMAIL$",
         "sendOtp":{
-    "encodedHash": "$ID:ESignet_OAuthDetailsRequest_VCI_ForVD12_uin_all_Valid_Smoke_sid_encodedResp$",
+    "encodedHash": "$ID:ESignet_OAuthDetailsRequest_VCI_ForVD12_MOSIPID_uin_all_Valid_Smoke_sid_encodedResp$",
     "requestTime": "$TIMESTAMP$",
-    "transactionId": "$ID:ESignet_OAuthDetailsRequest_VCI_ForVD12_uin_all_Valid_Smoke_sid_transactionId$",
-	"individualId": "$ID:AddIdentity_Valid_Params_VCI_uin_smoke_Pos_UIN$",
+    "transactionId": "$ID:ESignet_OAuthDetailsRequest_VCI_ForVD12_MOSIPID_uin_all_Valid_Smoke_sid_transactionId$",
+	"individualId": "$ID:AddIdentity_Valid_Params_VCI_MOSIPID_uin_smoke_Pos_UIN$",
     "otpChannels": [{channel: "email"},{channel: "phone"}],
     "sendOtpReqTemplate": "injicertify/SendOtp/SendOtp",
     "sendOtpEndPoint": "/v1/esignet/authorization/send-otp"

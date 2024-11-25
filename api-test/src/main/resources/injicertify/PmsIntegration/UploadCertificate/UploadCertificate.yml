@@ -1,26 +1,26 @@
 uploadCACert:
-   Injicertify_UploadCACertificate_All_Valid_Smoke:
+   Injicertify_UploadCACertificate_MOSIPID_All_Valid_Smoke:
       endPoint: /v1/partnermanager/partners/certificate/ca/upload
       role: partner
       restMethod: post
       inputTemplate: injicertify/PmsIntegration/UploadCertificate/uploadCertificate
       outputTemplate: injicertify/PmsIntegration/UploadCertificate/uploadCertificateResult
       input: '{
-    "partnerId": "$ID:PartnerSelfRegistration_All_Valid_Smoke_sid_partnerId$",
+    "partnerId": "$ID:PartnerSelfRegistration_MOSIPID_All_Valid_Smoke_sid_partnerId$",
     "certificateData": "$CACERT$",
     "requesttime": "$TIMESTAMP$"
   }'
       output: ' {
     "status": "Upload Success."
 }'
-   Injicertify_UploadCInterCertificate_All_Valid_Smoke:
+   Injicertify_UploadCInterCertificate_MOSIPID_All_Valid_Smoke:
       endPoint: /v1/partnermanager/partners/certificate/ca/upload
       role: partner
       restMethod: post
       inputTemplate: injicertify/PmsIntegration/UploadCertificate/uploadCertificate
       outputTemplate: injicertify/PmsIntegration/UploadCertificate/uploadCertificateResult
       input: '{
-    "partnerId": "$ID:PartnerSelfRegistration_All_Valid_Smoke_sid_partnerId$",
+    "partnerId": "$ID:PartnerSelfRegistration_MOSIPID_All_Valid_Smoke_sid_partnerId$",
     "certificateData": "$INTERCERT$",
     "requesttime": "$TIMESTAMP$"
   }'

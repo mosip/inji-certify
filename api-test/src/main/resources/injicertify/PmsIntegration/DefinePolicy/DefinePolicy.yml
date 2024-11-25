@@ -1,5 +1,5 @@
 definePolicy:
-   InjiCertify_DefinePolicy_All_Valid_Smoke_sid:
+   InjiCertify_DefinePolicy_MOSIPID_All_Valid_Smoke_sid:
       endPoint: /v1/policymanager/policies
       role: partner
       restMethod: post
@@ -8,7 +8,7 @@ definePolicy:
       input: '{
 	"desc": "$POLICYDESC$",
 	"name": "$POLICYNAME$",
-	"policyGroupName": "$ID:DefinePolicyGroup_All_Valid_Smoke_sid_name$",
+	"policyGroupName": "$ID:DefinePolicyGroup_MOSIPID_All_Valid_Smoke_sid_name$",
 	"policyType": "Auth",
 	"version": "1.0",
 	"requesttime": "$TIMESTAMP$"

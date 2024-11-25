@@ -26,6 +26,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 import io.mosip.testrig.apirig.dataprovider.BiometricDataProvider;
 import io.mosip.testrig.apirig.dbaccess.DBManager;
 import io.mosip.testrig.apirig.injicertify.utils.InjiCertifyConfigManager;
+import io.mosip.testrig.apirig.injicertify.utils.InjiCertifyUtil;
 import io.mosip.testrig.apirig.report.EmailableReport;
 import io.mosip.testrig.apirig.testrunner.BaseTestCase;
 import io.mosip.testrig.apirig.testrunner.ExtractResource;
@@ -188,24 +189,50 @@ public class MosipTestRunner {
 				return f1.getName().compareTo(f2.getName()); // default alphabetical order
 			});
 
-			for (File file : files) {
-				TestNG runner = new TestNG();
-				List<String> suitefiles = new ArrayList<>();
-				if (file.getName().toLowerCase().contains(GlobalConstants.INJICERTIFY)) {
-					if (file.getName().toLowerCase().contains("prerequisite")) {
-						BaseTestCase.setReportName(GlobalConstants.INJICERTIFY + "-prerequisite");
-					} else {
-						// if the prerequisite total skipped/failed count is greater than zero
-						if (EmailableReport.getFailedCount() > 0 || EmailableReport.getSkippedCount() > 0) {
-							// skipAll = true;
+			String useCaseToExecute = InjiCertifyConfigManager.getproperty("useCaseToExecute");
+
+			// Split the string by commas
+			String[] useCases = useCaseToExecute.split(",");
+
+			// Loop through the resulting array and print each element
+			for (String useCase : useCases) {
+				InjiCertifyUtil.currentUseCase = useCase;
+
+				for (File file : files) {
+					TestNG runner = new TestNG();
+					List<String> suitefiles = new ArrayList<>();
+
+					if (file.getName().toLowerCase().contains(GlobalConstants.INJICERTIFY)) {
+						if (file.getName().toLowerCase().contains("prerequisite")) {
+							if (useCase.equals("sunbird") == true) {
+								continue;
+							} else {
+								if (useCase != null && useCase.isBlank() == false) {
+									BaseTestCase.setReportName(
+											GlobalConstants.INJICERTIFY + "-" + useCase + "-prerequisite");
+								} else {
+									BaseTestCase.setReportName(GlobalConstants.INJICERTIFY + "-prerequisite");
+								}
+							}
+						} else {
+							// if the prerequisite total skipped/failed count is greater than zero
+							if (EmailableReport.getFailedCount() > 0 || EmailableReport.getSkippedCount() > 0) {
+								// skipAll = true;
+							}
+							if (useCase != null && useCase.isBlank() == false) {
+								BaseTestCase.setReportName(GlobalConstants.INJICERTIFY + "-" + useCase);
+							} else {
+								BaseTestCase.setReportName(GlobalConstants.INJICERTIFY);
+							}
+
 						}
-						BaseTestCase.setReportName(GlobalConstants.INJICERTIFY);
+						suitefiles.add(file.getAbsolutePath());
+						runner.setTestSuites(suitefiles);
+						System.getProperties().setProperty("testng.outpur.dir", "testng-report");
+						runner.setOutputDirectory("testng-report");
+						runner.run();
 					}
-					suitefiles.add(file.getAbsolutePath());
-					runner.setTestSuites(suitefiles);
-					System.getProperties().setProperty("testng.outpur.dir", "testng-report");
-					runner.setOutputDirectory("testng-report");
-					runner.run();
+
 				}
 			}
 		} else {

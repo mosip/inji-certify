@@ -17,6 +17,7 @@ import io.mosip.testrig.apirig.utils.SkipTestCaseHandler;
 public class InjiCertifyUtil extends AdminTestUtil {
 
 	private static final Logger logger = Logger.getLogger(InjiCertifyUtil.class);
+	public static String currentUseCase = "";
 
 	public static String smtpOtpHandler(String inputJson, TestCaseDTO testCaseDTO) {
 		JSONObject request = new JSONObject(inputJson);
@@ -252,7 +253,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	
 	public static String isTestCaseValidForExecution(TestCaseDTO testCaseDTO) {
 		String testCaseName = testCaseDTO.getTestCaseName();
-		
+
 		if (MosipTestRunner.skipAll == true) {
 			throw new SkipException(GlobalConstants.PRE_REQUISITE_FAILED_MESSAGE);
 		}
@@ -260,6 +261,17 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		if (SkipTestCaseHandler.isTestCaseInSkippedList(testCaseName)) {
 			throw new SkipException(GlobalConstants.KNOWN_ISSUES);
 		}
+
+		if (currentUseCase.toLowerCase().equals("mock") && testCaseName.toLowerCase().contains("mock") == false) {
+			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+		}
+		if (currentUseCase.toLowerCase().equals("sunbird") && testCaseName.toLowerCase().contains("sunbird") == false) {
+			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+		}
+		if (currentUseCase.toLowerCase().equals("mosipid") && testCaseName.toLowerCase().contains("mosipid") == false) {
+			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+		}
+
 		return testCaseName;
 	}
 	
