@@ -1,5 +1,5 @@
 OAuthDetailsRequestVCI:
-   InjiCertify_ESignet_OAuthDetailsRequest_VCI_ForVD11_uin_all_Valid_Smoke_sid:
+   InjiCertify_ESignet_OAuthDetailsRequest_VCI_ForVD11_MOSIPID_uin_all_Valid_Smoke_sid:
       endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/v2/oauth-details
       role: resident
       restMethod: post
@@ -8,7 +8,7 @@ OAuthDetailsRequestVCI:
       outputTemplate: injicertify/VCIMosipIDForVD11/OAuthDetailsRequestVCI/OAuthDetailsRequestVCIResult
       input: '{
       	"requestTime": "$TIMESTAMP$",
-      	"clientId": "$ID:CreateOIDCClient_all_Valid_Smoke_sid_clientId$",
+      	"clientId": "$ID:CreateOIDCClient_MOSIPID_all_Valid_Smoke_sid_clientId$",
       	"scope": "mosip_identity_vc_ldp",
       	"responseType": "code",
       	"redirectUri": "$IDPREDIRECTURI$",

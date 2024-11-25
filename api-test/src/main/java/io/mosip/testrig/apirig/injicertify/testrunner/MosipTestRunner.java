@@ -207,15 +207,24 @@ public class MosipTestRunner {
 							if (useCase.equals("sunbird") == true) {
 								continue;
 							} else {
-								BaseTestCase
-										.setReportName(GlobalConstants.INJICERTIFY + "-" + useCase + "-prerequisite");
+								if (useCase != null && useCase.isBlank() == false) {
+									BaseTestCase.setReportName(
+											GlobalConstants.INJICERTIFY + "-" + useCase + "-prerequisite");
+								} else {
+									BaseTestCase.setReportName(GlobalConstants.INJICERTIFY + "-prerequisite");
+								}
 							}
 						} else {
 							// if the prerequisite total skipped/failed count is greater than zero
 							if (EmailableReport.getFailedCount() > 0 || EmailableReport.getSkippedCount() > 0) {
 								// skipAll = true;
 							}
-							BaseTestCase.setReportName(GlobalConstants.INJICERTIFY + "-" + useCase);
+							if (useCase != null && useCase.isBlank() == false) {
+								BaseTestCase.setReportName(GlobalConstants.INJICERTIFY + "-" + useCase);
+							} else {
+								BaseTestCase.setReportName(GlobalConstants.INJICERTIFY);
+							}
+
 						}
 						suitefiles.add(file.getAbsolutePath());
 						runner.setTestSuites(suitefiles);

@@ -264,9 +264,11 @@ public class InjiCertifyUtil extends AdminTestUtil {
 
 		if (currentUseCase.toLowerCase().equals("mock") && testCaseName.toLowerCase().contains("mock") == false) {
 			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
-		} 
-		if (currentUseCase.toLowerCase().equals("sunbird")
-				&& testCaseName.toLowerCase().contains("sunbird") == false) {
+		}
+		if (currentUseCase.toLowerCase().equals("sunbird") && testCaseName.toLowerCase().contains("sunbird") == false) {
+			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+		}
+		if (currentUseCase.toLowerCase().equals("mosipid") && testCaseName.toLowerCase().contains("mosipid") == false) {
 			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
 		}
 

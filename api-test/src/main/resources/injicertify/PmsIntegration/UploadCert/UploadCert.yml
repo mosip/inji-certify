@@ -1,5 +1,5 @@
 uploadPartnerCert:
-   Injicertify_UploadPartnerCert_All_Valid_Smoke:
+   Injicertify_UploadPartnerCert_MOSIPID_All_Valid_Smoke:
       endPoint: /v1/partnermanager/partners/certificate/upload
       role: partner
       checkErrorsOnlyInResponse: true
@@ -8,7 +8,7 @@ uploadPartnerCert:
       outputTemplate: injicertify/PmsIntegration/UploadCert/uploadCertResult
       input: '{
   "certificateData": "$PARTNERCERT$",
-  "partnerId": "$ID:PartnerSelfRegistration_All_Valid_Smoke_sid_partnerId$",
+  "partnerId": "$ID:PartnerSelfRegistration_MOSIPID_All_Valid_Smoke_sid_partnerId$",
   "requesttime": "$TIMESTAMP$"
 }'
       output: ' {

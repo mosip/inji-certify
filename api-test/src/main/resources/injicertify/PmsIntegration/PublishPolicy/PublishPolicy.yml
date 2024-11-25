@@ -1,13 +1,13 @@
 createPublishPolicy:
-   InjiCertify_PublishPolicy_All_Valid_Smoke:
+   InjiCertify_PublishPolicy_MOSIPID_All_Valid_Smoke:
       endPoint: /v1/policymanager/policies/{policyId}/group/{policygroupId}/publish
       role: partner
       restMethod: post
       inputTemplate: injicertify/PmsIntegration/PublishPolicy/publishPolicy
       outputTemplate: injicertify/PmsIntegration/PublishPolicy/publishPolicyResult
       input: '{
-		"policygroupId": "$ID:DefinePolicyGroup_All_Valid_Smoke_sid_id$",
-		"policyId": "$ID:DefinePolicy_All_Valid_Smoke_sid_id$",
+		"policygroupId": "$ID:DefinePolicyGroup_MOSIPID_All_Valid_Smoke_sid_id$",
+		"policyId": "$ID:DefinePolicy_MOSIPID_All_Valid_Smoke_sid_id$",
 		"requesttime": "$TIMESTAMP$"
 }'
       output: '{

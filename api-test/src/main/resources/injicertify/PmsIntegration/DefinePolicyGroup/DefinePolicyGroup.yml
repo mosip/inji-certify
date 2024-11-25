@@ -1,5 +1,5 @@
 definePolicyGroup:
-   InjiCertify_DefinePolicyGroup_All_Valid_Smoke_sid:
+   InjiCertify_DefinePolicyGroup_MOSIPID_All_Valid_Smoke_sid:
       endPoint: /v1/policymanager/policies/group/new
       role: partner
       restMethod: post

@@ -1,5 +1,5 @@
 AuthorizationCodeVCI:
-   InjiCertify_ESignet_AuthorizationCode_VCI_ForVD12_uin_All_Valid_Smoke_sid:
+   InjiCertify_ESignet_AuthorizationCode_VCI_ForVD12_MOSIPID_uin_All_Valid_Smoke_sid:
       endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/auth-code
       role: resident
       restMethod: post
@@ -8,9 +8,9 @@ AuthorizationCodeVCI:
       inputTemplate: injicertify/VCIMosipIDForVD12/AuthorizationCodeVCI/AuthorizationCodeVCI
       outputTemplate: injicertify/VCIMosipIDForVD12/AuthorizationCodeVCI/AuthorizationCodeVCIResult
       input: '{
-        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_VCI_ForVD12_uin_all_Valid_Smoke_sid_encodedResp$",
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_VCI_ForVD12_MOSIPID_uin_all_Valid_Smoke_sid_encodedResp$",
       	"requestTime": "$TIMESTAMP$",
-      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_VCI_ForVD12_uin_all_Valid_Smoke_sid_transactionId$"
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_VCI_ForVD12_MOSIPID_uin_all_Valid_Smoke_sid_transactionId$"
 }'
       output: '{
 }'
