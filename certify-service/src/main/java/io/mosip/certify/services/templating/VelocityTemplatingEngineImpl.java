@@ -103,6 +103,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
             } else if (value instanceof String){
                 // entities which need to be quoted
                 finalTemplate.put(key, JSONObject.wrap(value));
+            } else {
+                finalTemplate.put(key, value);
             }
         }
         // Date: https://velocity.apache.org/tools/3.1/apidocs/org/apache/velocity/tools/generic/DateTool.html
