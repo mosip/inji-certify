@@ -1,13 +1,32 @@
 # Inji Stack Setup
 
-This guide provides instructions for setting up and running Inji Stack.
+This guide provides instructions for setting up and running Inji Stack for a custom use-case based on an existing configured foundational ID system.
+An example for this could be a use-case where Authentication is performed from a pre-existing registry such as a **National ID** being put to use to deliver services such as **Farmer Identity Card** to eligible farmers or a **Mobile Driving License** to eligible drivers. These examples can be further extended for different usecases and used with different OIDC Compatible clients.
+
+On the more technical side, this demo showcases the two types of VCI plugin an implementor can choose to implement depending upon their usecase & requirements & pre-existing identity system.
+
+
+# QuickStart: Mock Certify Plugin Setup
+
+Expected time to setup: ~10 minutes
+
+You have two sample options for the certify plugin which gives Verifiable Credentials
+
+1. Farmer Credential: returns an JSON-LD VC and is implemented using the CSV Plugin
+2. Mobile Driving License Credential: returns an mDL VC and is implemented using the mock-mdl Plugin
+
 
 ## Prerequisites
+
 - Docker and Docker Compose installed on your system
 - Git (to clone the repository)
 - Basic understanding of Docker and container operations
+- Relevant Postman collections are [here](../../docs/postman-collections/), please add the `mock` ones and install the [pmlib library](https://joolfe.github.io/postman-util-lib/) as per the steps given under the heading `Postman Collection` in your.
+- Network Connectivity to access the AuthZ Service
+
 
 ## Directory Structure Setup
+
 Create the following directory structure before proceeding:
 
 ```
@@ -30,12 +49,11 @@ docker-compose-injistack/
 └── docker-compose.yml
 ```
 
-## Mock Certify Plugin Setup
-You have two options for the certify plugin:
 
-#### Loading plugin for issuance
 
-setup active_profile_env value of the certify service in [docker-compose.yaml](./docker-compose.yaml) as per use case.
+## Choosing a VCI plugin for issuance
+
+setup active_profile_env value of the certify service in [docker-compose.yaml](./docker-compose.yaml) as per use case
 
 For,
 
@@ -47,17 +65,20 @@ For,
 Note: Refer the relevant config file based on use case to connect to the required environment
 
 ### Option 1: Use Existing Mock Plugin
+
 - Supported versions: 0.3.0 and above
-- Download the snapshot JAR from:
+- Download the latest snapshot JAR from:
   ```
   https://oss.sonatype.org/content/repositories/snapshots/io/mosip/certify/mock-certify-plugin/0.3.0-SNAPSHOT/
   ```
 - Place the downloaded JAR in `loader_path/certify/`
 
 ### Option 2: Create Custom Plugin
+
 You can create your own plugin by implementing the following interface and place the resultant jar in loader_path:
 
-Reference Implementation: [CSVDataProviderPlugin](https://github.com/mosip/digital-credential-plugins/blob/develop/mock-certify-plugin/src/main/java/io.mosip.certify.mock.integration/service/MockCSVDataProviderPlugin.java)
+Reference Implementation: [CSVDataProviderPlugin](https://github.com/mosip/digital-credential-plugins/blob/develop/mock-certify-plugin/src/main/java/io.mosip.certify.mock.integration/service/MockCSVDataProviderPlugin.java) or [MDocMockVCIssuancePlugin](https://github.com/mosip/digital-credential-plugins/blob/release-0.3.x/mock-certify-plugin/src/main/java/io.mosip.certify.mock.integration/service/MDocMockVCIssuancePlugin.java).
+
 ```java
 public interface DataProviderPlugin {
     // Implement your custom logic here
