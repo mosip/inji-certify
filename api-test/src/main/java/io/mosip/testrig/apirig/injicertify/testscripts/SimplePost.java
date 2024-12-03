@@ -134,7 +134,7 @@ public class SimplePost extends AdminTestUtil implements ITest {
 					}
 				}
 				inputJson = inputJsonKeyWordHandeler(inputJson, testCaseName);
-				inputJson = InjiCertifyUtil.reqJsonKeyWordHandeler(inputJson, testCaseName);
+				inputJson = InjiCertifyUtil.inputstringKeyWordHandeler(inputJson, testCaseName);
 				response = postRequestWithCookieAuthHeaderAndXsrfToken(tempUrl + testCaseDTO.getEndPoint(), inputJson,
 						COOKIENAME, testCaseDTO.getTestCaseName());
 			} else {

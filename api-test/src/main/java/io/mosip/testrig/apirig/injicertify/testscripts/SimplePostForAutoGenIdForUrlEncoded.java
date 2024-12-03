@@ -135,7 +135,7 @@ public class SimplePostForAutoGenIdForUrlEncoded extends AdminTestUtil implement
 			}
 		} else {
 			jsonInput = inputJsonKeyWordHandeler(jsonInput, testCaseName);
-			jsonInput = InjiCertifyUtil.reqJsonKeyWordHandeler(jsonInput, testCaseName);
+			jsonInput = InjiCertifyUtil.inputstringKeyWordHandeler(jsonInput, testCaseName);
 
 			if (testCaseName.contains("ESignet_")) {
 				String tempUrl = InjiCertifyConfigManager.getEsignetBaseUrl();
