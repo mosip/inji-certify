@@ -1,11 +1,15 @@
 # Inji Stack Setup
 
-This guide provides instructions for setting up and running Inji Stack.
+This guide provides instructions for setting up and running Inji Stack for a custom use-case based on an existing configured foundational ID system.
+An example for this could be a use-case where Authentication is performed from a pre-existing registry such as a **National ID** being put to use to deliver services such as **Farmer Identity Card** to eligible farmers.
 
 ## Prerequisites
+
 - Docker and Docker Compose installed on your system
 - Git (to clone the repository)
 - Basic understanding of Docker and container operations
+- Relevant Postman collections are [here](../../docs/postman-collections/), please add the `mock` ones and install the [pmlib library](https://joolfe.github.io/postman-util-lib/) as per the rules given under the heading `Postman Collection`.
+
 ### Building inji-web-proxy
 Before running the docker-compose, you need to build the inji-web-proxy image:
 
@@ -13,12 +17,15 @@ Before running the docker-compose, you need to build the inji-web-proxy image:
 # Clone the repository
 git clone https://github.com/mosip/inji-web.git -b release-0.11.x
 cd inji-web/inji-web-proxy
+```
 
+```bash
 # Build the Docker image
 docker build -t inji-web-proxy:local .
 ```
 
 ## Directory Structure Setup
+
 Create the following directory structure before proceeding:
 
 ```
