@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
  *  https://www.w3.org/community/reports/credentials/CG-FINAL-di-eddsa-2020-20220724/
  */
 @Component
-@ConditionalOnProperty(name = "mosip.certify.issuer.vc-sign-algo", havingValue = SignatureAlg.ED25519_SIGNATURE_SUITE_2020)
+@ConditionalOnProperty(name = "mosip.certify.data-provider-plugin.issuer.vc-sign-algo", havingValue = SignatureAlg.ED25519_SIGNATURE_SUITE_2020)
 public class Ed25519ProofSignature2020 implements ProofSignatureStrategy {
 
     @Autowired

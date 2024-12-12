@@ -46,7 +46,7 @@ public class KeymanagerLibSigner implements VCSigner {
 
     @Autowired
     ProofSignatureStrategy signProps;
-    @Value("${mosip.certify.issuer.pub.key}")
+    @Value("${mosip.certify.data-provider-plugin.issuer-public-key-uri}")
     private String hostedKey;
 
     @Override
