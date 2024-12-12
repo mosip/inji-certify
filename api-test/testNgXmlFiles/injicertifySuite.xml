@@ -8,43 +8,6 @@
 		<listener class-name="io.mosip.testrig.apirig.report.EmailableReport" />
 	</listeners>
 
-	<test name="CreatePolicySunBirdR">
-		<parameter name="ymlFile"
-			value="injicertify/SunBirdR/CreatePolicySunBirdR/CreatePolicySunBirdR.yml" />
-		<parameter name="idKeyName" value="osid" />
-		<parameter name="prerequisite" value="Yes" />
-		<classes>
-			<class
-				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
-		</classes>
-	</test>
-	<test name="GetPolicySunBirdR">
-		<parameter name="ymlFile"
-			value="injicertify/SunBirdR/GetPolicySunBirdR/GetPolicySunBirdR.yml" />
-		<parameter name="prerequisite" value="Yes" />
-		<classes>
-			<class
-				name="io.mosip.testrig.apirig.injicertify.testscripts.GetWithParam" />
-		</classes>
-	</test>
-	<test name="SearchPolicySunBirdR">
-		<parameter name="ymlFile"
-			value="injicertify/SunBirdR/SearchPolicySunBirdR/SearchPolicySunBirdR.yml" />
-		<parameter name="prerequisite" value="Yes" />
-		<classes>
-			<class name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
-		</classes>
-	</test>
-	<test name="CreateOIDCClientV2SunBirdC">
-		<parameter name="ymlFile"
-			value="injicertify/SunBirdC/CreateOIDCClientV2SunBirdC/CreateOIDCClientV2SunBirdC.yml" />
-		<parameter name="idKeyName" value="clientId" />
-		<parameter name="prerequisite" value="Yes" />
-		<classes>
-			<class
-				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
-		</classes>
-	</test>
 	<test name="OAuthDetailsRequestSunBirdC">
 		<parameter name="ymlFile"
 			value="injicertify/SunBirdC/OAuthDetailsRequestSunBirdC/OAuthDetailsRequestSunBirdC.yml" />
@@ -243,91 +206,6 @@
 				name="io.mosip.testrig.apirig.injicertify.testscripts.DeleteWithParam" />
 		</classes>
 	</test>
-	<test name="CreatePolicyGroup">
-		<parameter name="ymlFile" value="injicertify/PmsIntegration/DefinePolicyGroup/DefinePolicyGroup.yml" />
-		<parameter name="idKeyName" value="id,name" />
-		<parameter name="prerequisite" value="Yes" />
-		<classes>
-			<class name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
-		</classes>
-	</test>
-	<test name="DefinePolicy">
-		<parameter name="ymlFile"
-			value="injicertify/PmsIntegration/DefinePolicy/DefinePolicy.yml" />
-		<parameter name="idKeyName" value="id,name" />
-		<parameter name="prerequisite" value="Yes" />
-		<classes>
-			<class
-				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
-		</classes>
-	</test>
-	<test name="PublishPolicy">
-		<parameter name="ymlFile"
-			value="injicertify/PmsIntegration/PublishPolicy/PublishPolicy.yml" />
-		<parameter name="prerequisite" value="Yes" />
-		<classes>
-			<class
-				name="io.mosip.testrig.apirig.injicertify.testscripts.PostWithOnlyPathParam" />
-		</classes>
-	</test>
-	<test name="CreatePartner">
-		<parameter name="ymlFile"
-			value="injicertify/PmsIntegration/CreatePartner/CreatePartner.yml" />
-		<parameter name="idKeyName" value="partnerId" />
-		<parameter name="prerequisite" value="Yes" />
-		<classes>
-			<class
-				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
-		</classes>
-	</test>
-	<test name="UploadCACertificate">
-		<parameter name="ymlFile"
-			value="injicertify/PmsIntegration/UploadCertificate/UploadCertificate.yml" />
-		<parameter name="prerequisite" value="Yes" />
-		<classes>
-			<class
-				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
-		</classes>
-	</test>
-	<test name="UploadPartnerCertificate">
-		<parameter name="ymlFile"
-			value="injicertify/PmsIntegration/UploadCert/UploadCert.yml" />
-		<parameter name="idKeyName" value="signedCertificateData" />
-		<parameter name="prerequisite" value="Yes" />
-		<classes>
-			<class
-				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
-		</classes>
-	</test>
-	<test name="RequestAPIKeyForAuthPartner">
-		<parameter name="ymlFile"
-			value="injicertify/PmsIntegration/RequestAPIKey/RequestAPIKey.yml" />
-		<parameter name="idKeyName" value="mappingkey" />
-		<parameter name="prerequisite" value="Yes" />
-		<classes>
-			<class
-				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
-		</classes>
-	</test>
-	<test name="ApproveAPIKey">
-		<parameter name="ymlFile"
-			value="injicertify/PmsIntegration/ApproveAPIKey/ApproveAPIKey.yml" />
-		<parameter name="pathParams" value="mappingkey" />
-		<parameter name="prerequisite" value="Yes" />
-		<classes>
-			<class
-				name="io.mosip.testrig.apirig.injicertify.testscripts.PutWithPathParamsAndBody" />
-		</classes>
-	</test>
-	<test name="OIDCClient">
-		<parameter name="ymlFile" value="injicertify/OidcClient/OIDCClient.yml" />
-		<parameter name="idKeyName" value="clientId" />
-		<parameter name="prerequisite" value="Yes" />
-		<classes>
-			<class
-				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
-		</classes>
-	</test>
 	<test name="OAuthDetailsRequestVCIMosipID">
 		<parameter name="ymlFile"
 			value="injicertify/VCIMosipID/OAuthDetailsRequestVCI/OAuthDetailsRequestVCI.yml" />
@@ -467,16 +345,6 @@
 		<classes>
 			<class
 				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
-		</classes>
-	</test>
-	<test name="CreateOIDCClientV2ForMockIDA">
-		<parameter name="ymlFile"
-			value="injicertify/VCIMockIDA/CreateOIDCClientV2ForMockIDA/CreateOIDCClientV2ForMockIDA.yml" />
-		<parameter name="idKeyName" value="clientId" />
-		<parameter name="prerequisite" value="Yes" />
-		<classes>
-			<class
-				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
 		</classes>
 	</test>
 	<test name="OAuthDetailsRequestVCIForMockIDA">
