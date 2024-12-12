@@ -1,15 +1,31 @@
 package io.mosip.testrig.apirig.injicertify.utils;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.Calendar;
+import java.util.Date;
+
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 import org.testng.SkipException;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jose.JOSEObjectType;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 
 import io.mosip.testrig.apirig.dto.TestCaseDTO;
 import io.mosip.testrig.apirig.injicertify.testrunner.MosipTestRunner;
+import io.mosip.testrig.apirig.testrunner.BaseTestCase;
 import io.mosip.testrig.apirig.testrunner.OTPListener;
 import io.mosip.testrig.apirig.utils.AdminTestUtil;
+import io.mosip.testrig.apirig.utils.ConfigManager;
 import io.mosip.testrig.apirig.utils.GlobalConstants;
 import io.mosip.testrig.apirig.utils.JWKKeyUtil;
 import io.mosip.testrig.apirig.utils.SkipTestCaseHandler;
@@ -82,7 +98,44 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	}
 
 	public static String reqJsonKeyWordHandeler(String jsonString, String testCaseName) {
+		
+		if (jsonString.contains("$PROOF_JWT_FOR_INSURANCE$")) {
+			JWKKeyUtil.generateAndCacheJWKKey(BINDINGJWK1);
+
+			String oidcJWKKeyString = JWKKeyUtil.getJWKKey(OIDCJWK4);
+			logger.info("oidcJWKKeyString =" + oidcJWKKeyString);
+			try {
+				oidcJWKKey4 = RSAKey.parse(oidcJWKKeyString);
+				logger.info("oidcJWKKey4 =" + oidcJWKKey4);
+			} catch (java.text.ParseException e) {
+				logger.error(e.getMessage());
+			}
+
+			JSONObject request = new JSONObject(jsonString);
+			String clientId = "";
+			String accessToken = "";
+			String tempUrl = "";
+			if (request.has("client_id")) {
+				clientId = request.getString("client_id");
+				request.remove("client_id");
+			}
+			if (request.has("idpAccessToken")) {
+				accessToken = request.getString("idpAccessToken");
+			}
+			jsonString = request.toString();
+
+			if (BaseTestCase.currentModule.equals(GlobalConstants.INJICERTIFY)) {
+				String baseURL = ConfigManager.getInjiCertifyBaseUrl();
+				if (testCaseName.contains("_GetCredentialSunBirdC")) {
+					tempUrl = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer",
+							baseURL.replace("injicertify.", "injicertify-insurance."));
+				}
+			}
+			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_FOR_INSURANCE$",
+					signJWKForMockID(clientId, accessToken, oidcJWKKey4, testCaseName, tempUrl));
+		}
 		if (jsonString.contains("$PROOF_JWT_3$")) {
+			JWKKeyUtil.generateAndCacheJWKKey(BINDINGJWK1);
 			String oidcJWKKeyString = JWKKeyUtil.getJWKKey(OIDCJWK4);
 			logger.info("oidcJWKKeyString =" + oidcJWKKeyString);
 			try {
@@ -107,7 +160,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			tempUrl = getBaseURL(testCaseName, InjiCertifyConfigManager.getInjiCertifyBaseUrl());
 
 			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_3$",
-					signJWKForMock(clientId, accessToken, oidcJWKKey4, testCaseName, tempUrl));
+					signJWKForMockID(clientId, accessToken, oidcJWKKey4, testCaseName, tempUrl));
 		}
 
 		if (jsonString.contains("$CLIENT_ASSERTION_JWT$")) {
@@ -273,6 +326,87 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		}
 
 		return testCaseName;
+	}
+	
+	public static String signJWKForMockID(String clientId, String accessToken, RSAKey jwkKey, String testCaseName,
+			String tempUrl) {
+		int idTokenExpirySecs = Integer
+				.parseInt(getValueFromEsignetActuator(ConfigManager.getEsignetActuatorPropertySection(),
+						GlobalConstants.MOSIP_ESIGNET_ID_TOKEN_EXPIRE_SECONDS));
+		JWSSigner signer;
+		String proofJWT = "";
+		String typ = "openid4vci-proof+jwt";
+		JWK jwkHeader = jwkKey.toPublicJWK();
+		SignedJWT signedJWT = null;
+
+		try {
+			signer = new RSASSASigner(jwkKey);
+			Date currentTime = new Date();
+
+			// Create a Calendar instance to manipulate time
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(currentTime);
+
+			// Add one hour to the current time
+			calendar.add(Calendar.HOUR_OF_DAY, (idTokenExpirySecs / 3600)); // Adding one hour
+
+			// Get the updated expiration time
+			Date expirationTime = calendar.getTime();
+
+			String[] jwtParts = accessToken.split("\\.");
+			String jwtPayloadBase64 = jwtParts[1];
+			byte[] jwtPayloadBytes = Base64.getDecoder().decode(jwtPayloadBase64);
+			String jwtPayload = new String(jwtPayloadBytes, StandardCharsets.UTF_8);
+			JWTClaimsSet claimsSet = null;
+			String nonce = new ObjectMapper().readTree(jwtPayload).get("c_nonce").asText();
+			
+			if (testCaseName.contains("_Invalid_C_nonce_"))
+				nonce = "jwt_payload.c_nonce123";
+			else if (testCaseName.contains("_Empty_C_nonce_"))
+				nonce = "";
+			else if (testCaseName.contains("_SpaceVal_C_nonce_"))
+				nonce = "  ";
+			else if (testCaseName.contains("_Exp_C_nonce_"))
+				nonce = "aXPrnkX78dMgkbkkocu7AV";
+			else if (testCaseName.contains("_Empty_Typ_"))
+				typ = "";
+			else if (testCaseName.contains("_SpaceVal_Typ_"))
+				typ = "  ";
+			else if (testCaseName.contains("_Invalid_Typ_"))
+				typ = "openid4vci-123@proof+jwt";
+			else if (testCaseName.contains("_Invalid_JwkHeader_"))
+				jwkHeader = RSAKey.parse(JWKKeyUtil.getJWKKey(BINDINGJWK1)).toPublicJWK();
+			else if (testCaseName.contains("_Invalid_Aud_"))
+				tempUrl = "sdfaf";
+			else if (testCaseName.contains("_Empty_Aud_"))
+				tempUrl = "";
+			else if (testCaseName.contains("_SpaceVal_Aud_"))
+				tempUrl = "  ";
+			else if (testCaseName.contains("_Invalid_Iss_"))
+				clientId = "sdfdsg";
+			else if (testCaseName.contains("_Invalid_Exp_"))
+				idTokenExpirySecs = 0;
+
+			claimsSet = new JWTClaimsSet.Builder().audience(tempUrl).claim("nonce", nonce).issuer(clientId)
+					.issueTime(currentTime).expirationTime(expirationTime).build();
+			
+			if (testCaseName.contains("_Missing_Typ_")) {
+				signedJWT = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.RS256).jwk(jwkHeader).build(), claimsSet);
+			} else if (testCaseName.contains("_Missing_JwkHeader_")) {
+				signedJWT = new SignedJWT(
+						new JWSHeader.Builder(JWSAlgorithm.RS256).type(new JOSEObjectType(typ)).build(), claimsSet);
+			} else {
+				signedJWT = new SignedJWT(
+						new JWSHeader.Builder(JWSAlgorithm.RS256).type(new JOSEObjectType(typ)).jwk(jwkHeader).build(),
+						claimsSet);
+			}
+
+			signedJWT.sign(signer);
+			proofJWT = signedJWT.serialize();
+		} catch (Exception e) {
+			logger.error("Exception while signing proof_jwt to get credential: " + e.getMessage());
+		}
+		return proofJWT;
 	}
 	
 }
