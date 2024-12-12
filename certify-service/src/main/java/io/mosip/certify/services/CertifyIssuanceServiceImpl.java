@@ -68,10 +68,10 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Autowired
     private DataProviderPlugin dataModelService;
 
-    @Value("${mosip.certify.issuer.uri}")
+    @Value("${mosip.certify.data-provider-plugin.issuer-uri}")
     private String issuerURI;
 
-    @Value("${mosip.certify.issuer.svg.template.id}")
+    @Value("${mosip.certify.data-provider-plugin.svg-template-id}")
     private String svg;
 
     @Autowired
