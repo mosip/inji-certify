@@ -6,11 +6,10 @@
 package io.mosip.certify.services;
 
 import io.mosip.certify.core.constants.ErrorConstants;
-import io.mosip.certify.core.entity.SvgTemplate;
-import io.mosip.certify.core.exception.CertifyException;
+import io.mosip.certify.core.entity.SVGTemplate;
 import io.mosip.certify.core.exception.TemplateException;
-import io.mosip.certify.core.repository.SvgTemplateRepository;
-import io.mosip.certify.core.spi.SvgTemplateService;
+import io.mosip.certify.core.repository.SVGTemplateRepository;
+import io.mosip.certify.core.spi.SVGTemplateService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -20,15 +19,15 @@ import java.util.UUID;
 
 @Slf4j
 @Component
-public class SvgTemplateServiceImpl implements SvgTemplateService {
+public class SVGTemplateServiceImpl implements SVGTemplateService {
     @Autowired
-    SvgTemplateRepository svgRenderTemplateRepository;
+    SVGTemplateRepository svgRenderTemplateRepository;
 
 
     @Override
-    public SvgTemplate getSvgTemplate(UUID id) {
-        Optional<SvgTemplate> optional = svgRenderTemplateRepository.findById(id);
-        SvgTemplate svgRenderTemplate = optional.orElseThrow(() -> new TemplateException(ErrorConstants.INVALID_TEMPLATE_ID));
+    public SVGTemplate getSvgTemplate(UUID id) {
+        Optional<SVGTemplate> optional = svgRenderTemplateRepository.findById(id);
+        SVGTemplate svgRenderTemplate = optional.orElseThrow(() -> new TemplateException(ErrorConstants.INVALID_TEMPLATE_ID));
 
         return svgRenderTemplate;
 

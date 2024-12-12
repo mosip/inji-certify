@@ -10,9 +10,9 @@ package io.mosip.certify.config;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.mosip.certify.core.entity.SvgTemplate;
+import io.mosip.certify.core.entity.SVGTemplate;
 import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.core.repository.SvgTemplateRepository;
+import io.mosip.certify.core.repository.SVGTemplateRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,9 +32,9 @@ import java.util.*;
 @Slf4j
 public class TemplateConfig  implements CommandLineRunner {
     @Autowired
-    SvgTemplateRepository svgRenderTemplateRepository;
+    SVGTemplateRepository svgRenderTemplateRepository;
 
-    @Value("${mosip.certify.svg-templates}")
+    @Value("${mosip.certify.svg-templates:}")
     private String svgTemplateJson;
 
     @Autowired
@@ -67,11 +67,11 @@ public class TemplateConfig  implements CommandLineRunner {
                 throw new CertifyException("Missing configuration for svg template content " + e.getMessage());
             }
 
-            List<SvgTemplate> svgRenderTemplates = svgRenderTemplateRepository.findAll();
+            List<SVGTemplate> svgRenderTemplates = svgRenderTemplateRepository.findAll();
 
             if(svgRenderTemplates.isEmpty()) {
                 svgTemplateMap.forEach((value) -> {
-                    SvgTemplate svgRenderTemplate = new SvgTemplate();
+                    SVGTemplate svgRenderTemplate = new SVGTemplate();
                     LinkedHashMap<String, Object> valueMap = (LinkedHashMap<String, Object>) value;
                     UUID id = UUID.fromString(valueMap.get("id").toString());
                     svgRenderTemplate.setId(id);

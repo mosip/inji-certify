@@ -5,10 +5,9 @@
  */
 package io.mosip.certify.controller;
 
-import io.mosip.certify.core.entity.SvgTemplate;
-import io.mosip.certify.core.exception.CertifyException;
+import io.mosip.certify.core.entity.SVGTemplate;
 import io.mosip.certify.core.exception.TemplateException;
-import io.mosip.certify.core.spi.SvgTemplateService;
+import io.mosip.certify.core.spi.SVGTemplateService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.CacheControl;
@@ -26,13 +25,13 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @RestController
 @RequestMapping("/public")
-public class SvgTemplateController {
+public class SVGTemplateController {
     @Autowired
-    SvgTemplateService svgTemplateService;
+    SVGTemplateService svgTemplateService;
 
     @GetMapping("/svg-template/{id}")
     public ResponseEntity<String> serveSvgTemplate(@PathVariable UUID id) throws TemplateException {
-        SvgTemplate template = svgTemplateService.getSvgTemplate(id);
+        SVGTemplate template = svgTemplateService.getSvgTemplate(id);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, "image/svg+xml")
                 .cacheControl(CacheControl.maxAge(1, TimeUnit.DAYS).cachePublic())

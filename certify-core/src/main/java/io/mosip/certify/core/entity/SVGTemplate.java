@@ -19,7 +19,8 @@ import java.util.UUID;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-public class SvgTemplate {
+@Table(name = "svg_template")
+public class SVGTemplate {
     @Id
     private UUID id;
 

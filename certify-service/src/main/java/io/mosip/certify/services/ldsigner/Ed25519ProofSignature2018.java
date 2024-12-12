@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
  * Ed25519SignatureAlgorithm2018 as per https://w3c-ccg.github.io/lds-ed25519-2018/
  */
 @Component
-@ConditionalOnProperty(name = "mosip.certify.data-provider-plugin.issuer.vc-sign-algo", havingValue = SignatureAlg.ED25519_SIGNATURE_SUITE)
+@ConditionalOnProperty(name = "mosip.certify.data-provider-plugin.issuer.vc-sign-algo", havingValue = SignatureAlg.ED25519_SIGNATURE_SUITE_2018)
 public class Ed25519ProofSignature2018 implements ProofSignatureStrategy {
     @Autowired
     SignatureService signatureService;
@@ -26,7 +26,7 @@ public class Ed25519ProofSignature2018 implements ProofSignatureStrategy {
 
     @Override
     public String getName() {
-        return SignatureAlg.ED25519_SIGNATURE_SUITE;
+        return SignatureAlg.ED25519_SIGNATURE_SUITE_2018;
     }
 
     @Override

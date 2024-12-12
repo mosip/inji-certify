@@ -17,7 +17,7 @@ import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.constants.VCDMConstants;
 import io.mosip.certify.core.exception.TemplateException;
 import io.mosip.certify.core.repository.TemplateRepository;
-import io.mosip.certify.core.spi.SvgTemplateService;
+import io.mosip.certify.core.spi.SVGTemplateService;
 import io.mosip.certify.services.SVGRenderUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
@@ -45,7 +45,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     @Autowired
     TemplateRepository templateRepository;
     @Autowired
-    SvgTemplateService svgTemplateService;
+    SVGTemplateService svgTemplateService;
     @Value("${mosip.certify.vcformat.vc.expiry:true}")
     boolean shouldHaveDates;
     @Value("${mosip.certify.issuer.id.field.prefix.url:}")

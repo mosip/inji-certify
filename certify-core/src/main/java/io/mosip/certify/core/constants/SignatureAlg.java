@@ -7,9 +7,9 @@ package io.mosip.certify.core.constants;
  */
 public class SignatureAlg {
     // LinkedDataSignature Algorithms
-    public static final String RSA_SIGNATURE_SUITE = "RsaSignature2018";
+    public static final String RSA_SIGNATURE_SUITE_2018 = "RsaSignature2018";
 
-    public static final String ED25519_SIGNATURE_SUITE = "Ed25519Signature2018";
+    public static final String ED25519_SIGNATURE_SUITE_2018 = "Ed25519Signature2018";
 
     public static final String ED25519_SIGNATURE_SUITE_2020 = "Ed25519Signature2020";
 

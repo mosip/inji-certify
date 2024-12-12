@@ -17,7 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 @Component
-@ConditionalOnProperty(name = "mosip.certify.data-provider-plugin.issuer.vc-sign-algo", havingValue = SignatureAlg.RSA_SIGNATURE_SUITE)
+@ConditionalOnProperty(name = "mosip.certify.data-provider-plugin.issuer.vc-sign-algo", havingValue = SignatureAlg.RSA_SIGNATURE_SUITE_2018)
 public class RsaProofSignature2018 implements ProofSignatureStrategy {
     @Autowired
     SignatureService signatureService;
@@ -26,7 +26,7 @@ public class RsaProofSignature2018 implements ProofSignatureStrategy {
 
     @Override
     public String getName() {
-        return SignatureAlg.RSA_SIGNATURE_SUITE;
+        return SignatureAlg.RSA_SIGNATURE_SUITE_2018;
     }
 
     @Override

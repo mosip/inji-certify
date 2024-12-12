@@ -1,7 +1,7 @@
 package io.mosip.certify.repository;
 
-import io.mosip.certify.core.entity.SvgTemplate;
-import io.mosip.certify.core.repository.SvgTemplateRepository;
+import io.mosip.certify.core.entity.SVGTemplate;
+import io.mosip.certify.core.repository.SVGTemplateRepository;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -17,13 +17,13 @@ import java.util.UUID;
 
 @RunWith(SpringRunner.class)
 @DataJpaTest
-public class SvgRenderTemplateRepositoryTest {
+public class SVGRenderTemplateRepositoryTest {
     @Autowired
-    private SvgTemplateRepository svgRenderTemplateRepository;
+    private SVGTemplateRepository svgRenderTemplateRepository;
 
     @Test
     public void insertSvgTemplate_withValidDetail_thenPass() {
-        SvgTemplate svgRenderTemplate = new SvgTemplate();
+        SVGTemplate svgRenderTemplate = new SVGTemplate();
         String template = """
                     <svg xmlns=\\"http://www.w3.org/2000/svg\\" width=\\"200\\" height=\\"200\\">
                     <rect width=\\"200\\" height=\\"200\\" fill=\\"#ff6347\\"/>
@@ -39,14 +39,14 @@ public class SvgRenderTemplateRepositoryTest {
         svgRenderTemplate = svgRenderTemplateRepository.saveAndFlush(svgRenderTemplate);
         Assert.assertNotNull(svgRenderTemplate);
 
-        Optional<SvgTemplate> optional = svgRenderTemplateRepository.findById(svgRenderTemplate.getId());
+        Optional<SVGTemplate> optional = svgRenderTemplateRepository.findById(svgRenderTemplate.getId());
         Assert.assertTrue(optional.isPresent());
         Assert.assertEquals(svgRenderTemplate.getTemplate(), optional.get().getTemplate());
     }
 
     @Test
     public void insertSvgTemplate_withEmptyTemplate_thenFail() {
-        SvgTemplate svgRenderTemplate = new SvgTemplate();
+        SVGTemplate svgRenderTemplate = new SVGTemplate();
         svgRenderTemplate.setId(UUID.randomUUID());
         svgRenderTemplate.setTemplate("");
         svgRenderTemplate.setCreatedtimes(LocalDateTime.now());

@@ -2,9 +2,9 @@ package io.mosip.certify.controller;
 
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.ParsedAccessToken;
-import io.mosip.certify.core.entity.SvgTemplate;
+import io.mosip.certify.core.entity.SVGTemplate;
 import io.mosip.certify.core.exception.TemplateException;
-import io.mosip.certify.core.spi.SvgTemplateService;
+import io.mosip.certify.core.spi.SVGTemplateService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -16,27 +16,24 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import java.net.http.HttpHeaders;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 @RunWith(SpringRunner.class)
-@WebMvcTest(value=SvgTemplateController.class)
-public class SvgTemplateControllerTest {
+@WebMvcTest(value= SVGTemplateController.class)
+public class SVGTemplateControllerTest {
     @Autowired
     MockMvc mockMvc;
 
     @MockBean
-    SvgTemplateService svgTemplateService;
+    SVGTemplateService svgTemplateService;
 
     @MockBean
     ParsedAccessToken parsedAccessToken;
 
     @Test
     public void  getSvgTemplate_withValidId_thenPass() throws Exception {
-        SvgTemplate svgTemplate = new SvgTemplate();
+        SVGTemplate svgTemplate = new SVGTemplate();
         UUID id = UUID.randomUUID();
         svgTemplate.setId(id);
         String template = """

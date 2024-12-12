@@ -26,7 +26,7 @@ import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.core.util.AuditHelper;
 import io.mosip.certify.core.util.SecurityHelperService;
-import io.mosip.certify.core.validators.CredentialRequestValidatorFactory;
+import io.mosip.certify.services.validators.CredentialRequestValidatorFactory;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
@@ -71,7 +71,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Value("${mosip.certify.data-provider-plugin.issuer-uri}")
     private String issuerURI;
 
-    @Value("${mosip.certify.data-provider-plugin.svg-template-id}")
+    @Value("${mosip.certify.data-provider-plugin.svg-template-id:}")
     private String svg;
 
     @Autowired

@@ -5,10 +5,10 @@
  */
 package io.mosip.certify.core.repository;
 
-import io.mosip.certify.core.entity.SvgTemplate;
+import io.mosip.certify.core.entity.SVGTemplate;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;
 
-public interface SvgTemplateRepository extends JpaRepository<SvgTemplate, UUID> {
+public interface SVGTemplateRepository extends JpaRepository<SVGTemplate, UUID> {
 }

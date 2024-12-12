@@ -1,4 +1,4 @@
-package io.mosip.certify.core.validators;
+package io.mosip.certify.services.validators;
 
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.CredentialDefinition;
@@ -6,7 +6,6 @@ import io.mosip.certify.core.dto.CredentialRequest;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

@@ -1,4 +1,4 @@
-package io.mosip.certify.core.validators;
+package io.mosip.certify.services.validators;
 
 import io.mosip.certify.core.dto.CredentialRequest;
 
@@ -8,8 +8,6 @@ public class MsoMdocCredentialRequestValidator implements CredentialRequestValid
         if (credentialRequest.getDoctype() == null || credentialRequest.getDoctype().isBlank()) {
             return false;
         }
-        if (credentialRequest.getClaims() == null || credentialRequest.getClaims().isEmpty())
-            return false;
-        return true;
+        return credentialRequest.getClaims() != null && !credentialRequest.getClaims().isEmpty();
     }
 }

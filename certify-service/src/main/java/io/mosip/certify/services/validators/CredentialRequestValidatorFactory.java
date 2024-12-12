@@ -1,4 +1,4 @@
-package io.mosip.certify.core.validators;
+package io.mosip.certify.services.validators;
 
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.CredentialRequest;
