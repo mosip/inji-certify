@@ -15,7 +15,7 @@ COMMENT ON COLUMN rendering_template.template IS 'SVG Template Content: SVG Rend
 COMMENT ON COLUMN rendering_template.cr_dtimes IS 'Date when the template was inserted in table.';
 COMMENT ON COLUMN rendering_template.upd_dtimes IS 'Date when the template was last updated in table.';
 
-CREATE TABLE IF NOT EXISTS credential_template(
+CREATE TABLE credential_template(
 	context character varying(1024) NOT NULL,
 	credential_type character varying(512) NOT NULL,
 	template VARCHAR NOT NULL,

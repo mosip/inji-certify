@@ -128,31 +128,32 @@ INSERT INTO certify.credential_template (context, credential_type, template, cr_
 }', '2024-10-22 17:08:17.826851', NULL);
 INSERT INTO certify.credential_template (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/2018/credentials/v1', 'FarmerCredential,VerifiableCredential', '{
      "@context": [
-                "https://www.w3.org/2018/credentials/v1",
-                "https://vharsh.github.io/DID/farmer.json",
-    "https://w3id.org/security/suites/ed25519-2020/v1"
-        ],
-        "issuer": "${issuer}",
-        "type": [
-            "VerifiableCredential",
-            "FarmerCredential"
-        ],
-        "issuanceDate": "${validFrom}",
-        "expirationDate": "${validUntil}",
-        "credentialSubject": {
-            "name": "${name}",
-            "dateOfBirth": "${dateOfBirth}",
-            "highestEducation": "${highestEducation}",
-            "maritalStatus": "${maritalStatus}",
-            "typeOfHouse": "${typeOfHouse}",
-            "numberOfDependents": "${numberOfDependents}",
-            "phoneNumber": "${phoneNumber}",
-            "works": "${works}",
-            "landArea": "${landArea}",
-            "landOwnershipType": "${landOwnershipType}",
-            "primaryCropType": "${primaryCropType}",
-            "secondaryCropType": "${secondaryCropType}"
-        }
+         "https://www.w3.org/2018/credentials/v1",
+         "https://piyush7034.github.io/my-files/farmer.json"
+     ],
+     "issuer": "${issuer}",
+     "type": [
+         "VerifiableCredential",
+         "FarmerCredential"
+     ],
+     "issuanceDate": "${validFrom}",
+     "expirationDate": "${validUntil}",
+     "credentialSubject": {
+         "fullName": "${fullName}",
+         "mobileNumber": "${mobileNumber}",
+         "dateOfBirth": "${dateOfBirth}",
+         "gender": "${gender}",
+         "state": "${state}",
+         "district": "${district}",
+         "villageOrTown": "${villageOrTown}",
+         "postalCode": "${postalCode}",
+         "landArea": "${landArea}",
+         "landOwnershipType": "${landOwnershipType}",
+         "primaryCropType": "${primaryCropType}",
+         "secondaryCropType": "${secondaryCropType}",
+         "face": "${face}",
+         "farmerID": "${farmerID}"
+     }
 }
 ', '2024-10-24 12:32:38.065994', NULL);
 

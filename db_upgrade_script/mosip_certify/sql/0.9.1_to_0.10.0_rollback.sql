@@ -1,1 +1,4 @@
-\echo 'Rollback Queries not required for transition from $CURRENT_VERSION to $UPGRADE_VERSION'
+\c inji_certify
+
+drop table svg_template;
+drop table template_data;
