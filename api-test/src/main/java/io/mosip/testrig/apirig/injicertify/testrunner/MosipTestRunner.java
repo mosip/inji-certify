@@ -204,15 +204,11 @@ public class MosipTestRunner {
 
 					if (file.getName().toLowerCase().contains(GlobalConstants.INJICERTIFY)) {
 						if (file.getName().toLowerCase().contains("prerequisite")) {
-							if (useCase.equals("sunbird") == true) {
-								continue;
+							if (useCase != null && useCase.isBlank() == false) {
+								BaseTestCase
+										.setReportName(GlobalConstants.INJICERTIFY + "-" + useCase + "-prerequisite");
 							} else {
-								if (useCase != null && useCase.isBlank() == false) {
-									BaseTestCase.setReportName(
-											GlobalConstants.INJICERTIFY + "-" + useCase + "-prerequisite");
-								} else {
-									BaseTestCase.setReportName(GlobalConstants.INJICERTIFY + "-prerequisite");
-								}
+								BaseTestCase.setReportName(GlobalConstants.INJICERTIFY + "-prerequisite");
 							}
 						} else {
 							// if the prerequisite total skipped/failed count is greater than zero
