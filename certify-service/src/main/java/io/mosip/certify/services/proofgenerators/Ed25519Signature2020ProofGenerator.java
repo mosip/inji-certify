@@ -1,4 +1,4 @@
-package io.mosip.certify.services.ldsigner;
+package io.mosip.certify.services.proofgenerators;
 
 import com.danubetech.keyformats.jose.JWSAlgorithm;
 import info.weboftrust.ldsignatures.LdProof;
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @ConditionalOnProperty(name = "mosip.certify.data-provider-plugin.issuer.vc-sign-algo", havingValue = SignatureAlg.ED25519_SIGNATURE_SUITE_2020)
-public class Ed25519ProofSignature2020 implements ProofSignatureStrategy {
+public class Ed25519Signature2020ProofGenerator implements ProofGenerator {
 
     @Autowired
     SignatureServicev2 signatureService;
@@ -39,7 +39,7 @@ public class Ed25519ProofSignature2020 implements ProofSignatureStrategy {
     @Override
     public String getProof(String vcEncodedHash) {
         SignRequestDtoV2 srd = new SignRequestDtoV2();
-        srd.setApplicationId(KeyManagerConstants.CERTIFY_MOCK_ED25519);
+        srd.setApplicationId(KeyManagerConstants.CERTIFY_ED25519);
         srd.setReferenceId(KeyManagerConstants.ED25519_REF_ID);
         srd.setDataToSign(vcEncodedHash);
         srd.setResponseEncodingFormat("base58btc");

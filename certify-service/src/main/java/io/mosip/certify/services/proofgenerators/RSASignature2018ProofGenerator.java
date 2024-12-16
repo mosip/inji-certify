@@ -1,4 +1,4 @@
-package io.mosip.certify.services.ldsigner;
+package io.mosip.certify.services.proofgenerators;
 
 import com.danubetech.keyformats.jose.JWSAlgorithm;
 import info.weboftrust.ldsignatures.LdProof;
@@ -13,12 +13,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-/**
- * Ed25519SignatureAlgorithm2018 as per https://w3c-ccg.github.io/lds-ed25519-2018/
- */
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
 @Component
-@ConditionalOnProperty(name = "mosip.certify.data-provider-plugin.issuer.vc-sign-algo", havingValue = SignatureAlg.ED25519_SIGNATURE_SUITE_2018)
-public class Ed25519ProofSignature2018 implements ProofSignatureStrategy {
+@ConditionalOnProperty(name = "mosip.certify.data-provider-plugin.issuer.vc-sign-algo", havingValue = SignatureAlg.RSA_SIGNATURE_SUITE_2018)
+public class RSASignature2018ProofGenerator implements ProofGenerator {
     @Autowired
     SignatureService signatureService;
 
@@ -26,7 +26,7 @@ public class Ed25519ProofSignature2018 implements ProofSignatureStrategy {
 
     @Override
     public String getName() {
-        return SignatureAlg.ED25519_SIGNATURE_SUITE_2018;
+        return SignatureAlg.RSA_SIGNATURE_SUITE_2018;
     }
 
     @Override
@@ -36,17 +36,18 @@ public class Ed25519ProofSignature2018 implements ProofSignatureStrategy {
 
     @Override
     public String getProof(String vcEncodedHash) {
+        String vcEncodedData = Base64.getUrlEncoder().encodeToString(vcEncodedHash.getBytes(StandardCharsets.UTF_8));
         JWSSignatureRequestDto payload = new JWSSignatureRequestDto();
-        payload.setDataToSign(vcEncodedHash);
-        payload.setApplicationId(KeyManagerConstants.CERTIFY_MOCK_ED25519);
-        payload.setReferenceId(KeyManagerConstants.ED25519_REF_ID); // alg, empty = RSA
+        payload.setDataToSign(vcEncodedData);
+        payload.setApplicationId(KeyManagerConstants.CERTIFY_RSA);
+        payload.setReferenceId(KeyManagerConstants.EMPTY_REF_ID); // alg, empty = RSA
         payload.setIncludePayload(false);
         payload.setIncludeCertificate(false);
         payload.setIncludeCertHash(true);
         payload.setValidateJson(false);
         payload.setB64JWSHeaderParam(false);
         payload.setCertificateUrl("");
-        payload.setSignAlgorithm(JWSAlgorithm.EdDSA); // RSSignature2018 --> RS256, PS256, ES256
+        payload.setSignAlgorithm(JWSAlgorithm.RS256); // RSSignature2018 --> RS256, PS256, ES256
         JWTSignatureResponseDto jwsSignedData = signatureService.jwsSign(payload);
         return jwsSignedData.getJwtSignedData();
     }

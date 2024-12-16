@@ -13,7 +13,7 @@ import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.api.spi.VCSigner;
 import io.mosip.certify.core.constants.*;
 import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.services.ldsigner.ProofSignatureStrategy;
+import io.mosip.certify.services.proofgenerators.ProofGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,7 +29,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.Date;
-import java.util.Map;
 
 /**
  * KeymanagerLibSigner is a VCSigner which uses the Certify embedded
@@ -45,22 +44,22 @@ import java.util.Map;
 public class KeymanagerLibSigner implements VCSigner {
 
     @Autowired
-    ProofSignatureStrategy signProps;
+    ProofGenerator signProps;
     @Value("${mosip.certify.data-provider-plugin.issuer-public-key-uri}")
-    private String hostedKey;
+    private String issuerPublicKeyURI;
 
     @Override
     public VCResult<JsonLDObject> perform(String templatedVC) {
         // Can the below lines be done at Templating side itself ?
         VCResult<JsonLDObject> VC = new VCResult<>();
-        JsonLDObject j = JsonLDObject.fromJson(templatedVC);
-        j.setDocumentLoader(null);
+        JsonLDObject jsonLDObject = JsonLDObject.fromJson(templatedVC);
+        jsonLDObject.setDocumentLoader(null);
         // NOTE: other aspects can be configured via keyMgrInput map
         String validFrom;
-        if (j.getJsonObject().containsKey(VCDM1Constants.ISSUANCE_DATE)) {
-            validFrom = j.getJsonObject().get(VCDM1Constants.ISSUANCE_DATE).toString();
-        } else if (j.getJsonObject().containsKey(VCDM2Constants.VALID_FROM)){
-            validFrom = j.getJsonObject().get(VCDM2Constants.VALID_FROM).toString();
+        if (jsonLDObject.getJsonObject().containsKey(VCDM1Constants.ISSUANCE_DATE)) {
+            validFrom = jsonLDObject.getJsonObject().get(VCDM1Constants.ISSUANCE_DATE).toString();
+        } else if (jsonLDObject.getJsonObject().containsKey(VCDM2Constants.VALID_FROM)){
+            validFrom = jsonLDObject.getJsonObject().get(VCDM2Constants.VALID_FROM).toString();
         } else {
             validFrom = ZonedDateTime.now(ZoneOffset.UTC)
                     .format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
@@ -74,22 +73,22 @@ public class KeymanagerLibSigner implements VCSigner {
                         .atZone(ZoneId.systemDefault()).toInstant());
         LdProof vcLdProof = LdProof.builder().defaultContexts(false).defaultTypes(false).type(signProps.getName())
                 .created(createDate).proofPurpose(VCDMConstants.ASSERTION_METHOD)
-                .verificationMethod(URI.create(hostedKey))
+                .verificationMethod(URI.create(issuerPublicKeyURI))
                 .build();
         // 1. Canonicalize
         Canonicalizer canonicalizer = signProps.getCanonicalizer();
-        byte[] vcSignBytes = null;
+        byte[] vcHashBytes = null;
         try {
-            vcSignBytes = canonicalizer.canonicalize(vcLdProof, j);
+            vcHashBytes = canonicalizer.canonicalize(vcLdProof, jsonLDObject);
         } catch (IOException | GeneralSecurityException | JsonLDException e) {
             log.error("Error during canonicalization", e.getMessage());
             throw new CertifyException("Error during canonicalization");
         }
-        String vcEncodedHash = Base64.getUrlEncoder().encodeToString(vcSignBytes);
+        String vcEncodedHash = Base64.getUrlEncoder().encodeToString(vcHashBytes);
         String sign = signProps.getProof(vcEncodedHash);
         LdProof ldProofWithJWS = signProps.buildProof(vcLdProof, sign);
-        ldProofWithJWS.addToJsonLDObject(j);
-        VC.setCredential(j);
+        ldProofWithJWS.addToJsonLDObject(jsonLDObject);
+        VC.setCredential(jsonLDObject);
         return VC;
         // MOSIP ref: https://github.com/mosip/id-authentication/blob/master/authentication/authentication-service/src/main/java/io/mosip/authentication/service/kyc/impl/VciServiceImpl.java#L281
     }

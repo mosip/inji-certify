@@ -3,7 +3,8 @@ package io.mosip.certify.api.spi;
 import io.mosip.certify.api.dto.VCResult;
 
 /**
- * VCSigner can sign any VC provided a vcHash & Signer inputs
+ * VCSigner can sign any VC provided a vcHash & Signer inputs and return a
+ *  signed VCResult.
  */
 public interface VCSigner {
     VCResult<?> perform(String templatedVC);

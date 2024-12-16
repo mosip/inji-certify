@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS rendering_template (
     CONSTRAINT pk_svgtmp_id PRIMARY KEY (id)
 );
 
-CREATE TABLE  IF NOT EXISTS template_data(
+CREATE TABLE  IF NOT EXISTS credential_template(
     context character varying(1024) NOT NULL,
     credential_type character varying(512) NOT NULL,
     template VARCHAR NOT NULL,

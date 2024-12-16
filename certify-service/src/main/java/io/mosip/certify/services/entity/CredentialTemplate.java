@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @NoArgsConstructor
-@Table(name = "template_data")
+@Table(name = "credential_template")
 @IdClass(TemplateId.class)
 public class CredentialTemplate {
     @NotBlank(message = "Template is mandatory")

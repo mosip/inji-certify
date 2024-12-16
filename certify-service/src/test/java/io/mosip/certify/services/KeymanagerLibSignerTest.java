@@ -4,9 +4,7 @@ import foundation.identity.jsonld.JsonLDObject;
 import info.weboftrust.ldsignatures.LdProof;
 import info.weboftrust.ldsignatures.canonicalizer.URDNA2015Canonicalizer;
 import io.mosip.certify.api.dto.VCResult;
-import io.mosip.certify.core.constants.VCDMConstants;
-import io.mosip.certify.services.ldsigner.ProofSignatureStrategy;
-import io.mosip.certify.services.ldsigner.RsaProofSignature2018;
+import io.mosip.certify.services.proofgenerators.ProofGenerator;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import org.junit.Assert;
 import org.junit.Before;
@@ -22,7 +20,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.sql.Ref;
 import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -30,7 +27,7 @@ public class KeymanagerLibSignerTest {
     @Mock
     SignatureService signatureService;
     @Mock
-    ProofSignatureStrategy signProps;
+    ProofGenerator signProps;
     @InjectMocks
     private KeymanagerLibSigner signer;
     private static final String VC_1 = """
@@ -67,7 +64,7 @@ public class KeymanagerLibSignerTest {
 
     @Before
     public void setup() {
-        ReflectionTestUtils.setField(signer, "hostedKey", "https://example.com/sample.pub.key.json/");
+        ReflectionTestUtils.setField(signer, "issuerPublicKeyURI", "https://example.com/sample.pub.key.json/");
     }
 
     @Test

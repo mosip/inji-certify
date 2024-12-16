@@ -1,15 +1,13 @@
-package io.mosip.certify.services.ldsigner;
+package io.mosip.certify.services.proofgenerators;
 
 import info.weboftrust.ldsignatures.LdProof;
 import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
 
-import java.util.Map;
-
 /**
- *  ProofSignatureStrategy is a helper class for KeymanagerLibSigner
+ *  ProofGenerator is a helper class for KeymanagerLibSigner
  *  to better deal with multiple signature algorithms for JSON-LD VCs.
  */
-public interface ProofSignatureStrategy {
+public interface ProofGenerator {
     /**
      * @return returns the name of the Algorithm
      */

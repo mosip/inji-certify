@@ -30,8 +30,8 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
-@EnableJpaRepositories(basePackages = {"io.mosip.kernel.keymanagerservice.repository", "io.mosip.certify.core.repository"})
-@EntityScan(basePackages = {"io.mosip.kernel.keymanagerservice.entity, io.mosip.certify.core.entity"})
+@EnableJpaRepositories(basePackages = {"io.mosip.kernel.keymanagerservice.repository", "io.mosip.certify.services.repository"})
+@EntityScan(basePackages = {"io.mosip.kernel.keymanagerservice.entity, io.mosip.certify.services.entity"})
 @Slf4j
 public class AppConfig implements ApplicationRunner {
 
@@ -86,7 +86,7 @@ public class AppConfig implements ApplicationRunner {
         keymanagerService.generateMasterKey(objectType, masterKeyRequest);
         // TODO: Generate an EC & ED key via K8s Job(INJICERT-469)
         KeyPairGenerateRequestDto rsaKeyRequest = new KeyPairGenerateRequestDto();
-        rsaKeyRequest.setApplicationId(KeyManagerConstants.CERTIFY_MOCK_RSA);
+        rsaKeyRequest.setApplicationId(KeyManagerConstants.CERTIFY_RSA);
         rsaKeyRequest.setReferenceId(KeyManagerConstants.EMPTY_REF_ID);
         rsaKeyRequest.setForce(false);
         keymanagerService.generateMasterKey("certificate", rsaKeyRequest);
@@ -108,12 +108,12 @@ public class AppConfig implements ApplicationRunner {
         // Generate an Ed25519Key:
         // 1. Generate a master key first to enable Keymanager to store the key.
         KeyPairGenerateRequestDto storeKey = new KeyPairGenerateRequestDto();
-        storeKey.setApplicationId(KeyManagerConstants.CERTIFY_MOCK_ED25519);
+        storeKey.setApplicationId(KeyManagerConstants.CERTIFY_ED25519);
         storeKey.setReferenceId(org.apache.commons.lang3.StringUtils.EMPTY);
         keymanagerService.generateMasterKey("certificate", storeKey);
         // 2. Generate an Ed25519 key later
         KeyPairGenerateRequestDto ed25519Req = new KeyPairGenerateRequestDto();
-        ed25519Req.setApplicationId(KeyManagerConstants.CERTIFY_MOCK_ED25519);
+        ed25519Req.setApplicationId(KeyManagerConstants.CERTIFY_ED25519);
         ed25519Req.setReferenceId(KeyManagerConstants.ED25519_REF_ID);
         keymanagerService.generateECSignKey("certificate", ed25519Req);
         log.info("===================== CERTIFY KEY SETUP COMPLETED ========================");
