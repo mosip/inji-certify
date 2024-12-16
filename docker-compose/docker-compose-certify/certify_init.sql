@@ -64,7 +64,7 @@ CREATE TABLE certify.key_store(
                                   CONSTRAINT pk_keystr_id PRIMARY KEY (id)
 );
 
-CREATE TABLE certify.svg_template (
+CREATE TABLE certify.rendering_template (
                                     id UUID NOT NULL,
                                     template VARCHAR NOT NULL,
                                     cr_dtimes timestamp NOT NULL,

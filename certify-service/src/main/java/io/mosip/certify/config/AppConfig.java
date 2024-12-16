@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
-import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.services.KeyManagerConstants;
 import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateRequestDto;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
@@ -81,7 +80,7 @@ public class AppConfig implements ApplicationRunner {
         keymanagerService.generateMasterKey(objectType, rootKeyRequest);
         log.info("===================== CERTIFY_SERVICE MASTER KEY CHECK ========================");
         KeyPairGenerateRequestDto masterKeyRequest = new KeyPairGenerateRequestDto();
-        masterKeyRequest.setApplicationId(Constants.CERTIFY_SERVICE_APP_ID);
+        masterKeyRequest.setApplicationId(KeyManagerConstants.CERTIFY_SERVICE_APP_ID);
         // Set the reference id to empty string, as keymanager is expecting the same for initialization
         masterKeyRequest.setReferenceId(org.apache.commons.lang3.StringUtils.EMPTY);
         keymanagerService.generateMasterKey(objectType, masterKeyRequest);
@@ -93,7 +92,7 @@ public class AppConfig implements ApplicationRunner {
         keymanagerService.generateMasterKey("certificate", rsaKeyRequest);
         if(!StringUtils.isEmpty(cacheSecretKeyRefId)) {
             SymmetricKeyGenerateRequestDto symmetricKeyGenerateRequestDto = new SymmetricKeyGenerateRequestDto();
-            symmetricKeyGenerateRequestDto.setApplicationId(Constants.CERTIFY_SERVICE_APP_ID);
+            symmetricKeyGenerateRequestDto.setApplicationId(KeyManagerConstants.CERTIFY_SERVICE_APP_ID);
             symmetricKeyGenerateRequestDto.setReferenceId(cacheSecretKeyRefId);
             symmetricKeyGenerateRequestDto.setForce(false);
             keymanagerService.generateSymmetricKey(symmetricKeyGenerateRequestDto);
@@ -102,7 +101,7 @@ public class AppConfig implements ApplicationRunner {
 
         log.info("===================== CERTIFY_PARTNER MASTER KEY CHECK ========================");
         KeyPairGenerateRequestDto partnerMasterKeyRequest = new KeyPairGenerateRequestDto();
-        partnerMasterKeyRequest.setApplicationId(Constants.CERTIFY_PARTNER_APP_ID);
+        partnerMasterKeyRequest.setApplicationId(KeyManagerConstants.CERTIFY_PARTNER_APP_ID);
         // Set the reference id to empty string, as keymanager is expecting the same for initialization
         partnerMasterKeyRequest.setReferenceId(org.apache.commons.lang3.StringUtils.EMPTY);
         keymanagerService.generateMasterKey(objectType, partnerMasterKeyRequest);

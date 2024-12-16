@@ -1,4 +1,4 @@
-package io.mosip.certify.core.entity;
+package io.mosip.certify.services.entity;
 
 
 import jakarta.persistence.Entity;
@@ -9,8 +9,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @NoArgsConstructor
+@Table(name = "template_data")
 @IdClass(TemplateId.class)
-public class TemplateData {
+public class CredentialTemplate {
     @NotBlank(message = "Template is mandatory")
     @Getter
     @Setter

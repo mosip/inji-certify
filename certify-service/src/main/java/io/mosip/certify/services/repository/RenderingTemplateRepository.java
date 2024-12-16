@@ -3,12 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-package io.mosip.certify.core.repository;
+package io.mosip.certify.services.repository;
 
-import io.mosip.certify.core.entity.SVGTemplate;
+import io.mosip.certify.services.entity.RenderingTemplate;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.UUID;
-
-public interface SVGTemplateRepository extends JpaRepository<SVGTemplate, UUID> {
+public interface RenderingTemplateRepository extends JpaRepository<RenderingTemplate, String> {
 }

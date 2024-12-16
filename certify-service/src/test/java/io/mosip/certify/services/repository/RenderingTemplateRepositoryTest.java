@@ -1,7 +1,6 @@
-package io.mosip.certify.repository;
+package io.mosip.certify.services.repository;
 
-import io.mosip.certify.core.entity.SVGTemplate;
-import io.mosip.certify.core.repository.SVGTemplateRepository;
+import io.mosip.certify.services.entity.RenderingTemplate;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -17,13 +16,13 @@ import java.util.UUID;
 
 @RunWith(SpringRunner.class)
 @DataJpaTest
-public class SVGRenderTemplateRepositoryTest {
+public class RenderingTemplateRepositoryTest {
     @Autowired
-    private SVGTemplateRepository svgRenderTemplateRepository;
+    private RenderingTemplateRepository svgRenderTemplateRepository;
 
     @Test
     public void insertSvgTemplate_withValidDetail_thenPass() {
-        SVGTemplate svgRenderTemplate = new SVGTemplate();
+        RenderingTemplate svgRenderTemplate = new RenderingTemplate();
         String template = """
                     <svg xmlns=\\"http://www.w3.org/2000/svg\\" width=\\"200\\" height=\\"200\\">
                     <rect width=\\"200\\" height=\\"200\\" fill=\\"#ff6347\\"/>
@@ -31,23 +30,22 @@ public class SVGRenderTemplateRepositoryTest {
                     Hello, SVG!
                     </text></svg>
                 """;
-        UUID id = UUID.randomUUID();
-        svgRenderTemplate.setId(id);
+        svgRenderTemplate.setId("fake-id");
         svgRenderTemplate.setTemplate(template);
         svgRenderTemplate.setCreatedtimes(LocalDateTime.now());
 
         svgRenderTemplate = svgRenderTemplateRepository.saveAndFlush(svgRenderTemplate);
         Assert.assertNotNull(svgRenderTemplate);
 
-        Optional<SVGTemplate> optional = svgRenderTemplateRepository.findById(svgRenderTemplate.getId());
+        Optional<RenderingTemplate> optional = svgRenderTemplateRepository.findById(svgRenderTemplate.getId());
         Assert.assertTrue(optional.isPresent());
         Assert.assertEquals(svgRenderTemplate.getTemplate(), optional.get().getTemplate());
     }
 
     @Test
     public void insertSvgTemplate_withEmptyTemplate_thenFail() {
-        SVGTemplate svgRenderTemplate = new SVGTemplate();
-        svgRenderTemplate.setId(UUID.randomUUID());
+        RenderingTemplate svgRenderTemplate = new RenderingTemplate();
+        svgRenderTemplate.setId("fake-id");
         svgRenderTemplate.setTemplate("");
         svgRenderTemplate.setCreatedtimes(LocalDateTime.now());
 

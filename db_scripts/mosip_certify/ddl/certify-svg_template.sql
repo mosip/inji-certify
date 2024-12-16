@@ -3,7 +3,7 @@
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -- -------------------------------------------------------------------------------------------------
 -- Database Name: inji_certify
--- Table Name : svg_template
+-- Table Name : rendering_template
 -- Purpose    : Svg Template table
 --
 --
@@ -11,7 +11,7 @@
 -- ------------------------------------------------------------------------------------------
 -- ------------------------------------------------------------------------------------------
 
-CREATE TABLE svg_template (
+CREATE TABLE rendering_template (
     id UUID NOT NULL,
     template VARCHAR NOT NULL,
     cr_dtimes timestamp NOT NULL,
@@ -19,9 +19,9 @@ CREATE TABLE svg_template (
     CONSTRAINT pk_svgtmp_id PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE svg_template IS 'SVG Render Template: Contains svg render image for VC.';
+COMMENT ON TABLE rendering_template IS 'SVG Render Template: Contains svg render image for VC.';
 
-COMMENT ON COLUMN svg_template.id IS 'Template Id: Unique id assigned to save and identify template.';
-COMMENT ON COLUMN svg_template.template IS 'SVG Template Content: SVG Render Image for the VC details.';
-COMMENT ON COLUMN svg_template.cr_dtimes IS 'Date when the template was inserted in table.';
-COMMENT ON COLUMN svg_template.upd_dtimes IS 'Date when the template was last updated in table.';
+COMMENT ON COLUMN rendering_template.id IS 'Template Id: Unique id assigned to save and identify template.';
+COMMENT ON COLUMN rendering_template.template IS 'SVG Template Content: SVG Render Image for the VC details.';
+COMMENT ON COLUMN rendering_template.cr_dtimes IS 'Date when the template was inserted in table.';
+COMMENT ON COLUMN rendering_template.upd_dtimes IS 'Date when the template was last updated in table.';

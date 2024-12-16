@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-package io.mosip.certify.core.entity;
+package io.mosip.certify.services.entity;
 
 import io.mosip.certify.core.constants.ErrorConstants;
 import jakarta.persistence.*;
@@ -19,10 +19,10 @@ import java.util.UUID;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "svg_template")
-public class SVGTemplate {
+@Table(name = "rendering_template")
+public class RenderingTemplate {
     @Id
-    private UUID id;
+    private String id;
 
     @NotBlank(message = ErrorConstants.EMPTY_TEMPLATE_CONTENT)
     @Column(name = "template")

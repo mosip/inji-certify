@@ -11,14 +11,9 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
-public class CredentialRequestValidatorFactoryTest {
+public class CredentialRequestValidatorTest {
 
-    CredentialRequestValidatorFactory factory;
-
-    @Before
-    public void setUp() {
-        factory = new CredentialRequestValidatorFactory();
-    }
+    CredentialRequestValidator factory;
 
     @Test
     public void isValid_invalidFormat() {

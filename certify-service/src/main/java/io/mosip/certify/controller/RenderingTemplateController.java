@@ -5,11 +5,12 @@
  */
 package io.mosip.certify.controller;
 
-import io.mosip.certify.core.entity.SVGTemplate;
+import io.mosip.certify.services.entity.RenderingTemplate;
 import io.mosip.certify.core.exception.TemplateException;
-import io.mosip.certify.core.spi.SVGTemplateService;
+import io.mosip.certify.services.spi.RenderingTemplateService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -19,22 +20,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.ZoneId;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
 @RequestMapping("/public")
-public class SVGTemplateController {
+public class RenderingTemplateController {
+    @Value("${mosip.certify.data-provider-plugin.svgtemplate.default.maxAgeDays:1}")
+    Integer maxAgeDays;
     @Autowired
-    SVGTemplateService svgTemplateService;
+    RenderingTemplateService renderingTemplateService;
 
     @GetMapping("/svg-template/{id}")
-    public ResponseEntity<String> serveSvgTemplate(@PathVariable UUID id) throws TemplateException {
-        SVGTemplate template = svgTemplateService.getSvgTemplate(id);
+    public ResponseEntity<String> serveSvgTemplate(@PathVariable String id) throws TemplateException {
+        RenderingTemplate template = renderingTemplateService.getSvgTemplate(id);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, "image/svg+xml")
-                .cacheControl(CacheControl.maxAge(1, TimeUnit.DAYS).cachePublic())
+                .cacheControl(CacheControl.maxAge(maxAgeDays, TimeUnit.DAYS).cachePublic())
                 .lastModified(template.getUpdatedtimes().atZone(ZoneId.systemDefault()).toInstant())
                 .body(template.getTemplate());
     }

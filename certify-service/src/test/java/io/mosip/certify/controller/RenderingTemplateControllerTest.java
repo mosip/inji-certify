@@ -2,9 +2,9 @@ package io.mosip.certify.controller;
 
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.ParsedAccessToken;
-import io.mosip.certify.core.entity.SVGTemplate;
+import io.mosip.certify.services.entity.RenderingTemplate;
 import io.mosip.certify.core.exception.TemplateException;
-import io.mosip.certify.core.spi.SVGTemplateService;
+import io.mosip.certify.services.spi.RenderingTemplateService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -17,25 +17,23 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @RunWith(SpringRunner.class)
-@WebMvcTest(value= SVGTemplateController.class)
-public class SVGTemplateControllerTest {
+@WebMvcTest(value= RenderingTemplateController.class)
+public class RenderingTemplateControllerTest {
     @Autowired
     MockMvc mockMvc;
 
     @MockBean
-    SVGTemplateService svgTemplateService;
+    RenderingTemplateService renderingTemplateService;
 
     @MockBean
     ParsedAccessToken parsedAccessToken;
 
     @Test
     public void  getSvgTemplate_withValidId_thenPass() throws Exception {
-        SVGTemplate svgTemplate = new SVGTemplate();
-        UUID id = UUID.randomUUID();
-        svgTemplate.setId(id);
+        RenderingTemplate renderingTemplate = new RenderingTemplate();
+        renderingTemplate.setId("fake-id");
         String template = """
                     <svg xmlns=\\"http://www.w3.org/2000/svg\\" width=\\"200\\" height=\\"200\\">
                     <rect width=\\"200\\" height=\\"200\\" fill=\\"#ff6347\\"/>
@@ -43,16 +41,16 @@ public class SVGTemplateControllerTest {
                     Hello, SVG!
                     </text></svg>
                 """;
-        svgTemplate.setTemplate(template);
+        renderingTemplate.setTemplate(template);
         LocalDateTime date = LocalDateTime.now();
-        svgTemplate.setCreatedtimes(date);
-        svgTemplate.setUpdatedtimes(date);
+        renderingTemplate.setCreatedtimes(date);
+        renderingTemplate.setUpdatedtimes(date);
 
-        Mockito.when(svgTemplateService.getSvgTemplate(Mockito.any())).thenReturn(svgTemplate);
+        Mockito.when(renderingTemplateService.getSvgTemplate(Mockito.any())).thenReturn(renderingTemplate);
 
-        mockMvc.perform(get("/public/svg-template/" + id))
+        mockMvc.perform(get("/public/svg-template/fake-id"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(svgTemplate.getTemplate()))
+                .andExpect(content().string(renderingTemplate.getTemplate()))
                 .andExpect(content().contentType("image/svg+xml"))
                 .andExpect(header().string("Cache-Control", "max-age=86400, public"));
     }
@@ -60,10 +58,9 @@ public class SVGTemplateControllerTest {
     @Test
     public void  getSvgTemplate_withInValidId_thenFail() throws Exception {
         TemplateException templateException = new TemplateException(ErrorConstants.INVALID_TEMPLATE_ID);
-        UUID id = UUID.randomUUID();
-        Mockito.when(svgTemplateService.getSvgTemplate(id)).thenThrow(templateException);
+        Mockito.when(renderingTemplateService.getSvgTemplate("fake-id")).thenThrow(templateException);
 
-        mockMvc.perform(get("/public/svg-template/" + id))
+        mockMvc.perform(get("/public/svg-template/fake-id"))
                 .andExpect(status().isNotFound());
     }
 }

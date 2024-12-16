@@ -1,9 +1,9 @@
 package io.mosip.certify.services;
 
 import io.mosip.certify.core.constants.ErrorConstants;
-import io.mosip.certify.core.entity.SVGTemplate;
+import io.mosip.certify.services.entity.RenderingTemplate;
 import io.mosip.certify.core.exception.TemplateException;
-import io.mosip.certify.core.repository.SVGTemplateRepository;
+import io.mosip.certify.services.repository.RenderingTemplateRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
@@ -15,22 +15,20 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.UUID;
 
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
-public class SVGRenderTemplateServiceTest {
+public class RenderingTemplateServiceImplTest {
     @InjectMocks
-    SVGTemplateServiceImpl svgRenderTemplateService;
+    RenderingTemplateServiceImpl renderingTemplateService;
 
     @Mock
-    SVGTemplateRepository svgRenderTemplateRepository;
+    RenderingTemplateRepository svgRenderTemplateRepository;
 
     @Test
     public void getSvgTemplate_withValidDetail_thenPass() {
-        SVGTemplate svgRenderTemplate = new SVGTemplate();
-        UUID id = UUID.randomUUID();
-        svgRenderTemplate.setId(id);
+        RenderingTemplate svgRenderTemplate = new RenderingTemplate();
+        svgRenderTemplate.setId("fake-id");
         String svgTemplate = """
                     <svg xmlns=\\"http://www.w3.org/2000/svg\\" width=\\"200\\" height=\\"200\\">
                     <rect width=\\"200\\" height=\\"200\\" fill=\\"#ff6347\\"/>
@@ -40,9 +38,9 @@ public class SVGRenderTemplateServiceTest {
                 """;
         svgRenderTemplate.setTemplate(svgTemplate);
         svgRenderTemplate.setCreatedtimes(LocalDateTime.now());
-        Optional<SVGTemplate> optional = Optional.of(svgRenderTemplate);
+        Optional<RenderingTemplate> optional = Optional.of(svgRenderTemplate);
         Mockito.when(svgRenderTemplateRepository.findById(Mockito.any())).thenReturn(optional);
-        SVGTemplate svgRenderTemplateResponse = svgRenderTemplateService.getSvgTemplate(UUID.randomUUID());
+        RenderingTemplate svgRenderTemplateResponse = renderingTemplateService.getSvgTemplate("fake-id");
         Assert.assertNotNull(svgRenderTemplateResponse);
         Assert.assertEquals(svgRenderTemplate.getId(), svgRenderTemplateResponse.getId());
         Assert.assertEquals(svgTemplate, optional.get().getTemplate());
@@ -52,7 +50,7 @@ public class SVGRenderTemplateServiceTest {
     public void getSvgTemplate_withInvalidId_thenFail() {
         Mockito.when(svgRenderTemplateRepository.findById(Mockito.any())).thenReturn(Optional.empty());
         TemplateException templateException = Assert.assertThrows(TemplateException.class, () -> {
-            svgRenderTemplateService.getSvgTemplate(UUID.randomUUID());
+            renderingTemplateService.getSvgTemplate("fake-id");
         });
         Assert.assertEquals(ErrorConstants.INVALID_TEMPLATE_ID, templateException.getErrorCode());
     }

@@ -3,12 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-package io.mosip.certify.core.spi;
+package io.mosip.certify.services.spi;
 
-import io.mosip.certify.core.entity.SVGTemplate;
+import io.mosip.certify.services.entity.RenderingTemplate;
 
-import java.util.UUID;
 
-public interface SVGTemplateService {
-    SVGTemplate getSvgTemplate(UUID id);
+public interface RenderingTemplateService {
+    RenderingTemplate getSvgTemplate(String id);
 }

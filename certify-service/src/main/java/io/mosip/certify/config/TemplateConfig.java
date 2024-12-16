@@ -10,9 +10,8 @@ package io.mosip.certify.config;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.mosip.certify.core.entity.SVGTemplate;
-import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.core.repository.SVGTemplateRepository;
+import io.mosip.certify.services.entity.RenderingTemplate;
+import io.mosip.certify.services.repository.RenderingTemplateRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,7 +31,7 @@ import java.util.*;
 @Slf4j
 public class TemplateConfig  implements CommandLineRunner {
     @Autowired
-    SVGTemplateRepository svgRenderTemplateRepository;
+    RenderingTemplateRepository svgRenderTemplateRepository;
 
     @Value("${mosip.certify.svg-templates:}")
     private String svgTemplateJson;
@@ -45,13 +44,17 @@ public class TemplateConfig  implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        Long count = svgRenderTemplateRepository.count();
+        if (count != 0) {
+            return;
+        }
         String svgTemplateContent = "";
-        List<Object> svgTemplateMap;
 
         if(svgTemplateJson.startsWith("http")) {
             svgTemplateContent = restTemplate.getForObject(svgTemplateJson, String.class);
         } else {
             Resource resource = new ClassPathResource(svgTemplateJson);
+            // TODO: Verify this w.r.t local path
             try {
                 svgTemplateContent = (Files.readString(resource.getFile().toPath()));
             } catch (IOException e) {
@@ -59,21 +62,13 @@ public class TemplateConfig  implements CommandLineRunner {
             }
         }
 
-
         if(!svgTemplateContent.isEmpty()) {
             try {
-                svgTemplateMap = objectMapper.readValue(svgTemplateContent, List.class);
-            } catch (JsonProcessingException e) {
-                throw new CertifyException("Missing configuration for svg template content " + e.getMessage());
-            }
-
-            List<SVGTemplate> svgRenderTemplates = svgRenderTemplateRepository.findAll();
-
-            if(svgRenderTemplates.isEmpty()) {
+                List <Object> svgTemplateMap = objectMapper.readValue(svgTemplateContent, List.class);
                 svgTemplateMap.forEach((value) -> {
-                    SVGTemplate svgRenderTemplate = new SVGTemplate();
+                    RenderingTemplate svgRenderTemplate = new RenderingTemplate();
                     LinkedHashMap<String, Object> valueMap = (LinkedHashMap<String, Object>) value;
-                    UUID id = UUID.fromString(valueMap.get("id").toString());
+                    String id = valueMap.get("id").toString();
                     svgRenderTemplate.setId(id);
                     String templateURI = valueMap.get("content").toString();
                     if(templateURI.startsWith("http")) {
@@ -88,7 +83,10 @@ public class TemplateConfig  implements CommandLineRunner {
                     log.info("Template inserted in svg template table.");
                     svgRenderTemplateRepository.save(svgRenderTemplate);
                 });
+            } catch (JsonProcessingException e) {
+                log.error("Missing configuration for svg template content " + e.getMessage());
             }
+
         }
         log.info("=============== CERTIFY TEMPLATE SETUP COMPLETED ===============");
     }

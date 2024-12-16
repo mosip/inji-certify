@@ -1,4 +1,4 @@
-package io.mosip.certify.core.entity;
+package io.mosip.certify.services.entity;
 
 import lombok.*;
 

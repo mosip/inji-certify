@@ -7,9 +7,8 @@ import java.util.Map;
 /**
  * VCDataModelFormatter is a templating engine which takes @param templateInput and returns a templated VC.
  * Some implementations include
- * - VC 2.0 data model templating engine
+ * - VC 1.0 & 2.0 data model templating engine using Velocity
  */
 public interface VCFormatter {
-    // TODO: Should it be changed to JSONObject?
-    String format(JSONObject templateInput, Map<String, Object> defaultSettings);
+    String format(JSONObject valueMap, Map<String, Object> templateSettings);
 }
