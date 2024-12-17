@@ -1,9 +1,10 @@
 package io.mosip.certify.controller;
 
+import io.mosip.certify.api.dto.RenderingTemplateDTO;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.ParsedAccessToken;
 import io.mosip.certify.services.entity.RenderingTemplate;
-import io.mosip.certify.core.exception.TemplateException;
+import io.mosip.certify.core.exception.RenderingTemplateException;
 import io.mosip.certify.services.spi.RenderingTemplateService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,8 +33,8 @@ public class RenderingTemplateControllerTest {
 
     @Test
     public void  getSvgTemplate_withValidId_thenPass() throws Exception {
-        RenderingTemplate renderingTemplate = new RenderingTemplate();
-        renderingTemplate.setId("fake-id");
+        RenderingTemplateDTO renderingTemplateDTO = new RenderingTemplateDTO();
+        renderingTemplateDTO.setId("fake-id");
         String template = """
                     <svg xmlns=\\"http://www.w3.org/2000/svg\\" width=\\"200\\" height=\\"200\\">
                     <rect width=\\"200\\" height=\\"200\\" fill=\\"#ff6347\\"/>
@@ -41,23 +42,23 @@ public class RenderingTemplateControllerTest {
                     Hello, SVG!
                     </text></svg>
                 """;
-        renderingTemplate.setTemplate(template);
+        renderingTemplateDTO.setTemplate(template);
         LocalDateTime date = LocalDateTime.now();
-        renderingTemplate.setCreatedtimes(date);
-        renderingTemplate.setUpdatedtimes(date);
+        renderingTemplateDTO.setCreatedTimes(date);
+        renderingTemplateDTO.setUpdatedTimes(date);
 
-        Mockito.when(renderingTemplateService.getSvgTemplate(Mockito.any())).thenReturn(renderingTemplate);
+        Mockito.when(renderingTemplateService.getSvgTemplate(Mockito.any())).thenReturn(renderingTemplateDTO);
 
         mockMvc.perform(get("/public/rendering-template/fake-id"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(renderingTemplate.getTemplate()))
+                .andExpect(content().string(renderingTemplateDTO.getTemplate()))
                 .andExpect(content().contentType("image/svg+xml"))
                 .andExpect(header().string("Cache-Control", "max-age=86400, public"));
     }
 
     @Test
     public void  getSvgTemplate_withInValidId_thenFail() throws Exception {
-        TemplateException templateException = new TemplateException(ErrorConstants.INVALID_TEMPLATE_ID);
+        RenderingTemplateException templateException = new RenderingTemplateException(ErrorConstants.INVALID_TEMPLATE_ID);
         Mockito.when(renderingTemplateService.getSvgTemplate("fake-id")).thenThrow(templateException);
 
         mockMvc.perform(get("/public/rendering-template/fake-id"))

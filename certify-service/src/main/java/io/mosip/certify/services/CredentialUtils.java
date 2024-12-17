@@ -6,7 +6,7 @@ import java.security.NoSuchAlgorithmException;
 
 import io.ipfs.multibase.Multibase;
 
-public class RenderUtils {
+public class CredentialUtils {
     /**
      * Generate SVG digest for @param svg image as per spec.
      * ref: https://w3c-ccg.github.io/vc-render-method/#svgrenderingtemplate
