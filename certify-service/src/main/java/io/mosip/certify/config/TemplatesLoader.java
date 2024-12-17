@@ -33,7 +33,7 @@ public class TemplatesLoader implements CommandLineRunner {
     @Autowired
     RenderingTemplateRepository svgRenderTemplateRepository;
 
-    @Value("${mosip.certify.svg-templates:}")
+    @Value("${mosip.certify.rendering-templates:}")
     private String svgTemplateJson;
 
     @Autowired

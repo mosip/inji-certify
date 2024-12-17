@@ -1,4 +1,4 @@
-package io.mosip.certify.api.spi;
+package io.mosip.certify.services.spi;
 
 import io.mosip.certify.api.exception.DataProviderExchangeException;
 import org.json.JSONObject;

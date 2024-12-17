@@ -1,4 +1,4 @@
-package io.mosip.certify.api.spi;
+package io.mosip.certify.services.spi;
 
 
 import org.json.JSONObject;

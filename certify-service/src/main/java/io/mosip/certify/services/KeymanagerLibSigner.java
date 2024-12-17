@@ -10,7 +10,7 @@ import foundation.identity.jsonld.JsonLDObject;
 import info.weboftrust.ldsignatures.LdProof;
 import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
 import io.mosip.certify.api.dto.VCResult;
-import io.mosip.certify.api.spi.VCSigner;
+import io.mosip.certify.services.spi.VCSigner;
 import io.mosip.certify.core.constants.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.services.proofgenerators.ProofGenerator;

@@ -11,7 +11,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-import io.mosip.certify.api.spi.VCFormatter;
+import io.mosip.certify.services.spi.VCFormatter;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.constants.VCDMConstants;
@@ -91,9 +91,6 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
             String key = keys.next();
             Object value = valueMap.get(key);
             if (value instanceof List) {
-                // TODO(problem area): handle field values with unescaped JSON
-                //  reserved literals such as " or ,
-                // (Q) Should Object always be a JSONObject?
                 finalTemplate.put(key, new JSONArray((List<Object>) value));
             } else if (value.getClass().isArray()) {
                 finalTemplate.put(key, new JSONArray(List.of(value)));
