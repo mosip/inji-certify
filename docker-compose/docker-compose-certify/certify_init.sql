@@ -64,7 +64,7 @@ CREATE TABLE certify.key_store(
                                   CONSTRAINT pk_keystr_id PRIMARY KEY (id)
 );
 
-CREATE TABLE certify.svg_template (
+CREATE TABLE certify.rendering_template (
                                     id UUID NOT NULL,
                                     template VARCHAR NOT NULL,
                                     cr_dtimes timestamp NOT NULL,
@@ -72,7 +72,7 @@ CREATE TABLE certify.svg_template (
                                     CONSTRAINT pk_svgtmp_id PRIMARY KEY (id)
 );
 
-CREATE TABLE certify.template_data(
+CREATE TABLE certify.credential_template(
                                     context character varying(1024) NOT NULL,
                                     credential_type character varying(512) NOT NULL,
                                     template VARCHAR NOT NULL,
@@ -86,7 +86,7 @@ CREATE TABLE certify.template_data(
 INSERT INTO certify.KEY_POLICY_DEF(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('ROOT', 2920, 1125, 'NA', true, 'mosipadmin', now());
 INSERT INTO certify.KEY_POLICY_DEF(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_SERVICE', 1095, 50, 'NA', true, 'mosipadmin', now());
 INSERT INTO certify.KEY_POLICY_DEF(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_PARTNER', 1095, 50, 'NA', true, 'mosipadmin', now());
-INSERT INTO certify.KEY_POLICY_DEF(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_MOCK_RSA', 1095, 50, 'NA', true, 'mosipadmin', now());
-INSERT INTO certify.KEY_POLICY_DEF(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_MOCK_ED25519', 1095, 50, 'NA', true, 'mosipadmin', now());
+INSERT INTO certify.KEY_POLICY_DEF(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_RSA', 1095, 50, 'NA', true, 'mosipadmin', now());
+INSERT INTO certify.KEY_POLICY_DEF(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_ED25519', 1095, 50, 'NA', true, 'mosipadmin', now());
 INSERT INTO certify.KEY_POLICY_DEF(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('BASE', 730, 30, 'NA', true, 'mosipadmin', now());
 

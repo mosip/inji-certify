@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import io.mosip.certify.core.constants.Constants;
-import io.mosip.certify.services.KeyManagerConstants;
 import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateRequestDto;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 import io.mosip.kernel.keymanagerservice.dto.SymmetricKeyGenerateRequestDto;
@@ -31,8 +30,8 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
-@EnableJpaRepositories(basePackages = {"io.mosip.kernel.keymanagerservice.repository", "io.mosip.certify.core.repository"})
-@EntityScan(basePackages = {"io.mosip.kernel.keymanagerservice.entity, io.mosip.certify.core.entity"})
+@EnableJpaRepositories(basePackages = {"io.mosip.kernel.keymanagerservice.repository", "io.mosip.certify.services.repository"})
+@EntityScan(basePackages = {"io.mosip.kernel.keymanagerservice.entity, io.mosip.certify.services.entity"})
 @Slf4j
 public class AppConfig implements ApplicationRunner {
 
@@ -75,7 +74,7 @@ public class AppConfig implements ApplicationRunner {
         log.info("===================== CERTIFY_SERVICE ROOT KEY CHECK ========================");
         String objectType = "CSR";
         KeyPairGenerateRequestDto rootKeyRequest = new KeyPairGenerateRequestDto();
-        rootKeyRequest.setApplicationId(KeyManagerConstants.ROOT_KEY);
+        rootKeyRequest.setApplicationId(Constants.ROOT_KEY);
         // Set the reference id to empty string, as keymanager is expecting the same for initialization
         rootKeyRequest.setReferenceId(org.apache.commons.lang3.StringUtils.EMPTY);
         keymanagerService.generateMasterKey(objectType, rootKeyRequest);
@@ -87,8 +86,8 @@ public class AppConfig implements ApplicationRunner {
         keymanagerService.generateMasterKey(objectType, masterKeyRequest);
         // TODO: Generate an EC & ED key via K8s Job(INJICERT-469)
         KeyPairGenerateRequestDto rsaKeyRequest = new KeyPairGenerateRequestDto();
-        rsaKeyRequest.setApplicationId(KeyManagerConstants.CERTIFY_MOCK_RSA);
-        rsaKeyRequest.setReferenceId(KeyManagerConstants.EMPTY_REF_ID);
+        rsaKeyRequest.setApplicationId(Constants.CERTIFY_VC_SIGN_RSA);
+        rsaKeyRequest.setReferenceId(Constants.EMPTY_REF_ID);
         rsaKeyRequest.setForce(false);
         keymanagerService.generateMasterKey("certificate", rsaKeyRequest);
         if(!StringUtils.isEmpty(cacheSecretKeyRefId)) {
@@ -109,13 +108,13 @@ public class AppConfig implements ApplicationRunner {
         // Generate an Ed25519Key:
         // 1. Generate a master key first to enable Keymanager to store the key.
         KeyPairGenerateRequestDto storeKey = new KeyPairGenerateRequestDto();
-        storeKey.setApplicationId(KeyManagerConstants.CERTIFY_MOCK_ED25519);
-        storeKey.setReferenceId(org.apache.commons.lang3.StringUtils.EMPTY);
+        storeKey.setApplicationId(Constants.CERTIFY_VC_SIGN_ED25519);
+        storeKey.setReferenceId(Constants.EMPTY_REF_ID);
         keymanagerService.generateMasterKey("certificate", storeKey);
         // 2. Generate an Ed25519 key later
         KeyPairGenerateRequestDto ed25519Req = new KeyPairGenerateRequestDto();
-        ed25519Req.setApplicationId(KeyManagerConstants.CERTIFY_MOCK_ED25519);
-        ed25519Req.setReferenceId(KeyManagerConstants.ED25519_REF_ID);
+        ed25519Req.setApplicationId(Constants.CERTIFY_VC_SIGN_ED25519);
+        ed25519Req.setReferenceId(Constants.ED25519_REF_ID);
         keymanagerService.generateECSignKey("certificate", ed25519Req);
         log.info("===================== CERTIFY KEY SETUP COMPLETED ========================");
     }

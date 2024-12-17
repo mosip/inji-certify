@@ -28,7 +28,7 @@ import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.core.util.AuditHelper;
 import io.mosip.certify.core.util.SecurityHelperService;
-import io.mosip.certify.core.validators.CredentialRequestValidatorFactory;
+import io.mosip.certify.services.validators.CredentialRequestValidator;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
@@ -50,8 +50,6 @@ import java.util.Optional;
 @Service
 @ConditionalOnProperty(value = "mosip.certify.issuer", havingValue = "PluginIssuer")
 public class VCIssuanceServiceImpl implements VCIssuanceService {
-
-    private static final String TYPE_VERIFIABLE_CREDENTIAL = "VerifiableCredential";
 
     @Value("#{${mosip.certify.key-values}}")
     private LinkedHashMap<String, LinkedHashMap<String, Object>> issuerMetadata;
@@ -79,7 +77,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
-        boolean isValidCredentialRequest = new CredentialRequestValidatorFactory().isValid(credentialRequest);
+        boolean isValidCredentialRequest = new CredentialRequestValidator().isValid(credentialRequest);
         if(!isValidCredentialRequest) {
             throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
         }

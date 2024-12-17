@@ -1,1 +1,2 @@
-\echo 'Rollback Queries not required for transition from $CURRENT_VERSION to $UPGRADE_VERSION'
+drop table rendering_template;
+drop table credential_template;

@@ -46,15 +46,15 @@ CREATE TABLE  IF NOT EXISTS key_store(
 	CONSTRAINT pk_keystr_id PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS svg_template (
-    id VARCHAR NOT NULL,
+CREATE TABLE IF NOT EXISTS rendering_template (
+    id VARCHAR(128) NOT NULL,
     template VARCHAR NOT NULL,
     cr_dtimes timestamp NOT NULL,
     upd_dtimes timestamp,
-    CONSTRAINT pk_svgtmp_id PRIMARY KEY (id)
+    CONSTRAINT pk_rendertmp_id PRIMARY KEY (id)
 );
 
-CREATE TABLE  IF NOT EXISTS template_data(
+CREATE TABLE  IF NOT EXISTS credential_template(
     context character varying(1024) NOT NULL,
     credential_type character varying(512) NOT NULL,
     template VARCHAR NOT NULL,

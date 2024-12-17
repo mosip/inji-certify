@@ -20,14 +20,14 @@ services:
       - 8090:8090
     environment:
       - container_user=mosip
-      - active_profile_env=default, mock-identity
+      - active_profile_env=default, csvdp-farmer
       - SPRING_CONFIG_NAME=certify
       - SPRING_CONFIG_LOCATION=/home/mosip/config/
       - enable_certify_artifactory=false
       - download_hsm_client=false
     volumes:
       - ./config/certify-default.properties:/home/mosip/config/certify-default.properties
-      - ./config/certify-mock-identity.properties:/home/mosip/config/certify-mock-identity.properties
+      - ./config/certify-csvdp-farmer.properties:/home/mosip/config/certify-csvdp-farmer.properties
       - ./data/CERTIFY_PKCS12:/home/mosip/CERTIFY_PKCS12
       - ./loader_path/certify/:/home/mosip/additional_jars/
     networks:
@@ -39,7 +39,7 @@ services:
     container_name: nginx
     image: nginx:alpine
     ports:
-      - '80:80'
+      - '8099:80'
     volumes:
       - ./config/mimoto-issuers-config.json:/config/server/mimoto-issuers-config.json
       - ./config/mimoto-trusted-verifiers.json:/config/server/mimoto-trusted-verifiers.json
@@ -68,29 +68,14 @@ services:
     depends_on:
       - nginx
 
-  inji-web-proxy:
-    container_name: 'inji-web-proxy'
-    image: inji-web-proxy:local
-    ports:
-      - '3010:3010'
-    environment:
-      - MIMOTO_HOST=http://mimoto-service:8099/v1/mimoto
-      - PORT=3010
-    depends_on:
-      - mimoto-service
-    networks:
-      - network
-
   inji-web:
     container_name: 'inji-web'
-    image: mosipdev/inji-web:develop
+    image: mosipid/inji-web:0.10.0
     ports:
       - '3001:3004'
     environment:
       - MIMOTO_HOST=http://localhost:3010
       - DEFAULT_LANG=en
-    depends_on:
-      - inji-web-proxy
     networks:
       - network
 

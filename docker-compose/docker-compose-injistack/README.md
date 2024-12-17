@@ -6,17 +6,6 @@ This guide provides instructions for setting up and running Inji Stack.
 - Docker and Docker Compose installed on your system
 - Git (to clone the repository)
 - Basic understanding of Docker and container operations
-### Building inji-web-proxy
-Before running the docker-compose, you need to build the inji-web-proxy image:
-
-```bash
-# Clone the repository
-git clone https://github.com/mosip/inji-web.git -b release-0.11.x
-cd inji-web/inji-web-proxy
-
-# Build the Docker image
-docker build -t inji-web-proxy:local .
-```
 
 ## Directory Structure Setup
 Create the following directory structure before proceeding:
@@ -31,7 +20,7 @@ docker-compose-injistack/
 │   └── certify/ (plugin jar to be placed here)
 ├── config/ (default setup should work as is for csvplugin, any other config changes user can make as per their setup)
 │   ├── certify-default.properties
-│   ├── certify-mock-identity.properties
+│   ├── certify-csvdp-farmer.properties
 │   ├── mimoto-default.properties
 │   ├── mimoto-issuers-config.json
 │   ├── mimoto-trusted-verifiers.json
@@ -76,7 +65,7 @@ public interface DataProviderPlugin {
 ### 2. Configuration Files
 Ensure all configuration files are properly updated in the config directory:
 - certify-default.properties
-- certify-mock-identity.properties
+- certify-csvdp-farmer.properties
 - mimoto-default.properties
 - mimoto-issuers-config.json
 - mimoto-trusted-verifiers.json
@@ -103,7 +92,6 @@ The following services will be available:
 - Certify Service: `localhost:8090`
 - Nginx: `localhost:80`
 - Mimoto Service: `localhost:8099`
-- Inji Web Proxy: `localhost:3010`
 - Inji Web: `localhost:3001`
 
 ## Using the Application
@@ -140,7 +128,7 @@ docker logs [container_name]
 
 ## Hosting a public key in the form of a DID
 
-1. Extract the certificate from the [Ceritfy Endpoint](http://localhost:8090/v1/certify/system-info/certificate?applicationId=CERTIFY_MOCK_ED25519&referenceId=ED25519_SIGN)
+1. Extract the certificate from the [Ceritfy Endpoint](http://localhost:8090/v1/certify/system-info/certificate?applicationId=CERTIFY_VC_SIGN_ED25519&referenceId=ED25519_SIGN)
 2. Use `openssl x509 -pubkey -noout -in filename.pem`  to convert the certificate to a public key.
 3. Convert the public key to a publicKeyMultibase as per the [spec](https://www.w3.org/community/reports/credentials/CG-FINAL-di-eddsa-2020-20220724/).
 

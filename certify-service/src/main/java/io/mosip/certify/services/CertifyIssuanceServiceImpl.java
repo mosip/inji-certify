@@ -26,7 +26,10 @@ import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.core.util.AuditHelper;
 import io.mosip.certify.core.util.SecurityHelperService;
-import io.mosip.certify.core.validators.CredentialRequestValidatorFactory;
+import io.mosip.certify.services.spi.DataProviderPlugin;
+import io.mosip.certify.services.spi.VCFormatter;
+import io.mosip.certify.services.spi.VCSigner;
+import io.mosip.certify.services.validators.CredentialRequestValidator;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
@@ -66,13 +69,13 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     private VCSigner vcSigner;
 
     @Autowired
-    private DataProviderPlugin dataModelService;
+    private DataProviderPlugin dataProviderPlugin;
 
     @Value("${mosip.certify.data-provider-plugin.issuer-uri}")
     private String issuerURI;
 
-    @Value("${mosip.certify.data-provider-plugin.svg-template-id}")
-    private String svg;
+    @Value("${mosip.certify.data-provider-plugin.rendering-template-id:}")
+    private String svgTemplateId;
 
     @Autowired
     private ProofValidatorFactory proofValidatorFactory;
@@ -89,7 +92,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
         // 1. Credential Request validation
-        boolean isValidCredentialRequest = new CredentialRequestValidatorFactory().isValid(credentialRequest);
+        boolean isValidCredentialRequest = CredentialRequestValidator.isValid(credentialRequest);
         if(!isValidCredentialRequest) {
             throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
         }
@@ -151,15 +154,15 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 validateLdpVcFormatRequest(credentialRequest, credentialMetadata);
                 try {
                     // TODO(multitenancy): later decide which plugin out of n plugins is the correct one
-                    JSONObject jsonObject = dataModelService.fetchData(parsedAccessToken.getClaims());
+                    JSONObject jsonObject = dataProviderPlugin.fetchData(parsedAccessToken.getClaims());
                     Map<String, Object> templateParams = new HashMap<>();
                     templateParams.put(VelocityTemplatingConstants.TEMPLATE_NAME, CredentialUtils.getTemplateName(vcRequestDto));
                     templateParams.put(VelocityTemplatingConstants.ISSUER_URI, issuerURI);
-                    if (!StringUtils.isEmpty(svg)) {
-                        templateParams.put(VelocityTemplatingConstants.SVG_TEMPLATE, svg);
+                    if (!StringUtils.isEmpty(svgTemplateId)) {
+                        templateParams.put(VelocityTemplatingConstants.SVG_TEMPLATE, svgTemplateId);
                     }
-                    String templatedVC = vcFormatter.format(jsonObject, templateParams);
-                    vcResult = vcSigner.perform(templatedVC);
+                    String unSignedVC = vcFormatter.format(jsonObject, templateParams);
+                    vcResult = vcSigner.attachSignature(unSignedVC);
                 } catch(DataProviderExchangeException e) {
                     throw new CertifyException(e.getErrorCode());
                 }
