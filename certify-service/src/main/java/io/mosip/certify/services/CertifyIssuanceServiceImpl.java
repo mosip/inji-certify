@@ -75,7 +75,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     private String issuerURI;
 
     @Value("${mosip.certify.data-provider-plugin.rendering-template-id:}")
-    private String svgTemplateId;
+    private String renderTemplateId;
 
     @Autowired
     private ProofValidatorFactory proofValidatorFactory;
@@ -285,8 +285,8 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     Map<String, Object> templateParams = new HashMap<>();
                     templateParams.put(VelocityTemplatingConstants.TEMPLATE_NAME, CredentialUtils.getTemplateName(vcRequestDto));
                     templateParams.put(VelocityTemplatingConstants.ISSUER_URI, issuerURI);
-                    if (!StringUtils.isEmpty(svgTemplateId)) {
-                        templateParams.put(VelocityTemplatingConstants.SVG_TEMPLATE, svgTemplateId);
+                    if (!StringUtils.isEmpty(renderTemplateId)) {
+                        templateParams.put(VelocityTemplatingConstants.SVG_TEMPLATE, renderTemplateId);
                     }
                     String unSignedVC = vcFormatter.format(jsonObject, templateParams);
                     vcResult = vcSigner.attachSignature(unSignedVC);

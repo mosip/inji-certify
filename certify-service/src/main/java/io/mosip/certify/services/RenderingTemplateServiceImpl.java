@@ -5,9 +5,10 @@
  */
 package io.mosip.certify.services;
 
+import io.mosip.certify.api.dto.RenderingTemplateDTO;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.services.entity.RenderingTemplate;
-import io.mosip.certify.core.exception.TemplateException;
+import io.mosip.certify.core.exception.RenderingTemplateException;
 import io.mosip.certify.services.repository.RenderingTemplateRepository;
 import io.mosip.certify.services.spi.RenderingTemplateService;
 import lombok.extern.slf4j.Slf4j;
@@ -24,11 +25,16 @@ public class RenderingTemplateServiceImpl implements RenderingTemplateService {
 
 
     @Override
-    public RenderingTemplate getSvgTemplate(String id) {
+    public RenderingTemplateDTO getSvgTemplate(String id) {
         Optional<RenderingTemplate> optional = svgRenderTemplateRepository.findById(id);
-        RenderingTemplate svgRenderTemplate = optional.orElseThrow(() -> new TemplateException(ErrorConstants.INVALID_TEMPLATE_ID));
+        RenderingTemplate renderingTemplate = optional.orElseThrow(() -> new RenderingTemplateException(ErrorConstants.INVALID_TEMPLATE_ID));
+        RenderingTemplateDTO renderingTemplateDTO = new RenderingTemplateDTO();
+        renderingTemplateDTO.setId(renderingTemplate.getId());
+        renderingTemplateDTO.setTemplate(renderingTemplate.getTemplate());
+        renderingTemplateDTO.setCreatedTimes(renderingTemplate.getCreatedtimes());
+        renderingTemplateDTO.setUpdatedTimes(renderingTemplate.getUpdatedtimes());
 
-        return svgRenderTemplate;
+        return renderingTemplateDTO;
 
     }
 }

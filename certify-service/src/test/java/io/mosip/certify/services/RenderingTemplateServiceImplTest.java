@@ -1,8 +1,9 @@
 package io.mosip.certify.services;
 
+import io.mosip.certify.api.dto.RenderingTemplateDTO;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.services.entity.RenderingTemplate;
-import io.mosip.certify.core.exception.TemplateException;
+import io.mosip.certify.core.exception.RenderingTemplateException;
 import io.mosip.certify.services.repository.RenderingTemplateRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -40,7 +41,7 @@ public class RenderingTemplateServiceImplTest {
         svgRenderTemplate.setCreatedtimes(LocalDateTime.now());
         Optional<RenderingTemplate> optional = Optional.of(svgRenderTemplate);
         Mockito.when(svgRenderTemplateRepository.findById(Mockito.any())).thenReturn(optional);
-        RenderingTemplate svgRenderTemplateResponse = renderingTemplateService.getSvgTemplate("fake-id");
+        RenderingTemplateDTO svgRenderTemplateResponse = renderingTemplateService.getSvgTemplate("fake-id");
         Assert.assertNotNull(svgRenderTemplateResponse);
         Assert.assertEquals(svgRenderTemplate.getId(), svgRenderTemplateResponse.getId());
         Assert.assertEquals(svgTemplate, optional.get().getTemplate());
@@ -49,7 +50,7 @@ public class RenderingTemplateServiceImplTest {
     @Test
     public void getSvgTemplate_withInvalidId_thenFail() {
         Mockito.when(svgRenderTemplateRepository.findById(Mockito.any())).thenReturn(Optional.empty());
-        TemplateException templateException = Assert.assertThrows(TemplateException.class, () -> {
+        RenderingTemplateException templateException = Assert.assertThrows(RenderingTemplateException.class, () -> {
             renderingTemplateService.getSvgTemplate("fake-id");
         });
         Assert.assertEquals(ErrorConstants.INVALID_TEMPLATE_ID, templateException.getErrorCode());

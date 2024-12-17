@@ -5,8 +5,9 @@
  */
 package io.mosip.certify.controller;
 
+import io.mosip.certify.api.dto.RenderingTemplateDTO;
 import io.mosip.certify.services.entity.RenderingTemplate;
-import io.mosip.certify.core.exception.TemplateException;
+import io.mosip.certify.core.exception.RenderingTemplateException;
 import io.mosip.certify.services.spi.RenderingTemplateService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,12 +33,12 @@ public class RenderingTemplateController {
     RenderingTemplateService renderingTemplateService;
 
     @GetMapping("/rendering-template/{id}")
-    public ResponseEntity<String> serveSvgTemplate(@PathVariable String id) throws TemplateException {
-        RenderingTemplate template = renderingTemplateService.getSvgTemplate(id);
+    public ResponseEntity<String> serveSvgTemplate(@PathVariable String id) throws RenderingTemplateException {
+        RenderingTemplateDTO template = renderingTemplateService.getSvgTemplate(id);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, "image/svg+xml")
                 .cacheControl(CacheControl.maxAge(maxAgeDays, TimeUnit.DAYS).cachePublic())
-                .lastModified(template.getUpdatedtimes().atZone(ZoneId.systemDefault()).toInstant())
+                .lastModified(template.getUpdatedTimes().atZone(ZoneId.systemDefault()).toInstant())
                 .body(template.getTemplate());
     }
 }

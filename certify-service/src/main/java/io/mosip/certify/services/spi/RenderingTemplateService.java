@@ -5,9 +5,9 @@
  */
 package io.mosip.certify.services.spi;
 
-import io.mosip.certify.services.entity.RenderingTemplate;
+import io.mosip.certify.api.dto.RenderingTemplateDTO;
 
 
 public interface RenderingTemplateService {
-    RenderingTemplate getSvgTemplate(String id);
+    RenderingTemplateDTO getSvgTemplate(String id);
 }

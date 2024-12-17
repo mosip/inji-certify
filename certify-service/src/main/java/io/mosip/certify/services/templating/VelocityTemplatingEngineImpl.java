@@ -16,10 +16,10 @@ import io.mosip.certify.services.spi.VCFormatter;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.constants.VCDMConstants;
-import io.mosip.certify.core.exception.TemplateException;
+import io.mosip.certify.core.exception.RenderingTemplateException;
 import io.mosip.certify.services.repository.TemplateRepository;
 import io.mosip.certify.services.spi.RenderingTemplateService;
-import io.mosip.certify.services.RenderUtils;
+import io.mosip.certify.services.CredentialUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -83,7 +83,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         String template = getTemplate(templateName);
         if (template == null) {
             log.error("Template {} not found", templateName);
-            throw new TemplateException("Expected template not found");
+            throw new RenderingTemplateException("Expected template not found");
         }
         String issuer = templateSettings.get(ISSUER_URI).toString();
         StringWriter writer = new StringWriter();
@@ -117,9 +117,9 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         if (templateSettings.containsKey(SVG_TEMPLATE) && templateName.contains(VCDM2Constants.URL)) {
             try {
                 finalTemplate.put("_renderMethodSVGdigest",
-                        RenderUtils.getDigestMultibase(renderingTemplateService.getSvgTemplate(
+                        CredentialUtils.getDigestMultibase(renderingTemplateService.getSvgTemplate(
                                 (String) templateSettings.get(SVG_TEMPLATE)).getTemplate()));
-            } catch (TemplateException e) {
+            } catch (RenderingTemplateException e) {
                 log.error("SVG Template: " + templateSettings.get(SVG_TEMPLATE) + " not available in DB", e);
             }
         }
