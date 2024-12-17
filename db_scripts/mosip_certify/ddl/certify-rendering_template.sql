@@ -16,7 +16,7 @@ CREATE TABLE rendering_template (
     template VARCHAR NOT NULL,
     cr_dtimes timestamp NOT NULL,
     upd_dtimes timestamp,
-    CONSTRAINT pk_rendtmp_id PRIMARY KEY (id)
+    CONSTRAINT pk_rendertmp_id PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE rendering_template IS 'SVG Render Template: Contains svg render image for VC.';

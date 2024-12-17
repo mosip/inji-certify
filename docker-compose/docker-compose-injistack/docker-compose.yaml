@@ -39,7 +39,7 @@ services:
     container_name: nginx
     image: nginx:alpine
     ports:
-      - '8090:80'
+      - '8099:80'
     volumes:
       - ./config/mimoto-issuers-config.json:/config/server/mimoto-issuers-config.json
       - ./config/mimoto-trusted-verifiers.json:/config/server/mimoto-trusted-verifiers.json
@@ -70,7 +70,7 @@ services:
 
   inji-web:
     container_name: 'inji-web'
-    image: mosipdev/inji-web:develop
+    image: mosipid/inji-web:0.10.0
     ports:
       - '3001:3004'
     environment:
