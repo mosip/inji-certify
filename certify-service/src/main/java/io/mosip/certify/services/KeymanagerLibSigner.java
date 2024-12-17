@@ -44,15 +44,15 @@ import java.util.Date;
 public class KeymanagerLibSigner implements VCSigner {
 
     @Autowired
-    ProofGenerator signProps;
+    ProofGenerator proofGenerator;
     @Value("${mosip.certify.data-provider-plugin.issuer-public-key-uri}")
     private String issuerPublicKeyURI;
 
     @Override
-    public VCResult<JsonLDObject> perform(String templatedVC) {
+    public VCResult<JsonLDObject> attachSignature(String unSignedVC) {
         // Can the below lines be done at Templating side itself ?
         VCResult<JsonLDObject> VC = new VCResult<>();
-        JsonLDObject jsonLDObject = JsonLDObject.fromJson(templatedVC);
+        JsonLDObject jsonLDObject = JsonLDObject.fromJson(unSignedVC);
         jsonLDObject.setDocumentLoader(null);
         // NOTE: other aspects can be configured via keyMgrInput map
         String validFrom;
@@ -71,13 +71,13 @@ public class KeymanagerLibSigner implements VCSigner {
                         .parse(validFrom,
                                 DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN))
                         .atZone(ZoneId.systemDefault()).toInstant());
-        LdProof vcLdProof = LdProof.builder().defaultContexts(false).defaultTypes(false).type(signProps.getName())
+        LdProof vcLdProof = LdProof.builder().defaultContexts(false).defaultTypes(false).type(proofGenerator.getName())
                 .created(createDate).proofPurpose(VCDMConstants.ASSERTION_METHOD)
                 .verificationMethod(URI.create(issuerPublicKeyURI))
                 .build();
         // 1. Canonicalize
-        Canonicalizer canonicalizer = signProps.getCanonicalizer();
-        byte[] vcHashBytes = null;
+        Canonicalizer canonicalizer = proofGenerator.getCanonicalizer();
+        byte[] vcHashBytes;
         try {
             vcHashBytes = canonicalizer.canonicalize(vcLdProof, jsonLDObject);
         } catch (IOException | GeneralSecurityException | JsonLDException e) {
@@ -85,8 +85,7 @@ public class KeymanagerLibSigner implements VCSigner {
             throw new CertifyException("Error during canonicalization");
         }
         String vcEncodedHash = Base64.getUrlEncoder().encodeToString(vcHashBytes);
-        String sign = signProps.getProof(vcEncodedHash);
-        LdProof ldProofWithJWS = signProps.buildProof(vcLdProof, sign);
+        LdProof ldProofWithJWS = proofGenerator.generateProof(vcLdProof, vcEncodedHash);
         ldProofWithJWS.addToJsonLDObject(jsonLDObject);
         VC.setCredential(jsonLDObject);
         return VC;

@@ -68,7 +68,7 @@ public class KeymanagerLibSignerTest {
     }
 
     @Test
-    public void testPerformSuccess_VC2() {
+    public void testAttachSignatureSuccess_VC2() {
         // Mock Templated VC and Key Manager Input
         String VCs[] = new String[]{VC_1, VC_2};
         for (String templatedVC : VCs) {
@@ -78,12 +78,11 @@ public class KeymanagerLibSignerTest {
             when(signatureService.jwsSign(any())).thenReturn(jwsSignedData);
             when(signProps.getName()).thenReturn("FakeSignature2018");
             when(signProps.getCanonicalizer()).thenReturn(new URDNA2015Canonicalizer());
-            when(signProps.getProof(anyString())).thenReturn("fake-jws-proof");
             LdProof l = LdProof.builder().jws("fake-jws-proof").type("FakeSignature2018").proofPurpose("assertionMethod").build();
-            when(signProps.buildProof(any(), any())).thenReturn(l);
+            when(signProps.generateProof(any(), any())).thenReturn(l);
 
             // invoke
-            VCResult<JsonLDObject> vcResult = signer.perform(templatedVC);
+            VCResult<JsonLDObject> vcResult = signer.attachSignature(templatedVC);
 
             // test
             assert vcResult != null;

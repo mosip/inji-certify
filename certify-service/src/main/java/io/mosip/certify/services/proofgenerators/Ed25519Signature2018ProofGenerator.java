@@ -4,8 +4,8 @@ import com.danubetech.keyformats.jose.JWSAlgorithm;
 import info.weboftrust.ldsignatures.LdProof;
 import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
 import info.weboftrust.ldsignatures.canonicalizer.URDNA2015Canonicalizer;
+import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.SignatureAlg;
-import io.mosip.certify.services.KeyManagerConstants;
 import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import io.mosip.kernel.signature.service.SignatureService;
@@ -35,11 +35,11 @@ public class Ed25519Signature2018ProofGenerator implements ProofGenerator {
     }
 
     @Override
-    public String getProof(String vcEncodedHash) {
+    public LdProof generateProof(LdProof vcLdProof, String vcEncodedHash) {
         JWSSignatureRequestDto payload = new JWSSignatureRequestDto();
         payload.setDataToSign(vcEncodedHash);
-        payload.setApplicationId(KeyManagerConstants.CERTIFY_ED25519);
-        payload.setReferenceId(KeyManagerConstants.ED25519_REF_ID); // alg, empty = RSA
+        payload.setApplicationId(Constants.CERTIFY_VC_SIGN_ED25519);
+        payload.setReferenceId(Constants.ED25519_REF_ID); // alg, empty = RSA
         payload.setIncludePayload(false);
         payload.setIncludeCertificate(false);
         payload.setIncludeCertHash(true);
@@ -48,12 +48,7 @@ public class Ed25519Signature2018ProofGenerator implements ProofGenerator {
         payload.setCertificateUrl("");
         payload.setSignAlgorithm(JWSAlgorithm.EdDSA); // RSSignature2018 --> RS256, PS256, ES256
         JWTSignatureResponseDto jwsSignedData = signatureService.jwsSign(payload);
-        return jwsSignedData.getJwtSignedData();
-    }
-
-    @Override
-    public LdProof buildProof(LdProof vcLdProof, String sign) {
         return LdProof.builder().base(vcLdProof).defaultContexts(false)
-                .jws(sign).build();
+                .jws(jwsSignedData.getJwtSignedData()).build();
     }
 }

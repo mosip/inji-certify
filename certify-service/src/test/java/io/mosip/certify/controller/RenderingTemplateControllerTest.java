@@ -48,7 +48,7 @@ public class RenderingTemplateControllerTest {
 
         Mockito.when(renderingTemplateService.getSvgTemplate(Mockito.any())).thenReturn(renderingTemplate);
 
-        mockMvc.perform(get("/public/svg-template/fake-id"))
+        mockMvc.perform(get("/public/rendering-template/fake-id"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(renderingTemplate.getTemplate()))
                 .andExpect(content().contentType("image/svg+xml"))
@@ -60,7 +60,7 @@ public class RenderingTemplateControllerTest {
         TemplateException templateException = new TemplateException(ErrorConstants.INVALID_TEMPLATE_ID);
         Mockito.when(renderingTemplateService.getSvgTemplate("fake-id")).thenThrow(templateException);
 
-        mockMvc.perform(get("/public/svg-template/fake-id"))
+        mockMvc.perform(get("/public/rendering-template/fake-id"))
                 .andExpect(status().isNotFound());
     }
 }

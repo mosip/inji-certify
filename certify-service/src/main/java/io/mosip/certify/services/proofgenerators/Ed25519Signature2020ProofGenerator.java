@@ -4,8 +4,8 @@ import com.danubetech.keyformats.jose.JWSAlgorithm;
 import info.weboftrust.ldsignatures.LdProof;
 import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
 import info.weboftrust.ldsignatures.canonicalizer.URDNA2015Canonicalizer;
+import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.SignatureAlg;
-import io.mosip.certify.services.KeyManagerConstants;
 import io.mosip.kernel.signature.dto.SignRequestDtoV2;
 import io.mosip.kernel.signature.dto.SignResponseDto;
 import io.mosip.kernel.signature.service.SignatureServicev2;
@@ -37,20 +37,15 @@ public class Ed25519Signature2020ProofGenerator implements ProofGenerator {
     }
 
     @Override
-    public String getProof(String vcEncodedHash) {
+    public LdProof generateProof(LdProof vcLdProof, String vcEncodedHash) {
         SignRequestDtoV2 srd = new SignRequestDtoV2();
-        srd.setApplicationId(KeyManagerConstants.CERTIFY_ED25519);
-        srd.setReferenceId(KeyManagerConstants.ED25519_REF_ID);
+        srd.setApplicationId(Constants.CERTIFY_VC_SIGN_ED25519);
+        srd.setReferenceId(Constants.ED25519_REF_ID);
         srd.setDataToSign(vcEncodedHash);
         srd.setResponseEncodingFormat("base58btc");
         srd.setSignAlgorithm(JWSAlgorithm.EdDSA);
         SignResponseDto s = signatureService.signv2(srd);
-        return s.getSignature();
-    }
-
-    @Override
-    public LdProof buildProof(LdProof vcLdProof, String sign) {
         return LdProof.builder().base(vcLdProof).defaultContexts(false)
-                .proofValue(sign).build();
+                .proofValue(s.getSignature()).build();
     }
 }

@@ -19,17 +19,13 @@ public interface ProofGenerator {
     Canonicalizer getCanonicalizer();
 
     /**
-     * getProof takes canonicalized VC hash and returns proof using a competent
-     * SignatureService implementation
-     * @param vcEncodedHash
-     * @return
-     */
-    String getProof(String vcEncodedHash);
-    /**
-     * buildProof takes a proof String and attaches it to a proof object as per algorithm
+     * generateProof takes a canonicalized VC hash generates a proof and
+     *  returns an LdProof object.
+     *  signature: can be a detached JWS, or another proofString based on implementors choice
+     *
      * @param vcLdProof the proof object of the VC
-     * @param sign should be a string, can be a detached JWS, another proofString based on implementors choice
+     * @param vcHash is the output of the
      * @return
      */
-    LdProof buildProof(LdProof vcLdProof, String sign);
+    LdProof generateProof(LdProof vcLdProof, String vcHash);
 }

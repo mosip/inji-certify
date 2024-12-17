@@ -1,4 +1,2 @@
-\c inji_certify
-
-drop table svg_template;
-drop table template_data;
+drop table rendering_template;
+drop table credential_template;

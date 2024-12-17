@@ -158,8 +158,8 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     if (!StringUtils.isEmpty(svgTemplateId)) {
                         templateParams.put(VelocityTemplatingConstants.SVG_TEMPLATE, svgTemplateId);
                     }
-                    String templatedVC = vcFormatter.format(jsonObject, templateParams);
-                    vcResult = vcSigner.perform(templatedVC);
+                    String unSignedVC = vcFormatter.format(jsonObject, templateParams);
+                    vcResult = vcSigner.attachSignature(unSignedVC);
                 } catch(DataProviderExchangeException e) {
                     throw new CertifyException(e.getErrorCode());
                 }

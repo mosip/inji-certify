@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
-import io.mosip.certify.services.KeyManagerConstants;
+import io.mosip.certify.core.constants.Constants;
 import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateRequestDto;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 import io.mosip.kernel.keymanagerservice.dto.SymmetricKeyGenerateRequestDto;
@@ -74,25 +74,25 @@ public class AppConfig implements ApplicationRunner {
         log.info("===================== CERTIFY_SERVICE ROOT KEY CHECK ========================");
         String objectType = "CSR";
         KeyPairGenerateRequestDto rootKeyRequest = new KeyPairGenerateRequestDto();
-        rootKeyRequest.setApplicationId(KeyManagerConstants.ROOT_KEY);
+        rootKeyRequest.setApplicationId(Constants.ROOT_KEY);
         // Set the reference id to empty string, as keymanager is expecting the same for initialization
         rootKeyRequest.setReferenceId(org.apache.commons.lang3.StringUtils.EMPTY);
         keymanagerService.generateMasterKey(objectType, rootKeyRequest);
         log.info("===================== CERTIFY_SERVICE MASTER KEY CHECK ========================");
         KeyPairGenerateRequestDto masterKeyRequest = new KeyPairGenerateRequestDto();
-        masterKeyRequest.setApplicationId(KeyManagerConstants.CERTIFY_SERVICE_APP_ID);
+        masterKeyRequest.setApplicationId(Constants.CERTIFY_SERVICE_APP_ID);
         // Set the reference id to empty string, as keymanager is expecting the same for initialization
         masterKeyRequest.setReferenceId(org.apache.commons.lang3.StringUtils.EMPTY);
         keymanagerService.generateMasterKey(objectType, masterKeyRequest);
         // TODO: Generate an EC & ED key via K8s Job(INJICERT-469)
         KeyPairGenerateRequestDto rsaKeyRequest = new KeyPairGenerateRequestDto();
-        rsaKeyRequest.setApplicationId(KeyManagerConstants.CERTIFY_RSA);
-        rsaKeyRequest.setReferenceId(KeyManagerConstants.EMPTY_REF_ID);
+        rsaKeyRequest.setApplicationId(Constants.CERTIFY_VC_SIGN_RSA);
+        rsaKeyRequest.setReferenceId(Constants.EMPTY_REF_ID);
         rsaKeyRequest.setForce(false);
         keymanagerService.generateMasterKey("certificate", rsaKeyRequest);
         if(!StringUtils.isEmpty(cacheSecretKeyRefId)) {
             SymmetricKeyGenerateRequestDto symmetricKeyGenerateRequestDto = new SymmetricKeyGenerateRequestDto();
-            symmetricKeyGenerateRequestDto.setApplicationId(KeyManagerConstants.CERTIFY_SERVICE_APP_ID);
+            symmetricKeyGenerateRequestDto.setApplicationId(Constants.CERTIFY_SERVICE_APP_ID);
             symmetricKeyGenerateRequestDto.setReferenceId(cacheSecretKeyRefId);
             symmetricKeyGenerateRequestDto.setForce(false);
             keymanagerService.generateSymmetricKey(symmetricKeyGenerateRequestDto);
@@ -101,20 +101,20 @@ public class AppConfig implements ApplicationRunner {
 
         log.info("===================== CERTIFY_PARTNER MASTER KEY CHECK ========================");
         KeyPairGenerateRequestDto partnerMasterKeyRequest = new KeyPairGenerateRequestDto();
-        partnerMasterKeyRequest.setApplicationId(KeyManagerConstants.CERTIFY_PARTNER_APP_ID);
+        partnerMasterKeyRequest.setApplicationId(Constants.CERTIFY_PARTNER_APP_ID);
         // Set the reference id to empty string, as keymanager is expecting the same for initialization
         partnerMasterKeyRequest.setReferenceId(org.apache.commons.lang3.StringUtils.EMPTY);
         keymanagerService.generateMasterKey(objectType, partnerMasterKeyRequest);
         // Generate an Ed25519Key:
         // 1. Generate a master key first to enable Keymanager to store the key.
         KeyPairGenerateRequestDto storeKey = new KeyPairGenerateRequestDto();
-        storeKey.setApplicationId(KeyManagerConstants.CERTIFY_ED25519);
-        storeKey.setReferenceId(org.apache.commons.lang3.StringUtils.EMPTY);
+        storeKey.setApplicationId(Constants.CERTIFY_VC_SIGN_ED25519);
+        storeKey.setReferenceId(Constants.EMPTY_REF_ID);
         keymanagerService.generateMasterKey("certificate", storeKey);
         // 2. Generate an Ed25519 key later
         KeyPairGenerateRequestDto ed25519Req = new KeyPairGenerateRequestDto();
-        ed25519Req.setApplicationId(KeyManagerConstants.CERTIFY_ED25519);
-        ed25519Req.setReferenceId(KeyManagerConstants.ED25519_REF_ID);
+        ed25519Req.setApplicationId(Constants.CERTIFY_VC_SIGN_ED25519);
+        ed25519Req.setReferenceId(Constants.ED25519_REF_ID);
         keymanagerService.generateECSignKey("certificate", ed25519Req);
         log.info("===================== CERTIFY KEY SETUP COMPLETED ========================");
     }

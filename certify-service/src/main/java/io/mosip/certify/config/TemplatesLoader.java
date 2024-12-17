@@ -29,7 +29,7 @@ import java.util.*;
 
 @Configuration
 @Slf4j
-public class TemplateConfig  implements CommandLineRunner {
+public class TemplatesLoader implements CommandLineRunner {
     @Autowired
     RenderingTemplateRepository svgRenderTemplateRepository;
 

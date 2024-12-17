@@ -4,8 +4,8 @@ import com.danubetech.keyformats.jose.JWSAlgorithm;
 import info.weboftrust.ldsignatures.LdProof;
 import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
 import info.weboftrust.ldsignatures.canonicalizer.URDNA2015Canonicalizer;
+import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.SignatureAlg;
-import io.mosip.certify.services.KeyManagerConstants;
 import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import io.mosip.kernel.signature.service.SignatureService;
@@ -35,12 +35,12 @@ public class RSASignature2018ProofGenerator implements ProofGenerator {
     }
 
     @Override
-    public String getProof(String vcEncodedHash) {
+    public LdProof generateProof(LdProof vcLdProof, String vcEncodedHash) {
         String vcEncodedData = Base64.getUrlEncoder().encodeToString(vcEncodedHash.getBytes(StandardCharsets.UTF_8));
         JWSSignatureRequestDto payload = new JWSSignatureRequestDto();
         payload.setDataToSign(vcEncodedData);
-        payload.setApplicationId(KeyManagerConstants.CERTIFY_RSA);
-        payload.setReferenceId(KeyManagerConstants.EMPTY_REF_ID); // alg, empty = RSA
+        payload.setApplicationId(Constants.CERTIFY_VC_SIGN_RSA);
+        payload.setReferenceId(Constants.EMPTY_REF_ID); // alg, empty = RSA
         payload.setIncludePayload(false);
         payload.setIncludeCertificate(false);
         payload.setIncludeCertHash(true);
@@ -49,12 +49,7 @@ public class RSASignature2018ProofGenerator implements ProofGenerator {
         payload.setCertificateUrl("");
         payload.setSignAlgorithm(JWSAlgorithm.RS256); // RSSignature2018 --> RS256, PS256, ES256
         JWTSignatureResponseDto jwsSignedData = signatureService.jwsSign(payload);
-        return jwsSignedData.getJwtSignedData();
-    }
-
-    @Override
-    public LdProof buildProof(LdProof vcLdProof, String sign) {
         return LdProof.builder().base(vcLdProof).defaultContexts(false)
-                .jws(sign).build();
+                .jws(jwsSignedData.getJwtSignedData()).build();
     }
 }
