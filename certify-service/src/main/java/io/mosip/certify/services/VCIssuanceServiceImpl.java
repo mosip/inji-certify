@@ -28,7 +28,7 @@ import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.core.util.AuditHelper;
 import io.mosip.certify.core.util.SecurityHelperService;
-import io.mosip.certify.services.validators.CredentialRequestValidator;
+import io.mosip.certify.validators.CredentialRequestValidator;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
@@ -45,7 +45,7 @@ import java.util.*;
 
 @Slf4j
 @Service
-@ConditionalOnProperty(value = "mosip.certify.issuer", havingValue = "PluginIssuer")
+@ConditionalOnProperty(value = "mosip.certify.plugin-mode", havingValue = "VCIssuance")
 public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     @Value("#{${mosip.certify.key-values}}")

@@ -25,4 +25,5 @@ public class ErrorConstants {
     public static final String UNSUPPORTED_OPENID_VERSION = "unsupported_openid4vci_version";
     public static final String INVALID_TEMPLATE_ID = "template_with_id_not_found";
     public static final String EMPTY_TEMPLATE_CONTENT = "empty_template_content";
+    public static final String EXPECTED_TEMPLATE_NOT_FOUND = "expected_template_not_found";
 }

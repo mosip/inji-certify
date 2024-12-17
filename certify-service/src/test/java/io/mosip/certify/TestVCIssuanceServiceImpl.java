@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import java.util.Map;
 
-@ConditionalOnProperty(value = "mosip.certify.issuer", havingValue = "TestIssuer")
+@ConditionalOnProperty(value = "mosip.certify.plugin-mode", havingValue = "VCIssuance")
 public class TestVCIssuanceServiceImpl implements VCIssuanceService {
     @Override
     public <T> CredentialResponse<T> getCredential(CredentialRequest credentialRequest) {
