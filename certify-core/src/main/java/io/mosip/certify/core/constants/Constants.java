@@ -24,5 +24,5 @@ public class Constants {
     public static final String ED25519_REF_ID = "ED25519_SIGN";
     public static final String TEMPLATE_NAME = "templateName";
     public static final String ISSUER_URI = "issuerURI";
-    public static final String RENDERING_TEMPLATE = "renderingTemplateId";
+    public static final String RENDERING_TEMPLATE_ID = "renderingTemplateId";
 }

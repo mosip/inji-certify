@@ -1,4 +1,4 @@
-package io.mosip.certify.services;
+package io.mosip.certify.vcsigners;
 
 import foundation.identity.jsonld.JsonLDObject;
 import info.weboftrust.ldsignatures.LdProof;

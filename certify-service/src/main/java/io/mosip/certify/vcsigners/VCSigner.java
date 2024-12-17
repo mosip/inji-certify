@@ -1,4 +1,4 @@
-package io.mosip.certify.services;
+package io.mosip.certify.vcsigners;
 
 import io.mosip.certify.api.dto.VCResult;
 

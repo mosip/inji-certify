@@ -12,6 +12,7 @@ import io.mosip.certify.core.exception.InvalidRequestException;
 import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.util.SecurityHelperService;
 import io.mosip.certify.proof.ProofValidatorFactory;
+import io.mosip.certify.vcsigners.VCSigner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

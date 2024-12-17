@@ -6,9 +6,11 @@
 package io.mosip.certify.services.vcformatters;
 
 import java.io.*;
+import java.time.Duration;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 
 import io.mosip.certify.core.constants.ErrorConstants;
@@ -47,8 +49,10 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     CredentialTemplateRepository credentialTemplateRepository;
     @Autowired
     RenderingTemplateService renderingTemplateService;
-    @Value("${mosip.certify.vcformat.vc.expiry:true}")
-    boolean shouldHaveDates;
+
+    @Value("${mosip.certify.data-provider-plugin.vc-expiry-duration:P730d}")
+    String defaultExpiryDuration;
+
     @Value("${mosip.certify.issuer.id.field.prefix.url:}")
     String idPrefix;
 
@@ -113,21 +117,24 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         finalTemplate.put("_esc", new EscapeTool());
         // add the issuer value
         finalTemplate.put("_issuer", issuer);
-        if (templateSettings.containsKey(Constants.RENDERING_TEMPLATE) && templateName.contains(VCDM2Constants.URL)) {
+        if (templateSettings.containsKey(Constants.RENDERING_TEMPLATE_ID) && templateName.contains(VCDM2Constants.URL)) {
             try {
                 finalTemplate.put("_renderMethodSVGdigest",
                         CredentialUtils.getDigestMultibase(renderingTemplateService.getSvgTemplate(
-                                (String) templateSettings.get(Constants.RENDERING_TEMPLATE)).getTemplate()));
+                                (String) templateSettings.get(Constants.RENDERING_TEMPLATE_ID)).getTemplate()));
             } catch (RenderingTemplateException e) {
-                log.error("SVG Template: " + templateSettings.get(Constants.RENDERING_TEMPLATE) + " not available in DB", e);
+                log.error("SVG Template: " + templateSettings.get(Constants.RENDERING_TEMPLATE_ID) + " not available in DB", e);
             }
         }
-        if (shouldHaveDates && !(valueMap.has(VCDM2Constants.VALID_FROM)
-                && valueMap.has(VCDM2Constants.VALID_UNITL))) {
-            String time = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            // hardcoded time
-            String expiryTime = ZonedDateTime.now(ZoneOffset.UTC).plusYears(2).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            finalTemplate.put(VCDM2Constants.VALID_FROM, time);
+        if (!valueMap.has(VCDM2Constants.VALID_UNITL) && StringUtils.isNotEmpty(defaultExpiryDuration)) {
+            Duration duration;
+            try {
+                duration = Duration.parse(defaultExpiryDuration);
+            } catch (DateTimeParseException e) {
+                // set 730days(~2Y) as default VC expiry
+                duration = Duration.parse("P730D");
+            }
+            String expiryTime = ZonedDateTime.now(ZoneOffset.UTC).plusSeconds(duration.getSeconds()).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
             finalTemplate.put(VCDM2Constants.VALID_UNITL, expiryTime);
         }
         VelocityContext context = new VelocityContext(finalTemplate);

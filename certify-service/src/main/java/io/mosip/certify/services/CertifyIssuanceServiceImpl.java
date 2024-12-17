@@ -34,6 +34,7 @@ import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
 import io.mosip.certify.utils.CredentialUtils;
+import io.mosip.certify.vcsigners.VCSigner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
@@ -291,7 +292,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     templateParams.put(Constants.TEMPLATE_NAME, CredentialUtils.getTemplateName(vcRequestDto));
                     templateParams.put(Constants.ISSUER_URI, issuerURI);
                     if (!StringUtils.isEmpty(renderTemplateId)) {
-                        templateParams.put(Constants.RENDERING_TEMPLATE, renderTemplateId);
+                        templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
                     }
                     String unSignedVC = vcFormatter.format(jsonObject, templateParams);
                     Map<String, String> signerSettings = new HashMap<>();
