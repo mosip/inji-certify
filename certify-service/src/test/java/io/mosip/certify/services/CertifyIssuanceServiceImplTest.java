@@ -1,9 +1,8 @@
 package io.mosip.certify.services;
 
 import io.mosip.certify.api.spi.AuditPlugin;
-import io.mosip.certify.services.spi.DataProviderPlugin;
-import io.mosip.certify.services.spi.VCFormatter;
-import io.mosip.certify.services.spi.VCSigner;
+import io.mosip.certify.api.spi.DataProviderPlugin;
+import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.CredentialDefinition;
@@ -13,6 +12,7 @@ import io.mosip.certify.core.exception.InvalidRequestException;
 import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.util.SecurityHelperService;
 import io.mosip.certify.proof.ProofValidatorFactory;
+import io.mosip.certify.vcsigners.VCSigner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

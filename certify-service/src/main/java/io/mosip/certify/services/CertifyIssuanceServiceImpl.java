@@ -12,6 +12,7 @@ import io.mosip.certify.api.exception.DataProviderExchangeException;
 import io.mosip.certify.api.spi.*;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
+import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.CredentialMetadata;
 import io.mosip.certify.core.dto.CredentialRequest;
@@ -26,15 +27,14 @@ import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.core.util.AuditHelper;
 import io.mosip.certify.core.util.SecurityHelperService;
-import io.mosip.certify.services.spi.DataProviderPlugin;
-import io.mosip.certify.services.spi.VCFormatter;
-import io.mosip.certify.services.spi.VCSigner;
-import io.mosip.certify.services.validators.CredentialRequestValidator;
+import io.mosip.certify.api.spi.DataProviderPlugin;
+import io.mosip.certify.vcformatters.VCFormatter;
+import io.mosip.certify.validators.CredentialRequestValidator;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
-import io.mosip.certify.services.templating.VelocityTemplatingConstants;
 import io.mosip.certify.utils.CredentialUtils;
+import io.mosip.certify.vcsigners.VCSigner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
@@ -50,9 +50,15 @@ import java.util.*;
 
 @Slf4j
 @Service
-@ConditionalOnProperty(value = "mosip.certify.issuer", havingValue = "CertifyIssuer")
+@ConditionalOnProperty(value = "mosip.certify.plugin-mode", havingValue = "DataProvider")
 public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
+    public static final Map<String, List<String>> keyChooser = Map.of(
+            SignatureAlg.RSA_SIGNATURE_SUITE_2018, List.of(Constants.CERTIFY_VC_SIGN_RSA, Constants.EMPTY_REF_ID),
+            SignatureAlg.ED25519_SIGNATURE_SUITE_2018, List.of(Constants.CERTIFY_VC_SIGN_ED25519, Constants.ED25519_REF_ID),
+            SignatureAlg.ED25519_SIGNATURE_SUITE_2020, List.of(Constants.CERTIFY_VC_SIGN_ED25519, Constants.ED25519_REF_ID));
+    @Value("${mosip.certify.data-provider-plugin.issuer.vc-sign-algo:Ed25519Signature2020}")
+    private String vcSignAlgorithm;
     @Value("#{${mosip.certify.key-values}}")
     private LinkedHashMap<String, LinkedHashMap<String, Object>> issuerMetadata;
 
@@ -283,13 +289,17 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     // TODO(multitenancy): later decide which plugin out of n plugins is the correct one
                     JSONObject jsonObject = dataProviderPlugin.fetchData(parsedAccessToken.getClaims());
                     Map<String, Object> templateParams = new HashMap<>();
-                    templateParams.put(VelocityTemplatingConstants.TEMPLATE_NAME, CredentialUtils.getTemplateName(vcRequestDto));
-                    templateParams.put(VelocityTemplatingConstants.ISSUER_URI, issuerURI);
+                    templateParams.put(Constants.TEMPLATE_NAME, CredentialUtils.getTemplateName(vcRequestDto));
+                    templateParams.put(Constants.ISSUER_URI, issuerURI);
                     if (!StringUtils.isEmpty(renderTemplateId)) {
-                        templateParams.put(VelocityTemplatingConstants.SVG_TEMPLATE, renderTemplateId);
+                        templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
                     }
                     String unSignedVC = vcFormatter.format(jsonObject, templateParams);
-                    vcResult = vcSigner.attachSignature(unSignedVC);
+                    Map<String, String> signerSettings = new HashMap<>();
+                    // NOTE: This is a quasi implementation to add support for multi-tenancy.
+                    signerSettings.put(Constants.APPLICATION_ID, keyChooser.get(vcSignAlgorithm).getFirst());
+                    signerSettings.put(Constants.REFERENCE_ID, keyChooser.get(vcSignAlgorithm).getLast());
+                    vcResult = vcSigner.attachSignature(unSignedVC, signerSettings);
                 } catch(DataProviderExchangeException e) {
                     throw new CertifyException(e.getErrorCode());
                 }

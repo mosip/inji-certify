@@ -3,9 +3,8 @@ package io.mosip.certify.controller;
 import io.mosip.certify.api.dto.RenderingTemplateDTO;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.ParsedAccessToken;
-import io.mosip.certify.services.entity.RenderingTemplate;
 import io.mosip.certify.core.exception.RenderingTemplateException;
-import io.mosip.certify.services.spi.RenderingTemplateService;
+import io.mosip.certify.core.spi.RenderingTemplateService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -49,7 +48,7 @@ public class RenderingTemplateControllerTest {
 
         Mockito.when(renderingTemplateService.getSvgTemplate(Mockito.any())).thenReturn(renderingTemplateDTO);
 
-        mockMvc.perform(get("/public/rendering-template/fake-id"))
+        mockMvc.perform(get("/rendering-template/fake-id"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(renderingTemplateDTO.getTemplate()))
                 .andExpect(content().contentType("image/svg+xml"))
@@ -61,7 +60,7 @@ public class RenderingTemplateControllerTest {
         RenderingTemplateException templateException = new RenderingTemplateException(ErrorConstants.INVALID_TEMPLATE_ID);
         Mockito.when(renderingTemplateService.getSvgTemplate("fake-id")).thenThrow(templateException);
 
-        mockMvc.perform(get("/public/rendering-template/fake-id"))
+        mockMvc.perform(get("/rendering-template/fake-id"))
                 .andExpect(status().isNotFound());
     }
 }

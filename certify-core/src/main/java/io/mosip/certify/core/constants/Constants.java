@@ -9,6 +9,8 @@ public class Constants {
 
     public static final String UTC_DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
     public static final String SPACE = " ";
+    public static final String APPLICATION_ID = "applicationId";
+    public static final String REFERENCE_ID = "referenceId";
 
     public static final String C_NONCE = "c_nonce";
     public static final String C_NONCE_EXPIRES_IN = "c_nonce_expires_in";
@@ -20,4 +22,7 @@ public class Constants {
     public static final String ROOT_KEY = "ROOT";
     public static final String EMPTY_REF_ID = "";
     public static final String ED25519_REF_ID = "ED25519_SIGN";
+    public static final String TEMPLATE_NAME = "templateName";
+    public static final String ISSUER_URI = "issuerURI";
+    public static final String RENDERING_TEMPLATE_ID = "renderingTemplateId";
 }

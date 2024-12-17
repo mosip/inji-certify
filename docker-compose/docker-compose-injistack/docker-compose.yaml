@@ -14,7 +14,7 @@ services:
       - "5433:5432"
 
   certify:
-    image: mosipdev/inji-certify:develop
+    image: mosipqa/inji-certify:release-0.10.x
     user: root
     ports:
       - 8090:8090
@@ -30,6 +30,8 @@ services:
       - ./config/certify-csvdp-farmer.properties:/home/mosip/config/certify-csvdp-farmer.properties
       - ./data/CERTIFY_PKCS12:/home/mosip/CERTIFY_PKCS12
       - ./loader_path/certify/:/home/mosip/additional_jars/
+      # modify the below file to change the identity fields in the VC
+      - ./config/farmer_identity_data.csv:/home/mosip/config/farmer_identity_data.csv
     networks:
       - network
     depends_on:
@@ -39,7 +41,7 @@ services:
     container_name: nginx
     image: nginx:alpine
     ports:
-      - '8080:80'
+      - '80:80'
     volumes:
       - ./config/mimoto-issuers-config.json:/config/server/mimoto-issuers-config.json
       - ./config/mimoto-trusted-verifiers.json:/config/server/mimoto-trusted-verifiers.json
@@ -52,7 +54,7 @@ services:
 
   mimoto-service:
     container_name: 'Mimoto-Service'
-    image: 'mosipid/mimoto:0.14.0'
+    image: mosipid/mimoto:0.14.0
     user: root
     ports:
       - '8099:8099'

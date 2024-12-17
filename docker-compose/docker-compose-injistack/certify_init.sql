@@ -81,57 +81,13 @@ CREATE TABLE certify.credential_template(
                                     CONSTRAINT pk_template PRIMARY KEY (context, credential_type)
 );
 
-INSERT INTO certify.credential_template (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1', 'MockVerifiableCredential,VerifiableCredential', '{
-    "@context": [
-    "https://www.w3.org/2018/credentials/v1",
-    "https://vharsh.github.io/DID/mock-context.json"],
-    "issuer": "${issuer}",
-    "type": ["VerifiableCredential", "MockVerifiableCredential"],
-    "issuanceDate": "${validFrom}",
-    "expirationDate": "${validUntil}",
-    "credentialSubject": {
-        "gender": ${gender},
-        "postalCode": ${postalCode},
-        "fullName": ${fullName},
-        "dateOfBirth": "${dateOfBirth}",
-        "province": ${province},
-        "phone": "${phone}",
-        "addressLine1": ${addressLine1},
-        "region": ${region},
-        "vcVer": "${vcVer}",
-        "UIN": ${UIN},
-        "email": "${email}",
-        "face": "${face}"
-    }
-}', '2024-10-22 17:08:17.826851', NULL);
-INSERT INTO certify.credential_template (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/ns/credentials/v2', 'MockVerifiableCredential,VerifiableCredential', '{
-    "@context": [
-            "https://www.w3.org/ns/credentials/v2", "https://vharsh.github.io/DID/mock-context.json"],
-    "issuer": "${issuer}",
-    "type": ["VerifiableCredential", "MockVerifiableCredential"],
-    "validFrom": "${validFrom}",
-    "validUntil": "${validUntil}",
-    "credentialSubject": {
-    "gender": ${gender},
-        "postalCode": ${postalCode},
-        "fullName": ${fullName},
-        "dateOfBirth": "${dateOfBirth}",
-        "province": ${province},
-        "phone": "${phone}",
-        "addressLine1": ${addressLine1},
-        "region": ${region},
-        "vcVer": "${vcVer}",
-        "UIN": ${UIN},
-        "email": "${email}",
-        "face": "${face}"
-    }
-}', '2024-10-22 17:08:17.826851', NULL);
 INSERT INTO certify.credential_template (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/2018/credentials/v1', 'FarmerCredential,VerifiableCredential', '{
      "@context": [
          "https://www.w3.org/2018/credentials/v1",
-         "https://piyush7034.github.io/my-files/farmer.json"
+         "https://piyush7034.github.io/my-files/farmer.json",
+         "https://w3id.org/security/suites/ed25519-2020/v1"
      ],
-     "issuer": "${issuer}",
+     "issuer": "${_issuer}",
      "type": [
          "VerifiableCredential",
          "FarmerCredential"
@@ -157,6 +113,37 @@ INSERT INTO certify.credential_template (context, credential_type, template, cr_
 }
 ', '2024-10-24 12:32:38.065994', NULL);
 
+INSERT INTO certify.template_data (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/ns/credentials/v2', 'FarmerCredential,VerifiableCredential', '{
+     "@context": [
+                "https://www.w3.org/ns/credentials/v2",
+                "https://vharsh.github.io/DID/farmer.json",
+                "https://w3id.org/security/suites/ed25519-2020/v1"
+        ],
+        "issuer": "${_issuer}",
+        "type": [
+            "VerifiableCredential",
+            "FarmerCredential"
+        ],
+        "validFrom": "${validFrom}",
+        "validUntil": "${validUntil}",
+        "credentialSubject": {
+            "name": "${name}",
+            "dateOfBirth": "${dateOfBirth}",
+            "highestEducation": "${highestEducation}",
+            "maritalStatus": "${maritalStatus}",
+            "typeOfHouse": "${typeOfHouse}",
+            "numberOfDependents": "${numberOfDependents}",
+            "phoneNumber": "${phoneNumber}",
+            "works": "${works}",
+            "landArea": "${landArea}",
+            "landOwnershipType": "${landOwnershipType}",
+            "primaryCropType": "${primaryCropType}",
+            "secondaryCropType": "${secondaryCropType}",
+            "face": "${face}",
+            "farmerID": "${farmerID}"
+        }
+}
+', '2024-10-24 12:32:38.065994', NULL);
 
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('ROOT', 2920, 1125, 'NA', true, 'mosipadmin', now());
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_SERVICE', 1095, 60, 'NA', true, 'mosipadmin', now());

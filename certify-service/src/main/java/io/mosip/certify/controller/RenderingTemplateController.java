@@ -6,9 +6,8 @@
 package io.mosip.certify.controller;
 
 import io.mosip.certify.api.dto.RenderingTemplateDTO;
-import io.mosip.certify.services.entity.RenderingTemplate;
 import io.mosip.certify.core.exception.RenderingTemplateException;
-import io.mosip.certify.services.spi.RenderingTemplateService;
+import io.mosip.certify.core.spi.RenderingTemplateService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,14 +24,14 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
-@RequestMapping("/public")
+@RequestMapping("/rendering-template")
 public class RenderingTemplateController {
     @Value("${mosip.certify.rendering-template.cache-max-age-days:1}")
     Integer maxAgeDays;
     @Autowired
     RenderingTemplateService renderingTemplateService;
 
-    @GetMapping("/rendering-template/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<String> serveSvgTemplate(@PathVariable String id) throws RenderingTemplateException {
         RenderingTemplateDTO template = renderingTemplateService.getSvgTemplate(id);
         return ResponseEntity.ok()
