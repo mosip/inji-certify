@@ -1,4 +1,4 @@
-package io.mosip.certify.services.vcformatters;
+package io.mosip.certify.vcformatters;
 
 import java.util.Map;
 

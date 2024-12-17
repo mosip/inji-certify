@@ -1,4 +1,4 @@
-package io.mosip.certify.services.vcformatters;
+package io.mosip.certify.vcformatters;
 
 import io.mosip.certify.entity.CredentialTemplate;
 import io.mosip.certify.repository.CredentialTemplateRepository;
@@ -16,10 +16,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.stereotype.Service;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.Duration;
 import java.util.*;
 
 import static org.mockito.Mockito.when;

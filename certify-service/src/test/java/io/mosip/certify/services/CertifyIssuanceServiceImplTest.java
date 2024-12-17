@@ -2,7 +2,7 @@ package io.mosip.certify.services;
 
 import io.mosip.certify.api.spi.AuditPlugin;
 import io.mosip.certify.api.spi.DataProviderPlugin;
-import io.mosip.certify.services.vcformatters.VCFormatter;
+import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.CredentialDefinition;

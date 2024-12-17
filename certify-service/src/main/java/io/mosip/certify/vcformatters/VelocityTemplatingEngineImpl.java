@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-package io.mosip.certify.services.vcformatters;
+package io.mosip.certify.vcformatters;
 
 import java.io.*;
 import java.time.Duration;
@@ -21,7 +21,7 @@ import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.constants.VCDMConstants;
 import io.mosip.certify.core.exception.RenderingTemplateException;
 import io.mosip.certify.repository.CredentialTemplateRepository;
-import io.mosip.certify.services.spi.RenderingTemplateService;
+import io.mosip.certify.core.spi.RenderingTemplateService;
 import io.mosip.certify.services.CredentialUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;

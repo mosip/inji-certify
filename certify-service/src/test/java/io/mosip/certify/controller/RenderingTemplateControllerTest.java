@@ -4,7 +4,7 @@ import io.mosip.certify.api.dto.RenderingTemplateDTO;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.ParsedAccessToken;
 import io.mosip.certify.core.exception.RenderingTemplateException;
-import io.mosip.certify.services.spi.RenderingTemplateService;
+import io.mosip.certify.core.spi.RenderingTemplateService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;

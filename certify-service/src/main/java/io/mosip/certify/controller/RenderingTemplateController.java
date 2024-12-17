@@ -7,7 +7,7 @@ package io.mosip.certify.controller;
 
 import io.mosip.certify.api.dto.RenderingTemplateDTO;
 import io.mosip.certify.core.exception.RenderingTemplateException;
-import io.mosip.certify.services.spi.RenderingTemplateService;
+import io.mosip.certify.core.spi.RenderingTemplateService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
