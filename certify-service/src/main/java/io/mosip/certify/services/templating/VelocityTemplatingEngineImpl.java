@@ -11,6 +11,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+import io.mosip.certify.services.entity.CredentialTemplate;
 import io.mosip.certify.services.spi.VCFormatter;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCDM2Constants;
@@ -32,6 +33,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import static io.mosip.certify.services.templating.VelocityTemplatingConstants.*;
@@ -41,7 +43,7 @@ import static io.mosip.certify.services.templating.VelocityTemplatingConstants.*
 public class VelocityTemplatingEngineImpl implements VCFormatter {
     VelocityEngine engine;
     public static final String DELIMITER = ":";
-    Map<String, String> templateCache;
+    public static final String TEMPLATE_CACHE = "templatecache";
     @Autowired
     TemplateRepository templateRepository;
     @Autowired
@@ -56,8 +58,6 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         engine = new VelocityEngine();
         // TODO: The DataSourceResourceLoader can be used instead if there's a
         //  single primary key column and the table has a last modified date.
-        templateCache = new HashMap<>();
-        templateRepository.findAll().stream().forEach((template -> templateCache.put(String.join(DELIMITER, template.getCredentialType(), template.getContext()), template.getTemplate())));
         engine.setProperty(RuntimeConstants.INPUT_ENCODING, "UTF-8");
         engine.setProperty(RuntimeConstants.OUTPUT_ENCODING, "UTF-8");
         engine.init();
@@ -80,8 +80,12 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     public String format(JSONObject valueMap, Map<String, Object> templateSettings) {
         // TODO: Isn't template name becoming too complex with VC_CONTEXTS & CREDENTIAL_TYPES both?
         String templateName = templateSettings.get(TEMPLATE_NAME).toString();
+        String template = getTemplate(templateName);
+        if (template == null) {
+            log.error("Template {} not found", templateName);
+            throw new TemplateException("Expected template not found");
+        }
         String issuer = templateSettings.get(ISSUER_URI).toString();
-        String template = templateCache.get(templateName);
         StringWriter writer = new StringWriter();
         // 1. Prepare map
         // TODO: Eventually, the credentialSubject from the plugin will be templated as-is
@@ -135,5 +139,26 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
             return j.toString();
         }
         return writer.toString();
+    }
+
+    /**
+     * getTemplate fetches the VelocityTemplate from the DB or Spring Cache
+     * @param key key is a combination of sorted credentialType & sorted
+     *            context separated by a ':'.
+     * @return
+     */
+    @Override
+    @Cacheable(cacheNames = TEMPLATE_CACHE, key = "#key")
+    public String getTemplate(String key) {
+        if (!key.contains(DELIMITER)) {
+            return null;
+        }
+        String credentialType = key.split(DELIMITER)[0];
+        String context = key.split(DELIMITER, 2)[1];
+        CredentialTemplate template = templateRepository.findByCredentialTypeAndContext(credentialType, context).orElse(null);
+        if (template != null) {
+            return template.getTemplate();
+        } else
+            return null;
     }
 }

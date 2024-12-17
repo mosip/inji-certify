@@ -74,7 +74,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Value("${mosip.certify.data-provider-plugin.issuer-uri}")
     private String issuerURI;
 
-    @Value("${mosip.certify.data-provider-plugin.svg-template-id:}")
+    @Value("${mosip.certify.data-provider-plugin.rendering-template-id:}")
     private String svgTemplateId;
 
     @Autowired

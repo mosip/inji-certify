@@ -19,10 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.mockito.Mockito.when;
 
@@ -37,7 +34,6 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
     @SneakyThrows
     @Before
     public void setUp() {
-        List<CredentialTemplate> templates = new ArrayList<>();
         CredentialTemplate vc1 = initTemplate("""
                 {
                     "@context": [
@@ -118,7 +114,9 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
                 "MockVerifiableCredential,VerifiableCredential",
                 "https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1"
         );
-        when(templateRepository.findAll()).thenReturn(List.of(vc1, vc2, vc3));
+        //when(templateRepository.findByCredentialTypeAndContext("MockVerifiableCredential,VerifiableCredential", "https://schema.org,https://www.w3.org/2018/credentials/v1")).thenReturn(Optional.of(vc1));
+        when(templateRepository.findByCredentialTypeAndContext("MockVerifiableCredential,VerifiableCredential", "https://example.org/Person.json,https://www.w3.org/ns/credentials/v2")).thenReturn(Optional.of(vc2));
+        //when(templateRepository.findByCredentialTypeAndContext("MockVerifiableCredential,VerifiableCredential", "https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1")).thenReturn(Optional.of(vc3));
         ReflectionTestUtils.setField(formatter, "shouldHaveDates", true);
         formatter.initialize();
 //        engine = new VelocityEngine();
