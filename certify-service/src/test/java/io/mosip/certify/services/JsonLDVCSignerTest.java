@@ -1,4 +1,4 @@
-package io.mosip.certify.services.vcsigners;
+package io.mosip.certify.services;
 
 import foundation.identity.jsonld.JsonLDObject;
 import info.weboftrust.ldsignatures.LdProof;
@@ -23,13 +23,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
-public class KeymanagerLibSignerTest {
+public class JsonLDVCSignerTest {
     @Mock
     SignatureService signatureService;
     @Mock
     ProofGenerator signProps;
     @InjectMocks
-    private KeymanagerLibSigner signer;
+    private JsonLDVCSigner jsonLDVCSigner;
     private static final String VC_1 = """
             {
                             "@context": [
@@ -64,7 +64,7 @@ public class KeymanagerLibSignerTest {
 
     @Before
     public void setup() {
-        ReflectionTestUtils.setField(signer, "issuerPublicKeyURI", "https://example.com/sample.pub.key.json/");
+        ReflectionTestUtils.setField(jsonLDVCSigner, "issuerPublicKeyURI", "https://example.com/sample.pub.key.json/");
     }
 
     @Test
@@ -84,7 +84,7 @@ public class KeymanagerLibSignerTest {
             defaultSettings.put(Constants.APPLICATION_ID, "fake-application-id");
             defaultSettings.put(Constants.REFERENCE_ID, "fake-reference-id");
             // invoke
-            VCResult<JsonLDObject> vcResult = signer.attachSignature(templatedVC, defaultSettings);
+            VCResult<JsonLDObject> vcResult = jsonLDVCSigner.attachSignature(templatedVC, defaultSettings);
 
             // test
             assert vcResult != null;

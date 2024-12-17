@@ -29,7 +29,6 @@ import io.mosip.certify.core.util.AuditHelper;
 import io.mosip.certify.core.util.SecurityHelperService;
 import io.mosip.certify.api.spi.DataProviderPlugin;
 import io.mosip.certify.services.vcformatters.VCFormatter;
-import io.mosip.certify.services.vcsigners.VCSigner;
 import io.mosip.certify.validators.CredentialRequestValidator;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-package io.mosip.certify.services.vcsigners;
+package io.mosip.certify.services;
 
 import foundation.identity.jsonld.JsonLDException;
 import foundation.identity.jsonld.JsonLDObject;
@@ -31,7 +31,7 @@ import java.util.Date;
 import java.util.Map;
 
 /**
- * KeymanagerLibSigner is a VCSigner which uses the Certify embedded
+ * JsonLDVCSigner is a VCSigner which uses the Certify embedded
  * keymanager to perform VC signing tasks for JSON LD VCs.
  * These are the known external requirements:
  * - the public key must be pre-hosted for the VC & should be available
@@ -41,7 +41,7 @@ import java.util.Map;
  */
 @Slf4j
 @Service
-public class KeymanagerLibSigner implements VCSigner {
+public class JsonLDVCSigner implements VCSigner {
 
     @Autowired
     ProofGenerator proofGenerator;
@@ -49,7 +49,7 @@ public class KeymanagerLibSigner implements VCSigner {
     private String issuerPublicKeyURI;
 
     @Override
-    public VCResult<JsonLDObject> attachSignature(String unSignedVC, Map<String, String> defaultSettings) {
+    public VCResult<JsonLDObject> attachSignature(String unSignedVC, Map<String, String> keyReferenceDetails) {
         // Can the below lines be done at Templating side itself ?
         VCResult<JsonLDObject> VC = new VCResult<>();
         JsonLDObject jsonLDObject = JsonLDObject.fromJson(unSignedVC);
@@ -85,7 +85,7 @@ public class KeymanagerLibSigner implements VCSigner {
             throw new CertifyException("Error during canonicalization");
         }
         String vcEncodedHash = Base64.getUrlEncoder().encodeToString(vcHashBytes);
-        LdProof ldProofWithJWS = proofGenerator.generateProof(vcLdProof, vcEncodedHash, defaultSettings);
+        LdProof ldProofWithJWS = proofGenerator.generateProof(vcLdProof, vcEncodedHash, keyReferenceDetails);
         ldProofWithJWS.addToJsonLDObject(jsonLDObject);
         VC.setCredential(jsonLDObject);
         return VC;

@@ -1,4 +1,4 @@
-package io.mosip.certify.services.vcsigners;
+package io.mosip.certify.services;
 
 import io.mosip.certify.api.dto.VCResult;
 
@@ -9,5 +9,5 @@ import java.util.Map;
  *  return a signed VCResult.
  */
 public interface VCSigner {
-    VCResult<?> attachSignature(String unSignedVC, Map<String, String> defaultSettings);
+    VCResult<?> attachSignature(String unSignedVC, Map<String, String> keyReferenceDetails);
 }
