@@ -137,6 +137,9 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
             String expiryTime = ZonedDateTime.now(ZoneOffset.UTC).plusSeconds(duration.getSeconds()).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
             finalTemplate.put(VCDM2Constants.VALID_UNITL, expiryTime);
         }
+        if (!valueMap.has(VCDM2Constants.VALID_FROM)) {
+            finalTemplate.put(VCDM2Constants.VALID_FROM, ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN)));
+        }
         VelocityContext context = new VelocityContext(finalTemplate);
         engine.evaluate(context, writer, /*logTag */ templateName,template.toString());
         if (StringUtils.isNotEmpty(idPrefix)) {
