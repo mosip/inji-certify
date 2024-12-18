@@ -117,10 +117,14 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         if(issuerMetadata.containsKey(version)) {
             return issuerMetadata.get(version);
         } else if(version != null && version.equals("vd12")) {
-            Map<String, Object> vd12IssuerMetadata = convertLatestToVd12(issuerMetadata.get(version));
+            LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
+            Map<String, Object> vd12IssuerMetadata = convertLatestToVd12(originalIssuerMetadata);
+            issuerMetadata.put("vd12", (LinkedHashMap<String, Object>) vd12IssuerMetadata);
             return vd12IssuerMetadata;
         } else if(version != null && version.equals("vd11")) {
-            Map<String, Object> vd11IssuerMetadata = convertLatestToVd11(issuerMetadata.get(version));
+            LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
+            Map<String, Object> vd11IssuerMetadata = convertLatestToVd11(originalIssuerMetadata);
+            issuerMetadata.put("vd11", (LinkedHashMap<String, Object>) vd11IssuerMetadata);
             return vd11IssuerMetadata;
         }
         throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_OPENID_VERSION);
