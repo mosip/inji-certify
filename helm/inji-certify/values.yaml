@@ -244,7 +244,7 @@ extraEnvVars: |
   - name: MOSIP_KERNEL_KEYMANAGER_HSM_KEYSTORE_PASS
     valueFrom:
       secretKeyRef:
-        name: certify-softhsm
+        name: softhsm-certify
         key: security-pin
 
 ## ConfigMap with extra environment variables that used
