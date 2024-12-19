@@ -240,12 +240,7 @@ updateStrategy:
 ##   - name: FOO
 ##     value: "bar"
 ##
-extraEnvVars: |
-  - name: MOSIP_KERNEL_KEYMANAGER_HSM_KEYSTORE_PASS
-    valueFrom:
-      secretKeyRef:
-        name: softhsm-certify
-        key: security-pin
+extraEnvVars: []
 
 ## ConfigMap with extra environment variables that used
 ##
