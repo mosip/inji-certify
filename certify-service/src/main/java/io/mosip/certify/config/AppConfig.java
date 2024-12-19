@@ -47,6 +47,9 @@ public class AppConfig implements ApplicationRunner {
     @Value("${mosip.certify.cache.security.secretkey.reference-id}")
     private String cacheSecretKeyRefId;
 
+    @Value("${mosip.certify.plugin-mode}")
+    private String pluginMode;
+
 
     @Bean
     public ObjectMapper objectMapper() {
@@ -85,11 +88,6 @@ public class AppConfig implements ApplicationRunner {
         masterKeyRequest.setReferenceId(org.apache.commons.lang3.StringUtils.EMPTY);
         keymanagerService.generateMasterKey(objectType, masterKeyRequest);
         // TODO: Generate an EC & ED key via K8s Job(INJICERT-469)
-        KeyPairGenerateRequestDto rsaKeyRequest = new KeyPairGenerateRequestDto();
-        rsaKeyRequest.setApplicationId(Constants.CERTIFY_VC_SIGN_RSA);
-        rsaKeyRequest.setReferenceId(Constants.EMPTY_REF_ID);
-        rsaKeyRequest.setForce(false);
-        keymanagerService.generateMasterKey("certificate", rsaKeyRequest);
         if(!StringUtils.isEmpty(cacheSecretKeyRefId)) {
             SymmetricKeyGenerateRequestDto symmetricKeyGenerateRequestDto = new SymmetricKeyGenerateRequestDto();
             symmetricKeyGenerateRequestDto.setApplicationId(Constants.CERTIFY_SERVICE_APP_ID);
@@ -105,17 +103,27 @@ public class AppConfig implements ApplicationRunner {
         // Set the reference id to empty string, as keymanager is expecting the same for initialization
         partnerMasterKeyRequest.setReferenceId(org.apache.commons.lang3.StringUtils.EMPTY);
         keymanagerService.generateMasterKey(objectType, partnerMasterKeyRequest);
-        // Generate an Ed25519Key:
-        // 1. Generate a master key first to enable Keymanager to store the key.
-        KeyPairGenerateRequestDto storeKey = new KeyPairGenerateRequestDto();
-        storeKey.setApplicationId(Constants.CERTIFY_VC_SIGN_ED25519);
-        storeKey.setReferenceId(Constants.EMPTY_REF_ID);
-        keymanagerService.generateMasterKey("certificate", storeKey);
-        // 2. Generate an Ed25519 key later
-        KeyPairGenerateRequestDto ed25519Req = new KeyPairGenerateRequestDto();
-        ed25519Req.setApplicationId(Constants.CERTIFY_VC_SIGN_ED25519);
-        ed25519Req.setReferenceId(Constants.ED25519_REF_ID);
-        keymanagerService.generateECSignKey("certificate", ed25519Req);
+        if(pluginMode.equals("DataProvider")) {
+            // Generate RSA Key Certificate
+            log.info("===================== CERTIFY_VC_SIGN_RSA KEY CHECK ========================");
+            KeyPairGenerateRequestDto rsaKeyRequest = new KeyPairGenerateRequestDto();
+            rsaKeyRequest.setApplicationId(Constants.CERTIFY_VC_SIGN_RSA);
+            rsaKeyRequest.setReferenceId(Constants.EMPTY_REF_ID);
+            rsaKeyRequest.setForce(false);
+            keymanagerService.generateMasterKey("certificate", rsaKeyRequest);
+            // Generate an Ed25519Key:
+            // 1. Generate a master key first to enable Keymanager to store the key.
+            log.info("===================== CERTIFY_VC_SIGN_ED25519 KEY CHECK ========================");
+            KeyPairGenerateRequestDto storeKey = new KeyPairGenerateRequestDto();
+            storeKey.setApplicationId(Constants.CERTIFY_VC_SIGN_ED25519);
+            storeKey.setReferenceId(Constants.EMPTY_REF_ID);
+            keymanagerService.generateMasterKey("certificate", storeKey);
+            // 2. Generate an Ed25519 key later
+            KeyPairGenerateRequestDto ed25519Req = new KeyPairGenerateRequestDto();
+            ed25519Req.setApplicationId(Constants.CERTIFY_VC_SIGN_ED25519);
+            ed25519Req.setReferenceId(Constants.ED25519_REF_ID);
+            keymanagerService.generateECSignKey("certificate", ed25519Req);
+        }
         log.info("===================== CERTIFY KEY SETUP COMPLETED ========================");
     }
 }
