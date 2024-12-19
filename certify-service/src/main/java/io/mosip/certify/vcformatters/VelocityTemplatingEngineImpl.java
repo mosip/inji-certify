@@ -53,7 +53,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     @Value("${mosip.certify.data-provider-plugin.vc-expiry-duration:P730d}")
     String defaultExpiryDuration;
 
-    @Value("${mosip.certify.issuer.id.field.prefix.url:}")
+    @Value("${mosip.certify.data-provider-plugin.id-field-prefix-uri:}")
     String idPrefix;
 
     @PostConstruct

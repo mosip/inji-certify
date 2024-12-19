@@ -44,8 +44,6 @@ public class Ed25519Signature2020ProofGenerator implements ProofGenerator {
         SignRequestDtoV2 srd = new SignRequestDtoV2();
         srd.setApplicationId(keyID.get(Constants.APPLICATION_ID));
         srd.setReferenceId(keyID.get(Constants.REFERENCE_ID));
-        srd.setApplicationId(Constants.CERTIFY_VC_SIGN_ED25519);
-        srd.setReferenceId(Constants.ED25519_REF_ID);
         srd.setDataToSign(vcEncodedHash);
         srd.setResponseEncodingFormat("base58btc");
         srd.setSignAlgorithm(JWSAlgorithm.EdDSA);

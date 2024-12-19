@@ -42,8 +42,6 @@ public class Ed25519Signature2018ProofGenerator implements ProofGenerator {
         payload.setDataToSign(vcEncodedHash);
         payload.setApplicationId(keyID.get(Constants.APPLICATION_ID));
         payload.setReferenceId(keyID.get(Constants.REFERENCE_ID));
-        payload.setApplicationId(Constants.CERTIFY_VC_SIGN_ED25519);
-        payload.setReferenceId(Constants.ED25519_REF_ID); // alg, empty = RSA
         payload.setIncludePayload(false);
         payload.setIncludeCertificate(false);
         payload.setIncludeCertHash(true);
