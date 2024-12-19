@@ -33,6 +33,19 @@ docker-compose-injistack/
 ## Mock Certify Plugin Setup
 You have two options for the certify plugin:
 
+#### Loading plugin for issuance
+
+setup active_profile_env value of the certify service in [docker-compose.yaml](./docker-compose.yaml) as per use case.
+
+For,
+
+| active_profile_env    | use case                      |
+|-----------------------|-------------------------------|
+| default, mock-mdl     | Mobile driving license        |
+| default, csvdp-farmer | Farmer credential   (default) |
+
+Note: Refer the relevant config file based on use case to connect to the required environment
+
 ### Option 1: Use Existing Mock Plugin
 - Supported versions: 0.3.0 and above
 - Download the snapshot JAR from:
