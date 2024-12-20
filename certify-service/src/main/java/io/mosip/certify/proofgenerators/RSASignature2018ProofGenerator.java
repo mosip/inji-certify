@@ -13,8 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Map;
 
 @Component
@@ -37,9 +35,8 @@ public class RSASignature2018ProofGenerator implements ProofGenerator {
 
     @Override
     public LdProof generateProof(LdProof vcLdProof, String vcEncodedHash, Map<String, String> keyID) {
-        String vcEncodedData = Base64.getUrlEncoder().encodeToString(vcEncodedHash.getBytes(StandardCharsets.UTF_8));
         JWSSignatureRequestDto payload = new JWSSignatureRequestDto();
-        payload.setDataToSign(vcEncodedData);
+        payload.setDataToSign(vcEncodedHash);
         payload.setApplicationId(keyID.get(Constants.APPLICATION_ID));
         payload.setReferenceId(keyID.get(Constants.REFERENCE_ID)); // alg, empty = RSA
         payload.setIncludePayload(false);

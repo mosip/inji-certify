@@ -10,7 +10,6 @@ import io.mosip.kernel.signature.dto.SignRequestDtoV2;
 import io.mosip.kernel.signature.dto.SignResponseDto;
 import io.mosip.kernel.signature.service.SignatureServicev2;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
