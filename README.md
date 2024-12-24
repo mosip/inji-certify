@@ -179,7 +179,7 @@ Execute installation script
     * Registry Url `mosip.certify.vciplugin.sunbird-rc.credential-type.{credential type}.registry-get-url`
     * Template Url `mosip.certify.vciplugin.sunbird-rc.credential-type.{credential type}.template-url`
     * Credential schema version  `mosip.certify.vciplugin.sunbird-rc.credential-type.{credential type}.cred-schema-version`
-    * Change these properties for different credential types supported `mosip.certify.key-values` based on OID4VCI version.
+    * Change these properties for different credential types supported `mosip.certify.issuer-metadata.config-url` based on OID4VCI version.
 
 ## Web interface for VC Issuance (optional)
 
