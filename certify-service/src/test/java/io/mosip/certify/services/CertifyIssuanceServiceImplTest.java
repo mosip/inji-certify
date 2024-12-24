@@ -73,6 +73,34 @@ public class CertifyIssuanceServiceImplTest {
     }
 
     @Test
+    public void getCredentialIssuerMetadataVD11_valid() {
+        Mockito.when(issuerMetadata.containsKey("vd11")).thenReturn(false);
+        LinkedHashMap<String, Object> linkedHashMap = new LinkedHashMap<>();
+        linkedHashMap.put("credential_issuer", "https://localhost:9090");
+        linkedHashMap.put("credential_endpoint", "https://localhost:9090/v1/certify/issuance/credential");
+        Mockito.when(issuerMetadata.get("latest")).thenReturn(linkedHashMap);
+        Map<String, Object> actual = issuanceService.getCredentialIssuerMetadata("vd11");
+        assertNotNull(actual);
+        assertTrue(actual.containsKey("credential_issuer"));
+        assertTrue(actual.containsKey("credential_endpoint"));
+        assertEquals("https://localhost:9090/v1/certify/issuance/vd11/credential", actual.get("credential_endpoint"));
+    }
+
+    @Test
+    public void getCredentialIssuerMetadataVD12_valid() {
+        Mockito.when(issuerMetadata.containsKey("vd12")).thenReturn(false);
+        LinkedHashMap<String, Object> linkedHashMap = new LinkedHashMap<>();
+        linkedHashMap.put("credential_issuer", "https://localhost:9090");
+        linkedHashMap.put("credential_endpoint", "https://localhost:9090/v1/certify/issuance/credential");
+        Mockito.when(issuerMetadata.get("latest")).thenReturn(linkedHashMap);
+        Map<String, Object> actual = issuanceService.getCredentialIssuerMetadata("vd12");
+        assertNotNull(actual);
+        assertTrue(actual.containsKey("credential_issuer"));
+        assertTrue(actual.containsKey("credential_endpoint"));
+        assertEquals("https://localhost:9090/v1/certify/issuance/vd12/credential", actual.get("credential_endpoint"));
+    }
+
+    @Test
     public void getCredentialIssuerMetadata_invalid() {
         Mockito.when(issuerMetadata.containsKey("latest")).thenReturn(false);
         assertThrows(InvalidRequestException.class, () -> issuanceService.getCredentialIssuerMetadata("latest"));

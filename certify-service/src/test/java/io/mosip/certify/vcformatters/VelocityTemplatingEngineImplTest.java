@@ -30,10 +30,14 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
     @Mock
     CredentialTemplateRepository credentialTemplateRepository;
 
+    private CredentialTemplate vc1;
+    private CredentialTemplate vc2;
+    private CredentialTemplate vc3;
+
     @SneakyThrows
     @Before
     public void setUp() {
-        CredentialTemplate vc1 = initTemplate("""
+        vc1 = initTemplate("""
                 {
                     "@context": [
                     "https://www.w3.org/2018/credentials/v1"]
@@ -58,7 +62,7 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
                 """,
                 "MockVerifiableCredential,VerifiableCredential",
                 "https://schema.org,https://www.w3.org/2018/credentials/v1");
-        CredentialTemplate vc2 = initTemplate("""
+        vc2 = initTemplate("""
                         {
                             "@context": [
                                     "https://www.w3.org/ns/credentials/v2"],
@@ -85,7 +89,7 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
                 "MockVerifiableCredential,VerifiableCredential",
                 "https://example.org/Person.json,https://www.w3.org/ns/credentials/v2"
         );
-        CredentialTemplate vc3 = initTemplate("""
+        vc3 = initTemplate("""
                         {
                             "@context": [
                             "https://www.w3.org/2018/credentials/v1",
@@ -183,5 +187,21 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
         } catch (JSONException e) {
             Assert.fail(e.getMessage());
         }
+    }
+
+    @Test
+    public void getTemplateNameWithValidKey_thenPass() {
+        String key = "MockVerifiableCredential,VerifiableCredential:https://example.org/Person.json,https://www.w3.org/ns/credentials/v2";
+        String template = formatter.getTemplate(key);
+        Assert.assertNotNull(template);
+        Assert.assertEquals(vc2.getTemplate(), template);
+    }
+
+    @Test
+    public void getTemplateNameWithInvalidKey_thenFail() {
+        String key = "MockVerifiableCredential,VerifiableCredential;example.org/Person.json,www.w3.org/ns/credentials/v2";
+        String template = formatter.getTemplate(key);
+        Assert.assertNull(template);
+//        Assert.assertEquals(vc2.getTemplate(), template);
     }
 }
