@@ -80,6 +80,11 @@ public class VCIssuanceController {
         return vcIssuanceService.getCredentialIssuerMetadata(version);
     }
 
+    @GetMapping(value = "/.well-known/did.json")
+    public Map<String, Object> getDIDDocument() {
+       return vcIssuanceService.getDIDDocument();
+    }
+
 
     @ResponseBody
     @ExceptionHandler(InvalidNonceException.class)
