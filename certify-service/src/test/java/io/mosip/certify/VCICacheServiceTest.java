@@ -2,6 +2,7 @@ package io.mosip.certify;
 
 import io.mosip.certify.core.dto.VCIssuanceTransaction;
 import io.mosip.certify.services.VCICacheService;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;
@@ -30,7 +31,7 @@ public class VCICacheServiceTest {
     private static final String TEST_ACCESS_TOKEN_HASH = "testHash123";
     private static final String VCISSUANCE_CACHE = "vcissuance";
 
-    @BeforeEach
+    @Before
     public void setup() {
         when(cacheManager.getCache(VCISSUANCE_CACHE)).thenReturn(cache);
     }
@@ -48,10 +49,8 @@ public class VCICacheServiceTest {
     public void getVCITransaction_WhenTransactionExists_ShouldReturnTransaction() {
         VCIssuanceTransaction transaction = new VCIssuanceTransaction();
         transaction.setCNonce("test-cnonce");
-        when(cacheManager.getCache(VCISSUANCE_CACHE)).thenReturn(cache);
         when(cache.get(TEST_ACCESS_TOKEN_HASH, VCIssuanceTransaction.class)).thenReturn(transaction);
         VCIssuanceTransaction result = vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH);
-        assertNotNull(result);
         assertEquals(transaction, result);
         verify(cacheManager).getCache(VCISSUANCE_CACHE);
         verify(cache).get(eq(TEST_ACCESS_TOKEN_HASH), eq(VCIssuanceTransaction.class));

@@ -1,5 +1,6 @@
 package io.mosip.certify.vcformatters;
 
+import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.entity.CredentialTemplate;
 import io.mosip.certify.repository.CredentialTemplateRepository;
 import junit.framework.TestCase;
@@ -20,6 +21,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 
+import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
 
 @Service
@@ -33,6 +35,7 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
     private CredentialTemplate vc1;
     private CredentialTemplate vc2;
     private CredentialTemplate vc3;
+    private CredentialTemplate vc4;
 
     @SneakyThrows
     @Before
@@ -117,6 +120,10 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
                 "MockVerifiableCredential,VerifiableCredential",
                 "https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1"
         );
+        vc4 = initTemplate(null,
+                "TestVerifiableCredential,VerifiableCredential",
+                "https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1"
+        );
         //when(templateRepository.findByCredentialTypeAndContext("MockVerifiableCredential,VerifiableCredential", "https://schema.org,https://www.w3.org/2018/credentials/v1")).thenReturn(Optional.of(vc1));
         when(credentialTemplateRepository.findByCredentialTypeAndContext("MockVerifiableCredential,VerifiableCredential", "https://example.org/Person.json,https://www.w3.org/ns/credentials/v2")).thenReturn(Optional.of(vc2));
         //when(templateRepository.findByCredentialTypeAndContext("MockVerifiableCredential,VerifiableCredential", "https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1")).thenReturn(Optional.of(vc3));
@@ -168,6 +175,32 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
         JsonAssertions.assertThatJson(actualJSON).isEqualTo(expectedJSON);
     }
 
+    @SneakyThrows
+    @Test
+    public void testTemplating_templateNotFound_thenFail() {
+        JSONObject ret = new JSONObject();
+        ret.put("vcVer", "VC-V1");
+        // ret.put("issuer", "https://example.com/fake-issuer");
+        ret.put("fullName", "Amit Developer");
+        ret.put("validFrom", "01/01/2022");
+        ret.put("validUntil", "02/02/2122");
+        ret.put("gender", "female");
+        ret.put("dateOfBirth", "01/01/2022");
+        ret.put("email", "amit@fakemail.com");
+        ret.put("UIN", 123456);
+        ret.put("phone", "1234567890");
+        // both of the below work
+        ret.put("addressLine1", List.of("1", "Fake building", "Fake Area", "Fake City", "Near Fake Landmark"));
+        // ret.put("addressLine1", new String[]{"1", "Fake building", "Fake Area", "Fake City", "Near Fake Landmark"});
+        ret.put("province", "Fake Area");
+        ret.put("region", "FakeRegion");
+        ret.put("postalCode", "123");
+        ret.put("face", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII");
+        Map<String, Object> templateMap = Map.of("templateName", "TestVerifiableCredential,VerifiableCredential:https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1",
+                "issuerURI", "https://example.com/fake-issuer");
+        assertThrows(CertifyException.class, () -> formatter.format(ret, templateMap));
+    }
+
     @Ignore
     @Test
     public void testTemplating_localOnly() {
@@ -199,9 +232,15 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
 
     @Test
     public void getTemplateNameWithInvalidKey_thenFail() {
-        String key = "MockVerifiableCredential,VerifiableCredential;example.org/Person.json,www.w3.org/ns/credentials/v2";
+        String key = "TestVerifiableCredential,VerifiableCredential;example.org/Person.json,www.w3.org/ns/credentials/v2";
         String template = formatter.getTemplate(key);
         Assert.assertNull(template);
-//        Assert.assertEquals(vc2.getTemplate(), template);
+    }
+
+    @Test
+    public void getTemplateNameWithNullTemplate_thenFail() {
+        String key = "TestVerifiableCredential,VerifiableCredential:https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1";
+        String template = formatter.getTemplate(key);
+        Assert.assertNull(template);
     }
 }
