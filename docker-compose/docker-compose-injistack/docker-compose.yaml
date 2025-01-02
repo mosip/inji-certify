@@ -67,17 +67,16 @@ services:
     environment:
       - DEFAULT_LANG=en
       - MIMOTO_HOST=http://localhost:3001/v1/mimoto
-    volumes:
-      - ./config/mimoto-default.properties:/home/mosip/mimoto-default.properties
-      - ./config/mimoto-issuers-config.json:/home/mosip/mimoto-issuers-config.json
-      - ./config/mimoto-trusted-verifiers.json:/home/mosip/mimoto-trusted-verifiers.json
-      - ./config/credential-template.html:/home/mosip/credential-template.html
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - mimoto-service
     networks:
       - network
-
+    volumes:
+      - ./config/mimoto-default.properties :/home/mosip/mimoto-default.properties
+      - ./config/mimoto-issuers-config.json:/home/mosip/mimoto-issuers-config.json
+      - ./config/mimoto-trusted-verifiers.json:/home/mosip/mimoto-trusted-verifiers.json
+      - ./config/credential-template.html:/home/mosip/credential-template.html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
 
 networks:
   network:
