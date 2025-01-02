@@ -34,7 +34,10 @@ import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
 import io.mosip.certify.utils.CredentialUtils;
+import io.mosip.certify.utils.DIDDocumentUtil;
 import io.mosip.certify.vcsigners.VCSigner;
+import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
+import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
@@ -80,6 +83,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Value("${mosip.certify.data-provider-plugin.issuer-uri}")
     private String issuerURI;
 
+    @Value("${mosip.certify.data-provider-plugin.issuer-public-key-uri}")
+    private String issuerPublicKeyURI;
+
     @Value("${mosip.certify.data-provider-plugin.rendering-template-id:}")
     private String renderTemplateId;
 
@@ -94,6 +100,11 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     @Autowired
     private AuditPlugin auditWrapper;
+
+    @Autowired
+    private KeymanagerService keymanagerService;
+
+    private Map<String, Object> didDocument;
 
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
@@ -153,6 +164,18 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
            return vd11IssuerMetadata;
        }
        throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_OPENID_VERSION);
+    }
+
+    @Override
+    public Map<String, Object> getDIDDocument() {
+        if(didDocument != null)
+            return didDocument;
+
+        KeyPairGenerateResponseDto keyPairGenerateResponseDto = keymanagerService.getCertificate(keyChooser.get(vcSignAlgorithm).getFirst(), Optional.of(keyChooser.get(vcSignAlgorithm).getLast()));
+        String certificateString = keyPairGenerateResponseDto.getCertificate();
+
+        didDocument = DIDDocumentUtil.generateDIDDocument(vcSignAlgorithm, certificateString, issuerURI, issuerPublicKeyURI);
+        return didDocument;
     }
 
     private Map<String, Object> convertLatestToVd11(LinkedHashMap<String, Object> vciMetadata) {

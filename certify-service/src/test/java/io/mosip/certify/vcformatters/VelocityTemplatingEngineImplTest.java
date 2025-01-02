@@ -177,7 +177,6 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
         Map<String, Object> templateMap = Map.of("templateName", "MockVerifiableCredential,VerifiableCredential:https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1",
                 "issuerURI", "https://example.com/fake-issuer");
         String actualJSON = formatter.format(ret, templateMap);
-        System.out.println(actualJSON);
         try {
             JSONObject j = new JSONObject(actualJSON);
         } catch (JSONException e) {
