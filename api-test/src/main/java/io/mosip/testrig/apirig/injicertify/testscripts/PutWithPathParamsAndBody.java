@@ -97,6 +97,7 @@ public class PutWithPathParamsAndBody extends AdminTestUtil implements ITest {
 		}
 		testCaseDTO = AdminTestUtil.filterHbs(testCaseDTO);
 		String inputJson = filterInputHbs(testCaseDTO);
+		inputJson = InjiCertifyUtil.inputStringKeyWordHandeler(inputJson, testCaseName);
 
 		if (testCaseDTO.getTemplateFields() != null && templateFields.length > 0) {
 			ArrayList<JSONObject> inputtestCases = AdminTestUtil.getInputTestCase(testCaseDTO);

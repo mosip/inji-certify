@@ -101,7 +101,7 @@ public class AddIdentity extends AdminTestUtil implements ITest {
 
 			String inputJson = getJsonFromTemplate(testCaseDTO.getInput(), testCaseDTO.getInputTemplate());
 
-			inputJson = InjiCertifyUtil.inputstringKeyWordHandeler(inputJson, testCaseName);
+			inputJson = InjiCertifyUtil.inputStringKeyWordHandeler(inputJson, testCaseName);
 
 			if (inputJson.contains("$RANDOMINDIVIDUALIDFORMOCKIDENTITY$")) {
 				inputJson = replaceKeywordWithValue(inputJson, "$RANDOMINDIVIDUALIDFORMOCKIDENTITY$", individualIDStr);
@@ -158,6 +158,8 @@ public class AddIdentity extends AdminTestUtil implements ITest {
 				inputJson = replaceKeywordWithValue(inputJson, "$PHONENUMBERFORIDENTITY$", phoneNumber);
 				inputJson = replaceKeywordWithValue(inputJson, "$EMAILVALUE$", email);
 			}
+			
+			inputJson = InjiCertifyUtil.inputStringKeyWordHandeler(inputJson, testCaseName);
 
 			response = postWithBodyAndCookie(ApplnURI + testCaseDTO.getEndPoint(), inputJson, COOKIENAME,
 					testCaseDTO.getRole(), testCaseDTO.getTestCaseName());
