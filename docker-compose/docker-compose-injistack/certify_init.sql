@@ -95,6 +95,7 @@ INSERT INTO certify.credential_template (context, credential_type, template, cr_
      "issuanceDate": "${validFrom}",
      "expirationDate": "${validUntil}",
      "credentialSubject": {
+         "id": "${_holderId}",
          "fullName": "${fullName}",
          "mobileNumber": "${mobileNumber}",
          "dateOfBirth": "${dateOfBirth}",
@@ -127,6 +128,7 @@ INSERT INTO certify.credential_template (context, credential_type, template, cr_
     "validFrom": "${validFrom}",
     "validUntil": "${validUntil}",
     "credentialSubject": {
+        "id": "${_holderId}",
         "fullName": "${fullName}",
         "mobileNumber": "${mobileNumber}",
         "dateOfBirth": "${dateOfBirth}",
