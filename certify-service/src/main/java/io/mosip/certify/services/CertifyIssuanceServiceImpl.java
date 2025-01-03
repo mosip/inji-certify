@@ -40,6 +40,7 @@ import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -321,6 +322,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     if (!StringUtils.isEmpty(renderTemplateId)) {
                         templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
                     }
+                    jsonObject.put("_holderId", holderId);
                     String unSignedVC = vcFormatter.format(jsonObject, templateParams);
                     Map<String, String> signerSettings = new HashMap<>();
                     // NOTE: This is a quasi implementation to add support for multi-tenancy.
@@ -329,6 +331,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     vcResult = vcSigner.attachSignature(unSignedVC, signerSettings);
                 } catch(DataProviderExchangeException e) {
                     throw new CertifyException(e.getErrorCode());
+                } catch (JSONException e) {
+                    log.error(e.getMessage(), e);
+                    throw new CertifyException(ErrorConstants.UNKNOWN_ERROR);
                 }
                 break;
             default:
