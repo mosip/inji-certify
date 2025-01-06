@@ -27,8 +27,10 @@ import com.nimbusds.jwt.SignedJWT;
 import io.mosip.testrig.apirig.dataprovider.BiometricDataProvider;
 import io.mosip.testrig.apirig.dto.TestCaseDTO;
 import io.mosip.testrig.apirig.injicertify.testrunner.MosipTestRunner;
+import io.mosip.testrig.apirig.testrunner.BaseTestCase;
 import io.mosip.testrig.apirig.testrunner.OTPListener;
 import io.mosip.testrig.apirig.utils.AdminTestUtil;
+import io.mosip.testrig.apirig.utils.ConfigManager;
 import io.mosip.testrig.apirig.utils.GlobalConstants;
 import io.mosip.testrig.apirig.utils.JWKKeyUtil;
 import io.mosip.testrig.apirig.utils.RestClient;
@@ -128,6 +130,8 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	private static boolean gettriggerESignetKeyGen13() {
 		return triggerESignetKeyGen13;
 	}
+	
+	protected static final String BINDINGJWK1 = "bindingJWK1";
 
 	public static String inputStringKeyWordHandeler(String jsonString, String testCaseName) {
 		if (jsonString.contains("$ID:")) {
@@ -191,8 +195,8 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			}
 			jsonString = replaceKeywordValue(jsonString, "$OIDCJWKKEY4$", jwkKey);
 		}
-
 		if (jsonString.contains("$PROOF_JWT_3$")) {
+			JWKKeyUtil.generateAndCacheJWKKey(BINDINGJWK1);
 			String oidcJWKKeyString = JWKKeyUtil.getJWKKey(OIDCJWK4);
 			logger.info("oidcJWKKeyString =" + oidcJWKKeyString);
 			try {
@@ -217,7 +221,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			tempUrl = getBaseURL(testCaseName, InjiCertifyConfigManager.getInjiCertifyBaseUrl());
 
 			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_3$",
-					signJWKForMock(clientId, accessToken, oidcJWKKey4, testCaseName, tempUrl));
+					signJWKForMockID(clientId, accessToken, oidcJWKKey4, testCaseName, tempUrl));
 		}
 
 		if (jsonString.contains("$CLIENT_ASSERTION_JWT$")) {
@@ -641,6 +645,87 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		}
 
 		return testCaseName;
+	}
+	
+	public static String signJWKForMockID(String clientId, String accessToken, RSAKey jwkKey, String testCaseName,
+			String tempUrl) {
+		int idTokenExpirySecs = Integer
+				.parseInt(getValueFromEsignetActuator(ConfigManager.getEsignetActuatorPropertySection(),
+						GlobalConstants.MOSIP_ESIGNET_ID_TOKEN_EXPIRE_SECONDS));
+		JWSSigner signer;
+		String proofJWT = "";
+		String typ = "openid4vci-proof+jwt";
+		JWK jwkHeader = jwkKey.toPublicJWK();
+		SignedJWT signedJWT = null;
+
+		try {
+			signer = new RSASSASigner(jwkKey);
+			Date currentTime = new Date();
+
+			// Create a Calendar instance to manipulate time
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(currentTime);
+
+			// Add one hour to the current time
+			calendar.add(Calendar.HOUR_OF_DAY, (idTokenExpirySecs / 3600)); // Adding one hour
+
+			// Get the updated expiration time
+			Date expirationTime = calendar.getTime();
+
+			String[] jwtParts = accessToken.split("\\.");
+			String jwtPayloadBase64 = jwtParts[1];
+			byte[] jwtPayloadBytes = Base64.getDecoder().decode(jwtPayloadBase64);
+			String jwtPayload = new String(jwtPayloadBytes, StandardCharsets.UTF_8);
+			JWTClaimsSet claimsSet = null;
+			String nonce = new ObjectMapper().readTree(jwtPayload).get("c_nonce").asText();
+			
+			if (testCaseName.contains("_Invalid_C_nonce_"))
+				nonce = "jwt_payload.c_nonce123";
+			else if (testCaseName.contains("_Empty_C_nonce_"))
+				nonce = "";
+			else if (testCaseName.contains("_SpaceVal_C_nonce_"))
+				nonce = "  ";
+			else if (testCaseName.contains("_Exp_C_nonce_"))
+				nonce = "aXPrnkX78dMgkbkkocu7AV";
+			else if (testCaseName.contains("_Empty_Typ_"))
+				typ = "";
+			else if (testCaseName.contains("_SpaceVal_Typ_"))
+				typ = "  ";
+			else if (testCaseName.contains("_Invalid_Typ_"))
+				typ = "openid4vci-123@proof+jwt";
+			else if (testCaseName.contains("_Invalid_JwkHeader_"))
+				jwkHeader = RSAKey.parse(JWKKeyUtil.getJWKKey(BINDINGJWK1)).toPublicJWK();
+			else if (testCaseName.contains("_Invalid_Aud_"))
+				tempUrl = "sdfaf";
+			else if (testCaseName.contains("_Empty_Aud_"))
+				tempUrl = "";
+			else if (testCaseName.contains("_SpaceVal_Aud_"))
+				tempUrl = "  ";
+			else if (testCaseName.contains("_Invalid_Iss_"))
+				clientId = "sdfdsg";
+			else if (testCaseName.contains("_Invalid_Exp_"))
+				idTokenExpirySecs = 0;
+
+			claimsSet = new JWTClaimsSet.Builder().audience(tempUrl).claim("nonce", nonce).issuer(clientId)
+					.issueTime(currentTime).expirationTime(expirationTime).build();
+			
+			if (testCaseName.contains("_Missing_Typ_")) {
+				signedJWT = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.RS256).jwk(jwkHeader).build(), claimsSet);
+			} else if (testCaseName.contains("_Missing_JwkHeader_")) {
+				signedJWT = new SignedJWT(
+						new JWSHeader.Builder(JWSAlgorithm.RS256).type(new JOSEObjectType(typ)).build(), claimsSet);
+			} else {
+				signedJWT = new SignedJWT(
+						new JWSHeader.Builder(JWSAlgorithm.RS256).type(new JOSEObjectType(typ)).jwk(jwkHeader).build(),
+						claimsSet);
+			}
+
+			signedJWT.sign(signer);
+			proofJWT = signedJWT.serialize();
+		} catch (Exception e) {
+			logger.error("Exception while signing proof_jwt to get credential: " + e.getMessage());
+		}
+		return proofJWT;
 	}
 	
 }

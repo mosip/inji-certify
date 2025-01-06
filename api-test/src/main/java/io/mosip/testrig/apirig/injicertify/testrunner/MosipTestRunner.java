@@ -137,14 +137,14 @@ public class MosipTestRunner {
 		BaseTestCase.certsForModule = GlobalConstants.INJICERTIFY;
 		DBManager.executeDBQueries(InjiCertifyConfigManager.getKMDbUrl(), InjiCertifyConfigManager.getKMDbUser(),
 				InjiCertifyConfigManager.getKMDbPass(), InjiCertifyConfigManager.getKMDbSchema(),
-				getGlobalResourcePath() + "/" + "config/keyManagerDataDeleteQueriesForEsignet.txt");
+				getGlobalResourcePath() + "/" + "config/keyManagerCertDataDeleteQueries.txt");
 		DBManager.executeDBQueries(InjiCertifyConfigManager.getIdaDbUrl(), InjiCertifyConfigManager.getIdaDbUser(),
 				InjiCertifyConfigManager.getPMSDbPass(), InjiCertifyConfigManager.getIdaDbSchema(),
-				getGlobalResourcePath() + "/" + "config/idaDeleteQueriesForEsignet.txt");
+				getGlobalResourcePath() + "/" + "config/idaCertDataDeleteQueries.txt");
 		DBManager.executeDBQueries(InjiCertifyConfigManager.getMASTERDbUrl(),
 				InjiCertifyConfigManager.getMasterDbUser(), InjiCertifyConfigManager.getMasterDbPass(),
 				InjiCertifyConfigManager.getMasterDbSchema(),
-				getGlobalResourcePath() + "/" + "config/masterDataDeleteQueriesForEsignet.txt");
+				getGlobalResourcePath() + "/" + "config/masterDataCertDataDeleteQueries.txt");
 		AdminTestUtil.copymoduleSpecificAndConfigFile(GlobalConstants.INJICERTIFY);
 		BaseTestCase.otpListener = new OTPListener();
 		BaseTestCase.otpListener.run();
@@ -205,15 +205,11 @@ public class MosipTestRunner {
 
 					if (file.getName().toLowerCase().contains(GlobalConstants.INJICERTIFY)) {
 						if (file.getName().toLowerCase().contains("prerequisite")) {
-							if (useCase.equals("sunbird") == true) {
-								continue;
+							if (useCase != null && useCase.isBlank() == false) {
+								BaseTestCase
+										.setReportName(GlobalConstants.INJICERTIFY + "-" + useCase + "-prerequisite");
 							} else {
-								if (useCase != null && useCase.isBlank() == false) {
-									BaseTestCase.setReportName(
-											GlobalConstants.INJICERTIFY + "-" + useCase + "-prerequisite");
-								} else {
-									BaseTestCase.setReportName(GlobalConstants.INJICERTIFY + "-prerequisite");
-								}
+								BaseTestCase.setReportName(GlobalConstants.INJICERTIFY + "-prerequisite");
 							}
 						} else {
 							// if the prerequisite total skipped/failed count is greater than zero
