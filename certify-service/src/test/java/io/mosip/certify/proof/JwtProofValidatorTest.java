@@ -22,8 +22,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
@@ -65,6 +64,13 @@ class JwtProofValidatorTest {
 
 
         assertFalse(result, "Expected validation to fail for blank JWT");
+    }
+
+    @Test
+    void getProofType () {
+        String proofType = jwtProofValidator.getProofType();
+        assertNotNull(proofType);
+        assertEquals("jwt", proofType);
     }
 
     @Test
@@ -217,8 +223,143 @@ class JwtProofValidatorTest {
     }
 
     @Test
+    void testValidate_Es256WithNullHeaderType_InvalidAlgException() throws ParseException, JOSEException {
+        // Generate a valid ECKey with ES256
+        ECKey ecJWK = new ECKeyGenerator(Curve.P_256)
+                .keyUse(KeyUse.SIGNATURE)
+                .keyID(UUID.randomUUID().toString())
+                .generate();
+
+        // Create a public JWK from the private JWK
+        JWK publicJwk = ecJWK.toPublicJWK();
+
+        // Create JWS Header with public JWK
+        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.ES256)
+                .jwk(publicJwk)
+                .type(null)
+                .build();
+
+        // Build JWT Claims
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .audience("test-credential-id")
+                .issuer("clientId")
+                .claim("nonce", "someNonce")
+                .issueTime(new Date())
+                .expirationTime(new Date(System.currentTimeMillis() + 3600000)) // 1 hour from now
+                .build();
+
+        // Create and sign the JWT with the private EC key
+        SignedJWT signedJWT = new SignedJWT(header, claims);
+        JWSSigner signer = new ECDSASigner(ecJWK);
+        signedJWT.sign(signer);
+
+        // Serialize JWT
+        String jwt = signedJWT.serialize();
+
+        // Prepare CredentialProof object
+        CredentialProof credentialProof = new CredentialProof();
+        credentialProof.setJwt(jwt);
+
+        // Validate JWT
+        boolean result = jwtProofValidator.validate("clientId", "someNonce", credentialProof);
+
+        assertFalse(result, "No algorithm found exception");
+    }
+
+    @Test
+    void testValidate_Es256WithInvalidKeyId_InvalidAlgException() throws ParseException, JOSEException {
+        ReflectionTestUtils.setField(jwtProofValidator, "supportedAlgorithms", List.of("RS256", "ES256", "Ed25519"));
+        // Generate a valid ECKey with ES256
+        ECKey ecJWK = new ECKeyGenerator(Curve.P_256)
+                .keyUse(KeyUse.SIGNATURE)
+                .keyID(UUID.randomUUID().toString())
+                .generate();
+
+        // Create JWS Header with public JWK
+        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.ES256)
+                .jwk(null)
+                .keyID(null)
+                .type(new JOSEObjectType("openid4vci-proof+jwt"))
+                .build();
+
+        // Build JWT Claims
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .audience("test-credential-id")
+                .issuer("clientId")
+                .claim("nonce", "someNonce")
+                .issueTime(new Date())
+                .expirationTime(new Date(System.currentTimeMillis() + 3600000)) // 1 hour from now
+                .build();
+
+        // Create and sign the JWT with the private EC key
+        SignedJWT signedJWT = new SignedJWT(header, claims);
+        JWSSigner signer = new ECDSASigner(ecJWK);
+        signedJWT.sign(signer);
+
+        // Serialize JWT
+        String jwt = signedJWT.serialize();
+
+        // Prepare CredentialProof object
+        CredentialProof credentialProof = new CredentialProof();
+        credentialProof.setJwt(jwt);
+
+        // Validate JWT
+        boolean result = jwtProofValidator.validate("clientId", "someNonce", credentialProof);
+
+        assertFalse(result, "No algorithm found exception");
+    }
+
+    @Test
+    void testValidate_Es256WithNonNullHeaderJwkAndKeyId_InvalidAlgException() throws ParseException, JOSEException {
+        ReflectionTestUtils.setField(jwtProofValidator, "supportedAlgorithms", List.of("RS256", "ES256", "Ed25519"));
+        // Generate a valid ECKey with ES256
+        ECKey ecJWK = new ECKeyGenerator(Curve.P_256)
+                .keyUse(KeyUse.SIGNATURE)
+                .keyID(UUID.randomUUID().toString())
+                .generate();
+
+        // Create a public JWK from the private JWK
+        JWK publicJwk = ecJWK.toPublicJWK();
+
+        // Create JWS Header with public JWK
+        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.ES256)
+                .jwk(publicJwk)
+                .keyID(UUID.randomUUID().toString())
+                .type(new JOSEObjectType("openid4vci-proof+jwt"))
+                .build();
+
+        // Build JWT Claims
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .audience("test-credential-id")
+                .issuer("clientId")
+                .claim("nonce", "someNonce")
+                .issueTime(new Date())
+                .expirationTime(new Date(System.currentTimeMillis() + 3600000)) // 1 hour from now
+                .build();
+
+        // Create and sign the JWT with the private EC key
+        SignedJWT signedJWT = new SignedJWT(header, claims);
+        JWSSigner signer = new ECDSASigner(ecJWK);
+        signedJWT.sign(signer);
+
+        // Serialize JWT
+        String jwt = signedJWT.serialize();
+
+        // Prepare CredentialProof object
+        CredentialProof credentialProof = new CredentialProof();
+        credentialProof.setJwt(jwt);
+
+        // Validate JWT
+        boolean result = jwtProofValidator.validate("clientId", "someNonce", credentialProof);
+
+        assertFalse(result, "No algorithm found exception");
+    }
+
+    @Test
     void testValidate_ValidEd25519JWT() throws Exception {
-        String jwt = createValidEd25519JWT();
+        String keyId = "did:jwk:";
+        String jwt = createValidEd25519JWT(keyId);
+
         CredentialProof credentialProof = new CredentialProof();
         credentialProof.setJwt(jwt);
 
@@ -227,7 +368,7 @@ class JwtProofValidatorTest {
         assertTrue(result, "Ed25519 JWT should be valid");
     }
 
-    private String createValidEd25519JWT() throws Exception {
+    private String createValidEd25519JWT(String keyId) throws Exception {
         // Generate Ed25519 key pair
         OctetKeyPair edJWK = new OctetKeyPairGenerator(Curve.Ed25519)
                 .keyID(UUID.randomUUID().toString())  // Use unique key ID
@@ -236,7 +377,7 @@ class JwtProofValidatorTest {
         // Create JWT header with Ed25519 algorithm and JWK
         JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.Ed25519)
                 .type(new JOSEObjectType("openid4vci-proof+jwt"))
-                .keyID("did:jwk:" + Base64.getUrlEncoder().withoutPadding().encodeToString(edJWK.toPublicJWK().toJSONString().getBytes(StandardCharsets.UTF_8)))
+                .keyID(keyId + Base64.getUrlEncoder().withoutPadding().encodeToString(edJWK.toPublicJWK().toJSONString().getBytes(StandardCharsets.UTF_8)))
                 .build();
 
         // Create JWT claims
@@ -254,5 +395,17 @@ class JwtProofValidatorTest {
         jwt.sign(signer);
 
         return jwt.serialize();
+    }
+
+    @Test
+    void testValidate_Ed25519JWT_IllegalArgumentException() throws Exception {
+        String signedJwt = createValidEd25519JWT("did:jwk: ");
+
+        CredentialProof credentialProof = new CredentialProof();
+        credentialProof.setJwt(signedJwt);
+
+        boolean result = jwtProofValidator.validate("test-client", "test-nonce", credentialProof);
+
+        assertFalse(result, "Invalid base64 encoded ID");
     }
 }

@@ -46,6 +46,9 @@ public class RenderingCredentialTemplateRepositoryTest {
         Assert.assertNotNull(svgRenderTemplate);
 
         Optional<RenderingTemplate> optional = svgRenderTemplateRepository.findById(svgRenderTemplate.getId());
+        Assert.assertTrue(svgRenderTemplate.equals(optional.get()));
+        Assert.assertTrue(svgRenderTemplate.toString().equals(optional.get().toString()));
+        Assert.assertEquals(optional.get().hashCode(), svgRenderTemplate.hashCode());
         Assert.assertTrue(optional.isPresent());
         Assert.assertEquals(svgRenderTemplate.getTemplate(), optional.get().getTemplate());
     }

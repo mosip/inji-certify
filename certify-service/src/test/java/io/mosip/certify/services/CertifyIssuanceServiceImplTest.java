@@ -3,6 +3,7 @@ package io.mosip.certify.services;
 import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.api.exception.DataProviderExchangeException;
+import io.mosip.certify.api.exception.VCIExchangeException;
 import io.mosip.certify.api.spi.AuditPlugin;
 import io.mosip.certify.api.spi.DataProviderPlugin;
 import io.mosip.certify.core.dto.*;
@@ -192,6 +193,18 @@ public class CertifyIssuanceServiceImplTest {
         when(vciCacheService.setVCITransaction(eq(TEST_ACCESS_TOKEN_HASH), any()))
                 .thenReturn(transaction);
 
+        assertThrows(InvalidNonceException.class, () -> issuanceService.getCredential(request));
+    }
+
+    @Test
+    public void getCredential_NullTransaction_ThrowsInvalidCnonceException() throws VCIExchangeException {
+        when(parsedAccessToken.isActive()).thenReturn(true);
+        when(parsedAccessToken.getClaims()).thenReturn(claims);
+        when(vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH)).thenReturn(null);
+        when(vciCacheService.setVCITransaction(any(String.class), any(VCIssuanceTransaction.class))).thenReturn(transaction);
+        when(proofValidatorFactory.getProofValidator(any())).thenReturn(proofValidator);
+
+        // Act
         assertThrows(InvalidNonceException.class, () -> issuanceService.getCredential(request));
     }
 

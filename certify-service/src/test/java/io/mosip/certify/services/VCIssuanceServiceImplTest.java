@@ -161,6 +161,18 @@ public class VCIssuanceServiceImplTest {
     }
 
     @Test
+    public void getCredential_NullTransaction_ThrowsInvalidCnonceException() throws VCIExchangeException {
+        when(parsedAccessToken.isActive()).thenReturn(true);
+        when(parsedAccessToken.getClaims()).thenReturn(claims);
+        when(vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH)).thenReturn(null);
+        when(vciCacheService.setVCITransaction(any(String.class), any(VCIssuanceTransaction.class))).thenReturn(transaction);
+        when(proofValidatorFactory.getProofValidator(any())).thenReturn(proofValidator);
+
+        // Act
+        assertThrows(InvalidNonceException.class, () -> issuanceService.getCredential(request));
+    }
+
+    @Test
     public void getCredential_ValidRequest_NullJSONLD_Fail() {
         when(parsedAccessToken.isActive()).thenReturn(true);
         when(parsedAccessToken.getClaims()).thenReturn(claims);

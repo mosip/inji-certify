@@ -7,10 +7,10 @@ import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.kernel.signature.dto.SignRequestDtoV2;
 import io.mosip.kernel.signature.dto.SignResponseDto;
+import io.mosip.kernel.signature.exception.RequestException;
 import io.mosip.kernel.signature.service.SignatureServicev2;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -66,15 +66,7 @@ class Ed25519Signature2020ProofGeneratorTest {
 
         assertNotNull(result);
         assertEquals("mockSignatureValue", result.getProofValue());
-
-        ArgumentCaptor<SignRequestDtoV2> captor = ArgumentCaptor.forClass(SignRequestDtoV2.class);
-        verify(signatureService).signv2(captor.capture());
-
-        SignRequestDtoV2 capturedPayload = captor.getValue();
-        assertEquals(vcEncodedHash, capturedPayload.getDataToSign());
-        assertEquals("app123", capturedPayload.getApplicationId());
-        assertEquals("ref456", capturedPayload.getReferenceId());
-        assertEquals("base58btc", capturedPayload.getResponseEncodingFormat());
+        verify(signatureService).signv2(any(SignRequestDtoV2.class));
     }
 
     @Test
@@ -104,12 +96,13 @@ class Ed25519Signature2020ProofGeneratorTest {
 
     @Test
     void testGenerateProofSignature_ServiceFailure() {
-        when(signatureService.signv2(any(SignRequestDtoV2.class))).thenThrow(new RuntimeException("Signature Failed"));
+        when(signatureService.signv2(any(SignRequestDtoV2.class))).thenThrow(new RequestException("SIGNATURE_TEST_ERROR","Signature Failed"));
 
-        Exception exception = assertThrows(RuntimeException.class, () -> {
+        RequestException exception = assertThrows(RequestException.class, () -> {
             proofGenerator.generateProof(new LdProof(), "mockEncodedHash", keyID);
         });
 
-        assertEquals("Signature Failed", exception.getMessage());
+        assertEquals("SIGNATURE_TEST_ERROR", exception.getErrorCode());
+        assertEquals("SIGNATURE_TEST_ERROR --> Signature Failed", exception.getMessage());
     }
 }

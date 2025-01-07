@@ -3,7 +3,6 @@ package io.mosip.certify.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
@@ -12,7 +11,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Table(name = "credential_template")
 @IdClass(TemplateId.class)
-@Data
 public class CredentialTemplate {
     @NotBlank(message = "Template is mandatory")
     @Getter
@@ -27,7 +25,7 @@ public class CredentialTemplate {
     @Setter
     private String credentialType;
 
-    @NotNull
+    @NotBlank
     @Column(name = "cr_dtimes")
     private LocalDateTime createdTimes;
 
