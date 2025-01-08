@@ -109,9 +109,10 @@ mosip.certify.data-provider-plugin.issuer-uri=did:web:vharsh.github.io:DID:stati
 mosip.certify.data-provider-plugin.issuer-public-key-uri=did:web:vharsh.github.io:DID:static#key-0
 ```
 
-- Certify will automatically generate the DID document for your usecase at [this endpoint](http://localhost:8090/v1/certify/issuance/.well-known/did.json), please copy the contents of the HTTP response and host it appropriately in the same location.
-- To verify if everything is working you can try to resolve the DID via public DID resolvers such as [Uniresolver](https://dev.uniresolver.io/).
+- (required for Farmer setup) Certify will automatically generate the DID document for your usecase at [this endpoint](http://localhost:8090/v1/certify/issuance/.well-known/did.json), please copy the contents of the HTTP response and host it appropriately in the same location.
+    - To verify if everything is working you can try to resolve the DID via public DID resolvers such as [Uniresolver](https://dev.uniresolver.io/).
 
+- (required if Mobile driving license configured) Onboard issuer key and certificate data into property `mosip.certify.mock.mdoc.issuer-key-cert` using the [creation script](../../utils/create_mdoc_issuer_key_cert.sh).
 
 ### Advanced users only:
 
