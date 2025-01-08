@@ -111,12 +111,10 @@ public class SimplePostForAutoGenId extends AdminTestUtil implements ITest {
 				}
 			}
 		}
-
-		testCaseName = isTestCaseValidForExecution(testCaseDTO);
 		String[] templateFields = testCaseDTO.getTemplateFields();
 		String inputJson = "";
 
-			inputJson = getJsonFromTemplate(testCaseDTO.getInput(), testCaseDTO.getInputTemplate());
+		inputJson = getJsonFromTemplate(testCaseDTO.getInput(), testCaseDTO.getInputTemplate());
 
 		String outputJson = getJsonFromTemplate(testCaseDTO.getOutput(), testCaseDTO.getOutputTemplate());
 
@@ -142,6 +140,7 @@ public class SimplePostForAutoGenId extends AdminTestUtil implements ITest {
 					throw new AdminTestException("Failed at output validation");
 			}
 		} else {
+			inputJson = InjiCertifyUtil.inputStringKeyWordHandeler(inputJson, testCaseName);
 			if (testCaseName.contains("ESignet_")) {
 				if (InjiCertifyConfigManager.isInServiceNotDeployedList(GlobalConstants.ESIGNET)) {
 					throw new SkipException("esignet is not deployed hence skipping the testcase");

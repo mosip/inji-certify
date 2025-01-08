@@ -105,7 +105,6 @@ public class SimplePostForAutoGenIdForUrlEncoded extends AdminTestUtil implement
 		if (InjiCertifyConfigManager.isInServiceNotDeployedList(GlobalConstants.ESIGNET)) {
 			throw new SkipException("esignet is not deployed hence skipping the testcase");
 		}
-		testCaseName = isTestCaseValidForExecution(testCaseDTO);
 		String[] templateFields = testCaseDTO.getTemplateFields();
 
 		String inputJson = getJsonFromTemplate(testCaseDTO.getInput(), testCaseDTO.getInputTemplate());
@@ -135,8 +134,8 @@ public class SimplePostForAutoGenIdForUrlEncoded extends AdminTestUtil implement
 					throw new AdminTestException("Failed at output validation");
 			}
 		} else {
-			jsonInput = inputJsonKeyWordHandeler(jsonInput, testCaseName);
-			jsonInput = InjiCertifyUtil.reqJsonKeyWordHandeler(jsonInput, testCaseName);
+//			jsonInput = inputJsonKeyWordHandeler(jsonInput, testCaseName);
+			jsonInput = InjiCertifyUtil.inputStringKeyWordHandeler(jsonInput, testCaseName);
 
 			if (testCaseName.contains("ESignet_")) {
 				String tempUrl = InjiCertifyConfigManager.getEsignetBaseUrl();
