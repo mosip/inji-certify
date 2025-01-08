@@ -3,7 +3,7 @@
 This guide provides instructions for setting up and running Inji Stack for a custom use-case based on an existing configured foundational ID system.
 An example for this could be a use-case where Authentication is performed from a pre-existing registry such as a **National ID** being put to use to deliver services such as **Farmer Identity Card** to eligible farmers or a **Mobile Driving License** to eligible drivers. These examples can be further extended for different usecases and used with different OIDC Compatible clients.
 
-On the more technical side, this demo showcases the two types of VCI plugin an implementor can choose to implement depending upon their usecase & requirements & pre-existing identity system.
+On the more technical side, this demo showcases the two types of plugin an implementor can choose to implement depending upon their usecase & requirements & pre-existing identity system.
 
 
 # QuickStart: Mock Certify Plugin Setup
@@ -83,16 +83,10 @@ public interface VCIssuancePlugin {
 }
 ```
 
-
 ## Certificate Setup
 
-- Place your PKCS12 certificate file (obtained from esignet onboarding) in:
-  ```
-  certs/oidckeystore.p12
-  ```
-  [Collab Env OIDCKeystore](https://docs.inji.io/inji-wallet/inji-mobile/customization-overview/credential_providers#onboarding-mimoto-as-oidc-client-for-a-new-issuer)
-
-- Update `mosip.oidc.p12.password` to the password of the `oidckeystore.p12` file.
+- Place your PKCS12 keystore file in the `certs` directory as `oidckeystore.p12`. This is required for the Inji Web application and other applications which rely on Mimoto as a BFF and it can be configured as per these [docs](https://docs.inji.io/inji-wallet/inji-mobile/customization-overview/credential_providers#onboarding-mimoto-as-oidc-client-for-a-new-issuer) after the file is downloaded in the `certs` directory as shown in the directory tree.
+- Update `mosip.oidc.p12.password` to the password of the `oidckeystore.p12` file in the Mimoto [Config file](./config/mimoto-default.properties).
 
 
 ## Configuration Setup
@@ -109,10 +103,12 @@ public interface VCIssuancePlugin {
 ### Recommended
 
 - If you are going ahead with the Farmer usecase, configure the below values in [here](config/certify-csvdp-farmer.properties) to refer to the web location where you'd host the DID.
+
 ```properties
 mosip.certify.data-provider-plugin.issuer-uri=did:web:vharsh.github.io:DID:static
 mosip.certify.data-provider-plugin.issuer-public-key-uri=did:web:vharsh.github.io:DID:static#key-0
 ```
+
 - Certify will automatically generate the DID document for your usecase at [this endpoint](http://localhost:8090/v1/certify/issuance/.well-known/did.json), please copy the contents of the HTTP response and host it appropriately in the same location.
 - To verify if everything is working you can try to resolve the DID via public DID resolvers such as [Uniresolver](https://dev.uniresolver.io/).
 
