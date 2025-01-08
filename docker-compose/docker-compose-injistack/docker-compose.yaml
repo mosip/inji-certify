@@ -78,7 +78,6 @@ services:
     networks:
       - network
 
-
 networks:
   network:
     name: mosip_network
