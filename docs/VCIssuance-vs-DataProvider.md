@@ -14,15 +14,6 @@ While they are two types of Issuing Plugins, both types are issuing VCs by conne
 - There may be a case, where an integrator might want Certify to deal with fewer aspects of VCIssuance or have a pre-existing VC Issuance stack and may just want a Certify as a OpenID4VCI proxy, in this case the implementors can choose to implement VCIssuancePlugin interface which is supposed to give out a valid VC on it's own or with an external stack.
 - If an integrator doesn't have an existing VCIssuance stack pre-deployed, they can choose to let Certify do all the heavy lifting with a DataProviderPlugin. They can choose to use any of the sample plugins present in [this repo](https://github.com/mosip/digital-credential-plugins/) or choose to implement their own.
 
-# Summary
-
-| **Property**          |       VCIssuancePlugin             | DataProviderPlugin |
-|-------------------|------------------------------------|--------------------|
-| VC Signing        | managed by the plugin itself       | done by Inji Certify itself |
-| Credential Creation    | done by the plugin itself     | done by plugin itself |
-| Signing key management | can be done by plugin or delegated to keymanager lib | done by Inji Certify end-to-end via keymanager |
-| VC Issuance            | done by the plugin completely | data is given by the plugin, VC issuance is done by Inji Certify |
-
 # Doubts?
 
-If you've further questions, do not hesitate to ask a question about the same in [MOSIP Community](cd )
+If you've further questions, do not hesitate to ask a question about the same in [MOSIP Community](https://community.mosip.io)

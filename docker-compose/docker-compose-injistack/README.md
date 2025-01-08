@@ -85,6 +85,7 @@ public interface VCIssuancePlugin {
 
 ## Certificate Setup
 
+- Create a `certs/` directory inside the docker-compose-injistack directory
 - Place your PKCS12 keystore file in the `certs` directory as `oidckeystore.p12`. This is required for the Inji Web application and other applications which rely on Mimoto as a BFF and it can be configured as per these [docs](https://docs.inji.io/inji-wallet/inji-mobile/customization-overview/credential_providers#onboarding-mimoto-as-oidc-client-for-a-new-issuer) after the file is downloaded in the `certs` directory as shown in the directory tree.
 - Update `mosip.oidc.p12.password` to the password of the `oidckeystore.p12` file in the Mimoto [Config file](./config/mimoto-default.properties).
 
@@ -112,7 +113,7 @@ mosip.certify.data-provider-plugin.issuer-public-key-uri=did:web:vharsh.github.i
 - (required for Farmer setup) Certify will automatically generate the DID document for your usecase at [this endpoint](http://localhost:8090/v1/certify/issuance/.well-known/did.json), please copy the contents of the HTTP response and host it appropriately in the same location.
     - To verify if everything is working you can try to resolve the DID via public DID resolvers such as [Uniresolver](https://dev.uniresolver.io/).
 
-- (required if Mobile driving license configured) Onboard issuer key and certificate data into property `mosip.certify.mock.mdoc.issuer-key-cert` using the [creation script](../../utils/create_mdoc_issuer_key_cert.sh).
+- (required if Mobile driving license configured) Onboard issuer key and certificate data into property `mosip.certify.mock.mdoc.issuer-key-cert` using the creation script
 
 ### Advanced users only:
 
@@ -169,7 +170,6 @@ The following services will be available:
 2. You can:
     - Download credentials
     - View credential status at a Standards Compliant VC Verfier such as [Inji Verify](https://injiverify.collab.mosip.net).
-    - Manage your digital identity using a Mobile Wallet app such as [Inji Wallet](https://github.com/mosip/inji-wallet/).
 
 ### Accessing the Credentials via the Postman Interface
 
@@ -183,12 +183,7 @@ The following services will be available:
 
 ## Advanced Configurations
 
-1. For more advanced configuration of other components please refer to the READMEs of other relevant projects such as
-
-- [Inji Web Configuration Docs](https://github.com/mosip/inji-web/tree/release-0.11.x/docker-compose)
-- [Mimoto Docker Compose Configuration Docs](https://github.com/mosip/mimoto/tree/release-0.15.x/docker-compose)
-
-2. To use the Verifiable Credential Data Model 2.0 optional features one can configure them in the Velocity Template present in [this file](./certify_init.sql)as per [this draft spec](https://w3c-ccg.github.io/vc-render-method/). The Render Template has to be routable by all the clients and should be available.
+1. To use the Verifiable Credential Data Model 2.0 optional features one can configure them in the Velocity Template present in [this file](./certify_init.sql)as per [this draft spec](https://w3c-ccg.github.io/vc-render-method/). The Render Template has to be routable by all the clients and should be available.
 
 
 ## Troubleshooting
