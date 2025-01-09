@@ -184,6 +184,34 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			}
 			jsonString = replaceKeywordValue(jsonString, "$OIDCJWKKEY$", jwkKey);
 		}
+		
+		if (jsonString.contains("$PROOF_JWT$")) {
+			JWKKeyUtil.generateAndCacheJWKKey(BINDINGJWK1);
+			String oidcJWKKeyString = JWKKeyUtil.getJWKKey(OIDCJWK1);
+			logger.info("oidcJWKKeyString =" + oidcJWKKeyString);
+			try {
+				oidcJWKKey1 = RSAKey.parse(oidcJWKKeyString);
+				logger.info("oidcJWKKey1 =" + oidcJWKKey1);
+			} catch (java.text.ParseException e) {
+				logger.error(e.getMessage());
+			}
+			JSONObject request = new JSONObject(jsonString);
+			String clientId = "";
+			String accessToken = "";
+			String tempUrl = "";
+			if (request.has("client_id")) {
+				clientId = request.getString("client_id");
+				request.remove("client_id");
+			}
+			if (request.has("idpAccessToken")) {
+				accessToken = request.getString("idpAccessToken");
+			}
+			jsonString = request.toString();
+			tempUrl = getBaseURL(testCaseName, InjiCertifyConfigManager.getInjiCertifyBaseUrl());
+
+			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT$",
+					signJWKForMockID(clientId, accessToken, oidcJWKKey1, testCaseName, tempUrl));
+		}		
 
 		if (jsonString.contains("$OIDCJWKKEY4$")) {
 			String jwkKey = "";
@@ -535,20 +563,15 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		String tempURL = "";
 
 		if (testCaseName.contains("_GetCredentialSunBirdC")) {
-			tempURL = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer",
-					baseURL.replace("injicertify.", "injicertify-insurance."));
+			tempURL = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer", baseURL);
 		} else if (testCaseName.contains("_GetCredentialMosipID")) {
-			tempURL = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer",
-					baseURL.replace("injicertify.", "injicertify-mosipid."));
+			tempURL = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer", baseURL);
 		} else if (testCaseName.contains("_GenerateTokenVCIMOSIPID")) {
-			tempURL = getValueFromEsignetWellKnownEndPoint("token_endpoint",
-					baseURL.replace("injicertify.", "esignet-mosipid."));
+			tempURL = getValueFromEsignetWellKnownEndPoint("token_endpoint", InjiCertifyConfigManager.getEsignetBaseUrl());
 		} else if (testCaseName.contains("_GenerateToken_ForMockIDA")) {
-			tempURL = getValueFromEsignetWellKnownEndPoint("token_endpoint",
-					baseURL.replace("injicertify.", "esignet-mock."));
+			tempURL = getValueFromEsignetWellKnownEndPoint("token_endpoint", InjiCertifyConfigManager.getEsignetBaseUrl());
 		} else if (testCaseName.contains("_GetCredentialForMockIDA")) {
-			tempURL = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer",
-					baseURL.replace("injicertify.", "injicertify-mock."));
+			tempURL = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer", baseURL);
 		}
 
 		return tempURL;
@@ -565,25 +588,25 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		if (testCaseDTO.getEndPoint().startsWith("$ESIGNETMOCKBASEURL$") && testCaseName.contains("SunBirdC")) {
 			if (InjiCertifyConfigManager.isInServiceNotDeployedList("sunbirdrc"))
 				throw new SkipException(GlobalConstants.SERVICE_NOT_DEPLOYED_MESSAGE);
-			if (InjiCertifyConfigManager.getEsignetMockBaseURL() != null && !InjiCertifyConfigManager.getEsignetMockBaseURL().isBlank())
-				return ApplnURI.replace("api-internal.", InjiCertifyConfigManager.getEsignetMockBaseURL());
+
+			return InjiCertifyConfigManager.getEsignetBaseUrl();
 		} else if (testCaseDTO.getEndPoint().startsWith("$ESIGNETMOSIPIDBASEURL$")) {
-			return ApplnURI.replace("api-internal", "esignet-mosipid");
+			return InjiCertifyConfigManager.getEsignetBaseUrl();
 		} else if (testCaseDTO.getEndPoint().startsWith("$ESIGNETMOCKIDABASEURL$")) {
-			return ApplnURI.replace("api-internal", "esignet-mock");
+			return InjiCertifyConfigManager.getEsignetBaseUrl();
 		} else if (endPoint != null && endPoint.startsWith("$ESIGNETMOSIPIDBASEURL$")) {
-			return ApplnURI.replace("api-internal", "esignet-mosipid");
+			return InjiCertifyConfigManager.getEsignetBaseUrl();
 		} else if (endPoint != null && endPoint.startsWith("$ESIGNETMOCKIDABASEURL$")) {
-			return ApplnURI.replace("api-internal", "esignet-mock");
+			return InjiCertifyConfigManager.getEsignetBaseUrl();
 		} else if (testCaseDTO.getEndPoint().startsWith("$INJICERTIFYINSURANCEBASEURL$")
 				&& testCaseName.contains("GetCredentialSunBirdC")) {
-			return ApplnURI.replace("api-internal", "injicertify-insurance");
+			return InjiCertifyConfigManager. getInjiCertifyBaseUrl();
 		} else if (testCaseDTO.getEndPoint().startsWith("$INJICERTIFYMOSIPIDBASEURL$")
 				&& testCaseName.contains("_GetCredentialMosipID")) {
-			return ApplnURI.replace("api-internal", "injicertify-mosipid");
+			return InjiCertifyConfigManager. getInjiCertifyBaseUrl();
 		} else if (testCaseDTO.getEndPoint().startsWith("$INJICERTIFYMOCKIDABASEURL$")
 				&& testCaseName.contains("_GetCredentialForMockIDA")) {
-			return ApplnURI.replace("api-internal", "injicertify-mock");
+			return InjiCertifyConfigManager. getInjiCertifyBaseUrl();
 		} else if (testCaseDTO.getEndPoint().startsWith("$SUNBIRDBASEURL$")
 				&& testCaseName.contains("Policy_")) {
 			return InjiCertifyConfigManager.getSunBirdBaseURL();
