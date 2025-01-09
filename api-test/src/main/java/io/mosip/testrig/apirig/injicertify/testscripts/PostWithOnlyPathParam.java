@@ -83,7 +83,6 @@ public class PostWithOnlyPathParam extends AdminTestUtil implements ITest {
 	public void test(TestCaseDTO testCaseDTO) throws AuthenticationTestException, AdminTestException {
 		testCaseName = testCaseDTO.getTestCaseName();
 		testCaseName = InjiCertifyUtil.isTestCaseValidForExecution(testCaseDTO);
-		testCaseName = isTestCaseValidForExecution(testCaseDTO);
 		String[] templateFields = testCaseDTO.getTemplateFields();
 		if (HealthChecker.signalTerminateExecution) {
 			throw new SkipException(
@@ -117,6 +116,8 @@ public class PostWithOnlyPathParam extends AdminTestUtil implements ITest {
 		}
 
 		else {
+			String inputJson = getJsonFromTemplate(testCaseDTO.getInput(), testCaseDTO.getInputTemplate());
+			inputJson = InjiCertifyUtil.inputStringKeyWordHandeler(inputJson, testCaseName);
 			response = postWithOnlyPathParamAndCookie(ApplnURI + testCaseDTO.getEndPoint(),
 					getJsonFromTemplate(testCaseDTO.getInput(), testCaseDTO.getInputTemplate()), COOKIENAME,
 					testCaseDTO.getRole(), testCaseDTO.getTestCaseName(), sendEsignetToken);
