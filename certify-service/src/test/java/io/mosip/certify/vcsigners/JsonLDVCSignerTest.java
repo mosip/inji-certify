@@ -51,7 +51,22 @@ public class JsonLDVCSignerTest {
                             "@context": [
                                 "https://www.w3.org/ns/credentials/v2"
                             ],
-                            "validFrom": "2024-09-22T23:06:22.123Z",
+                            "issuanceDate": "2024-09-22T23:06:22.123Z",
+                            "validUntil": "2034-09-22T23:06:22.123Z",
+                            "type": [
+                                "VerifiableCredential",
+                                "MyPrototypeCredential"
+                            ],
+                            "credentialSubject": {
+                                "mySubjectProperty": "mySubjectValue"
+                            }
+            }""";
+    private static final String VC_3 = """
+            {
+                            "@context": [
+                                "https://www.w3.org/ns/credentials/v2"
+                            ],
+                            "vcIssuanceDate": "2024-09-22T23:06:22.123Z",
                             "validUntil": "2034-09-22T23:06:22.123Z",
                             "type": [
                                 "VerifiableCredential",
@@ -70,7 +85,7 @@ public class JsonLDVCSignerTest {
     @Test
     public void testAttachSignatureSuccess_VC2() {
         // Mock Templated VC and Key Manager Input
-        String VCs[] = new String[]{VC_1, VC_2};
+        String VCs[] = new String[]{VC_1, VC_2, VC_3};
         for (String templatedVC : VCs) {
             // Prepare a FakeSignature2018 implementation
             JWTSignatureResponseDto jwsSignedData = new JWTSignatureResponseDto();

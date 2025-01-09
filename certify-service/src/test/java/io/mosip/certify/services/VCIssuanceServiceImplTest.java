@@ -1,23 +1,22 @@
 package io.mosip.certify.services;
 
 import foundation.identity.jsonld.JsonLDObject;
+import io.mosip.certify.api.dto.VCRequestDto;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.api.exception.DataProviderExchangeException;
 import io.mosip.certify.api.exception.VCIExchangeException;
 import io.mosip.certify.api.spi.AuditPlugin;
-import io.mosip.certify.api.spi.DataProviderPlugin;
-import io.mosip.certify.core.dto.*;
-import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.exception.InvalidNonceException;
-import io.mosip.certify.proof.ProofValidator;
-import io.mosip.certify.vcformatters.VCFormatter;
+import io.mosip.certify.api.spi.VCIssuancePlugin;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
+import io.mosip.certify.core.dto.*;
+import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.util.SecurityHelperService;
+import io.mosip.certify.exception.InvalidNonceException;
+import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
-import io.mosip.certify.vcsigners.VCSigner;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,14 +33,15 @@ import java.time.ZoneOffset;
 import java.util.*;
 
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-@ConditionalOnProperty(value = "mosip.certify.plugin-mode", havingValue = "DataProvider")
-public class CertifyIssuanceServiceImplTest {
-
+@ConditionalOnProperty(value = "mosip.certify.plugin-mode", havingValue = "VCIssuance")
+public class VCIssuanceServiceImplTest {
     @Mock
     private LinkedHashMap<String, LinkedHashMap<String, Object>> issuerMetadata;
 
@@ -49,16 +49,10 @@ public class CertifyIssuanceServiceImplTest {
     private ParsedAccessToken parsedAccessToken;
 
     @Mock
-    private VCFormatter vcFormatter;
-
-    @Mock
-    private VCSigner vcSigner;
-
-    @Mock
-    private DataProviderPlugin dataProviderPlugin;
-
-    @Mock
     private ProofValidatorFactory proofValidatorFactory;
+
+    @Mock
+    private VCIssuancePlugin vcIssuancePlugin;
 
     @Mock
     private VCICacheService vciCacheService;
@@ -73,7 +67,7 @@ public class CertifyIssuanceServiceImplTest {
     private ProofValidator proofValidator;
 
     @InjectMocks
-    private CertifyIssuanceServiceImpl issuanceService;
+    private VCIssuanceServiceImpl issuanceService;
 
     private static final String TEST_ACCESS_TOKEN_HASH = "test-token-hash";
     private static final String TEST_CNONCE = "test-cnonce";
@@ -108,9 +102,7 @@ public class CertifyIssuanceServiceImplTest {
         issuerMetadata.put("latest", latestMetadata);
 
         ReflectionTestUtils.setField(issuanceService, "issuerMetadata", issuerMetadata);
-        ReflectionTestUtils.setField(issuanceService, "vcSignAlgorithm", "Ed25519Signature2020");
         ReflectionTestUtils.setField(issuanceService, "cNonceExpireSeconds", 300);
-        ReflectionTestUtils.setField(issuanceService, "issuerURI", "https://test.issuer.com");
 
         when(parsedAccessToken.getAccessTokenHash()).thenReturn(TEST_ACCESS_TOKEN_HASH);
 
@@ -134,15 +126,14 @@ public class CertifyIssuanceServiceImplTest {
     }
 
     @Test
-    public void getCredential_WithValidTransaction_Success() throws DataProviderExchangeException {
+    public void getCredential_WithValidTransaction_Success() throws VCIExchangeException {
         when(parsedAccessToken.isActive()).thenReturn(true);
         when(parsedAccessToken.getClaims()).thenReturn(claims);
         when(vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH)).thenReturn(transaction);
         when(proofValidatorFactory.getProofValidator(any())).thenReturn(proofValidator);
         when(proofValidator.validate(any(), eq(TEST_CNONCE), any())).thenReturn(true);
-        when(dataProviderPlugin.fetchData(any())).thenReturn(new JSONObject());
-        when(vcFormatter.format(any(), any())).thenReturn("unsigned-vc");
-        when(vcSigner.attachSignature(any(String.class), any(Map.class))).thenReturn(vcResult);
+        when(proofValidator.getKeyMaterial(any())).thenReturn("test_holder_id");
+        when(vcIssuancePlugin.getVerifiableCredentialWithLinkedDataProof(any(VCRequestDto.class), any(String.class), any(Map.class))).thenReturn(vcResult);
 
         // Act
         CredentialResponse<?> response = issuanceService.getCredential(request);
@@ -150,33 +141,6 @@ public class CertifyIssuanceServiceImplTest {
         // Assert
         assertNotNull(response);
         verify(auditWrapper).logAudit(any(), any(), any(), any());
-    }
-
-    @Test
-    public void getCredential_ValidRequest_NullJSONLD_Fail() throws DataProviderExchangeException {
-        when(parsedAccessToken.isActive()).thenReturn(true);
-        when(parsedAccessToken.getClaims()).thenReturn(claims);
-        when(vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH)).thenReturn(transaction);
-        when(proofValidatorFactory.getProofValidator(any())).thenReturn(proofValidator);
-        when(proofValidator.validate(any(), any(), any())).thenReturn(true);
-        when(dataProviderPlugin.fetchData(any())).thenReturn(new JSONObject());
-        when(vcFormatter.format(any(), any())).thenReturn("unsigned-vc");
-        when(vcSigner.attachSignature(anyString(), anyMap())).thenReturn(new VCResult<>());
-
-        assertThrows(ErrorConstants.VC_ISSUANCE_FAILED, CertifyException.class, () -> issuanceService.getCredential(request));
-    }
-
-    @Test
-    public void getCredential_ValidRequest_DataProviderException_Fail() throws DataProviderExchangeException {
-        when(parsedAccessToken.isActive()).thenReturn(true);
-        when(parsedAccessToken.getClaims()).thenReturn(claims);
-        when(vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH)).thenReturn(transaction);
-        when(proofValidatorFactory.getProofValidator(any())).thenReturn(proofValidator);
-        when(proofValidator.validate(any(), any(), any())).thenReturn(true);
-
-        DataProviderExchangeException e = new DataProviderExchangeException("Failed to fetch data");
-        when(dataProviderPlugin.fetchData(any())).thenThrow(e);
-        assertThrows(CertifyException.class, () -> issuanceService.getCredential(request));
     }
 
     @Test
@@ -209,20 +173,49 @@ public class CertifyIssuanceServiceImplTest {
     }
 
     @Test
-    public void getCredential_ValidRequest_InvalidFormat_Fail() throws DataProviderExchangeException {
+    public void getCredential_ValidRequest_NullJSONLD_Fail() {
+        when(parsedAccessToken.isActive()).thenReturn(true);
+        when(parsedAccessToken.getClaims()).thenReturn(claims);
+        when(vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH)).thenReturn(transaction);
+        when(proofValidatorFactory.getProofValidator(any())).thenReturn(proofValidator);
+        when(proofValidator.validate(any(), any(), any())).thenReturn(true);
+        assertThrows(ErrorConstants.VC_ISSUANCE_FAILED, CertifyException.class, () -> issuanceService.getCredential(request));
+    }
+
+    @Test
+    public void getCredential_ValidRequest_ValidJMsoMDoc_Success() throws VCIExchangeException {
+        request.setFormat("mso_mdoc");
+        request.setDoctype("mso-mdoc");
+        when(parsedAccessToken.isActive()).thenReturn(true);
+        when(parsedAccessToken.getClaims()).thenReturn(claims);
+        when(vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH)).thenReturn(transaction);
+        when(proofValidatorFactory.getProofValidator(any())).thenReturn(proofValidator);
+        when(proofValidator.validate(any(), any(), any())).thenReturn(true);
+        when(proofValidator.getKeyMaterial(any())).thenReturn("test_holder_id");
+        VCResult<String> msoMDocVCResult = new VCResult<>();
+        msoMDocVCResult.setCredential("test_credential");
+        when(vcIssuancePlugin.getVerifiableCredential(any(VCRequestDto.class), any(String.class), any(Map.class))).thenReturn(msoMDocVCResult);
+
+        CredentialResponse<?> response = issuanceService.getCredential(request);
+        assertNotNull(response);
+        verify(auditWrapper).logAudit(any(), any(), any(), any());
+    }
+
+    @Test
+    public void getCredential_ValidRequest_InvalidFormat_Fail() {
         request.setFormat("test-vc");
         assertThrows(ErrorConstants.INVALID_REQUEST, CertifyException.class, () -> issuanceService.getCredential(request));
     }
 
     @Test
-    public void getCredential_ValidRequest_InvalidScope_Fail() throws DataProviderExchangeException {
+    public void getCredential_ValidRequest_InvalidScope_Fail() {
         claims.put("scope", "test-new-scope");
         when(parsedAccessToken.isActive()).thenReturn(true);
         assertThrows(ErrorConstants.INVALID_SCOPE, CertifyException.class, () -> issuanceService.getCredential(request));
     }
 
     @Test
-    public void getCredential_ValidRequest_InvalidProof_Fail() throws DataProviderExchangeException {
+    public void getCredential_ValidRequest_InvalidProof_Fail() {
         when(parsedAccessToken.isActive()).thenReturn(true);
         when(parsedAccessToken.getClaims()).thenReturn(claims);
         when(vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH)).thenReturn(transaction);
@@ -247,7 +240,6 @@ public class CertifyIssuanceServiceImplTest {
         proof.setJwt("jwt");
         proof.setCwt("cwt");
         request.setProof(proof);
-
         return request;
     }
 

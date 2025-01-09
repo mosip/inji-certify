@@ -3,6 +3,7 @@ package io.mosip.certify.repository;
 import io.mosip.certify.entity.RenderingTemplate;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
@@ -19,6 +20,13 @@ public class RenderingCredentialTemplateRepositoryTest {
     @Autowired
     private RenderingTemplateRepository svgRenderTemplateRepository;
 
+    LocalDateTime localDateTime;
+
+    @Before
+    public void setup() {
+        localDateTime = LocalDateTime.now();
+    }
+
     @Test
     public void insertSvgTemplate_withValidDetail_thenPass() {
         RenderingTemplate svgRenderTemplate = new RenderingTemplate();
@@ -31,12 +39,16 @@ public class RenderingCredentialTemplateRepositoryTest {
                 """;
         svgRenderTemplate.setId("fake-id");
         svgRenderTemplate.setTemplate(template);
-        svgRenderTemplate.setCreatedtimes(LocalDateTime.now());
+        svgRenderTemplate.setCreatedtimes(localDateTime);
+        svgRenderTemplate.setUpdatedtimes(localDateTime);
 
         svgRenderTemplate = svgRenderTemplateRepository.saveAndFlush(svgRenderTemplate);
         Assert.assertNotNull(svgRenderTemplate);
 
         Optional<RenderingTemplate> optional = svgRenderTemplateRepository.findById(svgRenderTemplate.getId());
+        Assert.assertTrue(svgRenderTemplate.equals(optional.get()));
+        Assert.assertTrue(svgRenderTemplate.toString().equals(optional.get().toString()));
+        Assert.assertEquals(optional.get().hashCode(), svgRenderTemplate.hashCode());
         Assert.assertTrue(optional.isPresent());
         Assert.assertEquals(svgRenderTemplate.getTemplate(), optional.get().getTemplate());
     }
@@ -46,7 +58,9 @@ public class RenderingCredentialTemplateRepositoryTest {
         RenderingTemplate svgRenderTemplate = new RenderingTemplate();
         svgRenderTemplate.setId("fake-id");
         svgRenderTemplate.setTemplate("");
-        svgRenderTemplate.setCreatedtimes(LocalDateTime.now());
+        localDateTime = LocalDateTime.now();
+        svgRenderTemplate.setCreatedtimes(localDateTime);
+        svgRenderTemplate.setUpdatedtimes(localDateTime);
 
         ConstraintViolationException e = Assertions.assertThrows(
                 ConstraintViolationException.class, () -> svgRenderTemplateRepository.saveAndFlush(svgRenderTemplate)
