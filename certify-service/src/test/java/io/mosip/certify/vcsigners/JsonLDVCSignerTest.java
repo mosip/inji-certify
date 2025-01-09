@@ -104,7 +104,9 @@ public class JsonLDVCSignerTest {
             // test
             assert vcResult != null;
             JsonLDObject credential = vcResult.getCredential();
-            Assert.assertNotNull(credential.getJsonObject().containsKey("proof"));
+            Assert.assertNotNull(credential);
+            Assert.assertNotNull(credential.getJsonObject());
+            Assert.assertTrue(credential.getJsonObject().containsKey("proof"));
             Map<String, Object> proof = (Map<String, Object>) credential.getJsonObject().get("proof");
             Assert.assertEquals("fake-jws-proof", proof.get("jws"));
         }
