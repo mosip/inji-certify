@@ -12,6 +12,26 @@ Issuer can configure their respective credential schema for various types of cer
 
 Instructions [here](./docker-compose/docker-compose-injistack/README.md).
 
+### Steps to configure postgres-dataprovider-plugin
+- Supported versions: 0.3.0 and above
+- Download the latest JAR from:
+  ```
+  https://oss.sonatype.org/content/repositories/snapshots/io/mosip/certify/postgres-dataprovider-plugin/0.3.0-SNAPSHOT/
+  ```
+- Refer to the documentation of postgres plugin for required configurations: [Postgres Plugin Doc](https://github.com/mosip/digital-credential-plugins/blob/release-0.3.x/postgres-dataprovider-plugin/README.md) 
+
+### For Advanced Users: Create Custom Plugin
+
+You can create your own plugin by implementing the following interface and refer the below for postgres-dataprovider-plugin implementation:
+
+Reference Implementation: [postgres-dataprovider-plugin](https://github.com/mosip/digital-credential-plugins/tree/release-0.3.x/postgres-dataprovider-plugin).
+
+```java
+public interface DataProviderPlugin {
+    // Implement your custom logic here
+}
+```
+
 ## Databases
 
 Refer to [SQL scripts](db_scripts) and go through it's README
