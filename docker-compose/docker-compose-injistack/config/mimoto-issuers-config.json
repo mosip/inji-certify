@@ -6,12 +6,12 @@
       "protocol": "OpenId4VCI",
       "display": [
         {
-          "name": "Farmers Credentials",
+          "name": "Agriculture Department",
           "logo": {
-            "url": "https://api.collab.mosip.net/inji/mosip-logo.png",
-            "alt_text": "mosip-logo"
+            "url": "https://mosip.github.io/inji-config/logos/agro-vertias-logo.png",
+            "alt_text": "agri-logo"
           },
-          "title": "Farmers Credentials",
+          "title": "Agriculture Department",
           "description": "Download Farmers Credentials",
           "language": "en"
         }
@@ -32,12 +32,12 @@
       "protocol": "OpenId4VCI",
       "display": [
         {
-          "name": "Mobile Driving License",
+          "name": "Transport Department",
           "logo": {
             "url": "https://api.collab.mosip.net/inji/mosip-logo.png",
             "alt_text": "mosip-logo"
           },
-          "title": "Mobile Driving License",
+          "title": "Transport Department",
           "description": "Download Mobile Driving License",
           "language": "en"
         }
