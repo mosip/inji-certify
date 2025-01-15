@@ -1,29 +1,26 @@
 package io.mosip.certify.services;
 
-import foundation.identity.jsonld.JsonLDObject;
-import info.weboftrust.ldsignatures.LdProof;
-import info.weboftrust.ldsignatures.canonicalizer.URDNA2015Canonicalizer;
-import io.mosip.certify.api.dto.VCResult;
-import io.mosip.certify.core.constants.VCDMConstants;
-import io.mosip.certify.services.ldsigner.ProofSignatureStrategy;
-import io.mosip.certify.services.ldsigner.RsaProofSignature2018;
-import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
+import java.util.Map;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import io.mosip.kernel.signature.service.SignatureService;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.test.util.ReflectionTestUtils;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import static org.mockito.Mockito.when;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import java.sql.Ref;
-import java.util.Map;
+import foundation.identity.jsonld.JsonLDObject;
+import info.weboftrust.ldsignatures.LdProof;
+import info.weboftrust.ldsignatures.canonicalizer.URDNA2015Canonicalizer;
+import io.mosip.certify.api.dto.VCResult;
+import io.mosip.certify.services.ldsigner.ProofSignatureStrategy;
+import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
+import io.mosip.kernel.signature.service.SignatureService;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KeymanagerLibSignerTest {

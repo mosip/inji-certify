@@ -1,7 +1,7 @@
 package io.mosip.testrig.apirig.injicertify.utils;
 
 import org.apache.log4j.Logger;
-import org.json.JSONObject;
+import com.github.openjson.JSONObject;
 import org.testng.SkipException;
 
 import com.nimbusds.jose.jwk.RSAKey;

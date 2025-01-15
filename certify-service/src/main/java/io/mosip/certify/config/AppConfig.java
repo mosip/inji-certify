@@ -5,20 +5,9 @@
  */
 package io.mosip.certify.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
-import io.mosip.certify.core.constants.Constants;
-import io.mosip.certify.services.KeyManagerConstants;
-import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateRequestDto;
-import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
-import io.mosip.kernel.keymanagerservice.dto.SymmetricKeyGenerateRequestDto;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
-import org.springframework.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
@@ -28,7 +17,20 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
+
+import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.services.KeyManagerConstants;
+import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateRequestDto;
+import io.mosip.kernel.keymanagerservice.dto.SymmetricKeyGenerateRequestDto;
+import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
+import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @EnableJpaRepositories(basePackages = {"io.mosip.kernel.keymanagerservice.repository", "io.mosip.certify.core.repository"})
@@ -91,7 +93,7 @@ public class AppConfig implements ApplicationRunner {
         rsaKeyRequest.setReferenceId(KeyManagerConstants.EMPTY_REF_ID);
         rsaKeyRequest.setForce(false);
         keymanagerService.generateMasterKey("certificate", rsaKeyRequest);
-        if(!StringUtils.isEmpty(cacheSecretKeyRefId)) {
+        if(!ObjectUtils.isEmpty(cacheSecretKeyRefId)) {
             SymmetricKeyGenerateRequestDto symmetricKeyGenerateRequestDto = new SymmetricKeyGenerateRequestDto();
             symmetricKeyGenerateRequestDto.setApplicationId(Constants.CERTIFY_SERVICE_APP_ID);
             symmetricKeyGenerateRequestDto.setReferenceId(cacheSecretKeyRefId);

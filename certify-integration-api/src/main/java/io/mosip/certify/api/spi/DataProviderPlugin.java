@@ -1,7 +1,7 @@
 package io.mosip.certify.api.spi;
 
 import io.mosip.certify.api.exception.DataProviderExchangeException;
-import org.json.JSONObject;
+import com.github.openjson.JSONObject;
 
 import java.util.Map;
 

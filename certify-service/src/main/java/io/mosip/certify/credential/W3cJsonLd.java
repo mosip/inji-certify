@@ -3,7 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-package io.mosip.certify.services;
+
+package io.mosip.certify.credential;
 
 import java.io.IOException;
 import java.net.URI;
@@ -17,15 +18,13 @@ import java.util.Base64;
 import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import foundation.identity.jsonld.JsonLDException;
 import foundation.identity.jsonld.JsonLDObject;
 import info.weboftrust.ldsignatures.LdProof;
 import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
 import io.mosip.certify.api.dto.VCResult;
-import io.mosip.certify.api.spi.VCSigner;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCDM1Constants;
 import io.mosip.certify.core.constants.VCDM2Constants;
@@ -34,33 +33,27 @@ import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.services.ldsigner.ProofSignatureStrategy;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * KeymanagerLibSigner is a VCSigner which uses the Certify embedded
- * keymanager to perform VC signing tasks for JSON LD VCs.
- * These are the known external requirements:
- * - the public key must be pre-hosted for the VC & should be available
- *    so long that VC should be verifiable
- * - the VC should have a validFrom or issuanceDate in a specific UTC format,
- *  if missing it uses current time for proof creation timestamp.
- * @deprecated
- * This class is deprecated and should not be used.
- * Use the Credential with CredentialFactory instead.
- */
-@Slf4j
-@Deprecated 
-@Service
-public class KeymanagerLibSigner implements VCSigner {
 
+@Slf4j
+@Component
+public class W3cJsonLd extends Credential{
+    //TODO: This has to move to a factory
     @Autowired
     ProofSignatureStrategy signProps;
-    @Value("${mosip.certify.issuer.pub.key}")
-    private String hostedKey;
 
+    /**
+     * Adds a signature/proof. Based on the actual implementation the input 
+     * could be different, its recommended that the input matches the output 
+     * of the respective createCredential, for eg: Base64, Sringified JSON etc.
+     * <p>In the defaulat abstract implementation we assume 
+     * ```Base64.getUrlEncoder().encodeToString(vcToSign)``` </p>
+     * @param vcToSign actual vc as returned by the `createCredential` method. 
+     * @param heders headers to be added. Can be null.
+     */
     @Override
-    public VCResult<JsonLDObject> perform(String templatedVC) {
-        // Can the below lines be done at Templating side itself ?
+    public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm, String appID, String refID, String publicKeyURL){
         VCResult<JsonLDObject> VC = new VCResult<>();
-        JsonLDObject j = JsonLDObject.fromJson(templatedVC);
+        JsonLDObject j = JsonLDObject.fromJson(vcToSign);
         j.setDocumentLoader(null);
         // NOTE: other aspects can be configured via keyMgrInput map
         String validFrom;
@@ -81,7 +74,7 @@ public class KeymanagerLibSigner implements VCSigner {
                         .atZone(ZoneId.systemDefault()).toInstant());
         LdProof vcLdProof = LdProof.builder().defaultContexts(false).defaultTypes(false).type(signProps.getName())
                 .created(createDate).proofPurpose(VCDMConstants.ASSERTION_METHOD)
-                .verificationMethod(URI.create(hostedKey))
+                .verificationMethod(URI.create(publicKeyURL))
                 .build();
         // 1. Canonicalize
         Canonicalizer canonicalizer = signProps.getCanonicalizer();
@@ -97,7 +90,8 @@ public class KeymanagerLibSigner implements VCSigner {
         LdProof ldProofWithJWS = signProps.buildProof(vcLdProof, sign);
         ldProofWithJWS.addToJsonLDObject(j);
         VC.setCredential(j);
+        VC.setFormat("ldp_vc");
         return VC;
-        // MOSIP ref: https://github.com/mosip/id-authentication/blob/master/authentication/authentication-service/src/main/java/io/mosip/authentication/service/kyc/impl/VciServiceImpl.java#L281
     }
+
 }

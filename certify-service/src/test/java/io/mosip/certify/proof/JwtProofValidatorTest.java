@@ -1,19 +1,17 @@
 package io.mosip.certify.proof;
 
-import com.nimbusds.jose.JWSAlgorithm;
+/*import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.jwk.JWK;
-import io.mosip.certify.core.dto.CredentialProof;
+import com.nimbusds.jose.jwk.JWK;*/
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import java.lang.reflect.Method;
 import org.mockito.Mock;
+import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.mockito.Mockito.*;
+import io.mosip.certify.core.dto.CredentialProof;
 
 class JwtProofValidatorTest {
 

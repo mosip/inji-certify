@@ -5,11 +5,10 @@
  */
 package io.mosip.certify.controller;
 
-import io.mosip.certify.core.entity.SvgTemplate;
-import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.core.exception.TemplateException;
-import io.mosip.certify.core.spi.SvgTemplateService;
-import lombok.extern.slf4j.Slf4j;
+import java.time.ZoneId;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
@@ -19,9 +18,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.ZoneId;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+import io.mosip.certify.core.entity.SvgTemplate;
+import io.mosip.certify.core.exception.TemplateException;
+import io.mosip.certify.core.spi.SvgTemplateService;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController

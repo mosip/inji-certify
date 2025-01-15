@@ -3,7 +3,7 @@ package io.mosip.certify;
 import io.mosip.certify.api.exception.DataProviderExchangeException;
 import io.mosip.certify.api.spi.DataProviderPlugin;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONObject;
+import com.github.openjson.JSONObject;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 

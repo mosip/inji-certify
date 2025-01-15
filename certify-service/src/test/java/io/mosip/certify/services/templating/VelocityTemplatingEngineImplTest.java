@@ -1,12 +1,10 @@
 package io.mosip.certify.services.templating;
 
-import io.mosip.certify.core.entity.TemplateData;
-import io.mosip.certify.core.repository.TemplateRepository;
-import junit.framework.TestCase;
-import lombok.SneakyThrows;
-import net.javacrumbs.jsonunit.assertj.JsonAssertions;
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -14,17 +12,20 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.stereotype.Service;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.github.openjson.JSONException;
+import com.github.openjson.JSONObject;
 
-import static org.mockito.Mockito.when;
+import io.mosip.certify.core.entity.TemplateData;
+import io.mosip.certify.core.repository.TemplateRepository;
+import junit.framework.TestCase;
+import lombok.SneakyThrows;
+import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 
 @Service
 @RunWith(MockitoJUnitRunner.class)
@@ -130,6 +131,20 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
 //        engine.init();
     }
 
+    private TemplateData initTemplate(String template, String type, String context, String format, String didUrl, String keyManagerAppId, String keyManagerRefId, String signatureAlgo, String sdClaim) {
+        TemplateData t = new TemplateData();
+        t.setTemplate(template);
+        t.setCredentialType(type);
+        t.setContext(context);
+        t.setCredentialFormat(format);
+        t.setDidUrl(didUrl);
+        t.setKeyManagerAppId(keyManagerAppId);
+        t.setKeyManagerRefId(keyManagerRefId);
+        t.setSignatureAlgo(signatureAlgo);
+        t.setSdClaim(sdClaim);
+        return t;
+    }
+
     private TemplateData initTemplate(String template, String type, String context) {
         TemplateData t = new TemplateData();
         t.setTemplate(template);
@@ -183,7 +198,7 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
         String actualJSON = formatter.format(ret, templateMap);
         System.out.println(actualJSON);
         try {
-            JSONObject j = new JSONObject(actualJSON);
+            JSONObject unused = new JSONObject(actualJSON);
         } catch (JSONException e) {
             Assert.fail(e.getMessage());
         }

@@ -1,16 +1,16 @@
 package io.mosip.certify.core.validators;
 
-import io.mosip.certify.core.constants.VCFormats;
-import io.mosip.certify.core.dto.CredentialDefinition;
-import io.mosip.certify.core.dto.CredentialRequest;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import org.junit.Before;
+import org.junit.Test;
+
+import io.mosip.certify.core.constants.VCFormats;
+import io.mosip.certify.core.dto.CredentialDefinition;
+import io.mosip.certify.core.dto.CredentialRequest;
 
 public class CredentialRequestValidatorFactoryTest {
 
