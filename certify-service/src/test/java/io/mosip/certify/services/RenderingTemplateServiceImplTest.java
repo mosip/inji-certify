@@ -1,11 +1,8 @@
 package io.mosip.certify.services;
 
-import io.mosip.certify.api.dto.RenderingTemplateDTO;
-import io.mosip.certify.core.constants.ErrorConstants;
-import io.mosip.certify.core.exception.RenderingTemplateException;
-import io.mosip.certify.entity.RenderingTemplate;
-import io.mosip.certify.repository.RenderingTemplateRepository;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDateTime;
+import java.util.Optional;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,8 +11,12 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
+import io.mosip.certify.api.dto.RenderingTemplateDTO;
+import io.mosip.certify.core.constants.ErrorConstants;
+import io.mosip.certify.core.exception.RenderingTemplateException;
+import io.mosip.certify.entity.RenderingTemplate;
+import io.mosip.certify.repository.RenderingTemplateRepository;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
@@ -41,7 +42,7 @@ public class RenderingTemplateServiceImplTest {
         svgRenderTemplate.setCreatedtimes(LocalDateTime.now());
         Optional<RenderingTemplate> optional = Optional.of(svgRenderTemplate);
         Mockito.when(svgRenderTemplateRepository.findById(Mockito.any())).thenReturn(optional);
-        RenderingTemplateDTO svgRenderTemplateResponse = renderingTemplateService.getSvgTemplate("fake-id");
+        RenderingTemplateDTO svgRenderTemplateResponse = renderingTemplateService.getTemplate("fake-id");
         Assert.assertNotNull(svgRenderTemplateResponse);
         Assert.assertEquals(svgRenderTemplate.getId(), svgRenderTemplateResponse.getId());
         Assert.assertEquals(svgTemplate, optional.get().getTemplate());
@@ -51,7 +52,7 @@ public class RenderingTemplateServiceImplTest {
     public void getSvgTemplate_withInvalidId_thenFail() {
         Mockito.when(svgRenderTemplateRepository.findById(Mockito.any())).thenReturn(Optional.empty());
         RenderingTemplateException templateException = Assert.assertThrows(RenderingTemplateException.class, () -> {
-            renderingTemplateService.getSvgTemplate("fake-id");
+            renderingTemplateService.getTemplate("fake-id");
         });
         Assert.assertEquals(ErrorConstants.INVALID_TEMPLATE_ID, templateException.getErrorCode());
     }

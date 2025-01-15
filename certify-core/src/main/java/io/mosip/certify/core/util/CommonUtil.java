@@ -5,32 +5,31 @@
  */
 package io.mosip.certify.core.util;
 
-import com.nimbusds.jose.util.ByteUtils;
-import io.mosip.certify.core.constants.Constants;
-import io.mosip.certify.core.constants.ErrorConstants;
-import io.mosip.certify.core.exception.CertifyException;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.validator.routines.UrlValidator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.AntPathMatcher;
-import org.springframework.util.PathMatcher;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Base64;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.apache.commons.validator.routines.UrlValidator;
 import static org.apache.commons.validator.routines.UrlValidator.ALLOW_ALL_SCHEMES;
 import static org.apache.commons.validator.routines.UrlValidator.ALLOW_LOCAL_URLS;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.util.PathMatcher;
+
+import com.nimbusds.jose.util.ByteUtils;
+
+import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.constants.ErrorConstants;
+import io.mosip.certify.core.exception.CertifyException;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CommonUtil {
 
-    private static final Logger logger = LoggerFactory.getLogger(CommonUtil.class);
     public static final String ALGO_SHA_256 = "SHA-256";
     public static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
