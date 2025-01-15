@@ -5,6 +5,7 @@
  */
 package io.mosip.certify.core.constants;
 
+@Deprecated
 public class VCFormats {
 
     public static final String MSO_MDOC = "mso_mdoc";

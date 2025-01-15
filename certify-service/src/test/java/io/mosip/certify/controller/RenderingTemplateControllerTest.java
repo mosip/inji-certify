@@ -1,10 +1,7 @@
 package io.mosip.certify.controller;
 
-import io.mosip.certify.api.dto.RenderingTemplateDTO;
-import io.mosip.certify.core.constants.ErrorConstants;
-import io.mosip.certify.core.dto.ParsedAccessToken;
-import io.mosip.certify.core.exception.RenderingTemplateException;
-import io.mosip.certify.core.spi.RenderingTemplateService;
+import java.time.LocalDateTime;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -14,9 +11,15 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.time.LocalDateTime;
+import io.mosip.certify.api.dto.RenderingTemplateDTO;
+import io.mosip.certify.core.constants.ErrorConstants;
+import io.mosip.certify.core.dto.ParsedAccessToken;
+import io.mosip.certify.core.exception.RenderingTemplateException;
+import io.mosip.certify.core.spi.RenderingTemplateService;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(value= RenderingTemplateController.class)
@@ -46,7 +49,7 @@ public class RenderingTemplateControllerTest {
         renderingTemplateDTO.setCreatedTimes(date);
         renderingTemplateDTO.setUpdatedTimes(date);
 
-        Mockito.when(renderingTemplateService.getSvgTemplate(Mockito.any())).thenReturn(renderingTemplateDTO);
+        Mockito.when(renderingTemplateService.getTemplate(Mockito.any())).thenReturn(renderingTemplateDTO);
 
         mockMvc.perform(get("/rendering-template/fake-id"))
                 .andExpect(status().isOk())
@@ -58,7 +61,7 @@ public class RenderingTemplateControllerTest {
     @Test
     public void  getSvgTemplate_withInValidId_thenFail() throws Exception {
         RenderingTemplateException templateException = new RenderingTemplateException(ErrorConstants.INVALID_TEMPLATE_ID);
-        Mockito.when(renderingTemplateService.getSvgTemplate("fake-id")).thenThrow(templateException);
+        Mockito.when(renderingTemplateService.getTemplate("fake-id")).thenThrow(templateException);
 
         mockMvc.perform(get("/rendering-template/fake-id"))
                 .andExpect(status().isNotFound());
