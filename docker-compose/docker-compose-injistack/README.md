@@ -1,9 +1,8 @@
 # Inji Stack Setup
 
-This guide provides instructions for setting up and running Inji Stack for a custom use-case based on an existing configured foundational ID system.
-An example for this could be a use-case where Authentication is performed from a pre-existing registry such as a **National ID** being put to use to deliver services such as **Farmer Identity Card** to eligible farmers or a **Mobile Driving License** to eligible drivers. These examples can be further extended for different usecases and used with different OIDC Compatible clients.
+This guide provides instructions for setting up and running Inji Stack for a custom use-case using an existing foundational ID system. This shows how an institution can enable it's portfolio of deparments to build upon an existing identity to accelarate independent service delivery. In the below example, we help setup some components of **Inji Stack** which uses an Authorization Service of a **National ID** deployed by MOSIP to help other depute institutions setup a use-case specific Credential Delivery for it's citizens by two independent departments one at a time such as _Agriculture_ & _Transport_. This example demonstrates the delivery of profession specific identity cards to it's citizens **Farmer Identity Card** to eligible farmers by the **Agriculture Department** or a **Mobile Driving License** to eligible drivers by the **Transport Department**. These examples can be further extended for different usecases and used with different OIDC Compatible clients.
 
-On the more technical side, this demo showcases the two types of plugin an implementor can choose to implement depending upon their usecase & requirements & pre-existing identity system.
+On the more technical side, this demo showcases the two types of plugin an implementor can choose to implement depending upon their usecase & requirements and can even point to another pre-existing identity system demonstrating it's adaptability to various usecases while being backed by open standards which leads to faster adoption and widespread acceptability.
 
 
 # QuickStart: Mock Certify Plugin Setup
@@ -85,7 +84,7 @@ public interface VCIssuancePlugin {
 
 ## Certificate Setup
 
-- Create a `certs/` directory inside the docker-compose-injistack directory
+- Create a `certs/` directory inside the docker-compose-injistack directory.
 - Place your PKCS12 keystore file in the `certs` directory as `oidckeystore.p12`. This is required for the Inji Web application and other applications which rely on Mimoto as a BFF and it can be configured as per these [docs](https://docs.inji.io/inji-wallet/inji-mobile/customization-overview/credential_providers#onboarding-mimoto-as-oidc-client-for-a-new-issuer) after the file is downloaded in the `certs` directory as shown in the directory tree.
 - Update `mosip.oidc.p12.password` to the password of the `oidckeystore.p12` file in the Mimoto [Config file](./config/mimoto-default.properties).
 
@@ -113,7 +112,7 @@ mosip.certify.data-provider-plugin.issuer-public-key-uri=did:web:vharsh.github.i
 - (required for Farmer setup) Certify will automatically generate the DID document for your usecase at [this endpoint](http://localhost:8090/v1/certify/issuance/.well-known/did.json), please copy the contents of the HTTP response and host it appropriately in the same location.
     - To verify if everything is working you can try to resolve the DID via public DID resolvers such as [Uniresolver](https://dev.uniresolver.io/).
 
-- (required if Mobile driving license configured) Onboard issuer key and certificate data into property `mosip.certify.mock.mdoc.issuer-key-cert` using the creation script
+- (required if Mobile driving license configured) Onboard issuer key and certificate data into property `mosip.certify.mock.mdoc.issuer-key-cert` using the creation script, please read the [plugin README](https://github.com/mosip/digital-credential-plugins/tree/release-0.3.x/mock-certify-plugin) for the same.
 
 ### Advanced users only:
 
@@ -164,14 +163,14 @@ The following services will be available:
 
 ## Using the Application
 
-### Accessing the Web Interface
+### Recommended: Accessing the Web Interface
 
 1. Open your browser and navigate to `http://localhost:3001`
 2. You can:
     - Download credentials
     - View credential status at a Standards Compliant VC Verfier such as [Inji Verify](https://injiverify.collab.mosip.net).
 
-### Accessing the Credentials via the Postman Interface
+### Advanced Users: Accessing the Credentials via the Postman Interface
 
 1. Open Postman
 2. Import the [Mock Collections & Environments](../../docs/postman-collections/) from here, make appropriate changes to the Credential Type and contexts as per your VerifiableCredential and the configured WellKnown.
@@ -183,8 +182,23 @@ The following services will be available:
 
 ## Advanced Configurations
 
-1. To use the Verifiable Credential Data Model 2.0 optional features one can configure them in the Velocity Template present in [this file](./certify_init.sql)as per [this draft spec](https://w3c-ccg.github.io/vc-render-method/). The Render Template has to be routable by all the clients and should be available.
+1. To use the Verifiable Credential Data Model 2.0 optional features one can configure them in the Velocity Template present in [this file](./certify_init.sql)as per [this draft spec](https://w3c-ccg.github.io/vc-render-method/). The Render Template has to be routable by all the clients and should be cached appropriately. The template is not expected to be updated as the consuming clients are expected to verify the integrity with the provided `digestMultibase`. For detailed information please go through the draft spec.
 
+```json
+  "renderMethod": [{
+    "id": "https://yourdomain.certify.io/v1/certify/rendering-template/national-id",
+    "type": "SvgRenderingTemplate",
+    "name": "Portrait Mode",
+    "css3MediaQuery": "@media (orientation: portrait)",
+    "digestMultibase": "zQmAPdhyxzznFCwYxAp2dRerWC85Wg6wFl9G270iEu5h6JqW"
+  }]
+```
+
+The digest multibase can be hardcoded or if the template has been stored with Certify's DB & `mosip.certify.data-provider-plugin.rendering-template-id` is set to the correct the value `${_renderMethodSVGdigest}` can be used to enable Certify to evaluate it specifying the id of the rendering-template used. However, for optimal performance, it's recommended to not set this key and instead hardcode the `digestMultibase` value in the Velocity template itself.
+
+2. Deploying Inji Certify over a public URL, _using ngrok to demonstrate this_
+
+- change the value of the `mosipbox_public_url` to point to the public URL in ./docker-compose.yaml where Certify service will be accessible, when using locally with ngrok create an HTTP tunnel for the port `8090`, which is the port for Certify and access the Inji Web at http://localhost:3001, to access Inji Web you may have to create another client with the Authorization service and more configuration should be required at Mimoto side
 
 ## Troubleshooting
 

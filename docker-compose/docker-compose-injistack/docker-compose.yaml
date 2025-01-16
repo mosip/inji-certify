@@ -30,7 +30,6 @@ services:
       - ./config/certify-default.properties:/home/mosip/config/certify-default.properties
       - ./config/certify-csvdp-farmer.properties:/home/mosip/config/certify-csvdp-farmer.properties
       - ./config/certify-mock-mdl.properties:/home/mosip/config/certify-mock-mdl.properties
-      - ./config/farmer_identity_data.csv:/home/mosip/config/farmer_identity_data.csv
       - ./data/CERTIFY_PKCS12:/home/mosip/CERTIFY_PKCS12
       - ./loader_path/certify/:/home/mosip/additional_jars/
       # modify the below file to change the identity fields in the VC
