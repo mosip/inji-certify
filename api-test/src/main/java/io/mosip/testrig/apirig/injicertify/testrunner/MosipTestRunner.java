@@ -177,19 +177,8 @@ public class MosipTestRunner {
 			homeDir = new File(dir.getParent() + "/mosip/testNgXmlFiles");
 			LOGGER.info("ELSE :" + homeDir);
 		}
-		// List and sort the files
 		File[] files = homeDir.listFiles();
 		if (files != null) {
-			Arrays.sort(files, (f1, f2) -> {
-				// Customize the comparison based on file names
-				if (f1.getName().toLowerCase().contains("prerequisite")) {
-					return -1; // f1 should come before f2
-				} else if (f2.getName().toLowerCase().contains("prerequisite")) {
-					return 1; // f2 comes before f1
-				}
-				return f1.getName().compareTo(f2.getName()); // default alphabetical order
-			});
-
 			String useCaseToExecute = InjiCertifyConfigManager.getproperty("useCaseToExecute");
 
 			// Split the string by commas
@@ -203,25 +192,11 @@ public class MosipTestRunner {
 					TestNG runner = new TestNG();
 					List<String> suitefiles = new ArrayList<>();
 
-					if (file.getName().toLowerCase().contains(GlobalConstants.INJICERTIFY)) {
-						if (file.getName().toLowerCase().contains("prerequisite")) {
-							if (useCase != null && useCase.isBlank() == false) {
-								BaseTestCase
-										.setReportName(GlobalConstants.INJICERTIFY + "-" + useCase + "-prerequisite");
-							} else {
-								BaseTestCase.setReportName(GlobalConstants.INJICERTIFY + "-prerequisite");
-							}
+					if (file.getName().toLowerCase().contains("mastertestsuite")) {
+						if (useCase != null && useCase.isBlank() == false) {
+							BaseTestCase.setReportName(GlobalConstants.INJICERTIFY + "-" + useCase);
 						} else {
-							// if the prerequisite total skipped/failed count is greater than zero
-							if (EmailableReport.getFailedCount() > 0 || EmailableReport.getSkippedCount() > 0) {
-								// skipAll = true;
-							}
-							if (useCase != null && useCase.isBlank() == false) {
-								BaseTestCase.setReportName(GlobalConstants.INJICERTIFY + "-" + useCase);
-							} else {
-								BaseTestCase.setReportName(GlobalConstants.INJICERTIFY);
-							}
-
+							BaseTestCase.setReportName(GlobalConstants.INJICERTIFY);
 						}
 						suitefiles.add(file.getAbsolutePath());
 						runner.setTestSuites(suitefiles);
