@@ -4,7 +4,7 @@ INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('BASE', 1095, 60, 'NA', true, 'mosipadmin', now());
 
 CREATE TABLE rendering_template (
-    id UUID NOT NULL,
+    id VARCHAR(128) NOT NULL,
     template VARCHAR NOT NULL,
     cr_dtimes timestamp NOT NULL,
     upd_dtimes timestamp,
