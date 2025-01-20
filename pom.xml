@@ -84,6 +84,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<!-- maven -->
+		<maven.compiler.release>21</maven.compiler.release>
 		<maven.compiler.source>21</maven.compiler.source>
 		<maven.compiler.target>21</maven.compiler.target>
 		<maven.compiler.version>3.8.1</maven.compiler.version>
@@ -130,7 +131,7 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.30</version> 
+			<!--<version>1.18.30</version>  -->
 		</dependency> 
 		<dependency>
 			<groupId>jakarta.servlet</groupId>
@@ -210,7 +211,7 @@
 					<plugin>
 						<groupId>org.springframework.boot</groupId>
 						<artifactId>spring-boot-maven-plugin</artifactId>
-						<version>${spring.boot.version}</version>
+						<!--<version>${spring.boot.version}</version>-->
 						<configuration>
 							<executable>true</executable>
 							<layout>ZIP</layout>
@@ -292,7 +293,7 @@
 					<skipTests>${skipTests}</skipTests>
 					<skip>false</skip>
 					<argLine>
-						${argLine} --add-opens java.xml/jdk.xml.internal=ALL-UNNAMED --illegal-access=permit
+						${argLine} --add-opens java.xml/jdk.xml.internal=ALL-UNNAMED
 					</argLine>
 				</configuration>
 			</plugin>
@@ -417,15 +418,8 @@
 				<configuration>
 					<forceJavacCompilerUse>true</forceJavacCompilerUse>
 					<release>${maven.compiler.target}</release>
-					<source>${maven.compiler.source}</source>
+					<source>${maven.compiler.target}</source>
 					<target>${maven.compiler.target}</target>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<configuration>
-					<aggregate>true</aggregate>
 				</configuration>
 			</plugin>
 			<plugin>
