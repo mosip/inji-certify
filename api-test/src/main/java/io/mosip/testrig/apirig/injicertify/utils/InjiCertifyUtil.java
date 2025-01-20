@@ -310,7 +310,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		}
 
 		if (jsonString.contains("$PROOF_JWT_2$")) {
-
+			JWKKeyUtil.generateAndCacheJWKKey(BINDINGJWK1);
 			String oidcJWKKeyString = JWKKeyUtil.getJWKKey(OIDCJWK4);
 			logger.info("oidcJWKKeyString =" + oidcJWKKeyString);
 			try {
@@ -339,7 +339,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 						baseURL.replace("injicertify.", "injicertify-insurance."));
 			}
 			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_2$",
-					signJWKForMock(clientId, accessToken, oidcJWKKey4, testCaseName, tempUrl));
+					signJWKForMockID(clientId, accessToken, oidcJWKKey4, testCaseName, tempUrl));
 		}
 
 		return jsonString;
@@ -673,7 +673,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	public static String signJWKForMockID(String clientId, String accessToken, RSAKey jwkKey, String testCaseName,
 			String tempUrl) {
 		int idTokenExpirySecs = Integer
-				.parseInt(getValueFromEsignetActuator(ConfigManager.getEsignetActuatorPropertySection(),
+				.parseInt(getValueFromEsignetActuator(InjiCertifyConfigManager.getEsignetActuatorPropertySection(),
 						GlobalConstants.MOSIP_ESIGNET_ID_TOKEN_EXPIRE_SECONDS));
 		JWSSigner signer;
 		String proofJWT = "";
