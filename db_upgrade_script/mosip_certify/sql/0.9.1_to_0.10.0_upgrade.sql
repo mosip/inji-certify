@@ -1,3 +1,18 @@
+-- This Source Code Form is subject to the terms of the Mozilla Public
+-- License, v. 2.0. If a copy of the MPL was not distributed with this
+-- file, You can obtain one at https://mozilla.org/MPL/2.0/.
+-- -------------------------------------------------------------------------------------------------
+-- Database Name: inji_certify
+-- Table Name : rendering_template,credential_template, ca_cert_store
+-- Purpose    : To upgrade Certify v0.10.0 changes and make it compatible with new Keymanager lib
+--
+-- Create By   	: Harsh Vardhan
+-- Created Date	: January-2025
+--
+-- Modified Date        Modified By         Comments / Remarks
+-- ------------------------------------------------------------------------------------------
+-- ------------------------------------------------------------------------------------------
+
 --- keymanager specific DB changes ---
 CREATE TABLE ca_cert_store(
 	cert_id character varying(36) NOT NULL,
