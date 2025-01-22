@@ -108,8 +108,6 @@ public class PostWithAutogenIdWithOtpGenerate extends AdminTestUtil implements I
 //				dev	  - t f
 			}
 		}
-		testCaseName = isTestCaseValidForExecution(testCaseDTO);
-
 		String inputJson = testCaseDTO.getInput().toString();
 		JSONObject req = new JSONObject(testCaseDTO.getInput());
 
@@ -127,10 +125,13 @@ public class PostWithAutogenIdWithOtpGenerate extends AdminTestUtil implements I
 		sendOtpEndPoint = otpReqJson.getString("sendOtpEndPoint");
 		otpReqJson.remove("sendOtpEndPoint");
 
+		String input = getJsonFromTemplate(otpReqJson.toString(), sendOtpReqTemplate);
+		
 		Response otpResponse = null;
 		int maxLoopCount = Integer.parseInt(properties.getProperty("uinGenMaxLoopCount"));
 		int currLoopCount = 0;
 		while (currLoopCount < maxLoopCount) {
+			input = InjiCertifyUtil.inputStringKeyWordHandeler(input, testCaseName);
 			if (testCaseName.contains(GlobalConstants.ESIGNET_)) {
 				if (InjiCertifyConfigManager.isInServiceNotDeployedList(GlobalConstants.ESIGNET)) {
 					throw new SkipException("esignet is not deployed hence skipping the testcase");
@@ -145,12 +146,10 @@ public class PostWithAutogenIdWithOtpGenerate extends AdminTestUtil implements I
 							: sendOtpEndPoint;
 				}
 
-				otpResponse = postRequestWithCookieAuthHeaderAndXsrfToken(tempUrl + sendOtpEndPoint,
-						getJsonFromTemplate(otpReqJson.toString(), sendOtpReqTemplate), COOKIENAME,
+				otpResponse = postRequestWithCookieAuthHeaderAndXsrfToken(tempUrl + sendOtpEndPoint, input, COOKIENAME,
 						testCaseDTO.getTestCaseName());
 			} else {
-				otpResponse = postWithBodyAndCookie(ApplnURI + sendOtpEndPoint,
-						getJsonFromTemplate(otpReqJson.toString(), sendOtpReqTemplate), COOKIENAME,
+				otpResponse = postWithBodyAndCookie(ApplnURI + sendOtpEndPoint, input, COOKIENAME,
 						GlobalConstants.RESIDENT, testCaseDTO.getTestCaseName());
 			}
 
@@ -200,6 +199,7 @@ public class PostWithAutogenIdWithOtpGenerate extends AdminTestUtil implements I
 		}
 		
 		String reqJson = getJsonFromTemplate(testCaseDTO.getInput(), testCaseDTO.getInputTemplate());
+		reqJson = InjiCertifyUtil.inputStringKeyWordHandeler(reqJson, testCaseName);
 		reqJson = inputJsonKeyWordHandeler(reqJson, testCaseName);
 		reqJson = InjiCertifyUtil.smtpOtpHandler(reqJson, testCaseDTO);
 
