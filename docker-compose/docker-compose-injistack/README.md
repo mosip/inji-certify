@@ -105,26 +105,20 @@ public interface VCIssuancePlugin {
 - If you are going ahead with the Farmer usecase, configure the below values in [here](config/certify-csvdp-farmer.properties) to refer to the web location where you'd host the DID.
 
 ```properties
-mosip.certify.data-provider-plugin.issuer-uri=did:web:vharsh.github.io:DID:static
-mosip.certify.data-provider-plugin.issuer-public-key-uri=did:web:vharsh.github.io:DID:static#key-0
+mosip.certify.data-provider-plugin.issuer-uri=did:web:someuser.github.io:somerepo:somedirectory
+mosip.certify.data-provider-plugin.issuer-public-key-uri=did:web:someuser.github.io:somerepo:somedirectory#key-0
 ```
 
 - (required for Farmer setup) Certify will automatically generate the DID document for your usecase at [this endpoint](http://localhost:8090/v1/certify/issuance/.well-known/did.json), please copy the contents of the HTTP response and host it appropriately in the same location.
+    - A did with the ID `did:web:someuser.github.io:somerepo:somedirectory` will have be accessible at `https://someuser.github.io/somerepo/somedirectory/did.json`, i.e. if GitHub Pages is used to host the file, the contents should go in https://github.com/someuser/somerepo/blob/gh-pages/somedirectory/did.json assuming `gh-pages` is the branch for publishing GitHub Pages as per repository settings.
     - To verify if everything is working you can try to resolve the DID via public DID resolvers such as [Uniresolver](https://dev.uniresolver.io/).
 
 - (required if Mobile driving license configured) Onboard issuer key and certificate data into property `mosip.certify.mock.mdoc.issuer-key-cert` using the creation script, please read the [plugin README](https://github.com/mosip/digital-credential-plugins/tree/release-0.3.x/mock-certify-plugin) for the same.
 
-### Advanced users only:
 
-- Configure the endpoint for the public DID. This will be required if Farmer Credential is configured, for more details you can go through docs to setup a [DID document](../../docs/Hosting-DID-Document.md)  or a [Public key](../../docs/Hosting-Public-Key.md) later, for now just set this to your GitHub Pages or any other hosting service. The below configuration will help in the Verification of VCs.
-
-```properties
-mosip.certify.data-provider-plugin.issuer-uri=did:web:vharsh.github.io:DID:harsh
-mosip.certify.data-provider-plugin.issuer-public-key-uri=did:web:vharsh.github.io:DID:harsh#key-0
-```
+## Other configurations
 
 **Note**: Refer the relevant config file based on use case to connect to the required environment.
-
 
 Ensure all configuration files are properly updated in the config directory if you have are making any changes suggested for any Advanced usecase:
 
@@ -169,6 +163,7 @@ The following services will be available:
 2. You can:
     - Download credentials
     - View credential status at a Standards Compliant VC Verfier such as [Inji Verify](https://injiverify.collab.mosip.net).
+3. As a sample, you can try downloading VC with the UIN `5860356276` or `2154189532`. The OTP for this purpose can be given as `111111` which is the Mock OTP for eSignet Collab Environment. The above sample identities should be present at both the Identity Provider(here, National ID) and at the Local Issuer(here, Agriculture Department or Transport Department).
 
 ### Advanced Users: Accessing the Credentials via the Postman Interface
 
@@ -219,6 +214,16 @@ The digest multibase can be hardcoded or if the template has been stored with Ce
 
 4. Postman throws an error `pmlib is not defined`
     - Follow the steps defined in the pre-requsites above.
+
+5. The container images for Certify aren't published for the `linux/arm64` architecture yet, if your container runtime returns an error, you can try to run the engine in an emulated mode. This applies to Apple Silicon Mac users running Docker, they'd have to set `export DOCKER_DEFAULT_PLATFORM=linux/amd64` before doing `docker compose up -d`.
+
+6. Apple users using Colima may have issues with the permission of the `data/` directory.
+    - Set the owner, group and the permission mode-bits & the file's group & user ownership correctly so that the `local.p12` file can be created inside the data directory.
+
+7. VC download is failing with Mimoto error logs stating that VC Verification is failing.
+    - Check if the DID is updated & resolvable. The Multibase hash changes on each restart, please update it whenever a newer instance of Certify is setup.
+    - Check if the hosted DID matches with the [DID endpoint](http://localhost:8090/v1/certify/issuance/.well-known/did.json)
+    - As of now, Mimoto/Inji Web only supports downloads for Ed25519Signature2020 signed VerifiableCredential due to a limitation of the integrated VC-Verification module.
 
 
 ### Health Checks
