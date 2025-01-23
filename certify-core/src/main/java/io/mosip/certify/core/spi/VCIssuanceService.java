@@ -20,4 +20,6 @@ public interface VCIssuanceService {
     <T> CredentialResponse<T> getCredential(CredentialRequest credentialRequest);
 
     Map<String, Object> getCredentialIssuerMetadata(String version);
+
+    Map<String, Object> getDIDDocument();
 }

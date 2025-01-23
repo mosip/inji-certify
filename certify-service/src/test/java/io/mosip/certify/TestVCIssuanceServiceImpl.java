@@ -1,13 +1,15 @@
 package io.mosip.certify;
 
+import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
+import io.mosip.certify.core.exception.InvalidRequestException;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import java.util.Map;
 
-@ConditionalOnProperty(value = "mosip.certify.issuer", havingValue = "TestIssuer")
+@ConditionalOnProperty(value = "mosip.certify.plugin-mode", havingValue = "VCIssuance")
 public class TestVCIssuanceServiceImpl implements VCIssuanceService {
     @Override
     public <T> CredentialResponse<T> getCredential(CredentialRequest credentialRequest) {
@@ -23,5 +25,10 @@ public class TestVCIssuanceServiceImpl implements VCIssuanceService {
     @Override
     public Map<String, Object> getCredentialIssuerMetadata(String version) {
         return Map.of();
+    }
+
+    @Override
+    public Map<String, Object> getDIDDocument() {
+        throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE);
     }
 }

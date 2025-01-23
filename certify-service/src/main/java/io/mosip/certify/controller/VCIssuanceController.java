@@ -44,7 +44,6 @@ public class VCIssuanceController {
     }
 
 
-
     /**
      * 1. The credential Endpoint MUST accept Access Tokens
      * @param credentialRequest VC credential request
@@ -79,6 +78,11 @@ public class VCIssuanceController {
     public Map<String, Object> getMetadata(
             @RequestParam(name = "version", required = false, defaultValue = "latest") String version) {
         return vcIssuanceService.getCredentialIssuerMetadata(version);
+    }
+
+    @GetMapping(value = "/.well-known/did.json")
+    public Map<String, Object> getDIDDocument() {
+       return vcIssuanceService.getDIDDocument();
     }
 
 

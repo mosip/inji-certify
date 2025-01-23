@@ -15,6 +15,7 @@ CREATE SCHEMA certify;
 ALTER SCHEMA certify OWNER TO postgres;
 ALTER DATABASE inji_certify SET search_path TO certify,pg_catalog,public;
 
+--- keymanager specific DB changes ---
 CREATE TABLE certify.key_alias(
                                   id character varying(36) NOT NULL,
                                   app_id character varying(36) NOT NULL,
@@ -64,15 +65,39 @@ CREATE TABLE certify.key_store(
                                   CONSTRAINT pk_keystr_id PRIMARY KEY (id)
 );
 
-CREATE TABLE certify.svg_template (
-                                    id UUID NOT NULL,
+CREATE TABLE certify.ca_cert_store(
+    cert_id character varying(36) NOT NULL,
+    cert_subject character varying(500) NOT NULL,
+    cert_issuer character varying(500) NOT NULL,
+    issuer_id character varying(36) NOT NULL,
+    cert_not_before timestamp,
+    cert_not_after timestamp,
+    crl_uri character varying(120),
+    cert_data character varying,
+    cert_thumbprint character varying(100),
+    cert_serial_no character varying(50),
+    partner_domain character varying(36),
+    cr_by character varying(256),
+    cr_dtimes timestamp,
+    upd_by character varying(256),
+    upd_dtimes timestamp,
+    is_deleted boolean DEFAULT FALSE,
+    del_dtimes timestamp,
+    ca_cert_type character varying(25),
+    CONSTRAINT pk_cacs_id PRIMARY KEY (cert_id),
+    CONSTRAINT cert_thumbprint_unique UNIQUE (cert_thumbprint,partner_domain)
+
+);
+
+CREATE TABLE certify.rendering_template (
+                                    id varchar(128) NOT NULL,
                                     template VARCHAR NOT NULL,
                                     cr_dtimes timestamp NOT NULL,
                                     upd_dtimes timestamp,
                                     CONSTRAINT pk_svgtmp_id PRIMARY KEY (id)
 );
 
-CREATE TABLE certify.template_data(
+CREATE TABLE certify.credential_template(
                                     context character varying(1024) NOT NULL,
                                     credential_type character varying(512) NOT NULL,
                                     template VARCHAR NOT NULL,
@@ -81,86 +106,74 @@ CREATE TABLE certify.template_data(
                                     CONSTRAINT pk_template PRIMARY KEY (context, credential_type)
 );
 
-INSERT INTO certify.template_data (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1', 'MockVerifiableCredential,VerifiableCredential', '{
-    "@context": [
-    "https://www.w3.org/2018/credentials/v1",
-    "https://vharsh.github.io/DID/mock-context.json"],
-    "issuer": "${issuer}",
-    "type": ["VerifiableCredential", "MockVerifiableCredential"],
-    "issuanceDate": "${validFrom}",
-    "expirationDate": "${validUntil}",
-    "credentialSubject": {
-        "gender": ${gender},
-        "postalCode": ${postalCode},
-        "fullName": ${fullName},
-        "dateOfBirth": "${dateOfBirth}",
-        "province": ${province},
-        "phone": "${phone}",
-        "addressLine1": ${addressLine1},
-        "region": ${region},
-        "vcVer": "${vcVer}",
-        "UIN": ${UIN},
-        "email": "${email}",
-        "face": "${face}"
-    }
-}', '2024-10-22 17:08:17.826851', NULL);
-INSERT INTO certify.template_data (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/ns/credentials/v2', 'MockVerifiableCredential,VerifiableCredential', '{
-    "@context": [
-            "https://www.w3.org/ns/credentials/v2", "https://vharsh.github.io/DID/mock-context.json"],
-    "issuer": "${issuer}",
-    "type": ["VerifiableCredential", "MockVerifiableCredential"],
-    "validFrom": "${validFrom}",
-    "validUntil": "${validUntil}",
-    "credentialSubject": {
-    "gender": ${gender},
-        "postalCode": ${postalCode},
-        "fullName": ${fullName},
-        "dateOfBirth": "${dateOfBirth}",
-        "province": ${province},
-        "phone": "${phone}",
-        "addressLine1": ${addressLine1},
-        "region": ${region},
-        "vcVer": "${vcVer}",
-        "UIN": ${UIN},
-        "email": "${email}",
-        "face": "${face}"
-    }
-}', '2024-10-22 17:08:17.826851', NULL);
-INSERT INTO certify.template_data (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/2018/credentials/v1', 'FarmerCredential,VerifiableCredential', '{
+INSERT INTO certify.credential_template (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/2018/credentials/v1', 'FarmerCredential,VerifiableCredential', '{
      "@context": [
-                "https://www.w3.org/2018/credentials/v1",
-                "https://vharsh.github.io/DID/farmer.json",
-    "https://w3id.org/security/suites/ed25519-2020/v1"
-        ],
-        "issuer": "${issuer}",
-        "type": [
-            "VerifiableCredential",
-            "FarmerCredential"
-        ],
-        "issuanceDate": "${validFrom}",
-        "expirationDate": "${validUntil}",
-        "credentialSubject": {
-            "name": "${name}",
-            "dateOfBirth": "${dateOfBirth}",
-            "highestEducation": "${highestEducation}",
-            "maritalStatus": "${maritalStatus}",
-            "typeOfHouse": "${typeOfHouse}",
-            "numberOfDependents": "${numberOfDependents}",
-            "phoneNumber": "${phoneNumber}",
-            "works": "${works}",
-            "landArea": "${landArea}",
-            "landOwnershipType": "${landOwnershipType}",
-            "primaryCropType": "${primaryCropType}",
-            "secondaryCropType": "${secondaryCropType}"
-        }
+         "https://www.w3.org/2018/credentials/v1",
+         "https://piyush7034.github.io/my-files/farmer.json",
+         "https://w3id.org/security/suites/ed25519-2020/v1"
+     ],
+     "issuer": "${_issuer}",
+     "type": [
+         "VerifiableCredential",
+         "FarmerCredential"
+     ],
+     "issuanceDate": "${validFrom}",
+     "expirationDate": "${validUntil}",
+     "credentialSubject": {
+         "id": "${_holderId}",
+         "fullName": "${fullName}",
+         "mobileNumber": "${mobileNumber}",
+         "dateOfBirth": "${dateOfBirth}",
+         "gender": "${gender}",
+         "state": "${state}",
+         "district": "${district}",
+         "villageOrTown": "${villageOrTown}",
+         "postalCode": "${postalCode}",
+         "landArea": "${landArea}",
+         "landOwnershipType": "${landOwnershipType}",
+         "primaryCropType": "${primaryCropType}",
+         "secondaryCropType": "${secondaryCropType}",
+         "face": "${face}",
+         "farmerID": "${farmerID}"
+     }
 }
 ', '2024-10-24 12:32:38.065994', NULL);
 
+INSERT INTO certify.credential_template (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/ns/credentials/v2', 'FarmerCredential,VerifiableCredential', '{
+    "@context": [
+        "https://www.w3.org/ns/credentials/v2",
+        "https://piyush7034.github.io/my-files/farmer.json",
+        "https://w3id.org/security/suites/ed25519-2020/v1"
+    ],
+    "issuer": "${_issuer}",
+    "type": [
+        "VerifiableCredential",
+        "FarmerCredential"
+    ],
+    "validFrom": "${validFrom}",
+    "validUntil": "${validUntil}",
+    "credentialSubject": {
+        "id": "${_holderId}",
+        "fullName": "${fullName}",
+        "mobileNumber": "${mobileNumber}",
+        "dateOfBirth": "${dateOfBirth}",
+        "gender": "${gender}",
+        "state": "${state}",
+        "district": "${district}",
+        "villageOrTown": "${villageOrTown}",
+        "postalCode": "${postalCode}",
+        "landArea": "${landArea}",
+        "landOwnershipType": "${landOwnershipType}",
+        "primaryCropType": "${primaryCropType}",
+        "secondaryCropType": "${secondaryCropType}",
+        "face": "${face}",
+        "farmerID": "${farmerID}"
+    }
+}', '2024-10-24 12:32:38.065994', NULL);
 
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('ROOT', 2920, 1125, 'NA', true, 'mosipadmin', now());
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_SERVICE', 1095, 60, 'NA', true, 'mosipadmin', now());
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_PARTNER', 1095, 60, 'NA', true, 'mosipadmin', now());
-INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_MOCK_RSA', 1095, 60, 'NA', true, 'mosipadmin', now());
-INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_MOCK_ED25519', 1095, 60, 'NA', true, 'mosipadmin', now());
+INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_VC_SIGN_RSA', 1095, 60, 'NA', true, 'mosipadmin', now());
+INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_VC_SIGN_ED25519', 1095, 60, 'NA', true, 'mosipadmin', now());
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('BASE', 1095, 60, 'NA', true, 'mosipadmin', now());
-

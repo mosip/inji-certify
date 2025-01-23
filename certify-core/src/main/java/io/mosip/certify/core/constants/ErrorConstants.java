@@ -22,7 +22,12 @@ public class ErrorConstants {
     public static final String PROOF_HEADER_INVALID_ALG = "proof_header_invalid_alg";
     public static final String PROOF_HEADER_INVALID_KEY = "proof_header_invalid_key";
     public static final String PROOF_HEADER_AMBIGUOUS_KEY = "proof_header_ambiguous_key";
-    public static final String UNSUPPORTED_OPENID_VERSION = "unsupported_openid4vci_draft_version";
+    public static final String UNSUPPORTED_OPENID_VERSION = "unsupported_openid4vci_version";
     public static final String INVALID_TEMPLATE_ID = "template_with_id_not_found";
     public static final String EMPTY_TEMPLATE_CONTENT = "empty_template_content";
+    public static final String EXPECTED_TEMPLATE_NOT_FOUND = "expected_template_not_found";
+    public static final String UNSUPPORTED_IN_CURRENT_PLUGIN_MODE = "unsupported_in_current_plugin_mode";
+    public static final String UNSUPPORTED_ALGORITHM = "unsupported_algorithm";
+    public static final String INVALID_CERTIFICATE = "invalid_certificate";
+    public static final String VERIFICATION_METHOD_GENERATION_FAILED = "verification_method_generation_failed";
 }
