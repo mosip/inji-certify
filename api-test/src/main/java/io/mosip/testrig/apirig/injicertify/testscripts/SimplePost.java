@@ -84,7 +84,6 @@ public class SimplePost extends AdminTestUtil implements ITest {
 	public void test(TestCaseDTO testCaseDTO) throws AuthenticationTestException, AdminTestException {
 		testCaseName = testCaseDTO.getTestCaseName();
 		testCaseName = InjiCertifyUtil.isTestCaseValidForExecution(testCaseDTO);
-		testCaseName = isTestCaseValidForExecution(testCaseDTO);
 		auditLogCheck = testCaseDTO.isAuditLogCheck();
 		String[] templateFields = testCaseDTO.getTemplateFields();
 		if (HealthChecker.signalTerminateExecution) {
@@ -121,6 +120,7 @@ public class SimplePost extends AdminTestUtil implements ITest {
 		}
 
 		else {
+			inputJson = InjiCertifyUtil.inputStringKeyWordHandeler(inputJson, testCaseName);
 			String tempUrl = InjiCertifyConfigManager.getEsignetBaseUrl();
 			if (testCaseName.contains("ESignet_") || testCaseName.contains("InjiCertify")) {
 
@@ -134,8 +134,8 @@ public class SimplePost extends AdminTestUtil implements ITest {
 						testCaseDTO.setEndPoint(testCaseDTO.getEndPoint().replace(endPointKeyWord, ""));
 					}
 				}
-				inputJson = inputJsonKeyWordHandeler(inputJson, testCaseName);
-				inputJson = InjiCertifyUtil.reqJsonKeyWordHandeler(inputJson, testCaseName);
+//				inputJson = inputJsonKeyWordHandeler(inputJson, testCaseName);
+//				inputJson = InjiCertifyUtil.inputStringKeyWordHandeler(inputJson, testCaseName);
 				response = postRequestWithCookieAuthHeaderAndXsrfToken(tempUrl + testCaseDTO.getEndPoint(), inputJson,
 						COOKIENAME, testCaseDTO.getTestCaseName());
 			} else {
