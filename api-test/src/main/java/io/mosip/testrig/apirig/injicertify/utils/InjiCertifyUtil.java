@@ -637,15 +637,6 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		return "";
 	}
 	
-//	public static String inputstringKeyWordHandeler(String jsonString, String testCaseName) {
-//		if (jsonString.contains(GlobalConstants.TIMESTAMP))
-//			jsonString = replaceKeywordValue(jsonString, GlobalConstants.TIMESTAMP, generateCurrentUTCTimeStamp());
-//		
-//		
-//		return jsonString;
-//		
-//	}
-	
 	public static String isTestCaseValidForExecution(TestCaseDTO testCaseDTO) {
 		String testCaseName = testCaseDTO.getTestCaseName();
 

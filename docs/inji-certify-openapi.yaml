@@ -24,7 +24,7 @@ paths:
               - vd12
               - latest
             default: latest
-      description: ''
+      description: 'Get the OpenID wellknown '
       responses:
         '200':
           description: OK
@@ -503,6 +503,187 @@ paths:
                           - benefits
                           - email
     parameters: []
+  /issuance/.well-known/did.json:
+    get:
+      summary: Fetch the DID object
+      description: 'Fetch the DID object as per the URI references & Plugin Mode configured and '
+      responses:
+        '200':
+          description: A successful response with DID document data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  assertionMethod:
+                    type: array
+                    description: List of assertion methods associated with the DID.
+                    example:
+                      - 'did:web:vharsh.github.io:DID:harsh#key-0'
+                    items:
+                      type: string
+                  service:
+                    type: array
+                    description: List of services associated with the DID (empty in this case).
+                    items:
+                      type: object
+                  id:
+                    type: string
+                    description: The DID identifier.
+                    example: 'did:web:vharsh.github.io:DID:harsh'
+                  verificationMethod:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        publicKeyMultibase:
+                          type: string
+                          description: The public key in multibase format.
+                          example: z6MkuY7TsbhRsdrhHWWUswDVddNQdiPo7EzPNdQW8S8Ghd8d
+                        controller:
+                          type: string
+                          description: The DID controller.
+                          example: 'did:web:vharsh.github.io:DID:harsh'
+                        id:
+                          type: string
+                          description: The verification method identifier.
+                          example: 'did:web:vharsh.github.io:DID:harsh#key-0'
+                        type:
+                          type: string
+                          description: The type of the verification method.
+                          example: Ed25519VerificationKey2020
+                        '@context':
+                          type: string
+                          description: The context for the verification method.
+                          example: 'https://w3id.org/security/suites/ed25519-2020/v1'
+                  '@context':
+                    type: array
+                    description: The context for the DID document.
+                    example:
+                      - 'https://www.w3.org/ns/did/v1'
+                    items:
+                      type: string
+                  alsoKnownAs:
+                    type: array
+                    description: Alternate names associated with the DID.
+                    items:
+                      type: string
+                  authentication:
+                    type: array
+                    description: List of authentication methods associated with the DID.
+                    example:
+                      - 'did:web:vharsh.github.io:DID:harsh#key-0'
+                    items:
+                      type: string
+        '400':
+          description: unsupported for VCIssuance plugin mode
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: The error code.
+                    example: unsupported_in_current_plugin_mode
+                  error_description:
+                    type: string
+                    description: A detailed description of the error.
+                    example: unsupported_in_current_plugin_mode
+          headers:
+            Content-Type:
+              schema:
+                type: string
+              description: application/json
+      operationId: ''
+  '/rendering-template/{id}':
+    get:
+      summary: Fetch the SVG template
+      description: A public endpoint to download the rendering template for Verifiable Credentials for rendering a VC
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: A string matching the ID of the template in the DB.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'the svg template available for download'
+          content: image/svg+xml
+        '400':
+          description: 'invalid template request'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  responseTime:
+                    type: string
+                    format: date-time
+                    example: "2024-10-21T12:07:06.991Z"
+                  response:
+                    type: 'null'
+                    example: null
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        errorCode:
+                          type: string
+                          example: "invalid_request"
+                        errorMessage:
+                          type: string
+                          example: "template_with_id_not_found"
+
+      x-stoplight:
+        id: rt5t4bbccx6id
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+        description: the string id of the template
+  /system-info/certificate:
+    get:
+      summary: Get the Certificate against an applicationId and referenceId
+      description: A public endpoint to download a Keymanager managed Certificate
+      parameters:
+        - in: query
+          name: applicationId
+          required: true
+          description: applicationId of the certificate
+          schema:
+            type: string
+        - in: query
+          name: referenceId
+          required: false
+          description: referenceId of the certificate
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Got the Certificate.
+          content: application/json
+      x-stoplight:
+        id: rt5t4bbccx6id
+    post:
+      summary: upload a Certificate against an applicationId and referenceId
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                applicationId:
+                  type: string
+                referenceId:
+                  type: string
+                  default: ''
+                certificateData:
+                  type: string
   /issuance/credential:
     post:
       summary: Credential Issuance endpoint

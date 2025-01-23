@@ -11,7 +11,7 @@ import io.mosip.certify.core.dto.VCError;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import io.mosip.certify.core.exception.NotAuthenticatedException;
-import io.mosip.certify.core.exception.TemplateException;
+import io.mosip.certify.core.exception.RenderingTemplateException;
 import io.mosip.certify.core.util.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.TypeMismatchException;
@@ -131,7 +131,7 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
             String errorCode = ((CertifyException) ex).getErrorCode();
             return new ResponseEntity<ResponseWrapper>(getResponseWrapper(errorCode, getMessage(errorCode)), HttpStatus.OK);
         }
-        if(ex instanceof TemplateException) {
+        if(ex instanceof RenderingTemplateException) {
             return new ResponseEntity<>(getResponseWrapper(INVALID_REQUEST, ex.getMessage()) ,HttpStatus.NOT_FOUND);
         }
         if(ex instanceof AuthenticationCredentialsNotFoundException) {

@@ -11,7 +11,13 @@ import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.api.exception.VCIExchangeException;
 
 import java.util.Map;
-
+/**
+ * VCIssuancePlugin is implemented by VC plugin
+ *  implementors who want to make use of an existing VC Issuance Infrastructure
+ *  or want to do everything by themselves to generate the VC from the plugin.
+ *  VC is received by the plugin and sent to Certify and forwarded to the
+ *  client applications.
+ */
 public interface VCIssuancePlugin {
 
     /**
