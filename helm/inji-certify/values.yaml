@@ -52,8 +52,8 @@ service:
 
 image:
   registry: docker.io
-  repository: mosipqa/inji-certify-with-plugins
-  tag: develop
+  repository: mosipid/inji-certify
+  tag: 0.10.0
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
   ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -240,17 +240,12 @@ updateStrategy:
 ##   - name: FOO
 ##     value: "bar"
 ##
-extraEnvVars: |
-  - name: DB_DBUSER_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: db-common-secrets
-        key: db-dbuser-password
+extraEnvVars: []
 
 ## ConfigMap with extra environment variables that used
 ##
 extraEnvVarsCM:
-  - inji-stack-config
+  - global
   - config-server-share
   - artifactory-share
   - softhsm-certify-share
@@ -461,17 +456,8 @@ istio:
       port: 80
   hosts:
     - injicertify.sandbox.xyz.net
-  uriMatches:
-    - matchType: exact
-      uri: /.well-known/openid-credential-issuer
-      rewriteUri: /v1/certify/issuance/.well-known/openid-credential-issuer
-      port: 80
-    - matchType: exact
-      uri: /.well-known/did.json
-      rewriteUri: /v1/certify/issuance/.well-known/did.json
-      port: 80
-    - matchType: prefix
-      uri: /
-      port: 80
+  prefix: /
 
-installHSMPlugin: "true"
+enable_insecure: false
+springConfigNameEnv:
+activeProfileEnv:
