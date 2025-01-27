@@ -246,7 +246,7 @@ extraEnvVars: []
 ##
 extraEnvVarsCM:
   - global
-  - inji-config-server-share
+  - config-server-share
   - artifactory-share
   - softhsm-certify-share
 
