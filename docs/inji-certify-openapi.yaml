@@ -33,8 +33,116 @@ paths:
               schema:
                 type: object
                 properties:
-                  property1: object
-                  property2: object
+                  credential_issuer:
+                    type: string
+                    format: uri
+                    description: The URI of the credential issuer.
+                  credential_endpoint:
+                    type: string
+                    format: uri
+                    description: The endpoint URI for credential issuance.
+                  authorization_servers:
+                    type: array
+                    items:
+                      type: string
+                      format: uri
+                    description: A list of authorization server URIs.
+                  display:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: The name of the display item.
+                        locale:
+                          type: string
+                          description: The locale of the display item.
+                  credential_configurations_supported:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        format:
+                          type: string
+                          description: The credential format (e.g., `ldp_vc`).
+                        scope:
+                          type: string
+                          description: The scope of the credential.
+                        cryptographic_binding_methods_supported:
+                          type: array
+                          items:
+                            type: string
+                          description: Supported cryptographic binding methods.
+                        cryptographic_suites_supported:
+                          type: array
+                          items:
+                            type: string
+                          description: Supported cryptographic suites.
+                        proof_types_supported:
+                          type: object
+                          properties:
+                            proof_signing_alg_values_supported:
+                              type: array
+                              items:
+                                type: string
+                              description: Supported proof signing algorithms.
+                        credential_definition:
+                          type: object
+                          properties:
+                            type:
+                              type: array
+                              items:
+                                type: string
+                              description: Credential types.
+                            credentialSubject:
+                              type: object
+                              additionalProperties:
+                                type: object
+                                properties:
+                                  display:
+                                    type: array
+                                    items:
+                                      type: object
+                                      properties:
+                                        name:
+                                          type: string
+                                          description: Display name of the credential subject property.
+                                        locale:
+                                          type: string
+                                          description: Locale of the display name.
+                        display:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                description: Display name for the credential.
+                              locale:
+                                type: string
+                                description: Locale of the display name.
+                              logo:
+                                type: object
+                                properties:
+                                  url:
+                                    type: string
+                                    format: uri
+                                    description: URL of the logo.
+                                  alt_text:
+                                    type: string
+                                    description: Alt text for the logo.
+                              background_color:
+                                type: string
+                                description: Background color for display.
+                              text_color:
+                                type: string
+                                description: Text color for display.
+                        order:
+                          type: array
+                          items:
+                            type: string
+                          description: Order of fields in the credential subject.
               x-examples:
                 Example 1:
                   credential_issuer: 'http://localhost:8090'
@@ -506,7 +614,7 @@ paths:
   /issuance/.well-known/did.json:
     get:
       summary: Fetch the DID object
-      description: 'Fetch the DID object as per the URI references & Plugin Mode configured and '
+      description: 'Fetch the DID object as per the URI references, Plugin Mode configured and the signature scheme chosen'
       responses:
         '200':
           description: A successful response with DID document data.
@@ -609,10 +717,22 @@ paths:
             type: string
       responses:
         '200':
-          description: 'the svg template available for download'
-          content: image/svg+xml
+          description: the svg template available for download
+          headers:
+            Cache-Control:
+              description: Caching policy for the SVG template.
+              schema:
+                type: string
+                example: public, max-age=2592000
+          content:
+            image/svg+xml:
+              schema:
+                type: string
+                format: binary
+                description: SVG image content
+          
         '400':
-          description: 'invalid template request'
+          description: invalid template request
           content:
             application/json:
               schema:
@@ -621,9 +741,10 @@ paths:
                   responseTime:
                     type: string
                     format: date-time
-                    example: "2024-10-21T12:07:06.991Z"
+                    example: '2024-10-21T12:07:06.991Z'
                   response:
-                    type: 'null'
+                    type: object
+                    nullable: true
                     example: null
                   errors:
                     type: array
@@ -632,11 +753,10 @@ paths:
                       properties:
                         errorCode:
                           type: string
-                          example: "invalid_request"
+                          example: invalid_request
                         errorMessage:
                           type: string
-                          example: "template_with_id_not_found"
-
+                          example: template_with_id_not_found
       x-stoplight:
         id: rt5t4bbccx6id
     parameters:
@@ -666,7 +786,61 @@ paths:
       responses:
         '200':
           description: Got the Certificate.
-          content: application/json
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  responseTime:
+                    type: string
+                    format: date-time
+                    description: The timestamp when the response was generated.
+                  response:
+                    type: object
+                    properties:
+                      certificate:
+                        type: string
+                        description: The certificate content in PEM format.
+                        example: |-
+                          -----BEGIN CERTIFICATE-----
+                          MIIDxDCCAqygAwIBAgIImib36nzVvhAwDQYJKoZIhvcNAQELBQAweDELMAkGA1UE
+                          BhMCSU4xCzAJBgNVBAgMAktBMRIwEAYDVQQHDAlCQU5HQUxPUkUxDjAMBgNVBAoM
+                          BUlJSVRCMRcwFQYDVQQLDA5FWEFNUExFLUNFTlRFUjEfMB0GA1UEAwwWd3d3LmV4
+                          YW1wbGUuY29tIChST09UKTAeFw0yNDEyMTMxMTMxNTVaFw0yNzEyMTMxMTMxNTVa
+                          MIGEMQswCQYDVQQGEwJJTjELMAkGA1UECAwCS0ExEjAQBgNVBAcMCUJBTkdBTE9S
+                          ...
+                          -----END CERTIFICATE-----
+                      certSignRequest:
+                        type: string
+                        nullable: true
+                        description: The certificate signing request. Can be null.
+                        example: null
+                      issuedAt:
+                        type: string
+                        format: date-time
+                        description: The issuance date of the certificate.
+                      expiryAt:
+                        type: string
+                        format: date-time
+                        description: The expiration date of the certificate.
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: The generation timestamp of the certificate response.
+                  errors:
+                    type: array
+                    description: List of errors, if any.
+                    items:
+                      type: object
+                      properties:
+                        errorCode:
+                          type: string
+                          description: The error code identifying the issue.
+                        errorMessage:
+                          type: string
+                          description: Detailed error message describing the issue.
+          
+                        
       x-stoplight:
         id: rt5t4bbccx6id
     post:
@@ -684,6 +858,62 @@ paths:
                   default: ''
                 certificateData:
                   type: string
+      responses:
+        '200':
+          description: Got the Certificate.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  responseTime:
+                    type: string
+                    format: date-time
+                    description: The timestamp when the response was generated.
+                  response:
+                    type: object
+                    properties:
+                      certificate:
+                        type: string
+                        description: The certificate content in PEM format.
+                        example: |-
+                          -----BEGIN CERTIFICATE-----
+                          MIIDxDCCAqygAwIBAgIImib36nzVvhAwDQYJKoZIhvcNAQELBQAweDELMAkGA1UE
+                          BhMCSU4xCzAJBgNVBAgMAktBMRIwEAYDVQQHDAlCQU5HQUxPUkUxDjAMBgNVBAoM
+                          BUlJSVRCMRcwFQYDVQQLDA5FWEFNUExFLUNFTlRFUjEfMB0GA1UEAwwWd3d3LmV4
+                          YW1wbGUuY29tIChST09UKTAeFw0yNDEyMTMxMTMxNTVaFw0yNzEyMTMxMTMxNTVa
+                          MIGEMQswCQYDVQQGEwJJTjELMAkGA1UECAwCS0ExEjAQBgNVBAcMCUJBTkdBTE9S
+                          ...
+                          -----END CERTIFICATE-----
+                      certSignRequest:
+                        type: string
+                        nullable: true
+                        description: The certificate signing request. Can be null.
+                        example: null
+                      issuedAt:
+                        type: string
+                        format: date-time
+                        description: The issuance date of the certificate.
+                      expiryAt:
+                        type: string
+                        format: date-time
+                        description: The expiration date of the certificate.
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: The generation timestamp of the certificate response.
+                  errors:
+                    type: array
+                    description: List of errors, if any.
+                    items:
+                      type: object
+                      properties:
+                        errorCode:
+                          type: string
+                          description: The error code identifying the issue.
+                        errorMessage:
+                          type: string
+                          description: Detailed error message describing the issue.
   /issuance/credential:
     post:
       summary: Credential Issuance endpoint
@@ -806,13 +1036,12 @@ paths:
                 type: object
                 properties:
                   error:
-                    const: invalid_token
+                    type: string
+                    enum: [invalid_token]
                   error_description:
                     type: string
                 required:
                   - error
-      security:
-        - Authorization-access_token: []
   /issuance/vd12/credential:
     post:
       summary: Credential Issuance endpoint - Draft 12
@@ -940,7 +1169,8 @@ paths:
                 type: object
                 properties:
                   error:
-                    const: invalid_token
+                    type: string
+                    enum: [invalid_token]
                   error_description:
                     type: string
                 required:
@@ -1074,7 +1304,8 @@ paths:
                 type: object
                 properties:
                   error:
-                    const: invalid_token
+                    type: string
+                    enum: [invalid_token]
                   error_description:
                     type: string
                 required:
@@ -1150,3 +1381,7 @@ components:
         c_nonce_expires_in:
           type: integer
           format: int32
+  securitySchemes: 
+    Authorization-access_token:
+      type: http
+      scheme: bearer
