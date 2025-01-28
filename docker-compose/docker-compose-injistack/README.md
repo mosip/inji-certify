@@ -189,68 +189,6 @@ The following services will be available:
   }]
 ```
 
-```mermaid
-sequenceDiagram
-    participant User as 👤 User
-    participant MobileWallet as 📱 Mobile Wallet
-    participant Admin as 👤 Admin
-
-    box "Inji Certify" #LightBlue
-        participant CredentialIssuer as 📜 Credential Issuer
-        participant RenderingService as 🔧 Rendering Service
-        participant Config as ⚙️ application.properties
-        participant TemplateStore as 🗄️ Template Store
-    end
-    
-    %% Setup Phase
-    Note over User,TemplateStore: ==================== Setup Phase ====================
-    Admin->>TemplateStore: Add New Template using sql queris
-    TemplateStore-->>Admin: Template ID
-    
-    Note over Config: SVG Rendering Template Template Configuration
-    Admin->>Config: Configure mosip.certify.data-provider-plugin.rendering-template-id
-    Config->>RenderingService: Load template mappings
-    
-    %% Divider between setup and credential flow
-    Note over User,TemplateStore: ==================== Credential Flow ====================
-    
-    User ->> MobileWallet: Request Credential
-    MobileWallet->>CredentialIssuer: Request Credential
-    CredentialIssuer->>MobileWallet: Issue VC (openid4vci) (v2.0 Data Model)
-    
-    MobileWallet->>RenderingService: GET Rendering Template
-    RenderingService ->> TemplateStore: Get Rendering Template
-    TemplateStore ->> RenderingService: Template
-    RenderingService ->> MobileWallet: Template
-    Note left of RenderingService: Set Headers:<br/>- Content-Type: image/svg+xml<br/>- Cache-Control: max-age=604800<br/>- Vary: Accept-Language
-    MobileWallet->>MobileWallet: Render SVG<br/>(Interactive Display)
-```
-
-## 🔄 Credential Flow
-
-1. **User Initiation**: Request credential via Mobile Wallet
-
-2. **VC Issuance**:
-   - Wallet → Credential Issuer: /credential request
-   - Response: Signed VC with renderMethod claim
-
-3. **Template Fetch**:
-```http
-GET /rendering-template/vaccine_card_v1
-```
-
-4. **SVG Rendering**:
-   - Wallet processes SVG with VC data binding
-   - Interactive elements enabled (e.g., QR code toggles)
-
-## 🖋️ Response Headers
-
-| Header | Value | Purpose |
-|--------|-------|---------|
-| Content-Type | image/svg+xml | MIME type enforcement |
-| Cache-Control | max-age=604800 | CDN/browser caching |
-| Vary | Accept-Language | Locale-specific caching |
-
 The digest multibase can be hardcoded or if the template has been stored with Certify's DB & `mosip.certify.data-provider-plugin.rendering-template-id` is set to the correct the value `${_renderMethodSVGdigest}` can be used to enable Certify to evaluate it specifying the id of the rendering-template used. However, for optimal performance, it's recommended to not set this key and instead hardcode the `digestMultibase` value in the Velocity template itself.
 
 2. Deploying Inji Certify over a public URL, _using ngrok to demonstrate this_

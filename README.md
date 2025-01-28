@@ -36,6 +36,9 @@ public interface DataProviderPlugin {
 
 Refer to [SQL scripts](db_scripts) and go through it's README
 
+## Rendering Template
+Refer to [Rendering Template](docs/Rendering-Template.md)
+
 # Local Installation Guide (via Docker Compose)
 
 The following steps will help you to setup Sunbird RC and Esignet services using Docker compose alongwith Certify.
