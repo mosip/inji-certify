@@ -1,8 +1,6 @@
 # Rendering Template Integration for Inji Certify (OpenID4VCI 2.0 RenderMethod)
 
-![Inji Certify Architecture](https://via.placeholder.com/800x400.png?text=Sequence+Diagram+Overview)
-
-This document explains the integration of Credential rendering templates in Inji Certify using ![VC Render Specification](https://w3c-ccg.github.io/vc-render-method/).
+This document explains the integration of Credential rendering templates in Inji Certify using [VC Render Specification](https://w3c-ccg.github.io/vc-render-method/).
 
 1. To use the Verifiable Credential Data Model 2.0 optional features one can configure them in the Velocity Template present in [this file](./certify_init.sql)as per [this draft spec](https://w3c-ccg.github.io/vc-render-method/). The Render Template has to be routable by all the clients and should be cached appropriately. The template is not expected to be updated as the consuming clients are expected to verify the integrity with the provided `digestMultibase`. For detailed information please go through the draft spec.
 
