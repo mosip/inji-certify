@@ -54,7 +54,7 @@ paths:
                     "credential_configurations_supported": {
                       "FarmerCredential": {
                         "format": "ldp_vc",
-                        "scope": "sunbird_rc_insurance_vc_ldp",
+                        "scope": "farmer_vc_ldp",
                         "cryptographic_binding_methods_supported": [
                           "did:jwk"
                         ],
@@ -676,7 +676,7 @@ paths:
                     credential_configurations_supported:
                       FarmerCredential:
                         format: ldp_vc
-                        scope: sunbird_rc_insurance_vc_ldp
+                        scope: farmer_vc_ldp
                         cryptographic_binding_methods_supported:
                           - 'did:jwk'
                         cryptographic_suites_supported:
