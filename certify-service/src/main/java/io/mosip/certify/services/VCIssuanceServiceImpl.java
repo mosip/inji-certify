@@ -5,6 +5,8 @@
  */
 package io.mosip.certify.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.jsonld.JsonLDObject;
 
 import io.mosip.certify.api.dto.VCRequestDto;
@@ -32,12 +34,21 @@ import io.mosip.certify.validators.CredentialRequestValidator;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.env.PropertyResolver;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ResourceUtils;
+import org.springframework.web.client.RestTemplate;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -48,8 +59,16 @@ import java.util.*;
 @ConditionalOnProperty(value = "mosip.certify.plugin-mode", havingValue = "VCIssuance")
 public class VCIssuanceServiceImpl implements VCIssuanceService {
 
-    @Value("#{${mosip.certify.key-values}}")
     private LinkedHashMap<String, LinkedHashMap<String, Object>> issuerMetadata;
+
+    @Autowired
+    private PropertyResolver propertyResolver;
+
+    @Value("${mosip.certify.issuer-metadata.config-url}")
+    private String issuerMetadataConfigURL;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     @Value("${mosip.certify.cnonce-expire-seconds:300}")
     private int cNonceExpireSeconds;
@@ -71,6 +90,43 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     @Autowired
     private AuditPlugin auditWrapper;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @PostConstruct
+    public void postConstructMetadata() throws FileNotFoundException {
+        String issuerMetadataString;
+        if (issuerMetadataConfigURL.startsWith("http")) {
+            // download the file to a path: usecase(docker, spring cloud config)
+            issuerMetadataString = restTemplate.getForObject(issuerMetadataConfigURL, String.class);
+        } else if (issuerMetadataConfigURL.startsWith("classpath:")) {
+            try {
+                // usecase(local setup)
+                File filePath = ResourceUtils.getFile(issuerMetadataConfigURL);
+                issuerMetadataString = Files.readString(filePath.toPath());
+            } catch (IOException e) {
+                throw new FileNotFoundException("File not found in: " + issuerMetadataConfigURL);
+            }
+        } else {
+            // TODO: Check iff the 2nd else-if and this one are equivalent
+            try {
+                File filePath = new File(issuerMetadataConfigURL);
+                issuerMetadataString = Files.readString(filePath.toPath());
+            } catch (IOException e) {
+                throw new FileNotFoundException("File not found in: " + issuerMetadataConfigURL);
+            }
+        }
+        try {
+            // TODO(bug): at times differential handling of items is required, i.e.
+            //  sometimes something is a string and other times it's a List<String>,
+            //  this needs to be thoroughly investigated.
+            String solvedMeta = propertyResolver.resolvePlaceholders(issuerMetadataString);
+            issuerMetadata = objectMapper.readValue(solvedMeta, LinkedHashMap.class);
+        } catch (JsonProcessingException e) {
+            throw new CertifyException(ErrorConstants.ERROR_PARSING_WELLKNOWN);
+        }
+    }
 
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {

@@ -1,0 +1,41 @@
+{
+    "latest" : {
+        "credential_issuer": "${mosip.certify.identifier}",   
+        "authorization_servers": ["${mosip.certify.authorization.url}"], 
+        "credential_endpoint": "${mosipbox.public.url}${server.servlet.path}/issuance/credential", 
+        "display": [{"name": "Agricultural Department", "locale": "en"}],
+        "credential_configurations_supported" : { 
+            "FarmerCredential" : {
+                "format": "ldp_vc",
+                "scope" : "mock_identity_vc_ldp",
+                "cryptographic_binding_methods_supported": ["did:jwk"],
+                "credential_signing_alg_values_supported": ["Ed25519Signature2020"],
+                "proof_types_supported": {"jwt": {"proof_signing_alg_values_supported": ["RS256", "PS256"]}},
+                "credential_definition": {
+                    "type": ["VerifiableCredential", "FarmerCredential"],
+                    "context": ["https://www.w3.org/2018/credentials/v1"],
+                    "credentialSubject": {
+                        "fullName": {"display": [{"name": "Full Name","locale": "en"},{"name": "முழு பெயர்","locale": "ta"}]},
+                        "mobileNumber": {"display": [{"name": "Phone Number","locale": "en"},{"name": "தொலைபேசி எண்","locale": "ta"}]},
+                        "dateOfBirth": {"display": [{"name": "Date of Birth","locale": "en"},{"name": "பிறந்த தேதி","locale": "ta"}]},
+                        "gender": {"display": [{"name": "Gender","locale": "en"},{"name": "பாலினம்","locale": "ta"}]},
+                        "state": {"display": [{"name": "State","locale": "en"},{"name": "மாநிலம்","locale": "ta"}]},
+                        "district": {"display": [{"name": "District","locale": "en"},{"name": "மாவட்டம்","locale": "ta"}]},
+                        "villageOrTown": {"display": [{"name": "Village or Town","locale": "en"},{"name": "கிராமம் அல்லது நகரம்","locale": "ta"}]},
+                        "postalCode": {"display": [{"name": "Postal Code","locale": "en"},{"name": "அஞ்சல் குறியீடு","locale": "ta"}]},
+                        "landArea": {"display": [{"name": "Land Area","locale": "en"},{"name": "நிலப்பரப்பு","locale": "ta"}]},
+                        "landOwnershipType": {"display": [{"name": "Land Ownership Type","locale": "en"},{"name": "நில உரிம வகை","locale": "ta"}]},
+                        "primaryCropType": {"display": [{"name": "Primary Crop Name","locale": "en"},{"name": "முதன்மை பயிர் பெயர்","locale": "ta"}]},
+                        "secondaryCropType": {"display": [{"name": "Secondary Crop type","locale": "en"},{"name": "இரண்டாம் பட்சி பயிர் வகை","locale": "ta"}]},
+                        "farmerID": {"display": [{"name": "Farmer ID","locale": "en"},{"name": "விவசாயி அடையாளம்","locale": "ta"}]}
+                    }},
+                    "display": [{"name": "Farmer Profile Verifiable Credential",
+                        "locale": "en", 
+                        "logo": {"url": "https://mosip.github.io/inji-config/logos/agro-vertias-logo.png","alt_text": "a square logo of Agricultural department"},
+                        "background_color": "#FDFAF9",
+                        "background_image": { "uri": "https://mosip.github.io/inji-config/logos/agro-vertias-logo.png" },
+                        "text_color": "#7C4616"}],
+                        "order" : ["farmerID","fullName","mobileNumber","dateOfBirth","gender","state","district","villageOrTown","postalCode","landArea","landOwnershipType","primaryCropType","secondaryCropType"]
+            }}
+    }
+}
