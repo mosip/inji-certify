@@ -33,7 +33,7 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-                description: A free-form JSON object with string keys and any values
+                description: Openid Well Known document
               x-examples:
                 Example vd11:
                   credential_issuer: 'http://localhost:8090'
