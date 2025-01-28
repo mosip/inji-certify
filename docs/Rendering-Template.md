@@ -66,7 +66,6 @@ GET /rendering-template/vaccine_card_v1
 
 4. **SVG Rendering**:
    - Wallet processes SVG with VC data binding
-   - Interactive elements enabled (e.g., QR code toggles)
 
 ## 🖋️ Response Headers
 
