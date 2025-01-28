@@ -4,39 +4,54 @@ kind: VirtualService
 metadata:
   name: {{ template "common.names.fullname" . }}
   namespace: {{ .Release.Namespace }}
-  labels: {{- include "common.labels.standard" . | nindent 4 }}
-    {{- if .Values.commonLabels }}
-    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
-    {{- end }}
+  labels: 
+    {{- include "common.labels.standard" . | nindent 4 }}
+  {{- if .Values.commonLabels }}
+  {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+  {{- end }}
   {{- if .Values.commonAnnotations }}
-  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  annotations: 
+    {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
   {{- end }}
 spec:
   hosts:
-  - "*"
+    - "*"
   gateways:
     {{ range $index, $service := .Values.istio.gateways }}
     - {{ .name }}
     {{ end }}
   http:
-  - match:
-      - uri:
-          prefix: {{ .Values.istio.prefix }}
-    route:
-    - destination:
-        host: {{ template "common.names.fullname" . }}
-        port:
-          number: {{ .Values.service.port }}
-    corsPolicy:
-    {{- include "common.tplvalues.render" ( dict "value" .Values.istio.corsPolicy "context" $ ) | nindent 6 }}
-    headers:
-      request:
-        set:
-          x-forwarded-proto: https
-      response:
-        set:
-          Cache-control: no-store
-          Pragma: no-cache
-          Strict-Transport-Security: max-age=31536000; includeSubDomains
-          X-Frame-Options: SAMEORIGIN    
+    {{- $releaseName := .Release.Name }}
+    {{- range .Values.istio.uriMatches }}
+    - match:
+        - uri:
+            {{- if eq .matchType "exact" }}
+            exact: {{ .uri }}
+            {{- else if eq .matchType "prefix" }}
+            prefix: {{ .uri }}
+            {{- end }}
+      {{- if eq .matchType "exact" }}
+      rewrite:
+        uri: {{ .rewriteUri }}
+      {{- end }}
+      route:
+        - destination:
+            host: {{ $releaseName }}
+            port:
+              number: {{ .port }}
+    {{- end }}
+  {{- if .Values.istio.corsPolicy }}
+  corsPolicy:
+    {{- include "common.tplvalues.render" (dict "value" .Values.istio.corsPolicy "context" $) | nindent 6 }}
+  {{- end }}
+  headers:
+    request:
+      set:
+        x-forwarded-proto: https
+    response:
+      set:
+        Cache-control: no-store
+        Pragma: no-cache
+        Strict-Transport-Security: max-age=31536000; includeSubDomains
+        X-Frame-Options: SAMEORIGIN
 {{- end }}
