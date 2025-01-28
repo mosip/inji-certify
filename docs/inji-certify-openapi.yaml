@@ -32,119 +32,10 @@ paths:
             application/json:
               schema:
                 type: object
-                properties:
-                  credential_issuer:
-                    type: string
-                    format: uri
-                    description: The URI of the credential issuer.
-                  credential_endpoint:
-                    type: string
-                    format: uri
-                    description: The endpoint URI for credential issuance.
-                  authorization_servers:
-                    type: array
-                    items:
-                      type: string
-                      format: uri
-                    description: A list of authorization server URIs.
-                  display:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        name:
-                          type: string
-                          description: The name of the display item.
-                        locale:
-                          type: string
-                          description: The locale of the display item.
-                  credential_configurations_supported:
-                    type: object
-                    additionalProperties:
-                      type: object
-                      properties:
-                        format:
-                          type: string
-                          description: The credential format (e.g., `ldp_vc`).
-                        scope:
-                          type: string
-                          description: The scope of the credential.
-                        cryptographic_binding_methods_supported:
-                          type: array
-                          items:
-                            type: string
-                          description: Supported cryptographic binding methods.
-                        cryptographic_suites_supported:
-                          type: array
-                          items:
-                            type: string
-                          description: Supported cryptographic suites.
-                        proof_types_supported:
-                          type: object
-                          properties:
-                            proof_signing_alg_values_supported:
-                              type: array
-                              items:
-                                type: string
-                              description: Supported proof signing algorithms.
-                        credential_definition:
-                          type: object
-                          properties:
-                            type:
-                              type: array
-                              items:
-                                type: string
-                              description: Credential types.
-                            credentialSubject:
-                              type: object
-                              additionalProperties:
-                                type: object
-                                properties:
-                                  display:
-                                    type: array
-                                    items:
-                                      type: object
-                                      properties:
-                                        name:
-                                          type: string
-                                          description: Display name of the credential subject property.
-                                        locale:
-                                          type: string
-                                          description: Locale of the display name.
-                        display:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              name:
-                                type: string
-                                description: Display name for the credential.
-                              locale:
-                                type: string
-                                description: Locale of the display name.
-                              logo:
-                                type: object
-                                properties:
-                                  url:
-                                    type: string
-                                    format: uri
-                                    description: URL of the logo.
-                                  alt_text:
-                                    type: string
-                                    description: Alt text for the logo.
-                              background_color:
-                                type: string
-                                description: Background color for display.
-                              text_color:
-                                type: string
-                                description: Text color for display.
-                        order:
-                          type: array
-                          items:
-                            type: string
-                          description: Order of fields in the credential subject.
+                additionalProperties: true
+                description: A free-form JSON object with string keys and any values
               x-examples:
-                Example 1:
+                Example vd11:
                   credential_issuer: 'http://localhost:8090'
                   credential_endpoint: 'http://localhost:8090/v1/certify/issuance/credential?version=vd11'
                   authorization_servers:
@@ -152,7 +43,7 @@ paths:
                   display:
                     - name: Insurance
                       locale: en
-                  credential_configurations_supported:
+                  credentials_supported:
                     InsuranceCredential:
                       format: ldp_vc
                       scope: sunbird_rc_insurance_vc_ldp
@@ -165,6 +56,8 @@ paths:
                         properties:
                           proof_signing_alg_values_supported:
                             type: array
+                            items:
+                              ['RS256']
                             examples:
                               - RS256
                               - PS256
@@ -304,13 +197,175 @@ paths:
                         - gender
                         - benefits
                         - email
-                Example 2:
+                Example vd12:
+                  credential_issuer: 'http://localhost:8090'
+                  credential_endpoint: 'http://localhost:8090/v1/certify/issuance/credential?version=vd12'
+                  authorization_servers:
+                    - 'http://localhost:8080'
+                  display:
+                    - name: Insurance
+                      locale: en
+                  credentials_supported:
+                    InsuranceCredential:
+                      format: ldp_vc
+                      scope: sunbird_rc_insurance_vc_ldp
+                      cryptographic_binding_methods_supported:
+                        - 'did:jwk'
+                      credential_signing_alg_values_supported:
+                        - Ed25519Signature2020
+                      proof_types_supported:
+                        type: object
+                        properties:
+                          proof_signing_alg_values_supported:
+                            type: array
+                            items:
+                              ['RS256']
+                            examples:
+                              - RS256
+                              - PS256
+                      credential_definition:
+                        type:
+                          - VerifiableCredential
+                          - InsuranceCredential
+                        credentialSubject:
+                          fullName:
+                            display:
+                              - name: Name
+                                locale: en
+                          mobile:
+                            display:
+                              - name: Phone Number
+                                locale: en
+                          dob:
+                            display:
+                              - name: Date of Birth
+                                locale: en
+                          gender:
+                            display:
+                              - name: Gender
+                                locale: en
+                          benefits:
+                            display:
+                              - name: Benefits
+                                locale: en
+                          email:
+                            display:
+                              - name: Email Id
+                                locale: en
+                          policyIssuedOn:
+                            display:
+                              - name: Policy Issued On
+                                locale: en
+                          policyExpiresOn:
+                            display:
+                              - name: Policy Expires On
+                                locale: en
+                          policyName:
+                            display:
+                              - name: Policy Name
+                                locale: en
+                          policyNumber:
+                            display:
+                              - name: Policy Number
+                                locale: en
+                      display:
+                        - name: Sunbird RC Insurance Verifiable Credential
+                          locale: en
+                          logo:
+                            url: 'https://sunbird.org/images/sunbird-logo-new.png'
+                            alt_text: a square logo of a Sunbird
+                          background_color: '#FDFAF9'
+                          text_color: '#7C4616'
+                      order:
+                        - fullName
+                        - policyName
+                        - policyExpiresOn
+                        - policyIssuedOn
+                        - policyNumber
+                        - mobile
+                        - dob
+                        - gender
+                        - benefits
+                        - email
+                    LifeInsuranceCredential:
+                      format: ldp_vc
+                      scope: life_insurance_vc_ldp
+                      cryptographic_binding_methods_supported:
+                        - 'did:jwk'
+                      cryptographic_suites_supported:
+                        - Ed25519Signature2020
+                      proof_types_supported:
+                        - jwt
+                      credential_definition:
+                        type:
+                          - VerifiableCredential
+                        credentialSubject:
+                          fullName:
+                            display:
+                              - name: Name
+                                locale: en
+                          mobile:
+                            display:
+                              - name: Phone Number
+                                locale: en
+                          dob:
+                            display:
+                              - name: Date of Birth
+                                locale: en
+                          gender:
+                            display:
+                              - name: Gender
+                                locale: en
+                          benefits:
+                            display:
+                              - name: Benefits
+                                locale: en
+                          email:
+                            display:
+                              - name: Email Id
+                                locale: en
+                          policyIssuedOn:
+                            display:
+                              - name: Policy Issued On
+                                locale: en
+                          policyExpiresOn:
+                            display:
+                              - name: Policy Expires On
+                                locale: en
+                          policyName:
+                            display:
+                              - name: Policy Name
+                                locale: en
+                          policyNumber:
+                            display:
+                              - name: Policy Number
+                                locale: en
+                      display:
+                        - name: Life Insurance Verifiable Credential
+                          locale: en
+                          logo:
+                            url: 'https://sunbird.org/images/sunbird-logo-new.png'
+                            alt_text: a square logo of a Sunbird
+                          background_color: '#FDFAF9'
+                          text_color: '#7C4616'
+                      order:
+                        - fullName
+                        - policyName
+                        - policyExpiresOn
+                        - policyIssuedOn
+                        - policyNumber
+                        - mobile
+                        - dob
+                        - gender
+                        - benefits
+                        - email
+                Example vd13:
                   credential_issuer: 'http://localhost:8090'
                   credential_endpoint: 'http://localhost:8090/v1/certify/issuance/credential'
                   display:
                     - name: Insurance
                       locale: en
-                  credentials_supported:
+                  credential_configurations_supported:
                     InsuranceCredential:
                       format: ldp_vc
                       scope: sunbird_rc_insurance_vc_ldp
@@ -464,7 +519,7 @@ paths:
                     display:
                       - name: Insurance
                         locale: en
-                    credentials_supported:
+                    credential_configurations_supported:
                       InsuranceCredential:
                         format: ldp_vc
                         scope: sunbird_rc_insurance_vc_ldp
@@ -923,28 +978,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                format:
-                  type: string
-                  enum:
-                    - ldp_vc
-                    - jwt_vc_json
-                    - jwt_vc_json-ld
-                  description: Format of the Credential to be issued.
-                proof:
-                  $ref: '#/components/schemas/CredentialProof'
-                credential_definition:
-                  $ref: '#/components/schemas/CredentialDefinition'
-                  description: |-
-                    JSON object containing (and isolating) the detailed description of the credential type.
-                         * This object MUST be processed using full JSON-LD processing.
-                         If it consists of the following sub claims:
-                         * @context: REQUIRED. JSON array
-              required:
-                - format
-                - proof
-                - credential_definition
+              $ref: '#/components/schemas/CredentialRequest'
             examples:
               Example 1:
                 value:
@@ -1051,28 +1085,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                format:
-                  type: string
-                  enum:
-                    - ldp_vc
-                    - jwt_vc_json
-                    - jwt_vc_json-ld
-                  description: Format of the Credential to be issued.
-                proof:
-                  $ref: '#/components/schemas/CredentialProof'
-                credential_definition:
-                  $ref: '#/components/schemas/CredentialDefinition'
-                  description: |-
-                    JSON object containing (and isolating) the detailed description of the credential type.
-                         * This object MUST be processed using full JSON-LD processing.
-                         If it consists of the following sub claims:
-                         * @context: REQUIRED. JSON array
-              required:
-                - format
-                - proof
-                - credential_definition
+              $ref: '#/components/schemas/CredentialRequest'
             examples:
               Example 1:
                 value:
@@ -1186,28 +1199,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                format:
-                  type: string
-                  enum:
-                    - ldp_vc
-                    - jwt_vc_json
-                    - jwt_vc_json-ld
-                  description: Format of the Credential to be issued.
-                proof:
-                  $ref: '#/components/schemas/CredentialProof'
-                credential_definition:
-                  $ref: '#/components/schemas/CredentialDefinition'
-                  description: |-
-                    JSON object containing (and isolating) the detailed description of the credential type.
-                         * This object MUST be processed using full JSON-LD processing.
-                         If it consists of the following sub claims:
-                         * @context: REQUIRED. JSON array
-              required:
-                - format
-                - proof
-                - credential_definition
+              $ref: '#/components/schemas/CredentialRequest'
             examples:
               Example 1:
                 value:
@@ -1355,18 +1347,46 @@ components:
         cwt:
           type: string
     CredentialRequest:
-      required:
-        - credential_definition
-        - format
-        - proof
       type: object
-      properties:
-        format:
-          type: string
-        proof:
-          $ref: '#/components/schemas/CredentialProof'
-        credential_definition:
-          $ref: '#/components/schemas/CredentialDefinition'
+      oneOf:
+        - title: CredentialRequest (mso_modc)
+          required:
+            - format
+            - proof
+            - doctype
+            - claims
+          properties:
+            format:
+              enum: [mso_mdoc]
+            doctype:
+              type: string
+              minLength: 1
+              example: org.iso.18013.5.1.mDL
+            claims:
+              type: object
+              additionalProperties:
+                type: object
+                additionalProperties: true
+              minProperties: 1
+            proof:
+              $ref: '#/components/schemas/CredentialProof'
+            credential_definition:
+              not: {}
+        - title: CredentialRequest (other formats)
+          required:
+            - format
+            - proof
+            - credential_definition
+          properties:
+            format:
+              enum: [jwt_vc_json, jwt_vc_json-ld, ldp_vc]
+            credential_definition:
+              $ref: '#/components/schemas/CredentialDefinition'
+            proof:
+              $ref: '#/components/schemas/CredentialProof'
+            
+      
+        
     CredentialResponse:
       type: object
       properties:
@@ -1381,6 +1401,7 @@ components:
         c_nonce_expires_in:
           type: integer
           format: int32
+    
   securitySchemes: 
     Authorization-access_token:
       type: http
