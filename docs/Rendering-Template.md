@@ -74,6 +74,5 @@ GET /rendering-template/vaccine_card_v1
 |--------|-------|---------|
 | Content-Type | image/svg+xml | MIME type enforcement |
 | Cache-Control | max-age=604800 | CDN/browser caching |
-| Vary | Accept-Language | Locale-specific caching |
 
 The digest multibase can be hardcoded or if the template has been stored with Certify's DB & `mosip.certify.data-provider-plugin.rendering-template-id` is set to the correct the value `${_renderMethodSVGdigest}` can be used to enable Certify to evaluate it specifying the id of the rendering-template used. However, for optimal performance, it's recommended to not set this key and instead hardcode the `digestMultibase` value in the Velocity template itself.
