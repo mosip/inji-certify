@@ -1,4 +1,4 @@
-FROM certify-service:local
+FROM mosipdev/inji-certify:develop
 
 ARG SOURCE
 ARG COMMIT_HASH

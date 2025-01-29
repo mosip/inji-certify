@@ -1,4 +1,4 @@
-FROM infyartifactory.ad.infosys.com/docker-remote/eclipse-temurin:21-jre
+FROM eclipse-temurin:21-jre
 
 ARG SOURCE
 ARG COMMIT_HASH
