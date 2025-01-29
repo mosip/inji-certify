@@ -32,11 +32,164 @@ paths:
             application/json:
               schema:
                 type: object
-                properties:
-                  property1: object
-                  property2: object
+                additionalProperties: true
+                description: |
+                  OpenID Connect Well-Known configuration document.
+                  Structure varies by draft version and provider implementation.
+                  
+                  **Example:**
+                  ```json
+                  {
+                    "credential_issuer": "https://injicertify-farmer.collab.mosip.net",
+                    "authorization_servers": [
+                      "https://esignet-farmer.collab.mosip.net"
+                    ],
+                    "credential_endpoint": "https://injicertify-farmer.collab.mosip.net/v1/certify/issuance/credential",
+                    "display": [
+                      {
+                        "name": "Farmer Credential",
+                        "locale": "en"
+                      }
+                    ],
+                    "credential_configurations_supported": {
+                      "FarmerCredential": {
+                        "format": "ldp_vc",
+                        "scope": "farmer_vc_ldp",
+                        "cryptographic_binding_methods_supported": [
+                          "did:jwk"
+                        ],
+                        "credential_signing_alg_values_supported": [
+                          "Ed25519Signature2020"
+                        ],
+                        "proof_types_supported": {
+                          "jwt": {
+                            "proof_signing_alg_values_supported": [
+                              "RS256",
+                              "PS256"
+                            ]
+                          }
+                        },
+                        "credential_definition": {
+                          "type": [
+                            "VerifiableCredential",
+                            "FarmerCredential"
+                          ],
+                          "credentialSubject": {
+                            "fullName": {
+                              "display": [
+                                {
+                                  "name": "Name",
+                                  "locale": "en"
+                                }
+                              ]
+                            },
+                            "mobile": {
+                              "display": [
+                                {
+                                  "name": "Phone Number",
+                                  "locale": "en"
+                                }
+                              ]
+                            },
+                            "dob": {
+                              "display": [
+                                {
+                                  "name": "Date of Birth",
+                                  "locale": "en"
+                                }
+                              ]
+                            },
+                            "gender": {
+                              "display": [
+                                {
+                                  "name": "Gender",
+                                  "locale": "en"
+                                }
+                              ]
+                            },
+                            "benefits": {
+                              "display": [
+                                {
+                                  "name": "Crops",
+                                  "locale": "en"
+                                }
+                              ]
+                            },
+                            "email": {
+                              "display": [
+                                {
+                                  "name": "Email Id",
+                                  "locale": "en"
+                                }
+                              ]
+                            },
+                            "policyIssuedOn": {
+                              "display": [
+                                {
+                                  "name": "Date of Issuance",
+                                  "locale": "en"
+                                }
+                              ]
+                            },
+                            "policyExpiresOn": {
+                              "display": [
+                                {
+                                  "name": "Valid Till",
+                                  "locale": "en"
+                                }
+                              ]
+                            },
+                            "policyName": {
+                              "display": [
+                                {
+                                  "name": "Land Ownership Type",
+                                  "locale": "en"
+                                }
+                              ]
+                            },
+                            "policyNumber": {
+                              "display": [
+                                {
+                                  "name": "Farmer Id",
+                                  "locale": "en"
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "display": [
+                          {
+                            "name": "Farmer Credential",
+                            "locale": "en",
+                            "logo": {
+                              "url": "https://raw.githubusercontent.com/tw-mosip/file-server/master/Agro%20Vertias%20Logo.png",
+                              "alt_text": "Farmer Credential"
+                            },
+                            "background_color": "#F7FFF8",
+                            "background_image": {
+                              "uri": "https://raw.githubusercontent.com/tw-mosip/file-server/master/Agro%20Vertias%20Logo.png"
+                            },
+                            "text_color": "#051B09"
+                          }
+                        ],
+                        "order": [
+                          "policyNumber",
+                          "fullName",
+                          "policyName",
+                          "benefits",
+                          "policyIssuedOn",
+                          "policyExpiresOn",
+                          "mobile",
+                          "dob",
+                          "gender",
+                          "email"
+                        ]
+                      }
+                    }
+                  } 
+                  ```
               x-examples:
-                Example 1:
+                Example vd11:
                   credential_issuer: 'http://localhost:8090'
                   credential_endpoint: 'http://localhost:8090/v1/certify/issuance/credential?version=vd11'
                   authorization_servers:
@@ -44,7 +197,7 @@ paths:
                   display:
                     - name: Insurance
                       locale: en
-                  credential_configurations_supported:
+                  credentials_supported:
                     InsuranceCredential:
                       format: ldp_vc
                       scope: sunbird_rc_insurance_vc_ldp
@@ -57,6 +210,8 @@ paths:
                         properties:
                           proof_signing_alg_values_supported:
                             type: array
+                            items:
+                              ['RS256']
                             examples:
                               - RS256
                               - PS256
@@ -196,13 +351,175 @@ paths:
                         - gender
                         - benefits
                         - email
-                Example 2:
+                Example vd12:
+                  credential_issuer: 'http://localhost:8090'
+                  credential_endpoint: 'http://localhost:8090/v1/certify/issuance/credential?version=vd12'
+                  authorization_servers:
+                    - 'http://localhost:8080'
+                  display:
+                    - name: Insurance
+                      locale: en
+                  credentials_supported:
+                    InsuranceCredential:
+                      format: ldp_vc
+                      scope: sunbird_rc_insurance_vc_ldp
+                      cryptographic_binding_methods_supported:
+                        - 'did:jwk'
+                      credential_signing_alg_values_supported:
+                        - Ed25519Signature2020
+                      proof_types_supported:
+                        type: object
+                        properties:
+                          proof_signing_alg_values_supported:
+                            type: array
+                            items:
+                              ['RS256']
+                            examples:
+                              - RS256
+                              - PS256
+                      credential_definition:
+                        type:
+                          - VerifiableCredential
+                          - InsuranceCredential
+                        credentialSubject:
+                          fullName:
+                            display:
+                              - name: Name
+                                locale: en
+                          mobile:
+                            display:
+                              - name: Phone Number
+                                locale: en
+                          dob:
+                            display:
+                              - name: Date of Birth
+                                locale: en
+                          gender:
+                            display:
+                              - name: Gender
+                                locale: en
+                          benefits:
+                            display:
+                              - name: Benefits
+                                locale: en
+                          email:
+                            display:
+                              - name: Email Id
+                                locale: en
+                          policyIssuedOn:
+                            display:
+                              - name: Policy Issued On
+                                locale: en
+                          policyExpiresOn:
+                            display:
+                              - name: Policy Expires On
+                                locale: en
+                          policyName:
+                            display:
+                              - name: Policy Name
+                                locale: en
+                          policyNumber:
+                            display:
+                              - name: Policy Number
+                                locale: en
+                      display:
+                        - name: Sunbird RC Insurance Verifiable Credential
+                          locale: en
+                          logo:
+                            url: 'https://sunbird.org/images/sunbird-logo-new.png'
+                            alt_text: a square logo of a Sunbird
+                          background_color: '#FDFAF9'
+                          text_color: '#7C4616'
+                      order:
+                        - fullName
+                        - policyName
+                        - policyExpiresOn
+                        - policyIssuedOn
+                        - policyNumber
+                        - mobile
+                        - dob
+                        - gender
+                        - benefits
+                        - email
+                    LifeInsuranceCredential:
+                      format: ldp_vc
+                      scope: life_insurance_vc_ldp
+                      cryptographic_binding_methods_supported:
+                        - 'did:jwk'
+                      cryptographic_suites_supported:
+                        - Ed25519Signature2020
+                      proof_types_supported:
+                        - jwt
+                      credential_definition:
+                        type:
+                          - VerifiableCredential
+                        credentialSubject:
+                          fullName:
+                            display:
+                              - name: Name
+                                locale: en
+                          mobile:
+                            display:
+                              - name: Phone Number
+                                locale: en
+                          dob:
+                            display:
+                              - name: Date of Birth
+                                locale: en
+                          gender:
+                            display:
+                              - name: Gender
+                                locale: en
+                          benefits:
+                            display:
+                              - name: Benefits
+                                locale: en
+                          email:
+                            display:
+                              - name: Email Id
+                                locale: en
+                          policyIssuedOn:
+                            display:
+                              - name: Policy Issued On
+                                locale: en
+                          policyExpiresOn:
+                            display:
+                              - name: Policy Expires On
+                                locale: en
+                          policyName:
+                            display:
+                              - name: Policy Name
+                                locale: en
+                          policyNumber:
+                            display:
+                              - name: Policy Number
+                                locale: en
+                      display:
+                        - name: Life Insurance Verifiable Credential
+                          locale: en
+                          logo:
+                            url: 'https://sunbird.org/images/sunbird-logo-new.png'
+                            alt_text: a square logo of a Sunbird
+                          background_color: '#FDFAF9'
+                          text_color: '#7C4616'
+                      order:
+                        - fullName
+                        - policyName
+                        - policyExpiresOn
+                        - policyIssuedOn
+                        - policyNumber
+                        - mobile
+                        - dob
+                        - gender
+                        - benefits
+                        - email
+                Example vd13:
                   credential_issuer: 'http://localhost:8090'
                   credential_endpoint: 'http://localhost:8090/v1/certify/issuance/credential'
                   display:
                     - name: Insurance
                       locale: en
-                  credentials_supported:
+                  credential_configurations_supported:
                     InsuranceCredential:
                       format: ldp_vc
                       scope: sunbird_rc_insurance_vc_ldp
@@ -354,12 +671,12 @@ paths:
                     credential_issuer: 'http://localhost:8090'
                     credential_endpoint: 'http://localhost:8090/v1/certify/issuance/credential'
                     display:
-                      - name: Insurance
+                      - name: Farmer Credential
                         locale: en
-                    credentials_supported:
-                      InsuranceCredential:
+                    credential_configurations_supported:
+                      FarmerCredential:
                         format: ldp_vc
-                        scope: sunbird_rc_insurance_vc_ldp
+                        scope: farmer_vc_ldp
                         cryptographic_binding_methods_supported:
                           - 'did:jwk'
                         cryptographic_suites_supported:
@@ -369,7 +686,7 @@ paths:
                         credential_definition:
                           type:
                             - VerifiableCredential
-                            - InsuranceCredential
+                            - FarmerCredential
                           credentialSubject:
                             fullName:
                               display:
@@ -389,7 +706,7 @@ paths:
                                   locale: en
                             benefits:
                               display:
-                                - name: Benefits
+                                - name: Crops
                                   locale: en
                             email:
                               display:
@@ -397,116 +714,46 @@ paths:
                                   locale: en
                             policyIssuedOn:
                               display:
-                                - name: Policy Issued On
+                                - name: Date of Issuance
                                   locale: en
                             policyExpiresOn:
                               display:
-                                - name: Policy Expires On
+                                - name: Valid Till
                                   locale: en
                             policyName:
                               display:
-                                - name: Policy Name
+                                - name: Land Ownership Type
                                   locale: en
                             policyNumber:
                               display:
-                                - name: Policy Number
+                                - name: Farmer Id
                                   locale: en
                         display:
-                          - name: Sunbird RC Insurance Verifiable Credential
+                          - name: Farmer Credential
                             locale: en
                             logo:
-                              url: 'https://sunbird.org/images/sunbird-logo-new.png'
-                              alt_text: a square logo of a Sunbird
-                            background_color: '#FDFAF9'
-                            text_color: '#7C4616'
+                              url: 'https://raw.githubusercontent.com/tw-mosip/file-server/master/Agro%20Vertias%20Logo.png'
+                              alt_text: Farmer Credential
+                            background_color: '#F7FFF8'
+                            background_image:
+                              uri: 'https://raw.githubusercontent.com/tw-mosip/file-server/master/Agro%20Vertias%20Logo.png'
+                            text_color: '#051B09'
                         order:
+                          - policyNumber
                           - fullName
                           - policyName
-                          - policyExpiresOn
+                          - benefits
                           - policyIssuedOn
-                          - policyNumber
+                          - policyExpiresOn
                           - mobile
                           - dob
                           - gender
-                          - benefits
-                          - email
-                      LifeInsuranceCredential:
-                        format: ldp_vc
-                        scope: life_insurance_vc_ldp
-                        cryptographic_binding_methods_supported:
-                          - 'did:jwk'
-                        cryptographic_suites_supported:
-                          - Ed25519Signature2020
-                        proof_types_supported:
-                          - jwt
-                        credential_definition:
-                          type:
-                            - VerifiableCredential
-                          credentialSubject:
-                            fullName:
-                              display:
-                                - name: Name
-                                  locale: en
-                            mobile:
-                              display:
-                                - name: Phone Number
-                                  locale: en
-                            dob:
-                              display:
-                                - name: Date of Birth
-                                  locale: en
-                            gender:
-                              display:
-                                - name: Gender
-                                  locale: en
-                            benefits:
-                              display:
-                                - name: Benefits
-                                  locale: en
-                            email:
-                              display:
-                                - name: Email Id
-                                  locale: en
-                            policyIssuedOn:
-                              display:
-                                - name: Policy Issued On
-                                  locale: en
-                            policyExpiresOn:
-                              display:
-                                - name: Policy Expires On
-                                  locale: en
-                            policyName:
-                              display:
-                                - name: Policy Name
-                                  locale: en
-                            policyNumber:
-                              display:
-                                - name: Policy Number
-                                  locale: en
-                        display:
-                          - name: Life Insurance Verifiable Credential
-                            locale: en
-                            logo:
-                              url: 'https://sunbird.org/images/sunbird-logo-new.png'
-                              alt_text: a square logo of a Sunbird
-                            background_color: '#FDFAF9'
-                            text_color: '#7C4616'
-                        order:
-                          - fullName
-                          - policyName
-                          - policyExpiresOn
-                          - policyIssuedOn
-                          - policyNumber
-                          - mobile
-                          - dob
-                          - gender
-                          - benefits
                           - email
     parameters: []
   /issuance/.well-known/did.json:
     get:
       summary: Fetch the DID object
-      description: 'Fetch the DID object as per the URI references & Plugin Mode configured and '
+      description: 'Fetch the DID object as per the URI references, Plugin Mode configured and the signature scheme chosen'
       responses:
         '200':
           description: A successful response with DID document data.
@@ -518,8 +765,6 @@ paths:
                   assertionMethod:
                     type: array
                     description: List of assertion methods associated with the DID.
-                    example:
-                      - 'did:web:vharsh.github.io:DID:harsh#key-0'
                     items:
                       type: string
                   service:
@@ -530,7 +775,6 @@ paths:
                   id:
                     type: string
                     description: The DID identifier.
-                    example: 'did:web:vharsh.github.io:DID:harsh'
                   verificationMethod:
                     type: array
                     items:
@@ -539,28 +783,25 @@ paths:
                         publicKeyMultibase:
                           type: string
                           description: The public key in multibase format.
-                          example: z6MkuY7TsbhRsdrhHWWUswDVddNQdiPo7EzPNdQW8S8Ghd8d
+                        publicKeyJwk:
+                          type: object
+                          description: The public key in JWK format.
                         controller:
                           type: string
                           description: The DID controller.
-                          example: 'did:web:vharsh.github.io:DID:harsh'
                         id:
                           type: string
                           description: The verification method identifier.
-                          example: 'did:web:vharsh.github.io:DID:harsh#key-0'
                         type:
                           type: string
                           description: The type of the verification method.
-                          example: Ed25519VerificationKey2020
                         '@context':
                           type: string
                           description: The context for the verification method.
-                          example: 'https://w3id.org/security/suites/ed25519-2020/v1'
+                      additionalProperties: true
                   '@context':
                     type: array
                     description: The context for the DID document.
-                    example:
-                      - 'https://www.w3.org/ns/did/v1'
                     items:
                       type: string
                   alsoKnownAs:
@@ -571,10 +812,41 @@ paths:
                   authentication:
                     type: array
                     description: List of authentication methods associated with the DID.
-                    example:
-                      - 'did:web:vharsh.github.io:DID:harsh#key-0'
                     items:
                       type: string
+                additionalProperties: true
+              examples:
+                Ed25519Example:
+                  value:
+                    assertionMethod: ["did:web:mosip.github.io:vc:collab#key-0"]
+                    service: []
+                    id: "did:web:mosip.github.io:vc:collab"
+                    verificationMethod:
+                      - publicKeyMultibase: "z6MktdWxFzyFMVkoxKoQ3GJQ8ibcYMqG8dSfTRjHG78pcFKG"
+                        controller: "did:web:mosip.github.io:vc:collab"
+                        id: "did:web:mosip.github.io:vc:collab#key-0"
+                        type: "Ed25519VerificationKey2020"
+                        "@context": "https://w3id.org/security/suites/ed25519-2020/v1"
+                    "@context": ["https://www.w3.org/ns/did/v1"]
+                    alsoKnownAs: []
+                    authentication: ["did:web:mosip.github.io:vc:collab#key-0"]
+                JWKExample:
+                  value:
+                    assertionMethod: ["did:web:mosip.github.io:vc:collab#key-0"]
+                    service: []
+                    id: "did:web:mosip.github.io:vc:collab"
+                    verificationMethod:
+                      - controller: "did:web:mosip.github.io:vc:collab"
+                        publicKeyJwk:
+                          kty: "RSA"
+                          e: "AQAB"
+                          n: "usfF3zped2sphzvBQ5cwwjot6ivWMkTg6OyB0DDtuUSJdQArrwWx1t44rcJlGoOvsxa_w_6E1f6DK5QxzGPy5NxJRUW15VzusLxc6Y75hmFEs-QUNG0YwkTWyu65gqk8GqYBbcR4DfsMf8Jf5_B9Spvv9cNlkprIeXrWo63y_PLx8NhEEGoSOLVDrej4ni0jcqqrUW5BNjDngGdfCpEQ-3NX2nKpJTdYuLnYEnlIfPqXhN05bFKd3xDDFYmPxB9kmcbaMUYW5G1ot5DKuJ5JdwFpDOb_zJyNg1zKZMIfy6qFVBMFy4r-Hi3hUXUtEYrGB3Q0dP1QmYdR4S9M9LdDtw"
+                        id: "did:web:mosip.github.io:vc:collab#key-0"
+                        type: "JsonWebKey2020"
+                        "@context": "https://w3id.org/security/suites/jws-2020/v1"
+                    "@context": ["https://www.w3.org/ns/did/v1"]
+                    alsoKnownAs: []
+                    authentication: ["did:web:mosip.github.io:vc:collab#key-0"]
         '400':
           description: unsupported for VCIssuance plugin mode
           content:
@@ -595,7 +867,6 @@ paths:
               schema:
                 type: string
               description: application/json
-      operationId: ''
   '/rendering-template/{id}':
     get:
       summary: Fetch the SVG template
@@ -609,10 +880,22 @@ paths:
             type: string
       responses:
         '200':
-          description: 'the svg template available for download'
-          content: image/svg+xml
+          description: the svg template available for download
+          headers:
+            Cache-Control:
+              description: Caching policy for the SVG template.
+              schema:
+                type: string
+                example: public, max-age=2592000
+          content:
+            image/svg+xml:
+              schema:
+                type: string
+                format: binary
+                description: SVG image content
+          
         '400':
-          description: 'invalid template request'
+          description: invalid template request
           content:
             application/json:
               schema:
@@ -621,9 +904,10 @@ paths:
                   responseTime:
                     type: string
                     format: date-time
-                    example: "2024-10-21T12:07:06.991Z"
+                    example: '2024-10-21T12:07:06.991Z'
                   response:
-                    type: 'null'
+                    type: object
+                    nullable: true
                     example: null
                   errors:
                     type: array
@@ -632,11 +916,10 @@ paths:
                       properties:
                         errorCode:
                           type: string
-                          example: "invalid_request"
+                          example: invalid_request
                         errorMessage:
                           type: string
-                          example: "template_with_id_not_found"
-
+                          example: template_with_id_not_found
       x-stoplight:
         id: rt5t4bbccx6id
     parameters:
@@ -666,7 +949,61 @@ paths:
       responses:
         '200':
           description: Got the Certificate.
-          content: application/json
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  responseTime:
+                    type: string
+                    format: date-time
+                    description: The timestamp when the response was generated.
+                  response:
+                    type: object
+                    properties:
+                      certificate:
+                        type: string
+                        description: The certificate content in PEM format.
+                        example: |-
+                          -----BEGIN CERTIFICATE-----
+                          MIIDxDCCAqygAwIBAgIImib36nzVvhAwDQYJKoZIhvcNAQELBQAweDELMAkGA1UE
+                          BhMCSU4xCzAJBgNVBAgMAktBMRIwEAYDVQQHDAlCQU5HQUxPUkUxDjAMBgNVBAoM
+                          BUlJSVRCMRcwFQYDVQQLDA5FWEFNUExFLUNFTlRFUjEfMB0GA1UEAwwWd3d3LmV4
+                          YW1wbGUuY29tIChST09UKTAeFw0yNDEyMTMxMTMxNTVaFw0yNzEyMTMxMTMxNTVa
+                          MIGEMQswCQYDVQQGEwJJTjELMAkGA1UECAwCS0ExEjAQBgNVBAcMCUJBTkdBTE9S
+                          ...
+                          -----END CERTIFICATE-----
+                      certSignRequest:
+                        type: string
+                        nullable: true
+                        description: The certificate signing request. Can be null.
+                        example: null
+                      issuedAt:
+                        type: string
+                        format: date-time
+                        description: The issuance date of the certificate.
+                      expiryAt:
+                        type: string
+                        format: date-time
+                        description: The expiration date of the certificate.
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: The generation timestamp of the certificate response.
+                  errors:
+                    type: array
+                    description: List of errors, if any.
+                    items:
+                      type: object
+                      properties:
+                        errorCode:
+                          type: string
+                          description: The error code identifying the issue.
+                        errorMessage:
+                          type: string
+                          description: Detailed error message describing the issue.
+          
+                        
       x-stoplight:
         id: rt5t4bbccx6id
     post:
@@ -684,6 +1021,62 @@ paths:
                   default: ''
                 certificateData:
                   type: string
+      responses:
+        '200':
+          description: Got the Certificate.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  responseTime:
+                    type: string
+                    format: date-time
+                    description: The timestamp when the response was generated.
+                  response:
+                    type: object
+                    properties:
+                      certificate:
+                        type: string
+                        description: The certificate content in PEM format.
+                        example: |-
+                          -----BEGIN CERTIFICATE-----
+                          MIIDxDCCAqygAwIBAgIImib36nzVvhAwDQYJKoZIhvcNAQELBQAweDELMAkGA1UE
+                          BhMCSU4xCzAJBgNVBAgMAktBMRIwEAYDVQQHDAlCQU5HQUxPUkUxDjAMBgNVBAoM
+                          BUlJSVRCMRcwFQYDVQQLDA5FWEFNUExFLUNFTlRFUjEfMB0GA1UEAwwWd3d3LmV4
+                          YW1wbGUuY29tIChST09UKTAeFw0yNDEyMTMxMTMxNTVaFw0yNzEyMTMxMTMxNTVa
+                          MIGEMQswCQYDVQQGEwJJTjELMAkGA1UECAwCS0ExEjAQBgNVBAcMCUJBTkdBTE9S
+                          ...
+                          -----END CERTIFICATE-----
+                      certSignRequest:
+                        type: string
+                        nullable: true
+                        description: The certificate signing request. Can be null.
+                        example: null
+                      issuedAt:
+                        type: string
+                        format: date-time
+                        description: The issuance date of the certificate.
+                      expiryAt:
+                        type: string
+                        format: date-time
+                        description: The expiration date of the certificate.
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: The generation timestamp of the certificate response.
+                  errors:
+                    type: array
+                    description: List of errors, if any.
+                    items:
+                      type: object
+                      properties:
+                        errorCode:
+                          type: string
+                          description: The error code identifying the issue.
+                        errorMessage:
+                          type: string
+                          description: Detailed error message describing the issue.
   /issuance/credential:
     post:
       summary: Credential Issuance endpoint
@@ -693,28 +1086,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                format:
-                  type: string
-                  enum:
-                    - ldp_vc
-                    - jwt_vc_json
-                    - jwt_vc_json-ld
-                  description: Format of the Credential to be issued.
-                proof:
-                  $ref: '#/components/schemas/CredentialProof'
-                credential_definition:
-                  $ref: '#/components/schemas/CredentialDefinition'
-                  description: |-
-                    JSON object containing (and isolating) the detailed description of the credential type.
-                         * This object MUST be processed using full JSON-LD processing.
-                         If it consists of the following sub claims:
-                         * @context: REQUIRED. JSON array
-              required:
-                - format
-                - proof
-                - credential_definition
+              $ref: '#/components/schemas/CredentialRequest'
             examples:
               Example 1:
                 value:
@@ -806,13 +1178,12 @@ paths:
                 type: object
                 properties:
                   error:
-                    const: invalid_token
+                    type: string
+                    enum: [invalid_token]
                   error_description:
                     type: string
                 required:
                   - error
-      security:
-        - Authorization-access_token: []
   /issuance/vd12/credential:
     post:
       summary: Credential Issuance endpoint - Draft 12
@@ -822,28 +1193,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                format:
-                  type: string
-                  enum:
-                    - ldp_vc
-                    - jwt_vc_json
-                    - jwt_vc_json-ld
-                  description: Format of the Credential to be issued.
-                proof:
-                  $ref: '#/components/schemas/CredentialProof'
-                credential_definition:
-                  $ref: '#/components/schemas/CredentialDefinition'
-                  description: |-
-                    JSON object containing (and isolating) the detailed description of the credential type.
-                         * This object MUST be processed using full JSON-LD processing.
-                         If it consists of the following sub claims:
-                         * @context: REQUIRED. JSON array
-              required:
-                - format
-                - proof
-                - credential_definition
+              $ref: '#/components/schemas/CredentialRequest'
             examples:
               Example 1:
                 value:
@@ -940,7 +1290,8 @@ paths:
                 type: object
                 properties:
                   error:
-                    const: invalid_token
+                    type: string
+                    enum: [invalid_token]
                   error_description:
                     type: string
                 required:
@@ -956,28 +1307,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                format:
-                  type: string
-                  enum:
-                    - ldp_vc
-                    - jwt_vc_json
-                    - jwt_vc_json-ld
-                  description: Format of the Credential to be issued.
-                proof:
-                  $ref: '#/components/schemas/CredentialProof'
-                credential_definition:
-                  $ref: '#/components/schemas/CredentialDefinition'
-                  description: |-
-                    JSON object containing (and isolating) the detailed description of the credential type.
-                         * This object MUST be processed using full JSON-LD processing.
-                         If it consists of the following sub claims:
-                         * @context: REQUIRED. JSON array
-              required:
-                - format
-                - proof
-                - credential_definition
+              $ref: '#/components/schemas/CredentialRequest'
             examples:
               Example 1:
                 value:
@@ -1074,7 +1404,8 @@ paths:
                 type: object
                 properties:
                   error:
-                    const: invalid_token
+                    type: string
+                    enum: [invalid_token]
                   error_description:
                     type: string
                 required:
@@ -1124,18 +1455,46 @@ components:
         cwt:
           type: string
     CredentialRequest:
-      required:
-        - credential_definition
-        - format
-        - proof
       type: object
-      properties:
-        format:
-          type: string
-        proof:
-          $ref: '#/components/schemas/CredentialProof'
-        credential_definition:
-          $ref: '#/components/schemas/CredentialDefinition'
+      oneOf:
+        - title: CredentialRequest (mso_modc)
+          required:
+            - format
+            - proof
+            - doctype
+            - claims
+          properties:
+            format:
+              enum: [mso_mdoc]
+            doctype:
+              type: string
+              minLength: 1
+              example: org.iso.18013.5.1.mDL
+            claims:
+              type: object
+              additionalProperties:
+                type: object
+                additionalProperties: true
+              minProperties: 1
+            proof:
+              $ref: '#/components/schemas/CredentialProof'
+            credential_definition:
+              not: {}
+        - title: CredentialRequest (other formats)
+          required:
+            - format
+            - proof
+            - credential_definition
+          properties:
+            format:
+              enum: [jwt_vc_json, jwt_vc_json-ld, ldp_vc]
+            credential_definition:
+              $ref: '#/components/schemas/CredentialDefinition'
+            proof:
+              $ref: '#/components/schemas/CredentialProof'
+            
+      
+        
     CredentialResponse:
       type: object
       properties:
@@ -1150,3 +1509,8 @@ components:
         c_nonce_expires_in:
           type: integer
           format: int32
+    
+  securitySchemes: 
+    Authorization-access_token:
+      type: http
+      scheme: bearer
