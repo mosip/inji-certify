@@ -456,8 +456,10 @@ istio:
       port: 80
   hosts:
     - injicertify.sandbox.xyz.net
-  prefix: /
-
-enable_insecure: false
-springConfigNameEnv:
-activeProfileEnv:
+  uriMatches:
+    - matchType: exact
+      uri: /.well-known/openid-credential-issuer
+      rewriteUri: /v1/certify/issuance/.well-known/openid-credential-issuer
+    - matchType: prefix
+      uri: /
+      port: 80
