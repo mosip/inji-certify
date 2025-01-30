@@ -2,7 +2,7 @@ modules:
   injicertify:
     enabled: true
     image:
-      repository: mosipid/apitest-injicertify
+      repository: mosipid/apitest-inji-certify
       tag: 0.10.0
       pullPolicy: Always
   prereg:
