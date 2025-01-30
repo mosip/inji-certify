@@ -9,12 +9,12 @@
     <parent>
         <groupId>io.mosip.certify</groupId>
         <artifactId>certify-parent</artifactId>
-        <version>0.12.0-SNAPSHOT</version>
+        <version>0.10.0</version>
     </parent>
 
     <groupId>io.mosip.certify</groupId>
     <artifactId>certify-service</artifactId>
-    <version>0.12.0-SNAPSHOT</version>
+    <version>0.10.0</version>
     <name>certify-service</name>
     <description>certify vci service</description>
     <repositories>
@@ -22,41 +22,9 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
-        <repository>
-            <id>danubetech-maven-public</id>
-            <url>https://repo.danubetech.com/repository/maven-public/</url>
-        </repository>
     </repositories>
 
     <dependencies>
-        <dependency>
-            <groupId>io.mosip.certify</groupId>
-            <artifactId>mock-certify-plugin</artifactId>
-            <version>0.4.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-cbor</artifactId>
-            <version>2.18.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.jayway.jsonpath</groupId>
-            <artifactId>json-path</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>net.javacrumbs.shedlock</groupId>
-            <artifactId>shedlock-spring</artifactId>
-            <version>6.8.0</version>
-        </dependency>
-        <dependency>
-            <groupId>net.javacrumbs.shedlock</groupId>
-            <artifactId>shedlock-provider-jdbc-template</artifactId>
-            <version>6.8.0</version>
-        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
@@ -94,14 +62,8 @@
         <dependency>
             <groupId>io.mosip.certify</groupId>
             <artifactId>certify-core</artifactId>
-            <version>0.12.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-cbor</artifactId>
-            <version>2.18.1</version>
-        </dependency>
-
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-bootstrap</artifactId>
@@ -125,10 +87,6 @@
                     <groupId>org.springframework.security</groupId>
                     <artifactId>spring-security-test</artifactId>
                 </exclusion>
-                <exclusion>
-                    <groupId>com.vaadin.external.google</groupId>
-                    <artifactId>android-json</artifactId>
-                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -141,21 +99,6 @@
             <groupId>info.weboftrust</groupId>
             <artifactId>ld-signatures-java</artifactId>
             <version>1.0.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.danubetech</groupId>
-                    <artifactId>key-formats-java</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>decentralized-identity</groupId>
-                    <artifactId>jsonld-common-java</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.danubetech</groupId>
-            <artifactId>data-integrity-java</artifactId>
-            <version>1.17.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.crypto.tink</groupId>
@@ -167,50 +110,6 @@
             <artifactId>java-multibase</artifactId>
             <version>v1.1.1</version>
         </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.authlete</groupId>
-            <artifactId>sd-jwt</artifactId>
-            <version>1.5</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct</artifactId>
-            <version>1.5.5.Final</version>
-        </dependency>
-        <dependency>
-            <groupId>io.hypersistence</groupId>
-            <artifactId>hypersistence-utils-hibernate-63</artifactId>
-            <version>3.9.9</version>
-        </dependency>
-        <dependency>
-            <groupId>com.jayway.jsonpath</groupId>
-            <artifactId>json-path</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>net.javacrumbs.shedlock</groupId>
-            <artifactId>shedlock-spring</artifactId>
-            <version>6.8.0</version>
-        </dependency>
-        <dependency>
-            <groupId>net.javacrumbs.shedlock</groupId>
-            <artifactId>shedlock-provider-jdbc-template</artifactId>
-            <version>6.8.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-cbor</artifactId>
-            <version>2.18.1</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/io.mosip.certify/mock-certify-plugin -->
     </dependencies>
 
     <build>
@@ -229,35 +128,8 @@
                             <goal>build-info</goal>
                             <goal>repackage</goal>
                         </goals>
-                        <configuration>
-                            <attach>false</attach>
-                        </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
-                <configuration>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.mapstruct</groupId>
-                            <artifactId>mapstruct-processor</artifactId>
-                            <version>1.5.5.Final</version>
-                        </path>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>1.18.30</version>
-                        </path>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok-mapstruct-binding</artifactId>
-                            <version>0.2.0</version>
-                        </path>
-                    </annotationProcessorPaths>
-                </configuration>
             </plugin>
         </plugins>
     </build>

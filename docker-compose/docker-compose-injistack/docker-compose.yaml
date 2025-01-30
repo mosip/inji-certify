@@ -14,7 +14,7 @@ services:
       - "5433:5432"
 
   certify:
-    image: mosipqa/inji-certify-with-plugins:develop
+    image: mosipid/inji-certify:0.10.0
     user: root
     ports:
       - 8090:8090
@@ -25,14 +25,13 @@ services:
       - SPRING_CONFIG_LOCATION=/home/mosip/config/
       - enable_certify_artifactory=false
       - download_hsm_client=false
-      - mosip_certify_domain_url=http://certify-nginx:80
+      - mosipbox_public_url=http://certify:8090
     volumes:
       - ./config/certify-default.properties:/home/mosip/config/certify-default.properties
       - ./config/certify-csvdp-farmer.properties:/home/mosip/config/certify-csvdp-farmer.properties
       - ./config/certify-mock-mdl.properties:/home/mosip/config/certify-mock-mdl.properties
       - ./data/CERTIFY_PKCS12:/home/mosip/CERTIFY_PKCS12
-      # This can be disabled if one uses plugins included in inji-certify-with-plugins docker image.
-#      - ./loader_path/certify/:/home/mosip/additional_jars/
+      - ./loader_path/certify/:/home/mosip/additional_jars/
       # modify the below file to change the identity fields in the VC
       - ./config/farmer_identity_data.csv:/home/mosip/config/farmer_identity_data.csv
     networks:
@@ -40,21 +39,9 @@ services:
     depends_on:
       - database
 
-  certify-nginx:
-    image: nginx:stable
-    ports:
-      - 8091:80
-    volumes:
-      - ./certify-nginx.conf:/etc/nginx/conf.d/default.conf
-    networks:
-      - network
-    depends_on:
-      - certify
-
-
   mimoto-service:
     container_name: 'Mimoto-Service'
-    image: mosipid/mimoto:0.15.0
+    image: mosipid/mimoto:release-0.15.0
     user: root
     ports:
       - '8099:8099'
@@ -73,7 +60,7 @@ services:
 
   inji-web:
     container_name: 'inji-web'
-    image: mosipid/inji-web:0.11.0
+    image: mosipid/inji-web:release-0.11.0
     ports:
       - '3001:3004'
     environment:
