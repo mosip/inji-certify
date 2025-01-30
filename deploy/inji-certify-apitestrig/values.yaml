@@ -2,6 +2,23 @@ modules:
   injicertify:
     enabled: true
     image:
-      repository: mosipqa/apitest-injicertify
-      tag: develop
+      repository: mosipid/apitest-injicertify
+      tag: 0.10.0
       pullPolicy: Always
+  prereg:
+    enabled: false
+    masterdata:
+      enabled: false
+    idrepo:
+      enabled: false
+    partner:
+      enabled: false
+    pms:
+    resident:
+      enabled: false
+    auth:
+      enabled: false
+    esignet:
+      enabled: false
+    mimoto:
+      enabled: false
