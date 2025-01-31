@@ -5,8 +5,6 @@ set -e
 #installs the pkcs11 libraries.
 if [ "$download_hsm_client" = "true" ]; then
   set -e
-  wget -q "https://raw.githubusercontent.com/mosip/artifactory-ref-impl/v1.3.0-beta.1/artifacts/src/hsm/client.zip"
-  echo "Downloaded hsmclient"
   FILE_NAME="client.zip"
 
   DIR_NAME=$hsm_local_dir_name
