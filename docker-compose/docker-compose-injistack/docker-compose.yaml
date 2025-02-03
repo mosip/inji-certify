@@ -33,6 +33,7 @@ services:
       - ./data/CERTIFY_PKCS12:/home/mosip/CERTIFY_PKCS12
       - ./loader_path/certify/:/home/mosip/additional_jars/
       - ./config/openid4vci-farmer-wk.json:/home/mosip/openid4vci-farmer-wk.json
+      - ./config/openid4vci-mdl-wk.json:/home/mosip/openid4vci-mdl.json
       # modify the below file to change the identity fields in the VC
       - ./config/farmer_identity_data.csv:/home/mosip/config/farmer_identity_data.csv
     networks:

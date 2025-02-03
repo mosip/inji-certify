@@ -5,7 +5,7 @@
         "credential_endpoint": "${mosipbox.public.url}${server.servlet.path}/issuance/credential", 
         "display": [{"name": "Agricultural Department", "locale": "en"}],
         "credential_configurations_supported" : { 
-            "FarmerCredential" : {
+            "FarmerProfileCredential" : {
                 "format": "ldp_vc",
                 "scope" : "mock_identity_vc_ldp",
                 "cryptographic_binding_methods_supported": ["did:jwk"],
