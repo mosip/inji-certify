@@ -24,7 +24,7 @@ Instructions [here](./docker-compose/docker-compose-injistack/README.md).
 
 You can create your own plugin by implementing the following interface and refer the below for postgres-dataprovider-plugin implementation:
 
-Reference Implementation: [postgres-dataprovider-plugin](https://github.com/mosip/digital-credential-plugins/tree/release-0.3.x/postgres-dataprovider-plugin).
+Reference Implementation: [postgres-dataprovider-plugin](https://github.com/mosip/digital-credential-plugins/tree/v0.3.0/postgres-dataprovider-plugin).
 
 ```java
 public interface DataProviderPlugin {
