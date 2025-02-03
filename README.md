@@ -18,7 +18,7 @@ Instructions [here](./docker-compose/docker-compose-injistack/README.md).
   ```
   https://repo1.maven.org/maven2/io/mosip/certify/postgres-dataprovider-plugin/0.3.0/postgres-dataprovider-plugin-0.3.0.jar
   ```
-- Refer to the documentation of postgres plugin for required configurations: [Postgres Plugin Doc](https://github.com/mosip/digital-credential-plugins/blob/release-0.3.x/postgres-dataprovider-plugin/README.md) 
+- Refer to the documentation of postgres plugin for required configurations: [Postgres Plugin Doc](https://github.com/mosip/digital-credential-plugins/blob/v0.3.0/postgres-dataprovider-plugin/README.md)
 
 ### For Advanced Users: Create Custom Plugin
 
