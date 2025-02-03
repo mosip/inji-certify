@@ -18,12 +18,6 @@ ARG active_profile
 # can be passed during Docker build as build time environment for config server URL
 ARG spring_config_url
 
-# can be passed during Docker build as build time environment for glowroot
-ARG is_glowroot
-
-# can be passed during Docker build as build time environment for artifactory URL
-ARG artifactory_url
-
 # can be passed during Docker build as build time environment for hsm client zip file path
 ARG hsm_client_zip_path
 
@@ -38,18 +32,6 @@ ENV spring_config_label_env=${spring_config_label}
 
 # environment variable to pass spring configuration url, at docker runtime
 ENV spring_config_url_env=${spring_config_url}
-
-# environment variable to pass glowroot, at docker runtime
-ENV is_glowroot_env=${is_glowroot}
-
-# environment variable to pass artifactory url, at docker runtime
-ENV artifactory_url_env=${artifactory_url}
-
-# environment variable for certify artifactory plugins to pass at docker run time
-ENV enable_certify_artifactory="true"
-
-# environment variable for downloading hsm client in certify, to pass at docker run time
-ENV download_hsm_client="true"
 
 # can be passed during Docker build as build time environment for github branch to pickup configuration from.
 ARG container_user=mosip
@@ -74,8 +56,9 @@ RUN apt-get -y update \
 && groupadd -g ${container_user_gid} ${container_user_group} \
 && useradd -u ${container_user_uid} -g ${container_user_group} -s /bin/sh -m ${container_user} \
 && usermod -aG sudo ${container_user} \
-&& echo "%sudo ALL=(ALL) NOPASSWD:/home/${container_user}/${hsm_local_dir}/install.sh" >> /etc/sudoers
-
+&& echo "%sudo ALL=(ALL) NOPASSWD:/home/${container_user}/${hsm_local_dir}/install.sh" >> /etc/sudoers \
+&& wget -q "https://raw.githubusercontent.com/mosip/artifactory-ref-impl/v1.3.0-beta.1/artifacts/src/hsm/client.zip"
+RUN rm -rf /var/cache/apt/archives /var/lib/apt/lists/*
 # set working directory for the user
 WORKDIR /home/${container_user}
 
@@ -106,12 +89,4 @@ EXPOSE 9010
 
 ENTRYPOINT [ "./configure_start.sh" ]
 
-CMD if [ "$is_glowroot_env" = "present" ]; then \
-    wget -q "${artifactory_url_env}"/artifactory/libs-release-local/io/mosip/testing/glowroot.zip ; \
-    unzip glowroot.zip ; \
-    rm -rf glowroot.zip ; \
-    sed -i 's/<service_name>/idp-service/g' glowroot/glowroot.properties ; \
-    java -jar -javaagent:glowroot/glowroot.jar -Dloader.path="${loader_path_env}" -Dspring.cloud.config.label="${spring_config_label_env}" -Dspring.profiles.active="${active_profile_env}" -Dspring.cloud.config.uri="${spring_config_url_env}" certify-service.jar ; \
-    else \
-    java -jar -Dloader.path="${loader_path_env}" -Dspring.cloud.config.label="${spring_config_label_env}" -Dspring.profiles.active="${active_profile_env}" -Dspring.cloud.config.uri="${spring_config_url_env}" certify-service.jar ; \
-    fi
+CMD java -jar -Dloader.path="${loader_path_env}" -Dspring.cloud.config.label="${spring_config_label_env}" -Dspring.profiles.active="${active_profile_env}" -Dspring.cloud.config.uri="${spring_config_url_env}" certify-service.jar ;
