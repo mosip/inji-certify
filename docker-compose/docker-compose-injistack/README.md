@@ -56,11 +56,11 @@ docker-compose-injistack/
 ### Recommended: Use one of the Existing Mock Plugin
 
 - Supported versions: 0.3.0 and above
-- Download the latest JAR from:
+- Download the latest JAR from the below link and place the downloaded JAR in `loader_path/certify/`
+
   ```
-  https://oss.sonatype.org/content/repositories/snapshots/io/mosip/certify/mock-certify-plugin/0.3.0-SNAPSHOT/
+  https://repo1.maven.org/maven2/io/mosip/certify/mock-certify-plugin/0.3.0/mock-certify-plugin-0.3.0.jar
   ```
-- Place the downloaded JAR in `loader_path/certify/`
 
 ### For Advanced Users: Create Custom Plugin
 
