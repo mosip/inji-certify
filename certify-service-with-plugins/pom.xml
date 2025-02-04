@@ -18,6 +18,13 @@
     <name>certify-service-with-plugins</name>
     <description>certify vci service</description>
 
+    <licenses>
+        <license>
+            <name>MPL 2.0</name>
+            <url>https://www.mozilla.org/en-US/MPL/2.0/</url>
+        </license>
+    </licenses>
+
     <properties>
         <certify-plugins.location>target/certify-plugins</certify-plugins.location>
         <mock-certify-plugin.version>0.3.1-SNAPSHOT</mock-certify-plugin.version>
