@@ -37,8 +37,9 @@ jobs:
 
   build-maven-inji-certify-with-plugins:
     uses: mosip/kattu/.github/workflows/maven-build.yml@master-java21
+    needs: build-maven-inji-certify
     with:
-      SERVICE_LOCATION: ./
+      SERVICE_LOCATION: ./certify-service-with-plugins
       BUILD_ARTIFACT: inji-certify-with-plugins
     secrets:
       OSSRH_USER: ${{ secrets.OSSRH_USER }}
