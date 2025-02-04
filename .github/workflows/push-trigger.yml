@@ -85,7 +85,7 @@ jobs:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
   build-dockers-inji-certify-with-plugins:
-    needs: build-maven-inji-certify-with-plugins
+    needs: [build-dockers, build-maven-inji-certify-with-plugins]
     strategy:
       matrix:
         include:
