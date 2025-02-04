@@ -25,6 +25,15 @@
         </license>
     </licenses>
 
+    <developers>
+        <developer>
+            <name>Mosip</name>
+            <email>mosip.emailnotifier@gmail.com</email>
+            <organization>io.mosip</organization>
+            <organizationUrl>https://github.com/mosip/inji-certify</organizationUrl>
+        </developer>
+    </developers>
+
     <properties>
         <certify-plugins.location>target/certify-plugins</certify-plugins.location>
         <mock-certify-plugin.version>0.3.1-SNAPSHOT</mock-certify-plugin.version>
