@@ -3,7 +3,7 @@
 set -e
 
 #installs the pkcs11 libraries.
-if [ "$download_hsm_client" = "true" ]; then
+if [ "$install_hsm_client" = "true" ]; then
   set -e
   FILE_NAME="client.zip"
 
