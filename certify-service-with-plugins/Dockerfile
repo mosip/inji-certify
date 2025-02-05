@@ -1,4 +1,4 @@
-FROM mosipdev/inji-certify:develop
+FROM mosipdev/inji-certify:INJICERT-661
 
 ARG SOURCE
 ARG COMMIT_HASH
