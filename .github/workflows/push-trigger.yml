@@ -37,7 +37,8 @@ jobs:
 
   build-maven-inji-certify-with-plugins:
     needs: build-maven-inji-certify
-    with:
+    env:
+      NAMESPACE: ${{ secrets.dev_namespace_docker_hub }}
       SERVICE_LOCATION: ./certify-service-with-plugins
       BUILD_ARTIFACT: inji-certify-with-plugins
     secrets:
