@@ -464,9 +464,6 @@ istio:
       uri: /
       port: 80
 
-enable_insecure: false
-springConfigNameEnv:
-activeProfileEnv:
 installHSMPlugin: true
 
   
