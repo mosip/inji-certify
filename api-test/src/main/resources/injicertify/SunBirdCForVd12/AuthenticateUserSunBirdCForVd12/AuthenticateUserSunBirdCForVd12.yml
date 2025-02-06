@@ -1,6 +1,8 @@
 AuthenticateUserSunBirdCForVd12:
    InjiCertify_ESignet_AuthenticateUserSunBirdCForVd12_Valid_Smoke:
       endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/authorization/authenticate
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_vd12      
+      description: Authenticate User      
       role: resident
       restMethod: post
       checkErrorsOnlyInResponse: true

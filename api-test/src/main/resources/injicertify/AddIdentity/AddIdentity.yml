@@ -1,6 +1,8 @@
 AddIdentity:
    InjiCertify_AddIdentity_Valid_Params_VCI_MOSIPID_uin_smoke_Pos:
       endPoint: /idrepository/v1/identity/
+      uniqueIdentifier: TC_idrepo_dependency_01      
+      description: Add identity      
       role: idrepo
       restMethod: post
       inputTemplate: injicertify/AddIdentity/addIdentity_$LANGNUMBER$

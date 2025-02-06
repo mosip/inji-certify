@@ -1,6 +1,7 @@
 AddIdentity:
    InjiCertify_AddIdentity_For_Mock_Valid_smoke_Pos:
       endPoint: /v1/mock-identity-system/identity
+      uniqueIdentifier: TC_idrepo_dependency_02      
       description: Add identity for mock scenario
       role: idrepo
       restMethod: post

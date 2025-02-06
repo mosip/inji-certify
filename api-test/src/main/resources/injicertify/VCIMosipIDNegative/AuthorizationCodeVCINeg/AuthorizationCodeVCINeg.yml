@@ -1,5 +1,5 @@
 AuthorizationCodeVCINeg:
-   InjiCertify_ESignet_AuthorizationCode_VCI_uin_All_Valid_Smoke_sid_Neg:
+   InjiCertify_ESignet_AuthorizationCode_VCI_MOSIPID_uin_All_Valid_Smoke_sid_Neg:
       endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/auth-code
       uniqueIdentifier: TC_esignetDependent_AuthorizationCodeNeg      
       description: Authorization Code      

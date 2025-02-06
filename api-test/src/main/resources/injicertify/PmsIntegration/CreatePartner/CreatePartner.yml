@@ -1,6 +1,8 @@
 createPartnerSelfRegistration:
    InjiCertify_PartnerSelfRegistration_MOSIPID_All_Valid_Smoke_sid:
       endPoint: /v1/partnermanager/partners
+      uniqueIdentifier: TC_pms_dependency_03      
+      description: Create partner      
       role: partner
       restMethod: post
       inputTemplate: injicertify/PmsIntegration/CreatePartner/createPartner

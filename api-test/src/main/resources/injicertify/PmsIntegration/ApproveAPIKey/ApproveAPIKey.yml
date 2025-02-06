@@ -1,6 +1,8 @@
 ApproveAPIKey:
    InjiCertify_ApproveRejectPartnerAPIKeyReq_MOSIPID_All_Valid_Smoke:
       endPoint: /v1/partnermanager/partners/policy/{mappingkey}
+      uniqueIdentifier: TC_pms_dependency_02      
+      description: Approve APIkey      
       role: partner
       restMethod: put
       inputTemplate: injicertify/PmsIntegration/ApproveAPIKey/approveAPIKey
