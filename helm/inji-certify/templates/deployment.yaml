@@ -109,6 +109,10 @@ spec:
             {{- if .Values.extraEnvVars }}
             {{- include "common.tplvalues.render" (dict "value" .Values.extraEnvVars "context" $) | nindent 12 }}
             {{- end }}
+            {{- if .Values.installHSMPlugin }}
+            - name: install_hsm_client
+              value: {{ .Values.installHSMPlugin }}
+            {{- end }}
           envFrom:
             {{- if .Values.extraEnvVarsCM }}
             {{- range .Values.extraEnvVarsCM }}
