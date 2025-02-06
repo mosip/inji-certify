@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.security.PublicKey;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,6 +12,8 @@ import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.Map;
 
+import com.nimbusds.jose.jwk.Curve;
+import com.nimbusds.jose.jwk.ECKey;
 import org.bouncycastle.jcajce.provider.asymmetric.edec.BCEdDSAPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
@@ -41,6 +44,9 @@ public class DIDDocumentUtil {
         PublicKey publicKey = loadPublicKeyFromCertificate(certificateString);
         try {
             switch (vcSignAlgorithm) {
+                case SignatureAlg.EC_SECP256K1_2019:
+                    verificationMethod = generateECK12019VerificationMethod(publicKey, issuerURI, issuerPublicKeyURI);
+                    break;
                 case SignatureAlg.ED25519_SIGNATURE_SUITE_2018:
                     verificationMethod = generateEd25519VerificationMethod(publicKey, issuerURI, issuerPublicKeyURI);
                     break;
@@ -107,5 +113,28 @@ public class DIDDocumentUtil {
         verificationMethod.put("publicKeyJwk", publicKeyJwk);
         return verificationMethod;
     }
-    
+
+    private static Map<String, Object> generateECK12019VerificationMethod(PublicKey publicKey, String issuerURI, String issuerPublicKeyURI) {
+        // TODO: can validate the key or directly assume the curve here and
+        //  go ahead or use P_256 only if `nimbusCurve` is having same value.
+        ECKey nimbusKey = new ECKey.Builder(Curve.SECP256K1, (ECPublicKey) publicKey)
+                .build();
+
+        Map<String, Object> verificationMethod = new HashMap<>();
+        verificationMethod.put("id", issuerPublicKeyURI);
+
+        // ref: https://github.com/w3c-ccg/lds-ecdsa-secp256k1-2019/issues/8
+        verificationMethod.put("type", "EcdsaSecp256k1VerificationKey2019");
+        verificationMethod.put("@context", "https://w3id.org/security/v1");
+        // (improvement): can also add expires key here
+        verificationMethod.put("controller", issuerURI);
+        verificationMethod.put("publicKeyJwk", nimbusKey.toJSONObject());
+        // NOTE: Advice against using publicKeyHex by the spec author
+        // ref: https://github.com/w3c-ccg/lds-ecdsa-secp256k1-2019/issues/4
+        // ref: https://w3c.github.io/vc-data-integrity/vocab/security/vocabulary.html#publicKeyHex
+
+        // As per the below spec, publicKeyBase58 is also supported
+        // ref: https://w3c-ccg.github.io/ld-cryptosuite-registry/#ecdsasecp256k1signature2019
+        return verificationMethod;
+    }
 }
