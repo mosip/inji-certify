@@ -4,6 +4,63 @@
 
 The **Inji Certify API Test Rig** is designed for the execution of module-wise automation API tests for the inji certify module. This test rig utilizes **Java REST Assured** and **TestNG** frameworks to automate testing of the inji certify API functionalities. The key focus is to validate the Credential fetching and related functionalities provided by the inji certify module.
 
+# inji-certify Core Service Plugins
+
+## 1. MOSIP-ID (MOSIP Identity Service)
+The MOSIP-ID plugin integrates the MOSIP (Modular Open Source Identity Platform) to provide identity management and authentication services for inji-certify. It enables secure identity verification, authentication workflows, and digital certificate issuance based on the MOSIP platform.
+
+### Key Features:
+- **Identity Verification**: Validates and verifies user identities through the MOSIP platform.
+- **Authentication**: Secure authentication of users based on the MOSIP ID service.
+- **Digital Certificate Management**: Manages the creation and distribution of digital certificates for identity validation.
+
+## 2. Mock-Identity-System
+The Mock-Identity-System plugin simulates the behavior of the MOSIP-ID plugin, providing an environment for testing and development without the need for actual access to the MOSIP platform. It mimics the responses of the MOSIP identity service, facilitating testing of certificate workflows, authentication, and consent management.
+
+### Key Features:
+- **Simulated Responses**: Provides mock responses to simulate the behavior of the MOSIP-ID plugin.
+- **Testing Environment**: Useful for development and testing without connecting to a live identity system.
+- **Mocked Identity Management**: Simulates identity verification and authentication processes for testing.
+
+## 3. Sunbird Insurance Use Case
+The Sunbird Insurance Use Case plugin integrates with the Sunbird platform to issue and manage insurance-related certificates. It facilitates secure interactions between inji-certify and Sunbird to ensure the authenticity of certificates issued for insurance services.
+
+### Key Features:
+- **Insurance Certificate Issuance**: Automates the process of issuing insurance-related certificates.
+- **Integration with Sunbird**: Ensures seamless interactions between inji-certify and the Sunbird platform for insurance workflows.
+- **Secure Certification**: Ensures that all issued certificates are authentic, tamper-proof, and verifiable.
+
+---
+
+# API Test Rig Configuration
+The API Test Rig is configured to work with different core service plugins, such as MOSIP-ID, Mock-Identity-System, and Sunbird Insurance. It allows for dynamic testing and validation of workflows related to identity management, authentication, and certificate issuance.
+
+## Integration of inji-certify API Test Rig with Core Service Plugins
+The Test Rig is dynamically configured based on the core service plugin being tested (either MOSIP-ID, Mock-Identity-System, or Sunbird Insurance). The configuration is as follows:
+
+### 1. Configuration for MOSIP-ID Plugin:
+- **eSignetbaseurl**: The Test Rig will use the live eSignet instance integrated with the MOSIP-ID service.
+- **injiCertifyBaseURL**: The Test Rig will use the live inji-certify instance integrated with the MOSIP-ID service.
+- **mosip_components_base_urls**: A string defining the base URLs for various components.
+- **useCaseToExecute**: Specifies the use case to be executed, such as "mosipid".
+- **esignetActuatorPropertySection**: To fetch the configuration and properties from the actuator for service interactions.
+
+### 2. Configuration for Mock-Identity-System Plugin:
+- **eSignetbaseurl**: The Test Rig will use the live eSignet instance integrated with the Mock-Identity-service.
+- **injiCertifyBaseURL**: The Test Rig will use the live inji-certify instance integrated with the Mock-Identity-service.
+- **mosip_components_base_urls**: A string defining the base URLs for various components.
+- **useCaseToExecute**: Specifies the use case to be executed, such as "mock".
+- **usePreConfiguredOtp**: A flag to use pre-configured OTPs. Set to `"true"` for OTP-based workflows.
+- **esignetActuatorPropertySection**: To fetch the configuration and properties from the actuator for service interactions.
+
+### 3. Configuration for Sunbird Insurance Use Case:
+- **eSignetbaseurl**: The Test Rig will use the live eSignet instance integrated with the Sunbird insurance service.
+- **injiCertifyBaseURL**: The Test Rig will use the live inji-certify instance integrated with the Mock-Identity-service.
+- **esignetSunBirdBaseURL**: The Test Rig will use the live Sunbird registry instance integrated with the Sunbird insurance service.
+- **mosip_components_base_urls**: A string defining the base URLs for various components.
+- **useCaseToExecute**: Specifies the use case to be executed, such as "sunbird".
+- **esignetActuatorPropertySection**: To fetch the configuration and properties from the actuator for service interactions.
+
 ---
 
 ## Test Categories
@@ -96,7 +153,7 @@ To execute the tests using Jar, use the following steps:
 
 2. Run the automation test suite JAR file:
    ```
-   java -jar -Dmodules=injicertify -Denv.user=api-internal.<env_name> -Denv.endpoint=<base_env> -Denv.testLevel=smokeAndRegression -jar apitest-injicertify-1.3.0-SNAPSHOT-jar-with-dependencies.jar
+   java -jar -Dmodules=injicertify -Denv.user=api-internal.<env_name> -Denv.endpoint=<base_env> -Denv.testLevel=smokeAndRegression -jar apitest-injicertify-0.10.0-jar-with-dependencies.jar
    ```
    
 # Using Eclipse IDE
@@ -146,9 +203,9 @@ To execute the tests using Eclipse IDE, use the following steps:
 ## 6. **View Test Results**
 
    - After the tests are executed, you can view the detailed results in the `api-test\testng-report` directory.
-   - Two reports will gets generated
-       - First report is for pre-requisite testcases
-       - Second report is for core testcases
+   - The report will have two sections:
+       - One section for **pre-requisite APIs** test cases.
+       - Another section for **core test cases**.
 
 ---
 
@@ -157,7 +214,7 @@ To execute the tests using Eclipse IDE, use the following steps:
 - **env.user**: Replace `<env_name>` with the appropriate environment name (e.g., `dev`, `qa`, etc.).
 - **env.endpoint**: The environment where the application under test is deployed. Replace `<base_env>` with the correct base URL for the environment (e.g., `https://api-internal.<env_name>.mosip.net`).
 - **env.testLevel**: Set this to `smoke` to run only smoke test cases, or `smokeAndRegression` to run both smoke and regression tests.
-- **jar**: Specify the name of the JAR file to execute. The version will change according to the development code version. For example, the current version may look like `apitest-injicertify-1.3.0-SNAPSHOT-jar-with-dependencies.jar`.
+- **jar**: Specify the name of the JAR file to execute. The version will change according to the development code version. For example, the current version may look like `apitest-injicertify-0.10.0-jar-with-dependencies.jar`.
 
 ### Build and Run Info
 
