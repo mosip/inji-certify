@@ -465,6 +465,3 @@ istio:
       port: 80
 
 installHSMPlugin: true
-
-  
-
