@@ -52,8 +52,8 @@ service:
 
 image:
   registry: docker.io
-  repository: mosipid/inji-certify
-  tag: 0.10.0
+  repository: mosipid/inji-certify-with-plugins
+  tag: develop
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
   ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -246,7 +246,7 @@ extraEnvVars: []
 ##
 extraEnvVarsCM:
   - global
-  - inji-config-server-share
+  - config-server-share
   - artifactory-share
   - softhsm-certify-share
 
@@ -463,3 +463,5 @@ istio:
     - matchType: prefix
       uri: /
       port: 80
+
+installHSMPlugin: true
