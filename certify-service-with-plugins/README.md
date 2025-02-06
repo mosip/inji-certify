@@ -17,10 +17,10 @@ This is built on top of base inji-certify docker image and includes the plugins 
 
 ### Deploying the Service
 To deploy the service, ensure the necessary configurations are set in your deployment pipeline. The JARs are already included in the image, so no additional artifact retrieval steps are needed.
-New plugins if needed can be mounted loader_path
+New plugins if needed can be mounted loader_path using a volume mount either in [docker-compose](../docker-compose/docker-compose-injistack/README.md)  or [helm charts](../helm/inji-certify/)
 
 #### Enabling HSM Client
 To install the `hsm_client`, set the following environment variable in the deployment configuration:
 ```sh
-$install_hsm_client=true
+install_hsm_client=true
 ```
