@@ -15,4 +15,7 @@ any new plugin to be added can be added by volume mount to loader_path
 
 is_glowroot_env - this field is removed from configure_start.sh to remove dependency on glowroot apm
 
+
+
 ```
+moved client.zip to build time dependency in dockerfile - addition of new hsm-client zip can be done by adding it to volume mount in docker-compose or helm charts with same structure as [client.zip](https://raw.githubusercontent.com/mosip/artifactory-ref-impl/v1.3.0-beta.1/artifacts/src/hsm/client.zip)
