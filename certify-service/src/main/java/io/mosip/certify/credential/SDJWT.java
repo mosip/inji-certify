@@ -28,6 +28,7 @@ import io.mosip.certify.utils.SDJsonUtils;
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
+import io.mosip.kernel.signature.service.SignatureService;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -36,7 +37,18 @@ import lombok.extern.slf4j.Slf4j;
 public class SDJWT extends Credential{
 
     @Autowired
-    private VCFormatter vcFormatter;
+    public SDJWT(VCFormatter vcFormatter, SignatureService signatureService){
+        super(vcFormatter, signatureService);
+    }
+
+    /**
+     * This method returns true when a format can be handled.
+     */
+    @Override
+    public boolean canHandle(String format){
+        return "vc+sd-jwt".equals(format);
+    }
+
 
     
     @Override
@@ -69,7 +81,7 @@ public class SDJWT extends Credential{
         String currentPath = "$";
 
         String templatedJSON = super.createCredential(templateParams, templateName);
-        List<String> sdPaths = vcFormatter.getSelectiveDisclosureInfo(templateName);   
+        List<String> sdPaths = super.vcFormatter.getSelectiveDisclosureInfo(templateName);   
         try {
             
             node = objectMapper.readTree(templatedJSON);
@@ -109,19 +121,23 @@ public class SDJWT extends Credential{
     @Override
     public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm, String appID, String refID, String publicKeyURL){
         VCResult<String> VC = new VCResult<>();
-        String[] jwtPayload = vcToSign.split("~");
+        String[] jwt = vcToSign.split("~");
+        String[] jwtPayload = jwt[0].split("\\.");
         //TODO: Request DTO should add options for header.
         JWSSignatureRequestDto payload = new JWSSignatureRequestDto();
-        payload.setDataToSign(jwtPayload[0]);
+        payload.setDataToSign(jwtPayload.length > 1?jwtPayload[1]:jwtPayload[0]);
         payload.setApplicationId(appID);
-        payload.setReferenceId(refID); // alg, empty = RSA
-        payload.setIncludePayload(false);
-        payload.setIncludeCertificate(false);
+        payload.setReferenceId(refID); 
+        //TODO: Wait for keymanager fix here.
+        payload.setSignAlgorithm("ES256");
+        payload.setIncludePayload(true);
+        payload.setIncludeCertificate(true);
         payload.setIncludeCertHash(true);
         payload.setValidateJson(false);
-        payload.setB64JWSHeaderParam(false);
+        payload.setB64JWSHeaderParam(true);
         payload.setCertificateUrl("");
-        payload.setSignAlgorithm(signAlgorithm); // RSSignature2018 --> RS256, PS256, ES256
+        //payload.setSignAlgorithm(signAlgorithm); // RSSignature2018 --> RS256, PS256, ES256
+        
         JWTSignatureResponseDto jwsSignedData = signatureService.jwsSign(payload);
         VC.setCredential(vcToSign.replaceAll("^[^~]*", jwsSignedData.getJwtSignedData()));
         return VC;

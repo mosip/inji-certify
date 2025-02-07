@@ -26,6 +26,7 @@ import foundation.identity.jsonld.JsonLDObject;
 import info.weboftrust.ldsignatures.LdProof;
 import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
 import io.mosip.certify.api.dto.VCResult;
+import io.mosip.certify.api.spi.VCFormatter;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCDM1Constants;
 import io.mosip.certify.core.constants.VCDM2Constants;

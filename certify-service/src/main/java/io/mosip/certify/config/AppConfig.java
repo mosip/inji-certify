@@ -147,5 +147,6 @@ public class AppConfig implements ApplicationRunner {
             keymanagerService.generateECSignKey("certificate", ecK1Req);
         }
         log.info("===================== CERTIFY KEY SETUP COMPLETED ========================");
+        log.info("===================== INJI Certify -- Started ============================");
     }
 }
