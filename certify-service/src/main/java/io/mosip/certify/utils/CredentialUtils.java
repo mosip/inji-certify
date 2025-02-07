@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.springframework.util.StringUtils;
-
 import io.mosip.certify.api.dto.VCRequestDto;
 
 public class CredentialUtils {
@@ -27,7 +25,7 @@ public class CredentialUtils {
         Collections.sort(t);
         String contextKey = String.join(",", c);
         String typeKey = String.join(",", t);
-        contextKey = StringUtils.hasText(vcRequestDto.getFormat())?contextKey.concat("-"+vcRequestDto.getFormat()):contextKey;
-        return String.join(":", typeKey, contextKey);
+      //  contextKey = StringUtils.hasText(vcRequestDto.getFormat())?contextKey.concat("-"+vcRequestDto.getFormat()):contextKey;
+        return String.join(":", typeKey, contextKey,vcRequestDto.getFormat());
     }
 }

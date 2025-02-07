@@ -8,8 +8,6 @@ package io.mosip.certify.credential;
 
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.vcformatters.VCFormatter;
@@ -20,11 +18,26 @@ import io.mosip.kernel.signature.service.SignatureService;
 
 public abstract class Credential{
     
-    @Autowired
-    private VCFormatter vcFormatter;
+    protected VCFormatter vcFormatter;
 
-    @Autowired
-    SignatureService signatureService;
+    protected SignatureService signatureService;
+
+    /**
+     * Constructor for credentials
+     * @param vcFormatter
+     * @param signatureService
+     */
+    public Credential(VCFormatter vcFormatter, SignatureService signatureService){
+        this.vcFormatter = vcFormatter;
+        this.signatureService = signatureService;
+    }
+
+    /**
+     * lets the factory know if the instance can handle the given format or not.
+     * @param format
+     * @return
+     */
+    public abstract boolean canHandle(String format);
 
     /**
      * Override this method to say if you can handle the given format.
