@@ -23,6 +23,11 @@ import org.springframework.web.client.RestTemplate;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.entity.CredentialTemplate;
 import io.mosip.certify.repository.CredentialTemplateRepository;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import io.mosip.certify.core.entity.TemplateData;
+import io.mosip.certify.core.repository.TemplateRepository;
 import junit.framework.TestCase;
 import lombok.SneakyThrows;
 import net.javacrumbs.jsonunit.assertj.JsonAssertions;

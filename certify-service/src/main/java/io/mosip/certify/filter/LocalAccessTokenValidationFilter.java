@@ -6,26 +6,19 @@
 package io.mosip.certify.filter;
 
 import java.io.IOException;
-import java.time.Clock;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
-import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtClaimNames;
-import org.springframework.security.oauth2.jwt.JwtClaimValidator;
-import org.springframework.security.oauth2.jwt.JwtIssuerValidator;
-import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.dto.ParsedAccessToken;
 import io.mosip.certify.core.util.CommonUtil;
 import jakarta.servlet.FilterChain;
@@ -37,8 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-@Profile("!local")
-public class AccessTokenValidationFilter extends OncePerRequestFilter {
+@Profile("local")
+public class LocalAccessTokenValidationFilter extends OncePerRequestFilter {
 
     @Value("${mosip.certify.authn.issuer-uri}")
     private String issuerUri;
@@ -62,23 +55,6 @@ public class AccessTokenValidationFilter extends OncePerRequestFilter {
         return token.split("\\.").length == 3;
     }
 
-    private NimbusJwtDecoder getNimbusJwtDecoder() {
-        if(nimbusJwtDecoder == null) {
-            nimbusJwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
-            nimbusJwtDecoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
-                    new JwtTimestampValidator(),
-                    new JwtIssuerValidator(issuerUri),
-                    new JwtClaimValidator<List<String>>(JwtClaimNames.AUD, allowedAudiences::containsAll),
-                    new JwtClaimValidator<String>(JwtClaimNames.SUB, Objects::nonNull),
-                    new JwtClaimValidator<String>(Constants.CLIENT_ID, Objects::nonNull),
-                    new JwtClaimValidator<Instant>(JwtClaimNames.IAT,
-                            iat -> iat != null && iat.isBefore(Instant.now(Clock.systemUTC()))),
-                    new JwtClaimValidator<Instant>(JwtClaimNames.EXP,
-                            exp -> exp != null && exp.isAfter(Instant.now(Clock.systemUTC())))));
-        }
-        return nimbusJwtDecoder;
-    }
-
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         final String path = request.getRequestURI();
@@ -88,13 +64,15 @@ public class AccessTokenValidationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String authorizationHeader = request.getHeader("Authorization");
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            String token = authorizationHeader.substring(7);
+        log.warn("Local Validator Enabled. THIS IS A DEBUG ONLY FEATURE, DO NOT TURN ON IN PRODUCTION");
+        log.info("Use TestBearer token to pass your own claims in unsecurted JWT format");
+        if (authorizationHeader != null && authorizationHeader.startsWith("TestBearer ")) {
+            String token = authorizationHeader.substring(11);
             //validate access token no matter if its JWT or Opaque
             if(isJwt(token)) {
                 try {
-                    //Verifies signature and claim predicates, If invalid throws exception
-                    Jwt jwt = getNimbusJwtDecoder().decode(token);
+                    
+                    Jwt jwt = Jwt.withTokenValue(token).build();  //getNimbusJwtDecoder().decode(token); 
                     parsedAccessToken.setClaims(new HashMap<>());
                     parsedAccessToken.getClaims().putAll(jwt.getClaims());
                     parsedAccessToken.setAccessTokenHash(CommonUtil.generateOIDCAtHash(token));
@@ -107,9 +85,24 @@ public class AccessTokenValidationFilter extends OncePerRequestFilter {
                 }
             }
         }
-
-        log.error("No Bearer / Opaque token provided, continue with the request chain");
-        parsedAccessToken.setActive(false);
+        
+        parsedAccessToken.setClaims(new HashMap<>());
+        parsedAccessToken.getClaims().put("iat", Instant.now().getEpochSecond());
+        parsedAccessToken.getClaims().put("nbf", Instant.now().getEpochSecond());
+        parsedAccessToken.getClaims().put("exp", Instant.now().plusSeconds(TimeUnit.MINUTES.toSeconds( 10 )).getEpochSecond());
+        parsedAccessToken.getClaims().put("jti", "WTHVMJHxEHSe_zRYcfvJF");
+        parsedAccessToken.getClaims().put("aud", "https://local.mock.esignet.io");
+        parsedAccessToken.getClaims().put("c_nonce", "nZEA28AFIrUsYD8o5vDG");
+        parsedAccessToken.getClaims().put("iss", "demo-local-certify");
+        parsedAccessToken.getClaims().put("sub", "user@inji.io");
+        parsedAccessToken.getClaims().put("client_id", "demo-certify");
+        parsedAccessToken.getClaims().put("scope", "mock_identity_vc_sd-jwt");
+        parsedAccessToken.getClaims().put("c_nonce_expires_in", 86400);
+        parsedAccessToken.setAccessTokenHash(CommonUtil.generateOIDCAtHash("demo"));
+        parsedAccessToken.setActive(true);
+        log.debug("No Bearer / Opaque token provided, continue with the fake token" , parsedAccessToken.toString() );
         filterChain.doFilter(request, response);
+        //parsedAccessToken.setActive(false);
+        //filterChain.doFilter(request, response);
     }
 }

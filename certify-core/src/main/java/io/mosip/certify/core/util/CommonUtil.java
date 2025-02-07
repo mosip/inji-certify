@@ -12,6 +12,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.commons.validator.routines.UrlValidator;
@@ -80,5 +81,44 @@ public class CommonUtil {
             builder.append(CHARACTERS.charAt(index));
         }
         return builder.toString();
+    }
+
+    /**
+     * For a given strin bytes generate UUID version 5 using SHA-1
+     * ref: https://www.baeldung.com/java-generate-alphanumeric-uuid#2-versions-3-and-5
+     * @param name
+     * @return
+     */
+    public static UUID generateType5UUID(String name) {
+
+        try {
+    
+            byte[] bytes = name.getBytes(StandardCharsets.UTF_8);
+            MessageDigest md = MessageDigest.getInstance("SHA-1");
+    
+            byte[] hash = md.digest(bytes);
+    
+            long msb = getLeastAndMostSignificantBitsVersion5(hash, 0);
+            long lsb = getLeastAndMostSignificantBitsVersion5(hash, 8);
+             // Set the version field
+            msb &= ~(0xfL << 12);
+            msb |= 5L << 12;
+            // Set the variant field to 2
+            lsb &= ~(0x3L << 62);
+            lsb |= 2L << 62;
+            return new UUID(msb, lsb);
+    
+        } catch (NoSuchAlgorithmException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    private static long getLeastAndMostSignificantBitsVersion5(final byte[] src, final int offset) {
+        long ans = 0;
+        for (int i = offset + 7; i >= offset; i -= 1) {
+            ans <<= 8;
+            ans |= src[i] & 0xffL;
+        }
+        return ans;
     }
 }

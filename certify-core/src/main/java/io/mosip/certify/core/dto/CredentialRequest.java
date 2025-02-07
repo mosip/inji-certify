@@ -52,11 +52,4 @@ public class CredentialRequest {
      */
     private Map<String,Object> claims;
 
-    /**
-     * Claims that should be considered for the selective disclosure.
-     * This is set only when a algorithm needs that selective disclosure to be known during issuance. eg:sd_jwt
-     * 
-     */
-    @JsonProperty(required = false)
-     private List<String> sdClaim;
 }
