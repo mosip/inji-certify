@@ -15,13 +15,12 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.stereotype.Service;
-
-import com.github.openjson.JSONObject;
 
 import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.dto.VCRequestDto;
@@ -33,6 +32,7 @@ import io.mosip.certify.api.spi.VCFormatter;
 import io.mosip.certify.api.spi.VCSigner;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
+import io.mosip.certify.api.util.AuditHelper;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
@@ -45,7 +45,6 @@ import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.spi.VCIssuanceService;
-import io.mosip.certify.api.util.AuditHelper;
 import io.mosip.certify.core.util.SecurityHelperService;
 import io.mosip.certify.core.validators.CredentialRequestValidatorFactory;
 import io.mosip.certify.credential.Credential;
@@ -84,7 +83,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Value("${mosip.certify.issuer.uri}")
     private String issuerURI;
 
-    @Value("${mosip.certify.issuer.svg.template.id}")
+    @Value("${mosip.certify.issuer.svg.template.id:}")
     private String svg;
 
     @Autowired
@@ -98,6 +97,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     @Autowired
     private AuditPlugin auditWrapper;
+
+    @Autowired
+    private CredentialFactory credentialFactory;
 
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
@@ -148,8 +150,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
        throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_OPENID_VERSION);
     }
 
-    private VCResult<?> getVerifiableCredential(CredentialRequest credentialRequest, CredentialMetadata credentialMetadata,
-                                                String holderId) {
+    private VCResult<?> getVerifiableCredential(CredentialRequest credentialRequest, CredentialMetadata credentialMetadata,String holderId) {
         parsedAccessToken.getClaims().put("accessTokenHash", parsedAccessToken.getAccessTokenHash());
         VCRequestDto vcRequestDto = new VCRequestDto();
         vcRequestDto.setFormat(credentialRequest.getFormat());
@@ -171,11 +172,12 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     if (!StringUtils.isEmpty(svg)) {
                         templateParams.put(VelocityTemplatingConstants.SVG_TEMPLATE, svg);
                     }
-                    Credential cred = CredentialFactory.getCredential(CredentialFormat.VC_LDP);
-                    templateParams.putAll(JSONObject.objectAsMap(jsonObject));
+                    Credential cred = credentialFactory.getCredential(CredentialFormat.VC_LDP).orElseThrow(()-> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
+                    templateParams.putAll(jsonObject.toMap());
                     String unsignedCredential=cred.createCredential(templateParams, templateName);
                     return cred.addProof(unsignedCredential,"", vcFormatter.getProofAlgorithm(templateName), vcFormatter.getAppID(templateName), vcFormatter.getRefID(templateName),vcFormatter.getDidUrl(templateName));
                 } catch(DataProviderExchangeException e) {
+                    log.error("Error processing the SD-JWT :", e);
                     throw new CertifyException(ErrorConstants.VC_ISSUANCE_FAILED);
                 }
             case "vc+sd-jwt":
@@ -193,8 +195,8 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 if (!StringUtils.isEmpty(svg)) {
                     templateParams.put(VelocityTemplatingConstants.SVG_TEMPLATE, svg);
                 }
-                Credential cred = CredentialFactory.getCredential(CredentialFormat.VC_LDP);
-                    templateParams.putAll(JSONObject.objectAsMap(jsonObject));
+                Credential cred = credentialFactory.getCredential(CredentialFormat.LDP_SD_JWT).orElseThrow(()-> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
+                    templateParams.putAll(jsonObject.toMap());
                     String unsignedCredential=cred.createCredential(templateParams, templateName);
                     return cred.addProof(unsignedCredential,"", vcFormatter.getProofAlgorithm(templateName), vcFormatter.getAppID(templateName), vcFormatter.getRefID(templateName),vcFormatter.getDidUrl(templateName));
             } catch(DataProviderExchangeException e) {
@@ -204,13 +206,8 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             default:
                 throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
         }
-
-        //log.error("Failed to generate VC : {}", vcResult);
-        //auditWrapper.logAudit(Action.VC_ISSUANCE, ActionStatus.ERROR,
-         //       AuditHelper.buildAuditDto(parsedAccessToken.getAccessTokenHash(), "accessTokenHash"), null);
-        
     }
-
+       
     private CredentialResponse<?> getCredentialResponse(String format, VCResult<?> vcResult) {
         switch (format) {
             case "ldp_vc" -> {
@@ -239,7 +236,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             credentialMetadata.setFormat((String) metadata.get("format"));
             credentialMetadata.setScope((String) metadata.get("scope"));
             credentialMetadata.setId(result.get().getKey());
-            if(format.equals(VCFormats.LDP_VC)){
+            if(format.equals(VCFormats.LDP_VC) || format.equals(VCFormats.LDP_SD_JWT)){
                 LinkedHashMap<String, Object> credentialDefinition = (LinkedHashMap<String, Object>) metadata.get("credential_definition");
                 credentialMetadata.setTypes((List<String>) credentialDefinition.get("type"));
             }
@@ -248,6 +245,8 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         return Optional.empty();
     }
 
+    //TODO: This method needs to handle multiple format requests or we should ask the
+    // respective credentials to handle this rather than the service.
     private void validateLdpVcFormatRequest(CredentialRequest credentialRequest,
                                             CredentialMetadata credentialMetadata) {
         if(!credentialRequest.getCredential_definition().getType().containsAll(credentialMetadata.getTypes()))
@@ -267,7 +266,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 nonceExpireSeconds instanceof Long ? (int)(long)nonceExpireSeconds : (int)nonceExpireSeconds :
                 transaction.getCNonceExpireSeconds();
         long issuedEpoch = (transaction == null) ?
-                ((Instant) parsedAccessToken.getClaims().getOrDefault(JwtClaimNames.IAT, Instant.MIN)).getEpochSecond():
+                (long)parsedAccessToken.getClaims().getOrDefault(JwtClaimNames.IAT, Instant.now().getEpochSecond()):
                 transaction.getCNonceIssuedEpoch();
 
         if( cNonce == null ||

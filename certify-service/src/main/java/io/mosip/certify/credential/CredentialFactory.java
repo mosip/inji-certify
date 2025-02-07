@@ -1,5 +1,11 @@
 package io.mosip.certify.credential;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import io.mosip.certify.enums.CredentialFormat;
 import lombok.extern.slf4j.Slf4j;
 
@@ -9,27 +15,20 @@ import lombok.extern.slf4j.Slf4j;
  * Credential Factory class
  **/
 @Slf4j
+@Component
 public class CredentialFactory {
 
+    @Autowired
+    private List<Credential> credentials;
+
     // Factory method to create objects based on type
-    public static Credential getCredential(CredentialFormat format) {
+    public Optional<Credential> getCredential(CredentialFormat format) {
         if (format == null) {
             return null;
         }
-        switch (format) {
-            /*case VC_SD_JWT -> {
-                yield "VC_SD_JWT processed"; // 'yield' returns value from case
-            }*/
-            case SD_JWT -> {
-                return new SDJWT();
-            }
-            case VC_LDP -> {
-                return new W3cJsonLd();
-            }
-            default -> {
-               log.error("unknown credential format {}", format);
-                return null;
-            }
-        }
+
+        return credentials.stream()
+            .filter(service -> service.canHandle(format.toString()))
+            .findFirst();
     }
 }

@@ -18,8 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
-import com.github.openjson.JSONException;
-import com.github.openjson.JSONObject;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import io.mosip.certify.core.entity.TemplateData;
 import io.mosip.certify.core.repository.TemplateRepository;

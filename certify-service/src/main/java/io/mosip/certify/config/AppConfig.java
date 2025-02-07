@@ -119,6 +119,21 @@ public class AppConfig implements ApplicationRunner {
         ed25519Req.setApplicationId(KeyManagerConstants.CERTIFY_MOCK_ED25519);
         ed25519Req.setReferenceId(KeyManagerConstants.ED25519_REF_ID);
         keymanagerService.generateECSignKey("certificate", ed25519Req);
+
+        //Generate ECC K1 Key
+        //In case of ECC keys there is no need for the master key as the HSM's support natively.
+        KeyPairGenerateRequestDto eccK1Req = new KeyPairGenerateRequestDto();   
+        eccK1Req.setApplicationId("CERTIFY_MOCK_ECCK1");
+        eccK1Req.setReferenceId("EC_SECP256K1_SIGN");
+        keymanagerService.generateECSignKey("certificate", eccK1Req);
+
+        //Generate ECC R1 Key
+        // 1. In case of ECC keys there is no need for the master key as the HSM's support natively.
+        KeyPairGenerateRequestDto eccR1Req = new KeyPairGenerateRequestDto();   
+        eccR1Req.setApplicationId("CERTIFY_MOCK_ECCR1");
+        eccR1Req.setReferenceId("EC_SECP256R1_SIGN");
+        keymanagerService.generateECSignKey("certificate", eccR1Req);
         log.info("===================== CERTIFY KEY SETUP COMPLETED ========================");
+        log.info("===================== INJI Certify -- Started ============================");
     }
 }

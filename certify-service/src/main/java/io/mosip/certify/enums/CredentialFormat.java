@@ -4,8 +4,8 @@ package io.mosip.certify.enums;
  * Enum for credential format as per the OpenID4VCI
  */
 public enum CredentialFormat {
-    VC_SD_JWT("vc+sd-jwt"),
-    SD_JWT("sd-jwt"),
+    LDP_SD_JWT("vc+sd-jwt"),
+    SD_JWT("dc+sd-jwt"),
     VC_LDP("ldp_vc");
 
     private final String format;

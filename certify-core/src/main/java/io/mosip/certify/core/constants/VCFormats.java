@@ -9,4 +9,6 @@ public class VCFormats {
 
     public static final String MSO_MDOC = "mso_mdoc";
     public static final String LDP_VC = "ldp_vc";
+    public static final String SD_JWT = "dc+sd-jwt";
+    public static final String LDP_SD_JWT = "vc+sd-jwt";
 }

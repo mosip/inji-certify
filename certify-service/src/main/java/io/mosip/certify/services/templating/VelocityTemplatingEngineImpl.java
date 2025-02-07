@@ -6,13 +6,14 @@
 package io.mosip.certify.services.templating;
 
 import java.io.StringWriter;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,13 +25,12 @@ import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeConstants;
 import org.apache.velocity.tools.generic.DateTool;
 import org.apache.velocity.tools.generic.EscapeTool;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.openjson.JSONArray;
-import com.github.openjson.JSONObject;
 
 import io.mosip.certify.api.spi.VCFormatter;
 import io.mosip.certify.core.constants.Constants;
@@ -39,6 +39,7 @@ import io.mosip.certify.core.constants.VCDMConstants;
 import io.mosip.certify.core.exception.TemplateException;
 import io.mosip.certify.core.repository.TemplateRepository;
 import io.mosip.certify.core.spi.SvgTemplateService;
+import io.mosip.certify.core.util.CommonUtil;
 import io.mosip.certify.services.SVGRenderUtils;
 import static io.mosip.certify.services.templating.VelocityTemplatingConstants.ISSUER_URI;
 import static io.mosip.certify.services.templating.VelocityTemplatingConstants.SVG_TEMPLATE;
@@ -61,6 +62,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     boolean shouldHaveDates;
     @Value("${mosip.certify.issuer.id.field.prefix.url:}")
     String idPrefix;
+    @Value("${mosip.certify.issuer.expiry:3650}") //This is in days
+    int defaultExpiry;
 
     @PostConstruct
     public void initialize() {
@@ -73,7 +76,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
             ObjectMapper oMapper = new ObjectMapper();
             templateMap = oMapper.convertValue(template , Map.class);
             //BeanUtils.copyProperties(template, templateMap);
-            templateCache.put(String.join(DELIMITER, template.getCredentialType(), template.getContext()), templateMap);
+            templateCache.put(String.join(DELIMITER, template.getCredentialType(), template.getContext(),template.getCredentialFormat()), templateMap);
          }));
         engine.setProperty(RuntimeConstants.INPUT_ENCODING, "UTF-8");
         engine.setProperty(RuntimeConstants.OUTPUT_ENCODING, "UTF-8");
@@ -155,54 +158,9 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         String issuer = defaultSettings.get(ISSUER_URI).toString();
         String t = templateCache.get(templateName).get("template");
         StringWriter writer = new StringWriter();
-        // 1. Prepare map
-        // TODO: Eventually, the credentialSubject from the plugin will be templated as-is
-        Map<String, Object> finalTemplate = new HashMap<>();
-        Iterator<String> keys = templateInput.keys();
-        while(keys.hasNext()) {
-            String key = keys.next();
-            Object value = templateInput.get(key);
-            if (value instanceof List) {
-                // TODO(problem area): handle field values with unescaped JSON
-                //  reserved literals such as " or ,
-                // (Q) Should Object always be a JSONObject?
-                finalTemplate.put(key, new JSONArray((List<Object>) value));
-            } else if (value.getClass().isArray()) {
-                finalTemplate.put(key, new JSONArray(List.of(value)));
-            } else if (value instanceof Integer | value instanceof Float | value instanceof Long | value instanceof Double) {
-                // entities which don't need to be quoted
-                finalTemplate.put(key, value);
-            } else if (value instanceof String){
-                // entities which need to be quoted
-                finalTemplate.put(key, JSONObject.wrap(value));
-            } else {
-                //no conversion needed
-                finalTemplate.put(key, value);
-            }
-        }
-        // Date: https://velocity.apache.org/tools/3.1/apidocs/org/apache/velocity/tools/generic/DateTool.html
-        finalTemplate.put("_dateTool", new DateTool());
-        // Escape: https://velocity.apache.org/tools/3.1/apidocs/org/apache/velocity/tools/generic/EscapeTool.html
-        finalTemplate.put("_esc", new EscapeTool());
-        // add the issuer value
-        finalTemplate.put("issuer", issuer);
-        if (defaultSettings.containsKey(SVG_TEMPLATE) && templateName.contains(VCDM2Constants.URL)) {
-            try {
-                finalTemplate.put("_renderMethodSVGdigest",
-                        SVGRenderUtils.getDigestMultibase(svgTemplateService.getSvgTemplate(
-                                UUID.fromString((String) defaultSettings.get(SVG_TEMPLATE))).getTemplate()));
-            } catch (TemplateException e) {
-                log.error("SVG Template: " + defaultSettings.get(SVG_TEMPLATE) + " not available in DB", e);
-            }
-        }
-        if (shouldHaveDates && !(templateInput.has(VCDM2Constants.VALID_FROM)
-                && templateInput.has(VCDM2Constants.VALID_UNITL))) {
-            String time = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            // hardcoded time
-            String expiryTime = ZonedDateTime.now(ZoneOffset.UTC).plusYears(2).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            finalTemplate.put(VCDM2Constants.VALID_FROM, time);
-            finalTemplate.put(VCDM2Constants.VALID_UNITL, expiryTime);
-        }
+        
+        defaultSettings.putAll(templateInput.toMap());
+        Map<String, Object> finalTemplate = setupTemplateInput(defaultSettings);
         VelocityContext context = new VelocityContext(finalTemplate);
         engine.evaluate(context, writer, /*logTag */ templateName,t.toString());
         if (StringUtils.isNotEmpty(idPrefix)) {
@@ -226,42 +184,64 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     public String format(Map<String, Object> templateInput) {
         // TODO: Isn't template name becoming too complex with VC_CONTEXTS & CREDENTIAL_TYPES both?
         String templateName = templateInput.get(TEMPLATE_NAME).toString();
-        String issuer = templateInput.get(ISSUER_URI).toString();
-        String t = templateCache.get(templateName).get("template");
+        String t = templateCache.get(templateName).get("template");   
         StringWriter writer = new StringWriter();
-        // 1. Prepare map
-        // TODO: Eventually, the credentialSubject from the plugin will be templated as-is
-        Map<String, Object> finalTemplate = templateInput;
+
+        Map<String, Object> finalTemplate = setupTemplateInput(templateInput);
+
+        VelocityContext context = new VelocityContext(finalTemplate);
+        boolean result = engine.evaluate(context, writer, /*logTag */ templateName,t.toString());
+        if (result) {
+            log.error("Error processing velocity template for {}", templateName);
+        }
+        // if (StringUtils.isNotEmpty(idPrefix)) {
+        //     JSONObject j = new JSONObject(writer.toString());
+        //     j.put(VCDMConstants.ID, idPrefix + UUID.randomUUID());
+        //     return j.toString();
+        // }
+        return writer.toString();
+    }
+
+
+    private Map<String, Object> setupTemplateInput(Map<String, Object> input){
+        String templateName = input.remove(TEMPLATE_NAME).toString();
+        String issuer = input.remove(ISSUER_URI).toString();
+       // String t = templateCache.get(templateName).get("template");
+        String templateDigest = "";
+
+        String validUntil = input.containsKey(VCDM2Constants.VALID_UNITL)?input.remove(VCDM2Constants.VALID_UNITL).toString(): ZonedDateTime.now(ZoneOffset.UTC).plusYears(2).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
+        String validFrom = input.containsKey(VCDM2Constants.VALID_FROM)?input.remove(VCDM2Constants.VALID_FROM).toString(): ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
+        String id = input.containsKey(VCDMConstants.ID) ? idPrefix + input.remove(VCDMConstants.ID): idPrefix + UUID.randomUUID();
+        String randomID = idPrefix + UUID.randomUUID();
+        long iat = Instant.now().getEpochSecond();
+        long exp = Instant.now().plus(defaultExpiry, ChronoUnit.DAYS).getEpochSecond();
+        
+        if (input.containsKey(SVG_TEMPLATE) && templateName.contains(VCDM2Constants.URL)) {
+            try {
+
+                templateDigest = SVGRenderUtils.getDigestMultibase(svgTemplateService.getSvgTemplate(
+                                 CommonUtil.generateType5UUID((String) input.remove(SVG_TEMPLATE))).getTemplate());
+
+            } catch (TemplateException e) {
+                log.error("SVG Template: " + input.get(SVG_TEMPLATE) + " not available in DB", e);
+            }
+        }
+
+        Map<String, Object> finalTemplate = input;
         // Date: https://velocity.apache.org/tools/3.1/apidocs/org/apache/velocity/tools/generic/DateTool.html
         finalTemplate.put("_dateTool", new DateTool());
         // Escape: https://velocity.apache.org/tools/3.1/apidocs/org/apache/velocity/tools/generic/EscapeTool.html
         finalTemplate.put("_esc", new EscapeTool());
         // add the issuer value
-        finalTemplate.put("issuer", issuer);
-        if (templateInput.containsKey(SVG_TEMPLATE) && templateName.contains(VCDM2Constants.URL)) {
-            try {
-                finalTemplate.put("_renderMethodSVGdigest",
-                        SVGRenderUtils.getDigestMultibase(svgTemplateService.getSvgTemplate(
-                                UUID.fromString((String) templateInput.get(SVG_TEMPLATE))).getTemplate()));
-            } catch (TemplateException e) {
-                log.error("SVG Template: " + templateInput.get(SVG_TEMPLATE) + " not available in DB", e);
-            }
-        }
-        if (shouldHaveDates && !(templateInput.containsKey(VCDM2Constants.VALID_FROM)
-                && templateInput.containsKey(VCDM2Constants.VALID_UNITL))) {
-            String time = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            // hardcoded time
-            String expiryTime = ZonedDateTime.now(ZoneOffset.UTC).plusYears(2).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            finalTemplate.put(VCDM2Constants.VALID_FROM, time);
-            finalTemplate.put(VCDM2Constants.VALID_UNITL, expiryTime);
-        }
-        VelocityContext context = new VelocityContext(finalTemplate);
-        engine.evaluate(context, writer, /*logTag */ templateName,t.toString());
-        if (StringUtils.isNotEmpty(idPrefix)) {
-            JSONObject j = new JSONObject(writer.toString());
-            j.put(VCDMConstants.ID, idPrefix + UUID.randomUUID());
-            return j.toString();
-        }
-        return writer.toString();
+        finalTemplate.put("_issuer", issuer);
+        finalTemplate.put("_renderMethodSVGdigest", templateDigest);
+        finalTemplate.put("_validFrom", validFrom);
+        finalTemplate.put("_validUntil", validUntil);
+        finalTemplate.put("_iat", iat);
+        finalTemplate.put("_exp",exp);
+        finalTemplate.put("_nbf",iat);
+        finalTemplate.put(VCDMConstants.ID, id);
+        finalTemplate.put("_uuid", randomID);
+        return finalTemplate;
     }
 }

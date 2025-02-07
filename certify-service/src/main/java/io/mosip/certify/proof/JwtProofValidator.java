@@ -29,7 +29,7 @@ import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.CredentialProof;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
-import com.github.openjson.JSONException;
+import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -174,7 +174,7 @@ public class JwtProofValidator implements ProofValidator {
                 //a fixed #0 value. If the JWK contains a kid value it is not used as the reference, #0 is the only valid value.
                 did = did.split("#")[0];
                 byte[] jwkBytes = Base64.getUrlDecoder().decode(did.substring(DID_JWK_PREFIX.length()));
-                com.github.openjson.JSONObject jsonKey = new com.github.openjson.JSONObject(new String(jwkBytes));
+                org.json.JSONObject jsonKey = new org.json.JSONObject(new String(jwkBytes));
                 jsonKey.put("kid", did);
                 return JWK.parse(jsonKey.toString());
             } catch (IllegalArgumentException e) {

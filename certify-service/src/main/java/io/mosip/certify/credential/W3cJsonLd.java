@@ -25,12 +25,14 @@ import foundation.identity.jsonld.JsonLDObject;
 import info.weboftrust.ldsignatures.LdProof;
 import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
 import io.mosip.certify.api.dto.VCResult;
+import io.mosip.certify.api.spi.VCFormatter;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCDM1Constants;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.constants.VCDMConstants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.services.ldsigner.ProofSignatureStrategy;
+import io.mosip.kernel.signature.service.SignatureService;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -40,6 +42,16 @@ public class W3cJsonLd extends Credential{
     //TODO: This has to move to a factory
     @Autowired
     ProofSignatureStrategy signProps;
+
+    @Autowired
+    public W3cJsonLd(VCFormatter vcFormatter, SignatureService signatureService){
+        super(vcFormatter, signatureService);
+    }
+
+    @Override
+    public boolean canHandle(String format){
+        return "ldp_vc".equals(format);
+    }
 
     /**
      * Adds a signature/proof. Based on the actual implementation the input 

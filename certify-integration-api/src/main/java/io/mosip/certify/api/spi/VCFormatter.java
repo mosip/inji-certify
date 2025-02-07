@@ -4,7 +4,7 @@ package io.mosip.certify.api.spi;
 import java.util.List;
 import java.util.Map;
 
-import com.github.openjson.JSONObject;
+import org.json.JSONObject;
 /**
  * VCFormatter is a templating engine. This engine is responsible to keep track
  * of templates, their formats, signature keys and any other additional information.

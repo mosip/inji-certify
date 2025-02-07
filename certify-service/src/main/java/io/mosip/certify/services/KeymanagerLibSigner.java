@@ -53,7 +53,7 @@ public class KeymanagerLibSigner implements VCSigner {
 
     @Autowired
     ProofSignatureStrategy signProps;
-    @Value("${mosip.certify.issuer.pub.key}")
+    @Value("${mosip.certify.issuer.pub.key:}")
     private String hostedKey;
 
     @Override
