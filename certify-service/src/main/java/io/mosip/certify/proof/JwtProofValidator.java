@@ -65,8 +65,6 @@ public class JwtProofValidator implements ProofValidator {
 
         REQUIRED_CLAIMS = new HashSet<>();
         REQUIRED_CLAIMS.add("aud");
-        REQUIRED_CLAIMS.add("exp");
-        REQUIRED_CLAIMS.add("iss");
         REQUIRED_CLAIMS.add("iat");
     }
 
@@ -87,11 +85,21 @@ public class JwtProofValidator implements ProofValidator {
                 throw new InvalidRequestException(ErrorConstants.PROOF_HEADER_INVALID_KEY);
             }
 
-            DefaultJWTClaimsVerifier claimsSetVerifier = new DefaultJWTClaimsVerifier(new JWTClaimsSet.Builder()
+            JWTClaimsSet.Builder proofJwtClaimsBuilder = new JWTClaimsSet.Builder()
                     .audience(credentialIdentifier)
-                    .issuer(clientId)
-                    .claim("nonce", cNonce)
-                    .build(), REQUIRED_CLAIMS);
+                    .claim("nonce", cNonce);
+
+            // if the proof contains issuer claim, then it should match with the client id ref: https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0-ID1.html#section-7.2.1.1-2.2.2.1
+            // https://github.com/openid/OpenID4VCI/issues/349
+            if(jwt.getJWTClaimsSet().getClaim("iss") != null) {
+                proofJwtClaimsBuilder.issuer(clientId);
+            }
+            if(jwt.getJWTClaimsSet().getClaim("exp") != null) {
+                REQUIRED_CLAIMS.add("exp");
+            }
+
+            DefaultJWTClaimsVerifier claimsSetVerifier = new DefaultJWTClaimsVerifier(proofJwtClaimsBuilder.build(), REQUIRED_CLAIMS);
+
             claimsSetVerifier.setMaxClockSkew(0);
             JWSKeySelector keySelector;
             if(JWSAlgorithm.ES256K.equals(jwt.getHeader().getAlgorithm())) {
@@ -164,7 +172,7 @@ public class JwtProofValidator implements ProofValidator {
 
     /**
      * Currently only handles did:jwk, Need to handle other methods
-     * @param keyId
+     * @param did kid of jwk in didLjwk format. ref: https://github.com/quartzjer/did-jwk/blob/main/spec.md#to-create-the-did-url
      * @return
      */
     private JWK resolveDID(String did) {
@@ -172,9 +180,13 @@ public class JwtProofValidator implements ProofValidator {
             try {
                 //Ignoring fragment part as did:jwk only contains single key, the DID URL fragment identifier is always
                 //a fixed #0 value. If the JWK contains a kid value it is not used as the reference, #0 is the only valid value.
-                did = did.split("#")[0];
-                byte[] jwkBytes = Base64.getUrlDecoder().decode(did.substring(DID_JWK_PREFIX.length()));
-                org.json.JSONObject jsonKey = new org.json.JSONObject(new String(jwkBytes));
+                String base64JWK = did.split("#")[0].substring(DID_JWK_PREFIX.length());
+                // Decode JWK from Base64
+                byte[] jwkBytes = Base64.getUrlDecoder().decode(base64JWK);
+                String jwkJson = new String(jwkBytes, StandardCharsets.UTF_8);
+
+                // Parse JWK
+                org.json.JSONObject jsonKey = new org.json.JSONObject(jwkJson);
                 jsonKey.put("kid", did);
                 return JWK.parse(jsonKey.toString());
             } catch (IllegalArgumentException e) {
