@@ -90,8 +90,12 @@ public class JwtProofValidator implements ProofValidator {
                     .claim("nonce", cNonce);
 
             // if the proof contains issuer claim, then it should match with the client id ref: https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0-ID1.html#section-7.2.1.1-2.2.2.1
+            // https://github.com/openid/OpenID4VCI/issues/349
             if(jwt.getJWTClaimsSet().getClaim("iss") != null) {
                 proofJwtClaimsBuilder.issuer(clientId);
+            }
+            if(jwt.getJWTClaimsSet().getClaim("exp") != null) {
+                REQUIRED_CLAIMS.add("exp");
             }
 
             DefaultJWTClaimsVerifier claimsSetVerifier = new DefaultJWTClaimsVerifier(proofJwtClaimsBuilder.build(), REQUIRED_CLAIMS);
@@ -168,7 +172,7 @@ public class JwtProofValidator implements ProofValidator {
 
     /**
      * Currently only handles did:jwk, Need to handle other methods
-     * @param did
+     * @param did kid of jwk in didLjwk format. ref: https://github.com/quartzjer/did-jwk/blob/main/spec.md#to-create-the-did-url
      * @return
      */
     private JWK resolveDID(String did) {
