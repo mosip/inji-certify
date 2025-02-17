@@ -9,12 +9,12 @@
     <parent>
         <groupId>io.mosip.certify</groupId>
         <artifactId>certify-parent</artifactId>
-        <version>0.10.1</version>
+        <version>0.10.2-SNAPSHOT</version>
     </parent>
 
     <groupId>io.mosip.certify</groupId>
     <artifactId>certify-service</artifactId>
-    <version>0.10.1</version>
+    <version>0.10.2-SNAPSHOT</version>
     <name>certify-service</name>
     <description>certify vci service</description>
     <repositories>
