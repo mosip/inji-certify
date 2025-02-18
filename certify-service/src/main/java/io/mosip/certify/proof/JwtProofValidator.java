@@ -57,15 +57,11 @@ public class JwtProofValidator implements ProofValidator {
 
     private static final Set<JWSAlgorithm> allowedSignatureAlgorithms;
 
-    private static Set<String> REQUIRED_CLAIMS;
+    private static final Set<String> DEFAULT_REQUIRED_CLAIMS = Set.of("aud", "iat");
 
     static {
         allowedSignatureAlgorithms = new HashSet<>();
         allowedSignatureAlgorithms.addAll(List.of(JWSAlgorithm.Family.SIGNATURE.toArray(new JWSAlgorithm[0])));
-
-        REQUIRED_CLAIMS = new HashSet<>();
-        REQUIRED_CLAIMS.add("aud");
-        REQUIRED_CLAIMS.add("iat");
     }
 
     @Override
@@ -91,14 +87,15 @@ public class JwtProofValidator implements ProofValidator {
 
             // if the proof contains issuer claim, then it should match with the client id ref: https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0-ID1.html#section-7.2.1.1-2.2.2.1
             // https://github.com/openid/OpenID4VCI/issues/349
+            Set<String> requiredClaims = new HashSet<>(DEFAULT_REQUIRED_CLAIMS);
             if(jwt.getJWTClaimsSet().getClaim("iss") != null) {
                 proofJwtClaimsBuilder.issuer(clientId);
             }
             if(jwt.getJWTClaimsSet().getClaim("exp") != null) {
-                REQUIRED_CLAIMS.add("exp");
+                requiredClaims.add("exp");
             }
 
-            DefaultJWTClaimsVerifier claimsSetVerifier = new DefaultJWTClaimsVerifier(proofJwtClaimsBuilder.build(), REQUIRED_CLAIMS);
+            DefaultJWTClaimsVerifier claimsSetVerifier = new DefaultJWTClaimsVerifier(proofJwtClaimsBuilder.build(), requiredClaims);
 
             claimsSetVerifier.setMaxClockSkew(0);
             JWSKeySelector keySelector;
