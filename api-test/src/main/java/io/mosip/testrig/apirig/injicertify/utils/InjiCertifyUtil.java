@@ -8,6 +8,7 @@ import java.util.HashMap;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -41,6 +42,13 @@ public class InjiCertifyUtil extends AdminTestUtil {
 
 	private static final Logger logger = Logger.getLogger(InjiCertifyUtil.class);
 	public static String currentUseCase = "";
+	
+	public static void setLogLevel() {
+		if (InjiCertifyConfigManager.IsDebugEnabled())
+			logger.setLevel(Level.ALL);
+		else
+			logger.setLevel(Level.ERROR);
+	}
 
 	public static String smtpOtpHandler(String inputJson, TestCaseDTO testCaseDTO) {
 		JSONObject request = new JSONObject(inputJson);
@@ -421,9 +429,6 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	
 	public static String signJWKKeyForMock(String clientId, RSAKey jwkKey) {
 		String tempUrl = getValueFromEsignetWellKnownEndPoint("token_endpoint", InjiCertifyConfigManager.getEsignetBaseUrl());
-		if (tempUrl.contains("esignet.")) {
-			tempUrl = tempUrl.replace("esignet.", InjiCertifyConfigManager.getproperty("esignetMockBaseURL"));
-		}
 		int idTokenExpirySecs = Integer
 				.parseInt(getValueFromEsignetActuator(InjiCertifyConfigManager.getEsignetActuatorPropertySection(),
 						GlobalConstants.MOSIP_ESIGNET_ID_TOKEN_EXPIRE_SECONDS));
