@@ -14,6 +14,7 @@ import io.mosip.certify.core.dto.CredentialProof;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.*;
@@ -25,6 +26,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.Mockito.*;
 
 class JwtProofValidatorTest {
@@ -141,6 +143,109 @@ class JwtProofValidatorTest {
         jwt.sign(signer);
 
         return jwt.serialize();
+    }
+
+    private String createValidJWTWithDid(String issuer, Long expiryMillis, Boolean validDid ) throws Exception {
+        // Generate a 2048-bit RSA key pair
+        RSAKey rsaJWK = new RSAKeyGenerator(2048)
+                .keyID(UUID.randomUUID().toString())
+                .generate();
+
+        // Extract public key
+        RSAKey rsaPublicJWK = rsaJWK.toPublicJWK();
+
+        String didJWK;
+
+        if(validDid)
+        // Construct the did:jwk identifier
+            didJWK  = "did:jwk:" + Base64.getUrlEncoder().withoutPadding().encodeToString(rsaPublicJWK.toJSONString().getBytes()) + "#0";
+        else
+            didJWK = "did:jwk:invalid";
+
+        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.RS256)
+                .type(new JOSEObjectType("openid4vci-proof+jwt"))
+                .keyID(didJWK)  // Set kid as did:jwk
+                .build();
+
+        // Build JWT claims
+        JWTClaimsSet.Builder claimsBuilder = new JWTClaimsSet.Builder()
+                .audience("test-credential-id")
+                .claim("nonce", "test-nonce")
+                .issueTime(new Date());
+
+        if (issuer != null) {
+            claimsBuilder.issuer(issuer);
+        }
+
+        if (expiryMillis != null) {
+            claimsBuilder.expirationTime(new Date(System.currentTimeMillis() + expiryMillis));
+        }
+
+        SignedJWT jwt = new SignedJWT(header, claimsBuilder.build());
+
+        // Sign JWT using private key
+        JWSSigner signer = new RSASSASigner(rsaJWK);
+        jwt.sign(signer);
+
+        return jwt.serialize();
+    }
+
+    @Test
+    public  void testValidate_DIDJWK_ValidJWT_WithClientID_and_Expiry() throws Exception {
+        String jwt = createValidJWTWithDid("test-client", 60000L, true);
+        CredentialProof credentialProof = new CredentialProof();
+        credentialProof.setJwt(jwt);
+
+        boolean result = jwtProofValidator.validate("test-client", "test-nonce", credentialProof);
+
+        assertTrue(result, "JWT should be valid");
+    }
+
+    @Test
+    public  void testValidate_DIDJWK_ValidJWT_NoClientID_and_Expiry() throws Exception {
+        String jwt = createValidJWTWithDid(null, 60000L, true);
+        CredentialProof credentialProof = new CredentialProof();
+        credentialProof.setJwt(jwt);
+
+        boolean result = jwtProofValidator.validate("test-client", "test-nonce", credentialProof);
+
+        assertTrue(result, "JWT should be valid");
+    }
+
+    @Test
+    public  void testValidate_DIDJWK_ValidJWT_NoClientID_and_No_Expiry() throws Exception {
+        String jwt = createValidJWTWithDid(null, null, true);
+        CredentialProof credentialProof = new CredentialProof();
+        credentialProof.setJwt(jwt);
+
+        boolean result = jwtProofValidator.validate("test-client", "test-nonce", credentialProof);
+
+        assertTrue(result, "JWT should be valid");
+    }
+    @Test
+    public  void testValidate_DIDJWK_ValidJWT_WrongClientID() throws Exception {
+        String jwt = createValidJWTWithDid("client-id-1", 600000L, true);
+        CredentialProof credentialProof = new CredentialProof();
+        credentialProof.setJwt(jwt);
+
+        boolean result = jwtProofValidator.validate("test-client", "test-nonce", credentialProof);
+
+        assertFalse(result, "Client id should match");
+    }
+
+    @Test
+    public void testValidate_InvalidDID_JWK()  {
+        String jwt = null;
+        try {
+            jwt = createValidJWTWithDid("test-client", 60000L, false);
+        } catch (Exception e) {
+            //do nothing here
+        }
+        CredentialProof credentialProof = new CredentialProof();
+        credentialProof.setJwt(jwt);
+        //exception are handled by the validator logic presently
+        assertFalse( jwtProofValidator.validate("test-client", "test-nonce", credentialProof));
+
     }
 
     @Test
