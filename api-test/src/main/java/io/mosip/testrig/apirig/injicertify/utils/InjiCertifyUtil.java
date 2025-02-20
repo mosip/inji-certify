@@ -60,8 +60,10 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			if (challengeKey.endsWith(GlobalConstants.MOSIP_NET)
 					|| challengeKey.endsWith(GlobalConstants.OTP_AS_PHONE)) {
 				emailId = challengeKey;
-				if (emailId.endsWith(GlobalConstants.OTP_AS_PHONE))
+				if (emailId.endsWith(GlobalConstants.OTP_AS_PHONE)) {
 					emailId = emailId.replace(GlobalConstants.OTP_AS_PHONE, "");
+					emailId = removeLeadingPlusSigns(emailId);
+				}
 				logger.info(emailId);
 				otp = OTPListener.getOtp(emailId);
 				request.put("otp", otp);
@@ -74,8 +76,10 @@ public class InjiCertifyUtil extends AdminTestUtil {
 				if (challengeKey.endsWith(GlobalConstants.MOSIP_NET)
 						|| challengeKey.endsWith(GlobalConstants.OTP_AS_PHONE)) {
 					emailId = challengeKey;
-					if (emailId.endsWith(GlobalConstants.OTP_AS_PHONE))
+					if (emailId.endsWith(GlobalConstants.OTP_AS_PHONE)) {
 						emailId = emailId.replace(GlobalConstants.OTP_AS_PHONE, "");
+						emailId = removeLeadingPlusSigns(emailId);
+					}
 					logger.info(emailId);
 					otp = OTPListener.getOtp(emailId);
 					request.getJSONObject(GlobalConstants.REQUEST).put("otp", otp);
@@ -95,8 +99,10 @@ public class InjiCertifyUtil extends AdminTestUtil {
 						if (challengeKey.endsWith(GlobalConstants.MOSIP_NET)
 								|| challengeKey.endsWith(GlobalConstants.OTP_AS_PHONE)) {
 							emailId = challengeKey;
-							if (emailId.endsWith(GlobalConstants.OTP_AS_PHONE))
+							if (emailId.endsWith(GlobalConstants.OTP_AS_PHONE)) {
 								emailId = emailId.replace(GlobalConstants.OTP_AS_PHONE, "");
+								emailId = removeLeadingPlusSigns(emailId);
+							}
 							logger.info(emailId);
 							otp = OTPListener.getOtp(emailId);
 							request.getJSONObject(GlobalConstants.REQUEST).getJSONArray(GlobalConstants.CHALLENGELIST)
