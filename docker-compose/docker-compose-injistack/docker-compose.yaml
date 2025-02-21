@@ -14,7 +14,7 @@ services:
       - "5433:5432"
 
   certify:
-    image: mosipqa/inji-certify:0.10.x
+    image: mosipid/inji-certify:0.10.2
     user: root
     ports:
       - 8090:8090
