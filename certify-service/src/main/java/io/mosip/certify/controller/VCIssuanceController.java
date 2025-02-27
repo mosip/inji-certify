@@ -5,6 +5,7 @@
  */
 package io.mosip.certify.controller;
 
+import io.mosip.certify.core.dto.CredentialConfigurationRequest;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
 import io.mosip.certify.core.dto.VCError;
@@ -18,6 +19,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -83,6 +86,11 @@ public class VCIssuanceController {
     @GetMapping(value = "/.well-known/did.json")
     public Map<String, Object> getDIDDocument() {
        return vcIssuanceService.getDIDDocument();
+    }
+
+    @PostMapping(value = "/credentials/configurations", produces = "application/json")
+    public Map<String, String>  getCredentialConfiguration(@Valid @RequestBody CredentialConfigurationRequest credentialConfigurationRequest) {
+        return vcIssuanceService.addCredentialConfiguration(credentialConfigurationRequest);
     }
 
 

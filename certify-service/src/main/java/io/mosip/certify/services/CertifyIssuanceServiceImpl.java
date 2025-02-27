@@ -14,11 +14,7 @@ import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
 import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.certify.core.constants.VCFormats;
-import io.mosip.certify.core.dto.CredentialMetadata;
-import io.mosip.certify.core.dto.CredentialRequest;
-import io.mosip.certify.core.dto.CredentialResponse;
-import io.mosip.certify.core.dto.ParsedAccessToken;
-import io.mosip.certify.core.dto.VCIssuanceTransaction;
+import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
@@ -179,6 +175,15 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
         didDocument = DIDDocumentUtil.generateDIDDocument(vcSignAlgorithm, certificateString, issuerURI, issuerPublicKeyURI);
         return didDocument;
+    }
+
+    @Override
+    public Map<String, String> addCredentialConfiguration(CredentialConfigurationRequest credentialConfigurationRequest) {
+        Map<String, String> configurationResponse = new HashMap<>();
+        configurationResponse.put("id", "farmer-credential-config-001");
+        configurationResponse.put("status", "active");
+
+        return configurationResponse;
     }
 
     private Map<String, Object> convertLatestToVd11(LinkedHashMap<String, Object> vciMetadata) {
