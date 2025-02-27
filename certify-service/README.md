@@ -8,7 +8,6 @@
 - Supports mounting plugins dynamically during deployment via volume mounts (e.g., Docker Compose or Helm charts).
 - No bundled plugins; users can mount specific plugins required for their use case.
 - Simplifies deployment by separating service core from plugin dependencies.
-- Supports optional installation of the HSM client during deployment.
 
 ## Installation & Deployment
 ### Prerequisites

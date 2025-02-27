@@ -24,7 +24,7 @@
       "client_alias": "wallet-demo-client",
       "qr_code_type": "EmbeddedVC",
       "enabled": "true",
-      "wellknown_endpoint": "http://certify:8090/v1/certify/issuance/.well-known/openid-credential-issuer"
+      "wellknown_endpoint": "http://certify-nginx:80/.well-known/openid-credential-issuer"
     },
     {
       "issuer_id": "MockMdl",
@@ -50,7 +50,7 @@
       "client_alias": "wallet-demo-client",
       "qr_code_type": "EmbeddedVC",
       "enabled": "true",
-      "wellknown_endpoint": "http://certify:8090/v1/certify/issuance/.well-known/openid-credential-issuer"
+      "wellknown_endpoint": "http://certify-nginx:80/.well-known/openid-credential-issuer"
     }    
   ]
 }
