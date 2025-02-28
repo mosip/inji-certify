@@ -13,7 +13,6 @@ public class SignatureAlg {
 
     public static final String ED25519_SIGNATURE_SUITE_2020 = "Ed25519Signature2020";
     // EC K1 curves
-    public static final String EC_K1_2016 = "EcdsaKoblitzSignature2016";
     public static final String EC_SECP256K1_2019 = "EcdsaSecp256k1Signature2019"; // secp256k1
 
 }
