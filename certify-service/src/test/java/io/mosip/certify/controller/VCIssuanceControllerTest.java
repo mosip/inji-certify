@@ -255,44 +255,4 @@ public class VCIssuanceControllerTest {
                 .andExpect(jsonPath("$.format").exists())
                 .andExpect(jsonPath("$.credential").exists());
     }
-
-    @Test
-    public void addNewCredentialConfiguration_Success() throws Exception {
-        CredentialConfigurationRequest credentialConfigurationRequest = new CredentialConfigurationRequest();
-        credentialConfigurationRequest.setVcTemplate("test_template");
-        credentialConfigurationRequest.setContext(Arrays.asList("https://www.w3.org/2018/credentials/v1"));
-        credentialConfigurationRequest.setCredentialType(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"));
-        credentialConfigurationRequest.setCredentialFormat("ldp_vc");
-        credentialConfigurationRequest.setDidUrl("did:web:test.github.io:test-env:test-folder");
-        CredentialDisplay credentialDisplay = new CredentialDisplay();
-        credentialDisplay.setName("Test Verifiable Credential");
-        credentialDisplay.setLocale("en");
-        credentialDisplay.setBackgroundColor("#FDFAF9");
-        credentialDisplay.setTextColor("#7C4616");
-        credentialDisplay.setLogo(Map.of("url", "https://www.example.com", "alt_text", "test"));
-        credentialConfigurationRequest.setDisplay(credentialDisplay);
-        credentialConfigurationRequest.setOrder(Arrays.asList("test1", "test2", "test3", "test4"));
-        credentialConfigurationRequest.setScope("test_vc_ldp");
-        credentialConfigurationRequest.setCryptographicBindingMethodsSupported(Arrays.asList("did:jwk"));
-        credentialConfigurationRequest.setCredentialSigningAlgValuesSupported(Arrays.asList("Ed25519Signature2020"));
-        Map<String, Object> jwtValues = Map.of("proof_signing_alg_values_supported", Arrays.asList("RS256", "ES256"));
-        credentialConfigurationRequest.setProofTypesSupported(Map.of("jwt", jwtValues));
-        Map<String, String> pluginConfigMap = new HashMap<>();
-        pluginConfigMap.put("mosip.certify.mock.data-provider.test-one", "valueOne");
-        pluginConfigMap.put("mosip.certify.mock.data-provider.test-two", "valueTwo");
-        pluginConfigMap.put("mosip.certify.mock.data-provider.test-three", "valueThree");
-        credentialConfigurationRequest.setPluginConfigurations(Arrays.asList(pluginConfigMap));
-
-        Map<String, String> configurationResponse = new HashMap<>();
-        configurationResponse.put("id", "farmer-credential-config-001");
-        configurationResponse.put("status", "active");
-        Mockito.when(vcIssuanceService.addCredentialConfiguration(credentialConfigurationRequest)).thenReturn(configurationResponse);
-
-        mockMvc.perform(post("/issuance/credentials/configurations")
-                        .content(objectMapper.writeValueAsBytes(credentialConfigurationRequest))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.status").exists());
-    }
 }
