@@ -186,6 +186,11 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         return configurationResponse;
     }
 
+    @Override
+    public CredentialIssuerMetadata fetchCredentialIssuerMetadata(String version) {
+        return new CredentialIssuerMetadata();
+    }
+
     private Map<String, Object> convertLatestToVd11(LinkedHashMap<String, Object> vciMetadata) {
         // Create a list to hold the transformed credentials
         List<Map<String, Object>> credentialsList = new ArrayList<>();

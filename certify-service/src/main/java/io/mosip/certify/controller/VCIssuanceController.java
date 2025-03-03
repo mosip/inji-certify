@@ -88,12 +88,6 @@ public class VCIssuanceController {
        return vcIssuanceService.getDIDDocument();
     }
 
-    @PostMapping(value = "/credentials/configurations", produces = "application/json")
-    public Map<String, String>  getCredentialConfiguration(@Valid @RequestBody CredentialConfigurationRequest credentialConfigurationRequest) {
-        return vcIssuanceService.addCredentialConfiguration(credentialConfigurationRequest);
-    }
-
-
     @ResponseBody
     @ExceptionHandler(InvalidNonceException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

@@ -2,6 +2,7 @@ package io.mosip.certify;
 
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.CredentialConfigurationRequest;
+import io.mosip.certify.core.dto.CredentialIssuerMetadata;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
 import io.mosip.certify.core.exception.InvalidRequestException;
@@ -36,5 +37,10 @@ public class TestVCIssuanceServiceImpl implements VCIssuanceService {
     @Override
     public Map<String, String> addCredentialConfiguration(CredentialConfigurationRequest credentialConfigurationRequest) {
         return Map.of();
+    }
+
+    @Override
+    public CredentialIssuerMetadata fetchCredentialIssuerMetadata(String version) {
+        return new CredentialIssuerMetadata();
     }
 }

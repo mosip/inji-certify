@@ -5,9 +5,7 @@
  */
 package io.mosip.certify.core.spi;
 
-import io.mosip.certify.core.dto.CredentialConfigurationRequest;
-import io.mosip.certify.core.dto.CredentialRequest;
-import io.mosip.certify.core.dto.CredentialResponse;
+import io.mosip.certify.core.dto.*;
 
 import java.util.Map;
 
@@ -25,4 +23,6 @@ public interface VCIssuanceService {
     Map<String, Object> getDIDDocument();
 
     Map<String, String> addCredentialConfiguration(CredentialConfigurationRequest credentialConfigurationRequest);
+
+    CredentialIssuerMetadata fetchCredentialIssuerMetadata(String version);
 }
