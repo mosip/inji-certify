@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.Optional;
 
+import io.mosip.certify.api.util.AuditHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,9 +119,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     private AuditPlugin auditWrapper;
 
     @Autowired
-    private CredentialFactory credentialFactory;
-
-    @Autowired
     private KeymanagerService keymanagerService;
 
     private Map<String, Object> didDocument;
@@ -185,82 +183,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
        throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_OPENID_VERSION);
     }
 
-    @Override
-    public Map<String, Object> getDIDDocument() {
-        if(didDocument != null)
-            return didDocument;
 
-        KeyPairGenerateResponseDto keyPairGenerateResponseDto = keymanagerService.getCertificate(keyChooser.get(vcSignAlgorithm).getFirst(), Optional.of(keyChooser.get(vcSignAlgorithm).getLast()));
-        String certificateString = keyPairGenerateResponseDto.getCertificate();
-
-        didDocument = DIDDocumentUtil.generateDIDDocument(vcSignAlgorithm, certificateString, issuerURI, issuerPublicKeyURI);
-        return didDocument;
-    }
-
-    private Map<String, Object> convertLatestToVd11(LinkedHashMap<String, Object> vciMetadata) {
-        // Create a list to hold the transformed credentials
-        List<Map<String, Object>> credentialsList = new ArrayList<>();
-
-        // Check if the original config contains 'credential_configurations_supported'
-        if (vciMetadata.containsKey("credential_configurations_supported")) {
-            // Cast the value to a Map
-            Map<String, Object> originalCredentials =
-                    (Map<String, Object>) vciMetadata.get("credential_configurations_supported");
-
-            // Iterate through each credential
-            for (Map.Entry<String, Object> entry : originalCredentials.entrySet()) {
-                // Cast the credential configuration
-                Map<String, Object> credConfig = (Map<String, Object>) entry.getValue();
-
-                // Create a new transformed credential configuration
-                Map<String, Object> transformedCredential = new HashMap<>(credConfig);
-
-                // Add 'id' field with the original key
-                transformedCredential.put("id", entry.getKey());
-
-                // Rename 'credential_signing_alg_values_supported' to 'cryptographic_suites_supported'
-                if (transformedCredential.containsKey("credential_signing_alg_values_supported")) {
-                    transformedCredential.put("cryptographic_suites_supported",
-                            transformedCredential.remove("credential_signing_alg_values_supported"));
-                }
-
-                // Modify proof_types_supported
-                if (transformedCredential.containsKey("proof_types_supported")) {
-                    Map<String, Object> proofTypes = (Map<String, Object>) transformedCredential.get("proof_types_supported");
-                    transformedCredential.put("proof_types_supported", proofTypes.keySet());
-                }
-
-                if(transformedCredential.containsKey("display")) {
-                    List<Map<String, Object>> displayMapList = new ArrayList<>((List<Map<String, Object>>)transformedCredential.get("display"));
-                    List<Map<String, Object>> newDisplayMapList = new ArrayList<>();
-                    for(Map<String, Object> map : displayMapList) {
-                        Map<String, Object> displayMap = new HashMap<>(map);
-                        displayMap.remove("background_image");
-                        newDisplayMapList.add(displayMap);
-                    }
-                    transformedCredential.put("display", newDisplayMapList);
-                }
-
-                // Remove 'order' if it exists
-                transformedCredential.remove("order");
-
-                // Add the transformed credential to the list
-                credentialsList.add(transformedCredential);
-            }
-
-            // Set the transformed credentials in the new configuration
-            vciMetadata.put("credentials_supported", credentialsList);
-        }
-
-        vciMetadata.remove("credential_configurations_supported");
-        vciMetadata.remove("authorization_servers");
-        vciMetadata.remove("display");
-        String endpoint = (String)vciMetadata.get("credential_endpoint");
-        int issuanceIndex = endpoint.indexOf("issuance/");
-        String newEndPoint = endpoint.substring(0, issuanceIndex+9);
-        vciMetadata.put("credential_endpoint", newEndPoint + "vd11/credential");
-        return vciMetadata;
-    }
 
     private Map<String, Object> convertLatestToVd12(LinkedHashMap<String, Object> vciMetadata) {
         // Create a new map to store the transformed configuration
@@ -278,44 +201,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         return vciMetadata;
     }
 
-    private static Map<String, Object> transformCredentialConfiguration(LinkedHashMap<String, Object> originalConfig) {
-        Map<String, Object> transformedConfig = new LinkedHashMap<>();
 
-        for (Map.Entry<String, Object> entry : originalConfig.entrySet()) {
-            Map<String, Object> credentialDetails = (Map<String, Object>) entry.getValue();
-
-            // Create a new map to store modified credential details
-            Map<String, Object> transformedCredential = new LinkedHashMap<>(credentialDetails);
-
-            // Replace 'credential_signing_alg_values_supported' with 'cryptographic_suites_supported'
-            if (transformedCredential.containsKey("credential_signing_alg_values_supported")) {
-                Object signingAlgs = transformedCredential.remove("credential_signing_alg_values_supported");
-                transformedCredential.put("cryptographic_suites_supported", signingAlgs);
-            }
-
-            // Modify proof_types_supported
-            if (transformedCredential.containsKey("proof_types_supported")) {
-                Map<String, Object> proofTypes = (Map<String, Object>) transformedCredential.get("proof_types_supported");
-                transformedCredential.put("proof_types_supported", proofTypes.keySet());
-            }
-
-            if(transformedCredential.containsKey("display")) {
-                List<Map<String, Object>> displayMapList = new ArrayList<>((List<Map<String, Object>>)transformedCredential.get("display"));
-                List<Map<String, Object>> newDisplayMapList = new ArrayList<>();
-                for(Map<String, Object> map : displayMapList) {
-                    Map<String, Object> displayMap = new HashMap<>(map);
-                    displayMap.remove("background_image");
-                    newDisplayMapList.add(displayMap);
-                }
-                transformedCredential.put("display", newDisplayMapList);
-            }
-
-            // Add the modified credential details to the transformed config
-            transformedConfig.put(entry.getKey(), transformedCredential);
-        }
-
-        return transformedConfig;
-    }
 
     @Override
     public Map<String, Object> getDIDDocument() {
@@ -394,21 +280,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         return vciMetadata;
     }
 
-    private Map<String, Object> convertLatestToVd12(LinkedHashMap<String, Object> vciMetadata) {
-        // Create a new map to store the transformed configuration
-        if(vciMetadata.containsKey("credential_configurations_supported")) {
-            LinkedHashMap<String, Object> supportedCredentials = (LinkedHashMap<String, Object>) vciMetadata.get("credential_configurations_supported");
-            Map<String, Object> transformedMap = transformCredentialConfiguration(supportedCredentials);
-            vciMetadata.put("credentials_supported", transformedMap);
-        }
 
-        vciMetadata.remove("credential_configurations_supported");
-        String endpoint = (String)vciMetadata.get("credential_endpoint");
-        int issuanceIndex = endpoint.indexOf("issuance/");
-        String newEndPoint = endpoint.substring(0, issuanceIndex+9);
-        vciMetadata.put("credential_endpoint", newEndPoint + "vd12/credential");
-        return vciMetadata;
-    }
 
     private static Map<String, Object> transformCredentialConfiguration(LinkedHashMap<String, Object> originalConfig) {
         Map<String, Object> transformedConfig = new LinkedHashMap<>();

@@ -50,15 +50,6 @@ public class SDJWT extends Credential{
     }
 
 
-    
-    @Override
-    public boolean canHandle(String format){
-        if(format.equals("vc+sd-jwt")){
-            return true;
-        }
-        return false;
-    }
-
         /** 
      * createCredential method is resposible to convert the given template and 
      * templateparams into the requested credential format. This not just a 

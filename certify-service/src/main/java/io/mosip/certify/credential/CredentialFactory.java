@@ -20,8 +20,6 @@ public class CredentialFactory {
     @Autowired
     private List<Credential> credentials;
 
-    @Autowired
-    private List<Credential> credentials;
     /**
      * Factory method to create objects based on the given format.
      * 

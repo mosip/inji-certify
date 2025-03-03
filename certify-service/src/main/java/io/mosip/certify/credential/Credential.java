@@ -39,12 +39,6 @@ public abstract class Credential{
      */
     public abstract boolean canHandle(String format);
 
-    /**
-     * Override this method to say if you can handle the given format.
-     * @param format
-     * @return
-     */
-    public abstract boolean canHandle(String format);
 
     /** 
      * createCredential method is resposible to convert the given template and 

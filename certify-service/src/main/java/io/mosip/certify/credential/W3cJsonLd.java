@@ -18,6 +18,8 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
 
+import io.mosip.certify.vcformatters.VCFormatter;
+import io.mosip.kernel.signature.service.SignatureService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +28,6 @@ import foundation.identity.jsonld.JsonLDObject;
 import info.weboftrust.ldsignatures.LdProof;
 import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
 import io.mosip.certify.api.dto.VCResult;
-import io.mosip.certify.api.spi.VCFormatter;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCDM1Constants;
 import io.mosip.certify.core.constants.VCDM2Constants;
@@ -42,6 +43,16 @@ public class W3cJsonLd extends Credential{
     //TODO: This has to move to a factory
     @Autowired
     ProofGenerator proofGenerator;
+
+    /**
+     * Constructor for credentials
+     *
+     * @param vcFormatter
+     * @param signatureService
+     */
+    public W3cJsonLd(VCFormatter vcFormatter, SignatureService signatureService) {
+        super(vcFormatter, signatureService);
+    }
 
 
     @Override
