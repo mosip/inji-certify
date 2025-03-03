@@ -96,7 +96,7 @@ public class LocalAccessTokenValidationFilter extends OncePerRequestFilter {
         parsedAccessToken.getClaims().put("iss", "demo-local-certify");
         parsedAccessToken.getClaims().put("sub", "user@inji.io");
         parsedAccessToken.getClaims().put("client_id", "demo-certify");
-        parsedAccessToken.getClaims().put("scope", "mock_identity_vc_sd-jwt");
+        parsedAccessToken.getClaims().put("scope", "sample_vc_ldp");
         parsedAccessToken.getClaims().put("c_nonce_expires_in", 86400);
         parsedAccessToken.setAccessTokenHash(CommonUtil.generateOIDCAtHash("demo"));
         parsedAccessToken.setActive(true);

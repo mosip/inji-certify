@@ -6,6 +6,7 @@
 package io.mosip.certify.plugin.impl;
 
 import org.slf4j.MDC;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +17,7 @@ import io.mosip.certify.api.util.ActionStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
-//@ConditionalOnProperty(value = "mosip.certify.integration.audit-plugin", havingValue = "LoggerAuditService")
+@ConditionalOnProperty(value = "mosip.certify.integration.audit-plugin", havingValue = "LoggerAuditService")
 @Component
 @Slf4j
 public class LoggerAuditService implements AuditPlugin {

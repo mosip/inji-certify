@@ -4,6 +4,7 @@ import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.CredentialRequest;
 import lombok.extern.slf4j.Slf4j;
 
+//todo replace usage of existing validators with this factory
 @Slf4j
 public class CredentialRequestValidatorFactory {
      public boolean isValid(CredentialRequest credentialRequest) {
