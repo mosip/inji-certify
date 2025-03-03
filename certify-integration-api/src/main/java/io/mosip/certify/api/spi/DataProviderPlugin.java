@@ -1,9 +1,10 @@
 package io.mosip.certify.api.spi;
 
-import io.mosip.certify.api.exception.DataProviderExchangeException;
+import java.util.Map;
+
 import org.json.JSONObject;
 
-import java.util.Map;
+import io.mosip.certify.api.exception.DataProviderExchangeException;
 
 /**
  * DataProviderPlugin is implemented by VC plugin

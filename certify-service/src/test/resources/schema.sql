@@ -81,7 +81,13 @@ CREATE TABLE  IF NOT EXISTS credential_template(
     context character varying(1024) NOT NULL,
     credential_type character varying(512) NOT NULL,
     template VARCHAR NOT NULL,
+    credential_format character varying(1024),
+	did_url VARCHAR,
+	key_manager_app_id character varying(36) NOT NULL,
+    key_manager_ref_id character varying(128),
+	signature_algo character(2048),
+	sd_claim VARCHAR,
     cr_dtimes TIMESTAMP DEFAULT NOW() NOT NULL,
     upd_dtimes TIMESTAMP,
-    CONSTRAINT pk_template PRIMARY KEY (context, credential_type)
+    CONSTRAINT pk_template PRIMARY KEY (context, credential_type, credential_format)
 );

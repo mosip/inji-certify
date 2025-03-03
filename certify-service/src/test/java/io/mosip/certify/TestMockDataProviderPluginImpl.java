@@ -1,13 +1,14 @@
 package io.mosip.certify;
 
-import io.mosip.certify.api.exception.DataProviderExchangeException;
-import io.mosip.certify.api.spi.DataProviderPlugin;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Map;
+
 import org.json.JSONObject;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
+import io.mosip.certify.api.exception.DataProviderExchangeException;
+import io.mosip.certify.api.spi.DataProviderPlugin;
+import lombok.extern.slf4j.Slf4j;
 
 @ConditionalOnProperty(value = "mosip.certify.integration.vci-plugin", havingValue = "TestVCIPluginImpl")
 @Component

@@ -5,28 +5,32 @@
  */
 package io.mosip.certify.services;
 
-import io.mosip.certify.api.dto.RenderingTemplateDTO;
-import io.mosip.certify.core.constants.ErrorConstants;
-import io.mosip.certify.entity.RenderingTemplate;
-import io.mosip.certify.core.exception.RenderingTemplateException;
-import io.mosip.certify.repository.RenderingTemplateRepository;
-import io.mosip.certify.core.spi.RenderingTemplateService;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
+import io.mosip.certify.api.dto.RenderingTemplateDTO;
+import io.mosip.certify.core.constants.ErrorConstants;
+import io.mosip.certify.core.exception.RenderingTemplateException;
+import io.mosip.certify.core.spi.RenderingTemplateService;
+import io.mosip.certify.entity.RenderingTemplate;
+import io.mosip.certify.repository.RenderingTemplateRepository;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
 public class RenderingTemplateServiceImpl implements RenderingTemplateService {
     @Autowired
-    RenderingTemplateRepository svgRenderTemplateRepository;
+    RenderingTemplateRepository renderTemplateRepository;
 
+    //TODO: Cache it...
 
     @Override
-    public RenderingTemplateDTO getSvgTemplate(String id) {
-        Optional<RenderingTemplate> optional = svgRenderTemplateRepository.findById(id);
+    @Cacheable(cacheNames="renderTemplate", key="#id")
+    public RenderingTemplateDTO getTemplate(String id) {
+        Optional<RenderingTemplate> optional = renderTemplateRepository.findById(id);
         RenderingTemplate renderingTemplate = optional.orElseThrow(() -> new RenderingTemplateException(ErrorConstants.INVALID_TEMPLATE_ID));
         RenderingTemplateDTO renderingTemplateDTO = new RenderingTemplateDTO();
         renderingTemplateDTO.setId(renderingTemplate.getId());

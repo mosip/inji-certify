@@ -5,10 +5,9 @@
  */
 package io.mosip.certify.controller;
 
-import io.mosip.certify.api.dto.RenderingTemplateDTO;
-import io.mosip.certify.core.exception.RenderingTemplateException;
-import io.mosip.certify.core.spi.RenderingTemplateService;
-import lombok.extern.slf4j.Slf4j;
+import java.time.ZoneId;
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.CacheControl;
@@ -19,8 +18,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.ZoneId;
-import java.util.concurrent.TimeUnit;
+import io.mosip.certify.api.dto.RenderingTemplateDTO;
+import io.mosip.certify.core.exception.RenderingTemplateException;
+import io.mosip.certify.core.spi.RenderingTemplateService;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
@@ -33,7 +34,7 @@ public class RenderingTemplateController {
 
     @GetMapping("/{id}")
     public ResponseEntity<String> serveSvgTemplate(@PathVariable String id) throws RenderingTemplateException {
-        RenderingTemplateDTO template = renderingTemplateService.getSvgTemplate(id);
+        RenderingTemplateDTO template = renderingTemplateService.getTemplate(id);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, "image/svg+xml")
                 .cacheControl(CacheControl.maxAge(maxAgeDays, TimeUnit.DAYS).cachePublic())
