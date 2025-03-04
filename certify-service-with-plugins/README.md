@@ -8,7 +8,6 @@ This is built on top of base inji-certify docker image and includes the plugins 
 - Bundles runtime JARs directly within the Docker image.
 - Simplifies deployment process for demos and POCs.
 - Removes dependency on Artifactory.
-- Supports optional installation of `hsm_client` during deployment.
 
 ## Installation & Deployment
 ### Prerequisites

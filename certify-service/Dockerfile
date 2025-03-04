@@ -18,12 +18,6 @@ ARG active_profile
 # can be passed during Docker build as build time environment for config server URL
 ARG spring_config_url
 
-# can be passed during Docker build as build time environment for hsm client zip file path
-ARG hsm_client_zip_path
-
-# environment variable to pass hsm client zip file path, at docker runtime
-ENV hsm_zip_file_path=${hsm_client_zip_path}
-
 # environment variable to pass active profile such as DEV, QA etc at docker runtime
 ENV active_profile_env=${active_profile}
 
