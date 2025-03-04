@@ -87,6 +87,10 @@
                     <groupId>org.springframework.security</groupId>
                     <artifactId>spring-security-test</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>com.vaadin.external.google</groupId>
+                    <artifactId>android-json</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -109,6 +113,22 @@
             <groupId>com.github.multiformats</groupId>
             <artifactId>java-multibase</artifactId>
             <version>v1.1.1</version>
+        </dependency>
+        <dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20241224</version>
+		</dependency>
+        <dependency>
+            <groupId>com.authlete</groupId>
+            <artifactId>sd-jwt</artifactId>
+            <version>1.5</version>
+        </dependency>
+        <dependency>
+            <groupId>io.mosip.certify</groupId>
+            <artifactId>mock-certify-plugin</artifactId>
+            <version>0.3.0-SNAPSHOT</version>
+           <scope>provided</scope>
         </dependency>
     </dependencies>
 
