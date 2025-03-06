@@ -53,7 +53,22 @@
 		<git.commit.id.plugin.version>3.0.1</git.commit.id.plugin.version>
 		<fileName>apitest-injicertify-0.11.0-SNAPSHOT-jar-with-dependencies</fileName>
 	</properties>
-		
+	<repositories>
+		<repository>
+			<id>central</id>
+			<url>https://repo.maven.apache.org/maven2</url>
+		</repository>
+		<repository>
+			<id>scijava</id>
+			<url>https://maven.scijava.org/content/repositories/public/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>io.mosip.testrig.apitest.commons</groupId>
