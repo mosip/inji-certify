@@ -84,7 +84,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
             ObjectMapper oMapper = new ObjectMapper();
             templateMap = oMapper.convertValue(template , Map.class);
             //BeanUtils.copyProperties(template, templateMap);
-            templateCache.put(String.join(DELIMITER, template.getCredentialType(), template.getContext()), templateMap);
+            templateCache.put(String.join(DELIMITER, template.getCredentialType(), template.getContext(), template.getCredentialFormat()), templateMap);
          }));
         engine.setProperty(RuntimeConstants.INPUT_ENCODING, "UTF-8");
         engine.setProperty(RuntimeConstants.OUTPUT_ENCODING, "UTF-8");
@@ -107,7 +107,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     /**
      * Get the URL of the public key for this template
      * @param templateName is the name of the template.
-     * @return URL of the public key. 
+     * @return URL of the public key.
      */
     @Override
     public String getDidUrl(String templateName){
@@ -117,7 +117,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     /**
      * Get the refid of the key stored in keymanager.
      * @param templateName is the name of the template.
-     * @return refid for the keymanager. 
+     * @return refid for the keymanager.
      */
     @Override
     public String getRefID(String templateName){
@@ -127,17 +127,17 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     /**
      * Get the appid of the key stored in keymanager
      * @param templateName is the name of the template.
-     * @return appid of the keymanager. 
+     * @return appid of the keymanager.
      */
     @Override
     public String getAppID(String templateName){
         return templateCache.get(templateName).get("keyManagerAppId");
     }
-    
+
     /**
-     * Gets the selective disclosure information. 
+     * Gets the selective disclosure information.
      * @param templateName is the name of the template
-     * @return the list of selective disclosure paths. In case of null 
+     * @return the list of selective disclosure paths. In case of null
      * it returns an empty list.
      */
     @Override
@@ -165,7 +165,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         String templateName = templateSettings.get(TEMPLATE_NAME).toString();
         String issuer = templateSettings.get(ISSUER_URI).toString();
         String template = templateCache.get(templateName).get("template");
-        
+
         if (template == null) {
             log.error("Template {} not found", templateName);
             throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND);
@@ -276,7 +276,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         // Escape: https://velocity.apache.org/tools/3.1/apidocs/org/apache/velocity/tools/generic/EscapeTool.html
         finalTemplate.put("_esc", new EscapeTool());
         // add the issuer value
-        finalTemplate.put("issuer", issuer);
+        finalTemplate.put("_issuer", issuer);
         if (templateInput.containsKey(Constants.TEMPLATE_NAME) && templateName.contains(VCDM2Constants.URL)) {
             try {
                 finalTemplate.put("_renderMethodSVGdigest",

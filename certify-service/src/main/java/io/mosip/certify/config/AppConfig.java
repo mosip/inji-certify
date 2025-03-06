@@ -80,9 +80,9 @@ public class AppConfig implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        if (env.matchesProfiles("local")) {
+//        if (env.matchesProfiles("local")) {
             initKeys();
-        }   
+//        }
     }
 
     private void initKeys(){
@@ -134,17 +134,17 @@ public class AppConfig implements ApplicationRunner {
             ed25519Req.setReferenceId(Constants.ED25519_REF_ID);
             keymanagerService.generateECSignKey("certificate", ed25519Req);
 
-            // Generate an EC K1 Key
-            KeyPairGenerateRequestDto ecK1Req = new KeyPairGenerateRequestDto();
-            ecK1Req.setApplicationId(Constants.CERTIFY_VC_SIGN_EC_K1);
-            ecK1Req.setReferenceId(Constants.EC_SECP256K1_SIGN);
-            keymanagerService.generateECSignKey("certificate", ecK1Req);
+//            // Generate an EC K1 Key
+//            KeyPairGenerateRequestDto ecK1Req = new KeyPairGenerateRequestDto();
+//            ecK1Req.setApplicationId(Constants.CERTIFY_VC_SIGN_EC_K1);
+//            ecK1Req.setReferenceId(Constants.EC_SECP256K1_SIGN);
+//            keymanagerService.generateECSignKey("certificate", ecK1Req);
 
-            // Generate an EC R1 Key
-            KeyPairGenerateRequestDto ecR1Req = new KeyPairGenerateRequestDto();
-            ecR1Req.setApplicationId(Constants.CERTIFY_VC_SIGN_EC_R1);
-            ecR1Req.setReferenceId(Constants.EC_SECP256R1_SIGN);
-            keymanagerService.generateECSignKey("certificate", ecK1Req);
+//            // Generate an EC R1 Key
+//            KeyPairGenerateRequestDto ecR1Req = new KeyPairGenerateRequestDto();
+//            ecR1Req.setApplicationId(Constants.CERTIFY_VC_SIGN_EC_R1);
+//            ecR1Req.setReferenceId(Constants.EC_SECP256R1_SIGN);
+//            keymanagerService.generateECSignKey("certificate", ecK1Req);
         }
         log.info("===================== CERTIFY KEY SETUP COMPLETED ========================");
         log.info("===================== INJI Certify -- Started ============================");
