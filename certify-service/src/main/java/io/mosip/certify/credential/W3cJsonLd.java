@@ -57,7 +57,7 @@ public class W3cJsonLd extends Credential{
 
     @Override
     public boolean canHandle(String format){
-        if(format.equals("vc+sd-jwt")){
+        if(format.equals("ldp_vc")){
             return true;
         }
         return false;
