@@ -134,8 +134,6 @@ public class SimplePost extends InjiCertifyUtil implements ITest {
 						testCaseDTO.setEndPoint(testCaseDTO.getEndPoint().replace(endPointKeyWord, ""));
 					}
 				}
-//				inputJson = inputJsonKeyWordHandeler(inputJson, testCaseName);
-//				inputJson = InjiCertifyUtil.inputStringKeyWordHandeler(inputJson, testCaseName);
 				response = postRequestWithCookieAuthHeaderAndXsrfToken(tempUrl + testCaseDTO.getEndPoint(), inputJson,
 						COOKIENAME, testCaseDTO.getTestCaseName());
 			} else {
