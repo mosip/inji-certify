@@ -98,16 +98,6 @@ public class PostWithAutogenIdWithOtpGenerate extends InjiCertifyUtil implements
 			}
 		}
 
-//		if (BaseTestCase.isTargetEnvLTS()) {
-//			if (InjiCertifyConfigManager.isInServiceNotDeployedList(GlobalConstants.RESIDENT)
-//					&& (BaseTestCase.currentModule.equals("esignet")
-//							&& testCaseName.startsWith("ESignetRes_Generate"))) {
-//				throw new SkipException("Generating VID using IdRepo API. Hence skipping this test case");
-////				qa115 - f
-////				cam   - t t
-////				dev	  - t f
-//			}
-//		}
 		String inputJson = testCaseDTO.getInput().toString();
 		JSONObject req = new JSONObject(testCaseDTO.getInput());
 
@@ -158,7 +148,6 @@ public class PostWithAutogenIdWithOtpGenerate extends InjiCertifyUtil implements
 						+ " as UIN not available in database");
 				try {
 					Thread.sleep(Long.parseLong(properties.getProperty("uinGenDelayTime")));
-//					SlackChannelIntegration.sendMessageToSlack("UIN not available in database in :" + ApplnURI + "Env") ;
 
 				} catch (NumberFormatException | InterruptedException e) {
 					logger.error(e.getMessage());
@@ -258,9 +247,6 @@ public class PostWithAutogenIdWithOtpGenerate extends InjiCertifyUtil implements
 		try {
 			if (!testCaseName.contains(GlobalConstants.ESIGNET_)) {
 				long delayTime = Long.parseLong(properties.getProperty("Delaytime"));
-//				if (!BaseTestCase.isTargetEnvLTS())
-//					delayTime = Long.parseLong(properties.getProperty("uinGenDelayTime"))
-//							* Long.parseLong(properties.getProperty("uinGenMaxLoopCount"));
 				logger.info("waiting for " + delayTime + " mili secs after VID Generation In RESIDENT SERVICES");
 				Thread.sleep(delayTime);
 			}
