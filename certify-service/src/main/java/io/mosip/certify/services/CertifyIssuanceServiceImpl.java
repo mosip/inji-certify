@@ -178,15 +178,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     }
 
     @Override
-    public Map<String, String> addCredentialConfiguration(CredentialConfigurationRequest credentialConfigurationRequest) {
-        Map<String, String> configurationResponse = new HashMap<>();
-        configurationResponse.put("id", "farmer-credential-config-001");
-        configurationResponse.put("status", "active");
-
-        return configurationResponse;
-    }
-
-    @Override
     public CredentialIssuerMetadata fetchCredentialIssuerMetadata(String version) {
         return new CredentialIssuerMetadata();
     }

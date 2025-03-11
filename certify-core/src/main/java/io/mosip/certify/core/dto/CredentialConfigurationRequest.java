@@ -16,12 +16,16 @@ public class CredentialConfigurationRequest {
     @NotEmpty(message = ErrorConstants.INVALID_REQUEST)
     private String vcTemplate;
 
+    @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private List<String> context;
 
+    @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private List<String> credentialType;
 
+    @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private String credentialFormat;
 
+    @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private String didUrl;
 
     @Valid
@@ -30,14 +34,17 @@ public class CredentialConfigurationRequest {
 
     private List<String> order;
 
+    @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private String scope;
 
+    @NotNull(message = ErrorConstants.INVALID_REQUEST)
     @JsonProperty("cryptographic_binding_methods_supported")
     private List<String> cryptographicBindingMethodsSupported;
 
     @JsonProperty("credential_signing_alg_values_supported")
     private List<String> credentialSigningAlgValuesSupported;
 
+    @NotNull(message = ErrorConstants.INVALID_REQUEST)
     @JsonProperty("proof_types_supported")
     private Map<String, Object> proofTypesSupported;
 
