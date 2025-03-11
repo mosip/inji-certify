@@ -35,11 +35,6 @@ public class TestVCIssuanceServiceImpl implements VCIssuanceService {
     }
 
     @Override
-    public Map<String, String> addCredentialConfiguration(CredentialConfigurationRequest credentialConfigurationRequest) {
-        return Map.of();
-    }
-
-    @Override
     public CredentialIssuerMetadata fetchCredentialIssuerMetadata(String version) {
         return new CredentialIssuerMetadata();
     }
