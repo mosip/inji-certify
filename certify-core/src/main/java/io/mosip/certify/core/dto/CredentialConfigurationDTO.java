@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-public class CredentialConfigurationRequest {
+public class CredentialConfigurationDTO {
 
     @NotEmpty(message = ErrorConstants.INVALID_REQUEST)
     private String vcTemplate;

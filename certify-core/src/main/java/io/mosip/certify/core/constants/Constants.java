@@ -29,4 +29,6 @@ public class Constants {
     public static final String CERTIFY_VC_SIGN_EC_R1 = "CERTIFY_VC_SIGN_EC_R1";
     public static final String EC_SECP256K1_SIGN = "EC_SECP256K1_SIGN";
     public static final String EC_SECP256R1_SIGN = "EC_SECP256R1_SIGN";
+    public static final String ACTIVE = "active";
+    public static final String INACTIVE = "inactive";
 }
