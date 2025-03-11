@@ -243,17 +243,5 @@ public class PostWithAutogenIdWithOtpGenerate extends InjiCertifyUtil implements
 	}
 
 	@AfterClass(alwaysRun = true)
-	public void waittime() {
-		try {
-			if (!testCaseName.contains(GlobalConstants.ESIGNET_)) {
-				long delayTime = Long.parseLong(properties.getProperty("Delaytime"));
-				logger.info("waiting for " + delayTime + " mili secs after VID Generation In RESIDENT SERVICES");
-				Thread.sleep(delayTime);
-			}
-		} catch (Exception e) {
-			logger.error("Exception : " + e.getMessage());
-			Thread.currentThread().interrupt();
-		}
-
-	}
+	public void waittime() {}
 }
