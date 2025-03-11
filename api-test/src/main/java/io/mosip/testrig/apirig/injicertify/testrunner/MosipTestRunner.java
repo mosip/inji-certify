@@ -81,6 +81,8 @@ public class MosipTestRunner {
 			SkipTestCaseHandler.loadTestcaseToBeSkippedList("testCaseSkippedList.txt");
 			GlobalMethods.setModuleNameAndReCompilePattern(InjiCertifyConfigManager.getproperty("moduleNamePattern"));
 			setLogLevels();
+			
+			String useCaseToExecute = InjiCertifyConfigManager.getproperty("useCaseToExecute");
 
 			HealthChecker healthcheck = new HealthChecker();
 			healthcheck.setCurrentRunningModule(BaseTestCase.currentModule);
@@ -94,13 +96,16 @@ public class MosipTestRunner {
 
 			BaseTestCase.getLanguageList();
 			
-			// Generate device certificates to be consumed by Mock-MDS
-			PartnerRegistration.deleteCertificates();
-			AdminTestUtil.createAndPublishPolicy();
-			AdminTestUtil.createEditAndPublishPolicy();
-			PartnerRegistration.deviceGeneration();
+			if (useCaseToExecute.equalsIgnoreCase("mosipid")) {
 
-			BiometricDataProvider.generateBiometricTestData("Registration");
+				// Generate device certificates to be consumed by Mock-MDS
+				PartnerRegistration.deleteCertificates();
+				AdminTestUtil.createAndPublishPolicy();
+				AdminTestUtil.createEditAndPublishPolicy();
+				PartnerRegistration.deviceGeneration();
+
+				BiometricDataProvider.generateBiometricTestData("Registration");
+			}
 
 			startTestRunner();
 		} catch (Exception e) {
@@ -179,32 +184,25 @@ public class MosipTestRunner {
 		File[] files = homeDir.listFiles();
 		if (files != null) {
 			String useCaseToExecute = InjiCertifyConfigManager.getproperty("useCaseToExecute");
+			InjiCertifyUtil.currentUseCase = useCaseToExecute;
 
-			// Split the string by commas
-			String[] useCases = useCaseToExecute.split(",");
+			for (File file : files) {
+				TestNG runner = new TestNG();
+				List<String> suitefiles = new ArrayList<>();
 
-			// Loop through the resulting array and print each element
-			for (String useCase : useCases) {
-				InjiCertifyUtil.currentUseCase = useCase;
-
-				for (File file : files) {
-					TestNG runner = new TestNG();
-					List<String> suitefiles = new ArrayList<>();
-
-					if (file.getName().toLowerCase().contains("mastertestsuite")) {
-						if (useCase != null && useCase.isBlank() == false) {
-							BaseTestCase.setReportName(GlobalConstants.INJICERTIFY + "-" + useCase);
-						} else {
-							BaseTestCase.setReportName(GlobalConstants.INJICERTIFY);
-						}
-						suitefiles.add(file.getAbsolutePath());
-						runner.setTestSuites(suitefiles);
-						System.getProperties().setProperty("testng.outpur.dir", "testng-report");
-						runner.setOutputDirectory("testng-report");
-						runner.run();
+				if (file.getName().toLowerCase().contains("mastertestsuite")) {
+					if (useCaseToExecute != null && useCaseToExecute.isBlank() == false) {
+						BaseTestCase.setReportName(GlobalConstants.INJICERTIFY + "-" + useCaseToExecute);
+					} else {
+						BaseTestCase.setReportName(GlobalConstants.INJICERTIFY);
 					}
-
+					suitefiles.add(file.getAbsolutePath());
+					runner.setTestSuites(suitefiles);
+					System.getProperties().setProperty("testng.outpur.dir", "testng-report");
+					runner.setOutputDirectory("testng-report");
+					runner.run();
 				}
+
 			}
 		} else {
 			LOGGER.error("No files found in directory: " + homeDir);
