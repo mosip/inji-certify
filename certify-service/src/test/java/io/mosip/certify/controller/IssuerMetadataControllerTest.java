@@ -43,7 +43,7 @@ public class IssuerMetadataControllerTest {
         Map<String, String> display = new HashMap<>();
         display.put("name", "Test Credential Issuer");
         display.put("locale", "en");
-        credentialIssuerMetadata.setDisplay(display);
+        credentialIssuerMetadata.setDisplay(List.of(display));
 
         CredentialConfigurationSupported credentialConfigurationSupported = new CredentialConfigurationSupported();
         credentialConfigurationSupported.setFormat("ldp_vc");
@@ -58,7 +58,7 @@ public class IssuerMetadataControllerTest {
         credentialDisplay.setBackgroundColor("#FDFAF9");
         credentialDisplay.setTextColor("#7C4616");
         credentialDisplay.setLogo(Map.of("url", "https://www.example.com", "alt_text", "test"));
-        credentialConfigurationSupported.setDisplay(credentialDisplay);
+        credentialConfigurationSupported.setDisplay(List.of(credentialDisplay));
         credentialConfigurationSupported.setOrder(Arrays.asList("test1", "test2", "test3", "test4"));
         credentialIssuerMetadata.setCredentialConfigurationSupported(Map.of("TestCredential_ldp", credentialConfigurationSupported));
 

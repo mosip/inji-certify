@@ -177,11 +177,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         return didDocument;
     }
 
-    @Override
-    public CredentialIssuerMetadata fetchCredentialIssuerMetadata(String version) {
-        return new CredentialIssuerMetadata();
-    }
-
     private Map<String, Object> convertLatestToVd11(LinkedHashMap<String, Object> vciMetadata) {
         // Create a list to hold the transformed credentials
         List<Map<String, Object>> credentialsList = new ArrayList<>();
@@ -421,5 +416,21 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         transaction.setCNonceIssuedEpoch(LocalDateTime.now(ZoneOffset.UTC).toEpochSecond(ZoneOffset.UTC));
         transaction.setCNonceExpireSeconds(cNonceExpireSeconds);
         return vciCacheService.setVCITransaction(parsedAccessToken.getAccessTokenHash(), transaction);
+    }
+
+    @Override
+    public CredentialIssuerMetadata fetchCredentialIssuerMetadata(String version) {
+        LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
+
+        CredentialIssuerMetadata credentialIssuerMetadata = new CredentialIssuerMetadata();
+        credentialIssuerMetadata.setCredentialIssuer((String) originalIssuerMetadata.get("credential_issuer"));
+        credentialIssuerMetadata.setAuthorizationServers((List<String>) originalIssuerMetadata.get("authorization_servers"));
+        credentialIssuerMetadata.setCredentialEndpoint((String) originalIssuerMetadata.get("credential_endpoint"));
+        credentialIssuerMetadata.setDisplay((List<Map<String, String>>) originalIssuerMetadata.get("display"));
+
+        Map<String, CredentialConfigurationSupported> credentialConfigurationSupported = (Map<String, CredentialConfigurationSupported>) originalIssuerMetadata.get("credential_configurations_supported");
+        credentialIssuerMetadata.setCredentialConfigurationSupported(credentialConfigurationSupported);
+
+        return credentialIssuerMetadata;
     }
 }

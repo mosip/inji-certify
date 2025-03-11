@@ -43,49 +43,49 @@ public class CredentialConfigControllerTest {
     VCIssuanceService vcIssuanceService;
 
     @Mock
-    private CredentialConfigurationRequest credentialConfigurationRequest;
+    private CredentialConfigurationDTO credentialConfigurationDTO;
 
     @Before
     public void setup() {
-        credentialConfigurationRequest = new CredentialConfigurationRequest();
-        credentialConfigurationRequest.setVcTemplate("test_template");
-        credentialConfigurationRequest.setContext(List.of("https://www.w3.org/2018/credentials/v1"));
-        credentialConfigurationRequest.setCredentialType(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"));
-        credentialConfigurationRequest.setCredentialFormat("ldp_vc");
-        credentialConfigurationRequest.setDidUrl("did:web:test.github.io:test-env:test-folder");
+        credentialConfigurationDTO = new CredentialConfigurationDTO();
+        credentialConfigurationDTO.setVcTemplate("test_template");
+        credentialConfigurationDTO.setContext(List.of("https://www.w3.org/2018/credentials/v1"));
+        credentialConfigurationDTO.setCredentialType(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"));
+        credentialConfigurationDTO.setCredentialFormat("ldp_vc");
+        credentialConfigurationDTO.setDidUrl("did:web:test.github.io:test-env:test-folder");
         CredentialDisplay credentialDisplay = new CredentialDisplay();
         credentialDisplay.setName("Test Verifiable Credential");
         credentialDisplay.setLocale("en");
         credentialDisplay.setBackgroundColor("#FDFAF9");
         credentialDisplay.setTextColor("#7C4616");
         credentialDisplay.setLogo(Map.of("url", "https://www.example.com", "alt_text", "test"));
-        credentialConfigurationRequest.setDisplay(credentialDisplay);
-        credentialConfigurationRequest.setOrder(Arrays.asList("test1", "test2", "test3", "test4"));
-        credentialConfigurationRequest.setScope("test_vc_ldp");
-        credentialConfigurationRequest.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
-        credentialConfigurationRequest.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
+        credentialConfigurationDTO.setDisplay(credentialDisplay);
+        credentialConfigurationDTO.setOrder(Arrays.asList("test1", "test2", "test3", "test4"));
+        credentialConfigurationDTO.setScope("test_vc_ldp");
+        credentialConfigurationDTO.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
+        credentialConfigurationDTO.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
         Map<String, Object> jwtValues = Map.of("proof_signing_alg_values_supported", Arrays.asList("RS256", "ES256"));
-        credentialConfigurationRequest.setProofTypesSupported(Map.of("jwt", jwtValues));
+        credentialConfigurationDTO.setProofTypesSupported(Map.of("jwt", jwtValues));
         Map<String, String> pluginConfigMap = new HashMap<>();
         pluginConfigMap.put("mosip.certify.mock.data-provider.test-one", "valueOne");
         pluginConfigMap.put("mosip.certify.mock.data-provider.test-two", "valueTwo");
         pluginConfigMap.put("mosip.certify.mock.data-provider.test-three", "valueThree");
-        credentialConfigurationRequest.setPluginConfigurations(List.of(pluginConfigMap));
+        credentialConfigurationDTO.setPluginConfigurations(List.of(pluginConfigMap));
     }
 
     @Test
     public void addNewCredentialConfiguration_Success() throws Exception {
 
 
-        Map<String, String> configurationResponse = new HashMap<>();
-        configurationResponse.put("id", "farmer-credential-config-001");
-        configurationResponse.put("status", "active");
-        Mockito.when(credentialConfigurationService.addCredentialConfiguration(credentialConfigurationRequest)).thenReturn(configurationResponse);
+        CredentialConfigResponse credentialConfigResponse = new CredentialConfigResponse();
+        credentialConfigResponse.setId("farmer-credential-config-001");
+        credentialConfigResponse.setStatus("active");
+        Mockito.when(credentialConfigurationService.addCredentialConfiguration(credentialConfigurationDTO)).thenReturn(credentialConfigResponse);
 
-        mockMvc.perform(post("/credentials/configurations")
-                        .content(objectMapper.writeValueAsBytes(credentialConfigurationRequest))
+        mockMvc.perform(post("/configurations")
+                        .content(objectMapper.writeValueAsBytes(credentialConfigurationDTO))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.status").exists());
     }
@@ -93,9 +93,9 @@ public class CredentialConfigControllerTest {
     @Test
     public void getCredentialConfigurationById_Success() throws Exception {
 
-        Mockito.when(credentialConfigurationService.getCredentialConfigurationById(Mockito.anyString())).thenReturn(credentialConfigurationRequest);
+        Mockito.when(credentialConfigurationService.getCredentialConfigurationById(Mockito.anyString())).thenReturn(credentialConfigurationDTO);
 
-        mockMvc.perform(get("/credentials/configurations/1"))
+        mockMvc.perform(get("/configurations/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.vcTemplate").exists())
                 .andExpect(jsonPath("$.context").exists())
@@ -109,16 +109,26 @@ public class CredentialConfigControllerTest {
 
     @Test
     public void updateExistingCredentialConfiguration_Success() throws Exception {
-        Map<String, String> configurationResponse = new HashMap<>();
-        configurationResponse.put("id", "farmer-credential-config-001");
-        configurationResponse.put("status", "active");
-        Mockito.when(credentialConfigurationService.updateCredentialConfiguration(Mockito.anyString(), eq(credentialConfigurationRequest))).thenReturn(configurationResponse);
+        CredentialConfigResponse credentialConfigResponse = new CredentialConfigResponse();
+        credentialConfigResponse.setId("farmer-credential-config-001");
+        credentialConfigResponse.setStatus("active");
+        Mockito.when(credentialConfigurationService.updateCredentialConfiguration(Mockito.anyString(), eq(credentialConfigurationDTO))).thenReturn(credentialConfigResponse);
 
-        mockMvc.perform(put("/credentials/configurations/1")
-                        .content(objectMapper.writeValueAsBytes(credentialConfigurationRequest))
+        mockMvc.perform(put("/configurations/1")
+                        .content(objectMapper.writeValueAsBytes(credentialConfigurationDTO))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.status").exists());
+    }
+
+    @Test
+    public void deleteExistingCredentialConfiguration_Success() throws Exception {
+        String response = "Configuration deleted with id: 1";
+        Mockito.when(credentialConfigurationService.deleteCredentialConfigurationById(Mockito.anyString())).thenReturn(response);
+
+        mockMvc.perform(delete("/configurations/1"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(response));
     }
 }

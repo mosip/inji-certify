@@ -1,16 +1,16 @@
 package io.mosip.certify.core.spi;
 
-import io.mosip.certify.core.dto.CredentialConfigurationRequest;
-
-import java.util.Map;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import io.mosip.certify.core.dto.CredentialConfigResponse;
+import io.mosip.certify.core.dto.CredentialConfigurationDTO;
 
 public interface CredentialConfigurationService {
 
-    Map<String, String> addCredentialConfiguration(CredentialConfigurationRequest credentialConfigurationRequest);
+    CredentialConfigResponse addCredentialConfiguration(CredentialConfigurationDTO credentialConfigurationDTO) throws JsonProcessingException;
 
-    CredentialConfigurationRequest getCredentialConfigurationById(String id);
+    CredentialConfigurationDTO getCredentialConfigurationById(String id) throws JsonProcessingException;
 
-    Map<String, String> updateCredentialConfiguration(String id, CredentialConfigurationRequest credentialConfigurationRequest);
+    CredentialConfigResponse updateCredentialConfiguration(String id, CredentialConfigurationDTO credentialConfigurationDTO) throws JsonProcessingException;
 
-    void deleteCredentialConfigurationById(String id);
+    String deleteCredentialConfigurationById(String id);
 }

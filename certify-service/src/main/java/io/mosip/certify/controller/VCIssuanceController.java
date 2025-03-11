@@ -5,7 +5,6 @@
  */
 package io.mosip.certify.controller;
 
-import io.mosip.certify.core.dto.CredentialConfigurationRequest;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
 import io.mosip.certify.core.dto.VCError;
@@ -20,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
