@@ -30,7 +30,7 @@ public class CredentialConfigurationDTO {
 
     @Valid
     @NotNull(message = ErrorConstants.INVALID_REQUEST)
-    private CredentialDisplay display;
+    private CredentialDisplayDTO display;
 
     private List<String> order;
 
@@ -41,12 +41,17 @@ public class CredentialConfigurationDTO {
     @JsonProperty("cryptographic_binding_methods_supported")
     private List<String> cryptographicBindingMethodsSupported;
 
+    @NotNull
     @JsonProperty("credential_signing_alg_values_supported")
     private List<String> credentialSigningAlgValuesSupported;
 
     @NotNull(message = ErrorConstants.INVALID_REQUEST)
     @JsonProperty("proof_types_supported")
     private Map<String, Object> proofTypesSupported;
+
+    @NotNull(message = ErrorConstants.INVALID_REQUEST)
+    @JsonProperty("credentialSubject")
+    private Map<String, Object> credentialSubject;
 
     private List<Map<String, String>> pluginConfigurations;
 }

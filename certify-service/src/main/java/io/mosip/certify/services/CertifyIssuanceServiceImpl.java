@@ -417,20 +417,4 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         transaction.setCNonceExpireSeconds(cNonceExpireSeconds);
         return vciCacheService.setVCITransaction(parsedAccessToken.getAccessTokenHash(), transaction);
     }
-
-    @Override
-    public CredentialIssuerMetadata fetchCredentialIssuerMetadata(String version) {
-        LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
-
-        CredentialIssuerMetadata credentialIssuerMetadata = new CredentialIssuerMetadata();
-        credentialIssuerMetadata.setCredentialIssuer((String) originalIssuerMetadata.get("credential_issuer"));
-        credentialIssuerMetadata.setAuthorizationServers((List<String>) originalIssuerMetadata.get("authorization_servers"));
-        credentialIssuerMetadata.setCredentialEndpoint((String) originalIssuerMetadata.get("credential_endpoint"));
-        credentialIssuerMetadata.setDisplay((List<Map<String, String>>) originalIssuerMetadata.get("display"));
-
-        Map<String, CredentialConfigurationSupported> credentialConfigurationSupported = (Map<String, CredentialConfigurationSupported>) originalIssuerMetadata.get("credential_configurations_supported");
-        credentialIssuerMetadata.setCredentialConfigurationSupported(credentialConfigurationSupported);
-
-        return credentialIssuerMetadata;
-    }
 }

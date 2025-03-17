@@ -32,9 +32,4 @@ public class TestVCIssuanceServiceImpl implements VCIssuanceService {
     public Map<String, Object> getDIDDocument() {
         throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE);
     }
-
-    @Override
-    public CredentialIssuerMetadata fetchCredentialIssuerMetadata(String version) {
-        return new CredentialIssuerMetadata();
-    }
 }
