@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.Map;
 
 @Data
-public class CredentialDisplay {
+public class CredentialDisplayDTO {
 
     private String name;
 

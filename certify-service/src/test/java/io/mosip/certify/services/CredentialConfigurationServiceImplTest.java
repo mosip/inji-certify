@@ -4,9 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.core.dto.CredentialConfigResponse;
 import io.mosip.certify.core.dto.CredentialConfigurationDTO;
+import io.mosip.certify.core.dto.CredentialDisplayDTO;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.entity.CredentialConfig;
+import io.mosip.certify.entity.CredentialDisplay;
 import io.mosip.certify.repository.CredentialConfigRepository;
+import io.mosip.certify.repository.CredentialDisplayRepository;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,8 +18,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.Assert.assertThrows;
@@ -27,11 +30,12 @@ import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CredentialConfigurationServiceImplTest {
-    @Mock
-    ObjectMapper objectMapper;
 
     @Mock
     private CredentialConfigRepository credentialConfigRepository;
+
+    @Mock
+    private CredentialDisplayRepository credentialDisplayRepository;
 
     @InjectMocks
     private CredentialConfigurationServiceImpl credentialConfigurationService;
@@ -42,32 +46,46 @@ public class CredentialConfigurationServiceImplTest {
     @Mock
     private CredentialConfig credentialConfig;
 
+    @Mock
+    private CredentialDisplay credentialDisplay;
+
     @Before
     public void setup() {
         MockitoAnnotations.openMocks(this);
-        credentialConfigurationDTO = new CredentialConfigurationDTO();
-        credentialConfigurationDTO.setVcTemplate("test_template");
-        credentialConfigurationDTO.setContext(List.of("https://www.w3.org/2018/credentials/v1"));
-        credentialConfigurationDTO.setCredentialType(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"));
-        credentialConfigurationDTO.setCredentialFormat("ldp_vc");
-        credentialConfigurationDTO.setDidUrl("did:web:test.github.io:test-env:test-folder");
-        credentialConfigurationDTO.setOrder(Arrays.asList("test1", "test2", "test3", "test4"));
-        credentialConfigurationDTO.setScope("test_vc_ldp");
-        credentialConfigurationDTO.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
-        credentialConfigurationDTO.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
-
         credentialConfig = new CredentialConfig();
         String id = UUID.randomUUID().toString();
         credentialConfig.setId(id);
         credentialConfig.setStatus("active");
-        credentialConfig.setConfiguration("test-config-string");
-        credentialConfig.setCreatedTime(LocalDateTime.now());
+        credentialConfig.setVcTemplate("test_template");
+        credentialConfig.setContext(List.of("https://www.w3.org/2018/credentials/v1"));
+        credentialConfig.setCredentialType(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"));
+        credentialConfig.setCredentialFormat("ldp_vc");
+        credentialConfig.setDidUrl("did:web:test.github.io:test-env:test-folder");
+        credentialConfig.setOrder(Arrays.asList("test1", "test2", "test3", "test4"));
+        credentialConfig.setScope("test_vc_ldp");
+        credentialConfig.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
+        credentialConfig.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
+        credentialConfig.setCredentialSubject(Map.of("name", "Full Name"));
+
+        credentialDisplay = new CredentialDisplay();
+        credentialDisplay.setId(1L);
+        credentialDisplay.setName("Test Credential");
+        credentialDisplay.setLocale("en");
+        credentialDisplay.setTextColor("#FFFFFF");
+        credentialDisplay.setBackgroundColor("#12107c");
+        credentialDisplay.setLogo(Map.of("test1", "value1"));
+        credentialConfig.setDisplay(credentialDisplay);
+
+        credentialConfigurationDTO = new CredentialConfigurationDTO();
+        credentialConfigurationDTO.setDisplay(new CredentialDisplayDTO());
+
+        ReflectionTestUtils.setField(credentialConfigurationService, "credentialIssuer", "http://example.com");
+        ReflectionTestUtils.setField(credentialConfigurationService, "authServers", List.of("http://auth.com"));
+        ReflectionTestUtils.setField(credentialConfigurationService, "servletPath", "v1/test");
     }
 
     @Test
     public void addNewCredentialConfig_Success() throws JsonProcessingException {
-        when(objectMapper.writeValueAsString(any(CredentialConfigurationDTO.class)))
-                .thenReturn("test-config-string");
         when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(credentialConfig);
 
         CredentialConfigResponse credentialConfigResponse = credentialConfigurationService.addCredentialConfiguration(credentialConfigurationDTO);
@@ -78,25 +96,10 @@ public class CredentialConfigurationServiceImplTest {
         Assert.assertEquals("active", credentialConfigResponse.getStatus());
     }
 
-
-    @Test
-    public void addCredentialConfiguration_JsonProcessingException() throws JsonProcessingException {
-        when(objectMapper.writeValueAsString(any(CredentialConfigurationDTO.class)))
-                .thenThrow(new JsonProcessingException("Error processing JSON") {});
-
-        assertThrows(JsonProcessingException.class, () ->
-                credentialConfigurationService.addCredentialConfiguration(credentialConfigurationDTO));
-
-        verify(objectMapper).writeValueAsString(credentialConfigurationDTO);
-        verify(credentialConfigRepository, never()).save(any());
-    }
-
     @Test
     public void getCredentialConfigById_Success() throws JsonProcessingException {
         Optional<CredentialConfig> optional = Optional.of(credentialConfig);
         when(credentialConfigRepository.findById(anyString())).thenReturn(optional);
-        when(objectMapper.readValue("test-config-string", CredentialConfigurationDTO.class))
-                .thenReturn(credentialConfigurationDTO);
 
         CredentialConfigurationDTO credentialConfigurationDTOResponse = credentialConfigurationService.getCredentialConfigurationById("test");
 
@@ -123,24 +126,9 @@ public class CredentialConfigurationServiceImplTest {
     }
 
     @Test
-    public void getCredentialConfigurationById_JsonProcessingException() throws JsonProcessingException {
-        Optional<CredentialConfig> optional = Optional.of(credentialConfig);
-        when(credentialConfigRepository.findById("12345678"))
-                .thenReturn(optional);
-
-        when(objectMapper.readValue(anyString(), eq(CredentialConfigurationDTO.class)))
-                .thenThrow(new JsonProcessingException("Error processing JSON") {});
-
-        assertThrows(JsonProcessingException.class, () ->
-                credentialConfigurationService.getCredentialConfigurationById("12345678"));
-    }
-
-    @Test
     public void updateExistingCredentialConfig_Success() throws JsonProcessingException {
         Optional<CredentialConfig> optional = Optional.of(credentialConfig);
         when(credentialConfigRepository.findById(anyString())).thenReturn(optional);
-        when(objectMapper.writeValueAsString(any(CredentialConfigurationDTO.class)))
-                .thenReturn("test-config-string");
 
         CredentialConfigResponse credentialConfigResponse = credentialConfigurationService.updateCredentialConfiguration("12345678", credentialConfigurationDTO);
 
@@ -156,34 +144,23 @@ public class CredentialConfigurationServiceImplTest {
                 .thenReturn(Optional.empty());
 
         CertifyException exception = assertThrows(CertifyException.class, () ->
-                credentialConfigurationService.getCredentialConfigurationById("12345678"));
+                credentialConfigurationService.updateCredentialConfiguration("12345678", new CredentialConfigurationDTO()));
 
         assertEquals("Configuration not found with the provided id: " + "12345678", exception.getMessage());
     }
 
     @Test
-    public void updateExistingCredentialConfiguration_JsonProcessingException() throws JsonProcessingException {
-        Optional<CredentialConfig> optional = Optional.of(credentialConfig);
-        when(credentialConfigRepository.findById("12345678"))
-                .thenReturn(optional);
-
-        when(objectMapper.writeValueAsString(any(CredentialConfigurationDTO.class)))
-                .thenThrow(new JsonProcessingException("Error processing JSON") {});
-
-        assertThrows(JsonProcessingException.class, () ->
-                credentialConfigurationService.updateCredentialConfiguration("12345678", credentialConfigurationDTO));
-    }
-
-    @Test
     public void deleteCredentialConfig_Success() throws JsonProcessingException {
         Optional<CredentialConfig> optional = Optional.of(credentialConfig);
+        Optional<CredentialDisplay> optionalCredentialDisplay = Optional.of(credentialDisplay);
         when(credentialConfigRepository.findById(anyString())).thenReturn(optional);
+        when(credentialDisplayRepository.findById(anyLong())).thenReturn(optionalCredentialDisplay);
         doNothing().when(credentialConfigRepository).deleteById(anyString());
 
         String result = credentialConfigurationService.deleteCredentialConfigurationById("12345678");
 
         Assert.assertNotNull(result);
-        assertEquals("Configuration deleted with id: " + "12345678", result);
+        assertEquals("Configuration deleted with id: 12345678", result);
     }
 
     @Test
@@ -194,6 +171,6 @@ public class CredentialConfigurationServiceImplTest {
         CertifyException exception = assertThrows(CertifyException.class, () ->
                 credentialConfigurationService.deleteCredentialConfigurationById("12345678"));
 
-        assertEquals("Configuration not found with the provided id: " + "12345678", exception.getMessage());
+        assertEquals("Configuration not found with the provided id: 12345678", exception.getMessage());
     }
 }

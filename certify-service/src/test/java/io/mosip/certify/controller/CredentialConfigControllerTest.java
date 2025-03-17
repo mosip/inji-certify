@@ -39,9 +39,6 @@ public class CredentialConfigControllerTest {
     @MockBean
     CredentialConfigurationService credentialConfigurationService;
 
-    @MockBean
-    VCIssuanceService vcIssuanceService;
-
     @Mock
     private CredentialConfigurationDTO credentialConfigurationDTO;
 
@@ -53,7 +50,7 @@ public class CredentialConfigControllerTest {
         credentialConfigurationDTO.setCredentialType(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"));
         credentialConfigurationDTO.setCredentialFormat("ldp_vc");
         credentialConfigurationDTO.setDidUrl("did:web:test.github.io:test-env:test-folder");
-        CredentialDisplay credentialDisplay = new CredentialDisplay();
+        CredentialDisplayDTO credentialDisplay = new CredentialDisplayDTO();
         credentialDisplay.setName("Test Verifiable Credential");
         credentialDisplay.setLocale("en");
         credentialDisplay.setBackgroundColor("#FDFAF9");
@@ -71,18 +68,17 @@ public class CredentialConfigControllerTest {
         pluginConfigMap.put("mosip.certify.mock.data-provider.test-two", "valueTwo");
         pluginConfigMap.put("mosip.certify.mock.data-provider.test-three", "valueThree");
         credentialConfigurationDTO.setPluginConfigurations(List.of(pluginConfigMap));
+        credentialConfigurationDTO.setCredentialSubject(Map.of("name", "Full Name"));
     }
 
     @Test
     public void addNewCredentialConfiguration_Success() throws Exception {
-
-
         CredentialConfigResponse credentialConfigResponse = new CredentialConfigResponse();
         credentialConfigResponse.setId("farmer-credential-config-001");
         credentialConfigResponse.setStatus("active");
         Mockito.when(credentialConfigurationService.addCredentialConfiguration(credentialConfigurationDTO)).thenReturn(credentialConfigResponse);
 
-        mockMvc.perform(post("/configurations")
+        mockMvc.perform(post("/credentials/configurations")
                         .content(objectMapper.writeValueAsBytes(credentialConfigurationDTO))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
@@ -95,7 +91,7 @@ public class CredentialConfigControllerTest {
 
         Mockito.when(credentialConfigurationService.getCredentialConfigurationById(Mockito.anyString())).thenReturn(credentialConfigurationDTO);
 
-        mockMvc.perform(get("/configurations/1"))
+        mockMvc.perform(get("/credentials/configurations/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.vcTemplate").exists())
                 .andExpect(jsonPath("$.context").exists())
@@ -114,7 +110,7 @@ public class CredentialConfigControllerTest {
         credentialConfigResponse.setStatus("active");
         Mockito.when(credentialConfigurationService.updateCredentialConfiguration(Mockito.anyString(), eq(credentialConfigurationDTO))).thenReturn(credentialConfigResponse);
 
-        mockMvc.perform(put("/configurations/1")
+        mockMvc.perform(put("/credentials/configurations/1")
                         .content(objectMapper.writeValueAsBytes(credentialConfigurationDTO))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -127,8 +123,47 @@ public class CredentialConfigControllerTest {
         String response = "Configuration deleted with id: 1";
         Mockito.when(credentialConfigurationService.deleteCredentialConfigurationById(Mockito.anyString())).thenReturn(response);
 
-        mockMvc.perform(delete("/configurations/1"))
+        mockMvc.perform(delete("/credentials/configurations/1"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(response));
+    }
+
+        @Test
+    public void getIssuerMetadata_noQueryParams_thenPass() throws Exception {
+        CredentialIssuerMetadata credentialIssuerMetadata = new CredentialIssuerMetadata();
+        credentialIssuerMetadata.setCredentialIssuer("https://localhost:9090");
+        credentialIssuerMetadata.setAuthorizationServers(List.of("https://example.com/auth"));
+        credentialIssuerMetadata.setCredentialEndpoint("https://localhost:9090/v1/certify/issuance/credential");
+        Map<String, String> display = new HashMap<>();
+        display.put("name", "Test Credential Issuer");
+        display.put("locale", "en");
+        credentialIssuerMetadata.setDisplay(List.of(display));
+
+        CredentialConfigurationSupported credentialConfigurationSupported = new CredentialConfigurationSupported();
+        credentialConfigurationSupported.setFormat("ldp_vc");
+        credentialConfigurationSupported.setScope("test_vc_ldp");
+        credentialConfigurationSupported.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
+        credentialConfigurationSupported.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
+        Map<String, Object> jwtValues = Map.of("proof_signing_alg_values_supported", Arrays.asList("RS256", "ES256"));
+        credentialConfigurationSupported.setProofTypesSupported(jwtValues);
+        CredentialDisplayDTO credentialDisplay = new CredentialDisplayDTO();
+        credentialDisplay.setName("Test Verifiable Credential");
+        credentialDisplay.setLocale("en");
+        credentialDisplay.setBackgroundColor("#FDFAF9");
+        credentialDisplay.setTextColor("#7C4616");
+        credentialDisplay.setLogo(Map.of("url", "https://www.example.com", "alt_text", "test"));
+        credentialConfigurationSupported.setDisplay(credentialDisplay);
+        credentialConfigurationSupported.setOrder(Arrays.asList("test1", "test2", "test3", "test4"));
+        credentialIssuerMetadata.setCredentialConfigurationSupported(Map.of("TestCredential_ldp", credentialConfigurationSupported));
+
+        Mockito.when(credentialConfigurationService.fetchCredentialIssuerMetadata(Mockito.anyString())).thenReturn(credentialIssuerMetadata);
+
+        mockMvc.perform(get("/credentials/.well-known/openid-credential-issuer"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.credential_issuer").exists())
+                .andExpect(jsonPath("$.credential_configurations_supported").exists())
+                .andExpect(header().string("Content-Type", "application/json"));
+
+        Mockito.verify(credentialConfigurationService).fetchCredentialIssuerMetadata("latest");
     }
 }

@@ -3,6 +3,7 @@ package io.mosip.certify.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.mosip.certify.core.dto.CredentialConfigResponse;
 import io.mosip.certify.core.dto.CredentialConfigurationDTO;
+import io.mosip.certify.core.dto.CredentialIssuerMetadata;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -15,27 +16,27 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/configurations")
+@RequestMapping("/credentials")
 public class CredentialConfigController {
 
     @Autowired
     private CredentialConfigurationService credentialConfigurationService;
 
-    @PostMapping(produces = "application/json")
+    @PostMapping(value = "/configurations", produces = "application/json")
     public ResponseEntity<CredentialConfigResponse> addCredentialConfiguration(@Valid @RequestBody CredentialConfigurationDTO credentialConfigurationRequest) throws JsonProcessingException {
 
         CredentialConfigResponse credentialConfigResponse = credentialConfigurationService.addCredentialConfiguration(credentialConfigurationRequest);
         return new ResponseEntity<>(credentialConfigResponse, HttpStatus.CREATED);
     }
 
-    @GetMapping(value = "/{configurationId}", produces = "application/json")
+    @GetMapping(value = "/configurations/{configurationId}", produces = "application/json")
     public ResponseEntity<CredentialConfigurationDTO> getCredentialConfigurationById(@PathVariable String configurationId) throws JsonProcessingException {
 
         CredentialConfigurationDTO credentialConfigurationDTO = credentialConfigurationService.getCredentialConfigurationById(configurationId);
         return new ResponseEntity<>(credentialConfigurationDTO, HttpStatus.OK);
     }
 
-    @PutMapping(value = "/{configurationId}", produces = "application/json")
+    @PutMapping(value = "/configurations/{configurationId}", produces = "application/json")
     public ResponseEntity<CredentialConfigResponse> updateCredentialConfiguration(@PathVariable String configurationId,
                                                              @Valid @RequestBody CredentialConfigurationDTO credentialConfigurationRequest) throws JsonProcessingException {
 
@@ -43,10 +44,16 @@ public class CredentialConfigController {
         return new ResponseEntity<>(credentialConfigResponse, HttpStatus.OK);
     }
 
-    @DeleteMapping(value = "/{configurationId}", produces = "application/json")
+    @DeleteMapping(value = "/configurations/{configurationId}", produces = "application/json")
     public ResponseEntity<String> deleteCredentialConfigurationById(@PathVariable String configurationId) {
 
         String response = credentialConfigurationService.deleteCredentialConfigurationById(configurationId);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/.well-known/openid-credential-issuer", produces = "application/json")
+    public CredentialIssuerMetadata getCredentialIssuerMetadata(
+            @RequestParam(name = "version", required = false, defaultValue = "latest") String version) {
+        return credentialConfigurationService.fetchCredentialIssuerMetadata(version);
     }
 }

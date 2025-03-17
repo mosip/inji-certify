@@ -1,6 +1,7 @@
 package io.mosip.certify.controller;
 
 import io.mosip.certify.core.dto.CredentialIssuerMetadata;
+import io.mosip.certify.core.spi.CredentialConfigurationService;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,11 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class IssuerMetadataController {
 
     @Autowired
-    private VCIssuanceService vcIssuanceService;
+    private CredentialConfigurationService credentialConfigurationService;
 
     @GetMapping(value = "/.well-known/openid-credential-issuer", produces = "application/json")
     public CredentialIssuerMetadata getCredentialIssuerMetadata(
             @RequestParam(name = "version", required = false, defaultValue = "latest") String version) {
-        return vcIssuanceService.fetchCredentialIssuerMetadata(version);
+        return credentialConfigurationService.fetchCredentialIssuerMetadata(version);
     }
 }
