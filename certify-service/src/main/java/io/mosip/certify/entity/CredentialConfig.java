@@ -68,7 +68,7 @@ public class CredentialConfig {
     private Map<String, Object> credentialSubject;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "plugin_configurations", columnDefinition = "jsonb[]")
+    @Column(name = "plugin_configurations", columnDefinition = "jsonb")
     private List<Map<String, String>> pluginConfigurations;
 
     @NotNull
