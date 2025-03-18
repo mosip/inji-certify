@@ -123,10 +123,6 @@ public class DeleteWithParam extends InjiCertifyUtil implements ITest {
 					if (InjiCertifyConfigManager.getSunBirdBaseURL() != null
 							&& !InjiCertifyConfigManager.getSunBirdBaseURL().isBlank())
 						tempUrl = InjiCertifyConfigManager.getSunBirdBaseURL();
-					// Once sunbird registry is pointing to specific env, remove the above line and
-					// uncomment below line
-					// tempUrl = ApplnURI.replace(GlobalConstants.API_INTERNAL,
-					// MimotoConfigManager.getSunBirdBaseURL());
 					testCaseDTO.setEndPoint(testCaseDTO.getEndPoint().replace("$SUNBIRDBASEURL$", ""));
 				}
 
