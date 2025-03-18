@@ -106,6 +106,8 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         //Get VC from configured plugin implementation
         VCResult<?> vcResult = getVerifiableCredential(credentialRequest, credentialMetadata,
                 proofValidator.getKeyMaterial(credentialRequest.getProof()));
+        
+
 
         auditWrapper.logAudit(Action.VC_ISSUANCE, ActionStatus.SUCCESS,
                 AuditHelper.buildAuditDto(parsedAccessToken.getAccessTokenHash(), "accessTokenHash"), null);
