@@ -67,7 +67,7 @@ public class MosipTestRunner {
 
 		try {
 			LOGGER.info("** ------------- API Test Rig Run Started --------------------------------------------- **");
-			
+
 			BaseTestCase.setRunContext(getRunType(), jarUrl);
 			ExtractResource.removeOldMosipTestTestResource();
 			if (getRunType().equalsIgnoreCase("JAR")) {
@@ -88,15 +88,17 @@ public class MosipTestRunner {
 			healthcheck.setCurrentRunningModule(BaseTestCase.currentModule);
 			Thread trigger = new Thread(healthcheck);
 			trigger.start();
-			
+
 			KeycloakUserManager.removeUser();
 			KeycloakUserManager.createUsers();
 			KeycloakUserManager.closeKeycloakInstance();
 			AdminTestUtil.getRequiredField();
 
 			BaseTestCase.getLanguageList();
-			
+
 			if (useCaseToExecute.equalsIgnoreCase("mosipid")) {
+
+				InjiCertifyUtil.dBCleanup();
 
 				// Generate device certificates to be consumed by Mock-MDS
 				PartnerRegistration.deleteCertificates();
@@ -105,9 +107,13 @@ public class MosipTestRunner {
 				PartnerRegistration.deviceGeneration();
 
 				BiometricDataProvider.generateBiometricTestData("Registration");
-			}
 
-			startTestRunner();
+				startTestRunner();
+
+				InjiCertifyUtil.dBCleanup();
+			} else {
+				startTestRunner();
+			}
 		} catch (Exception e) {
 			LOGGER.error("Exception " + e.getMessage());
 		}
@@ -133,16 +139,6 @@ public class MosipTestRunner {
 		}
 		BaseTestCase.currentModule = GlobalConstants.INJICERTIFY;
 		BaseTestCase.certsForModule = GlobalConstants.INJICERTIFY;
-		DBManager.executeDBQueries(InjiCertifyConfigManager.getKMDbUrl(), InjiCertifyConfigManager.getKMDbUser(),
-				InjiCertifyConfigManager.getKMDbPass(), InjiCertifyConfigManager.getKMDbSchema(),
-				getGlobalResourcePath() + "/" + "config/keyManagerCertDataDeleteQueries.txt");
-		DBManager.executeDBQueries(InjiCertifyConfigManager.getIdaDbUrl(), InjiCertifyConfigManager.getIdaDbUser(),
-				InjiCertifyConfigManager.getPMSDbPass(), InjiCertifyConfigManager.getIdaDbSchema(),
-				getGlobalResourcePath() + "/" + "config/idaCertDataDeleteQueries.txt");
-		DBManager.executeDBQueries(InjiCertifyConfigManager.getMASTERDbUrl(),
-				InjiCertifyConfigManager.getMasterDbUser(), InjiCertifyConfigManager.getMasterDbPass(),
-				InjiCertifyConfigManager.getMasterDbSchema(),
-				getGlobalResourcePath() + "/" + "config/masterDataCertDataDeleteQueries.txt");
 		AdminTestUtil.copymoduleSpecificAndConfigFile(GlobalConstants.INJICERTIFY);
 		BaseTestCase.otpListener = new OTPListener();
 		BaseTestCase.otpListener.run();
