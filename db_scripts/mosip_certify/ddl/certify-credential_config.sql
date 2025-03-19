@@ -19,17 +19,16 @@ CREATE TABLE credential_config (
     credential_type TEXT[] NOT NULL,
     credential_format VARCHAR(255) NOT NULL,
     did_url VARCHAR NOT NULL,
-    display_id INT NOT NULL,
+    display JSONB NOT NULL,
     display_order TEXT[] NOT NULL,
     scope VARCHAR(255) NOT NULL,
     cryptographic_binding_methods_supported TEXT[] NOT NULL,
     credential_signing_alg_values_supported TEXT[] NOT NULL,
     proof_types_supported JSONB NOT NULL,  -- JSONB type
 	credential_subject JSONB NOT NULL,
-    plugin_configurations JSONB[],
+    plugin_configurations JSONB,
 	cr_dtimes TIMESTAMP NOT NULL,
-    upd_dtimes TIMESTAMP,
-    FOREIGN KEY (display_id) REFERENCES credential_display(id)
+    upd_dtimes TIMESTAMP
 );
 
 COMMENT ON TABLE credential_config IS 'Credential Config: Contains details of credential configuration.';

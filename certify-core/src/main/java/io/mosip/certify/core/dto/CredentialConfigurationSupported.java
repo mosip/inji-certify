@@ -25,7 +25,7 @@ public class CredentialConfigurationSupported {
     @JsonProperty("credential_definition")
     private CredentialDefinition credentialDefinition;
 
-    private CredentialDisplayDTO display;
+    private List<Map<String, Object>> display;
 
     private List<String> order;
 }

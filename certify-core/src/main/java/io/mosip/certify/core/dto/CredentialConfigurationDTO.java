@@ -30,7 +30,7 @@ public class CredentialConfigurationDTO {
 
     @Valid
     @NotNull(message = ErrorConstants.INVALID_REQUEST)
-    private CredentialDisplayDTO display;
+    private List<Map<String, Object>> display;
 
     private List<String> order;
 
