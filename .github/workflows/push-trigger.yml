@@ -58,7 +58,6 @@ jobs:
           - SERVICE_LOCATION: 'certify-service'
             SERVICE_NAME: 'inji-certify'
             BUILD_ARTIFACT: 'inji-certify'
-            SQUASH_LAYERS: '15'
       fail-fast: false
     name: ${{ matrix.SERVICE_NAME }}
     uses: mosip/kattu/.github/workflows/docker-build.yml@master-java21
