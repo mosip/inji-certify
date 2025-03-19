@@ -20,7 +20,6 @@ public class CredentialConfig {
 
     private String status;
 
-    @NotNull(message = "Invalid request")
     private String vcTemplate;
 
     @NotNull(message = "Invalid request")

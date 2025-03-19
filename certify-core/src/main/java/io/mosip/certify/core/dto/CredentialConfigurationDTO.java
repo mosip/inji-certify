@@ -13,7 +13,6 @@ import java.util.Map;
 @Data
 public class CredentialConfigurationDTO {
 
-    @NotEmpty(message = ErrorConstants.INVALID_REQUEST)
     private String vcTemplate;
 
     @NotNull(message = ErrorConstants.INVALID_REQUEST)
