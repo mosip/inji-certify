@@ -382,7 +382,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
             }
     }
-       
+
     private CredentialResponse<?> getCredentialResponse(String format, VCResult<?> vcResult) {
         switch (format) {
             case "ldp_vc" -> {
