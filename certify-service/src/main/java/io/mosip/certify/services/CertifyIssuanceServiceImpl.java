@@ -441,8 +441,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 nonceExpireSeconds instanceof Long ? (int)(long)nonceExpireSeconds : (int)nonceExpireSeconds :
                 transaction.getCNonceExpireSeconds();
         long issuedEpoch = (transaction == null) ?
-                //throws error when run as a jar
-                (long)parsedAccessToken.getClaims().getOrDefault(JwtClaimNames.IAT, Instant.now().getEpochSecond()):
+                ((Instant) parsedAccessToken.getClaims().getOrDefault(JwtClaimNames.IAT, Instant.MIN)).getEpochSecond():
                 transaction.getCNonceIssuedEpoch();
 
         if( cNonce == null ||
