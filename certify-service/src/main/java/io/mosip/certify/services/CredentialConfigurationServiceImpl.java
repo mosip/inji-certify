@@ -36,11 +36,18 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Value("${server.servlet.path}")
     private String servletPath;
 
+    @Value("${mosip.certify.plugin-mode}")
+    private String pluginMode;
+
     @Override
     public CredentialConfigResponse addCredentialConfiguration(CredentialConfigurationDTO credentialConfigurationDTO) throws JsonProcessingException {
         CredentialConfig credentialConfig = credentialConfigMapper.toEntity(credentialConfigurationDTO);
         credentialConfig.setId(UUID.randomUUID().toString());
         credentialConfig.setStatus(Constants.ACTIVE);
+
+        if(pluginMode.equals("DataProvider") && credentialConfig.getVcTemplate() == null) {
+            throw new CertifyException("Credential Template is mandatory for this \"DataProvider\" plugin issuer.");
+        }
 
         credentialConfigRepository.save(credentialConfig);
 

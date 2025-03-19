@@ -14,7 +14,7 @@
 CREATE TABLE credential_config (
     id VARCHAR(255) PRIMARY KEY,
     status VARCHAR(255),
-    vc_template VARCHAR NOT NULL,
+    vc_template VARCHAR,
     context TEXT[] NOT NULL,
     credential_type TEXT[] NOT NULL,
     credential_format VARCHAR(255) NOT NULL,
