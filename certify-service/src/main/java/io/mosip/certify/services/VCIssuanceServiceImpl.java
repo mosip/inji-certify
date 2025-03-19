@@ -131,11 +131,6 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE);
     }
 
-    @Override
-    public CredentialIssuerMetadata fetchCredentialIssuerMetadata(String version) {
-        return new CredentialIssuerMetadata();
-    }
-
     private Map<String, Object> convertLatestToVd11(LinkedHashMap<String, Object> vciMetadata) {
         // Create a list to hold the transformed credentials
         List<Map<String, Object>> credentialsList = new ArrayList<>();

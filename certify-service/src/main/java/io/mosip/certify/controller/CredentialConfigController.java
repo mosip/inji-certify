@@ -1,43 +1,59 @@
 package io.mosip.certify.controller;
 
-import io.mosip.certify.core.dto.CredentialConfigurationRequest;
-import io.mosip.certify.core.dto.CredentialConfigurationSupported;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import io.mosip.certify.core.dto.CredentialConfigResponse;
+import io.mosip.certify.core.dto.CredentialConfigurationDTO;
 import io.mosip.certify.core.dto.CredentialIssuerMetadata;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
-import io.mosip.certify.core.spi.VCIssuanceService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/credentials/configurations")
+@RequestMapping("/credentials")
 public class CredentialConfigController {
 
     @Autowired
     private CredentialConfigurationService credentialConfigurationService;
 
-    @PostMapping(produces = "application/json")
-    public Map<String, String> addCredentialConfiguration(@Valid @RequestBody CredentialConfigurationRequest credentialConfigurationRequest) {
-        return credentialConfigurationService.addCredentialConfiguration(credentialConfigurationRequest);
+    @PostMapping(value = "/configurations", produces = "application/json")
+    public ResponseEntity<CredentialConfigResponse> addCredentialConfiguration(@Valid @RequestBody CredentialConfigurationDTO credentialConfigurationRequest) throws JsonProcessingException {
+
+        CredentialConfigResponse credentialConfigResponse = credentialConfigurationService.addCredentialConfiguration(credentialConfigurationRequest);
+        return new ResponseEntity<>(credentialConfigResponse, HttpStatus.CREATED);
     }
 
-    @GetMapping(value = "/{configurationId}", produces = "application/json")
-    public CredentialConfigurationRequest getCredentialConfigurationById(@PathVariable String configurationId) {
-        return credentialConfigurationService.getCredentialConfigurationById(configurationId);
+    @GetMapping(value = "/configurations/{configurationId}", produces = "application/json")
+    public ResponseEntity<CredentialConfigurationDTO> getCredentialConfigurationById(@PathVariable String configurationId) throws JsonProcessingException {
+
+        CredentialConfigurationDTO credentialConfigurationDTO = credentialConfigurationService.getCredentialConfigurationById(configurationId);
+        return new ResponseEntity<>(credentialConfigurationDTO, HttpStatus.OK);
     }
 
-    @PutMapping(value = "/{configurationId}", produces = "application/json")
-    public Map<String, String> updateCredentialConfiguration(@PathVariable String configurationId,
-                                                             @Valid @RequestBody CredentialConfigurationRequest credentialConfigurationRequest) {
-        return credentialConfigurationService.updateCredentialConfiguration(configurationId, credentialConfigurationRequest);
+    @PutMapping(value = "/configurations/{configurationId}", produces = "application/json")
+    public ResponseEntity<CredentialConfigResponse> updateCredentialConfiguration(@PathVariable String configurationId,
+                                                             @Valid @RequestBody CredentialConfigurationDTO credentialConfigurationRequest) throws JsonProcessingException {
+
+        CredentialConfigResponse credentialConfigResponse = credentialConfigurationService.updateCredentialConfiguration(configurationId, credentialConfigurationRequest);
+        return new ResponseEntity<>(credentialConfigResponse, HttpStatus.OK);
     }
 
-    @DeleteMapping(value = "/{configurationId}", produces = "application/json")
-    public void deleteCredentialConfigurationById(@PathVariable String configurationId) {
-        credentialConfigurationService.deleteCredentialConfigurationById(configurationId);
+    @DeleteMapping(value = "/configurations/{configurationId}", produces = "application/json")
+    public ResponseEntity<String> deleteCredentialConfigurationById(@PathVariable String configurationId) {
+
+        String response = credentialConfigurationService.deleteCredentialConfigurationById(configurationId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/.well-known/openid-credential-issuer", produces = "application/json")
+    public CredentialIssuerMetadata getCredentialIssuerMetadata(
+            @RequestParam(name = "version", required = false, defaultValue = "latest") String version) {
+        return credentialConfigurationService.fetchCredentialIssuerMetadata(version);
     }
 }

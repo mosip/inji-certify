@@ -1,7 +1,6 @@
 package io.mosip.certify;
 
 import io.mosip.certify.core.constants.ErrorConstants;
-import io.mosip.certify.core.dto.CredentialConfigurationRequest;
 import io.mosip.certify.core.dto.CredentialIssuerMetadata;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
@@ -32,10 +31,5 @@ public class TestVCIssuanceServiceImpl implements VCIssuanceService {
     @Override
     public Map<String, Object> getDIDDocument() {
         throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE);
-    }
-
-    @Override
-    public CredentialIssuerMetadata fetchCredentialIssuerMetadata(String version) {
-        return new CredentialIssuerMetadata();
     }
 }

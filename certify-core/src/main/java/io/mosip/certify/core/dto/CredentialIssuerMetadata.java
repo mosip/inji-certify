@@ -18,7 +18,7 @@ public class CredentialIssuerMetadata {
     @JsonProperty("credential_endpoint")
     private String credentialEndpoint;
 
-    private Map<String, String> display;
+    private List<Map<String, String>> display;
 
     @JsonProperty("credential_configurations_supported")
     private Map<String, CredentialConfigurationSupported> credentialConfigurationSupported;
