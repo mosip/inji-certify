@@ -18,7 +18,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
-
 import java.util.Locale;
 import java.util.Map;
 
@@ -85,6 +84,7 @@ public class VCIssuanceController {
     public Map<String, Object> getDIDDocument() {
        return vcIssuanceService.getDIDDocument();
     }
+
 
     @ResponseBody
     @ExceptionHandler(InvalidNonceException.class)

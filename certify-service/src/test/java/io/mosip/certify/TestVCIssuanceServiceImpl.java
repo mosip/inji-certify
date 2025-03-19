@@ -1,7 +1,6 @@
 package io.mosip.certify;
 
 import io.mosip.certify.core.constants.ErrorConstants;
-import io.mosip.certify.core.dto.CredentialIssuerMetadata;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
 import io.mosip.certify.core.exception.InvalidRequestException;
