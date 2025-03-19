@@ -3,7 +3,6 @@ package io.mosip.certify.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
-import io.mosip.certify.core.spi.VCIssuanceService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,13 +49,7 @@ public class CredentialConfigControllerTest {
         credentialConfigurationDTO.setCredentialType(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"));
         credentialConfigurationDTO.setCredentialFormat("ldp_vc");
         credentialConfigurationDTO.setDidUrl("did:web:test.github.io:test-env:test-folder");
-        CredentialDisplayDTO credentialDisplay = new CredentialDisplayDTO();
-        credentialDisplay.setName("Test Verifiable Credential");
-        credentialDisplay.setLocale("en");
-        credentialDisplay.setBackgroundColor("#FDFAF9");
-        credentialDisplay.setTextColor("#7C4616");
-        credentialDisplay.setLogo(Map.of("url", "https://www.example.com", "alt_text", "test"));
-        credentialConfigurationDTO.setDisplay(credentialDisplay);
+        credentialConfigurationDTO.setDisplay(List.of());
         credentialConfigurationDTO.setOrder(Arrays.asList("test1", "test2", "test3", "test4"));
         credentialConfigurationDTO.setScope("test_vc_ldp");
         credentialConfigurationDTO.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
@@ -146,13 +139,7 @@ public class CredentialConfigControllerTest {
         credentialConfigurationSupported.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
         Map<String, Object> jwtValues = Map.of("proof_signing_alg_values_supported", Arrays.asList("RS256", "ES256"));
         credentialConfigurationSupported.setProofTypesSupported(jwtValues);
-        CredentialDisplayDTO credentialDisplay = new CredentialDisplayDTO();
-        credentialDisplay.setName("Test Verifiable Credential");
-        credentialDisplay.setLocale("en");
-        credentialDisplay.setBackgroundColor("#FDFAF9");
-        credentialDisplay.setTextColor("#7C4616");
-        credentialDisplay.setLogo(Map.of("url", "https://www.example.com", "alt_text", "test"));
-        credentialConfigurationSupported.setDisplay(credentialDisplay);
+        credentialConfigurationSupported.setDisplay(List.of());
         credentialConfigurationSupported.setOrder(Arrays.asList("test1", "test2", "test3", "test4"));
         credentialIssuerMetadata.setCredentialConfigurationSupported(Map.of("TestCredential_ldp", credentialConfigurationSupported));
 

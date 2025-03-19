@@ -1,16 +1,12 @@
 package io.mosip.certify.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.core.dto.CredentialConfigResponse;
 import io.mosip.certify.core.dto.CredentialConfigurationDTO;
-import io.mosip.certify.core.dto.CredentialDisplayDTO;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.entity.CredentialConfig;
-import io.mosip.certify.entity.CredentialDisplay;
 import io.mosip.certify.mapper.CredentialConfigMapper;
 import io.mosip.certify.repository.CredentialConfigRepository;
-import io.mosip.certify.repository.CredentialDisplayRepository;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,9 +32,6 @@ public class CredentialConfigurationServiceImplTest {
     private CredentialConfigRepository credentialConfigRepository;
 
     @Mock
-    private CredentialDisplayRepository credentialDisplayRepository;
-
-    @Mock
     private CredentialConfigMapper credentialConfigMapper;
 
     @InjectMocks
@@ -49,9 +42,6 @@ public class CredentialConfigurationServiceImplTest {
 
     @Mock
     private CredentialConfig credentialConfig;
-
-    @Mock
-    private CredentialDisplay credentialDisplay;
 
     @Before
     public void setup() {
@@ -71,17 +61,8 @@ public class CredentialConfigurationServiceImplTest {
         credentialConfig.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
         credentialConfig.setCredentialSubject(Map.of("name", "Full Name"));
 
-        credentialDisplay = new CredentialDisplay();
-        credentialDisplay.setId(1L);
-        credentialDisplay.setName("Test Credential");
-        credentialDisplay.setLocale("en");
-        credentialDisplay.setTextColor("#FFFFFF");
-        credentialDisplay.setBackgroundColor("#12107c");
-        credentialDisplay.setLogo(Map.of("test1", "value1"));
-        credentialConfig.setDisplay(credentialDisplay);
-
         credentialConfigurationDTO = new CredentialConfigurationDTO();
-        credentialConfigurationDTO.setDisplay(new CredentialDisplayDTO());
+        credentialConfigurationDTO.setDisplay(List.of());
         credentialConfigurationDTO.setVcTemplate("test_template");
         credentialConfigurationDTO.setCredentialFormat("test_vc");
         credentialConfigurationDTO.setContext(List.of("https://www.w3.org/2018/credentials/v1"));
@@ -162,7 +143,6 @@ public class CredentialConfigurationServiceImplTest {
     @Test
     public void deleteCredentialConfig_Success() throws JsonProcessingException {
         Optional<CredentialConfig> optional = Optional.of(credentialConfig);
-        Optional<CredentialDisplay> optionalCredentialDisplay = Optional.of(credentialDisplay);
         when(credentialConfigRepository.findById(anyString())).thenReturn(optional);
         doNothing().when(credentialConfigRepository).deleteById(anyString());
 

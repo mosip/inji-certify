@@ -37,11 +37,10 @@ public class CredentialConfig {
     @NotNull(message = "Invalid request")
     private String didUrl;
 
-    @Valid
     @NotNull(message = "Invalid request")
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "display_id")
-    private CredentialDisplay display;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "display", columnDefinition = "jsonb")
+    private List<Map<String, Object>> display;
 
     @Column(name = "display_order", columnDefinition = "TEXT[]")
     private List<String> order;
