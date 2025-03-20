@@ -35,7 +35,7 @@ import io.mosip.testrig.apirig.utils.OutputValidationUtil;
 import io.mosip.testrig.apirig.utils.ReportUtil;
 import io.restassured.response.Response;
 
-public class SimplePostForAutoGenIdForUrlEncoded extends AdminTestUtil implements ITest {
+public class SimplePostForAutoGenIdForUrlEncoded extends InjiCertifyUtil implements ITest {
 	private static final Logger logger = Logger.getLogger(SimplePostForAutoGenIdForUrlEncoded.class);
 	protected String testCaseName = "";
 	public String idKeyName = null;
@@ -134,7 +134,6 @@ public class SimplePostForAutoGenIdForUrlEncoded extends AdminTestUtil implement
 					throw new AdminTestException("Failed at output validation");
 			}
 		} else {
-//			jsonInput = inputJsonKeyWordHandeler(jsonInput, testCaseName);
 			jsonInput = InjiCertifyUtil.inputStringKeyWordHandeler(jsonInput, testCaseName);
 
 			if (testCaseName.contains("ESignet_")) {

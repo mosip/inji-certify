@@ -36,7 +36,7 @@ import io.mosip.testrig.apirig.utils.OutputValidationUtil;
 import io.mosip.testrig.apirig.utils.ReportUtil;
 import io.restassured.response.Response;
 
-public class SimplePostForAutoGenId extends AdminTestUtil implements ITest {
+public class SimplePostForAutoGenId extends InjiCertifyUtil implements ITest {
 	private static final Logger logger = Logger.getLogger(SimplePostForAutoGenId.class);
 	protected String testCaseName = "";
 	public String idKeyName = null;
@@ -100,17 +100,6 @@ public class SimplePostForAutoGenId extends AdminTestUtil implements ITest {
 			}
 		}
 
-		if (BaseTestCase.isTargetEnvLTS()) {
-			if (!InjiCertifyConfigManager.isInServiceNotDeployedList(GlobalConstants.RESIDENT)) {
-				if ((BaseTestCase.currentModule.equals("esignet") && testCaseName.startsWith("ESignetIdR_Generate"))) {
-					throw new SkipException(
-							GlobalConstants.VID_GENERATED_USING_RESIDENT_API_SO_FEATURE_NOT_SUPPORTED_OR_NEEDED_MESSAGE);
-//					qa115 - f
-//					cam   - t f
-//					dev	  - t 
-				}
-			}
-		}
 		String[] templateFields = testCaseDTO.getTemplateFields();
 		String inputJson = "";
 

@@ -33,7 +33,7 @@ import io.mosip.testrig.apirig.utils.OutputValidationUtil;
 import io.mosip.testrig.apirig.utils.ReportUtil;
 import io.restassured.response.Response;
 
-public class DeleteWithParam extends AdminTestUtil implements ITest {
+public class DeleteWithParam extends InjiCertifyUtil implements ITest {
 	private static final Logger logger = Logger.getLogger(DeleteWithParam.class);
 	protected String testCaseName = "";
 	public Response response = null;
@@ -123,10 +123,6 @@ public class DeleteWithParam extends AdminTestUtil implements ITest {
 					if (InjiCertifyConfigManager.getSunBirdBaseURL() != null
 							&& !InjiCertifyConfigManager.getSunBirdBaseURL().isBlank())
 						tempUrl = InjiCertifyConfigManager.getSunBirdBaseURL();
-					// Once sunbird registry is pointing to specific env, remove the above line and
-					// uncomment below line
-					// tempUrl = ApplnURI.replace(GlobalConstants.API_INTERNAL,
-					// MimotoConfigManager.getSunBirdBaseURL());
 					testCaseDTO.setEndPoint(testCaseDTO.getEndPoint().replace("$SUNBIRDBASEURL$", ""));
 				}
 

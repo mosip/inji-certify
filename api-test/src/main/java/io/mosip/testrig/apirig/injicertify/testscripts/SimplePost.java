@@ -35,7 +35,7 @@ import io.mosip.testrig.apirig.utils.OutputValidationUtil;
 import io.mosip.testrig.apirig.utils.ReportUtil;
 import io.restassured.response.Response;
 
-public class SimplePost extends AdminTestUtil implements ITest {
+public class SimplePost extends InjiCertifyUtil implements ITest {
 	private static final Logger logger = Logger.getLogger(SimplePost.class);
 	protected String testCaseName = "";
 	public Response response = null;
@@ -134,8 +134,6 @@ public class SimplePost extends AdminTestUtil implements ITest {
 						testCaseDTO.setEndPoint(testCaseDTO.getEndPoint().replace(endPointKeyWord, ""));
 					}
 				}
-//				inputJson = inputJsonKeyWordHandeler(inputJson, testCaseName);
-//				inputJson = InjiCertifyUtil.inputStringKeyWordHandeler(inputJson, testCaseName);
 				response = postRequestWithCookieAuthHeaderAndXsrfToken(tempUrl + testCaseDTO.getEndPoint(), inputJson,
 						COOKIENAME, testCaseDTO.getTestCaseName());
 			} else {

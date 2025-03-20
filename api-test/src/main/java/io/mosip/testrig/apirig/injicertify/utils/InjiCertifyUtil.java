@@ -5,15 +5,19 @@ import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.testng.SkipException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.javafaker.Faker;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -25,6 +29,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
 import io.mosip.testrig.apirig.dataprovider.BiometricDataProvider;
+import io.mosip.testrig.apirig.dbaccess.DBManager;
 import io.mosip.testrig.apirig.dto.TestCaseDTO;
 import io.mosip.testrig.apirig.injicertify.testrunner.MosipTestRunner;
 import io.mosip.testrig.apirig.testrunner.BaseTestCase;
@@ -41,6 +46,37 @@ public class InjiCertifyUtil extends AdminTestUtil {
 
 	private static final Logger logger = Logger.getLogger(InjiCertifyUtil.class);
 	public static String currentUseCase = "";
+	private static Faker faker = new Faker();
+	private static String fullNameForSunBirdR = generateFullNameForSunBirdR();
+	private static String dobForSunBirdR = generateDobForSunBirdR();
+	private static String policyNumberForSunBirdR = generateRandomNumberString(9);
+	
+	public static void setLogLevel() {
+		if (InjiCertifyConfigManager.IsDebugEnabled())
+			logger.setLevel(Level.ALL);
+		else
+			logger.setLevel(Level.ERROR);
+	}
+	
+	public static void dBCleanup() {
+		DBManager.executeDBQueries(InjiCertifyConfigManager.getKMDbUrl(), InjiCertifyConfigManager.getKMDbUser(),
+				InjiCertifyConfigManager.getKMDbPass(), InjiCertifyConfigManager.getKMDbSchema(),
+				getGlobalResourcePath() + "/" + "config/keyManagerCertDataDeleteQueries.txt");
+		
+		DBManager.executeDBQueries(InjiCertifyConfigManager.getIdaDbUrl(), InjiCertifyConfigManager.getIdaDbUser(),
+				InjiCertifyConfigManager.getPMSDbPass(), InjiCertifyConfigManager.getIdaDbSchema(),
+				getGlobalResourcePath() + "/" + "config/idaCertDataDeleteQueries.txt");
+		
+		DBManager.executeDBQueries(InjiCertifyConfigManager.getMASTERDbUrl(),
+				InjiCertifyConfigManager.getMasterDbUser(), InjiCertifyConfigManager.getMasterDbPass(),
+				InjiCertifyConfigManager.getMasterDbSchema(),
+				getGlobalResourcePath() + "/" + "config/masterDataCertDataDeleteQueries.txt");
+		
+		DBManager.executeDBQueries(InjiCertifyConfigManager.getPMSDbUrl(), InjiCertifyConfigManager.getPMSDbUser(),
+				InjiCertifyConfigManager.getPMSDbPass(), InjiCertifyConfigManager.getPMSDbSchema(),
+				getGlobalResourcePath() + "/" + "config/pmsDataDeleteQueries.txt");
+		
+	}
 
 	public static String smtpOtpHandler(String inputJson, TestCaseDTO testCaseDTO) {
 		JSONObject request = new JSONObject(inputJson);
@@ -52,8 +88,10 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			if (challengeKey.endsWith(GlobalConstants.MOSIP_NET)
 					|| challengeKey.endsWith(GlobalConstants.OTP_AS_PHONE)) {
 				emailId = challengeKey;
-				if (emailId.endsWith(GlobalConstants.OTP_AS_PHONE))
+				if (emailId.endsWith(GlobalConstants.OTP_AS_PHONE)) {
 					emailId = emailId.replace(GlobalConstants.OTP_AS_PHONE, "");
+					emailId = removeLeadingPlusSigns(emailId);
+				}
 				logger.info(emailId);
 				otp = OTPListener.getOtp(emailId);
 				request.put("otp", otp);
@@ -66,8 +104,10 @@ public class InjiCertifyUtil extends AdminTestUtil {
 				if (challengeKey.endsWith(GlobalConstants.MOSIP_NET)
 						|| challengeKey.endsWith(GlobalConstants.OTP_AS_PHONE)) {
 					emailId = challengeKey;
-					if (emailId.endsWith(GlobalConstants.OTP_AS_PHONE))
+					if (emailId.endsWith(GlobalConstants.OTP_AS_PHONE)) {
 						emailId = emailId.replace(GlobalConstants.OTP_AS_PHONE, "");
+						emailId = removeLeadingPlusSigns(emailId);
+					}
 					logger.info(emailId);
 					otp = OTPListener.getOtp(emailId);
 					request.getJSONObject(GlobalConstants.REQUEST).put("otp", otp);
@@ -87,8 +127,10 @@ public class InjiCertifyUtil extends AdminTestUtil {
 						if (challengeKey.endsWith(GlobalConstants.MOSIP_NET)
 								|| challengeKey.endsWith(GlobalConstants.OTP_AS_PHONE)) {
 							emailId = challengeKey;
-							if (emailId.endsWith(GlobalConstants.OTP_AS_PHONE))
+							if (emailId.endsWith(GlobalConstants.OTP_AS_PHONE)) {
 								emailId = emailId.replace(GlobalConstants.OTP_AS_PHONE, "");
+								emailId = removeLeadingPlusSigns(emailId);
+							}
 							logger.info(emailId);
 							otp = OTPListener.getOtp(emailId);
 							request.getJSONObject(GlobalConstants.REQUEST).getJSONArray(GlobalConstants.CHALLENGELIST)
@@ -135,8 +177,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 
 	public static String inputStringKeyWordHandeler(String jsonString, String testCaseName) {
 		if (jsonString.contains("$ID:")) {
-			String autoGenIdFileName = injiCertifyAutoGeneratedIdPropFileName;
-			jsonString = replaceIdWithAutogeneratedId(jsonString, "$ID:", autoGenIdFileName);
+			jsonString = replaceIdWithAutogeneratedId(jsonString, "$ID:");
 		}
 		
 		if (jsonString.contains(GlobalConstants.TIMESTAMP)) {
@@ -144,23 +185,22 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		}
 
 		if (jsonString.contains("$POLICYNUMBERFORSUNBIRDRC$")) {
-			jsonString = replaceKeywordValue(jsonString, "$POLICYNUMBERFORSUNBIRDRC$",
-					properties.getProperty("policyNumberForSunBirdRC"));
+			jsonString = replaceKeywordValue(jsonString, "$POLICYNUMBERFORSUNBIRDRC$", policyNumberForSunBirdR);
 		}
 
 		if (jsonString.contains("$FULLNAMEFORSUNBIRDRC$")) {
-			jsonString = replaceKeywordValue(jsonString, "$FULLNAMEFORSUNBIRDRC$", fullNameForSunBirdRC);
+			jsonString = replaceKeywordValue(jsonString, "$FULLNAMEFORSUNBIRDRC$", fullNameForSunBirdR);
 		}
 
 		if (jsonString.contains("$DOBFORSUNBIRDRC$")) {
-			jsonString = replaceKeywordValue(jsonString, "$DOBFORSUNBIRDRC$", dobForSunBirdRC);
+			jsonString = replaceKeywordValue(jsonString, "$DOBFORSUNBIRDRC$", dobForSunBirdR);
 		}
 
 		if (jsonString.contains("$CHALLENGEVALUEFORSUNBIRDC$")) {
 
 			HashMap<String, String> mapForChallenge = new HashMap<String, String>();
-			mapForChallenge.put(GlobalConstants.FULLNAME, fullNameForSunBirdRC);
-			mapForChallenge.put(GlobalConstants.DOB, dobForSunBirdRC);
+			mapForChallenge.put(GlobalConstants.FULLNAME, fullNameForSunBirdR);
+			mapForChallenge.put(GlobalConstants.DOB, dobForSunBirdR);
 
 			String challenge = gson.toJson(mapForChallenge);
 
@@ -421,9 +461,6 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	
 	public static String signJWKKeyForMock(String clientId, RSAKey jwkKey) {
 		String tempUrl = getValueFromEsignetWellKnownEndPoint("token_endpoint", InjiCertifyConfigManager.getEsignetBaseUrl());
-		if (tempUrl.contains("esignet.")) {
-			tempUrl = tempUrl.replace("esignet.", InjiCertifyConfigManager.getproperty("esignetMockBaseURL"));
-		}
 		int idTokenExpirySecs = Integer
 				.parseInt(getValueFromEsignetActuator(InjiCertifyConfigManager.getEsignetActuatorPropertySection(),
 						GlobalConstants.MOSIP_ESIGNET_ID_TOKEN_EXPIRE_SECONDS));
@@ -740,6 +777,17 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			logger.error("Exception while signing proof_jwt to get credential: " + e.getMessage());
 		}
 		return proofJWT;
+	}
+	
+	public static String generateFullNameForSunBirdR() {
+		return faker.name().fullName();
+	}
+
+	public static String generateDobForSunBirdR() {
+		Faker faker = new Faker();
+		LocalDate dob = faker.date().birthday().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+		return dob.format(formatter);
 	}
 	
 }

@@ -12,5 +12,5 @@ GetPolicySunBirdR:
         "insuranceid": "$ID:ESignet_SunBirdR_CreatePolicy_NOAUTH_Valid_Smoke_Sid_osid$"
     }'
       output: '{
-	"policyNumber": "325698741"
+	"policyNumber": "$POLICYNUMBERFORSUNBIRDRC$"
 }'
