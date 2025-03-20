@@ -5,7 +5,6 @@
  */
 package io.mosip.certify.core.spi;
 
-import io.mosip.certify.core.dto.CredentialConfigurationRequest;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
 

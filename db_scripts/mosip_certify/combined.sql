@@ -94,6 +94,27 @@ CREATE TABLE rendering_template (
     upd_dtimes timestamp,
     CONSTRAINT pk_rendertmp_id PRIMARY KEY (id)
 );
+DROP TABLE IF EXISTS credential_config CASCADE CONSTRAINTS;
+CREATE TABLE credential_config (
+    id VARCHAR(255) PRIMARY KEY,
+    status VARCHAR(255),
+    vc_template VARCHAR,
+    context TEXT[] NOT NULL,
+    credential_type TEXT[] NOT NULL,
+    credential_format VARCHAR(255) NOT NULL,
+    did_url VARCHAR NOT NULL,
+    display JSONB NOT NULL,
+    display_order TEXT[] NOT NULL,
+    scope VARCHAR(255) NOT NULL,
+    cryptographic_binding_methods_supported TEXT[] NOT NULL,
+    credential_signing_alg_values_supported TEXT[] NOT NULL,
+    proof_types_supported JSONB NOT NULL,
+	credential_subject JSONB NOT NULL,
+    plugin_configurations JSONB,
+	cr_dtimes TIMESTAMP NOT NULL,
+    upd_dtimes TIMESTAMP,
+    CONSTRAINT pk_config_id PRIMARY KEY (id)
+);
 INSERT INTO key_policy_def (app_id, key_validity_duration, pre_expire_days, access_allowed, is_active, cr_by, cr_dtimes)
 SELECT app_id, key_validity_duration, pre_expire_days, access_allowed, is_active, cr_by, CURRENT_TIMESTAMP
 FROM CSVREAD('./db_scripts/mosip_certify/dml/certify-key_policy_def.csv');

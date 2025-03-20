@@ -47,16 +47,16 @@ CREATE TABLE IF NOT EXISTS key_store(
 	del_dtimes timestamp,
 	CONSTRAINT pk_keystr_id PRIMARY KEY (id)
 );
-DROP TABLE IF EXISTS svg_template CASCADE CONSTRAINTS;
-CREATE TABLE IF NOT EXISTS svg_template (
+DROP TABLE IF EXISTS rendering_template CASCADE CONSTRAINTS;
+CREATE TABLE IF NOT EXISTS rendering_template (
     id UUID NOT NULL,
     template VARCHAR NOT NULL,
     cr_dtimes timestamp NOT NULL,
     upd_dtimes timestamp,
     CONSTRAINT pk_svgtmp_id PRIMARY KEY (id)
 );
-DROP TABLE IF EXISTS template_data CASCADE CONSTRAINTS;
-CREATE TABLE IF NOT EXISTS template_data(
+DROP TABLE IF EXISTS credential_template CASCADE CONSTRAINTS;
+CREATE TABLE IF NOT EXISTS credential_template(
 	context character varying(1024) NOT NULL,
 	credential_type character varying(512) NOT NULL,
 	template VARCHAR NOT NULL,
@@ -69,6 +69,27 @@ CREATE TABLE IF NOT EXISTS template_data(
 	cr_dtimes timestamp NOT NULL default now(),
 	upd_dtimes timestamp,
 	CONSTRAINT pk_template PRIMARY KEY (context, credential_type, credential_format)
+);
+DROP TABLE IF EXISTS credential_config CASCADE CONSTRAINTS;
+CREATE TABLE IF NOT EXISTS credential_config (
+    id VARCHAR(255) PRIMARY KEY,
+    status VARCHAR(255),
+    vc_template VARCHAR,
+    context TEXT[] NOT NULL,
+    credential_type TEXT[] NOT NULL,
+    credential_format VARCHAR(255) NOT NULL,
+    did_url VARCHAR NOT NULL,
+    display JSONB NOT NULL,
+    display_order TEXT[] NOT NULL,
+    scope VARCHAR(255) NOT NULL,
+    cryptographic_binding_methods_supported TEXT[] NOT NULL,
+    credential_signing_alg_values_supported TEXT[] NOT NULL,
+    proof_types_supported JSONB NOT NULL,
+	credential_subject JSONB NOT NULL,
+    plugin_configurations JSONB,
+	cr_dtimes TIMESTAMP NOT NULL,
+    upd_dtimes TIMESTAMP,
+    CONSTRAINT pk_config_id PRIMARY KEY (id)
 );
 
 

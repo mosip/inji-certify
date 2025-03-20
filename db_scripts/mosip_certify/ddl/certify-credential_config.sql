@@ -24,7 +24,7 @@ CREATE TABLE credential_config (
     scope VARCHAR(255) NOT NULL,
     cryptographic_binding_methods_supported TEXT[] NOT NULL,
     credential_signing_alg_values_supported TEXT[] NOT NULL,
-    proof_types_supported JSONB NOT NULL,  -- JSONB type
+    proof_types_supported JSONB NOT NULL,
 	credential_subject JSONB NOT NULL,
     plugin_configurations JSONB,
 	cr_dtimes TIMESTAMP NOT NULL,

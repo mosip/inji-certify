@@ -112,6 +112,27 @@ CREATE TABLE IF NOT EXISTS certify.credential_template(
 	CONSTRAINT pk_template PRIMARY KEY (context, credential_type, credential_format)
 );
 
+CREATE TABLE IF  NOT EXISTS credential_config (
+    id VARCHAR(255) PRIMARY KEY,
+    status VARCHAR(255),
+    vc_template VARCHAR,
+    context TEXT[] NOT NULL,
+    credential_type TEXT[] NOT NULL,
+    credential_format VARCHAR(255) NOT NULL,
+    did_url VARCHAR NOT NULL,
+    display JSONB NOT NULL,
+    display_order TEXT[] NOT NULL,
+    scope VARCHAR(255) NOT NULL,
+    cryptographic_binding_methods_supported TEXT[] NOT NULL,
+    credential_signing_alg_values_supported TEXT[] NOT NULL,
+    proof_types_supported JSONB NOT NULL,
+	credential_subject JSONB NOT NULL,
+    plugin_configurations JSONB,
+	cr_dtimes TIMESTAMP NOT NULL,
+    upd_dtimes TIMESTAMP,
+    CONSTRAINT pk_config_id PRIMARY KEY (id)
+);
+
 INSERT INTO certify.credential_template (context, credential_type, template, credential_format, key_manager_app_id, key_manager_ref_id, did_url, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/2018/credentials/v1', 'FarmerCredential,VerifiableCredential', '{
      "@context": [
          "https://www.w3.org/2018/credentials/v1",

@@ -1,10 +1,12 @@
 package io.mosip.certify.entity;
 
+import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.Type;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
@@ -37,6 +39,7 @@ public class CredentialConfig {
     private String didUrl;
 
     @NotNull(message = "Invalid request")
+    @Type(JsonBinaryType.class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "display", columnDefinition = "jsonb")
     private List<Map<String, Object>> display;
@@ -56,15 +59,18 @@ public class CredentialConfig {
     private List<String> credentialSigningAlgValuesSupported;
 
     @NotNull(message = "Invalid request")
+    @Type(JsonBinaryType.class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "proof_types_supported", columnDefinition = "jsonb")
     private Map<String, Object> proofTypesSupported;
 
     @NotNull(message = "Invalid request")
+    @Type(JsonBinaryType.class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "credential_subject", columnDefinition = "jsonb")
     private Map<String, Object> credentialSubject;
 
+    @Type(JsonBinaryType.class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "plugin_configurations", columnDefinition = "jsonb")
     private List<Map<String, String>> pluginConfigurations;
