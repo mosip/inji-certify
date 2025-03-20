@@ -97,16 +97,22 @@ CREATE TABLE certify.rendering_template (
                                     CONSTRAINT pk_svgtmp_id PRIMARY KEY (id)
 );
 
-CREATE TABLE certify.credential_template(
-                                    context character varying(1024) NOT NULL,
-                                    credential_type character varying(512) NOT NULL,
-                                    template VARCHAR NOT NULL,
-                                    cr_dtimes timestamp NOT NULL default now(),
-                                    upd_dtimes timestamp,
-                                    CONSTRAINT pk_template PRIMARY KEY (context, credential_type)
+CREATE TABLE IF NOT EXISTS certify.credential_template(
+	context character varying(1024) NOT NULL,
+	credential_type character varying(512) NOT NULL,
+	template VARCHAR NOT NULL,
+	credential_format character varying(1024),
+	did_url VARCHAR,
+	key_manager_app_id character varying(36) NOT NULL,
+    key_manager_ref_id character varying(128),
+	signature_algo character(2048),
+	sd_claim VARCHAR,
+	cr_dtimes timestamp NOT NULL default now(),
+	upd_dtimes timestamp,
+	CONSTRAINT pk_template PRIMARY KEY (context, credential_type, credential_format)
 );
 
-INSERT INTO certify.credential_template (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/2018/credentials/v1', 'FarmerCredential,VerifiableCredential', '{
+INSERT INTO certify.credential_template (context, credential_type, template, credential_format, key_manager_app_id, key_manager_ref_id, did_url, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/2018/credentials/v1', 'FarmerCredential,VerifiableCredential', '{
      "@context": [
          "https://www.w3.org/2018/credentials/v1",
          "https://piyush7034.github.io/my-files/farmer.json",
@@ -137,9 +143,42 @@ INSERT INTO certify.credential_template (context, credential_type, template, cr_
          "farmerID": "${farmerID}"
      }
 }
-', '2024-10-24 12:32:38.065994', NULL);
+', 'ldp_vc', 'CERTIFY_VC_SIGN_ED25519','ED25519_SIGN','did:web:jainhitesh9998.github.io:tempfiles:vc-local-ed25519#key-0', '2024-10-24 12:32:38.065994', NULL);
 
-INSERT INTO certify.credential_template (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/ns/credentials/v2', 'FarmerCredential,VerifiableCredential', '{
+INSERT INTO certify.credential_template (context, credential_type, template, credential_format, key_manager_app_id, key_manager_ref_id, did_url, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/2018/credentials/v1', 'VerifiableCredential,FarmerCredential', '{
+     "@context": [
+         "https://www.w3.org/2018/credentials/v1",
+         "https://piyush7034.github.io/my-files/farmer.json",
+         "https://w3id.org/security/suites/ed25519-2020/v1"
+     ],
+     "issuer": "${_issuer}",
+     "type": [
+         "VerifiableCredential",
+         "FarmerCredential"
+     ],
+     "issuanceDate": "${validFrom}",
+     "expirationDate": "${validUntil}",
+     "credentialSubject": {
+         "id": "${_holderId}",
+         "fullName": "${fullName}",
+         "mobileNumber": "${mobileNumber}",
+         "dateOfBirth": "${dateOfBirth}",
+         "gender": "${gender}",
+         "state": "${state}",
+         "district": "${district}",
+         "villageOrTown": "${villageOrTown}",
+         "postalCode": "${postalCode}",
+         "landArea": "${landArea}",
+         "landOwnershipType": "${landOwnershipType}",
+         "primaryCropType": "${primaryCropType}",
+         "secondaryCropType": "${secondaryCropType}",
+         "face": "${face}",
+         "farmerID": "${farmerID}"
+     }
+}
+', 'ldp_vc', 'CERTIFY_VC_SIGN_ED25519','ED25519_SIGN','did:web:jainhitesh9998.github.io:tempfiles:vc-local-ed25519#key-0', '2024-10-24 12:32:38.065994', NULL);
+
+INSERT INTO certify.credential_template(context, credential_type, template, credential_format, key_manager_app_id, key_manager_ref_id, did_url, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/ns/credentials/v2', 'FarmerCredential,VerifiableCredential', '{
     "@context": [
         "https://www.w3.org/ns/credentials/v2",
         "https://piyush7034.github.io/my-files/farmer.json",
@@ -169,7 +208,8 @@ INSERT INTO certify.credential_template (context, credential_type, template, cr_
         "face": "${face}",
         "farmerID": "${farmerID}"
     }
-}', '2024-10-24 12:32:38.065994', NULL);
+}', 'ldp_vc', 'CERTIFY_MOCK_ED25519','ED25519_SIGN', 'did:web:vharsh.github.io:DID:harsh', '2024-10-24 12:32:38.065994', NULL);
+
 
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('ROOT', 2920, 1125, 'NA', true, 'mosipadmin', now());
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_SERVICE', 1095, 60, 'NA', true, 'mosipadmin', now());
@@ -177,5 +217,8 @@ INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_VC_SIGN_RSA', 1095, 60, 'NA', true, 'mosipadmin', now());
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_VC_SIGN_ED25519', 1095, 60, 'NA', true, 'mosipadmin', now());
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('BASE', 1095, 60, 'NA', true, 'mosipadmin', now());
+INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_MOCK_RSA', 1095, 60, 'NA', true, 'mosipadmin', now());
+INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_MOCK_ED25519', 1095, 60, 'NA', true, 'mosipadmin', now());
+INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_MOCK_ECCK1', 1095, 60, 'NA', true, 'mosipadmin', now());
+INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_MOCK_ECCR1', 1095, 60, 'NA', true, 'mosipadmin', now());
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_VC_SIGN_EC_K1', 1095, 60, 'NA', true, 'mosipadmin', now());
-INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_VC_SIGN_EC_R1', 1095, 60, 'NA', true, 'mosipadmin', now());

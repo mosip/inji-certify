@@ -26,7 +26,7 @@ import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.spi.VCIssuanceService;
-import io.mosip.certify.core.util.AuditHelper;
+import io.mosip.certify.api.util.AuditHelper;
 import io.mosip.certify.core.util.SecurityHelperService;
 import io.mosip.certify.validators.CredentialRequestValidator;
 import io.mosip.certify.exception.InvalidNonceException;

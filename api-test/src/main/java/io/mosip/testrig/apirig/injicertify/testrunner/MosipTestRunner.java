@@ -67,7 +67,7 @@ public class MosipTestRunner {
 
 		try {
 			LOGGER.info("** ------------- API Test Rig Run Started --------------------------------------------- **");
-			
+
 			BaseTestCase.setRunContext(getRunType(), jarUrl);
 			ExtractResource.removeOldMosipTestTestResource();
 			if (getRunType().equalsIgnoreCase("JAR")) {
@@ -81,38 +81,46 @@ public class MosipTestRunner {
 			SkipTestCaseHandler.loadTestcaseToBeSkippedList("testCaseSkippedList.txt");
 			GlobalMethods.setModuleNameAndReCompilePattern(InjiCertifyConfigManager.getproperty("moduleNamePattern"));
 			setLogLevels();
+			
+			String useCaseToExecute = InjiCertifyConfigManager.getproperty("useCaseToExecute");
 
-			// For now we are not doing health check for qa-115.
-			if (BaseTestCase.isTargetEnvLTS()) {
-				HealthChecker healthcheck = new HealthChecker();
-				healthcheck.setCurrentRunningModule(BaseTestCase.currentModule);
-				Thread trigger = new Thread(healthcheck);
-				trigger.start();
-			}
+			HealthChecker healthcheck = new HealthChecker();
+			healthcheck.setCurrentRunningModule(BaseTestCase.currentModule);
+			Thread trigger = new Thread(healthcheck);
+			trigger.start();
+
 			KeycloakUserManager.removeUser();
 			KeycloakUserManager.createUsers();
 			KeycloakUserManager.closeKeycloakInstance();
 			AdminTestUtil.getRequiredField();
 
 			BaseTestCase.getLanguageList();
-			
-			// Generate device certificates to be consumed by Mock-MDS
-			PartnerRegistration.deleteCertificates();
-			AdminTestUtil.createAndPublishPolicy();
-			AdminTestUtil.createEditAndPublishPolicy();
-			PartnerRegistration.deviceGeneration();
 
-			BiometricDataProvider.generateBiometricTestData("Registration");
+			if (useCaseToExecute.equalsIgnoreCase("mosipid")) {
 
-			startTestRunner();
+				InjiCertifyUtil.dBCleanup();
+
+				// Generate device certificates to be consumed by Mock-MDS
+				PartnerRegistration.deleteCertificates();
+				AdminTestUtil.createAndPublishPolicy();
+				AdminTestUtil.createEditAndPublishPolicy();
+				PartnerRegistration.deviceGeneration();
+
+				BiometricDataProvider.generateBiometricTestData("Registration");
+
+				startTestRunner();
+
+				InjiCertifyUtil.dBCleanup();
+			} else {
+				startTestRunner();
+			}
 		} catch (Exception e) {
 			LOGGER.error("Exception " + e.getMessage());
 		}
 
 		OTPListener.bTerminate = true;
 
-		if (BaseTestCase.isTargetEnvLTS())
-			HealthChecker.bTerminate = true;
+		HealthChecker.bTerminate = true;
 
 		System.exit(0);
 
@@ -131,16 +139,6 @@ public class MosipTestRunner {
 		}
 		BaseTestCase.currentModule = GlobalConstants.INJICERTIFY;
 		BaseTestCase.certsForModule = GlobalConstants.INJICERTIFY;
-		DBManager.executeDBQueries(InjiCertifyConfigManager.getKMDbUrl(), InjiCertifyConfigManager.getKMDbUser(),
-				InjiCertifyConfigManager.getKMDbPass(), InjiCertifyConfigManager.getKMDbSchema(),
-				getGlobalResourcePath() + "/" + "config/keyManagerCertDataDeleteQueries.txt");
-		DBManager.executeDBQueries(InjiCertifyConfigManager.getIdaDbUrl(), InjiCertifyConfigManager.getIdaDbUser(),
-				InjiCertifyConfigManager.getPMSDbPass(), InjiCertifyConfigManager.getIdaDbSchema(),
-				getGlobalResourcePath() + "/" + "config/idaCertDataDeleteQueries.txt");
-		DBManager.executeDBQueries(InjiCertifyConfigManager.getMASTERDbUrl(),
-				InjiCertifyConfigManager.getMasterDbUser(), InjiCertifyConfigManager.getMasterDbPass(),
-				InjiCertifyConfigManager.getMasterDbSchema(),
-				getGlobalResourcePath() + "/" + "config/masterDataCertDataDeleteQueries.txt");
 		AdminTestUtil.copymoduleSpecificAndConfigFile(GlobalConstants.INJICERTIFY);
 		BaseTestCase.otpListener = new OTPListener();
 		BaseTestCase.otpListener.run();
@@ -157,6 +155,9 @@ public class MosipTestRunner {
 		KernelAuthentication.setLogLevel();
 		BaseTestCase.setLogLevel();
 		InjiCertifyUtil.setLogLevel();
+		KeycloakUserManager.setLogLevel();
+		DBManager.setLogLevel();
+		BiometricDataProvider.setLogLevel();
 	}
 
 	/**
@@ -179,32 +180,25 @@ public class MosipTestRunner {
 		File[] files = homeDir.listFiles();
 		if (files != null) {
 			String useCaseToExecute = InjiCertifyConfigManager.getproperty("useCaseToExecute");
+			InjiCertifyUtil.currentUseCase = useCaseToExecute;
 
-			// Split the string by commas
-			String[] useCases = useCaseToExecute.split(",");
+			for (File file : files) {
+				TestNG runner = new TestNG();
+				List<String> suitefiles = new ArrayList<>();
 
-			// Loop through the resulting array and print each element
-			for (String useCase : useCases) {
-				InjiCertifyUtil.currentUseCase = useCase;
-
-				for (File file : files) {
-					TestNG runner = new TestNG();
-					List<String> suitefiles = new ArrayList<>();
-
-					if (file.getName().toLowerCase().contains("mastertestsuite")) {
-						if (useCase != null && useCase.isBlank() == false) {
-							BaseTestCase.setReportName(GlobalConstants.INJICERTIFY + "-" + useCase);
-						} else {
-							BaseTestCase.setReportName(GlobalConstants.INJICERTIFY);
-						}
-						suitefiles.add(file.getAbsolutePath());
-						runner.setTestSuites(suitefiles);
-						System.getProperties().setProperty("testng.outpur.dir", "testng-report");
-						runner.setOutputDirectory("testng-report");
-						runner.run();
+				if (file.getName().toLowerCase().contains("mastertestsuite")) {
+					if (useCaseToExecute != null && useCaseToExecute.isBlank() == false) {
+						BaseTestCase.setReportName(GlobalConstants.INJICERTIFY + "-" + useCaseToExecute);
+					} else {
+						BaseTestCase.setReportName(GlobalConstants.INJICERTIFY);
 					}
-
+					suitefiles.add(file.getAbsolutePath());
+					runner.setTestSuites(suitefiles);
+					System.getProperties().setProperty("testng.outpur.dir", "testng-report");
+					runner.setOutputDirectory("testng-report");
+					runner.run();
 				}
+
 			}
 		} else {
 			LOGGER.error("No files found in directory: " + homeDir);

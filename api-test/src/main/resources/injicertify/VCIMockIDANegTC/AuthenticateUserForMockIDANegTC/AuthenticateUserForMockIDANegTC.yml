@@ -1,5 +1,5 @@
 AuthenticateUserForMockIDANegTC:
-   InjiCertify_ESignet_AuthenticateUserVCI_ForMockIDA_uin_Otp_Valid_Smoke_For_Neg_Flow:
+   InjiCertify_ESignet_AuthenticateUserVCI_ForMockIDA_uin_Otp_Valid_For_Neg_Flow:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
       role: resident
       restMethod: post
@@ -8,17 +8,17 @@ AuthenticateUserForMockIDANegTC:
       inputTemplate: injicertify/VCIMockIDANegTC/AuthenticateUserForMockIDANegTC/AuthenticateUserForMockIDANegTC
       outputTemplate: injicertify/VCIMockIDANegTC/AuthenticateUserForMockIDANegTC/AuthenticateUserForMockIDANegTCResult
       input: '{
-        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_ForMockIDA_uin_all_Valid_Smoke_sid_For_Neg_Flow_encodedResp$",
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_ForMockIDA_uin_all_Valid_sid_For_Neg_Flow_encodedResp$",
         "requestTime": "$TIMESTAMP$",
-        "transactionId": "$ID:ESignet_OAuthDetailsRequest_ForMockIDA_uin_all_Valid_Smoke_sid_For_Neg_Flow_transactionId$",
+        "transactionId": "$ID:ESignet_OAuthDetailsRequest_ForMockIDA_uin_all_Valid_sid_For_Neg_Flow_transactionId$",
         "individualId": "$ID:AddIdentity_For_Mock_Valid_smoke_Pos_UIN$",
         "authFactorType" : "OTP",
         "challenge" : "111111",
         "format": "alpha-numeric",
         "sendOtp":{
-            "encodedHash": "$ID:ESignet_OAuthDetailsRequest_ForMockIDA_uin_all_Valid_Smoke_sid_For_Neg_Flow_encodedResp$",
+            "encodedHash": "$ID:ESignet_OAuthDetailsRequest_ForMockIDA_uin_all_Valid_sid_For_Neg_Flow_encodedResp$",
             "requestTime": "$TIMESTAMP$",
-            "transactionId": "$ID:ESignet_OAuthDetailsRequest_ForMockIDA_uin_all_Valid_Smoke_sid_For_Neg_Flow_transactionId$",
+            "transactionId": "$ID:ESignet_OAuthDetailsRequest_ForMockIDA_uin_all_Valid_sid_For_Neg_Flow_transactionId$",
             "individualId": "$ID:AddIdentity_For_Mock_Valid_smoke_Pos_UIN$",
             "otpChannels": [{channel: "email"},{channel: "phone"}],
             "sendOtpReqTemplate": "injicertify/SendOtp/SendOtp",

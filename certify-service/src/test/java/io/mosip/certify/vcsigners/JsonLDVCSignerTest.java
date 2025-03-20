@@ -1,5 +1,19 @@
 package io.mosip.certify.vcsigners;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import static org.mockito.ArgumentMatchers.any;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.test.util.ReflectionTestUtils;
+
 import foundation.identity.jsonld.JsonLDObject;
 import info.weboftrust.ldsignatures.LdProof;
 import info.weboftrust.ldsignatures.canonicalizer.URDNA2015Canonicalizer;
@@ -7,20 +21,7 @@ import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.proofgenerators.ProofGenerator;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import io.mosip.kernel.signature.service.SignatureService;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.test.util.ReflectionTestUtils;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
 public class JsonLDVCSignerTest {

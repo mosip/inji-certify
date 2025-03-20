@@ -21,6 +21,16 @@ public class CertifyException extends RuntimeException {
         this.errorCode = errorCode;
     }
 
+    public CertifyException(String errorCode, String message, Throwable cause) {
+        super(message, cause);
+        this.errorCode = errorCode;
+    }
+
+    public CertifyException(String errorCode, String message) {
+        super(message);
+        this.errorCode = errorCode;
+    }
+
     public String getErrorCode() {
         return errorCode;
     }
