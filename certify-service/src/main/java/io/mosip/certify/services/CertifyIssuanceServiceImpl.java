@@ -344,7 +344,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                         templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
                     }
                     jsonObject.put("_holderId", holderId);
-                    String unSignedVC = vcFormatter.format(jsonObject, templateParams);
                     Credential cred = credentialFactory.getCredential(credentialRequest.getFormat()).orElseThrow(()-> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
                     templateParams.putAll(jsonObject.toMap());
                     String unsignedCredential=cred.createCredential(templateParams, templateName);
@@ -441,7 +440,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 nonceExpireSeconds instanceof Long ? (int)(long)nonceExpireSeconds : (int)nonceExpireSeconds :
                 transaction.getCNonceExpireSeconds();
         long issuedEpoch = (transaction == null) ?
-                ((Instant) parsedAccessToken.getClaims().getOrDefault(JwtClaimNames.IAT, Instant.MIN)).getEpochSecond():
+                (long) parsedAccessToken.getClaims().getOrDefault(JwtClaimNames.IAT, Instant.MIN) :
                 transaction.getCNonceIssuedEpoch();
 
         if( cNonce == null ||

@@ -11,7 +11,7 @@ CREATE DATABASE inji_certify
 	OWNER = postgres
 	TEMPLATE  = template0;
 
-COMMENT ON DATABASE mosip_idp IS 'Certify related data is stored in this database';
+COMMENT ON DATABASE inji_certify IS 'Certify related data is stored in this database';
 
 \c inji_certify postgres
 
