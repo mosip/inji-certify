@@ -15,6 +15,7 @@ CREATE TABLE credential_config (
     id VARCHAR(255) PRIMARY KEY,
     status VARCHAR(255),
     vc_template VARCHAR,
+    doctype VARCHAR,
     context TEXT[] NOT NULL,
     credential_type TEXT[] NOT NULL,
     credential_format VARCHAR(255) NOT NULL,
@@ -25,10 +26,12 @@ CREATE TABLE credential_config (
     cryptographic_binding_methods_supported TEXT[] NOT NULL,
     credential_signing_alg_values_supported TEXT[] NOT NULL,
     proof_types_supported JSONB NOT NULL,
-	credential_subject JSONB NOT NULL,
+	credential_subject JSONB,
+	claims JSONB,
     plugin_configurations JSONB,
 	cr_dtimes TIMESTAMP NOT NULL,
-    upd_dtimes TIMESTAMP
+    upd_dtimes TIMESTAMP,
+    CONSTRAINT pk_config_id PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE credential_config IS 'Credential Config: Contains details of credential configuration.';

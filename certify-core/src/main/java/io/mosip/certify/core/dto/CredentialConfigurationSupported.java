@@ -11,6 +11,9 @@ public class CredentialConfigurationSupported {
 
     private String format;
 
+    @JsonProperty("doctype")
+    private String docType;
+
     private String scope;
 
     @JsonProperty("cryptographic_binding_methods_supported")
@@ -24,6 +27,8 @@ public class CredentialConfigurationSupported {
 
     @JsonProperty("credential_definition")
     private CredentialDefinition credentialDefinition;
+
+    private Map<String, Object> claims;
 
     private List<Map<String, Object>> display;
 

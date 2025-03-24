@@ -64,11 +64,18 @@ public class CredentialConfig {
     @Column(name = "proof_types_supported", columnDefinition = "jsonb")
     private Map<String, Object> proofTypesSupported;
 
-    @NotNull(message = "Invalid request")
+    @Column(name = "doctype")
+    private String docType;
+
     @Type(JsonBinaryType.class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "credential_subject", columnDefinition = "jsonb")
     private Map<String, Object> credentialSubject;
+
+    @Type(JsonBinaryType.class)
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "claims", columnDefinition = "jsonb")
+    private Map<String, Object> claims;
 
     @Type(JsonBinaryType.class)
     @JdbcTypeCode(SqlTypes.JSON)

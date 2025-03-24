@@ -48,9 +48,14 @@ public class CredentialConfigurationDTO {
     @JsonProperty("proof_types_supported")
     private Map<String, Object> proofTypesSupported;
 
-    @NotNull(message = ErrorConstants.INVALID_REQUEST)
     @JsonProperty("credentialSubject")
     private Map<String, Object> credentialSubject;
+
+    @JsonProperty("claims")
+    private Map<String, Object> claims;
+
+    @JsonProperty("doctype")
+    private String docType;
 
     private List<Map<String, String>> pluginConfigurations;
 }

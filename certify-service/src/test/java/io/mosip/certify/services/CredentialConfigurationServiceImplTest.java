@@ -67,6 +67,7 @@ public class CredentialConfigurationServiceImplTest {
         credentialConfigurationDTO.setCredentialFormat("test_vc");
         credentialConfigurationDTO.setContext(List.of("https://www.w3.org/2018/credentials/v1"));
         credentialConfigurationDTO.setCredentialType(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"));
+        credentialConfigurationDTO.setCredentialSubject(Map.of("name", "Full Name"));
 
         ReflectionTestUtils.setField(credentialConfigurationService, "credentialIssuer", "http://example.com");
         ReflectionTestUtils.setField(credentialConfigurationService, "authServers", List.of("http://auth.com"));

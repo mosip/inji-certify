@@ -46,7 +46,13 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         credentialConfig.setStatus(Constants.ACTIVE);
 
         if(pluginMode.equals("DataProvider") && credentialConfig.getVcTemplate() == null) {
-            throw new CertifyException("Credential Template is mandatory for this \"DataProvider\" plugin issuer.");
+            throw new CertifyException("Credential Template is mandatory for this `DataProvider` plugin issuer.");
+        }
+
+        if(credentialConfigurationDTO.getCredentialSubject() == null &&
+                (credentialConfigurationDTO.getClaims() == null || credentialConfigurationDTO.getDocType() == null)) {
+
+            throw new CertifyException("Please provide a value for at least one of credentialSubject or both doctype and claims");
         }
 
         credentialConfigRepository.save(credentialConfig);
@@ -128,13 +134,18 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                     credentialConfigurationSupported.setDisplay(credentialConfig.getDisplay());
                     credentialConfigurationSupported.setOrder(credentialConfig.getOrder());
 
-                    CredentialDefinition credentialDefinition = new CredentialDefinition();
-                    credentialDefinition.setType(credentialConfig.getCredentialType());
-                    credentialDefinition.setContext(credentialConfig.getContext());
-                    credentialDefinition.setCredentialSubject(credentialConfig.getCredentialSubject());
-                    credentialConfigurationSupported.setCredentialDefinition(credentialDefinition);
-                    String credentialType = credentialConfig.getCredentialType().get(1);
+                    if(credentialConfig.getCredentialSubject() != null) {
+                        CredentialDefinition credentialDefinition = new CredentialDefinition();
+                        credentialDefinition.setType(credentialConfig.getCredentialType());
+                        credentialDefinition.setContext(credentialConfig.getContext());
+                        credentialDefinition.setCredentialSubject(credentialConfig.getCredentialSubject());
+                        credentialConfigurationSupported.setCredentialDefinition(credentialDefinition);
+                    } else {
+                        credentialConfigurationSupported.setClaims(credentialConfig.getClaims());
+                        credentialConfigurationSupported.setDocType(credentialConfig.getDocType());
+                    }
 
+                    String credentialType = credentialConfig.getCredentialType().get(1);
                     credentialConfigurationSupportedMap.put(credentialType, credentialConfigurationSupported);
                 });
 
