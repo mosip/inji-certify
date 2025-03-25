@@ -14,7 +14,7 @@ services:
       - "5433:5432"
 
   certify:
-    image: mosipdev/inji-certify-with-plugins:release-0.11.x
+    image: mosipqa/inji-certify-with-plugins:0.11.x
     user: root
     ports:
       - 8090:8090
