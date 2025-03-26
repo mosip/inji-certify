@@ -6,12 +6,6 @@ if [ $# -ge 1 ] ; then
   export KUBECONFIG=$1
 fi
 
-SOFTHSM_NS=softhsm
-SOFTHSM_CHART_VERSION=1.3.0-beta.2
-
-echo Create $SOFTHSM_NS namespace
-kubectl create ns $SOFTHSM_NS
-
 NS=inji-certify
 CHART_VERSION=0.10.1-develop
 
@@ -25,24 +19,12 @@ function installing_inji-certify() {
   helm repo add mosip https://mosip.github.io/mosip-helm
   helm repo update
 
-  echo Installing Softhsm for certify
-  helm -n $SOFTHSM_NS install softhsm-certify mosip/softhsm -f softhsm-values.yaml --version $SOFTHSM_CHART_VERSION --wait
-  echo Installed Softhsm for certify
-
   echo Copy configmaps
   COPY_UTIL=../copy_cm_func.sh
-  $COPY_UTIL configmap global default $NS
+  $COPY_UTIL configmap inji-global default $NS
   $COPY_UTIL configmap artifactory-share artifactory $NS
   $COPY_UTIL configmap config-server-share config-server $NS
   $COPY_UTIL configmap softhsm-certify-share softhsm $NS
-
-
-  echo Copy secrets
-  ../copy_cm_func.sh secret softhsm-certify softhsm config-server
-
-  kubectl -n config-server set env --keys=mosip-injicertify-host --from configmap/global deployment/config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_
-  kubectl -n config-server set env --keys=security-pin --from secret/softhsm-certify deployment/config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_SOFTHSM_CERTIFY_
-  kubectl -n config-server get deploy -o name |  xargs -n1 -t  kubectl -n config-server rollout status
 
 
   INJICERTIFY_HOST=$(kubectl get cm global -o jsonpath={.data.mosip-injicertify-host})
