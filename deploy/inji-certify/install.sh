@@ -21,7 +21,7 @@ function installing_inji-certify() {
 
   echo Copy configmaps
   COPY_UTIL=../copy_cm_func.sh
-  $COPY_UTIL configmap inji-global default $NS
+  $COPY_UTIL configmap global default $NS
   $COPY_UTIL configmap artifactory-share artifactory $NS
   $COPY_UTIL configmap config-server-share config-server $NS
   $COPY_UTIL configmap softhsm-certify-share softhsm $NS

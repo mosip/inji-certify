@@ -14,7 +14,7 @@
   ```
 ## Install inji certify
 
-```
-cd inji-certify
-./install.sh
-```
+  ```
+   cd inji-certify
+    ./install.sh
+   ```
