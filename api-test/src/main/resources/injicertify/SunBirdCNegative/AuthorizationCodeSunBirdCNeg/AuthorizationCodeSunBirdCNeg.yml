@@ -1,5 +1,5 @@
 AuthorizationCodeSunBirdCNeg:
-   InjiCertify_ESignet_AuthorizationCode_SunBirdC_All_Valid_sid_Neg:
+   InjiCertify_ESignet_AuthorizationCode_SunBirdC_All_Valid_sid_For_Neg_flow:
       endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/authorization/auth-code
       uniqueIdentifier: TC_esignetDependent_AuthorizationCodeNeg      
       description: Authorization Code      
