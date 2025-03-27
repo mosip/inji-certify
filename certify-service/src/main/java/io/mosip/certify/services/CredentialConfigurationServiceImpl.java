@@ -42,7 +42,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Override
     public CredentialConfigResponse addCredentialConfiguration(CredentialConfigurationDTO credentialConfigurationDTO) throws JsonProcessingException {
         CredentialConfig credentialConfig = credentialConfigMapper.toEntity(credentialConfigurationDTO);
-        credentialConfig.setId(UUID.randomUUID().toString());
+        credentialConfig.setConfigId(UUID.randomUUID().toString());
         credentialConfig.setStatus(Constants.ACTIVE);
 
         if(pluginMode.equals("DataProvider") && credentialConfig.getVcTemplate() == null) {
@@ -58,7 +58,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         credentialConfigRepository.save(credentialConfig);
 
         CredentialConfigResponse credentialConfigResponse = new CredentialConfigResponse();
-        credentialConfigResponse.setId(credentialConfig.getId());
+        credentialConfigResponse.setId(credentialConfig.getConfigId());
         credentialConfigResponse.setStatus(credentialConfig.getStatus());
 
         return credentialConfigResponse;
@@ -66,7 +66,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
     @Override
     public CredentialConfigurationDTO getCredentialConfigurationById(String id) throws JsonProcessingException {
-        Optional<CredentialConfig> optional = credentialConfigRepository.findById(id);
+        Optional<CredentialConfig> optional = credentialConfigRepository.findByConfigId(id);
 
         if(optional.isEmpty()) {
             throw new CertifyException("Configuration not found with the provided id: " + id);
@@ -84,7 +84,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
     @Override
     public CredentialConfigResponse updateCredentialConfiguration(String id, CredentialConfigurationDTO credentialConfigurationDTO) throws JsonProcessingException {
-        Optional<CredentialConfig> optional = credentialConfigRepository.findById(id);
+        Optional<CredentialConfig> optional = credentialConfigRepository.findByConfigId(id);
 
         if(optional.isEmpty()) {
             throw new CertifyException("Configuration not found with the provided id: " + id);
@@ -95,7 +95,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         credentialConfigRepository.save(credentialConfig);
 
         CredentialConfigResponse credentialConfigResponse = new CredentialConfigResponse();
-        credentialConfigResponse.setId(credentialConfig.getId());
+        credentialConfigResponse.setId(credentialConfig.getConfigId());
         credentialConfigResponse.setStatus(credentialConfig.getStatus());
 
         return credentialConfigResponse;
@@ -103,13 +103,13 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
     @Override
     public String deleteCredentialConfigurationById(String id) {
-        Optional<CredentialConfig> optional = credentialConfigRepository.findById(id);
+        Optional<CredentialConfig> optional = credentialConfigRepository.findByConfigId(id);
 
         if(optional.isEmpty()) {
             throw new CertifyException("Configuration not found with the provided id: " + id);
         }
 
-        credentialConfigRepository.deleteById(id);
+        credentialConfigRepository.delete(optional.get());
         return "Configuration deleted with id: " + id;
     }
 
@@ -125,19 +125,20 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         credentialConfigList.stream()
                 .forEach(credentialConfig -> {
                     CredentialConfigurationSupported credentialConfigurationSupported = new CredentialConfigurationSupported();
-                    credentialConfigurationSupported.setFormat(credentialConfig.getCredentialFormat());
-                    credentialConfigurationSupported.setScope(credentialConfig.getScope());
-                    credentialConfigurationSupported.setCryptographicBindingMethodsSupported(credentialConfig.getCryptographicBindingMethodsSupported());
-                    credentialConfigurationSupported.setCredentialSigningAlgValuesSupported(credentialConfig.getCredentialSigningAlgValuesSupported());
-                    credentialConfigurationSupported.setProofTypesSupported(credentialConfig.getProofTypesSupported());
+                    CredentialConfigurationDTO credentialConfigurationDTO = credentialConfigMapper.toDto(credentialConfig);
+                    credentialConfigurationSupported.setFormat(credentialConfigurationDTO.getCredentialFormat());
+                    credentialConfigurationSupported.setScope(credentialConfigurationDTO.getScope());
+                    credentialConfigurationSupported.setCryptographicBindingMethodsSupported(credentialConfigurationDTO.getCryptographicBindingMethodsSupported());
+                    credentialConfigurationSupported.setCredentialSigningAlgValuesSupported(credentialConfigurationDTO.getCredentialSigningAlgValuesSupported());
+                    credentialConfigurationSupported.setProofTypesSupported(credentialConfigurationDTO.getProofTypesSupported());
 
-                    credentialConfigurationSupported.setDisplay(credentialConfig.getDisplay());
-                    credentialConfigurationSupported.setOrder(credentialConfig.getOrder());
+                    credentialConfigurationSupported.setDisplay(credentialConfigurationDTO.getDisplay());
+                    credentialConfigurationSupported.setOrder(credentialConfigurationDTO.getOrder());
 
                     if(credentialConfig.getCredentialSubject() != null) {
                         CredentialDefinition credentialDefinition = new CredentialDefinition();
-                        credentialDefinition.setType(credentialConfig.getCredentialType());
-                        credentialDefinition.setContext(credentialConfig.getContext());
+                        credentialDefinition.setType(credentialConfigurationDTO.getCredentialType());
+                        credentialDefinition.setContext(credentialConfigurationDTO.getContext());
                         credentialDefinition.setCredentialSubject(credentialConfig.getCredentialSubject());
                         credentialConfigurationSupported.setCredentialDefinition(credentialDefinition);
                     } else {
@@ -145,7 +146,10 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                         credentialConfigurationSupported.setDocType(credentialConfig.getDocType());
                     }
 
-                    String credentialType = credentialConfig.getCredentialType().get(1);
+                    String credentialType = credentialConfigurationDTO.getCredentialType().stream()
+                            .filter(type -> !type.equals("VerifiableCredential"))
+                            .findFirst()
+                            .orElse(null);
                     credentialConfigurationSupportedMap.put(credentialType, credentialConfigurationSupported);
                 });
 

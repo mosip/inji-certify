@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.hibernate.annotations.Comment;
 
 import java.util.List;
 import java.util.Map;
@@ -24,8 +25,15 @@ public class CredentialConfigurationDTO {
     @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private String credentialFormat;
 
-    @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private String didUrl;
+
+    private String keyManagerAppId;
+
+    private String keyManagerRefId;
+
+    private String signatureAlgo; //Can be called as Proof algorithm
+
+    private String sdClaim;
 
     @Valid
     @NotNull(message = ErrorConstants.INVALID_REQUEST)

@@ -48,11 +48,11 @@ public class CredentialConfigurationServiceImplTest {
         MockitoAnnotations.openMocks(this);
         credentialConfig = new CredentialConfig();
         String id = UUID.randomUUID().toString();
-        credentialConfig.setId(id);
+        credentialConfig.setConfigId(id);
         credentialConfig.setStatus("active");
         credentialConfig.setVcTemplate("test_template");
-        credentialConfig.setContext(List.of("https://www.w3.org/2018/credentials/v1"));
-        credentialConfig.setCredentialType(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"));
+        credentialConfig.setContext("https://www.w3.org/2018/credentials/v1");
+        credentialConfig.setCredentialType("VerifiableCredential,TestVerifiableCredential");
         credentialConfig.setCredentialFormat("ldp_vc");
         credentialConfig.setDidUrl("did:web:test.github.io:test-env:test-folder");
         credentialConfig.setOrder(Arrays.asList("test1", "test2", "test3", "test4"));
@@ -60,6 +60,7 @@ public class CredentialConfigurationServiceImplTest {
         credentialConfig.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
         credentialConfig.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
         credentialConfig.setCredentialSubject(Map.of("name", "Full Name"));
+        credentialConfig.setKeyManagerAppId("TEST2019");
 
         credentialConfigurationDTO = new CredentialConfigurationDTO();
         credentialConfigurationDTO.setDisplay(List.of());
@@ -91,7 +92,7 @@ public class CredentialConfigurationServiceImplTest {
     @Test
     public void getCredentialConfigById_Success() throws JsonProcessingException {
         Optional<CredentialConfig> optional = Optional.of(credentialConfig);
-        when(credentialConfigRepository.findById(anyString())).thenReturn(optional);
+        when(credentialConfigRepository.findByConfigId(anyString())).thenReturn(optional);
         when(credentialConfigMapper.toDto(any(CredentialConfig.class))).thenReturn(credentialConfigurationDTO);
         CredentialConfigurationDTO credentialConfigurationDTOResponse = credentialConfigurationService.getCredentialConfigurationById("test");
 
@@ -108,7 +109,7 @@ public class CredentialConfigurationServiceImplTest {
 
     @Test
     public void getCredentialConfigurationById_ConfigNotFound() {
-        when(credentialConfigRepository.findById("12345678"))
+        when(credentialConfigRepository.findByConfigId("12345678"))
                 .thenReturn(Optional.empty());
 
         CertifyException exception = assertThrows(CertifyException.class, () ->
@@ -120,7 +121,7 @@ public class CredentialConfigurationServiceImplTest {
     @Test
     public void updateExistingCredentialConfig_Success() throws JsonProcessingException {
         Optional<CredentialConfig> optional = Optional.of(credentialConfig);
-        when(credentialConfigRepository.findById(anyString())).thenReturn(optional);
+        when(credentialConfigRepository.findByConfigId(anyString())).thenReturn(optional);
         doNothing().when(credentialConfigMapper).updateEntityFromDto(any(CredentialConfigurationDTO.class), any(CredentialConfig.class));
 
         CredentialConfigResponse credentialConfigResponse = credentialConfigurationService.updateCredentialConfiguration("12345678", credentialConfigurationDTO);
@@ -133,7 +134,7 @@ public class CredentialConfigurationServiceImplTest {
 
     @Test
     public void updateExistingCredentialConfiguration_ConfigNotFound() {
-        when(credentialConfigRepository.findById(anyString()))
+        when(credentialConfigRepository.findByConfigId(anyString()))
                 .thenReturn(Optional.empty());
 
         CertifyException exception = assertThrows(CertifyException.class, () ->
@@ -145,8 +146,8 @@ public class CredentialConfigurationServiceImplTest {
     @Test
     public void deleteCredentialConfig_Success() throws JsonProcessingException {
         Optional<CredentialConfig> optional = Optional.of(credentialConfig);
-        when(credentialConfigRepository.findById(anyString())).thenReturn(optional);
-        doNothing().when(credentialConfigRepository).deleteById(anyString());
+        when(credentialConfigRepository.findByConfigId(anyString())).thenReturn(optional);
+        doNothing().when(credentialConfigRepository).delete(any(CredentialConfig.class));
 
         String result = credentialConfigurationService.deleteCredentialConfigurationById("12345678");
 
@@ -156,7 +157,7 @@ public class CredentialConfigurationServiceImplTest {
 
     @Test
     public void deleteCredentialConfiguration_ConfigNotFound() {
-        when(credentialConfigRepository.findById(anyString()))
+        when(credentialConfigRepository.findByConfigId(anyString()))
                 .thenReturn(Optional.empty());
 
         CertifyException exception = assertThrows(CertifyException.class, () ->

@@ -22,21 +22,6 @@ CREATE TABLE ca_cert_store(
 	CONSTRAINT cert_thumbprint_unique UNIQUE (cert_thumbprint,partner_domain)
 
 );
-Drop table if exists credential_template;
-CREATE TABLE IF NOT EXISTS credential_template(
-	context character varying(1024) NOT NULL,
-	credential_type character varying(512) NOT NULL,
-	template VARCHAR NOT NULL,
-	credential_format character varying(1024),
-	did_url VARCHAR,
-	key_manager_app_id character varying(36) NOT NULL,
-    key_manager_ref_id character varying(128),
-	signature_algo character(2048),
-	sd_claim VARCHAR,
-	cr_dtimes timestamp NOT NULL default now(),
-	upd_dtimes timestamp,
-	CONSTRAINT pk_template PRIMARY KEY (context, credential_type, credential_format)
-);
 Drop table if exists key_alias;
 CREATE TABLE key_alias(
     id character varying(36) NOT NULL,
@@ -96,14 +81,18 @@ CREATE TABLE rendering_template (
 );
 DROP TABLE IF EXISTS credential_config CASCADE CONSTRAINTS;
 CREATE TABLE credential_config (
-    id VARCHAR(255) PRIMARY KEY,
+    config_id VARCHAR(255),
     status VARCHAR(255),
     vc_template VARCHAR,
     doctype VARCHAR,
-    context TEXT[] NOT NULL,
-    credential_type TEXT[] NOT NULL,
+    context VARCHAR NOT NULL,
+    credential_type VARCHAR NOT NULL,
     credential_format VARCHAR(255) NOT NULL,
     did_url VARCHAR NOT NULL,
+    key_manager_app_id VARCHAR(36) NOT NULL,
+    key_manager_ref_id VARCHAR(128),
+    signature_algo VARCHAR(2048),
+    sd_claim VARCHAR,
     display JSONB NOT NULL,
     display_order TEXT[] NOT NULL,
     scope VARCHAR(255) NOT NULL,
@@ -115,7 +104,7 @@ CREATE TABLE credential_config (
     plugin_configurations JSONB,
 	cr_dtimes TIMESTAMP NOT NULL,
     upd_dtimes TIMESTAMP,
-    CONSTRAINT pk_config_id PRIMARY KEY (id)
+    CONSTRAINT pk_config_id PRIMARY KEY (context, credential_type, credential_format)
 );
 INSERT INTO key_policy_def (app_id, key_validity_duration, pre_expire_days, access_allowed, is_active, cr_by, cr_dtimes)
 SELECT app_id, key_validity_duration, pre_expire_days, access_allowed, is_active, cr_by, CURRENT_TIMESTAMP

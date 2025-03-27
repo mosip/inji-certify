@@ -3,13 +3,17 @@
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -- -------------------------------------------------------------------------------------------------
 -- Database Name: inji_certify
--- Table Name : credential_config
--- Purpose    : Credential Configuration Table
+-- Table Name : rendering_template,credential_template, ca_cert_store
+-- Purpose    : To upgrade Certify v0.11.0 changes and make it compatible with v0.12.0
 --
+-- Create By   	: Piyush Shukla
+-- Created Date	: January-2025
 --
 -- Modified Date        Modified By         Comments / Remarks
 -- ------------------------------------------------------------------------------------------
 -- ------------------------------------------------------------------------------------------
+
+drop table credential_template;
 
 CREATE TABLE credential_config (
     config_id VARCHAR(255),
