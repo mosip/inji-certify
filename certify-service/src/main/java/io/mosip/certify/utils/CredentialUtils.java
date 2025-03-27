@@ -1,10 +1,10 @@
 package io.mosip.certify.utils;
 
-import io.mosip.certify.api.dto.VCRequestDto;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import io.mosip.certify.api.dto.VCRequestDto;
 
 public class CredentialUtils {
     // returns true for VC 2.0 VCI requests
@@ -18,12 +18,14 @@ public class CredentialUtils {
      * @return
      */
     public static String getTemplateName(VCRequestDto vcRequestDto) {
+        //TODO: Cache this entire data so we do not construct all the time.
         List<String> c = new ArrayList<>(vcRequestDto.getContext());
         List<String> t = new ArrayList<>(vcRequestDto.getType());
         Collections.sort(c);
         Collections.sort(t);
         String contextKey = String.join(",", c);
         String typeKey = String.join(",", t);
-        return String.join(":", typeKey, contextKey);
+      //  contextKey = StringUtils.hasText(vcRequestDto.getFormat())?contextKey.concat("-"+vcRequestDto.getFormat()):contextKey;
+        return String.join(":", typeKey, contextKey,vcRequestDto.getFormat());
     }
 }

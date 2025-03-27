@@ -5,19 +5,9 @@
  */
 package io.mosip.certify.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
-import io.mosip.certify.core.constants.Constants;
-import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateRequestDto;
-import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
-import io.mosip.kernel.keymanagerservice.dto.SymmetricKeyGenerateRequestDto;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
-import org.springframework.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
@@ -25,9 +15,23 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
+
+import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.services.KeyManagerConstants;
+import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateRequestDto;
+import io.mosip.kernel.keymanagerservice.dto.SymmetricKeyGenerateRequestDto;
+import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
+import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @EnableJpaRepositories(basePackages = {"io.mosip.kernel.keymanagerservice.repository", "io.mosip.certify.repository"})
@@ -50,6 +54,8 @@ public class AppConfig implements ApplicationRunner {
     @Value("${mosip.certify.plugin-mode}")
     private String pluginMode;
 
+    @Autowired
+    private Environment env;
 
     @Bean
     public ObjectMapper objectMapper() {
@@ -74,6 +80,12 @@ public class AppConfig implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
+//        if (env.matchesProfiles("local")) {
+            initKeys();
+//        }
+    }
+
+    private void initKeys(){
         log.info("===================== CERTIFY_SERVICE ROOT KEY CHECK ========================");
         String objectType = "CSR";
         KeyPairGenerateRequestDto rootKeyRequest = new KeyPairGenerateRequestDto();
@@ -88,7 +100,12 @@ public class AppConfig implements ApplicationRunner {
         masterKeyRequest.setReferenceId(org.apache.commons.lang3.StringUtils.EMPTY);
         keymanagerService.generateMasterKey(objectType, masterKeyRequest);
         // TODO: Generate an EC & ED key via K8s Job(INJICERT-469)
-        if(!StringUtils.isEmpty(cacheSecretKeyRefId)) {
+        KeyPairGenerateRequestDto rsaKeyRequest = new KeyPairGenerateRequestDto();
+        rsaKeyRequest.setApplicationId(KeyManagerConstants.CERTIFY_VC_SIGN_RSA);
+        rsaKeyRequest.setReferenceId(KeyManagerConstants.EMPTY_REF_ID);
+        rsaKeyRequest.setForce(false);
+        keymanagerService.generateMasterKey("certificate", rsaKeyRequest);
+        if(!ObjectUtils.isEmpty(cacheSecretKeyRefId)) {
             SymmetricKeyGenerateRequestDto symmetricKeyGenerateRequestDto = new SymmetricKeyGenerateRequestDto();
             symmetricKeyGenerateRequestDto.setApplicationId(Constants.CERTIFY_SERVICE_APP_ID);
             symmetricKeyGenerateRequestDto.setReferenceId(cacheSecretKeyRefId);
@@ -104,13 +121,6 @@ public class AppConfig implements ApplicationRunner {
         partnerMasterKeyRequest.setReferenceId(org.apache.commons.lang3.StringUtils.EMPTY);
         keymanagerService.generateMasterKey(objectType, partnerMasterKeyRequest);
         if(pluginMode.equals("DataProvider")) {
-            // Generate RSA Key Certificate
-            log.info("===================== CERTIFY_VC_SIGN_RSA KEY CHECK ========================");
-            KeyPairGenerateRequestDto rsaKeyRequest = new KeyPairGenerateRequestDto();
-            rsaKeyRequest.setApplicationId(Constants.CERTIFY_VC_SIGN_RSA);
-            rsaKeyRequest.setReferenceId(Constants.EMPTY_REF_ID);
-            rsaKeyRequest.setForce(false);
-            keymanagerService.generateMasterKey("certificate", rsaKeyRequest);
             // Generate an Ed25519Key:
             // 1. Generate a master key first to enable Keymanager to store the key.
             log.info("===================== CERTIFY_VC_SIGN_ED25519 KEY CHECK ========================");
@@ -130,12 +140,13 @@ public class AppConfig implements ApplicationRunner {
             ecK1Req.setReferenceId(Constants.EC_SECP256K1_SIGN);
             keymanagerService.generateECSignKey("certificate", ecK1Req);
 
-            // Generate an EC R1 Key
-            KeyPairGenerateRequestDto ecR1Req = new KeyPairGenerateRequestDto();
-            ecR1Req.setApplicationId(Constants.CERTIFY_VC_SIGN_EC_R1);
-            ecR1Req.setReferenceId(Constants.EC_SECP256R1_SIGN);
-            keymanagerService.generateECSignKey("certificate", ecK1Req);
+//            // Generate an EC R1 Key
+//            KeyPairGenerateRequestDto ecR1Req = new KeyPairGenerateRequestDto();
+//            ecR1Req.setApplicationId(Constants.CERTIFY_VC_SIGN_EC_R1);
+//            ecR1Req.setReferenceId(Constants.EC_SECP256R1_SIGN);
+//            keymanagerService.generateECSignKey("certificate", ecK1Req);
         }
         log.info("===================== CERTIFY KEY SETUP COMPLETED ========================");
+        log.info("===================== INJI Certify -- Started ============================");
     }
 }
