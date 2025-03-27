@@ -29,7 +29,7 @@ function prompt_for_deployment() {
 function installing_prerequisites() {
 
 
-  declare -a modules=("postgres" "redis")
+  declare -a modules=("postgres" "redis" "softhsm")
   declare -A prompts=(
     ["postgres"]="Do you want to install postgres in the postgres namespace? Opt \"n\" in case it already exists in postgres namespace: "
     ["softhsm"]="Do you want to install softhsm for inji certify service in softhsm namespace? Opt "n" in case it already exists in Softhsm namespace: "

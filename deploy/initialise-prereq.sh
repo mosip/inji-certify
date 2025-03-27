@@ -49,7 +49,7 @@ function initialising_prerequisites() {
   ../copy_cm_func.sh secret redis redis config-server
 
   echo "Updating environment variables in config-server"
-  kubectl -n config-server set env --keys=db-common-secrets --from secret/db-common-secrets deployment/config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_
+  kubectl -n config-server set env --keys=db-dbuser-password --from secret/db-common-secrets deployment/config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_
   kubectl -n config-server set env --keys=security-pin --from secret/softhsm-certify deployment/config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_SOFTHSM_CERTIFY_
   kubectl -n config-server set env --keys=redis-password --from secret/redis deployment/config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_
 

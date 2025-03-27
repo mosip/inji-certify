@@ -14,8 +14,6 @@ kubectl create ns $NS
 
 function installing_inji-certify() {
 
-  echo Istio label
-  kubectl label ns $SOFTHSM_NS istio-injection=enabled --overwrite
   helm repo add mosip https://mosip.github.io/mosip-helm
   helm repo update
 

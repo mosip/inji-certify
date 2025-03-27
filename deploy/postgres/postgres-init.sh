@@ -28,8 +28,9 @@ function initialize_db() {
         then
           echo Removing existing mosip_certify installation
           helm -n $NS delete postgres-init || true
+          kubectl -n $NS delete secret db-common-secrets  || true
           echo Initializing DB
-          helm -n $NS install postgres-init mosip/postgres-init --version $CHART_VERSION -f init_values.yaml --wait --wait-for-jobs
+          helm -n $NS install postgres-init mosip/postgres-init -f init_values.yaml --version $CHART_VERSION --wait --wait-for-jobs
           break
       elif [ "$yn" = "N" ] || [ "$yn" = "n" ]; then
           echo "Skipping certify postgres DB initialisation as per your input"
