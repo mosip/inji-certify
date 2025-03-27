@@ -5,19 +5,6 @@
  */
 package io.mosip.certify.vcsigners;
 
-import foundation.identity.jsonld.JsonLDException;
-import foundation.identity.jsonld.JsonLDObject;
-import info.weboftrust.ldsignatures.LdProof;
-import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
-import io.mosip.certify.api.dto.VCResult;
-import io.mosip.certify.core.constants.*;
-import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.proofgenerators.ProofGenerator;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
 import java.io.IOException;
 import java.net.URI;
 import java.security.GeneralSecurityException;
@@ -29,6 +16,23 @@ import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import foundation.identity.jsonld.JsonLDException;
+import foundation.identity.jsonld.JsonLDObject;
+import info.weboftrust.ldsignatures.LdProof;
+import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
+import io.mosip.certify.api.dto.VCResult;
+import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.constants.VCDM1Constants;
+import io.mosip.certify.core.constants.VCDM2Constants;
+import io.mosip.certify.core.constants.VCDMConstants;
+import io.mosip.certify.core.exception.CertifyException;
+import io.mosip.certify.proofgenerators.ProofGenerator;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * JsonLDVCSigner is a VCSigner which uses the Certify embedded
