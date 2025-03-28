@@ -36,28 +36,7 @@ public class CredentialHolder {
     @Column(name = "credential_type", nullable = false)
     private String credentialType;
     
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-    
-    @Column(name = "cr_by", nullable = false)
-    private String createdBy;
-    
-    @Column(name = "cr_dtimes", nullable = false)
-    private LocalDateTime createdTimes;
-    
-    @Column(name = "upd_by")
-    private String updatedBy;
-    
-    @Column(name = "upd_dtimes")
-    private LocalDateTime updatedTimes;
-    
-    @Column(name = "is_deleted", columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private Boolean isDeleted;
-    
-    @Column(name = "del_dtimes")
-    private LocalDateTime deletedTimes;
-    
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "credential_id", referencedColumnName = "credential_id", insertable = false, updatable = false)
-    private CredentialStatus credentialStatus;
+    private LedgerIssuanceTable ledgerIssuanceTable;
 }

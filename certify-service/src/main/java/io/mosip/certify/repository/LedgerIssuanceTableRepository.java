@@ -1,6 +1,6 @@
 package io.mosip.certify.repository;
 
-import io.mosip.certify.entity.CredentialStatus;
+import io.mosip.certify.entity.LedgerIssuanceTable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,25 +11,25 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface CredentialStatusRepository extends JpaRepository<CredentialStatus, String> {
+public interface LedgerIssuanceTableRepository extends JpaRepository<LedgerIssuanceTable, String> {
     
-    Optional<CredentialStatus> findByCredentialId(String credentialId);
+    Optional<LedgerIssuanceTable> findByCredentialId(String credentialId);
     
-    List<CredentialStatus> findByIssuerId(String issuerId);
+    List<LedgerIssuanceTable> findByIssuerId(String issuerId);
     
-    List<CredentialStatus> findByCredentialStatus(String status);
+    List<LedgerIssuanceTable> findByCredentialStatus(String status);
     
-    List<CredentialStatus> findByStatusPurpose(String statusPurpose);
+    List<LedgerIssuanceTable> findByStatusPurpose(String statusPurpose);
     
-    Optional<CredentialStatus> findByCredentialIdAndIssuerId(String credentialId, String issuerId);
+    Optional<LedgerIssuanceTable> findByCredentialIdAndIssuerId(String credentialId, String issuerId);
     
-    List<CredentialStatus> findByIssuerIdAndStatusPurpose(String issuerId, String statusPurpose);
+    List<LedgerIssuanceTable> findByIssuerIdAndStatusPurpose(String issuerId, String statusPurpose);
     
-    List<CredentialStatus> findByIssuerIdAndCredentialStatus(String issuerId, String status);
+    List<LedgerIssuanceTable> findByIssuerIdAndCredentialStatus(String issuerId, String status);
     
-    @Query("SELECT cs FROM CredentialStatus cs WHERE cs.issueDate <= :date AND (cs.expirationDate IS NULL OR cs.expirationDate >= :date)")
-    List<CredentialStatus> findValidCredentialsAtDate(@Param("date") LocalDateTime date);
+    @Query("SELECT cs FROM LedgerIssuanceTable cs WHERE cs.issueDate <= :date AND (cs.expirationDate IS NULL OR cs.expirationDate >= :date)")
+    List<LedgerIssuanceTable> findValidCredentialsAtDate(@Param("date") LocalDateTime date);
     
-    @Query("SELECT cs FROM CredentialStatus cs WHERE cs.credentialStatus = 'valid' AND cs.expirationDate <= :date")
-    List<CredentialStatus> findExpiredCredentials(@Param("date") LocalDateTime date);
+    @Query("SELECT cs FROM LedgerIssuanceTable cs WHERE cs.credentialStatus = 'valid' AND cs.expirationDate <= :date")
+    List<LedgerIssuanceTable> findExpiredCredentials(@Param("date") LocalDateTime date);
 }

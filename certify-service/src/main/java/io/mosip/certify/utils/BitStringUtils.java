@@ -1,108 +1,98 @@
-//package io.mosip.certify.utils;
-//
-//import java.nio.ByteBuffer;
-//import java.util.BitSet;
-//import java.util.Base64;
-//import java.util.zip.Deflater;
-//import java.util.zip.Inflater;
-//
-//public class BitStringStatusListUtil {
-//
-//    /**
-//     * Creates a new empty bitstring of the specified size
-//     */
-//    public static String createEmptyBitstring(int size) {
-//        BitSet bitSet = new BitSet(size);
-//        return encodeBitstring(bitSet, size);
-//    }
-//
-//    /**
-//     * Updates a bit in the encoded bitstring
-//     */
-//    public static String updateBitstring(String encodedBitstring, int index, boolean value) {
-//        BitSet bitSet = decodeBitstring(encodedBitstring);
-//        bitSet.set(index, value);
-//        return encodeBitstring(bitSet, bitSet.length());
-//    }
-//
-//    /**
-//     * Gets the value of a bit in the encoded bitstring
-//     */
-//    public static boolean getBitstringValue(String encodedBitstring, int index) {
-//        BitSet bitSet = decodeBitstring(encodedBitstring);
-//        return bitSet.get(index);
-//    }
-//
-//    /**
-//     * Encodes a BitSet as a compressed Base64 string
-//     */
-//    private static String encodeBitstring(BitSet bitSet, int size) {
-//        byte[] bytes = bitSet.toByteArray();
-//
-//        // Compress the bytes
-//        byte[] compressedBytes = compress(bytes);
-//
-//        // Convert to Base64
-//        return Base64.getEncoder().encodeToString(compressedBytes);
-//    }
-//
-//    /**
-//     * Decodes a compressed Base64 string into a BitSet
-//     */
-//    private static BitSet decodeBitstring(String encodedBitstring) {
-//        byte[] compressedBytes = Base64.getDecoder().decode(encodedBitstring);
-//
-//        // Decompress the bytes
-//        byte[] decompressedBytes = decompress(compressedBytes);
-//
-//        return BitSet.valueOf(decompressedBytes);
-//    }
-//
-//    /**
-//     * Compresses a byte array
-//     */
-//    private static byte[] compress(byte[] data) {
-//        Deflater deflater = new Deflater();
-//        deflater.setInput(data);
-//        deflater.finish();
-//
-//        byte[] buffer = new byte[data.length];
-//        int compressedSize = deflater.deflate(buffer);
-//
-//        byte[] compressedData = new byte[compressedSize];
-//        System.arraycopy(buffer, 0, compressedData, 0, compressedSize);
-//
-//        deflater.end();
-//        return compressedData;
-//    }
-//
-//    /**
-//     * Decompresses a byte array
-//     */
-//    private static byte[] decompress(byte[] compressedData) {
-//        Inflater inflater = new Inflater();
-//        inflater.setInput(compressedData);
-//
-//        byte[] buffer = new byte[1024];
-//        int resultSize = 0;
-//        ByteBuffer result = ByteBuffer.allocate(1024);
-//
-//        try {
-//            while (!inflater.finished()) {
-//                int count = inflater.inflate(buffer);
-//                result.put(buffer, 0, count);
-//                resultSize += count;
-//            }
-//        } catch (Exception e) {
-//            throw new RuntimeException("Failed to decompress data", e);
-//        } finally {
-//            inflater.end();
-//        }
-//
-//        byte[] decompressedData = new byte[resultSize];
-//        result.flip();
-//        result.get(decompressedData, 0, resultSize);
-//
-//        return decompressedData;
-//    }
-//}
+package io.mosip.certify.utils;
+
+import io.mosip.certify.entity.LedgerIssuanceTable;
+import io.mosip.certify.entity.StatusListCredential;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Base64;
+import java.util.List;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
+public class BitStringUtils {
+    private static final int DEFAULT_LIST_SIZE = 131_072; // 16 KB
+    private static final int DEFAULT_STATUS_SIZE = 1;
+    /**
+     * Set a specific bit in a byte array
+     */
+    public static void setBitAtIndex(byte[] bitstring, long index, byte value) {
+        int byteIndex = (int) (index / 8);
+        int bitPosition = (int) (index % 8);
+
+        if (value == 1) {
+            bitstring[byteIndex] |= (1 << (7 - bitPosition));
+        } else {
+            bitstring[byteIndex] &= ~(1 << (7 - bitPosition));
+        }
+    }
+
+    /**
+     * Check the value of a bit at a specific index
+     */
+    public static boolean checkBitAtIndex(byte[] bitstring, long index) {
+        int byteIndex = (int) (index / 8);
+        int bitPosition = (int) (index % 8);
+
+        return ((bitstring[byteIndex] & (1 << (7 - bitPosition))) != 0);
+    }
+
+    /**
+     * Decompress GZIP compressed byte array
+     */
+    public static byte[] decompressGzip(byte[] compressedBytes) throws IOException {
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(compressedBytes);
+             GZIPInputStream gzipIs = new GZIPInputStream(bais);
+             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+
+            byte[] buffer = new byte[1024];
+            int len;
+            while ((len = gzipIs.read(buffer)) > 0) {
+                baos.write(buffer, 0, len);
+            }
+            return baos.toByteArray();
+        }
+    }
+
+    /**
+     * Compress bitstring using GZIP and Base64 encode
+     */
+    private String compressAndEncodeList(byte[] bitstring) throws IOException {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             GZIPOutputStream gzipOs = new GZIPOutputStream(baos)) {
+            gzipOs.write(bitstring);
+            gzipOs.close();
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(baos.toByteArray());
+        }
+    }
+
+    /**
+     * Expand compressed and encoded list
+     */
+    public byte[] expandCompressedList(String compressedEncodedList) throws Exception {
+        try {
+            byte[] compressedBytes = Base64.getUrlDecoder().decode(compressedEncodedList);
+            return BitStringUtils.decompressGzip(compressedBytes);
+        } catch (Exception e) {
+            throw new Exception("Error expanding compressed list", e);
+        }
+    }
+
+    /**
+     * Generate bitstring from issued credentials
+     */
+    public byte[] generateBitstring(List<LedgerIssuanceTable> issuedCredentials) {
+        byte[] bitstring = new byte[DEFAULT_LIST_SIZE / 8]; // Convert bits to bytes
+
+        for (LedgerIssuanceTable entry : issuedCredentials) {
+            BitStringUtils.setBitAtIndex(
+                    bitstring,
+                    entry.getStatusListIndex(),
+                    entry.getCredentialStatus().equals("revoked") ? (byte)1 : (byte)0
+            );
+        }
+
+        return bitstring;
+    }
+}
