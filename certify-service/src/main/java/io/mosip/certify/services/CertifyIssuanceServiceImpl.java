@@ -28,6 +28,10 @@ import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.core.util.AuditHelper;
 import io.mosip.certify.core.util.SecurityHelperService;
 import io.mosip.certify.api.spi.DataProviderPlugin;
+import io.mosip.certify.entity.LedgerIssuanceTable;
+import io.mosip.certify.entity.StatusListCredential;
+import io.mosip.certify.repository.LedgerIssuanceTableRepository;
+import io.mosip.certify.repository.StatusListCredentialRepository;
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.certify.validators.CredentialRequestValidator;
 import io.mosip.certify.exception.InvalidNonceException;
@@ -38,6 +42,7 @@ import io.mosip.certify.utils.DIDDocumentUtil;
 import io.mosip.certify.vcsigners.VCSigner;
 import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
@@ -47,10 +52,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.stereotype.Service;
+
+import java.lang.reflect.Method;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -107,8 +115,24 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Autowired
     private KeymanagerService keymanagerService;
 
+    @Autowired
+    private LedgerIssuanceTableRepository ledgerIssuanceTableRepository;
+
+    @Autowired
+    private StatusListCredentialRepository statusListCredentialRepository;
+
+    @Autowired
+    private BitStringStatusListService bitStringStatusListService;
+
+    @Value("${mosip.certify.data-provider-plugin.issuer-uri}")
+    private String issuerId;
+
+    @Value("${mosip.certify.domain.url}")
+    private String domainUrl;
+
     private Map<String, Object> didDocument;
 
+    @Transactional
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
         // 1. Credential Request validation
@@ -145,6 +169,29 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         // 4. Get VC from configured plugin implementation
         VCResult<?> vcResult = getVerifiableCredential(credentialRequest, credentialMetadata,
                 proofValidator.getKeyMaterial(credentialRequest.getProof()));
+
+
+        JsonLDObject jsonLdCredential = (JsonLDObject) vcResult.getCredential();
+        Map<String, Object> credentialMap = jsonLdCredential.toMap();
+        long statusListIndex = generateUniqueStatusListIndex();
+
+        String statusListCredentialUrl = getOrCreateStatusListCredential(issuerId, "revocation");
+        String credentialId = UUID.randomUUID().toString();
+
+        LedgerIssuanceTable ledgerIssuanceTable = new LedgerIssuanceTable();
+        ledgerIssuanceTable.setId(statusListCredentialUrl+"#"+statusListIndex);
+        ledgerIssuanceTable.setHolderId(proofValidator.getKeyMaterial(credentialRequest.getProof()));
+        ledgerIssuanceTable.setCredentialId(credentialId);
+        ledgerIssuanceTable.setIssuerId(issuerId);
+        ledgerIssuanceTable.setStatusListIndex(statusListIndex);
+        ledgerIssuanceTable.setStatusListCredential(statusListCredentialUrl);
+        ledgerIssuanceTable.setStatusPurpose("revocation");
+        ledgerIssuanceTable.setCredentialStatus("valid");
+        ledgerIssuanceTable.setIssueDate(LocalDateTime.now());
+        ledgerIssuanceTableRepository.save(ledgerIssuanceTable);
+
+        // Add ledgerIssuanceTable to the VC
+        addLedgerIssuanceTableToVC(vcResult, ledgerIssuanceTable);
 
         auditWrapper.logAudit(Action.VC_ISSUANCE, ActionStatus.SUCCESS,
                 AuditHelper.buildAuditDto(parsedAccessToken.getAccessTokenHash(), "accessTokenHash"), null);
@@ -421,4 +468,96 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         transaction.setCNonceExpireSeconds(cNonceExpireSeconds);
         return vciCacheService.setVCITransaction(parsedAccessToken.getAccessTokenHash(), transaction);
     }
+
+
+    private long generateUniqueStatusListIndex() {
+        return new Random().nextInt(131_072);
+    }
+
+    private String getOrCreateStatusListCredential(String issuerId, String statusPurpose) {
+        return bitStringStatusListService.generateStatusListCredential(
+                issuerId,
+                statusPurpose,
+                domainUrl
+        );
+    }
+
+//    private String getOrCreateStatusListCredential(String issuerId, String statusPurpose) {
+//        // Check if a status list credential already exists for this issuer and purpose
+//        log.info("Searching for StatusListCredential with issuerId: {} and statusPurpose: {}", issuerId, statusPurpose);
+//        Optional<StatusListCredential> existingList = statusListCredentialRepository
+//                .findByIssuerIdAndStatusPurpose(issuerId, statusPurpose);
+//        log.info("ExistingList: {}", existingList);
+//
+//        if (existingList.isPresent()) {
+//            return existingList.get().getId();
+//        }
+//
+//        // Create a new status list credential
+//        String statusListId = domainUrl + "/credential/status/" + UUID.randomUUID().toString();
+//        StatusListCredential statusList = new StatusListCredential();
+//        statusList.setId(statusListId);
+//        statusList.setIssuerId(issuerId);
+//        statusList.setStatusPurpose(statusPurpose);
+//        statusList.setEncodedList(Base64.getEncoder().encodeToString(new byte[1])); // Initialize with empty list
+//        statusList.setListSize(0);
+//        statusList.setValidFrom(LocalDateTime.now());
+//
+//        statusListCredentialRepository.save(statusList);
+//
+//        return statusListId;
+//    }
+
+    private void addLedgerIssuanceTableToVC(VCResult<?> vcResult, LedgerIssuanceTable ledgerIssuanceTable) {
+        log.info("Entering addLedgerIssuanceTableToVC with VCResult: {} and LedgerIssuanceTable: {}", vcResult, ledgerIssuanceTable);
+
+        // For JWT-based VCs:
+        if (vcResult.getCredential() instanceof String) {
+            log.info("Processing JWT-based VC");
+
+            Map<String, Object> statusObject = new HashMap<>();
+            statusObject.put("id", ledgerIssuanceTable.getId());
+            statusObject.put("type", "BitstringStatusListEntry");
+            statusObject.put("statusPurpose", ledgerIssuanceTable.getStatusPurpose());
+            statusObject.put("statusListIndex", ledgerIssuanceTable.getStatusListIndex());
+            statusObject.put("statusListCredential", ledgerIssuanceTable.getStatusListCredential());
+
+            log.info("Constructed status object for JWT VC: {}", statusObject);
+        }
+        // For JSON-LD VCs:
+        else if (vcResult.getCredential() instanceof JsonLDObject) {
+            log.info("Processing JSON-LD VC");
+
+            try {
+                JsonLDObject vc = (JsonLDObject) vcResult.getCredential();
+                log.info("Original JSON-LD VC: {}", vc);
+
+                // Create a new map for credential status
+                Map<String, Object> statusObject = new HashMap<>();
+                statusObject.put("id", ledgerIssuanceTable.getId());
+                statusObject.put("type", "BitstringStatusListEntry");
+                statusObject.put("statusPurpose", ledgerIssuanceTable.getStatusPurpose());
+                statusObject.put("statusListIndex", ledgerIssuanceTable.getStatusListIndex());
+                statusObject.put("statusListCredential", ledgerIssuanceTable.getStatusListCredential());
+
+                log.info("Constructed status object for JSON-LD VC: {}", statusObject);
+
+                JsonLDObject statusJsonLD = JsonLDObject.fromMap(statusObject);
+                log.info("Converted status to JSON-LD object: {}", statusJsonLD);
+
+                statusJsonLD.addToJsonLDObject(vc, "ledgerIssuanceTable");
+
+                log.info("Updated JSON-LD VC with credential status: {}", vc);
+            } catch (Exception e) {
+                log.error("Error adding credential status to JsonLDObject", e);
+                throw new CertifyException(e.getMessage());
+            }
+        } else {
+            log.warn("Unknown credential type: {}", vcResult.getCredential().getClass().getName());
+        }
+
+        log.info("Exiting addLedgerIssuanceTableToVC");
+    }
+
+
 }

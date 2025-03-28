@@ -24,6 +24,9 @@ public class LedgerIssuanceTable {
     @Column(name = "issuer_id", nullable = false)
     private String issuerId;
 
+    @Column(name = "holder_id", nullable = false)
+    private String holderId;
+
     @Column(name = "type", nullable = false, columnDefinition = "VARCHAR(50) DEFAULT 'BitstringStatusListEntry'")
     private String type = "BitstringStatusListEntry";
 
@@ -63,7 +66,4 @@ public class LedgerIssuanceTable {
 
     @Column(name = "revocation_proof", length = 512)
     private String revocationProof;
-
-//    @OneToMany(mappedBy = "credentialStatus", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-//    private java.util.Set<CredentialHolder> credentialHolders;
 }
