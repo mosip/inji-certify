@@ -115,6 +115,8 @@ public class DIDDocumentUtil {
     }
 
     private static Map<String, Object> generateECK12019VerificationMethod(PublicKey publicKey, String issuerURI, String issuerPublicKeyURI) {
+        // TODO: can validate the key or directly assume the curve here and
+        //  go ahead or use P_256 only if `nimbusCurve` is having same value.
         ECKey nimbusKey = new ECKey.Builder(Curve.SECP256K1, (ECPublicKey) publicKey)
                 .build();
 
