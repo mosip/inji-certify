@@ -6,6 +6,5 @@
 \ir ddl/certify-ca_cert_store.sql
 \ir ddl/certify-rendering_template.sql
 \ir ddl/certify-credential_template.sql
-\ir ddl/certify-credential_holder.sql
-\ir ddl/certify-credential_status.sql
+\ir ddl/certify-ledger_issuance_table.sql
 \ir ddl/certify-status_list_credential.sql

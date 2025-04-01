@@ -176,12 +176,11 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         long statusListIndex = generateUniqueStatusListIndex();
 
         String statusListCredentialUrl = getOrCreateStatusListCredential(issuerId, "revocation");
-        String credentialId = UUID.randomUUID().toString();
 
         LedgerIssuanceTable ledgerIssuanceTable = new LedgerIssuanceTable();
         ledgerIssuanceTable.setId(statusListCredentialUrl+"#"+statusListIndex);
         ledgerIssuanceTable.setHolderId(proofValidator.getKeyMaterial(credentialRequest.getProof()));
-        ledgerIssuanceTable.setCredentialId(credentialId);
+        ledgerIssuanceTable.setCredentialId(statusListCredentialUrl+"#"+statusListIndex);
         ledgerIssuanceTable.setIssuerId(issuerId);
         ledgerIssuanceTable.setStatusListIndex(statusListIndex);
         ledgerIssuanceTable.setStatusListCredential(statusListCredentialUrl);
@@ -516,7 +515,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             log.info("Processing JWT-based VC");
 
             Map<String, Object> statusObject = new HashMap<>();
-            statusObject.put("id", ledgerIssuanceTable.getId());
+            statusObject.put("id", ledgerIssuanceTable.getCredentialId());
             statusObject.put("type", "BitstringStatusListEntry");
             statusObject.put("statusPurpose", ledgerIssuanceTable.getStatusPurpose());
             statusObject.put("statusListIndex", ledgerIssuanceTable.getStatusListIndex());
@@ -534,7 +533,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
                 // Create a new map for credential status
                 Map<String, Object> statusObject = new HashMap<>();
-                statusObject.put("id", ledgerIssuanceTable.getId());
+                statusObject.put("id", ledgerIssuanceTable.getCredentialId());
                 statusObject.put("type", "BitstringStatusListEntry");
                 statusObject.put("statusPurpose", ledgerIssuanceTable.getStatusPurpose());
                 statusObject.put("statusListIndex", ledgerIssuanceTable.getStatusListIndex());

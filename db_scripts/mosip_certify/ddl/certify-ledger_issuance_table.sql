@@ -14,6 +14,7 @@ CREATE TABLE certify.ledger_issuance_table(
     id character varying(255) NOT NULL,
     credential_id character varying(255) NOT NULL,
     issuer_id character varying(255) NOT NULL,
+    holder_id character varying(1024) NOT NULL,
     type character varying(50) NOT NULL DEFAULT 'BitstringStatusListEntry',
     status_list_index bigint NOT NULL,
     status_list_credential character varying(255) NOT NULL,
@@ -53,9 +54,3 @@ COMMENT ON COLUMN certify.ledger_issuance_table.expiration_date IS 'Date and tim
 COMMENT ON COLUMN certify.ledger_issuance_table.revocation_timestamp IS 'Date and time when the credential was revoked (if applicable)';
 COMMENT ON COLUMN certify.ledger_issuance_table.revocation_reason IS 'Reason for revocation (if applicable)';
 COMMENT ON COLUMN certify.ledger_issuance_table.revocation_proof IS 'Cryptographic proof or hash representing the integrity of the revocation action';
-COMMENT ON COLUMN certify.ledger_issuance_table.cr_by IS 'ID or name of the user who created the record';
-COMMENT ON COLUMN certify.ledger_issuance_table.cr_dtimes IS 'Date and Timestamp when the record is created';
-COMMENT ON COLUMN certify.ledger_issuance_table.upd_by IS 'ID or name of the user who updated the record';
-COMMENT ON COLUMN certify.ledger_issuance_table.upd_dtimes IS 'Date and Timestamp when the record was last updated';
-COMMENT ON COLUMN certify.ledger_issuance_table.is_deleted IS 'Flag to mark whether the record is Soft deleted';
-COMMENT ON COLUMN certify.ledger_issuance_table.del_dtimes IS 'Date and Timestamp when the record is soft deleted';
