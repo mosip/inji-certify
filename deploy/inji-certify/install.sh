@@ -12,6 +12,35 @@ CHART_VERSION=0.10.1-develop
 echo Create $NS namespace
 kubectl create ns $NS
 
+DEFAULT_MOSIP_INJICERTIFY_HOST=$( kubectl get cm global -n config-server -o jsonpath={.data.mosip-injicertify-host} )
+# Check if MOSIP_INJICDERTIFY_HOST is present under configmap/global of configserver
+if echo "DEFAULT_MOSIP_INJICERTIFY_HOST" | grep -q "MOSIP_CERTIFY_HOST"; then
+    echo "MOSIP_CERTIFY_HOST is already present in configmap/global of configserver"
+    MOSIP_INJICERTIFY_HOST=DEFAULT_MOSIP_INJICERTIFY_HOST
+else
+    read -p "Please provide injicertifyhost (eg: injicertify.sandbox.xyz.net ) : " MOSIP_INJICERTIFY_HOST
+
+    if [ -z "MOSIP_INJICERTIFY_HOST" ]; then
+    echo "INJICERTIFY Host not provided; EXITING;"
+    exit 0;
+    fi
+fi
+
+CHK_MOSIP_INJICERTIFY_HOST=$( nslookup "$MOSIP_INJICERTIFY_HOST" )
+if [ $? -gt 0 ]; then
+    echo "Injicertify Host does not exists; EXITING;"
+    exit 0;
+fi
+
+echo "MOSIP_INJICERTIFY_HOST is not present in configmap/global of configserver"
+    # Add injicertify host to global
+    kubectl patch configmap global -n config-server --type merge -p "{\"data\": {\"mosip-injicertify-host\": \"$MOSIP_INJICERTIFY_HOST\"}}"
+    kubectl patch configmap global -n default --type merge -p "{\"data\": {\"mosip-injicertify-host\": \"$MOSIP_INJICERTIFY_HOST\"}}"
+    # Add the host
+    kubectl -n config-server set env --keys=mosip-injicertify-host --from configmap/global deployment/config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_
+    # Restart the configserver deployment
+    kubectl -n config-server get deploy -o name | xargs -n1 -t kubectl -n config-server rollout status
+
 function installing_inji-certify() {
 
   helm repo add mosip https://mosip.github.io/mosip-helm

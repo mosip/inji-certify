@@ -23,10 +23,10 @@ function initialize_db() {
   done
 
   while true; do
-      read -p "CAUTION: all existing data if any for mosip_certify will be lost. Are you sure? (Y/n)" yn
+      read -p "CAUTION: all existing data if any for inji_certify will be lost. Are you sure? (Y/n)" yn
       if [ $yn = "Y" ] || [ $yn = "y" ];
         then
-          echo Removing existing mosip_certify installation
+          echo Removing existing inji_certify installation
           helm -n $NS delete postgres-init || true
           kubectl -n $NS delete secret db-common-secrets  || true
           echo Initializing DB
