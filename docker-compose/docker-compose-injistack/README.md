@@ -11,8 +11,8 @@ Expected time to setup: ~10 minutes
 
 You have two options for the certify plugin which gives Verifiable Credentials of different types
 
-1. Farmer Credential: returns an JSON-LD VC and is implemented using the [CSV Plugin](https://github.com/mosip/digital-credential-plugins/blob/release-0.3.x/mock-certify-plugin/src/main/java/io.mosip.certify.mock.integration/service/MockCSVDataProviderPlugin.java).
-2. Mobile Driving License Credential: returns an mDL VC and is implemented using the [mock-mdl Plugin](https://github.com/mosip/digital-credential-plugins/blob/release-0.3.x/mock-certify-plugin/src/main/java/io.mosip.certify.mock.integration/service/MDocMockVCIssuancePlugin.java).
+1. Farmer Credential: returns an JSON-LD VC and is implemented using the [CSV Plugin](https://github.com/mosip/digital-credential-plugins/blob/release-0.4.x/mock-certify-plugin/src/main/java/io.mosip.certify.mock.integration/service/MockCSVDataProviderPlugin.java).
+2. Mobile Driving License Credential: returns an mDL VC and is implemented using the [mock-mdl Plugin](https://github.com/mosip/digital-credential-plugins/blob/release-0.4.x/mock-certify-plugin/src/main/java/io.mosip.certify.mock.integration/service/MDocMockVCIssuancePlugin.java).
 
 
 ## Prerequisites
@@ -43,7 +43,8 @@ docker-compose-injistack/
 │   ├── mimoto-issuers-config.json
 │   ├── mimoto-trusted-verifiers.json
 │   └── credential-template.html
-├── nginx.conf
+├── certify-nginx.conf (Nginx configuration for Certify service)
+├── nginx.conf ((Nginx configuration for Inji-web)
 ├── certify_init.sql
 └── docker-compose.yml
 ```
@@ -51,22 +52,27 @@ docker-compose-injistack/
 
 
 ## Choosing a VCI plugin for issuance
-
-
 ### Recommended: Use one of the Existing Mock Plugin
+- Follow any one of the following options:
 
-- Supported versions: 0.3.0 and above
-- Download the latest JAR from:
-  ```
-  https://oss.sonatype.org/content/repositories/snapshots/io/mosip/certify/mock-certify-plugin/0.3.0-SNAPSHOT/
-  ```
-- Place the downloaded JAR in `loader_path/certify/`
+# Option 1: Building the plugin jar manually. 
+   - Use the `mosipqa/inji-certify:0.11.x` docker image for certify.
+   - Supported versions: 0.4.0 and above
+   - Download the latest JAR from:
+     ```
+     https://oss.sonatype.org/content/repositories/snapshots/io/mosip/certify/mock-certify-plugin/0.4.0-SNAPSHOT/
+     ```
+   - Place the downloaded JAR in `loader_path/certify/`
+
+# Option 2: Building the jars through `certify-service-with-plugins` folder and using the `inji-certify-with-plugins` docker image
+   - Use the `mosipqa/inji-certify-with-plugins:0.11.x` docker image for certify.
+   **Note**: No need of manually placing the jar inside the `loader_path/certify` path, so this volume mount should be disabled from the [docker-compose.yml](./docker-compose.yaml#L35)
 
 ### For Advanced Users: Create Custom Plugin
 
 You can create your own plugin by implementing the following interface and place the resultant jar in `loader_path`:
 
-Reference Implementation: [CSVDataProviderPlugin](https://github.com/mosip/digital-credential-plugins/blob/release-0.3.x/mock-certify-plugin/src/main/java/io.mosip.certify.mock.integration/service/MockCSVDataProviderPlugin.java) or [MDocMockVCIssuancePlugin](https://github.com/mosip/digital-credential-plugins/blob/release-0.3.x/mock-certify-plugin/src/main/java/io.mosip.certify.mock.integration/service/MDocMockVCIssuancePlugin.java).
+Reference Implementation: [CSVDataProviderPlugin](https://github.com/mosip/digital-credential-plugins/blob/release-0.4.x/mock-certify-plugin/src/main/java/io.mosip.certify.mock.integration/service/MockCSVDataProviderPlugin.java) or [MDocMockVCIssuancePlugin](https://github.com/mosip/digital-credential-plugins/blob/release-0.4.x/mock-certify-plugin/src/main/java/io.mosip.certify.mock.integration/service/MDocMockVCIssuancePlugin.java).
 
 ```java
 public interface DataProviderPlugin {
@@ -113,7 +119,7 @@ mosip.certify.data-provider-plugin.issuer-public-key-uri=did:web:someuser.github
     - A did with the ID `did:web:someuser.github.io:somerepo:somedirectory` will have be accessible at `https://someuser.github.io/somerepo/somedirectory/did.json`, i.e. if GitHub Pages is used to host the file, the contents should go in https://github.com/someuser/somerepo/blob/gh-pages/somedirectory/did.json assuming `gh-pages` is the branch for publishing GitHub Pages as per repository settings.
     - To verify if everything is working you can try to resolve the DID via public DID resolvers such as [Uniresolver](https://dev.uniresolver.io/).
 
-- (required if Mobile driving license configured) Onboard issuer key and certificate data into property `mosip.certify.mock.mdoc.issuer-key-cert` using the creation script, please read the [plugin README](https://github.com/mosip/digital-credential-plugins/tree/release-0.3.x/mock-certify-plugin) for the same.
+- (required if Mobile driving license configured) Onboard issuer key and certificate data into property `mosip.certify.mock.mdoc.issuer-key-cert` using the creation script, please read the [plugin README](https://github.com/mosip/digital-credential-plugins/tree/release-0.4.x/mock-certify-plugin) for the same.
 
 
 ## Other configurations
@@ -129,6 +135,14 @@ Ensure all configuration files are properly updated in the config directory if y
 - mimoto-trusted-verifiers.json
 - credential-template.html
 
+
+# Nginx Configuration
+## Certify Nginx Configuration
+The setup includes an Nginx service (certify-nginx) that acts as a reverse proxy for the Certify service:
+
+- Configured via certify-nginx.conf
+- Runs on port 8091 (mapped to internal port 80)
+- Acts as a reverse proxy for the Certify service
 
 
 ## Running the Application
@@ -152,6 +166,7 @@ The following services will be available:
 
 - Database (PostgreSQL): `localhost:5433`
 - Certify Service: `localhost:8090`
+- Certify Nginx: `localhost:8091`
 - Mimoto Service: `localhost:8099`
 - Inji Web: `localhost:3001`
 
