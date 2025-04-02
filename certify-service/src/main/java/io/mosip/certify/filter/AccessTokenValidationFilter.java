@@ -68,7 +68,8 @@ public class AccessTokenValidationFilter extends OncePerRequestFilter {
             nimbusJwtDecoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
                     new JwtTimestampValidator(),
                     new JwtIssuerValidator(issuerUri),
-                    new JwtClaimValidator<List<String>>(JwtClaimNames.AUD, allowedAudiences::containsAll),
+                    new JwtClaimValidator<List<String>>(JwtClaimNames.AUD,
+                            aud -> aud.stream().anyMatch(allowedAudiences::contains)),
                     new JwtClaimValidator<String>(JwtClaimNames.SUB, Objects::nonNull),
                     new JwtClaimValidator<String>(Constants.CLIENT_ID, Objects::nonNull),
                     new JwtClaimValidator<Instant>(JwtClaimNames.IAT,
