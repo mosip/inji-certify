@@ -5,7 +5,11 @@
  */
 package io.mosip.certify.core.config;
 
-import com.google.common.cache.CacheBuilder;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.Cache;
@@ -16,10 +20,7 @@ import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import com.google.common.cache.CacheBuilder;
 
 @ConditionalOnProperty(value = "spring.cache.type", havingValue = "simple")
 @Configuration

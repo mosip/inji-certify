@@ -8,7 +8,8 @@ package io.mosip.certify.core.dto;
 import io.mosip.certify.core.constants.ErrorConstants;
 import jakarta.validation.Valid;
 import lombok.Data;
-
+import java.util.List;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -46,5 +47,9 @@ public class CredentialRequest {
 
     private String doctype;
 
+    /**
+     * The claims that are asserted in this credential.
+     */
     private Map<String,Object> claims;
+
 }
