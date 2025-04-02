@@ -460,6 +460,9 @@ istio:
     - matchType: exact
       uri: /.well-known/openid-credential-issuer
       rewriteUri: /v1/certify/issuance/.well-known/openid-credential-issuer
+    - matchType: exact
+      uri: /.well-known/did.json
+      rewriteUri: /v1/certify/issuance/.well-known/did.json
     - matchType: prefix
       uri: /
       port: 80

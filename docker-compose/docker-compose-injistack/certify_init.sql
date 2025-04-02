@@ -148,7 +148,7 @@ INSERT INTO certify.credential_template (context, credential_type, template, cre
 INSERT INTO certify.credential_template (context, credential_type, template, credential_format, key_manager_app_id, key_manager_ref_id, did_url, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/2018/credentials/v1', 'VerifiableCredential,FarmerCredential', '{
      "@context": [
          "https://www.w3.org/2018/credentials/v1",
-         "https://piyush7034.github.io/my-files/farmer.json",
+         "https://mosip.github.io/inji-config/contexts/farmer.json",
          "https://w3id.org/security/suites/ed25519-2020/v1"
      ],
      "issuer": "${_issuer}",
@@ -181,7 +181,7 @@ INSERT INTO certify.credential_template (context, credential_type, template, cre
 INSERT INTO certify.credential_template(context, credential_type, template, credential_format, key_manager_app_id, key_manager_ref_id, did_url, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/ns/credentials/v2', 'FarmerCredential,VerifiableCredential', '{
     "@context": [
         "https://www.w3.org/ns/credentials/v2",
-        "https://piyush7034.github.io/my-files/farmer.json",
+        "https://mosip.github.io/inji-config/contexts/farmer.json",
         "https://w3id.org/security/suites/ed25519-2020/v1"
     ],
     "issuer": "${_issuer}",
@@ -209,6 +209,72 @@ INSERT INTO certify.credential_template(context, credential_type, template, cred
         "farmerID": "${farmerID}"
     }
 }', 'ldp_vc', 'CERTIFY_MOCK_ED25519','ED25519_SIGN', 'did:web:vharsh.github.io:DID:harsh', '2024-10-24 12:32:38.065994', NULL);
+
+
+INSERT INTO certify.credential_template (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/2018/credentials/v1,https://mosip.github.io/inji-config/contexts/farmer.json', 'FarmerCredential,VerifiableCredential', '{
+     "@context": [
+         "https://www.w3.org/2018/credentials/v1",
+         "https://mosip.github.io/inji-config/contexts/farmer.json",
+         "https://w3id.org/security/suites/ed25519-2020/v1"
+     ],
+     "issuer": "${_issuer}",
+     "type": [
+         "VerifiableCredential",
+         "FarmerCredential"
+     ],
+     "issuanceDate": "${validFrom}",
+     "expirationDate": "${validUntil}",
+     "credentialSubject": {
+         "id": "${_holderId}",
+         "fullName": "${fullName}",
+         "mobileNumber": "${mobileNumber}",
+         "dateOfBirth": "${dateOfBirth}",
+         "gender": "${gender}",
+         "state": "${state}",
+         "district": "${district}",
+         "villageOrTown": "${villageOrTown}",
+         "postalCode": "${postalCode}",
+         "landArea": "${landArea}",
+         "landOwnershipType": "${landOwnershipType}",
+         "primaryCropType": "${primaryCropType}",
+         "secondaryCropType": "${secondaryCropType}",
+         "face": "${face}",
+         "farmerID": "${farmerID}"
+     }
+}
+', '2024-10-24 12:32:38.065994', NULL);
+
+INSERT INTO certify.credential_template (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/ns/credentials/v2,https://mosip.github.io/inji-config/contexts/farmer.json', 'FarmerCredential,VerifiableCredential', '{
+    "@context": [
+        "https://www.w3.org/ns/credentials/v2",
+        "https://mosip.github.io/inji-config/contexts/farmer.json",
+        "https://w3id.org/security/suites/ed25519-2020/v1"
+    ],
+    "issuer": "${_issuer}",
+    "type": [
+        "VerifiableCredential",
+        "FarmerCredential"
+    ],
+    "validFrom": "${validFrom}",
+    "validUntil": "${validUntil}",
+    "credentialSubject": {
+        "id": "${_holderId}",
+        "fullName": "${fullName}",
+        "mobileNumber": "${mobileNumber}",
+        "dateOfBirth": "${dateOfBirth}",
+        "gender": "${gender}",
+        "state": "${state}",
+        "district": "${district}",
+        "villageOrTown": "${villageOrTown}",
+        "postalCode": "${postalCode}",
+        "landArea": "${landArea}",
+        "landOwnershipType": "${landOwnershipType}",
+        "primaryCropType": "${primaryCropType}",
+        "secondaryCropType": "${secondaryCropType}",
+        "face": "${face}",
+        "farmerID": "${farmerID}"
+    }
+}', '2024-10-24 12:32:38.065994', NULL);
 
 
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('ROOT', 2920, 1125, 'NA', true, 'mosipadmin', now());
