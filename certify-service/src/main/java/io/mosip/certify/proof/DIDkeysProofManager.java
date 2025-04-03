@@ -5,26 +5,21 @@
  */
 package io.mosip.certify.proof;
 
-import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.jwk.*;
 import com.nimbusds.jose.util.Base64URL;
 import io.ipfs.multibase.Multibase;
 import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
-import org.bouncycastle.jce.spec.ECNamedCurveSpec;
 import org.bouncycastle.math.ec.ECCurve;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PublicKey;
-import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.*;
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.math.ec.ECPoint;
 
-import javax.swing.text.html.Option;
 import java.text.ParseException;
 import java.util.*;
 
@@ -36,6 +31,7 @@ public class DIDkeysProofManager implements JwtProofKeyManager {
         if(Objects.nonNull(header.getJWK()))
             return Optional.ofNullable(header.getJWK());
         byte b[] = Multibase.decode(header.getKeyID().split("did:key:")[1]);
+        // full list of keys and their multibase prefixes available here: https://github.com/multiformats/multicodec/blob/master/table.csv
         // NOTE: https://w3c-ccg.github.io/did-key-spec/#signature-method-creation-algorithm
         if ((b[0] == (byte) 0xed && b[1] == (byte) 0x01) && b.length == 34) {
             try {
@@ -91,10 +87,6 @@ public class DIDkeysProofManager implements JwtProofKeyManager {
             } catch (ParseException e) {
                 return Optional.empty();
             }
-        } else if (b[0] == (byte) 0x80) {
-            return Optional.empty();
-            // P-256
-            // Extract x and y coordinates from raw public key (P-256 uses uncompressed format)
         }
         return Optional.empty();
     }
