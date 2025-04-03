@@ -117,7 +117,4 @@ public class DBIntegration extends InjiCertifyUtil implements ITest {
 			Reporter.log("Exception : " + e.getMessage());
 		}
 	}
-
-	@AfterClass(alwaysRun = true)
-	public void waittime() {}
 }
