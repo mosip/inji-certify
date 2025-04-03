@@ -1,6 +1,8 @@
 AuthenticateUserForLandRegistry:
    InjiCertify_ESignet_AuthenticateUserVCI_ForLandRegistry_uin_Otp_Valid_Smoke:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser
+      description: Authenticate User for mock ida
       role: resident
       restMethod: post
       checkErrorsOnlyInResponse: true
@@ -11,7 +13,7 @@ AuthenticateUserForLandRegistry:
         "encodedHash": "$ID:ESignet_OAuthDetailsRequest_ForLandRegistry_uin_all_Valid_Smoke_sid_encodedResp$",
       	"requestTime": "$TIMESTAMP$",
       	"transactionId": "$ID:ESignet_OAuthDetailsRequest_ForLandRegistry_uin_all_Valid_Smoke_sid_transactionId$",
-      	"individualId": "5614273165",
+      	"individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
       	"authFactorType" : "OTP",
       	"challenge" : "111111",
         "format": "alpha-numeric",
@@ -19,7 +21,7 @@ AuthenticateUserForLandRegistry:
     "encodedHash": "$ID:ESignet_OAuthDetailsRequest_ForLandRegistry_uin_all_Valid_Smoke_sid_encodedResp$",
     "requestTime": "$TIMESTAMP$",
     "transactionId": "$ID:ESignet_OAuthDetailsRequest_ForLandRegistry_uin_all_Valid_Smoke_sid_transactionId$",
-	"individualId": "5614273165",
+	"individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
     "otpChannels": [{channel: "email"},{channel: "phone"}],
     "sendOtpReqTemplate": "injicertify/SendOtp/SendOtp",
     "sendOtpEndPoint": "$ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/send-otp"
@@ -35,6 +37,8 @@ AuthenticateUserForLandRegistry:
 
    InjiCertify_ESignet_AuthenticateUserVCI_ForLandRegistry_Cred_2_uin_Otp_Valid_Smoke:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser
+      description: Authenticate User for mock ida
       role: resident
       restMethod: post
       checkErrorsOnlyInResponse: true
@@ -45,7 +49,7 @@ AuthenticateUserForLandRegistry:
         "encodedHash": "$ID:ESignet_OAuthDetailsRequest_ForLandRegistry_Cred_2_uin_all_Valid_Smoke_sid_encodedResp$",
       	"requestTime": "$TIMESTAMP$",
       	"transactionId": "$ID:ESignet_OAuthDetailsRequest_ForLandRegistry_Cred_2_uin_all_Valid_Smoke_sid_transactionId$",
-      	"individualId": "5614273165",
+      	"individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
       	"authFactorType" : "OTP",
       	"challenge" : "111111",
         "format": "alpha-numeric",
@@ -53,7 +57,7 @@ AuthenticateUserForLandRegistry:
     "encodedHash": "$ID:ESignet_OAuthDetailsRequest_ForLandRegistry_Cred_2_uin_all_Valid_Smoke_sid_encodedResp$",
     "requestTime": "$TIMESTAMP$",
     "transactionId": "$ID:ESignet_OAuthDetailsRequest_ForLandRegistry_Cred_2_uin_all_Valid_Smoke_sid_transactionId$",
-	"individualId": "5614273165",
+	"individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
     "otpChannels": [{channel: "email"},{channel: "phone"}],
     "sendOtpReqTemplate": "injicertify/SendOtp/SendOtp",
     "sendOtpEndPoint": "$ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/send-otp"

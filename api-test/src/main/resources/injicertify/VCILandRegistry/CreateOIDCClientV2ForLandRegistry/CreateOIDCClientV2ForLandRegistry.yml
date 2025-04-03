@@ -1,6 +1,8 @@
 CreateOIDCClientV2VCIForLandRegistry:
    InjiCertify_ESignet_CreateOIDCClientV2_ForLandRegistry_all_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/client-mgmt/oauth-client
+      uniqueIdentifier: TC_esignetDependent_CreateOidc
+      description: Create OIDC client
       role: partner
       restMethod: post
       inputTemplate: injicertify/VCILandRegistry/CreateOIDCClientV2ForLandRegistry/CreateOIDCClientV2ForLandRegistry

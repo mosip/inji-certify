@@ -1,11 +1,2 @@
 ##### JIRA number;testcase 
 #MOSIP-12456------Mimoto_AddIdentity_Binding_smoke_Pos
-INJICERT-681------InjiCertify_GetCredentialForMockIDA_IdpAccessToken_Invalid_Format_Neg
-INJICERT-681------InjiCertify_GetCredentialForMockIDA_IdpAccessToken_MoreThanOne_Format_Neg
-INJICERT-681------InjiCertify_GetCredentialForMockIDA_IdpAccessToken_UnImplementedJWTVCJsonld_Format_Neg
-INJICERT-681------InjiCertify_GetCredentialForMockIDA_IdpAccessToken_UnImplementedJWT_Format_Neg
-INJICERT-681------InjiCertify_GetCredentialSunBirdC_IdpAccessToken_Context_empty_Neg
-INJICERT-681------InjiCertify_GetCredentialSunBirdC_IdpAccessToken_context_Emptyarray_Neg
-INJICERT-681------InjiCertify_GetCredentialSunBirdC_IdpAccessToken_invalid_format_Neg
-INJICERT-681------InjiCertify_GetCredentialSunBirdC_IdpAccessToken_multiple_format_value_Neg
-INJICERT-681------InjiCertify_GetCredentialSunBirdC_IdpAccessToken_unsupported_format_value_Neg

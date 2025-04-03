@@ -32,10 +32,8 @@ import io.mosip.testrig.apirig.dataprovider.BiometricDataProvider;
 import io.mosip.testrig.apirig.dbaccess.DBManager;
 import io.mosip.testrig.apirig.dto.TestCaseDTO;
 import io.mosip.testrig.apirig.injicertify.testrunner.MosipTestRunner;
-import io.mosip.testrig.apirig.testrunner.BaseTestCase;
 import io.mosip.testrig.apirig.testrunner.OTPListener;
 import io.mosip.testrig.apirig.utils.AdminTestUtil;
-import io.mosip.testrig.apirig.utils.ConfigManager;
 import io.mosip.testrig.apirig.utils.GlobalConstants;
 import io.mosip.testrig.apirig.utils.JWKKeyUtil;
 import io.mosip.testrig.apirig.utils.RestClient;
@@ -76,6 +74,16 @@ public class InjiCertifyUtil extends AdminTestUtil {
 				InjiCertifyConfigManager.getPMSDbPass(), InjiCertifyConfigManager.getPMSDbSchema(),
 				getGlobalResourcePath() + "/" + "config/pmsDataDeleteQueries.txt");
 		
+	}
+	
+	public static void landRegistryDBCleanup() {
+
+		DBManager.executeDBQueries(InjiCertifyConfigManager.getInjiCertifyDBURL(),
+				InjiCertifyConfigManager.getproperty("db-su-user"),
+				InjiCertifyConfigManager.getproperty("postgres-password"),
+				InjiCertifyConfigManager.getproperty("inji_certify_schema"),
+				getGlobalResourcePath() + "/" + "config/landRegistryDataDeleteQueries.txt");
+
 	}
 
 	public static String smtpOtpHandler(String inputJson, TestCaseDTO testCaseDTO) {
@@ -385,8 +393,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 
 			String baseURL = InjiCertifyConfigManager.getInjiCertifyBaseUrl();
 			if (testCaseName.contains("_GetCredentialSunBirdC")) {
-				tempUrl = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer",
-						baseURL.replace("injicertify.", "injicertify-insurance."));
+				tempUrl = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer", baseURL);
 			}
 			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_2$",
 					signJWKForMockID(clientId, accessToken, oidcJWKKey4, testCaseName, tempUrl));

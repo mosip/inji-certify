@@ -25,6 +25,14 @@
 			<class name="io.mosip.testrig.apirig.injicertify.testscripts.AddIdentity" />
 		</classes>
 	</test>
+	
+	<test name="InsertDBData">
+		<parameter name="ymlFile"
+			value="injicertify/InsertDBData/InsertDBData.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.injicertify.testscripts.DBIntegration" />
+		</classes>
+	</test>
 	<test name="CreatePolicySunBirdR">
 		<parameter name="ymlFile"
 			value="injicertify/SunBirdR/CreatePolicySunBirdR/CreatePolicySunBirdR.yml" />
