@@ -36,12 +36,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import io.micrometer.tracing.SamplerFunction;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.RenderingTemplateException;
-import io.mosip.certify.entity.CredentialTemplate;
-import io.mosip.certify.repository.CredentialTemplateRepository;
+import io.mosip.certify.entity.CredentialConfig;
+import io.mosip.certify.repository.CredentialConfigRepository;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.constants.VCDMConstants;
@@ -53,8 +52,6 @@ import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
-import io.mosip.certify.credential.Credential;
-
 
 @Slf4j
 @Service
@@ -63,7 +60,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     public static final String DELIMITER = ":";
     Map<String, Map<String, String>> templateCache;
     @Autowired
-    CredentialTemplateRepository credentialTemplateRepository;
+    CredentialConfigRepository credentialConfigRepository;
     @Autowired
     RenderingTemplateService renderingTemplateService;
 
@@ -79,7 +76,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         // TODO: The DataSourceResourceLoader can be used instead if there's a
         //  single primary key column and the table has a last modified date.
         templateCache = new HashMap<>();
-        credentialTemplateRepository.findAll().stream().forEach((template -> {
+        credentialConfigRepository.findAll().stream().forEach((template -> {
             Map<String, String> templateMap = new HashMap<>();
             ObjectMapper oMapper = new ObjectMapper();
             templateMap = oMapper.convertValue(template , Map.class);
@@ -164,7 +161,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         // TODO: Isn't template name becoming too complex with VC_CONTEXTS & CREDENTIAL_TYPES both?
         String templateName = templateSettings.get(TEMPLATE_NAME).toString();
         String issuer = templateSettings.get(ISSUER_URI).toString();
-        String template = templateCache.get(templateName).get("template");
+        String template = templateCache.get(templateName).get("vcTemplate");
 
         if (template == null) {
             log.error("Template {} not found", templateName);
@@ -245,9 +242,9 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         }
         String credentialType = key.split(DELIMITER)[0];
         String context = key.split(DELIMITER, 2)[1];
-        CredentialTemplate template = credentialTemplateRepository.findByCredentialTypeAndContext(credentialType, context).orElse(null);
+        CredentialConfig template = credentialConfigRepository.findByCredentialTypeAndContext(credentialType, context).orElse(null);
         if (template != null) {
-            return template.getTemplate();
+            return template.getVcTemplate();
         } else
             return null;
     }
@@ -266,7 +263,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         // TODO: Isn't template name becoming too complex with VC_CONTEXTS & CREDENTIAL_TYPES both?
         String templateName = templateInput.get(TEMPLATE_NAME).toString();
         String issuer = templateInput.get(ISSUER_URI).toString();
-        String t = templateCache.get(templateName).get("template");
+        String t = templateCache.get(templateName).get("vcTemplate");
         StringWriter writer = new StringWriter();
         // 1. Prepare map
         // TODO: Eventually, the credentialSubject from the plugin will be templated as-is
