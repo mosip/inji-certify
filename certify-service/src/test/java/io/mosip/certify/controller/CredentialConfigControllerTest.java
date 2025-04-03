@@ -123,7 +123,7 @@ public class CredentialConfigControllerTest {
 
         @Test
     public void getIssuerMetadata_noQueryParams_thenPass() throws Exception {
-        CredentialIssuerMetadata credentialIssuerMetadata = new CredentialIssuerMetadata();
+        CredentialIssuerMetadataDTO credentialIssuerMetadata = new CredentialIssuerMetadataDTO();
         credentialIssuerMetadata.setCredentialIssuer("https://localhost:9090");
         credentialIssuerMetadata.setAuthorizationServers(List.of("https://example.com/auth"));
         credentialIssuerMetadata.setCredentialEndpoint("https://localhost:9090/v1/certify/issuance/credential");
@@ -132,7 +132,7 @@ public class CredentialConfigControllerTest {
         display.put("locale", "en");
         credentialIssuerMetadata.setDisplay(List.of(display));
 
-        CredentialConfigurationSupported credentialConfigurationSupported = new CredentialConfigurationSupported();
+        CredentialConfigurationSupportedDTO credentialConfigurationSupported = new CredentialConfigurationSupportedDTO();
         credentialConfigurationSupported.setFormat("ldp_vc");
         credentialConfigurationSupported.setScope("test_vc_ldp");
         credentialConfigurationSupported.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
@@ -141,7 +141,7 @@ public class CredentialConfigControllerTest {
         credentialConfigurationSupported.setProofTypesSupported(jwtValues);
         credentialConfigurationSupported.setDisplay(List.of());
         credentialConfigurationSupported.setOrder(Arrays.asList("test1", "test2", "test3", "test4"));
-        credentialIssuerMetadata.setCredentialConfigurationSupported(Map.of("TestCredential_ldp", credentialConfigurationSupported));
+        credentialIssuerMetadata.setCredentialConfigurationSupportedDTO(Map.of("TestCredential_ldp", credentialConfigurationSupported));
 
         Mockito.when(credentialConfigurationService.fetchCredentialIssuerMetadata(Mockito.anyString())).thenReturn(credentialIssuerMetadata);
 

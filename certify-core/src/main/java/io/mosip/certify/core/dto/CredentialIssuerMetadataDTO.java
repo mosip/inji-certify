@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-public class CredentialIssuerMetadata {
+public class CredentialIssuerMetadataDTO {
 
     @JsonProperty("credential_issuer")
     private String credentialIssuer;
@@ -21,5 +21,5 @@ public class CredentialIssuerMetadata {
     private List<Map<String, String>> display;
 
     @JsonProperty("credential_configurations_supported")
-    private Map<String, CredentialConfigurationSupported> credentialConfigurationSupported;
+    private Map<String, CredentialConfigurationSupportedDTO> credentialConfigurationSupportedDTO;
 }

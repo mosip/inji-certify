@@ -3,7 +3,7 @@ package io.mosip.certify.core.spi;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.mosip.certify.core.dto.CredentialConfigResponse;
 import io.mosip.certify.core.dto.CredentialConfigurationDTO;
-import io.mosip.certify.core.dto.CredentialIssuerMetadata;
+import io.mosip.certify.core.dto.CredentialIssuerMetadataDTO;
 
 public interface CredentialConfigurationService {
 
@@ -15,5 +15,5 @@ public interface CredentialConfigurationService {
 
     String deleteCredentialConfigurationById(String id);
 
-    CredentialIssuerMetadata fetchCredentialIssuerMetadata(String version);
+    CredentialIssuerMetadataDTO fetchCredentialIssuerMetadata(String version);
 }

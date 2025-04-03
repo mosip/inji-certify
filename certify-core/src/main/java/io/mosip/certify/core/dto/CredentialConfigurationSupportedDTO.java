@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-public class CredentialConfigurationSupported {
+public class CredentialConfigurationSupportedDTO {
 
     private String format;
 

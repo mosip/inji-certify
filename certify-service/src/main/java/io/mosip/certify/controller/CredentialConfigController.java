@@ -3,7 +3,7 @@ package io.mosip.certify.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.mosip.certify.core.dto.CredentialConfigResponse;
 import io.mosip.certify.core.dto.CredentialConfigurationDTO;
-import io.mosip.certify.core.dto.CredentialIssuerMetadata;
+import io.mosip.certify.core.dto.CredentialIssuerMetadataDTO;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -11,8 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @Slf4j
 @RestController
@@ -52,7 +50,7 @@ public class CredentialConfigController {
     }
 
     @GetMapping(value = "/.well-known/openid-credential-issuer", produces = "application/json")
-    public CredentialIssuerMetadata getCredentialIssuerMetadata(
+    public CredentialIssuerMetadataDTO getCredentialIssuerMetadata(
             @RequestParam(name = "version", required = false, defaultValue = "latest") String version) {
         return credentialConfigurationService.fetchCredentialIssuerMetadata(version);
     }

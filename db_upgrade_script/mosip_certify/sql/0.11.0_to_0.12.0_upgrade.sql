@@ -13,34 +13,41 @@
 -- ------------------------------------------------------------------------------------------
 -- ------------------------------------------------------------------------------------------
 
-drop table credential_template;
+-- Step 1: Rename the table
+ALTER TABLE credential_template RENAME TO credential_config;
 
-CREATE TABLE credential_config (
-    config_id VARCHAR(255),
-    status VARCHAR(255),
-    vc_template VARCHAR,
-    doctype VARCHAR,
-    context VARCHAR NOT NULL,
-    credential_type VARCHAR NOT NULL,
-    credential_format VARCHAR(255) NOT NULL,
-    did_url VARCHAR NOT NULL,
-    key_manager_app_id VARCHAR(36) NOT NULL,
-    key_manager_ref_id VARCHAR(128),
-    signature_algo VARCHAR(2048),
-    sd_claim VARCHAR,
-    display JSONB NOT NULL,
-    display_order TEXT[] NOT NULL,
-    scope VARCHAR(255) NOT NULL,
-    cryptographic_binding_methods_supported TEXT[] NOT NULL,
-    credential_signing_alg_values_supported TEXT[] NOT NULL,
-    proof_types_supported JSONB NOT NULL,
-	credential_subject JSONB,
-	claims JSONB,
-    plugin_configurations JSONB,
-	cr_dtimes TIMESTAMP NOT NULL,
-    upd_dtimes TIMESTAMP,
-    CONSTRAINT pk_config_id PRIMARY KEY (context, credential_type, credential_format)
-);
+-- Step 2: Add new columns
+ALTER TABLE credential_config
+    ADD COLUMN config_id VARCHAR(255),
+    ADD COLUMN status VARCHAR(255),
+    ADD COLUMN doctype VARCHAR,
+    ADD COLUMN credential_format VARCHAR(255) NOT NULL DEFAULT 'default_format', -- Adding a default value for NOT NULL constraint
+    ADD COLUMN did_url VARCHAR NOT NULL DEFAULT '', -- Adding a default value for NOT NULL constraint
+    ADD COLUMN key_manager_app_id VARCHAR(36) NOT NULL DEFAULT '', -- Adding a default value for NOT NULL constraint
+    ADD COLUMN key_manager_ref_id VARCHAR(128),
+    ADD COLUMN signature_algo VARCHAR(36),
+    ADD COLUMN sd_claim VARCHAR,
+    ADD COLUMN display JSONB NOT NULL DEFAULT '{}'::jsonb, -- Adding a default value for NOT NULL constraint
+    ADD COLUMN display_order TEXT[] NOT NULL DEFAULT '{}', -- Adding a default value for NOT NULL constraint
+    ADD COLUMN scope VARCHAR(255) NOT NULL DEFAULT '', -- Adding a default value for NOT NULL constraint
+    ADD COLUMN cryptographic_binding_methods_supported TEXT[] NOT NULL DEFAULT '{}', -- Adding a default value for NOT NULL constraint
+    ADD COLUMN credential_signing_alg_values_supported TEXT[] NOT NULL DEFAULT '{}', -- Adding a default value for NOT NULL constraint
+    ADD COLUMN proof_types_supported JSONB NOT NULL DEFAULT '{}'::jsonb, -- Adding a default value for NOT NULL constraint
+    ADD COLUMN credential_subject JSONB,
+    ADD COLUMN claims JSONB,
+    ADD COLUMN plugin_configurations JSONB;
+
+-- Step 3: Rename the template column to match the new schema
+ALTER TABLE credential_config RENAME COLUMN template TO vc_template;
+
+-- Step 4: Alter column sizes to match the new schema
+ALTER TABLE credential_config
+    ALTER COLUMN context TYPE VARCHAR,
+    ALTER COLUMN credential_type TYPE VARCHAR;
+
+-- Step 5: Update the primary key constraint
+ALTER TABLE credential_config DROP CONSTRAINT pk_template;
+ALTER TABLE credential_config ADD CONSTRAINT pk_config_id PRIMARY KEY (context, credential_type, credential_format);
 
 COMMENT ON TABLE credential_config IS 'Credential Config: Contains details of credential configuration.';
 

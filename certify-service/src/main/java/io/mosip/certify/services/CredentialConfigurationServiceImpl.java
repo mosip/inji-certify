@@ -39,6 +39,9 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Value("${mosip.certify.plugin-mode}")
     private String pluginMode;
 
+    @Value("#{${mosip.certify.credential-config.issuer.display}}")
+    private List<Map<String, String>> issuerDisplay;
+
     @Override
     public CredentialConfigResponse addCredentialConfiguration(CredentialConfigurationDTO credentialConfigurationDTO) throws JsonProcessingException {
         CredentialConfig credentialConfig = credentialConfigMapper.toEntity(credentialConfigurationDTO);
@@ -114,17 +117,18 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     }
 
     @Override
-    public CredentialIssuerMetadata fetchCredentialIssuerMetadata(String version) {
-        CredentialIssuerMetadata credentialIssuerMetadata = new CredentialIssuerMetadata();
+    public CredentialIssuerMetadataDTO fetchCredentialIssuerMetadata(String version) {
+        CredentialIssuerMetadataDTO credentialIssuerMetadata = new CredentialIssuerMetadataDTO();
         credentialIssuerMetadata.setCredentialIssuer(credentialIssuer);
         credentialIssuerMetadata.setAuthorizationServers(authServers);
         String credentialEndpoint = credentialIssuer + servletPath + "/issuance" + (!version.equals("latest") ? "/" +version : "") + "/credential" ;
         credentialIssuerMetadata.setCredentialEndpoint(credentialEndpoint);
+        credentialIssuerMetadata.setDisplay(issuerDisplay);
         List<CredentialConfig> credentialConfigList = credentialConfigRepository.findAll();
-        Map<String, CredentialConfigurationSupported> credentialConfigurationSupportedMap = new HashMap<>();
+        Map<String, CredentialConfigurationSupportedDTO> credentialConfigurationSupportedMap = new HashMap<>();
         credentialConfigList.stream()
                 .forEach(credentialConfig -> {
-                    CredentialConfigurationSupported credentialConfigurationSupported = new CredentialConfigurationSupported();
+                    CredentialConfigurationSupportedDTO credentialConfigurationSupported = new CredentialConfigurationSupportedDTO();
                     CredentialConfigurationDTO credentialConfigurationDTO = credentialConfigMapper.toDto(credentialConfig);
                     credentialConfigurationSupported.setFormat(credentialConfigurationDTO.getCredentialFormat());
                     credentialConfigurationSupported.setScope(credentialConfigurationDTO.getScope());
@@ -153,7 +157,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                     credentialConfigurationSupportedMap.put(credentialType, credentialConfigurationSupported);
                 });
 
-        credentialIssuerMetadata.setCredentialConfigurationSupported(credentialConfigurationSupportedMap);
+        credentialIssuerMetadata.setCredentialConfigurationSupportedDTO(credentialConfigurationSupportedMap);
         return credentialIssuerMetadata;
     }
 }

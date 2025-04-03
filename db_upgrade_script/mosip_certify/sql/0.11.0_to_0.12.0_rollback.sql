@@ -13,16 +13,44 @@
 -- ------------------------------------------------------------------------------------------
 -- ------------------------------------------------------------------------------------------
 
-drop table credential_config;
+-- Step 1: Drop the new primary key constraint
+ALTER TABLE credential_config DROP CONSTRAINT pk_config_id;
 
-CREATE TABLE credential_template(
-	context character varying(1024) NOT NULL,
-	credential_type character varying(512) NOT NULL,
-	template VARCHAR NOT NULL,
-	cr_dtimes timestamp NOT NULL default now(),
-	upd_dtimes timestamp,
-	CONSTRAINT pk_template PRIMARY KEY (context, credential_type)
-);
+-- Step 2: Drop all the newly added columns
+ALTER TABLE credential_config
+    DROP COLUMN config_id,
+    DROP COLUMN status,
+    DROP COLUMN doctype,
+    DROP COLUMN credential_format,
+    DROP COLUMN did_url,
+    DROP COLUMN key_manager_app_id,
+    DROP COLUMN key_manager_ref_id,
+    DROP COLUMN signature_algo,
+    DROP COLUMN sd_claim,
+    DROP COLUMN display,
+    DROP COLUMN display_order,
+    DROP COLUMN scope,
+    DROP COLUMN cryptographic_binding_methods_supported,
+    DROP COLUMN credential_signing_alg_values_supported,
+    DROP COLUMN proof_types_supported,
+    DROP COLUMN credential_subject,
+    DROP COLUMN claims,
+    DROP COLUMN plugin_configurations;
+
+-- Step 3: Rename vc_template back to template
+ALTER TABLE credential_config RENAME COLUMN vc_template TO template;
+
+-- Step 4: Restore the column types to original specifications
+ALTER TABLE credential_config
+    ALTER COLUMN context TYPE character varying(1024),
+    ALTER COLUMN credential_type TYPE character varying(512),
+    ALTER COLUMN template TYPE VARCHAR;
+
+-- Step 5: Add back the original primary key constraint
+ALTER TABLE credential_config ADD CONSTRAINT pk_template PRIMARY KEY (context, credential_type);
+
+-- Step 6: Rename the table back to its original name
+ALTER TABLE credential_config RENAME TO credential_template;
 
 COMMENT ON TABLE credential_template IS 'Template Data: Contains velocity template for VC';
 
