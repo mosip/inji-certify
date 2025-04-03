@@ -97,185 +97,196 @@ CREATE TABLE certify.rendering_template (
                                     CONSTRAINT pk_svgtmp_id PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS certify.credential_template(
-	context character varying(1024) NOT NULL,
-	credential_type character varying(512) NOT NULL,
-	template VARCHAR NOT NULL,
-	credential_format character varying(1024),
-	did_url VARCHAR,
-	key_manager_app_id character varying(36) NOT NULL,
-    key_manager_ref_id character varying(128),
-	signature_algo character(2048),
-	sd_claim VARCHAR,
-	cr_dtimes timestamp NOT NULL default now(),
-	upd_dtimes timestamp,
-	CONSTRAINT pk_template PRIMARY KEY (context, credential_type, credential_format)
+CREATE TABLE IF NOT EXISTS credential_config (
+    config_id VARCHAR(255),
+    status VARCHAR(255),
+    vc_template VARCHAR,
+    doctype VARCHAR,
+    context VARCHAR NOT NULL,
+    credential_type VARCHAR NOT NULL,
+    credential_format VARCHAR(255) NOT NULL,
+    did_url VARCHAR NOT NULL,
+    key_manager_app_id VARCHAR(36) NOT NULL,
+    key_manager_ref_id VARCHAR(128),
+    signature_algo VARCHAR(36),
+    sd_claim VARCHAR,
+    display JSONB NOT NULL,
+    display_order TEXT[] NOT NULL,
+    scope VARCHAR(255) NOT NULL,
+    cryptographic_binding_methods_supported TEXT[] NOT NULL,
+    credential_signing_alg_values_supported TEXT[] NOT NULL,
+    proof_types_supported JSONB NOT NULL,
+	credential_subject JSONB,
+	claims JSONB,
+    plugin_configurations JSONB,
+	cr_dtimes TIMESTAMP NOT NULL,
+    upd_dtimes TIMESTAMP,
+    CONSTRAINT pk_config_id PRIMARY KEY (context, credential_type, credential_format)
 );
 
-INSERT INTO certify.credential_template (context, credential_type, template, credential_format, key_manager_app_id, key_manager_ref_id, did_url, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/2018/credentials/v1', 'FarmerCredential,VerifiableCredential', '{
-     "@context": [
-         "https://www.w3.org/2018/credentials/v1",
-         "https://piyush7034.github.io/my-files/farmer.json",
-         "https://w3id.org/security/suites/ed25519-2020/v1"
-     ],
-     "issuer": "${_issuer}",
-     "type": [
-         "VerifiableCredential",
-         "FarmerCredential"
-     ],
-     "issuanceDate": "${validFrom}",
-     "expirationDate": "${validUntil}",
-     "credentialSubject": {
-         "id": "${_holderId}",
-         "fullName": "${fullName}",
-         "mobileNumber": "${mobileNumber}",
-         "dateOfBirth": "${dateOfBirth}",
-         "gender": "${gender}",
-         "state": "${state}",
-         "district": "${district}",
-         "villageOrTown": "${villageOrTown}",
-         "postalCode": "${postalCode}",
-         "landArea": "${landArea}",
-         "landOwnershipType": "${landOwnershipType}",
-         "primaryCropType": "${primaryCropType}",
-         "secondaryCropType": "${secondaryCropType}",
-         "face": "${face}",
-         "farmerID": "${farmerID}"
+INSERT INTO credential_config (
+    config_id,
+    status,
+    vc_template,
+    doctype,
+    context,
+    credential_type,
+    credential_format,
+    did_url,
+    key_manager_app_id,
+    key_manager_ref_id,
+    signature_algo,
+    sd_claim,
+    display,
+    display_order,
+    scope,
+    cryptographic_binding_methods_supported,
+    credential_signing_alg_values_supported,
+    proof_types_supported,
+    credential_subject,
+    claims,
+    plugin_configurations,
+    cr_dtimes,
+    upd_dtimes
+)
+VALUES (
+    gen_random_uuid()::VARCHAR(255),  -- generating a unique config_id
+    'active',  -- assuming an active status
+    '{
+          "@context": [
+              "https://www.w3.org/2018/credentials/v1",
+              "https://piyush7034.github.io/my-files/farmer.json",
+              "https://w3id.org/security/suites/ed25519-2020/v1"
+          ],
+          "issuer": "${_issuer}",
+          "type": [
+              "VerifiableCredential",
+              "FarmerCredential"
+          ],
+          "issuanceDate": "${validFrom}",
+          "expirationDate": "${validUntil}",
+          "credentialSubject": {
+              "id": "${_holderId}",
+              "fullName": "${fullName}",
+              "mobileNumber": "${mobileNumber}",
+              "dateOfBirth": "${dateOfBirth}",
+              "gender": "${gender}",
+              "state": "${state}",
+              "district": "${district}",
+              "villageOrTown": "${villageOrTown}",
+              "postalCode": "${postalCode}",
+              "landArea": "${landArea}",
+              "landOwnershipType": "${landOwnershipType}",
+              "primaryCropType": "${primaryCropType}",
+              "secondaryCropType": "${secondaryCropType}",
+              "face": "${face}",
+              "farmerID": "${farmerID}"
+          }
      }
-}
-', 'ldp_vc', 'CERTIFY_VC_SIGN_ED25519','ED25519_SIGN','did:web:jainhitesh9998.github.io:tempfiles:vc-local-ed25519#key-0', '2024-10-24 12:32:38.065994', NULL);
+    ',  -- the VC template from the JSON
+    NULL,  -- doctype from JSON
+    'https://www.w3.org/2018/credentials/v1, https://piyush7034.github.io/my-files/farmer.json, https://w3id.org/security/suites/ed25519-2020/v1',  -- context as comma-separated string
+    'VerifiableCredential,FarmerCredential',  -- credential_type as comma-separated string
+    'ldp_vc',  -- credential_format
+    'did:web:jainhitesh9998.github.io:tempfiles:vc-local-ed25519#key-0',  -- did_url
+    'CERTIFY_VC_SIGN_ED25519',  -- key_manager_app_id
+    'ED25519_SIGN',  -- key_manager_ref_id (optional)
+    'EdDSA',  -- signature_algo (optional)
+    NULL,  -- sd_claim (optional)
+    '[{"name": "Farmer Verifiable Credential", "locale": "en", "logo": {"url": "https://example.com/logo.png", "alt_text": "Farmer Credential Logo"}, "background_color": "#12107c", "text_color": "#FFFFFF"}]'::JSONB,  -- display
+    ARRAY['fullName', 'mobileNumber', 'dateOfBirth', 'gender', 'state', 'district', 'villageOrTown', 'postalCode', 'landArea', 'landOwnershipType', 'primaryCropType', 'secondaryCropType', 'farmerID'],  -- display_order
+    'farmer_identity_vc',  -- scope
+    ARRAY['did:jwk'],  -- cryptographic_binding_methods_supported
+    ARRAY['Ed25519Signature2020'],  -- credential_signing_alg_values_supported
+    '{"jwt": {"proof_signing_alg_values_supported": ["RS256", "ES256"]}}'::JSONB,  -- proof_types_supported
+    '{"fullName": {"display": [{"name": "Full Name", "locale": "en"}]}, "phone": {"display": [{"name": "Phone Number", "locale": "en"}]}, "dateOfBirth": {"display": [{"name": "Date of Birth", "locale": "en"}]}, "gender": {"display": [{"name": "Gender", "locale": "en"}]}}'::JSONB,  -- credential_subject
+    NULL,  -- claims (optional)
+    '[{"mosip.certify.mock.data-provider.csv.identifier-column": "id", "mosip.certify.mock.data-provider.csv.data-columns": "id,fullName,mobileNumber,dateOfBirth,gender,state,district,villageOrTown,postalCode,landArea,landOwnershipType,primaryCropType,secondaryCropType,face,farmerID", "mosip.certify.mock.data-provider.csv-registry-uri": "/home/mosip/config/farmer_identity_data.csv"}]'::JSONB,  -- plugin_configurations
+    NOW(),  -- cr_dtimes
+    NULL  -- upd_dtimes (optional)
+);
 
-INSERT INTO certify.credential_template (context, credential_type, template, credential_format, key_manager_app_id, key_manager_ref_id, did_url, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/2018/credentials/v1', 'VerifiableCredential,FarmerCredential', '{
-     "@context": [
-         "https://www.w3.org/2018/credentials/v1",
-         "https://mosip.github.io/inji-config/contexts/farmer.json",
-         "https://w3id.org/security/suites/ed25519-2020/v1"
-     ],
-     "issuer": "${_issuer}",
-     "type": [
-         "VerifiableCredential",
-         "FarmerCredential"
-     ],
-     "issuanceDate": "${validFrom}",
-     "expirationDate": "${validUntil}",
-     "credentialSubject": {
-         "id": "${_holderId}",
-         "fullName": "${fullName}",
-         "mobileNumber": "${mobileNumber}",
-         "dateOfBirth": "${dateOfBirth}",
-         "gender": "${gender}",
-         "state": "${state}",
-         "district": "${district}",
-         "villageOrTown": "${villageOrTown}",
-         "postalCode": "${postalCode}",
-         "landArea": "${landArea}",
-         "landOwnershipType": "${landOwnershipType}",
-         "primaryCropType": "${primaryCropType}",
-         "secondaryCropType": "${secondaryCropType}",
-         "face": "${face}",
-         "farmerID": "${farmerID}"
-     }
-}
-', 'ldp_vc', 'CERTIFY_VC_SIGN_ED25519','ED25519_SIGN','did:web:jainhitesh9998.github.io:tempfiles:vc-local-ed25519#key-0', '2024-10-24 12:32:38.065994', NULL);
-
-INSERT INTO certify.credential_template(context, credential_type, template, credential_format, key_manager_app_id, key_manager_ref_id, did_url, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/ns/credentials/v2', 'FarmerCredential,VerifiableCredential', '{
-    "@context": [
-        "https://www.w3.org/ns/credentials/v2",
+INSERT INTO credential_config (
+    config_id,
+    status,
+    vc_template,
+    doctype,
+    context,
+    credential_type,
+    credential_format,
+    did_url,
+    key_manager_app_id,
+    key_manager_ref_id,
+    signature_algo,
+    sd_claim,
+    display,
+    display_order,
+    scope,
+    cryptographic_binding_methods_supported,
+    credential_signing_alg_values_supported,
+    proof_types_supported,
+    credential_subject,
+    claims,
+    plugin_configurations,
+    cr_dtimes,
+    upd_dtimes
+)
+VALUES (
+    gen_random_uuid()::VARCHAR(255),  -- generating a unique config_id
+    'active',  -- assuming an active status
+    '{
+          "@context": [
+              "https://www.w3.org/ns/credentials/v2",
         "https://mosip.github.io/inji-config/contexts/farmer.json",
-        "https://w3id.org/security/suites/ed25519-2020/v1"
-    ],
-    "issuer": "${_issuer}",
-    "type": [
-        "VerifiableCredential",
-        "FarmerCredential"
-    ],
+              "https://w3id.org/security/suites/ed25519-2020/v1"
+          ],
+          "issuer": "${_issuer}",
+          "type": [
+              "VerifiableCredential",
+              "FarmerCredential"
+          ],
     "validFrom": "${validFrom}",
     "validUntil": "${validUntil}",
-    "credentialSubject": {
-        "id": "${_holderId}",
-        "fullName": "${fullName}",
-        "mobileNumber": "${mobileNumber}",
-        "dateOfBirth": "${dateOfBirth}",
-        "gender": "${gender}",
-        "state": "${state}",
-        "district": "${district}",
-        "villageOrTown": "${villageOrTown}",
-        "postalCode": "${postalCode}",
-        "landArea": "${landArea}",
-        "landOwnershipType": "${landOwnershipType}",
-        "primaryCropType": "${primaryCropType}",
-        "secondaryCropType": "${secondaryCropType}",
-        "face": "${face}",
-        "farmerID": "${farmerID}"
-    }
-}', 'ldp_vc', 'CERTIFY_MOCK_ED25519','ED25519_SIGN', 'did:web:vharsh.github.io:DID:harsh', '2024-10-24 12:32:38.065994', NULL);
-
-
-INSERT INTO certify.credential_template (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/2018/credentials/v1,https://mosip.github.io/inji-config/contexts/farmer.json', 'FarmerCredential,VerifiableCredential', '{
-     "@context": [
-         "https://www.w3.org/2018/credentials/v1",
-         "https://mosip.github.io/inji-config/contexts/farmer.json",
-         "https://w3id.org/security/suites/ed25519-2020/v1"
-     ],
-     "issuer": "${_issuer}",
-     "type": [
-         "VerifiableCredential",
-         "FarmerCredential"
-     ],
-     "issuanceDate": "${validFrom}",
-     "expirationDate": "${validUntil}",
-     "credentialSubject": {
-         "id": "${_holderId}",
-         "fullName": "${fullName}",
-         "mobileNumber": "${mobileNumber}",
-         "dateOfBirth": "${dateOfBirth}",
-         "gender": "${gender}",
-         "state": "${state}",
-         "district": "${district}",
-         "villageOrTown": "${villageOrTown}",
-         "postalCode": "${postalCode}",
-         "landArea": "${landArea}",
-         "landOwnershipType": "${landOwnershipType}",
-         "primaryCropType": "${primaryCropType}",
-         "secondaryCropType": "${secondaryCropType}",
-         "face": "${face}",
-         "farmerID": "${farmerID}"
+          "credentialSubject": {
+              "id": "${_holderId}",
+              "fullName": "${fullName}",
+              "mobileNumber": "${mobileNumber}",
+              "dateOfBirth": "${dateOfBirth}",
+              "gender": "${gender}",
+              "state": "${state}",
+              "district": "${district}",
+              "villageOrTown": "${villageOrTown}",
+              "postalCode": "${postalCode}",
+              "landArea": "${landArea}",
+              "landOwnershipType": "${landOwnershipType}",
+              "primaryCropType": "${primaryCropType}",
+              "secondaryCropType": "${secondaryCropType}",
+              "face": "${face}",
+              "farmerID": "${farmerID}"
+          }
      }
-}
-', '2024-10-24 12:32:38.065994', NULL);
-
-INSERT INTO certify.credential_template (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/ns/credentials/v2,https://mosip.github.io/inji-config/contexts/farmer.json', 'FarmerCredential,VerifiableCredential', '{
-    "@context": [
-        "https://www.w3.org/ns/credentials/v2",
-        "https://mosip.github.io/inji-config/contexts/farmer.json",
-        "https://w3id.org/security/suites/ed25519-2020/v1"
-    ],
-    "issuer": "${_issuer}",
-    "type": [
-        "VerifiableCredential",
-        "FarmerCredential"
-    ],
-    "validFrom": "${validFrom}",
-    "validUntil": "${validUntil}",
-    "credentialSubject": {
-        "id": "${_holderId}",
-        "fullName": "${fullName}",
-        "mobileNumber": "${mobileNumber}",
-        "dateOfBirth": "${dateOfBirth}",
-        "gender": "${gender}",
-        "state": "${state}",
-        "district": "${district}",
-        "villageOrTown": "${villageOrTown}",
-        "postalCode": "${postalCode}",
-        "landArea": "${landArea}",
-        "landOwnershipType": "${landOwnershipType}",
-        "primaryCropType": "${primaryCropType}",
-        "secondaryCropType": "${secondaryCropType}",
-        "face": "${face}",
-        "farmerID": "${farmerID}"
-    }
-}', '2024-10-24 12:32:38.065994', NULL);
-
+    ',  -- the VC template from the JSON
+    NULL,  -- doctype from JSON
+    'https://www.w3.org/ns/credentials/v2, https://piyush7034.github.io/my-files/farmer.json, https://w3id.org/security/suites/ed25519-2020/v1',  -- context as comma-separated string
+    'VerifiableCredential,FarmerCredential',  -- credential_type as comma-separated string
+    'ldp_vc',  -- credential_format
+    'did:web:jainhitesh9998.github.io:tempfiles:vc-local-ed25519#key-0',  -- did_url
+    'CERTIFY_VC_SIGN_ED25519',  -- key_manager_app_id
+    'ED25519_SIGN',  -- key_manager_ref_id (optional)
+    'EdDSA',  -- signature_algo (optional)
+    NULL,  -- sd_claim (optional)
+    '[{"name": "Farmer Verifiable Credential", "locale": "en", "logo": {"url": "https://example.com/logo.png", "alt_text": "Farmer Credential Logo"}, "background_color": "#12107c", "text_color": "#FFFFFF"}]'::JSONB,  -- display
+    ARRAY['fullName', 'mobileNumber', 'dateOfBirth', 'gender', 'state', 'district', 'villageOrTown', 'postalCode', 'landArea', 'landOwnershipType', 'primaryCropType', 'secondaryCropType', 'farmerID'],  -- display_order
+    'farmer_identity_vc',  -- scope
+    ARRAY['did:jwk'],  -- cryptographic_binding_methods_supported
+    ARRAY['Ed25519Signature2020'],  -- credential_signing_alg_values_supported
+    '{"jwt": {"proof_signing_alg_values_supported": ["RS256", "ES256"]}}'::JSONB,  -- proof_types_supported
+    '{"fullName": {"display": [{"name": "Full Name", "locale": "en"}]}, "phone": {"display": [{"name": "Phone Number", "locale": "en"}]}, "dateOfBirth": {"display": [{"name": "Date of Birth", "locale": "en"}]}, "gender": {"display": [{"name": "Gender", "locale": "en"}]}}'::JSONB,  -- credential_subject
+    NULL,  -- claims (optional)
+    '[{"mosip.certify.mock.data-provider.csv.identifier-column": "id", "mosip.certify.mock.data-provider.csv.data-columns": "id,fullName,mobileNumber,dateOfBirth,gender,state,district,villageOrTown,postalCode,landArea,landOwnershipType,primaryCropType,secondaryCropType,face,farmerID", "mosip.certify.mock.data-provider.csv-registry-uri": "/home/mosip/config/farmer_identity_data.csv"}]'::JSONB,  -- plugin_configurations
+    NOW(),  -- cr_dtimes
+    NULL  -- upd_dtimes (optional)
+);
 
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('ROOT', 2920, 1125, 'NA', true, 'mosipadmin', now());
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_SERVICE', 1095, 60, 'NA', true, 'mosipadmin', now());
@@ -288,3 +299,4 @@ INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_MOCK_ECCK1', 1095, 60, 'NA', true, 'mosipadmin', now());
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_MOCK_ECCR1', 1095, 60, 'NA', true, 'mosipadmin', now());
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_VC_SIGN_EC_K1', 1095, 60, 'NA', true, 'mosipadmin', now());
+INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_VC_SIGN_EC_R1', 1095, 60, 'NA', true, 'mosipadmin', now());
