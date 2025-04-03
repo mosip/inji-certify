@@ -31,7 +31,7 @@ public class DIDjwkProofManager implements JwtProofKeyManager {
      * Currently only handles did:jwk, Need to handle other methods
      * @param header of jwk in did:jwk format.
      *               ref: https://github.com/quartzjer/did-jwk/blob/main/spec.md#to-create-the-did-url
-     * @return the JSON Web Key
+     * @return the JSON Web Key if a valid key exists
      */
     public Optional<JWK> getKeyFromHeader(JWSHeader header) {
         if(Objects.nonNull(header.getJWK()))
@@ -47,7 +47,7 @@ public class DIDjwkProofManager implements JwtProofKeyManager {
                 String jwkJson = new String(jwkBytes, StandardCharsets.UTF_8);
 
                 // Parse JWK
-                // TODO(perf): directly put kid in the JWK
+                // TODO(perf): the below lines make no sense here as did is already present in this if
                 org.json.JSONObject jsonKey = new org.json.JSONObject(jwkJson);
                 jsonKey.put("kid", did);
                 return Optional.of(JWK.parse(jsonKey.toString()));
@@ -61,8 +61,8 @@ public class DIDjwkProofManager implements JwtProofKeyManager {
     }
 
     /**
-     * @param header is the JWSHeader, where the pub key can be in kid or in jwk form
-     * @return
+     * @param header is the JWSHeader, where the pub key can be in kid or in jwk field
+     * @return the key in did:jwk form
      */
     @Override
     public Optional<String> getDID(JWSHeader header) {

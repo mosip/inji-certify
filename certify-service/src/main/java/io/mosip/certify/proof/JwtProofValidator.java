@@ -19,7 +19,6 @@ import com.nimbusds.jose.proc.BadJOSEException;
 import com.nimbusds.jose.proc.DefaultJOSEObjectTypeVerifier;
 import com.nimbusds.jose.proc.JWSKeySelector;
 import com.nimbusds.jose.proc.JWSVerificationKeySelector;
-import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.JWTParser;
 import com.nimbusds.jwt.SignedJWT;
@@ -50,8 +49,6 @@ public class JwtProofValidator implements ProofValidator {
 
     @Value("${mosip.certify.identifier}")
     private String credentialIdentifier;
-
-    private JwtProofKeyManager jpkm;
 
     @Override
     public String getProofType() {
@@ -143,11 +140,7 @@ public class JwtProofValidator implements ProofValidator {
         try {
             SignedJWT jwt = (SignedJWT) JWTParser.parse(credentialProof.getJwt());
             JwtProofKeyManager jpkm = getInstance(jwt.getHeader().getKeyID());
-            jpkm.getDID((JWSHeader) jwt.getHeader());
-            // TODO: Get key from the ProofManager
-            JWK jwk = jpkm.getKeyFromHeader(jwt.getHeader()).orElseThrow(() -> new InvalidRequestException(ErrorConstants.PROOF_HEADER_INVALID_KEY));
-            byte[] keyBytes = jwk.toJSONString().getBytes(StandardCharsets.UTF_8);
-            return DID_JWK_PREFIX.concat(Base64.getUrlEncoder().encodeToString(keyBytes));
+            return jpkm.getDID(jwt.getHeader()).get();
         } catch (ParseException e) {
             log.error("Failed to parse jwt in the credential proof", e);
         } catch (InvalidRequestException e) {
