@@ -191,7 +191,7 @@ VALUES (
     'did:web:jainhitesh9998.github.io:tempfiles:vc-local-ed25519#key-0',  -- did_url
     'CERTIFY_VC_SIGN_ED25519',  -- key_manager_app_id
     'ED25519_SIGN',  -- key_manager_ref_id (optional)
-    'did:web:vharsh.github.io:DID:harsh',  -- signature_algo (optional)
+    'EdDSA',  -- signature_algo (optional)
     NULL,  -- sd_claim (optional)
     '[{"name": "Farmer Verifiable Credential", "locale": "en", "logo": {"url": "https://example.com/logo.png", "alt_text": "Farmer Credential Logo"}, "background_color": "#12107c", "text_color": "#FFFFFF"}]'::JSONB,  -- display
     ARRAY['fullName', 'mobileNumber', 'dateOfBirth', 'gender', 'state', 'district', 'villageOrTown', 'postalCode', 'landArea', 'landOwnershipType', 'primaryCropType', 'secondaryCropType', 'farmerID'],  -- display_order
@@ -237,7 +237,7 @@ VALUES (
     '{
           "@context": [
               "https://www.w3.org/ns/credentials/v2",
-              "https://piyush7034.github.io/my-files/farmer.json",
+        "https://mosip.github.io/inji-config/contexts/farmer.json",
               "https://w3id.org/security/suites/ed25519-2020/v1"
           ],
           "issuer": "${_issuer}",
@@ -245,8 +245,8 @@ VALUES (
               "VerifiableCredential",
               "FarmerCredential"
           ],
-          "issuanceDate": "${validFrom}",
-          "expirationDate": "${validUntil}",
+    "validFrom": "${validFrom}",
+    "validUntil": "${validUntil}",
           "credentialSubject": {
               "id": "${_holderId}",
               "fullName": "${fullName}",
@@ -273,7 +273,7 @@ VALUES (
     'did:web:jainhitesh9998.github.io:tempfiles:vc-local-ed25519#key-0',  -- did_url
     'CERTIFY_VC_SIGN_ED25519',  -- key_manager_app_id
     'ED25519_SIGN',  -- key_manager_ref_id (optional)
-    'did:web:vharsh.github.io:DID:harsh',  -- signature_algo (optional)
+    'EdDSA',  -- signature_algo (optional)
     NULL,  -- sd_claim (optional)
     '[{"name": "Farmer Verifiable Credential", "locale": "en", "logo": {"url": "https://example.com/logo.png", "alt_text": "Farmer Credential Logo"}, "background_color": "#12107c", "text_color": "#FFFFFF"}]'::JSONB,  -- display
     ARRAY['fullName', 'mobileNumber', 'dateOfBirth', 'gender', 'state', 'district', 'villageOrTown', 'postalCode', 'landArea', 'landOwnershipType', 'primaryCropType', 'secondaryCropType', 'farmerID'],  -- display_order
@@ -299,3 +299,4 @@ INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_MOCK_ECCK1', 1095, 60, 'NA', true, 'mosipadmin', now());
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_MOCK_ECCR1', 1095, 60, 'NA', true, 'mosipadmin', now());
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_VC_SIGN_EC_K1', 1095, 60, 'NA', true, 'mosipadmin', now());
+INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_VC_SIGN_EC_R1', 1095, 60, 'NA', true, 'mosipadmin', now());

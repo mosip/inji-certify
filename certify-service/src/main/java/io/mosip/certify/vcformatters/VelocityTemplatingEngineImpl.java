@@ -36,6 +36,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import io.micrometer.tracing.SamplerFunction;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.RenderingTemplateException;
@@ -51,6 +52,9 @@ import static io.mosip.certify.core.constants.Constants.TEMPLATE_NAME;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+
+
+import io.mosip.certify.credential.Credential;
 
 
 @Slf4j

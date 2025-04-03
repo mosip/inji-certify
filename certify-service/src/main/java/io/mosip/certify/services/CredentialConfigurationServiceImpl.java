@@ -6,6 +6,7 @@ import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
 import io.mosip.certify.entity.CredentialConfig;
+import io.mosip.certify.entity.TemplateId;
 import io.mosip.certify.mapper.CredentialConfigMapper;
 import io.mosip.certify.repository.CredentialConfigRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +46,17 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Override
     public CredentialConfigResponse addCredentialConfiguration(CredentialConfigurationDTO credentialConfigurationDTO) throws JsonProcessingException {
         CredentialConfig credentialConfig = credentialConfigMapper.toEntity(credentialConfigurationDTO);
+        TemplateId templateId = new TemplateId();
+        templateId.setCredentialType(credentialConfig.getCredentialType());
+        templateId.setContext(credentialConfig.getContext());
+        templateId.setCredentialFormat(credentialConfig.getCredentialFormat());
+
+        Optional<CredentialConfig> optional = credentialConfigRepository.findById(templateId);
+
+        if(optional.isPresent()) {
+            throw new CertifyException("Credential type already exists. Try updating the credential.");
+        }
+
         credentialConfig.setConfigId(UUID.randomUUID().toString());
         credentialConfig.setStatus(Constants.ACTIVE);
 
@@ -52,10 +64,12 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
             throw new CertifyException("Credential Template is mandatory for this `DataProvider` plugin issuer.");
         }
 
-        if(credentialConfigurationDTO.getCredentialSubject() == null &&
-                (credentialConfigurationDTO.getClaims() == null || credentialConfigurationDTO.getDocType() == null)) {
-
-            throw new CertifyException("Please provide a value for at least one of credentialSubject or both doctype and claims");
+        if(credentialConfig.getCredentialFormat().equals("mso_mdoc")) {
+            if(credentialConfigurationDTO.getClaims() == null || credentialConfigurationDTO.getDocType() == null) {
+                throw new CertifyException("Claims and Doctype fields are mandatory for this credential format.");
+            }
+        } else if(credentialConfig.getCredentialSubject() == null) {
+            throw new CertifyException("Credential Subject field is mandatory for this credential format.");
         }
 
         credentialConfigRepository.save(credentialConfig);
