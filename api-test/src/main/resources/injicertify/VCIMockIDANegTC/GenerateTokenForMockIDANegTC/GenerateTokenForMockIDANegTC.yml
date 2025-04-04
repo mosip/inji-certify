@@ -1,6 +1,8 @@
 GenerateTokenForMockIDANegTC:
    InjiCertify_ESignet_GenerateToken_ForMockIDA_Valid_sid_For_Neg_Flow:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/oauth/v2/token
+      uniqueIdentifier: TC_esignetDependent_GenerateTokenNeg      
+      description: Generate Token for mock ida Negative      
       role: resident
       restMethod: post
       validityCheckRequired: true

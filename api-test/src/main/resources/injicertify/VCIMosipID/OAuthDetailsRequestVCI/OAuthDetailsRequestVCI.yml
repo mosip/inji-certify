@@ -1,6 +1,8 @@
 OAuthDetailsRequestVCI:
    InjiCertify_ESignet_OAuthDetailsRequest_VCI_MOSIPID_uin_all_Valid_Smoke_sid:
       endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/v2/oauth-details
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequestNeg
+      description: OAuth details request      
       role: resident
       restMethod: post
       checkErrorsOnlyInResponse: true

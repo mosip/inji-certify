@@ -1,0 +1,18 @@
+AuthorizationCodeVCINeg:
+   InjiCertify_ESignet_AuthorizationCode_VCI_MOSIPID_uin_All_Valid_Smoke_sid_For_Neg_flow:
+      endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/auth-code
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCodeNeg      
+      description: Authorization Code      
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/VCIMosipIDNegative/AuthorizationCodeVCINeg/AuthorizationCodeVCINeg
+      outputTemplate: injicertify/VCIMosipIDNegative/AuthorizationCodeVCINeg/AuthorizationCodeVCIResultNeg
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_VCI_MOSIPID_uin_all_Valid_Smoke_sid_Neg_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_VCI_MOSIPID_uin_all_Valid_Smoke_sid_Neg_transactionId$"
+}'
+      output: '{
+}'

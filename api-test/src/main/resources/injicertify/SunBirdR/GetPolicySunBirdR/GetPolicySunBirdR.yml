@@ -1,6 +1,7 @@
 GetPolicySunBirdR:
    InjiCertify_ESignet_SunBirdR_GetPolicy_NOAUTH_Valid_Smoke:
       endPoint: $SUNBIRDBASEURL$/api/v1/Insurance/{insuranceid}
+      uniqueIdentifier: TC_SunbirdDependent_Getpolicy      
       description: Getting sunbird policy with valid parameters
       role: resident
       restMethod: get
