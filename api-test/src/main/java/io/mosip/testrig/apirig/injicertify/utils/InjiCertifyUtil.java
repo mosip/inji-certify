@@ -32,10 +32,8 @@ import io.mosip.testrig.apirig.dataprovider.BiometricDataProvider;
 import io.mosip.testrig.apirig.dbaccess.DBManager;
 import io.mosip.testrig.apirig.dto.TestCaseDTO;
 import io.mosip.testrig.apirig.injicertify.testrunner.MosipTestRunner;
-import io.mosip.testrig.apirig.testrunner.BaseTestCase;
 import io.mosip.testrig.apirig.testrunner.OTPListener;
 import io.mosip.testrig.apirig.utils.AdminTestUtil;
-import io.mosip.testrig.apirig.utils.ConfigManager;
 import io.mosip.testrig.apirig.utils.GlobalConstants;
 import io.mosip.testrig.apirig.utils.JWKKeyUtil;
 import io.mosip.testrig.apirig.utils.RestClient;
@@ -76,6 +74,16 @@ public class InjiCertifyUtil extends AdminTestUtil {
 				InjiCertifyConfigManager.getPMSDbPass(), InjiCertifyConfigManager.getPMSDbSchema(),
 				getGlobalResourcePath() + "/" + "config/pmsDataDeleteQueries.txt");
 		
+	}
+	
+	public static void landRegistryDBCleanup() {
+
+		DBManager.executeDBQueries(InjiCertifyConfigManager.getInjiCertifyDBURL(),
+				InjiCertifyConfigManager.getproperty("db-su-user"),
+				InjiCertifyConfigManager.getproperty("postgres-password"),
+				InjiCertifyConfigManager.getproperty("inji_certify_schema"),
+				getGlobalResourcePath() + "/" + "config/landRegistryDataDeleteQueries.txt");
+
 	}
 
 	public static String smtpOtpHandler(String inputJson, TestCaseDTO testCaseDTO) {
@@ -182,6 +190,16 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		
 		if (jsonString.contains(GlobalConstants.TIMESTAMP)) {
 			jsonString = replaceKeywordValue(jsonString, GlobalConstants.TIMESTAMP, generateCurrentUTCTimeStamp());
+		}
+		
+		if (jsonString.contains("$VCICONTEXTURL$")) {
+			jsonString = replaceKeywordWithValue(jsonString, "$VCICONTEXTURL$",
+					properties.getProperty("vciContextURL"));
+		}
+		
+		if (jsonString.contains("$VCICONTEXTURL_2.0$")) {
+			jsonString = replaceKeywordWithValue(jsonString, "$VCICONTEXTURL_2.0$",
+					properties.getProperty("vciContextURL2"));
 		}
 
 		if (jsonString.contains("$POLICYNUMBERFORSUNBIRDRC$")) {
@@ -375,8 +393,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 
 			String baseURL = InjiCertifyConfigManager.getInjiCertifyBaseUrl();
 			if (testCaseName.contains("_GetCredentialSunBirdC")) {
-				tempUrl = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer",
-						baseURL.replace("injicertify.", "injicertify-insurance."));
+				tempUrl = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer", baseURL);
 			}
 			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_2$",
 					signJWKForMockID(clientId, accessToken, oidcJWKKey4, testCaseName, tempUrl));
@@ -604,10 +621,17 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		} else if (testCaseName.contains("_GetCredentialMosipID")) {
 			tempURL = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer", baseURL);
 		} else if (testCaseName.contains("_GenerateTokenVCIMOSIPID")) {
-			tempURL = getValueFromEsignetWellKnownEndPoint("token_endpoint", InjiCertifyConfigManager.getEsignetBaseUrl());
+			tempURL = getValueFromEsignetWellKnownEndPoint("token_endpoint",
+					InjiCertifyConfigManager.getEsignetBaseUrl());
 		} else if (testCaseName.contains("_GenerateToken_ForMockIDA")) {
-			tempURL = getValueFromEsignetWellKnownEndPoint("token_endpoint", InjiCertifyConfigManager.getEsignetBaseUrl());
+			tempURL = getValueFromEsignetWellKnownEndPoint("token_endpoint",
+					InjiCertifyConfigManager.getEsignetBaseUrl());
+		} else if (testCaseName.contains("_GenerateToken_ForLandRegistry")) {
+			tempURL = getValueFromEsignetWellKnownEndPoint("token_endpoint",
+					InjiCertifyConfigManager.getEsignetBaseUrl());
 		} else if (testCaseName.contains("_GetCredentialForMockIDA")) {
+			tempURL = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer", baseURL);
+		} else if (testCaseName.contains("_GetCredentialForLandRegistry")) {
 			tempURL = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer", baseURL);
 		}
 
@@ -647,6 +671,8 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		} else if (testCaseDTO.getEndPoint().startsWith("$SUNBIRDBASEURL$")
 				&& testCaseName.contains("Policy_")) {
 			return InjiCertifyConfigManager.getSunBirdBaseURL();
+		} else if (testCaseDTO.getEndPoint().startsWith("$INJICERTIFYBASEURL$")) {
+			return InjiCertifyConfigManager.getInjiCertifyBaseUrl();
 		}
 		
 		
@@ -670,6 +696,8 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			return "$INJICERTIFYMOCKIDABASEURL$";
 		if (endPoint.startsWith("$SUNBIRDBASEURL$"))
 			return "$SUNBIRDBASEURL$";
+		if (endPoint.startsWith("$INJICERTIFYBASEURL$"))
+			return "$INJICERTIFYBASEURL$";
 		
 		return "";
 	}
@@ -692,6 +720,9 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
 		}
 		if (currentUseCase.toLowerCase().equals("mosipid") && testCaseName.toLowerCase().contains("mosipid") == false) {
+			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+		}
+		if (currentUseCase.toLowerCase().equals("landregistry") && testCaseName.toLowerCase().contains("landregistry") == false) {
 			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
 		}
 
@@ -765,6 +796,10 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			} else if (testCaseName.contains("_Missing_JwkHeader_")) {
 				signedJWT = new SignedJWT(
 						new JWSHeader.Builder(JWSAlgorithm.RS256).type(new JOSEObjectType(typ)).build(), claimsSet);
+			} else if (testCaseName.contains("_Sign_PS256_")) {
+				signedJWT = new SignedJWT(
+						new JWSHeader.Builder(JWSAlgorithm.PS256).type(new JOSEObjectType(typ)).jwk(jwkHeader).build(),
+						claimsSet);
 			} else {
 				signedJWT = new SignedJWT(
 						new JWSHeader.Builder(JWSAlgorithm.RS256).type(new JOSEObjectType(typ)).jwk(jwkHeader).build(),

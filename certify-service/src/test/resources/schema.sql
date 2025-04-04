@@ -77,17 +77,30 @@ CREATE TABLE IF NOT EXISTS rendering_template (
     CONSTRAINT pk_rendertmp_id PRIMARY KEY (id)
 );
 
-CREATE TABLE  IF NOT EXISTS credential_template(
-    context character varying(1024) NOT NULL,
-    credential_type character varying(512) NOT NULL,
-    template VARCHAR NOT NULL,
-    credential_format character varying(1024),
-	did_url VARCHAR,
-	key_manager_app_id character varying(36) NOT NULL,
-    key_manager_ref_id character varying(128),
-	signature_algo character(2048),
-	sd_claim VARCHAR,
-    cr_dtimes TIMESTAMP DEFAULT NOW() NOT NULL,
+-- Changed all `JSONB` and `TEXT[]` types to VARCHAR to make it work with H2 database
+CREATE TABLE IF NOT EXISTS credential_config (
+    config_id VARCHAR(255),
+    status VARCHAR(255),
+    vc_template VARCHAR(1000),
+    doctype VARCHAR(255),
+    context VARCHAR(255) NOT NULL,
+    credential_type VARCHAR(255) NOT NULL,
+    credential_format VARCHAR(255) NOT NULL,
+    did_url VARCHAR(255) NOT NULL,
+    key_manager_app_id VARCHAR(36) NOT NULL,
+    key_manager_ref_id VARCHAR(128),
+    signature_algo VARCHAR(255),
+    sd_claim VARCHAR(255),
+    display VARCHAR NOT NULL,
+    display_order VARCHAR NOT NULL,
+    scope VARCHAR(255) NOT NULL,
+    cryptographic_binding_methods_supported VARCHAR NOT NULL,
+    credential_signing_alg_values_supported VARCHAR NOT NULL,
+    proof_types_supported VARCHAR NOT NULL,
+    credential_subject VARCHAR,
+    claims VARCHAR,
+    plugin_configurations VARCHAR,
+    cr_dtimes TIMESTAMP NOT NULL,
     upd_dtimes TIMESTAMP,
-    CONSTRAINT pk_template PRIMARY KEY (context, credential_type, credential_format)
+    CONSTRAINT pk_config_id PRIMARY KEY (context, credential_type, credential_format)
 );

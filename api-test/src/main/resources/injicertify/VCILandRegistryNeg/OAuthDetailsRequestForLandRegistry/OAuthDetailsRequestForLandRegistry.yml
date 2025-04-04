@@ -1,0 +1,56 @@
+OAuthDetailsRequestForLandRegistry:
+   InjiCertify_ESignet_OAuthDetailsRequest_ForLandRegistry_uin_Pos_For_NegFlow_sid:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest
+      description: OAuth details request for Mock
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      inputTemplate: injicertify/VCILandRegistryNeg/OAuthDetailsRequestForLandRegistry/OAuthDetailsRequestForLandRegistry
+      outputTemplate: injicertify/VCILandRegistryNeg/OAuthDetailsRequestForLandRegistry/OAuthDetailsRequestForLandRegistryResult
+      input: '{
+      	"requestTime": "$TIMESTAMP$",
+      	"clientId": "$ID:ESignet_CreateOIDCClientV2_ForLandRegistry_all_Valid_Smoke_sid_clientId$",
+      	"scope": "land_statement_vc_ldp",
+      	"responseType": "code",
+      	"redirectUri": "$IDPREDIRECTURI$",
+      	"display": "popup",
+	    "prompt": "login",
+	    "acrValues": "mosip:idp:acr:generated-code",
+	    "nonce": "973eieljzng",
+	    "state": "eree2311",
+	    "claimsLocales": "en",
+	    "codeChallenge": "$CODECHALLENGE$",
+        "codeChallengeMethod": "S256"
+}'
+      output: '{
+       
+}'
+
+   InjiCertify_ESignet_OAuthDetailsRequest_ForLandRegistry_Cred_2_uin_Pos_For_NegFlow_sid:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest
+      description: OAuth details request for Mock
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      inputTemplate: injicertify/VCILandRegistryNeg/OAuthDetailsRequestForLandRegistry/OAuthDetailsRequestForLandRegistry
+      outputTemplate: injicertify/VCILandRegistryNeg/OAuthDetailsRequestForLandRegistry/OAuthDetailsRequestForLandRegistryResult
+      input: '{
+      	"requestTime": "$TIMESTAMP$",
+      	"clientId": "$ID:ESignet_CreateOIDCClientV2_ForLandRegistry_all_Valid_Smoke_sid_clientId$",
+      	"scope": "land_registry_vc_ldp",
+      	"responseType": "code",
+      	"redirectUri": "$IDPREDIRECTURI$",
+      	"display": "popup",
+	    "prompt": "login",
+	    "acrValues": "mosip:idp:acr:generated-code",
+	    "nonce": "973eieljzng",
+	    "state": "eree2311",
+	    "claimsLocales": "en",
+	    "codeChallenge": "$CODECHALLENGE$",
+        "codeChallengeMethod": "S256"
+}'
+      output: '{
+       
+}'

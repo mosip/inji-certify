@@ -1,0 +1,28 @@
+InsertDBData:
+   InjiCertify_InsertDBData_For_LandRegistry_Registration_Receipt_Valid_smoke_Pos:
+      endPoint: no endpoint
+      uniqueIdentifier: TC_DBDependent_InsertQuery_01
+      description: Inserting data in Registration_Receipt table to authenticate and get credential for Land registry usecase
+      role: idrepo
+      restMethod: post
+      inputTemplate: injicertify/InsertDBData/InsertRegistrationReceiptDBData
+      outputTemplate: injicertify/InsertDBData/InsertDBDataResult
+      input: '{
+	  "registration_id": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$"
+}'
+      output: '{
+}'
+
+   InjiCertify_InsertDBData_For_LandRegistry_Certify_Statement_Valid_smoke_Pos:
+      endPoint: no endpoint
+      uniqueIdentifier: TC_DBDependent_InsertQuery_01
+      description: Inserting data in Certify_Statement table to authenticate and get credential for Land registry usecase
+      role: idrepo
+      restMethod: post
+      inputTemplate: injicertify/InsertDBData/InsertCertifyStatementData
+      outputTemplate: injicertify/InsertDBData/InsertDBDataResult
+      input: '{
+	  "registration_id": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$"
+}'
+      output: '{
+}'

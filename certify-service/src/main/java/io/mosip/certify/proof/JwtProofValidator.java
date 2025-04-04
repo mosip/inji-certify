@@ -30,7 +30,6 @@ import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.CredentialProof;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -75,8 +74,9 @@ public class JwtProofValidator implements ProofValidator {
         try {
             SignedJWT jwt = (SignedJWT) JWTParser.parse(credentialProof.getJwt());
             validateHeaderClaims(jwt.getHeader());
-
-            JWK jwk = getKeyFromHeader(jwt.getHeader());
+            JwtProofKeyManager jpkm = getInstance(jwt.getHeader().getKeyID());
+            JWK jwk = jpkm.getKeyFromHeader(jwt.getHeader())
+                    .orElseThrow(() -> new InvalidRequestException(ErrorConstants.PROOF_HEADER_AMBIGUOUS_KEY));
             if(jwk.isPrivate()) {
                 log.error("Provided key material contains private key! Rejecting proof.");
                 throw new InvalidRequestException(ErrorConstants.PROOF_HEADER_INVALID_KEY);
@@ -131,15 +131,20 @@ public class JwtProofValidator implements ProofValidator {
         return false;
     }
 
+    /**
+     * @param credentialProof proof from the credential request.
+     * @return the key material from the proof in a did:jwk or did:key format
+     */
     @Override
     public String getKeyMaterial(CredentialProof credentialProof) {
         try {
             SignedJWT jwt = (SignedJWT) JWTParser.parse(credentialProof.getJwt());
-            JWK jwk = getKeyFromHeader(jwt.getHeader());
-            byte[] keyBytes = jwk.toJSONString().getBytes(StandardCharsets.UTF_8);
-            return DID_JWK_PREFIX.concat(Base64.getUrlEncoder().encodeToString(keyBytes));
+            JwtProofKeyManager jpkm = getInstance(jwt.getHeader().getKeyID());
+            return jpkm.getDID(jwt.getHeader()).get();
         } catch (ParseException e) {
             log.error("Failed to parse jwt in the credential proof", e);
+        } catch (InvalidRequestException e) {
+            log.error("Invalid proof : {}", e.getErrorCode());
         }
         throw new InvalidRequestException(ErrorConstants.PROOF_HEADER_INVALID_KEY);
     }
@@ -161,38 +166,13 @@ public class JwtProofValidator implements ProofValidator {
         //TODO x5c and trust_chain validation
     }
 
-    private JWK getKeyFromHeader(JWSHeader jwsHeader) {
-        if(Objects.nonNull(jwsHeader.getJWK()))
-            return jwsHeader.getJWK();
-
-        return resolveDID(jwsHeader.getKeyID());
-    }
-
-    /**
-     * Currently only handles did:jwk, Need to handle other methods
-     * @param did kid of jwk in didLjwk format. ref: https://github.com/quartzjer/did-jwk/blob/main/spec.md#to-create-the-did-url
-     * @return
-     */
-    private JWK resolveDID(String did) {
-        if(did.startsWith(DID_JWK_PREFIX)) {
-            try {
-                //Ignoring fragment part as did:jwk only contains single key, the DID URL fragment identifier is always
-                //a fixed #0 value. If the JWK contains a kid value it is not used as the reference, #0 is the only valid value.
-                String base64JWK = did.split("#")[0].substring(DID_JWK_PREFIX.length());
-                // Decode JWK from Base64
-                byte[] jwkBytes = Base64.getUrlDecoder().decode(base64JWK);
-                String jwkJson = new String(jwkBytes, StandardCharsets.UTF_8);
-
-                // Parse JWK
-                org.json.JSONObject jsonKey = new org.json.JSONObject(jwkJson);
-                jsonKey.put("kid", did);
-                return JWK.parse(jsonKey.toString());
-            } catch (IllegalArgumentException e) {
-                log.error("Invalid base64 encoded ID : {}", did, e);
-            } catch (ParseException | JSONException e) {
-                log.error("Invalid jwk : {}", did, e);
-            }
+    public JwtProofKeyManager getInstance(String kid) {
+        if (kid == null || kid.startsWith(DID_JWK_PREFIX)) {
+            return new DIDjwkProofManager();
+        } else if (kid.startsWith("did:key:")) {
+            return new DIDkeysProofManager();
+        } else {
+            return new DIDjwkProofManager();
         }
-        throw new InvalidRequestException(ErrorConstants.PROOF_HEADER_INVALID_KEY);
     }
 }

@@ -21,10 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.entity.CredentialTemplate;
-import io.mosip.certify.repository.CredentialTemplateRepository;
-import org.json.JSONException;
-import org.json.JSONObject;
+import io.mosip.certify.entity.CredentialConfig;
+import io.mosip.certify.repository.CredentialConfigRepository;
 
 
 import junit.framework.TestCase;
@@ -39,12 +37,12 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
     @InjectMocks
     private VelocityTemplatingEngineImpl formatter;
     @Mock
-    CredentialTemplateRepository credentialTemplateRepository;
+    CredentialConfigRepository credentialConfigRepository;
 
-    private CredentialTemplate vc1;
-    private CredentialTemplate vc2;
-    private CredentialTemplate vc3;
-    private CredentialTemplate vc4;
+    private CredentialConfig vc1;
+    private CredentialConfig vc2;
+    private CredentialConfig vc3;
+    private CredentialConfig vc4;
 
     @SneakyThrows
     @Before
@@ -134,7 +132,7 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
                 "https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1"
         );
         //when(templateRepository.findByCredentialTypeAndContext("MockVerifiableCredential,VerifiableCredential", "https://schema.org,https://www.w3.org/2018/credentials/v1")).thenReturn(Optional.of(vc1));
-        when(credentialTemplateRepository.findByCredentialTypeAndContext("MockVerifiableCredential,VerifiableCredential", "https://example.org/Person.json,https://www.w3.org/ns/credentials/v2")).thenReturn(Optional.of(vc2));
+        when(credentialConfigRepository.findByCredentialTypeAndContext("MockVerifiableCredential,VerifiableCredential", "https://example.org/Person.json,https://www.w3.org/ns/credentials/v2")).thenReturn(Optional.of(vc2));
         //when(templateRepository.findByCredentialTypeAndContext("MockVerifiableCredential,VerifiableCredential", "https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1")).thenReturn(Optional.of(vc3));
         formatter.initialize();
 //        engine = new VelocityEngine();
@@ -146,9 +144,9 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
 //        engine.init();
     }
 
-    private CredentialTemplate initTemplate(String template, String type, String context, String format, String didUrl, String keyManagerAppId, String keyManagerRefId, String signatureAlgo, String sdClaim) {
-        CredentialTemplate t = new CredentialTemplate();
-        t.setTemplate(template);
+    private CredentialConfig initTemplate(String template, String type, String context, String format, String didUrl, String keyManagerAppId, String keyManagerRefId, String signatureAlgo, String sdClaim) {
+        CredentialConfig t = new CredentialConfig();
+        t.setVcTemplate(template);
         t.setCredentialType(type);
         t.setContext(context);
         t.setCredentialFormat(format);
@@ -161,9 +159,9 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
     }
 
 
-    private CredentialTemplate initTemplate(String template, String type, String context) {
-        CredentialTemplate t = new CredentialTemplate();
-        t.setTemplate(template);
+    private CredentialConfig initTemplate(String template, String type, String context) {
+        CredentialConfig t = new CredentialConfig();
+        t.setVcTemplate(template);
         t.setCredentialType(type);
         t.setContext(context);
         return t;
@@ -252,7 +250,7 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
         String key = "MockVerifiableCredential,VerifiableCredential:https://example.org/Person.json,https://www.w3.org/ns/credentials/v2";
         String template = formatter.getTemplate(key);
         Assert.assertNotNull(template);
-        Assert.assertEquals(vc2.getTemplate(), template);
+        Assert.assertEquals(vc2.getVcTemplate(), template);
     }
 
     @Test
