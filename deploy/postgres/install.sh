@@ -55,7 +55,7 @@ function installing_postgres() {
       exit 1
   fi
   echo Installing gateways and virtual services
-  POSTGRES_HOST=$(kubectl -n default get cm global -o jsonpath={.data.mosip-postgres-host})
+  POSTGRES_HOST=$(kubectl -n default get cm inji-stack-config -o jsonpath={.data.mosip-postgres-host})
   helm -n $NS install istio-addons chart/istio-addons --set postgresHost=$POSTGRES_HOST --wait
   return 0
 }
