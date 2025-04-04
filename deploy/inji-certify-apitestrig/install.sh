@@ -19,7 +19,7 @@ function installing_apitestrig() {
 
   echo Copy Configmaps
   COPY_UTIL=../copy_cm_func.sh
-  $COPY_UTIL configmap global default $NS
+  $COPY_UTIL configmap inji-stack-config default $NS
   $COPY_UTIL configmap keycloak-host keycloak $NS
   $COPY_UTIL configmap artifactory-share artifactory $NS
   $COPY_UTIL configmap config-server-share config-server $NS
@@ -34,9 +34,9 @@ function installing_apitestrig() {
   kubectl -n $NS delete --ignore-not-found=true configmap db
   kubectl -n $NS delete --ignore-not-found=true configmap apitestrig
 
-  DB_HOST=$( kubectl -n default get cm global -o json  |jq -r '.data."mosip-api-internal-host"' )
-  API_INTERNAL_HOST=$( kubectl -n default get cm global -o json  |jq -r '.data."mosip-api-internal-host"' )
-  ENV_USER=$( kubectl -n default get cm global -o json |jq -r '.data."mosip-api-internal-host"' | awk -F '.' '/api-internal/{print $1"."$2}')
+  DB_HOST=$( kubectl -n default get cm inji-stack-config -o json  |jq -r '.data."mosip-api-internal-host"' )
+  API_INTERNAL_HOST=$( kubectl -n default get cm inji-stack-config -o json  |jq -r '.data."mosip-api-internal-host"' )
+  ENV_USER=$( kubectl -n default get cm inji-stack-config -o json |jq -r '.data."mosip-api-internal-host"' | awk -F '.' '/api-internal/{print $1"."$2}')
 
   read -p "Please enter the time(hr) to run the cronjob every day (time: 0-23) : " time
   if [ -z "$time" ]; then
