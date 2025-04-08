@@ -96,6 +96,7 @@ public class MosipTestRunner {
 			AdminTestUtil.getRequiredField();
 
 			BaseTestCase.getLanguageList();
+			InjiCertifyUtil.getSupportedCredentialSigningAlg();
 
 			if (useCaseToExecute.equalsIgnoreCase("mosipid")) {
 
