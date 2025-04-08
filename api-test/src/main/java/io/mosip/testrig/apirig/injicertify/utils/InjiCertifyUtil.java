@@ -203,6 +203,17 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			jsonString = replaceKeywordValue(jsonString, GlobalConstants.TIMESTAMP, generateCurrentUTCTimeStamp());
 		}
 		
+		if (jsonString.contains("$SUNBIRDINSURANCEAUTHFACTORTYPE$")) {
+			String authFactorType = InjiCertifyConfigManager
+					.getproperty(InjiCertifyConstants.SUNBIRD_INSURANCE_AUTH_FACTOR_TYPE_STRING);
+
+			String valueToReplace = (authFactorType != null && !authFactorType.isBlank()) ? authFactorType
+					: InjiCertifyConstants.SUNBIRD_INSURANCE_AUTH_FACTOR_TYPE;
+
+			jsonString = replaceKeywordValue(jsonString, "$SUNBIRDINSURANCEAUTHFACTORTYPE$", valueToReplace);
+
+		}
+		
 		if (jsonString.contains("$UNIQUENONCEVALUE$")) {
 			jsonString = replaceKeywordValue(jsonString, "$UNIQUENONCEVALUE$",
 					String.valueOf(Calendar.getInstance().getTimeInMillis()));
