@@ -12,7 +12,7 @@ AuthenticateUserSunBirdCForVd12:
       	"requestTime": "$TIMESTAMP$",
       	"transactionId": "$ID:ESignet_OAuthDetailsRequest_SunBirdCForVd12_all_Valid_Smoke_sid_transactionId$",
       	"individualId": "$POLICYNUMBERFORSUNBIRDRC$",
-      	"authFactorType" : "KBA",
+      	"authFactorType" : "$SUNBIRDINSURANCEAUTHFACTORTYPE$",
       	"challenge" : "$CHALLENGEVALUEFORSUNBIRDC$",
       	"format": "base64url-encoded-json"
     }'
