@@ -81,7 +81,7 @@ public class SDJWT extends Credential{
             JWTClaimsSet claimsSet = JWTClaimsSet.parse(sdClaims);
             PlainJWT jwt = new PlainJWT(header, claimsSet);
             com.authlete.sd.SDJWT sdJwt = new com.authlete.sd.SDJWT(jwt.serialize(), disclosures);
-            return jwt.serialize();
+            return sdJwt.toString();
         } catch (JsonProcessingException ex) {
             log.error("JSON processing error", ex);
         }
@@ -118,9 +118,9 @@ public class SDJWT extends Credential{
         JWSSignatureRequestDto payload = new JWSSignatureRequestDto();
         payload.setDataToSign(jwtPayload.length > 1?jwtPayload[1]:jwtPayload[0]);
         payload.setApplicationId(appID);
-        payload.setReferenceId(refID); 
+        payload.setReferenceId(refID);
         //TODO: Wait for keymanager fix here.
-        payload.setSignAlgorithm("ES256");
+        payload.setSignAlgorithm(signAlgorithm);
         payload.setIncludePayload(true);
         payload.setIncludeCertificate(true);
         payload.setIncludeCertHash(true);

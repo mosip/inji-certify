@@ -370,9 +370,10 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                         templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
                     }
                     Credential cred = credentialFactory.getCredential(CredentialFormat.VC_SD_JWT.toString()).orElseThrow(()-> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
-                        templateParams.putAll(jsonObject.toMap());
-                        String unsignedCredential=cred.createCredential(templateParams, templateName);
-                        return cred.addProof(unsignedCredential,"", vcFormatter.getProofAlgorithm(templateName), vcFormatter.getAppID(templateName), vcFormatter.getRefID(templateName),vcFormatter.getDidUrl(templateName));
+                    jsonObject.put("_holderId", holderId);
+                    templateParams.putAll(jsonObject.toMap());
+                    String unsignedCredential=cred.createCredential(templateParams, templateName);
+                    return cred.addProof(unsignedCredential,"", vcFormatter.getProofAlgorithm(templateName), vcFormatter.getAppID(templateName), vcFormatter.getRefID(templateName),vcFormatter.getDidUrl(templateName));
                 } catch(DataProviderExchangeException e) {
                     log.error("Error processing the SD-JWT :", e);
                     throw new CertifyException(ErrorConstants.VC_ISSUANCE_FAILED);
