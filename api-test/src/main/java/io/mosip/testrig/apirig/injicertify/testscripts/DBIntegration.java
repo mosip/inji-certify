@@ -10,7 +10,6 @@ import org.testng.ITestContext;
 import org.testng.ITestResult;
 import org.testng.Reporter;
 import org.testng.SkipException;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -20,6 +19,7 @@ import org.testng.internal.TestResult;
 
 import io.mosip.testrig.apirig.dbaccess.DBManager;
 import io.mosip.testrig.apirig.dto.TestCaseDTO;
+import io.mosip.testrig.apirig.injicertify.utils.ExtendedDBManager;
 import io.mosip.testrig.apirig.injicertify.utils.InjiCertifyConfigManager;
 import io.mosip.testrig.apirig.injicertify.utils.InjiCertifyUtil;
 import io.mosip.testrig.apirig.testrunner.HealthChecker;
@@ -72,7 +72,7 @@ public class DBIntegration extends InjiCertifyUtil implements ITest {
 	@Test(dataProvider = "testcaselist")
 	public void test(TestCaseDTO testCaseDTO) throws Exception {
 		testCaseName = testCaseDTO.getTestCaseName();
-		testCaseName = InjiCertifyUtil.isTestCaseValidForExecution(testCaseDTO);
+		testCaseDTO = InjiCertifyUtil.isTestCaseValidForExecution(testCaseDTO);
 		if (HealthChecker.signalTerminateExecution) {
 			throw new SkipException(
 					GlobalConstants.TARGET_ENV_HEALTH_CHECK_FAILED + HealthChecker.healthCheckFailureMapS);
@@ -88,7 +88,7 @@ public class DBIntegration extends InjiCertifyUtil implements ITest {
 		logger.info("DB queries = " + sqlQuery);
 
 		try {
-			DBManager.executeDBWithQueries(InjiCertifyConfigManager.getInjiCertifyDBURL(),
+			ExtendedDBManager.executeDBWithQueries(InjiCertifyConfigManager.getInjiCertifyDBURL(),
 					InjiCertifyConfigManager.getproperty("db-su-user"),
 					InjiCertifyConfigManager.getproperty("postgres-password"),
 					InjiCertifyConfigManager.getproperty("inji_certify_schema"), sqlQuery);
