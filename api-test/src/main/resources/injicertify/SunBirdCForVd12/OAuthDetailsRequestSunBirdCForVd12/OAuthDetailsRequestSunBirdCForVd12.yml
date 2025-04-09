@@ -15,7 +15,7 @@ OAuthDetailsRequestSunBirdCForVd12:
       	"display": "popup",
 	    "prompt": "login",
 	    "acrValues": "mosip:idp:acr:knowledge",
-	    "nonce": "973eieljzng",
+	    "nonce": "$UNIQUENONCEVALUE$",
 	    "state": "eree2311",
 	    "claimsLocales": "en",
 	    "codeChallenge": "$CODECHALLENGE$",

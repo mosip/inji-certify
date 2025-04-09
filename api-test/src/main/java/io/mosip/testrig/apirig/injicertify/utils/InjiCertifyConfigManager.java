@@ -32,6 +32,10 @@ public class InjiCertifyConfigManager extends ConfigManager{
 		// Add module specific properties as well.
 		init(moduleSpecificPropertiesMap);
 	}
+	
+	public static String getInjiCertifyDBURL() {
+		return "jdbc:postgresql://" + getproperty("db-server") + ":" + getproperty("db-port") + "/" + getproperty("inji_certify_db_table");
+	}
 
 
 

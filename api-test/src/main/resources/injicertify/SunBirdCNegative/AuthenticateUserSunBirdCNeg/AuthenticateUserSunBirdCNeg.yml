@@ -14,7 +14,7 @@ AuthenticateUserSunBirdCNeg:
       	"requestTime": "$TIMESTAMP$",
       	"transactionId": "$ID:ESignet_OAuthDetailsRequest_SunBirdC_all_Valid_sid_Neg_transactionId$",
       	"individualId": "$POLICYNUMBERFORSUNBIRDRC$",
-      	"authFactorType" : "KBA",
+      	"authFactorType" : "$SUNBIRDINSURANCEAUTHFACTORTYPE$",
       	"challenge" : "$CHALLENGEVALUEFORSUNBIRDC$",
       	"format": "base64url-encoded-json"
     }'

@@ -57,6 +57,7 @@ public class MosipTestRunner {
 	public static String jarUrl = MosipTestRunner.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 	public static List<String> languageList = new ArrayList<>();
 	public static boolean skipAll = false;
+	private static String useCaseToExecute = "";
 
 	/**
 	 * C Main method to start mosip test execution
@@ -82,7 +83,7 @@ public class MosipTestRunner {
 			GlobalMethods.setModuleNameAndReCompilePattern(InjiCertifyConfigManager.getproperty("moduleNamePattern"));
 			setLogLevels();
 			
-			String useCaseToExecute = InjiCertifyConfigManager.getproperty("useCaseToExecute");
+			useCaseToExecute = InjiCertifyConfigManager.getproperty("useCaseToExecute");
 
 			HealthChecker healthcheck = new HealthChecker();
 			healthcheck.setCurrentRunningModule(BaseTestCase.currentModule);
@@ -95,6 +96,7 @@ public class MosipTestRunner {
 			AdminTestUtil.getRequiredField();
 
 			BaseTestCase.getLanguageList();
+			InjiCertifyUtil.getSupportedCredentialSigningAlg();
 
 			if (useCaseToExecute.equalsIgnoreCase("mosipid")) {
 
@@ -117,6 +119,13 @@ public class MosipTestRunner {
 		} catch (Exception e) {
 			LOGGER.error("Exception " + e.getMessage());
 		}
+		
+		if (useCaseToExecute.equalsIgnoreCase("landregistry")) {
+			InjiCertifyUtil.landRegistryDBCleanup();
+		}
+		
+		KeycloakUserManager.removeUser();
+		KeycloakUserManager.closeKeycloakInstance();
 
 		OTPListener.bTerminate = true;
 
