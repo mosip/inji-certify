@@ -499,7 +499,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 
 	}
 	
-	public static Map<String, List<String>> credentialSigningAlgorithmsMap = new HashMap<>();
+	public static Map<String, List<String>> proofSigningAlgorithmsMap = new HashMap<>();
 	
 	public static String getJsonFromInjiCertifyWellKnownEndPoint() {
 		String url = InjiCertifyConfigManager.getInjiCertifyBaseUrl()
@@ -528,7 +528,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			fetchAndUpdateSupportedAlgValues(jsonResponse);
 		}
 
-		logger.info("credentialSigningAlgorithmsMap = " + credentialSigningAlgorithmsMap);
+		logger.info("proofSigningAlgorithmsMap = " + proofSigningAlgorithmsMap);
 
 	}
 
@@ -545,17 +545,20 @@ public class InjiCertifyUtil extends AdminTestUtil {
 				String credentialType = fieldNames.next();
 				JsonNode credentialConfigNode = credentialConfigurationsNode.path(credentialType);
 
-				// Extract the credential_signing_alg_values_supported field
-				JsonNode signingAlgorithmsNode = credentialConfigNode.path("credential_signing_alg_values_supported");
+				// Extract the proof_signing_alg_values_supported field
+				JsonNode proofSigningAlgorithmsNode = credentialConfigNode.path("proof_types_supported").path("jwt")
+						.path("proof_signing_alg_values_supported");
 
-				if (signingAlgorithmsNode.isArray()) {
-					List<String> signingAlgorithms = new ArrayList<>();
-					for (JsonNode algNode : signingAlgorithmsNode) {
-						signingAlgorithms.add(algNode.asText());
+				if (proofSigningAlgorithmsNode.isArray()) {
+					// Initialize list to store proof signing algorithms
+					List<String> proofSigningAlgorithms = new ArrayList<>();
+					for (JsonNode algNode : proofSigningAlgorithmsNode) {
+						proofSigningAlgorithms.add(algNode.asText());
 					}
 
-					// Store in the map
-					credentialSigningAlgorithmsMap.put(credentialType, signingAlgorithms);
+					if (!proofSigningAlgorithms.isEmpty()) {
+						proofSigningAlgorithmsMap.put(credentialType, proofSigningAlgorithms);
+					}
 				}
 			}
 
@@ -824,41 +827,60 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			throw new SkipException(GlobalConstants.KNOWN_ISSUES);
 		}
 
-		if (currentUseCase.toLowerCase().equals("mock") && testCaseName.toLowerCase().contains("mock") == false) {
-			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+		if (currentUseCase.equalsIgnoreCase("mock")) {
+			if (!testCaseName.toLowerCase().contains("mock")) {
+				throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+			} else if (testCaseName.contains("_GetCredentialForMockIDA")
+					&& !(isSignatureSupportedForTheTestCase(testCaseDTO))) {
+				throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+			}
+
 		}
-		if (currentUseCase.toLowerCase().equals("sunbird") && testCaseName.toLowerCase().contains("sunbird") == false) {
-			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+		if (currentUseCase.toLowerCase().equals("sunbird")) {
+			if (!testCaseName.toLowerCase().contains("sunbird")) {
+				throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+			} else if (testCaseName.contains("_GetCredentialSunBirdC")
+					&& !(isSignatureSupportedForTheTestCase(testCaseDTO))) {
+				throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+			}
 		}
+
 		if (currentUseCase.toLowerCase().equals("mosipid") && testCaseName.toLowerCase().contains("mosipid") == false) {
 			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
 		}
+
 		if (currentUseCase.equalsIgnoreCase("landregistry")) {
-		    if (!testCaseName.toLowerCase().contains("landregistry")) {
-		        throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
-		    } 
-		    // For the specific case of "_GetCredentialForLandRegistry"
-		    else if (testCaseName.contains("_GetCredentialForLandRegistry")) {
-		        JSONObject testInputJson = new JSONObject(testCaseDTO.getInput());
-		        
-		        // Extract the credentialType and signatureSupported from the test input
-		        String credentialType = testInputJson.optString("credentialType", null);
-		        String signatureSupported = testInputJson.optString("signatureSupported", null);
-
-		        if (credentialType != null && signatureSupported != null) {
-		            List<String> signingAlgorithms = credentialSigningAlgorithmsMap.get(credentialType);
-
-		            if (signingAlgorithms != null) {
-		                // If signatureSupported is not in the signing algorithms list, skip the test
-		                if (!signingAlgorithms.contains(signatureSupported)) {
-		                    throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
-		                }
-		            }
-		        }
-		    }
+			if (!testCaseName.toLowerCase().contains("landregistry")) {
+				throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+			} else if (testCaseName.contains("_GetCredentialForLandRegistry")
+					&& !(isSignatureSupportedForTheTestCase(testCaseDTO))) {
+				throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+			}
 		}
 
 		return testCaseDTO;
+	}
+	
+	public static boolean isSignatureSupportedForTheTestCase(TestCaseDTO testCaseDTO) {
+		boolean bReturn = true;
+		JSONObject testInputJson = new JSONObject(testCaseDTO.getInput());
+
+		// Extract the credentialType and signatureSupported from the test input
+		String credentialType = testInputJson.optString("credentialType", null);
+		String signatureSupported = testInputJson.optString("signatureSupported", null);
+
+		if (credentialType != null && signatureSupported != null) {
+			List<String> signingAlgorithms = proofSigningAlgorithmsMap.get(credentialType);
+
+			if (signingAlgorithms != null) {
+				// If signatureSupported is not in the signing algorithms list, skip the test
+				if (!signingAlgorithms.contains(signatureSupported)) {
+					bReturn = false;
+				}
+			}
+		}
+
+		return bReturn;
 	}
 	
 	public static String signJWKForMockID(String clientId, String accessToken, RSAKey jwkKey, String testCaseName,
