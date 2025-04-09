@@ -1,10 +1,15 @@
 package io.mosip.testrig.apirig.injicertify.utils;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -16,15 +21,21 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.testng.SkipException;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
+import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.Ed25519Signer;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.jwk.OctetKeyPair;
 import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
@@ -32,10 +43,8 @@ import io.mosip.testrig.apirig.dataprovider.BiometricDataProvider;
 import io.mosip.testrig.apirig.dbaccess.DBManager;
 import io.mosip.testrig.apirig.dto.TestCaseDTO;
 import io.mosip.testrig.apirig.injicertify.testrunner.MosipTestRunner;
-import io.mosip.testrig.apirig.testrunner.BaseTestCase;
 import io.mosip.testrig.apirig.testrunner.OTPListener;
 import io.mosip.testrig.apirig.utils.AdminTestUtil;
-import io.mosip.testrig.apirig.utils.ConfigManager;
 import io.mosip.testrig.apirig.utils.GlobalConstants;
 import io.mosip.testrig.apirig.utils.JWKKeyUtil;
 import io.mosip.testrig.apirig.utils.RestClient;
@@ -76,6 +85,16 @@ public class InjiCertifyUtil extends AdminTestUtil {
 				InjiCertifyConfigManager.getPMSDbPass(), InjiCertifyConfigManager.getPMSDbSchema(),
 				getGlobalResourcePath() + "/" + "config/pmsDataDeleteQueries.txt");
 		
+	}
+	
+	public static void landRegistryDBCleanup() {
+
+		DBManager.executeDBQueries(InjiCertifyConfigManager.getInjiCertifyDBURL(),
+				InjiCertifyConfigManager.getproperty("db-su-user"),
+				InjiCertifyConfigManager.getproperty("postgres-password"),
+				InjiCertifyConfigManager.getproperty("inji_certify_schema"),
+				getGlobalResourcePath() + "/" + "config/landRegistryDataDeleteQueries.txt");
+
 	}
 
 	public static String smtpOtpHandler(String inputJson, TestCaseDTO testCaseDTO) {
@@ -182,6 +201,32 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		
 		if (jsonString.contains(GlobalConstants.TIMESTAMP)) {
 			jsonString = replaceKeywordValue(jsonString, GlobalConstants.TIMESTAMP, generateCurrentUTCTimeStamp());
+		}
+		
+		if (jsonString.contains("$SUNBIRDINSURANCEAUTHFACTORTYPE$")) {
+			String authFactorType = InjiCertifyConfigManager
+					.getproperty(InjiCertifyConstants.SUNBIRD_INSURANCE_AUTH_FACTOR_TYPE_STRING);
+
+			String valueToReplace = (authFactorType != null && !authFactorType.isBlank()) ? authFactorType
+					: InjiCertifyConstants.SUNBIRD_INSURANCE_AUTH_FACTOR_TYPE;
+
+			jsonString = replaceKeywordValue(jsonString, "$SUNBIRDINSURANCEAUTHFACTORTYPE$", valueToReplace);
+
+		}
+		
+		if (jsonString.contains("$UNIQUENONCEVALUE$")) {
+			jsonString = replaceKeywordValue(jsonString, "$UNIQUENONCEVALUE$",
+					String.valueOf(Calendar.getInstance().getTimeInMillis()));
+		}
+		
+		if (jsonString.contains("$VCICONTEXTURL$")) {
+			jsonString = replaceKeywordWithValue(jsonString, "$VCICONTEXTURL$",
+					properties.getProperty("vciContextURL"));
+		}
+		
+		if (jsonString.contains("$VCICONTEXTURL_2.0$")) {
+			jsonString = replaceKeywordWithValue(jsonString, "$VCICONTEXTURL_2.0$",
+					properties.getProperty("vciContextURL2"));
 		}
 
 		if (jsonString.contains("$POLICYNUMBERFORSUNBIRDRC$")) {
@@ -291,6 +336,25 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_3$",
 					signJWKForMockID(clientId, accessToken, oidcJWKKey4, testCaseName, tempUrl));
 		}
+		
+		if (jsonString.contains("$PROOF_JWT_ED25519$")) {
+			JSONObject request = new JSONObject(jsonString);
+			String clientId = "";
+			String accessToken = "";
+			String tempUrl = "";
+			if (request.has("client_id")) {
+				clientId = request.getString("client_id");
+				request.remove("client_id");
+			}
+			if (request.has("idpAccessToken")) {
+				accessToken = request.getString("idpAccessToken");
+			}
+			jsonString = request.toString();
+			tempUrl = getBaseURL(testCaseName, InjiCertifyConfigManager.getInjiCertifyBaseUrl());
+
+			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_ED25519$",
+					signED25519JWT(clientId, accessToken, testCaseName, tempUrl));
+		}
 
 		if (jsonString.contains("$CLIENT_ASSERTION_JWT$")) {
 			String oidcJWKKeyString = JWKKeyUtil.getJWKKey(OIDCJWK1);
@@ -375,8 +439,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 
 			String baseURL = InjiCertifyConfigManager.getInjiCertifyBaseUrl();
 			if (testCaseName.contains("_GetCredentialSunBirdC")) {
-				tempUrl = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer",
-						baseURL.replace("injicertify.", "injicertify-insurance."));
+				tempUrl = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer", baseURL);
 			}
 			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_2$",
 					signJWKForMockID(clientId, accessToken, oidcJWKKey4, testCaseName, tempUrl));
@@ -434,6 +497,74 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			return value;
 		}
 
+	}
+	
+	public static Map<String, List<String>> proofSigningAlgorithmsMap = new HashMap<>();
+	
+	public static String getJsonFromInjiCertifyWellKnownEndPoint() {
+		String url = InjiCertifyConfigManager.getInjiCertifyBaseUrl()
+				+ InjiCertifyConfigManager.getproperty("injiCertifyWellKnownEndPoint");
+
+		Response response = null;
+		try {
+			response = RestClient.getRequest(url, MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON);
+
+		} catch (Exception e) {
+			logger.error("Exception while making the request to the Inji Certify well-known endpoint: ", e);
+		}
+
+		if (response != null && response.getBody() != null) {
+			return response.getBody().asString();
+		} else {
+			logger.warn("No response or empty body received from the Inji Certify well-known endpoint.");
+			return "";
+		}
+	}
+	
+	public static void getSupportedCredentialSigningAlg() {
+		String jsonResponse = getJsonFromInjiCertifyWellKnownEndPoint();
+
+		if (jsonResponse != null && jsonResponse.isBlank() == false) {
+			fetchAndUpdateSupportedAlgValues(jsonResponse);
+		}
+
+		logger.info("proofSigningAlgorithmsMap = " + proofSigningAlgorithmsMap);
+
+	}
+
+	public static void fetchAndUpdateSupportedAlgValues(String json) {
+		ObjectMapper objectMapper = new ObjectMapper();
+
+		try {
+			JsonNode rootNode = objectMapper.readTree(json);
+			JsonNode credentialConfigurationsNode = rootNode.path("credential_configurations_supported");
+
+			// Iterate over each credential configuration and extract the signing algorithms
+			Iterator<String> fieldNames = credentialConfigurationsNode.fieldNames();
+			while (fieldNames.hasNext()) {
+				String credentialType = fieldNames.next();
+				JsonNode credentialConfigNode = credentialConfigurationsNode.path(credentialType);
+
+				// Extract the proof_signing_alg_values_supported field
+				JsonNode proofSigningAlgorithmsNode = credentialConfigNode.path("proof_types_supported").path("jwt")
+						.path("proof_signing_alg_values_supported");
+
+				if (proofSigningAlgorithmsNode.isArray()) {
+					// Initialize list to store proof signing algorithms
+					List<String> proofSigningAlgorithms = new ArrayList<>();
+					for (JsonNode algNode : proofSigningAlgorithmsNode) {
+						proofSigningAlgorithms.add(algNode.asText());
+					}
+
+					if (!proofSigningAlgorithms.isEmpty()) {
+						proofSigningAlgorithmsMap.put(credentialType, proofSigningAlgorithms);
+					}
+				}
+			}
+
+		} catch (IOException e) {
+			logger.error("Error while processing JSON: " + e.getMessage());
+		}
 	}
 	
 	public static String getValueFromInjiCertifyWellKnownEndPoint(String key, String baseURL) {
@@ -604,10 +735,17 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		} else if (testCaseName.contains("_GetCredentialMosipID")) {
 			tempURL = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer", baseURL);
 		} else if (testCaseName.contains("_GenerateTokenVCIMOSIPID")) {
-			tempURL = getValueFromEsignetWellKnownEndPoint("token_endpoint", InjiCertifyConfigManager.getEsignetBaseUrl());
+			tempURL = getValueFromEsignetWellKnownEndPoint("token_endpoint",
+					InjiCertifyConfigManager.getEsignetBaseUrl());
 		} else if (testCaseName.contains("_GenerateToken_ForMockIDA")) {
-			tempURL = getValueFromEsignetWellKnownEndPoint("token_endpoint", InjiCertifyConfigManager.getEsignetBaseUrl());
+			tempURL = getValueFromEsignetWellKnownEndPoint("token_endpoint",
+					InjiCertifyConfigManager.getEsignetBaseUrl());
+		} else if (testCaseName.contains("_GenerateToken_ForLandRegistry")) {
+			tempURL = getValueFromEsignetWellKnownEndPoint("token_endpoint",
+					InjiCertifyConfigManager.getEsignetBaseUrl());
 		} else if (testCaseName.contains("_GetCredentialForMockIDA")) {
+			tempURL = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer", baseURL);
+		} else if (testCaseName.contains("_GetCredentialForLandRegistry")) {
 			tempURL = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer", baseURL);
 		}
 
@@ -647,6 +785,8 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		} else if (testCaseDTO.getEndPoint().startsWith("$SUNBIRDBASEURL$")
 				&& testCaseName.contains("Policy_")) {
 			return InjiCertifyConfigManager.getSunBirdBaseURL();
+		} else if (testCaseDTO.getEndPoint().startsWith("$INJICERTIFYBASEURL$")) {
+			return InjiCertifyConfigManager.getInjiCertifyBaseUrl();
 		}
 		
 		
@@ -670,11 +810,13 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			return "$INJICERTIFYMOCKIDABASEURL$";
 		if (endPoint.startsWith("$SUNBIRDBASEURL$"))
 			return "$SUNBIRDBASEURL$";
+		if (endPoint.startsWith("$INJICERTIFYBASEURL$"))
+			return "$INJICERTIFYBASEURL$";
 		
 		return "";
 	}
 	
-	public static String isTestCaseValidForExecution(TestCaseDTO testCaseDTO) {
+	public static TestCaseDTO isTestCaseValidForExecution(TestCaseDTO testCaseDTO) {
 		String testCaseName = testCaseDTO.getTestCaseName();
 
 		if (MosipTestRunner.skipAll == true) {
@@ -685,17 +827,60 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			throw new SkipException(GlobalConstants.KNOWN_ISSUES);
 		}
 
-		if (currentUseCase.toLowerCase().equals("mock") && testCaseName.toLowerCase().contains("mock") == false) {
-			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+		if (currentUseCase.equalsIgnoreCase("mock")) {
+			if (!testCaseName.toLowerCase().contains("mock")) {
+				throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+			} else if (testCaseName.contains("_GetCredentialForMockIDA")
+					&& !(isSignatureSupportedForTheTestCase(testCaseDTO))) {
+				throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+			}
+
 		}
-		if (currentUseCase.toLowerCase().equals("sunbird") && testCaseName.toLowerCase().contains("sunbird") == false) {
-			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+		if (currentUseCase.toLowerCase().equals("sunbird")) {
+			if (!testCaseName.toLowerCase().contains("sunbird")) {
+				throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+			} else if (testCaseName.contains("_GetCredentialSunBirdC")
+					&& !(isSignatureSupportedForTheTestCase(testCaseDTO))) {
+				throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+			}
 		}
+
 		if (currentUseCase.toLowerCase().equals("mosipid") && testCaseName.toLowerCase().contains("mosipid") == false) {
 			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
 		}
 
-		return testCaseName;
+		if (currentUseCase.equalsIgnoreCase("landregistry")) {
+			if (!testCaseName.toLowerCase().contains("landregistry")) {
+				throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+			} else if (testCaseName.contains("_GetCredentialForLandRegistry")
+					&& !(isSignatureSupportedForTheTestCase(testCaseDTO))) {
+				throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+			}
+		}
+
+		return testCaseDTO;
+	}
+	
+	public static boolean isSignatureSupportedForTheTestCase(TestCaseDTO testCaseDTO) {
+		boolean bReturn = true;
+		JSONObject testInputJson = new JSONObject(testCaseDTO.getInput());
+
+		// Extract the credentialType and signatureSupported from the test input
+		String credentialType = testInputJson.optString("credentialType", null);
+		String signatureSupported = testInputJson.optString("signatureSupported", null);
+
+		if (credentialType != null && signatureSupported != null) {
+			List<String> signingAlgorithms = proofSigningAlgorithmsMap.get(credentialType);
+
+			if (signingAlgorithms != null) {
+				// If signatureSupported is not in the signing algorithms list, skip the test
+				if (!signingAlgorithms.contains(signatureSupported)) {
+					bReturn = false;
+				}
+			}
+		}
+
+		return bReturn;
 	}
 	
 	public static String signJWKForMockID(String clientId, String accessToken, RSAKey jwkKey, String testCaseName,
@@ -765,11 +950,61 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			} else if (testCaseName.contains("_Missing_JwkHeader_")) {
 				signedJWT = new SignedJWT(
 						new JWSHeader.Builder(JWSAlgorithm.RS256).type(new JOSEObjectType(typ)).build(), claimsSet);
+			} else if (testCaseName.contains("_Sign_PS256_")) {
+				signedJWT = new SignedJWT(
+						new JWSHeader.Builder(JWSAlgorithm.PS256).type(new JOSEObjectType(typ)).jwk(jwkHeader).build(),
+						claimsSet);
 			} else {
 				signedJWT = new SignedJWT(
 						new JWSHeader.Builder(JWSAlgorithm.RS256).type(new JOSEObjectType(typ)).jwk(jwkHeader).build(),
 						claimsSet);
 			}
+
+			signedJWT.sign(signer);
+			proofJWT = signedJWT.serialize();
+		} catch (Exception e) {
+			logger.error("Exception while signing proof_jwt to get credential: " + e.getMessage());
+		}
+		return proofJWT;
+	}
+	
+	public static String signED25519JWT(String clientId, String accessToken, String testCaseName, String tempUrl) {
+		int idTokenExpirySecs = Integer
+				.parseInt(getValueFromEsignetActuator(InjiCertifyConfigManager.getEsignetActuatorPropertySection(),
+						GlobalConstants.MOSIP_ESIGNET_ID_TOKEN_EXPIRE_SECONDS));
+		JWSSigner signer;
+		String proofJWT = "";
+		String typ = "openid4vci-proof+jwt";
+		SignedJWT signedJWT = null;
+
+		try {
+			OctetKeyPair edJWK = new OctetKeyPairGenerator(Curve.Ed25519).generate();
+
+			JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.Ed25519)
+					.type(new JOSEObjectType("openid4vci-proof+jwt")).jwk(edJWK.toPublicJWK()).build();
+
+			Date currentTime = new Date();
+
+			// Create a Calendar instance to manipulate time
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(currentTime);
+
+			// Add one hour to the current time
+			calendar.add(Calendar.HOUR_OF_DAY, (idTokenExpirySecs / 3600)); // Adding one hour
+
+			// Get the updated expiration time
+			Date expirationTime = calendar.getTime();
+
+			signedJWT = SignedJWT.parse(accessToken);
+
+			String nonce = signedJWT.getJWTClaimsSet().getClaim("c_nonce").toString();
+			JWTClaimsSet claimsSet = null;
+
+			claimsSet = new JWTClaimsSet.Builder().audience(tempUrl).claim("nonce", nonce).issuer(clientId)
+					.issueTime(currentTime).expirationTime(expirationTime).build();
+
+			signedJWT = new SignedJWT(header, claimsSet);
+			signer = new Ed25519Signer(edJWK);
 
 			signedJWT.sign(signer);
 			proofJWT = signedJWT.serialize();

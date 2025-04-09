@@ -1,7 +1,28 @@
 AddIdentity:
    InjiCertify_AddIdentity_For_Mock_Valid_smoke_Pos:
       endPoint: /v1/mock-identity-system/identity
+      uniqueIdentifier: TC_mock_identity_dependency_01
       description: Add identity for mock scenario
+      role: idrepo
+      restMethod: post
+      inputTemplate: injicertify/AddIdentityMock/AddIdentity
+      outputTemplate: injicertify/AddIdentityMock/addIdentityResult
+      input: '{
+	  "requesttime": "$TIMESTAMP$",
+	  "individualId": "$RANDOMINDIVIDUALIDFORMOCKIDENTITY$",
+	  "pin": "545411",
+	  "email": "$EMAILIDFORMOCKIDENTITY$",
+	  "password": "$PASSWORDFORMOCKIDENTITY$",
+	  "phone": "$PHONEFORMOCKIDENTITY$"
+}'
+      output: '{
+  "status":"mock identity data created successfully"
+}'
+
+   InjiCertify_AddIdentity_For_LandRegistry_Valid_smoke_Pos:
+      endPoint: /v1/mock-identity-system/identity
+      uniqueIdentifier: TC_mock_identity_dependency_02
+      description: Add identity for Land registry mock scenario
       role: idrepo
       restMethod: post
       inputTemplate: injicertify/AddIdentityMock/AddIdentity
