@@ -725,6 +725,9 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		if (currentUseCase.toLowerCase().equals("landregistry") && testCaseName.toLowerCase().contains("landregistry") == false) {
 			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
 		}
+		if (currentUseCase.toLowerCase().equals("mdoc") && testCaseName.toLowerCase().contains("mdoc") == false) {
+			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+		}		
 
 		return testCaseName;
 	}
