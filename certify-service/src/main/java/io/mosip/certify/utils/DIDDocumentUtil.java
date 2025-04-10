@@ -1,6 +1,8 @@
 package io.mosip.certify.utils;
 
 import java.io.ByteArrayInputStream;
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.security.PublicKey;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -56,6 +58,9 @@ public class DIDDocumentUtil {
                 case SignatureAlg.RSA_SIGNATURE_SUITE_2018:
                     verificationMethod = generateRSAVerificationMethod(publicKey, issuerURI, issuerPublicKeyURI);
                     break;
+                case SignatureAlg.EC_SECP256R1_2019:
+                    verificationMethod = generateECR1VerificationMethod(publicKey, issuerURI, issuerPublicKeyURI);
+                    break;
                 default:
                     log.error("Unsupported signature algorithm provided :" + vcSignAlgorithm);
                     throw new CertifyException(ErrorConstants.UNSUPPORTED_ALGORITHM);
@@ -71,6 +76,32 @@ public class DIDDocumentUtil {
         return didDocument;
     }
 
+    private static Map<String, Object> generateECR1VerificationMethod(PublicKey publicKey, String issuerURI, String issuerPublicKeyURI) {
+        ECPublicKey ecPublicKey = (ECPublicKey) publicKey;
+        BigInteger yBI = ecPublicKey.getW().getAffineY();
+        byte prefixByte = yBI.testBit(0) ? (byte) 0x03 : (byte) 0x02;
+        // Compressed format: 0x02 or 0x03 || X
+        byte[] compressed = ByteBuffer.allocate(1 + 32)
+                .put(prefixByte)
+                .put(ecPublicKey.getW().getAffineX().toByteArray())
+                .array();
+
+        // P-256 compressed public key multicodec prefix: 0x1201(varint form of 0x8024)
+        byte[] prefix = HexFormat.of().parseHex("8024");
+        byte[] finalBytes = new byte[prefix.length + compressed.length];
+        System.arraycopy(prefix, 0, finalBytes, 0, prefix.length);
+        System.arraycopy(compressed, 0, finalBytes, prefix.length, compressed.length);
+        String publicKeyMultibase = Multibase.encode(Multibase.Base.Base58BTC, finalBytes);
+
+        Map<String, Object> verificationMethod = new HashMap<>();
+        verificationMethod.put("id", issuerPublicKeyURI);
+        verificationMethod.put("type", "EcdsaSecp256r1VerificationKey2019");
+        verificationMethod.put("@context", "https://w3id.org/security/suites/ecdsa-2019/v1");
+        verificationMethod.put("controller", issuerURI);
+        verificationMethod.put("publicKeyMultibase", publicKeyMultibase);
+        return verificationMethod;
+    }
+
     private static PublicKey loadPublicKeyFromCertificate(String certificateString) {
         try {
             ByteArrayInputStream fis = new ByteArrayInputStream(certificateString.getBytes());
@@ -84,6 +115,7 @@ public class DIDDocumentUtil {
     }
 
      private static Map<String, Object> generateEd25519VerificationMethod(PublicKey publicKey, String issuerURI, String issuerPublicKeyURI) throws Exception {
+
         BCEdDSAPublicKey edKey = (BCEdDSAPublicKey) publicKey;
         byte[] rawBytes = edKey.getPointEncoding();
         byte[] multicodecBytes = HexFormat.of().parseHex(MULTICODEC_PREFIX);
