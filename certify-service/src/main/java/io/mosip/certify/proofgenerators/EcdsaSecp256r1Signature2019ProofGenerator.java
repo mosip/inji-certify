@@ -17,9 +17,7 @@ import java.util.Map;
 
 /**
  * EcdsaSecp256r1Signature2019 as per https://w3c.github.io/cg-reports/credentials/CG-FINAL-di-ecdsa-2019-20220724/
- * - secp256k1
- * - from W3C Web Payments Community Group
- * - ref: https://w3c-ccg.github.io/ld-cryptosuite-registry/#ecdsasecp256k1signature2019
+ * secp256r1/P-256
  */
 @Component
 @ConditionalOnProperty(name = "mosip.certify.data-provider-plugin.issuer.vc-sign-algo", havingValue = SignatureAlg.EC_SECP256R1_2019)
