@@ -1,18 +1,21 @@
 package io.mosip.certify.proof;
 
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.jwk.JWK;
-import com.nimbusds.jose.jwk.OctetKeyPair;
-import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.*;
+import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
+import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 import io.ipfs.multibase.Multibase;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.interfaces.RSAPublicKey;
+import java.util.Date;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -79,11 +82,13 @@ public class DIDkeysProofManagerTest {
 
         // Assert
         assertEquals("EC", result.getKeyType().getValue());
+        assertEquals("wldSvS-mIkLtxWUKTzH2bzpRc3r-lBeSu0FtqWBKiO4", ((ECKey) result).getX().toString());
+        assertEquals("omtLUrNAYHypnICk14EsyCbHmVQxBCsGf_n3Z2AAnQc", ((ECKey) result).getY().toString());
     }
 
     @Test
     void testGetKeyFromHeader_p256() {
-        // TODO: should be 0x1200 instead
+        // 0x8024 is the variable integer
         JWSHeader header = Mockito.mock(JWSHeader.class);
         // How will the DID differ when the value is compressed vs uncompressed?
         String keyID = "did:key:zDnaehKu2hNcmLBhd5iNkh3v6Q4ncq75fT4EXKMtietgzR1bZ"; // Valid EC key ID for below key
@@ -93,8 +98,7 @@ public class DIDkeysProofManagerTest {
 
         byte[] decodedKey = Multibase.decode(keyID.split("did:key:")[1]); // 0x12 0x00
         assertEquals((byte) 0x80, decodedKey[0]);
-        //assertEquals((byte) 0x12, decodedKey[0]);
-        //assertEquals((byte) 0x00, decodedKey[1]);
+        assertEquals((byte) 0x24, decodedKey[1]);
 
         // Test
         DIDkeysProofManager manager = new DIDkeysProofManager();
@@ -103,18 +107,19 @@ public class DIDkeysProofManagerTest {
         // Assert
         assertNotNull(result);
         assertEquals("EC", result.getKeyType().getValue());
+        assertEquals("-wim35fhXPUsGq78EeP90JV1Fq0YvvYTbc_0kqhB6cQ", ((ECKey) result).getX().toString());
+        assertEquals("42YsvtOfjrHASU_mJTraPLeEuA-At3YsXQwbRZDpM_A", ((ECKey) result).getY().toString());
     }
 
-    /*
     @Test
-    void testGetKeyFromHeader_WhenKeyIDIsRSA() {
-        // Mock JWSHeader
+    void testGetKeyFromHeader_RSA() {
         JWSHeader header = Mockito.mock(JWSHeader.class);
-        String keyID = "did:key:z4MXj1wBzi9jUstyPMS4jQqB6KdJaiatPkAtVtGc6bQEQEEsKTic4G7Rou3iBf9vPmT5dbkm9qsZsuVNjq8HCuW1w24nhBFGkRE4cd2Uf2tfrB3N7h4mnyPp1BF3ZttHTYv3DLUPi1zMdkULiow3M1GfXkoC6DoxDUm1jmN6GBj22SjVsr6dxezRVQc7aj9TxE7JLbMH1wh5X3kA58H3DFW8rnYMakFGbca5CB2Jf6CnGQZmL7o5uJAdTwXfy2iiiyPxXEGerMhHwhjTA1mKYobyk2CpeEcmvynADfNZ5MBvcCS7m3XkFCMNUYBS9NQ3fze6vMSUPsNa6GVYmKx2x6JrdEjCk3qRMMmyjnjCMfR4pXbRMZa3i"; // Replace with a valid RSA key ID
+        String keyID = "did:key:z4MXj1wBzi9jUstyPx4gpGCHXGU6SZNCGaWDBktDPabqKE9pU9Y3D8GeMkeXipiM3MYJooZRkhi32m2CWdWVm1MTdYQs2pwtp92SPbLnp9eqDKTwCWNrvnqgsbJC9u6CvrXfUj1XeRZgSEkRxqoAjycSFyAsdrEP76d9NaRveKKabnNQ4y2NCBTY2q8c2tBP4HAGWVa4rMvsgmZY7zcoyf1rLnuAhG717cXdDrrWJnHXY3miMPfHvZbLhouoXcakRDRRnxPJYRCFHqqohSBeDxDqN1QKw77MFCDwz286bWpWWxS1mD4DZwQdBomoQgv5y1LyvndoxHJ4GukM2m8AzJvy5eibDufpJtva6F5cZMq3nKw4hJtnU";
+        // {"kty":"RSA","e":"AQAB","use":"sig","kid":"c6e3bcdd-8a87-4bd0-a739-7071b5fa8383",
+        // "n":"y6dYuJhvq1gPXDm2ulPepI5RO19Z9i0ZVrWkvebXEZ2R_gUXNpVk7zHa2K-Z_JEX1Vtnrgr9X2bBgsxU57PoPRQIMiVKbV-xPLEfmtuX7sFn2Oucj7_lqI0Nm3wPZ8X0nl5I-Wy-Lug5NGWghEtjbXzF2d2gHRtuZ72_MbYnMBT7qpkK7GizutCMBqmzXASdbxijkApteOe2cMqZprFcnoGSPV_sfD_1eQaFHNCMPJjYOm_L1Mx0M7vLMvbh3mNGlvxWN7gC7m5bgvn_TEBeKDi3OkMGmBbGXsVo7qcCxJrp_eIgahX3YtkzMsjD7CwM_A-H1vl8w_v0KtZZNbLpAw"}
         when(header.getKeyID()).thenReturn(keyID);
 
-        // Decode the keyID to match the expected format
-        byte[] decodedKey = Multibase.decode(keyID.split("did:key:")[1]);
+        byte[] decodedKey = Multibase.decode(keyID.split("did:key:")[1]); // 0x12 0x00
         assertEquals((byte) 0x85, decodedKey[0]);
         assertEquals((byte) 0x24, decodedKey[1]);
 
@@ -125,35 +130,62 @@ public class DIDkeysProofManagerTest {
         // Assert
         assertNotNull(result);
         assertEquals("RSA", result.getKeyType().getValue());
+        assertEquals("AQAB", ((RSAKey) result).getPublicExponent().toString());
+        assertEquals("y6dYuJhvq1gPXDm2ulPepI5RO19Z9i0ZVrWkvebXEZ2R_gUXNpVk7zHa2K-Z_JEX1Vtnrgr9X2bBgsxU57PoPRQIMiVKbV-xPLEfmtuX7sFn2Oucj7_lqI0Nm3wPZ8X0nl5I-Wy-Lug5NGWghEtjbXzF2d2gHRtuZ72_MbYnMBT7qpkK7GizutCMBqmzXASdbxijkApteOe2cMqZprFcnoGSPV_sfD_1eQaFHNCMPJjYOm_L1Mx0M7vLMvbh3mNGlvxWN7gC7m5bgvn_TEBeKDi3OkMGmBbGXsVo7qcCxJrp_eIgahX3YtkzMsjD7CwM_A-H1vl8w_v0KtZZNbLpAw",
+                ((RSAKey) result).getModulus().toString());
     }
 
     @Test
-    void testGetKeyFromHeader_WhenKeyIDIsRSA2() throws NoSuchAlgorithmException {
-        // Mock JWSHeader
-        JWSHeader header = Mockito.mock(JWSHeader.class);
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-        kpg.initialize(2048);
-        KeyPair k = kpg.generateKeyPair();
-        byte b[] = k.getPublic().getEncoded();
-        String buf = Multibase.encode(Multibase.Base.Base58BTC, b);
-        String keyID = "did:key:" + buf;
-        RSAPublicKey publicKey = (RSAPublicKey) k.getPublic();
-        RSAKey rsaKey = new RSAKey.Builder(publicKey).build();
-        System.out.println(rsaKey.toPublicJWK());
-        when(header.getKeyID()).thenReturn(keyID);
-
-        // Decode the keyID to match the expected format
-        byte[] decodedKey = Multibase.decode(keyID.split("did:key:")[1]);
-        assertEquals((byte) 0x12, decodedKey[0]);
-
-        // Test
+    void testGetKeyFromHeader_genKeyP256() throws JOSEException {
+        ECKey jwk = new ECKeyGenerator(Curve.P_256)
+                .keyUse(KeyUse.SIGNATURE)
+                .keyID(UUID.randomUUID().toString())
+                .issueTime(new Date())
+                .generate();
         DIDkeysProofManager manager = new DIDkeysProofManager();
-        JWK result = manager.getKeyFromHeader(header).get();
-
-        // Assert
-        assertNotNull(result);
-        assertEquals("RSA", result.getKeyType().getValue());
+        // Create a jwt token with the above jwk in the jws header
+        JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.PS256)
+               .jwk(jwk.toPublicJWK())
+               .build();
+        SignedJWT signedJWT = new SignedJWT(jwsHeader, new JWTClaimsSet.Builder().build());
+        JWK actualJWK = manager.getKeyFromHeader(signedJWT.getHeader()).get();
+        assertEquals(jwk.toPublicJWK(), actualJWK);
     }
-     */
+
+
+
+    @Test
+    void testGetKeyFromHeader_genEd25519() throws JOSEException {
+        OctetKeyPair jwk = new OctetKeyPairGenerator(Curve.Ed25519)
+                .keyUse(KeyUse.SIGNATURE)
+                .keyID(UUID.randomUUID().toString())
+                .provider(new BouncyCastleProvider())
+                .issueTime(new Date())
+                .generate();
+        DIDkeysProofManager manager = new DIDkeysProofManager();
+        JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256)
+                .jwk(jwk.toPublicJWK())
+                .build();
+        SignedJWT signedJWT = new SignedJWT(jwsHeader, new JWTClaimsSet.Builder().build());
+        JWK actualJWK = manager.getKeyFromHeader(signedJWT.getHeader()).get();
+        assertEquals(jwk.toPublicJWK(), actualJWK);
+    }
+
+    @Test
+    void testGetKeyFromHeader_genKeySECPK1() throws JOSEException {
+        ECKey jwk = new ECKeyGenerator(Curve.SECP256K1)
+                .keyUse(KeyUse.SIGNATURE)
+                .keyID(UUID.randomUUID().toString())
+                .provider(new BouncyCastleProvider())
+                .issueTime(new Date())
+                .generate();
+        DIDkeysProofManager manager = new DIDkeysProofManager();
+        JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256)
+                .jwk(jwk.toPublicJWK())
+                .build();
+        SignedJWT signedJWT = new SignedJWT(jwsHeader, new JWTClaimsSet.Builder().build());
+        JWK actualJWK = manager.getKeyFromHeader(signedJWT.getHeader()).get();
+        assertEquals(jwk.toPublicJWK(), actualJWK);
+    }
 }
 
