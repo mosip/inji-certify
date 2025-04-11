@@ -26,8 +26,10 @@ import io.mosip.certify.core.util.SecurityHelperService;
 import io.mosip.certify.api.spi.DataProviderPlugin;
 import io.mosip.certify.entity.LedgerIssuanceTable;
 import io.mosip.certify.entity.StatusListCredential;
+import io.mosip.certify.exception.BitstringStatusListException;
 import io.mosip.certify.repository.LedgerIssuanceTableRepository;
 import io.mosip.certify.repository.StatusListCredentialRepository;
+import io.mosip.certify.utils.BitStringUtils;
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.certify.validators.CredentialRequestValidator;
 import io.mosip.certify.exception.InvalidNonceException;
@@ -60,6 +62,7 @@ import java.util.stream.Collectors;
 @Service
 @ConditionalOnProperty(value = "mosip.certify.plugin-mode", havingValue = "DataProvider")
 public class CertifyIssuanceServiceImpl implements VCIssuanceService {
+    private static final int STATUS_SIZE = 1;
 
     public static final Map<String, List<String>> keyChooser = Map.of(
             SignatureAlg.RSA_SIGNATURE_SUITE_2018, List.of(Constants.CERTIFY_VC_SIGN_RSA, Constants.EMPTY_REF_ID),
@@ -349,6 +352,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         Map<String, Object> statusObject = new HashMap<>();
         statusObject.put("id", ledgerIssuanceTable.getCredentialId());
         statusObject.put("type", "BitstringStatusListEntry");
+//        statusObject.put("type", "CredentialStatusList2017");
         statusObject.put("statusPurpose", ledgerIssuanceTable.getStatusPurpose());
         statusObject.put("statusListIndex", ledgerIssuanceTable.getStatusListIndex());
         statusObject.put("statusListCredential", ledgerIssuanceTable.getStatusListCredential());
@@ -368,11 +372,13 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     Map<String, Object> templateParams = new HashMap<>();
                     templateParams.put(Constants.TEMPLATE_NAME, CredentialUtils.getTemplateName(vcRequestDto));
                     templateParams.put(Constants.ISSUER_URI, issuerURI);
+//                    templateParams.put("credentialStatus", statusObject);
                     if (!StringUtils.isEmpty(renderTemplateId)) {
                         templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
                     }
                     jsonObject.put("_holderId", holderId);
                     jsonObject.put("credentialStatus", new JSONObject(statusObject));
+//                    jsonObject.put("credentialStatus", ledgerIssuanceTable.getCredentialId());
                     String unSignedVC = vcFormatter.format(jsonObject, templateParams);
                     Map<String, String> signerSettings = new HashMap<>();
                     // NOTE: This is a quasi implementation to add support for multi-tenancy.
@@ -475,12 +481,32 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         return new Random().nextInt(131_072);
     }
 
-    private String getOrCreateStatusListCredential(String issuerId, String statusPurpose) {
-        return bitStringStatusListService.generateStatusListCredential(
-                issuerId,
-                statusPurpose,
-                domainUrl
-        );
+    private String getOrCreateStatusListCredential(String issuerId, String statusPurpose){
+        Optional<StatusListCredential> existingList = statusListCredentialRepository
+                .findByIssuerIdAndStatusPurpose(issuerId, statusPurpose);
+        log.info("ExistingList: {}", existingList);
+
+        if (existingList.isPresent()) {
+            return existingList.get().getId();
+        }
+        // Find all issued credentials for this issuer and status purpose
+        List<LedgerIssuanceTable> issuedCredentials = ledgerIssuanceTableRepository
+                .findByIssuerIdAndStatusPurpose(issuerId, statusPurpose);
+
+        StatusListCredential statusListCredential = null;
+        try {
+            statusListCredential = BitStringUtils.generateStatusListCredential(
+                    issuedCredentials,
+                    issuerId,
+                    statusPurpose,
+                    domainUrl,
+                    STATUS_SIZE
+            );
+        } catch (BitstringStatusListException e) {
+            throw new RuntimeException(e);
+        }
+
+        return statusListCredential.getId();
     }
 
 }
