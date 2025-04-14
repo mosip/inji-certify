@@ -38,3 +38,23 @@ AddIdentity:
       output: '{
   "status":"mock identity data created successfully"
 }'
+
+   InjiCertify_AddIdentity_For_mDoc_Valid_smoke_Pos:
+      endPoint: /v1/mock-identity-system/identity
+      uniqueIdentifier: TC_mDoc_identity_dependency_01
+      description: Add identity for mDoc MDL scenario
+      role: idrepo
+      restMethod: post
+      inputTemplate: injicertify/AddIdentityMock/AddIdentity
+      outputTemplate: injicertify/AddIdentityMock/addIdentityResult
+      input: '{
+	  "requesttime": "$TIMESTAMP$",
+	  "individualId": "$RANDOMINDIVIDUALIDFORMOCKIDENTITY$",
+	  "pin": "545411",
+	  "email": "$EMAILIDFORMOCKIDENTITY$",
+	  "password": "$PASSWORDFORMOCKIDENTITY$",
+	  "phone": "$PHONEFORMOCKIDENTITY$"
+}'
+      output: '{
+  "status":"mock identity data created successfully"
+}'
