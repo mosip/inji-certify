@@ -10,9 +10,9 @@ AuthorizationCodeFormDocMDL:
       inputTemplate: injicertify/mDocMDL/AuthorizationCodeFormDoc/AuthorizationCodeFormDoc
       outputTemplate: injicertify/mDocMDL/AuthorizationCodeFormDoc/AuthorizationCodeFormDocResult
       input: '{
-        "encodedHash": "$ESignet_OAuthDetailsRequest_FormDocMDL_uin_all_Valid_Smoke_sid_encodedResp$",
+        "encodedHash": "$ESignet_OAuthDetailsRequest_FormDoc_uin_all_Valid_Smoke_sid_encodedResp$",
       	"requestTime": "$TIMESTAMP$",
-      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_FormDocMDL_uin_all_Valid_Smoke_sid_transactionId$"
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_FormDoc_uin_all_Valid_Smoke_sid_transactionId$"
 }'
       output: '{
 }'
