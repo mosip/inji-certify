@@ -13,7 +13,7 @@ GenerateTokenFormDocMDL:
 		  "code": "$ID:ESignet_AuthorizationCode_FormDoc_All_Valid_Smoke_sid_code$",
 		  "client_id": "$ID:ESignet_CreateOIDCClientV2_FormDoc_all_Valid_Smoke_sid_clientId$",
 		  "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
-		  "client_assertion": "$CLIENT_ASSERTION_USER4_JWT$",
+		  "client_assertion": "$CLIENT_ASSERTION_USER4_JWK$",
 		  "redirect_uri": "$IDPREDIRECTURI$",
   		  "code_verifier": "$CODEVERIFIER$"
 }'
