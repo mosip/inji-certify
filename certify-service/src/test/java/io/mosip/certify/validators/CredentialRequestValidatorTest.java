@@ -3,13 +3,14 @@ package io.mosip.certify.validators;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import io.mosip.certify.core.exception.InvalidRequestException;
 import org.junit.Test;
 
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.CredentialDefinition;
 import io.mosip.certify.core.dto.CredentialRequest;
+
+import static org.junit.Assert.*;
 
 public class CredentialRequestValidatorTest {
 
@@ -19,7 +20,8 @@ public class CredentialRequestValidatorTest {
     public void isValid_invalidFormat() {
         CredentialRequest cr = new CredentialRequest();
         cr.setFormat("fake-format");
-        assertFalse(factory.isValid(cr));
+        assertThrows(InvalidRequestException.class,
+                () -> factory.isValid(cr));
     }
 
     @Test
