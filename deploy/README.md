@@ -1,16 +1,11 @@
 
 # Deployment
 
-## Install Pre-requisites
-* Install pre-requisites
-  ```
-  ./install-prereq.sh
-  ```
 ## Initialise pre-requisites
-* Update values file for postgres init [here](postgres/init_values.yaml).
-* Execute `initialise-prereq.sh` script to initialise postgres and copy secrets to config server.
+* Update values file for postgres init [here](../db_scripts/init_values.yaml).
   ```
-  ./initialise-prereq.sh
+   cd db_scripts
+  ./init_db.sh
   ```
 ## Install inji certify
 
