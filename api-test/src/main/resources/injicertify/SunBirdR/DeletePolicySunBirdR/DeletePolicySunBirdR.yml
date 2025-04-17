@@ -1,6 +1,7 @@
 DeletePolicySunBirdR:
    InjiCertify_ESignet_SunBirdR_DeletePolicy_NOAUTH_Valid_Smoke:
       endPoint: $SUNBIRDBASEURL$/api/v1/Insurance/{insuranceid}
+      uniqueIdentifier: TC_SunbirdDependent_deletepolicy      
       description: Deleting Sunbird policy with valid parameters
       role: resident
       restMethod: delete

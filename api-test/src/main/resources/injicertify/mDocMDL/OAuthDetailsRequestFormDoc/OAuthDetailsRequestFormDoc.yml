@@ -1,0 +1,28 @@
+OAuthDetailsRequestFormDocMDL:
+   InjiCertify_ESignet_OAuthDetailsRequest_FormDoc_uin_all_Valid_Smoke_sid:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest      
+      description: OAuth details request      
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      inputTemplate: injicertify/mDocMDL/OAuthDetailsRequestFormDoc/OAuthDetailsRequestFormDoc
+      outputTemplate: injicertify/mDocMDL/OAuthDetailsRequestFormDoc/OAuthDetailsRequestFormDocResult
+      input: '{
+      	"requestTime": "$TIMESTAMP$",
+      	"clientId": "$ID:ESignet_CreateOIDCClientV2_FormDoc_all_Valid_Smoke_sid_clientId$",
+      	"scope": "sample_vc_mdoc",
+      	"responseType": "code",
+      	"redirectUri": "$IDPREDIRECTURI$",
+      	"display": "popup",
+	    "prompt": "login",
+	    "acrValues": "mosip:idp:acr:generated-code",
+	    "nonce": "$UNIQUENONCEVALUE$",
+	    "state": "eree2311",
+	    "claimsLocales": "en",
+	    "codeChallenge": "$CODECHALLENGE$",
+        "codeChallengeMethod": "S256"
+}'
+      output: '{
+       
+}'

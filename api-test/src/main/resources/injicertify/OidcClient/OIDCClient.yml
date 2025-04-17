@@ -1,6 +1,8 @@
 CreateOIDCClient:
    Injicertify_CreateOIDCClient_MOSIPID_all_Valid_Smoke_sid:
       endPoint: /v1/partnermanager/oidc/client
+      uniqueIdentifier: TC_pms_dependency_01      
+      description: create OIDC clientid      
       role: partner
       restMethod: post
       inputTemplate: injicertify/OidcClient/OIDCClient

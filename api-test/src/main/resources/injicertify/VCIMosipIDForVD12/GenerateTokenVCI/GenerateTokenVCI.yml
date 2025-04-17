@@ -1,6 +1,8 @@
 GenerateTokenVCI:
    InjiCertify_ESignet_GenerateTokenVCIMOSIPID_ForVD12_uin_Valid_Smoke_sid:
       endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/oauth/v2/token
+      uniqueIdentifier: TC_esignetDependent_GenerateToken_vd12      
+      description: Generate Token      
       role: resident
       restMethod: post
       validityCheckRequired: true

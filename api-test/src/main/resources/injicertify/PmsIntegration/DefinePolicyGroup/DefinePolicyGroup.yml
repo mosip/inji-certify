@@ -1,6 +1,8 @@
 definePolicyGroup:
    InjiCertify_DefinePolicyGroup_MOSIPID_All_Valid_Smoke_sid:
       endPoint: /v1/policymanager/policies/group/new
+      uniqueIdentifier: TC_pms_dependency_05     
+      description: Create policy Group      
       role: partner
       restMethod: post
       inputTemplate: injicertify/PmsIntegration/DefinePolicyGroup/definePolicyGroup

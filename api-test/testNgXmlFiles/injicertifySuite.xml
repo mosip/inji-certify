@@ -355,6 +355,53 @@
 				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
 		</classes>
 	</test>
+	<test name="OAuthDetailsRequestVCIMosipIDNeg">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMosipIDNegative/OAuthDetailsRequestVCINeg/OAuthDetailsRequestVCINeg.yml" />
+		<parameter name="idKeyName" value="transactionId,encodedResp" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="AuthenticateUserVCIMosipIDNeg">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMosipIDNegative/AuthenticateUserVCINeg/AuthenticateUserVCINeg.yml" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.PostWithAutogenIdWithOtpGenerate" />
+		</classes>
+	</test>
+	<test name="AuthorizationCodeVCIMosipIDNeg">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMosipIDNegative/AuthorizationCodeVCINeg/AuthorizationCodeVCINeg.yml" />
+		<parameter name="idKeyName" value="code" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="GenerateTokenVCIMosipIDNeg">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMosipIDNegative/GenerateTokenVCINeg/GenerateTokenVCINeg.yml" />
+		<parameter name="idKeyName" value="access_token" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenIdForUrlEncoded" />
+		</classes>
+	</test>
+	<test name="GetCredentialMosipIDNeg">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMosipIDNegative/GetCredentialMosipIDNeg/GetCredentialMosipIDNeg.yml" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
+		</classes>
+	</test>	
 	<test name="OAuthDetailsRequestVCIForMockIDA">
 		<parameter name="ymlFile"
 			value="injicertify/VCIMockIDA/OAuthDetailsRequestForMockIDA/OAuthDetailsRequestForMockIDA.yml" />
@@ -733,4 +780,53 @@
 				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
 		</classes>
 	</test>
+
+	<test name="OAuthDetailsRequestVCIFormDocMDL">
+		<parameter name="ymlFile"
+			value="injicertify/mDocMDL/OAuthDetailsRequestFormDoc/OAuthDetailsRequestFormDoc.yml" />
+		<parameter name="idKeyName" value="transactionId,encodedResp" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="AuthenticateUserVCIFormDoc">
+		<parameter name="ymlFile"
+			value="injicertify/mDocMDL/AuthenticateUserFormDoc/AuthenticateUserFormDoc.yml" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.PostWithAutogenIdWithOtpGenerate" />
+		</classes>
+	</test>
+	<test name="AuthorizationCodeVCImDoc">
+		<parameter name="ymlFile"
+			value="injicertify/mDocMDL/AuthorizationCodeFormDoc/AuthorizationCodeFormDoc.yml" />
+		<parameter name="idKeyName" value="code" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="GenerateTokenVCIFormDoc">
+		<parameter name="ymlFile"
+			value="injicertify/mDocMDL/GenerateTokenFormDoc/GenerateTokenFormDoc.yml" />
+		<parameter name="idKeyName" value="access_token" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenIdForUrlEncoded" />
+		</classes>
+	</test>
+	<test name="GetCredentialFormDoc">
+		<parameter name="ymlFile"
+			value="injicertify/mDocMDL/GetCredentialFormDoc/GetCredentialFormDoc.yml" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
+		</classes>
+	</test>	
+	
 </suite>

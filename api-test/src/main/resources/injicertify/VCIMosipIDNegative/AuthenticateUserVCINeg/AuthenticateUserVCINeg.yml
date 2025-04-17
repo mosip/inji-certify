@@ -1,0 +1,35 @@
+AuthenticateUserVCINeg:
+   InjiCertify_ESignet_AuthenticateUserVCI_MOSIPID_uin_Otp_Valid_Smoke_For_Neg_flow:
+      endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/authenticate
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUserNeg      
+      description: Authenticate User      
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/VCIMosipIDNegative/AuthenticateUserVCINeg/AuthenticateUserVCINeg
+      outputTemplate: injicertify/VCIMosipIDNegative/AuthenticateUserVCINeg/AuthenticateUserVCIResultNeg
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_VCI_MOSIPID_uin_all_Valid_Smoke_sid_Neg_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_VCI_MOSIPID_uin_all_Valid_Smoke_sid_Neg_transactionId$",
+      	"individualId": "$ID:AddIdentity_Valid_Params_VCI_MOSIPID_uin_smoke_Pos_UIN$",
+      	"authFactorType" : "OTP",
+      	"challenge" : "$ID:AddIdentity_Valid_Params_VCI_MOSIPID_uin_smoke_Pos_EMAIL$",
+        "sendOtp":{
+    "encodedHash": "$ID:ESignet_OAuthDetailsRequest_VCI_MOSIPID_uin_all_Valid_Smoke_sid_Neg_encodedResp$",
+    "requestTime": "$TIMESTAMP$",
+    "transactionId": "$ID:ESignet_OAuthDetailsRequest_VCI_MOSIPID_uin_all_Valid_Smoke_sid_Neg_transactionId$",
+    "individualId": "$ID:AddIdentity_Valid_Params_VCI_MOSIPID_uin_smoke_Pos_UIN$",
+    "otpChannels": [{channel: "email"},{channel: "phone"}],
+    "sendOtpReqTemplate": "injicertify/SendOtp/SendOtp",
+    "sendOtpEndPoint": "$ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/send-otp"
+    }
+    }'
+      output: '{
+  "sendOtpResp":{
+        "maskedMobile": "$IGNORE$",
+        "sendOtpResTemplate":"injicertify/SendOtp/SendOtpResult",
+        "maskedEmail": "$IGNORE$"
+    }
+}'

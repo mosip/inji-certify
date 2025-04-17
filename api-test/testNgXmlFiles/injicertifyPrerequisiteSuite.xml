@@ -165,6 +165,16 @@
 				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
 		</classes>
 	</test>
+	<test name="CreateOIDCClientV2FormDoc">
+		<parameter name="ymlFile"
+			value="injicertify/mDocMDL/CreateOIDCClientV2FormDoc/CreateOIDCClientV2FormDoc.yml" />
+		<parameter name="idKeyName" value="clientId" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>	
 	<test name="CreateOIDCClientV2ForLandRegistry">
 		<parameter name="ymlFile"
 			value="injicertify/VCILandRegistry/CreateOIDCClientV2ForLandRegistry/CreateOIDCClientV2ForLandRegistry.yml" />

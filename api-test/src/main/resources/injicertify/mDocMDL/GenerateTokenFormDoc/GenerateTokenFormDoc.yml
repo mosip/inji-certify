@@ -1,0 +1,22 @@
+GenerateTokenFormDocMDL:
+   InjiCertify_ESignet_GenerateToken_FormDoc_Valid_Smoke_sid:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/oauth/v2/token
+      uniqueIdentifier: TC_esignetDependent_GenerateToken      
+      description: Generate Token for mDoc
+      role: resident
+      restMethod: post
+      validityCheckRequired: true
+      inputTemplate: injicertify/mDocMDL/GenerateTokenFormDoc/GenerateTokenFormDoc
+      outputTemplate: injicertify/mDocMDL/GenerateTokenFormDoc/GenerateTokenFormDocResult
+      input: '{
+		  "grant_type": "authorization_code",
+		  "code": "$ID:ESignet_AuthorizationCode_FormDoc_All_Valid_Smoke_sid_code$",
+		  "client_id": "$ID:ESignet_CreateOIDCClientV2_FormDoc_all_Valid_Smoke_sid_clientId$",
+		  "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+		  "client_assertion": "$CLIENT_ASSERTION_USER4_JWK$",
+		  "redirect_uri": "$IDPREDIRECTURI$",
+  		  "code_verifier": "$CODEVERIFIER$"
+}'
+      output: '{
+   		"token_type": "Bearer"
+}'

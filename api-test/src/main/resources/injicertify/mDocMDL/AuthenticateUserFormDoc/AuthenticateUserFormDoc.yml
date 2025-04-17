@@ -1,0 +1,36 @@
+AuthenticateUserVCIFormDocMDL:
+   InjiCertify_ESignet_AuthenticateUserVCI_FormDocMDL_uin_Otp_Valid_Smoke:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser      
+      description: Authenticate User for mDocMDL      
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/mDocMDL/AuthenticateUserFormDoc/AuthenticateUserFormDoc
+      outputTemplate: injicertify/mDocMDL/AuthenticateUserFormDoc/AuthenticateUserFormDocResult
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_FormDoc_uin_all_Valid_Smoke_sid_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_FormDoc_uin_all_Valid_Smoke_sid_transactionId$",
+      	"individualId": "$ID:AddIdentity_For_mDoc_Valid_smoke_Pos_UIN$",
+      	"authFactorType" : "OTP",
+      	"challenge" : "111111",
+        "format": "alpha-numeric",
+        "sendOtp":{
+    "encodedHash": "$ID:ESignet_OAuthDetailsRequest_FormDoc_uin_all_Valid_Smoke_sid_encodedResp$",
+    "requestTime": "$TIMESTAMP$",
+    "transactionId": "$ID:ESignet_OAuthDetailsRequest_FormDoc_uin_all_Valid_Smoke_sid_transactionId$",
+	"individualId": "$ID:AddIdentity_For_mDoc_Valid_smoke_Pos_UIN$",
+    "otpChannels": [{channel: "email"},{channel: "phone"}],
+    "sendOtpReqTemplate": "injicertify/SendOtp/SendOtp",
+    "sendOtpEndPoint": "$ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/send-otp"
+    }
+    }'
+      output: '{
+  "sendOtpResp":{
+        "maskedMobile": "$IGNORE$",
+        "sendOtpResTemplate":"injicertify/SendOtp/SendOtpResult",
+        "maskedEmail": "$IGNORE$"
+    }
+}'

@@ -1,6 +1,8 @@
 AuthorizationCodeVCI:
    InjiCertify_ESignet_AuthorizationCode_VCI_ForVD12_MOSIPID_uin_All_Valid_Smoke_sid:
       endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/auth-code
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCode_vd12      
+      description: Authorization Code      
       role: resident
       restMethod: post
       checkErrorsOnlyInResponse: true

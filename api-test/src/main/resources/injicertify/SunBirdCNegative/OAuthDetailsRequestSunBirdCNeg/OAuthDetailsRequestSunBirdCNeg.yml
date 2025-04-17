@@ -1,5 +1,5 @@
 OAuthDetailsRequestSunBirdCNeg:
-   InjiCertify_ESignet_OAuthDetailsRequest_SunBirdC_all_Valid_sid_Neg:
+   InjiCertify_ESignet_OAuthDetailsRequest_SunBirdC_all_Valid_sid_For_Neg_Flow:
       endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/authorization/v2/oauth-details
       uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequestNeg
       description: OAuth details request
