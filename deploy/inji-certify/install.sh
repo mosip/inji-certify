@@ -9,6 +9,9 @@ fi
 SOFTHSM_NS=softhsm
 SOFTHSM_CHART_VERSION=1.3.0-beta.2
 
+echo Create $SOFTHSM_NS namespace
+kubectl create ns $SOFTHSM_NS
+
 NS=inji-certify
 CHART_VERSION=0.10.1-develop
 
