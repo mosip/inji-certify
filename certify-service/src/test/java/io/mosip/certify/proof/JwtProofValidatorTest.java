@@ -250,7 +250,7 @@ class JwtProofValidatorTest {
     }
 
     @Test
-    public void testValidate_InvalidJwt_MissingClaims() throws ParseException, JOSEException {
+    public void testValidate_InvalidJwt_MissingClaims() throws JOSEException {
         RSAKey rsaJWK = new RSAKeyGenerator(2048)
                 .keyID(UUID.randomUUID().toString())
                 .generate();
@@ -278,9 +278,7 @@ class JwtProofValidatorTest {
         String jwtStr = jwt.serialize();
         CredentialProof credentialProof = new CredentialProof();
         credentialProof.setJwt(jwtStr);
-
         boolean result = jwtProofValidator.validate("test-client", "test-nonce", credentialProof);
-
         assertFalse(result, "Missing iat from jwt claims");
     }
 

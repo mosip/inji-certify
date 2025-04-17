@@ -158,12 +158,12 @@ public class JwtProofValidator implements ProofValidator {
         if(Objects.isNull(jwsHeader.getAlgorithm()) || !supportedAlgorithms.contains(jwsHeader.getAlgorithm().getName()))
             throw new InvalidRequestException(ErrorConstants.PROOF_HEADER_INVALID_ALG);
 
-        if(Objects.isNull(jwsHeader.getKeyID()) && Objects.isNull(jwsHeader.getJWK())
-        || (Objects.isNull(jwsHeader.getKeyID()) &&
-                !(jwsHeader.getKeyID().startsWith(DID_JWK_PREFIX) || jwsHeader.getKeyID().startsWith(DID_KEY_PREFIX))))
+        if (Objects.isNull(jwsHeader.getKeyID()) && Objects.isNull(jwsHeader.getJWK())
+        ||
+                Objects.isNull(jwsHeader.getJWK()) && Objects.nonNull(jwsHeader.getKeyID()) &&
+                        !(jwsHeader.getKeyID().startsWith(DID_KEY_PREFIX) || jwsHeader.getKeyID().startsWith(DID_JWK_PREFIX)))
             throw new InvalidRequestException(ErrorConstants.PROOF_HEADER_INVALID_KEY);
-
-        //both cannot be present, either one of them is only allowed
+        // both cannot be present, either one of them is only allowed
         if(Objects.nonNull(jwsHeader.getKeyID()) && Objects.nonNull(jwsHeader.getJWK()))
             throw new InvalidRequestException(ErrorConstants.PROOF_HEADER_AMBIGUOUS_KEY);
 
