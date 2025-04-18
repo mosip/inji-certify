@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -102,9 +103,11 @@ public class CredentialConfig {
     private List<Map<String, String>> pluginConfigurations;
 
     @NotNull
+    @JsonIgnore
     @Column(name = "cr_dtimes")
     private LocalDateTime createdTimes;
 
+    @JsonIgnore
     @Column(name = "upd_dtimes")
     private LocalDateTime updatedTimes;
 
