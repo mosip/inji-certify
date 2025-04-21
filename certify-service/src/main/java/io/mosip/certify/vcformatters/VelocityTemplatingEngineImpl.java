@@ -67,6 +67,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     CredentialConfigRepository credentialConfigRepository;
     @Autowired
     RenderingTemplateService renderingTemplateService;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Value("${mosip.certify.data-provider-plugin.vc-expiry-duration:P730d}")
     String defaultExpiryDuration;
@@ -83,7 +85,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         credentialConfigRepository.findAll().stream().forEach((template -> {
             Map<String, String> templateMap = new HashMap<>();
             ObjectMapper oMapper = new ObjectMapper();
-            templateMap = oMapper.convertValue(template , Map.class);
+            templateMap = objectMapper.convertValue(template , Map.class);
             //BeanUtils.copyProperties(template, templateMap);
             templateCache.put(String.join(DELIMITER, template.getCredentialType(), template.getContext(), template.getCredentialFormat()), templateMap);
          }));
