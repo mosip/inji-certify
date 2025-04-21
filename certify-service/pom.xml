@@ -91,11 +91,6 @@
                     <groupId>com.vaadin.external.google</groupId>
                     <artifactId>android-json</artifactId>
                 </exclusion>
-                <exclusion>
-                    <groupId>io.hypersistence</groupId>
-                    <artifactId>hypersistence-utils-hibernate-60</artifactId>
-                </exclusion>
-
             </exclusions>
         </dependency>
         <dependency>
@@ -136,8 +131,8 @@
         </dependency>
         <dependency>
             <groupId>io.hypersistence</groupId>
-            <artifactId>hypersistence-utils-hibernate-60</artifactId>
-            <version>3.9.0</version>
+            <artifactId>hypersistence-utils-hibernate-63</artifactId>
+            <version>3.9.9</version>
         </dependency>
     </dependencies>
 
