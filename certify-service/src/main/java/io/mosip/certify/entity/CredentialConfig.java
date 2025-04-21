@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -32,6 +33,10 @@ public class CredentialConfig {
     private String status;
 
     private String vcTemplate;
+
+    @NotNull(message = "Invalid request")
+    @Column(name = "credential_config_key_id", unique = true)
+    private String credentialConfigKeyId;
 
     @Id
     private String context;
@@ -101,10 +106,12 @@ public class CredentialConfig {
     @Column(name = "plugin_configurations", columnDefinition = "jsonb")
     private List<Map<String, String>> pluginConfigurations;
 
+    @JsonIgnore
     @NotNull
     @Column(name = "cr_dtimes")
     private LocalDateTime createdTimes;
 
+    @JsonIgnore
     @Column(name = "upd_dtimes")
     private LocalDateTime updatedTimes;
 
