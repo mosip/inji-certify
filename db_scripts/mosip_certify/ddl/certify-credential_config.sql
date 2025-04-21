@@ -34,7 +34,7 @@ CREATE TABLE credential_config (
     credential_subject JSONB,
     claims JSONB,
     plugin_configurations JSONB,
-    cr_dtimes TIMESTAMP NOT NULL default now(),
+    cr_dtimes TIMESTAMP NOT NULL,
     upd_dtimes TIMESTAMP,
     CONSTRAINT pk_config_id PRIMARY KEY (context, credential_type, credential_format)
 );
