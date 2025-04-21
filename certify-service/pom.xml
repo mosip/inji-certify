@@ -91,6 +91,11 @@
                     <groupId>com.vaadin.external.google</groupId>
                     <artifactId>android-json</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>io.hypersistence</groupId>
+                    <artifactId>hypersistence-utils-hibernate-60</artifactId>
+                </exclusion>
+
             </exclusions>
         </dependency>
         <dependency>
