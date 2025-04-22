@@ -98,6 +98,7 @@ CREATE TABLE certify.rendering_template (
 );
 
 CREATE TABLE IF NOT EXISTS certify.credential_config (
+    credential_config_key_id VARCHAR(255) NOT NULL UNIQUE,
     config_id VARCHAR(255),
     status VARCHAR(255),
     vc_template VARCHAR,
@@ -125,6 +126,7 @@ CREATE TABLE IF NOT EXISTS certify.credential_config (
 );
 
 INSERT INTO certify.credential_config (
+    credential_config_key_id,
     config_id,
     status,
     vc_template,
@@ -150,6 +152,7 @@ INSERT INTO certify.credential_config (
     upd_dtimes
 )
 VALUES (
+    'FarmerCredential',
     gen_random_uuid()::VARCHAR(255),  -- generating a unique config_id
     'active',  -- assuming an active status
     '{
@@ -207,6 +210,7 @@ VALUES (
 );
 
 INSERT INTO certify.credential_config (
+    credential_config_key_id,
     config_id,
     status,
     vc_template,
@@ -232,6 +236,7 @@ INSERT INTO certify.credential_config (
     upd_dtimes
 )
 VALUES (
+    'FarmerCredential_ldp_vc_DM1.1',
     gen_random_uuid()::VARCHAR(255),  -- generating a unique config_id
     'active',  -- assuming an active status
     '{
@@ -267,8 +272,8 @@ VALUES (
      }
     ',  -- the VC template from the JSON
     NULL,  -- doctype from JSON
-    'https://www.w3.org/2018/credentials/v1, https://piyush7034.github.io/my-files/farmer.json, https://w3id.org/security/suites/ed25519-2020/v1',  -- context as comma-separated string
-    'VerifiableCredential,FarmerCredential',  -- credential_type as comma-separated string
+    'https://www.w3.org/2018/credentials/v1,https://piyush7034.github.io/my-files/farmer.json',  -- context as comma-separated string
+    'FarmerCredential,VerifiableCredential',  -- credential_type as comma-separated string
     'ldp_vc',  -- credential_format
     'did:web:mosip.github.io:inji-config:vc-local-ed25519#key-0',  -- did_url
     'CERTIFY_VC_SIGN_ED25519',  -- key_manager_app_id
@@ -289,6 +294,7 @@ VALUES (
 );
 
 INSERT INTO certify.credential_config (
+    credential_config_key_id,
     config_id,
     status,
     vc_template,
@@ -314,6 +320,7 @@ INSERT INTO certify.credential_config (
     upd_dtimes
 )
 VALUES (
+    'FarmerCredential_ldp_vc_DM2.0',
     gen_random_uuid()::VARCHAR(255),  -- generating a unique config_id
     'active',  -- assuming an active status
     '{
@@ -349,8 +356,8 @@ VALUES (
      }
     ',  -- the VC template from the JSON
     NULL,  -- doctype from JSON
-    'https://www.w3.org/ns/credentials/v2, https://piyush7034.github.io/my-files/farmer.json, https://w3id.org/security/suites/ed25519-2020/v1',  -- context as comma-separated string
-    'VerifiableCredential,FarmerCredential',  -- credential_type as comma-separated string
+    'https://piyush7034.github.io/my-files/farmer.json,https://www.w3.org/ns/credentials/v2',  -- context as comma-separated string
+    'FarmerCredential,VerifiableCredential',  -- credential_type as comma-separated string
     'ldp_vc',  -- credential_format
     'did:web:mosip.github.io:inji-config:vc-local-ed25519#key-0',  -- did_url
     'CERTIFY_VC_SIGN_ED25519',  -- key_manager_app_id

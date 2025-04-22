@@ -33,6 +33,10 @@ public class CredentialConfig {
 
     private String vcTemplate;
 
+    @NotNull(message = "Invalid request")
+    @Column(name = "credential_config_key_id", unique = true)
+    private String credentialConfigKeyId;
+
     @Id
     private String context;
 

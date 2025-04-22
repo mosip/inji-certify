@@ -14,12 +14,13 @@
 -- ------------------------------------------------------------------------------------------
 
 -- Step 1: Rename the table
-ALTER TABLE credential_template RENAME TO credential_config;
+ALTER TABLE certify.credential_template RENAME TO credential_config;
 
 -- Step 2: Add new columns
-ALTER TABLE credential_config
-    ADD COLUMN config_id VARCHAR(255),
-    ADD COLUMN status VARCHAR(255),
+ALTER TABLE certify.credential_config
+    ADD COLUMN credential_config_key_id VARCHAR(255) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    ADD COLUMN config_id VARCHAR(255) DEFAULT gen_random_uuid(),
+    ADD COLUMN status VARCHAR(255) DEFAULT 'active',
     ADD COLUMN doctype VARCHAR,
     ADD COLUMN credential_format VARCHAR(255) NOT NULL DEFAULT 'default_format', -- Adding a default value for NOT NULL constraint
     ADD COLUMN did_url VARCHAR NOT NULL DEFAULT '', -- Adding a default value for NOT NULL constraint
@@ -27,27 +28,27 @@ ALTER TABLE credential_config
     ADD COLUMN key_manager_ref_id VARCHAR(128),
     ADD COLUMN signature_algo VARCHAR(36),
     ADD COLUMN sd_claim VARCHAR,
-    ADD COLUMN display JSONB NOT NULL DEFAULT '{}'::jsonb, -- Adding a default value for NOT NULL constraint
-    ADD COLUMN display_order TEXT[] NOT NULL DEFAULT '{}', -- Adding a default value for NOT NULL constraint
+    ADD COLUMN display JSONB NOT NULL DEFAULT '[]'::jsonb, -- Adding a default value for NOT NULL constraint
+    ADD COLUMN display_order TEXT[] DEFAULT ARRAY[]::TEXT[], -- Adding a default value for NOT NULL constraint
     ADD COLUMN scope VARCHAR(255) NOT NULL DEFAULT '', -- Adding a default value for NOT NULL constraint
-    ADD COLUMN cryptographic_binding_methods_supported TEXT[] NOT NULL DEFAULT '{}', -- Adding a default value for NOT NULL constraint
-    ADD COLUMN credential_signing_alg_values_supported TEXT[] NOT NULL DEFAULT '{}', -- Adding a default value for NOT NULL constraint
+    ADD COLUMN cryptographic_binding_methods_supported TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[], -- Adding a default value for NOT NULL constraint
+    ADD COLUMN credential_signing_alg_values_supported TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[], -- Adding a default value for NOT NULL constraint
     ADD COLUMN proof_types_supported JSONB NOT NULL DEFAULT '{}'::jsonb, -- Adding a default value for NOT NULL constraint
-    ADD COLUMN credential_subject JSONB,
+    ADD COLUMN credential_subject JSONB DEFAULT '{}'::jsonb,
     ADD COLUMN claims JSONB,
     ADD COLUMN plugin_configurations JSONB;
 
 -- Step 3: Rename the template column to match the new schema
-ALTER TABLE credential_config RENAME COLUMN template TO vc_template;
+ALTER TABLE certify.credential_config RENAME COLUMN template TO vc_template;
 
 -- Step 4: Alter column sizes to match the new schema
-ALTER TABLE credential_config
+ALTER TABLE certify.credential_config
     ALTER COLUMN context TYPE VARCHAR,
     ALTER COLUMN credential_type TYPE VARCHAR;
 
 -- Step 5: Update the primary key constraint
-ALTER TABLE credential_config DROP CONSTRAINT pk_template;
-ALTER TABLE credential_config ADD CONSTRAINT pk_config_id PRIMARY KEY (context, credential_type, credential_format);
+ALTER TABLE certify.credential_config DROP CONSTRAINT pk_template;
+ALTER TABLE certify.credential_config ADD CONSTRAINT pk_config_id PRIMARY KEY (context, credential_type, credential_format);
 
 COMMENT ON TABLE credential_config IS 'Credential Config: Contains details of credential configuration.';
 

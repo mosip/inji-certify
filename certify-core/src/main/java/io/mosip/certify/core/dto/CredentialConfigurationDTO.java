@@ -16,6 +16,8 @@ public class CredentialConfigurationDTO {
 
     private String vcTemplate;
 
+    private String credentialConfigKeyId;
+
     @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private List<String> context;
 
