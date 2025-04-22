@@ -10,9 +10,31 @@ AuthenticateUserSunBirdCNeg:
       inputTemplate: injicertify/SunBirdCNegative/AuthenticateUserSunBirdCNeg/AuthenticateUserSunBirdCNeg
       outputTemplate: injicertify/SunBirdCNegative/AuthenticateUserSunBirdCNeg/AuthenticateUserSunBirdCResultNeg
       input: '{
-        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_SunBirdC_all_Valid_sid_Neg_encodedResp$",
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_SunBirdC_all_Valid_sid_For_Neg_Flow_encodedResp$",
       	"requestTime": "$TIMESTAMP$",
-      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_SunBirdC_all_Valid_sid_Neg_transactionId$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_SunBirdC_all_Valid_sid_For_Neg_Flow_transactionId$",
+      	"individualId": "$POLICYNUMBERFORSUNBIRDRC$",
+      	"authFactorType" : "$SUNBIRDINSURANCEAUTHFACTORTYPE$",
+      	"challenge" : "$CHALLENGEVALUEFORSUNBIRDC$",
+      	"format": "base64url-encoded-json"
+    }'
+      output: '{
+}'
+
+   InjiCertify_ESignet_AuthenticateUserSunBirdC_Diff_Scope_Valid_For_Neg_flow:
+      endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/authorization/authenticate
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUserNeg      
+      description: Authenticate User      
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/SunBirdCNegative/AuthenticateUserSunBirdCNeg/AuthenticateUserSunBirdCNeg
+      outputTemplate: injicertify/SunBirdCNegative/AuthenticateUserSunBirdCNeg/AuthenticateUserSunBirdCResultNeg
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_SunBirdC_Diff_Scope_Valid_sid_For_Neg_Flow_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_SunBirdC_Diff_Scope_Valid_sid_For_Neg_Flow_transactionId$",
       	"individualId": "$POLICYNUMBERFORSUNBIRDRC$",
       	"authFactorType" : "$SUNBIRDINSURANCEAUTHFACTORTYPE$",
       	"challenge" : "$CHALLENGEVALUEFORSUNBIRDC$",
