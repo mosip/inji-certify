@@ -7,14 +7,12 @@ if [ $# -ge 1 ] ; then
 fi
 
 NS=inji-certify
-CHART_VERSION=1.3.1
+CHART_VERSION=0.0.1-develop
 
 echo Create $NS namespace
 kubectl create ns $NS
 
 function installing_apitestrig() {
-  echo Istio label
-  kubectl label ns $NS istio-injection=disabled --overwrite
   helm repo update
 
   echo Copy Configmaps
