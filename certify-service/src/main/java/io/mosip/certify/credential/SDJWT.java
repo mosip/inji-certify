@@ -103,7 +103,7 @@ public class SDJWT extends Credential{
      * <p>In the defaulat abstract implementation we assume 
      * ```Base64.getUrlEncoder().encodeToString(vcToSign)``` </p>
      * @param vcToSign actual vc as returned by the `createCredential` method. 
-     * @param heders headers to be added. Can be null.
+     * @param headers headers to be added. Can be null.
      * @param signAlgorithm as defined in com.danubetech.keyformats.jose.JWSAlgorithm
      * @param appID app id from the keymanager tables
      * @param refID referemce id from the keymanager tables
