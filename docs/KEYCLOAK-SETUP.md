@@ -1,21 +1,11 @@
-# Implementing Certify for your own Identity System using a DataProvider Plugin Implementation
+# Using Certify with KeyCloak as an AuthZ service
 
-## Goals:
-
-- Taking a relevant release of Inji Certify with/without other relevant/related compatible components to issue Verifiable Credentials.
-- This document is a good first place to start looking for configuration just to **kick the tires**. There'd be way many compliance checks & certifications required for a Production deployment which is out of the scope of this document.
-
-
-## Non Goals:
-
-- Writing a new Certify VC Plugin
-- Security compliance/guidelines/safeguards from PoV of a Production deployment targeting a larger population.
-
+Guide a dev/integrator to use compatible version of Inji Certify to integrate KeyCloak as an Authentication service for VC Issuance. This document is strictly to showcase how other AuthZ services can be used  with Certify for the purposes of VC Issuance and does not cover all necessary security guidelines. The Certify developers have tested this with Keycloak 26 and it may work with other standards compliant AuthZ providers.
 
 ## Pre-requisite:
 
-1. A configured Keycloak setup.
-2.
+1. A configured Keycloak setup(replace this with another compatible AuthZ setup)
+2. A working Inji Certify setup with an appropriate VC Plugin
 
 ## Steps
 
@@ -29,7 +19,7 @@
 2. Create a "client scope" in Keycloak with the same scope name as the one configured in Certify Well Known
     - set the "Protocol" to be `openid-connect`
     - set "Include In Token Scope" to `true`
-    - Create mappers with the "token claim name" of `c_nonce_expires_in`, `aud`, `client_id`, `c_nonce` with the "Add to access token" set to `true`
+    - Create mappers with the "token claim name" of `aud` & `client_id` with the relevant details and set "Add to access token" to `true`.
 
 ### 2. Configure Certify
 
@@ -38,4 +28,4 @@
 3. Configure the scope correctly as per the scope of the VerifiableCredential as configured in the Keycloak client in the prior steps.
 4. Configure the credential types to match the VC in the well known
 5. Add and configure your VC Plugin and configure it's properties
-6. Generate an Authorization token via Keycloak and make
+6. Generate an Authorization token via Keycloak and try to download a VC from Certify using the relevant [Postman collections](./postman-collections/) or via another standards compliant interface.
