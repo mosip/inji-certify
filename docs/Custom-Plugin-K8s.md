@@ -1,4 +1,4 @@
-# Kubernetes Custom Plugin Deployment Guide for Inji Certify
+# Kubernetes Custom Plugin Deployment Guide for Inji Certify [Experimental]
 
 This document outlines general methods for deploying **custom plugins** (packaged as JAR files) to your **Inji Certify container** within a Kubernetes environment, particularly when the plugin is not included in the base application image. The goal is to make these plugins available within the container at the path `/home/mosip/additional_jars/`.
 
