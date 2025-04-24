@@ -14,7 +14,7 @@ is_glowroot_env - this field is removed from configure_start.sh to remove depend
 moved client.zip to build time dependency in dockerfile - addition of new hsm-client zip can be done by adding it to volume mount in docker-compose or helm charts with same structure as [client.zip](https://raw.githubusercontent.com/mosip/artifactory-ref-impl/v1.3.0-beta.1/artifacts/src/hsm/client.zip)
 
 
-# Note: MOSIP Identity Certify Plugin & eSignet Compatibility
+# Note: MOSIP Identity Certify Plugin & eSignet Compatibility [Experimental]
 
 This note provides specific version compatibility information between the official `mosip-identity-certify-plugin` and different versions of `eSignet`.
 
