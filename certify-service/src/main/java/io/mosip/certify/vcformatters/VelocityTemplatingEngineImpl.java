@@ -269,7 +269,9 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         // TODO: Isn't template name becoming too complex with VC_CONTEXTS & CREDENTIAL_TYPES both?
         String templateName = templateInput.get(TEMPLATE_NAME).toString();
         String issuer = templateInput.get(ISSUER_URI).toString();
-        String t = templateCache.get(templateName).get("vcTemplate");
+        String t = Optional.ofNullable(templateCache.get(templateName))
+                           .map(template -> template.get("vcTemplate"))
+                           .orElseThrow(() -> new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND));
         StringWriter writer = new StringWriter();
         // 1. Prepare map
         // TODO: Eventually, the credentialSubject from the plugin will be templated as-is
