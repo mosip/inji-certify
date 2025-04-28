@@ -18,10 +18,9 @@ You can make a custom plugin JAR available to your **Inji Certify container** us
 2.  **Using a Volume Mount:**
     * **Concept:** Directly mount a volume containing the plugin JAR into the **Inji Certify container** at the required path.
     * **Implementation:**
-        * Ensure your `custom-plugin.jar` is available in a location accessible to Kubernetes volumes (like a PVC, custom image layer, etc. - see below).
+        * Ensure your `custom-plugin.jar` is available in a location accessible to Kubernetes volumes (like a PVC).
         * Make the JAR file available through a Kubernetes volume. Common options include:
             * A `persistentVolumeClaim` (PVC): Store the JAR on persistent, network-attached storage.
-            * A `ConfigMap` or `Secret`: Generally not suitable for large JARs due to size limits.
         * Mount the chosen volume (containing `custom-plugin.jar`) into your **Inji Certify container** specifically at the path **`/home/mosip/additional_jars/`**. The application should then find the plugin at `/home/mosip/additional_jars/custom-plugin.jar`.
 
 3. **Rebuilding the image with the plugin:**
