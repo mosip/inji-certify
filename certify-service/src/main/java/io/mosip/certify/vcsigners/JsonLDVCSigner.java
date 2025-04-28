@@ -50,7 +50,7 @@ public class JsonLDVCSigner implements VCSigner {
 
     @Override
     public VCResult<JsonLDObject> attachSignature(String unSignedVC, Map<String, String> keyReferenceDetails) {
-        // Can the below lines be done at Templating side itself ?
+        // Can the below lines be done at Templating side itself
         VCResult<JsonLDObject> VC = new VCResult<>();
         JsonLDObject jsonLDObject = JsonLDObject.fromJson(unSignedVC);
         jsonLDObject.setDocumentLoader(null);
@@ -68,11 +68,15 @@ public class JsonLDVCSigner implements VCSigner {
         //  timezone restriction, this will have to be supported timely.
         Date createDate = Date
                 .from(LocalDateTime
-                        .parse(validFrom,
-                                DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN))
+                        .parse(validFrom, DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN))
                         .atZone(ZoneId.systemDefault()).toInstant());
-        LdProof vcLdProof = LdProof.builder().defaultContexts(false).defaultTypes(false).type(proofGenerator.getName())
-                .created(createDate).proofPurpose(VCDMConstants.ASSERTION_METHOD)
+
+        LdProof vcLdProof = LdProof.builder()
+                .defaultContexts(false)
+                .defaultTypes(false)
+                .type(proofGenerator.getName())
+                .created(createDate)
+                .proofPurpose(VCDMConstants.ASSERTION_METHOD)
                 .verificationMethod(URI.create(issuerPublicKeyURI))
                 .build();
         // 1. Canonicalize

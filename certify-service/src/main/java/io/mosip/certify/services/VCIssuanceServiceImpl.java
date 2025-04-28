@@ -38,10 +38,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.stereotype.Service;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import io.mosip.certify.services.BitStringStatusListService;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 @Slf4j
 @Service
@@ -71,6 +78,12 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     @Autowired
     private AuditPlugin auditWrapper;
+
+    @Autowired
+    private BitStringStatusListService bitStringStatusListService;
+
+    @Value("${mosip.certify.domain.url}")
+    private String domainUrl;
 
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
@@ -382,4 +395,64 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         transaction.setCNonceExpireSeconds(cNonceExpireSeconds);
         return vciCacheService.setVCITransaction(parsedAccessToken.getAccessTokenHash(), transaction);
     }
+
+
+    @Override
+    public Map<String, Object> verifyCredentialStatus(String statusListCredentialId, long statusListIndex, String statusPurpose) {
+        String statusListCredentialUrl = domainUrl + statusListCredentialId;
+        boolean isValid = bitStringStatusListService.validateCredentialStatus(statusListCredentialUrl, statusListIndex, statusPurpose);
+        return Map.of(
+                "status", isValid ? "valid" : "revoked",
+                "statusListCredentialUrl", statusListCredentialUrl,
+                "statusListIndex", statusListIndex
+        );
+    }
+
+    @Override
+    public Map<String, Object> revokeCredential(String statusListCredentialUrl, long statusListIndex, String statusPurpose) {
+        bitStringStatusListService.revokeCredential(statusListCredentialUrl, statusListIndex, statusPurpose);
+        return Map.of("message", "Credential revoked successfully");
+    }
+
+    @Override
+    public Map<String, Object> revokeCredentialV1(String credentialSubjectJson) {
+        try {
+            JSONObject requestJson = new JSONObject(credentialSubjectJson);
+            JSONObject credentialSubject = requestJson.getJSONObject("credentialSubject");
+            String hashedCredentialSubject = hashCredentialSubject(credentialSubject);
+            bitStringStatusListService.revokeCredentialV1(hashedCredentialSubject);
+            return Map.of("message", "Credential revoked successfully");
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return Map.of("error", "Invalid JSON string provided");
+        }
+    }
+
+
+    public String hashCredentialSubject(JSONObject credentialSubject) {
+        System.out.println("credentialSubject" + credentialSubject);
+        try {
+            String credentialSubjectString = credentialSubject.toString();
+            // Get the MessageDigest instance for SHA-256 hashing
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            
+            // Convert the JSON string into a byte array
+            byte[] hashBytes = digest.digest(credentialSubjectString.getBytes());
+            
+            // Convert the byte array to a hex string
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hashBytes) {
+                hexString.append(String.format("%02x", b));
+            }
+            
+            // Print the hash
+            System.out.println("SHA-256 Hash: " + hexString.toString());
+            return hexString.toString();
+            
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null; 
+        }
+    }
+
 }

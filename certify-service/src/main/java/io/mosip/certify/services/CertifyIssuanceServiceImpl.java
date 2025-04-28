@@ -14,11 +14,7 @@ import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
 import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.certify.core.constants.VCFormats;
-import io.mosip.certify.core.dto.CredentialMetadata;
-import io.mosip.certify.core.dto.CredentialRequest;
-import io.mosip.certify.core.dto.CredentialResponse;
-import io.mosip.certify.core.dto.ParsedAccessToken;
-import io.mosip.certify.core.dto.VCIssuanceTransaction;
+import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
@@ -27,7 +23,10 @@ import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.core.util.AuditHelper;
 import io.mosip.certify.core.util.SecurityHelperService;
-import io.mosip.certify.api.spi.DataProviderPlugin;
+import io.mosip.certify.entity.LedgerIssuanceTable;
+import io.mosip.certify.entity.StatusListCredential;
+import io.mosip.certify.repository.LedgerIssuanceTableRepository;
+import io.mosip.certify.repository.StatusListCredentialRepository;
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.certify.validators.CredentialRequestValidator;
 import io.mosip.certify.exception.InvalidNonceException;
@@ -38,6 +37,7 @@ import io.mosip.certify.utils.DIDDocumentUtil;
 import io.mosip.certify.vcsigners.VCSigner;
 import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
@@ -47,10 +47,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.stereotype.Service;
+import java.security.NoSuchAlgorithmException;
+
+import java.lang.reflect.Method;
+import java.security.MessageDigest;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.stream.Collectors;
+import org.apache.commons.lang3.tuple.Pair;
 
 @Slf4j
 @Service
@@ -107,8 +113,26 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Autowired
     private KeymanagerService keymanagerService;
 
+    @Autowired
+    private LedgerIssuanceTableRepository ledgerIssuanceTableRepository;
+
+    @Autowired
+    private StatusListCredentialRepository statusListCredentialRepository;
+
+    @Autowired
+    private BitStringStatusListService bitStringStatusListService;
+
+    @Value("${mosip.certify.data-provider-plugin.issuer-uri}")
+    private String issuerId;
+
+    @Value("${mosip.certify.domain.url}")
+    private String domainUrl;
+
     private Map<String, Object> didDocument;
 
+    private static final int STATUS_LIST_MAX_INDEX = 131072;
+
+    @Transactional
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
         // 1. Credential Request validation
@@ -119,6 +143,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
         if(!parsedAccessToken.isActive())
             throw new NotAuthenticatedException();
+
         // 2. Scope Validation
         String scopeClaim = (String) parsedAccessToken.getClaims().getOrDefault("scope", "");
         CredentialMetadata credentialMetadata = null;
@@ -141,32 +166,80 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 credentialRequest.getProof())) {
             throw new CertifyException(ErrorConstants.INVALID_PROOF);
         }
+        String credentialSubjectHash;
+        JSONObject jsonObject;
+
+        try {
+            parsedAccessToken.getClaims().put("accessTokenHash", parsedAccessToken.getAccessTokenHash());
+            jsonObject = dataProviderPlugin.fetchData(parsedAccessToken.getClaims());
+            credentialSubjectHash = hashCredentialSubject(jsonObject);
+
+        } catch (DataProviderExchangeException e) {
+            throw new CertifyException(e.getErrorCode());
+        } catch (Exception e) {
+            log.error("Unexpected error occurred while fetching data from dataProviderPlugin", e);
+            throw new CertifyException(ErrorConstants.VC_ISSUANCE_FAILED);
+        }
+
+        Optional<LedgerIssuanceTable> existingCredential = ledgerIssuanceTableRepository
+            .findByIssuerIdAndStatusPurposeAndCredentialSubjectHash(issuerId, "revocation", credentialSubjectHash);
+
+        if (existingCredential.isPresent()) {
+            log.info("VC already issued for issuerId={}, credentialSubjectHash={}", issuerId, credentialSubjectHash);
+            return getCredentialResponse(credentialRequest.getFormat(), getVerifiableCredential(
+                    credentialRequest,
+                    credentialMetadata,
+                    proofValidator.getKeyMaterial(credentialRequest.getProof()),
+                    existingCredential.get(),
+                    jsonObject
+            ));
+        }
+
+        Pair<String, Long> statusListInfo = getStatusListInfo(issuerId, "revocation");
+        String statusListCredentialUrl = statusListInfo.getLeft();
+        long statusListIndex = statusListInfo.getRight();
+
+        getOrCreateStatusListCredential(issuerId, "revocation", statusListCredentialUrl);
+        LedgerIssuanceTable ledgerIssuanceTable = new LedgerIssuanceTable();
+        ledgerIssuanceTable.setId(statusListCredentialUrl+"#"+statusListIndex);
+        ledgerIssuanceTable.setHolderId(proofValidator.getKeyMaterial(credentialRequest.getProof()));
+        ledgerIssuanceTable.setCredentialId(statusListCredentialUrl+"#"+statusListIndex);
+        ledgerIssuanceTable.setIssuerId(issuerId);
+        ledgerIssuanceTable.setStatusListIndex(statusListIndex);
+        ledgerIssuanceTable.setStatusListCredential(statusListCredentialUrl);
+        ledgerIssuanceTable.setStatusPurpose("revocation");
+        ledgerIssuanceTable.setCredentialStatus("valid");
+        ledgerIssuanceTable.setCredentialSubjectHash(credentialSubjectHash);
+        ledgerIssuanceTable.setIssueDate(LocalDateTime.now());
+        ledgerIssuanceTableRepository.save(ledgerIssuanceTable);
 
         // 4. Get VC from configured plugin implementation
         VCResult<?> vcResult = getVerifiableCredential(credentialRequest, credentialMetadata,
-                proofValidator.getKeyMaterial(credentialRequest.getProof()));
+                proofValidator.getKeyMaterial(credentialRequest.getProof()), ledgerIssuanceTable, jsonObject);
 
         auditWrapper.logAudit(Action.VC_ISSUANCE, ActionStatus.SUCCESS,
                 AuditHelper.buildAuditDto(parsedAccessToken.getAccessTokenHash(), "accessTokenHash"), null);
+
+        // ledgerIssuanceTableRepository.save(ledgerIssuanceTable);
         return getCredentialResponse(credentialRequest.getFormat(), vcResult);
     }
 
     @Override
     public Map<String, Object> getCredentialIssuerMetadata(String version) {
-       if(issuerMetadata.containsKey(version)) {
-           return issuerMetadata.get(version);
-       } else if(version != null && version.equals("vd12")) {
-           LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
-           Map<String, Object> vd12IssuerMetadata = convertLatestToVd12(originalIssuerMetadata);
-           issuerMetadata.put("vd12", (LinkedHashMap<String, Object>) vd12IssuerMetadata);
-           return vd12IssuerMetadata;
-       } else if(version != null && version.equals("vd11")) {
-           LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
-           Map<String, Object> vd11IssuerMetadata = convertLatestToVd11(originalIssuerMetadata);
-           issuerMetadata.put("vd11", (LinkedHashMap<String, Object>) vd11IssuerMetadata);
-           return vd11IssuerMetadata;
-       }
-       throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_OPENID_VERSION);
+        if(issuerMetadata.containsKey(version)) {
+            return issuerMetadata.get(version);
+        } else if(version != null && version.equals("vd12")) {
+            LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
+            Map<String, Object> vd12IssuerMetadata = convertLatestToVd12(originalIssuerMetadata);
+            issuerMetadata.put("vd12", (LinkedHashMap<String, Object>) vd12IssuerMetadata);
+            return vd12IssuerMetadata;
+        } else if(version != null && version.equals("vd11")) {
+            LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
+            Map<String, Object> vd11IssuerMetadata = convertLatestToVd11(originalIssuerMetadata);
+            issuerMetadata.put("vd11", (LinkedHashMap<String, Object>) vd11IssuerMetadata);
+            return vd11IssuerMetadata;
+        }
+        throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_OPENID_VERSION);
     }
 
     @Override
@@ -302,11 +375,18 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     }
 
     private VCResult<?> getVerifiableCredential(CredentialRequest credentialRequest, CredentialMetadata credentialMetadata,
-                                                String holderId) {
+                                                String holderId, LedgerIssuanceTable ledgerIssuanceTable, JSONObject jsonObject) {
         parsedAccessToken.getClaims().put("accessTokenHash", parsedAccessToken.getAccessTokenHash());
         VCRequestDto vcRequestDto = new VCRequestDto();
         vcRequestDto.setFormat(credentialRequest.getFormat());
 
+
+        Map<String, Object> statusObject = new HashMap<>();
+        statusObject.put("id", ledgerIssuanceTable.getCredentialId());
+        statusObject.put("type", "BitstringStatusListEntry");
+        statusObject.put("statusPurpose", ledgerIssuanceTable.getStatusPurpose());
+        statusObject.put("statusListIndex", ledgerIssuanceTable.getStatusListIndex());
+        statusObject.put("statusListCredential", ledgerIssuanceTable.getStatusListCredential());
 
         VCResult<?> vcResult = null;
         switch (credentialRequest.getFormat()) {
@@ -314,10 +394,11 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 vcRequestDto.setContext(credentialRequest.getCredential_definition().getContext());
                 vcRequestDto.setType(credentialRequest.getCredential_definition().getType());
                 vcRequestDto.setCredentialSubject(credentialRequest.getCredential_definition().getCredentialSubject());
+                vcRequestDto.setCredentialStatus(statusObject);
+
                 validateLdpVcFormatRequest(credentialRequest, credentialMetadata);
                 try {
                     // TODO(multitenancy): later decide which plugin out of n plugins is the correct one
-                    JSONObject jsonObject = dataProviderPlugin.fetchData(parsedAccessToken.getClaims());
                     Map<String, Object> templateParams = new HashMap<>();
                     templateParams.put(Constants.TEMPLATE_NAME, CredentialUtils.getTemplateName(vcRequestDto));
                     templateParams.put(Constants.ISSUER_URI, issuerURI);
@@ -325,14 +406,16 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                         templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
                     }
                     jsonObject.put("_holderId", holderId);
+                    jsonObject.put("credentialStatus", new JSONObject(statusObject));
                     String unSignedVC = vcFormatter.format(jsonObject, templateParams);
+                    JSONObject formattedVC = new JSONObject(unSignedVC);
+                    formattedVC.put("credentialStatus", new JSONObject(statusObject));
+                    String finalUnsignedVC = formattedVC.toString();
                     Map<String, String> signerSettings = new HashMap<>();
                     // NOTE: This is a quasi implementation to add support for multi-tenancy.
                     signerSettings.put(Constants.APPLICATION_ID, keyChooser.get(vcSignAlgorithm).getFirst());
                     signerSettings.put(Constants.REFERENCE_ID, keyChooser.get(vcSignAlgorithm).getLast());
-                    vcResult = vcSigner.attachSignature(unSignedVC, signerSettings);
-                } catch(DataProviderExchangeException e) {
-                    throw new CertifyException(e.getErrorCode());
+                    vcResult = vcSigner.attachSignature(finalUnsignedVC, signerSettings);
                 } catch (JSONException e) {
                     log.error(e.getMessage(), e);
                     throw new CertifyException(ErrorConstants.UNKNOWN_ERROR);
@@ -385,7 +468,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     private void validateLdpVcFormatRequest(CredentialRequest credentialRequest,
                                             CredentialMetadata credentialMetadata) {
         if(!credentialRequest.getCredential_definition().getType().containsAll(credentialMetadata.getTypes()))
-             throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_VC_TYPE);
+            throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_VC_TYPE);
 
         //TODO need to validate Credential_definition as JsonLD document, if invalid throw exception
     }
@@ -421,4 +504,93 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         transaction.setCNonceExpireSeconds(cNonceExpireSeconds);
         return vciCacheService.setVCITransaction(parsedAccessToken.getAccessTokenHash(), transaction);
     }
+
+
+    private Pair<String, Long> getStatusListInfo(String issuerId, String statusPurpose) {
+        Optional<LedgerIssuanceTable> latest = ledgerIssuanceTableRepository
+            .findLatestStatusListInfo(issuerId, statusPurpose);
+
+        if (latest.isEmpty()) {
+            // First-time creation
+            String newStatusListCredentialUrl = domainUrl + UUID.randomUUID();
+            return Pair.of(newStatusListCredentialUrl, 0L);
+        }
+
+        LedgerIssuanceTable latestEntry = latest.get();
+        if (latestEntry.getStatusListIndex() + 1 >= STATUS_LIST_MAX_INDEX) {
+            // Need to create a new file
+            String newStatusListCredentialUrl = domainUrl + UUID.randomUUID();
+            return Pair.of(newStatusListCredentialUrl, 0L);
+        }
+
+        // Reuse current statusListCredential
+        return Pair.of(latestEntry.getStatusListCredential(), latestEntry.getStatusListIndex() + 1);
+    }
+
+
+    private String getOrCreateStatusListCredential(String issuerId, String statusPurpose, String statusListCredentialUrl) {
+        return bitStringStatusListService.generateStatusListCredential(
+                issuerId,
+                statusPurpose,
+                statusListCredentialUrl
+        );
+    }
+    
+
+    public String hashCredentialSubject(JSONObject credentialSubject) {
+        try {
+            String credentialSubjectString = credentialSubject.toString();
+            // Get the MessageDigest instance for SHA-256 hashing
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            
+            // Convert the JSON string into a byte array
+            byte[] hashBytes = digest.digest(credentialSubjectString.getBytes());
+            
+            // Convert the byte array to a hex string
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hashBytes) {
+                hexString.append(String.format("%02x", b));
+            }
+            
+            // Print the hash
+            System.out.println("SHA-256 Hash: " + hexString.toString());
+            return hexString.toString();
+            
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null; 
+        }
+    }
+
+    @Override
+    public Map<String, Object> verifyCredentialStatus(String statusListCredentialId, long statusListIndex, String statusPurpose) {
+        String statusListCredentialUrl = domainUrl + statusListCredentialId;
+        boolean isValid = bitStringStatusListService.validateCredentialStatus(statusListCredentialUrl, statusListIndex, statusPurpose);
+        return Map.of(
+                "status", isValid ? "valid" : "revoked",
+                "statusListCredentialUrl", statusListCredentialUrl,
+                "statusListIndex", statusListIndex
+        );
+    }
+
+    @Override
+    public Map<String, Object> revokeCredential(String statusListCredentialUrl, long statusListIndex, String statusPurpose) {
+        bitStringStatusListService.revokeCredential(statusListCredentialUrl, statusListIndex, statusPurpose);
+        return Map.of("message", "Credential revoked successfully");
+    }
+
+    @Override
+    public Map<String, Object> revokeCredentialV1(String credentialSubjectJson) {
+        try {
+            JSONObject requestJson = new JSONObject(credentialSubjectJson);
+            JSONObject credentialSubject = requestJson.getJSONObject("credentialSubject");
+            String hashedCredentialSubject = hashCredentialSubject(credentialSubject);
+            bitStringStatusListService.revokeCredentialV1(hashedCredentialSubject);
+            return Map.of("message", "Credential revoked successfully");
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return Map.of("error", "Invalid JSON string provided");
+        }
+    }
+
 }

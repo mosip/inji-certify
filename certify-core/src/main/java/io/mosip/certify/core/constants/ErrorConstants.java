@@ -30,4 +30,7 @@ public class ErrorConstants {
     public static final String UNSUPPORTED_ALGORITHM = "unsupported_algorithm";
     public static final String INVALID_CERTIFICATE = "invalid_certificate";
     public static final String VERIFICATION_METHOD_GENERATION_FAILED = "verification_method_generation_failed";
+    public static final String MISSING_STATUS_LIST_INDEX = "Status list index is required";
+    public static final String MISSING_STATUS_PURPOSE = "Status purpose is required";
+    public static final String INVALID_STATUS_LIST_CREDENTIAL_URL = "Status list credential url is required";
 }

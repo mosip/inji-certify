@@ -7,6 +7,7 @@ package io.mosip.certify.controller;
 
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
+import io.mosip.certify.core.dto.CredentialRevokeRequest;
 import io.mosip.certify.core.dto.VCError;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.VCIssuanceService;
@@ -41,6 +42,29 @@ public class VCIssuanceController {
     @PostMapping(value = "/credential",produces = "application/json")
     public CredentialResponse getCredential(@Valid @RequestBody CredentialRequest credentialRequest) throws CertifyException {
         return vcIssuanceService.getCredential(credentialRequest);
+    }
+
+    @GetMapping("/credential/status/{id}")
+    public Map<String, Object> verifyCredentialStatus(
+            @PathVariable("id") String statusListCredentialId,
+            @RequestParam("statusListIndex") long statusListIndex,
+            @RequestParam("statusPurpose") String statusPurpose) {
+        return vcIssuanceService.verifyCredentialStatus(statusListCredentialId, statusListIndex, statusPurpose);
+    }
+
+    @PostMapping("/credential/revoke")
+    public Map<String, Object> revokeCredential(@Valid @RequestBody CredentialRevokeRequest request) {
+        return vcIssuanceService.revokeCredential(
+            request.getStatusListCredentialUrl(),
+            request.getStatusListIndex(),
+            request.getStatusPurpose()
+        );
+    }
+
+
+    @PostMapping("/v1/revoke")
+    public Map<String, Object> revokeCredentialV1(@RequestBody String requestBody) {
+        return vcIssuanceService.revokeCredentialV1(requestBody);
     }
 
 

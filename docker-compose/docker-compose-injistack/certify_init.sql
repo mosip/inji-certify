@@ -97,6 +97,47 @@ CREATE TABLE certify.rendering_template (
                                     CONSTRAINT pk_svgtmp_id PRIMARY KEY (id)
 );
 
+CREATE TABLE certify.ledger_issuance_table(
+    id character varying(255) NOT NULL,
+    credential_id character varying(255) NOT NULL,
+    issuer_id character varying(255) NOT NULL,
+    holder_id character varying(1024) NOT NULL,
+    type character varying(50) NOT NULL DEFAULT 'BitstringStatusListEntry',
+    status_list_index bigint NOT NULL,
+    status_list_credential character varying(255) NOT NULL,
+    status_purpose character varying(50) NOT NULL,
+    credential_status character varying(50) NOT NULL DEFAULT 'valid',
+    status_size integer DEFAULT 1,
+    status_message jsonb,
+    status_reference character varying(512),
+    issue_date timestamp NOT NULL,
+    expiration_date timestamp,
+    revocation_timestamp timestamp,
+    revocation_reason character varying(255),
+    revocation_proof character varying(512),
+    credential_subject_hash character varying(512),
+    -- encoded_list TEXT NOT NULL,
+    CONSTRAINT pk_credential_status_id PRIMARY KEY (id),
+    CONSTRAINT uk_credential_issuer UNIQUE (credential_id, issuer_id)
+);
+
+CREATE TABLE certify.status_list_credential (
+    id CHARACTER VARYING(255) NOT NULL,
+    issuer_id CHARACTER VARYING(255) NOT NULL,
+    type CHARACTER VARYING(100) NOT NULL DEFAULT 'BitstringStatusListCredential',
+    encoded_list TEXT NOT NULL,
+    list_size INTEGER NOT NULL,
+    status_purpose CHARACTER VARYING(50) NOT NULL,
+    status_size INTEGER DEFAULT 1,
+    status_messages JSONB,
+    valid_from TIMESTAMP NOT NULL,
+    valid_until TIMESTAMP,
+    ttl BIGINT,
+    CONSTRAINT pk_status_list_credential_id PRIMARY KEY (id),
+    CONSTRAINT uk_issuer_purpose UNIQUE (issuer_id, status_purpose)
+);
+
+
 CREATE TABLE certify.credential_template(
                                     context character varying(1024) NOT NULL,
                                     credential_type character varying(512) NOT NULL,
@@ -106,68 +147,48 @@ CREATE TABLE certify.credential_template(
                                     CONSTRAINT pk_template PRIMARY KEY (context, credential_type)
 );
 
-INSERT INTO certify.credential_template (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/2018/credentials/v1', 'FarmerCredential,VerifiableCredential', '{
-     "@context": [
-         "https://www.w3.org/2018/credentials/v1",
-         "https://piyush7034.github.io/my-files/farmer.json",
-         "https://w3id.org/security/suites/ed25519-2020/v1"
-     ],
-     "issuer": "${_issuer}",
-     "type": [
-         "VerifiableCredential",
-         "FarmerCredential"
-     ],
-     "issuanceDate": "${validFrom}",
-     "expirationDate": "${validUntil}",
-     "credentialSubject": {
-         "id": "${_holderId}",
-         "fullName": "${fullName}",
-         "mobileNumber": "${mobileNumber}",
-         "dateOfBirth": "${dateOfBirth}",
-         "gender": "${gender}",
-         "state": "${state}",
-         "district": "${district}",
-         "villageOrTown": "${villageOrTown}",
-         "postalCode": "${postalCode}",
-         "landArea": "${landArea}",
-         "landOwnershipType": "${landOwnershipType}",
-         "primaryCropType": "${primaryCropType}",
-         "secondaryCropType": "${secondaryCropType}",
-         "face": "${face}",
-         "farmerID": "${farmerID}"
-     }
-}
-', '2024-10-24 12:32:38.065994', NULL);
+-- INSERT INTO certify.credential_template (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/2018/credentials/v1', 'StudentCredential,VerifiableCredential', '{
+--      "@context": [
+--          "https://www.w3.org/2018/credentials/v1",
+--          "https://nandeesh778.github.io/my-files/welearntt-courses.json",
+--          "https://w3id.org/security/suites/ed25519-2020/v1"
+--      ],
+--      "issuer": "${_issuer}",
+--      "type": [
+--          "VerifiableCredential",
+--          "StudentCredential"
+--      ],
+--      "issuanceDate": "${validFrom}",
+--      "expirationDate": "${validUntil}",
+--      "credentialSubject": {
+--         "uuid": "${uuid}",
+--         "email": "${email}",
+--         "cFullname": "${cFullname}",
+--         "dateRegistered": "${dateRegistered}",
+--         "courses": ${courses}
+--     }
+-- }
+-- ', '2024-10-24 12:32:38.065994', NULL);
 
-INSERT INTO certify.credential_template (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/ns/credentials/v2', 'FarmerCredential,VerifiableCredential', '{
+INSERT INTO certify.credential_template (context, credential_type, template, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/ns/credentials/v2', 'StudentCredential,VerifiableCredential', '{
     "@context": [
         "https://www.w3.org/ns/credentials/v2",
-        "https://piyush7034.github.io/my-files/farmer.json",
+        "https://manjunathbhagwat12.github.io/my-files/courses.json",
         "https://w3id.org/security/suites/ed25519-2020/v1"
     ],
     "issuer": "${_issuer}",
     "type": [
         "VerifiableCredential",
-        "FarmerCredential"
+        "StudentCredential"
     ],
     "validFrom": "${validFrom}",
     "validUntil": "${validUntil}",
     "credentialSubject": {
-        "id": "${_holderId}",
-        "fullName": "${fullName}",
-        "mobileNumber": "${mobileNumber}",
-        "dateOfBirth": "${dateOfBirth}",
-        "gender": "${gender}",
-        "state": "${state}",
-        "district": "${district}",
-        "villageOrTown": "${villageOrTown}",
-        "postalCode": "${postalCode}",
-        "landArea": "${landArea}",
-        "landOwnershipType": "${landOwnershipType}",
-        "primaryCropType": "${primaryCropType}",
-        "secondaryCropType": "${secondaryCropType}",
-        "face": "${face}",
-        "farmerID": "${farmerID}"
+        "uuid": "${uuid}",
+        "email": "${email}",
+        "cFullname": "${cFullname}",
+        "dateRegistered": "${dateRegistered}",
+        "courses": ${courses}
     }
 }', '2024-10-24 12:32:38.065994', NULL);
 

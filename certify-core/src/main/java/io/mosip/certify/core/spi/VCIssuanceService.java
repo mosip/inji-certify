@@ -22,4 +22,11 @@ public interface VCIssuanceService {
     Map<String, Object> getCredentialIssuerMetadata(String version);
 
     Map<String, Object> getDIDDocument();
+
+    Map<String, Object> verifyCredentialStatus(String statusListCredentialId, long statusListIndex, String statusPurpose);
+
+    Map<String, Object> revokeCredential(String statusListCredentialUrl, long statusListIndex, String statusPurpose);
+
+    Map<String, Object> revokeCredentialV1(String credentialSubject);
+
 }
