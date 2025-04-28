@@ -2,6 +2,11 @@ package io.mosip.testrig.apirig.injicertify.utils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.interfaces.ECPrivateKey;
+import java.security.interfaces.ECPublicKey;
+import java.security.spec.ECGenParameterSpec;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Calendar;
@@ -10,6 +15,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -25,6 +31,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
 import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.crypto.Ed25519Signer;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -32,6 +39,7 @@ import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.Curve;
+import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.OctetKeyPair;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -354,6 +362,25 @@ public class InjiCertifyUtil extends AdminTestUtil {
 
 			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_ED25519$",
 					signED25519JWT(clientId, accessToken, testCaseName, tempUrl));
+		}
+		
+		if (jsonString.contains("$PROOF_JWT_ES256$")) {
+			JSONObject request = new JSONObject(jsonString);
+			String clientId = "";
+			String accessToken = "";
+			String tempUrl = "";
+			if (request.has("client_id")) {
+				clientId = request.getString("client_id");
+				request.remove("client_id");
+			}
+			if (request.has("idpAccessToken")) {
+				accessToken = request.getString("idpAccessToken");
+			}
+			jsonString = request.toString();
+			tempUrl = getBaseURL(testCaseName, InjiCertifyConfigManager.getInjiCertifyBaseUrl());
+
+			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_ES256$",
+					signES256JWT(clientId, accessToken, testCaseName, tempUrl));
 		}
 
 		if (jsonString.contains("$CLIENT_ASSERTION_JWT$")) {
@@ -970,6 +997,63 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		}
 		return proofJWT;
 	}
+	
+	public static String signES256JWT(String clientId, String accessToken, String testCaseName, String tempUrl) {
+	    int idTokenExpirySecs = Integer.parseInt(getValueFromEsignetActuator(
+	            InjiCertifyConfigManager.getEsignetActuatorPropertySection(),
+	            GlobalConstants.MOSIP_ESIGNET_ID_TOKEN_EXPIRE_SECONDS));
+
+	    String proofJWT = "";
+	    String typ = "openid4vci-proof+jwt";
+	    SignedJWT signedJWT;
+
+	    try {
+	        // Generate EC key pair using Java KeyPairGenerator
+	        KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("EC");
+	        keyPairGen.initialize(new ECGenParameterSpec("secp256r1")); // P-256
+	        KeyPair keyPair = keyPairGen.generateKeyPair();
+
+	        ECKey ecJWK = new ECKey.Builder(Curve.P_256, (ECPublicKey) keyPair.getPublic())
+	                .privateKey((ECPrivateKey) keyPair.getPrivate())
+	                .keyID(UUID.randomUUID().toString())
+	                .build();
+
+	        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.ES256)
+	                .type(new JOSEObjectType(typ))
+	                .jwk(ecJWK.toPublicJWK())
+	                .build();
+
+	        Date currentTime = new Date();
+
+	        Calendar calendar = Calendar.getInstance();
+	        calendar.setTime(currentTime);
+	        calendar.add(Calendar.SECOND, idTokenExpirySecs);
+	        Date expirationTime = calendar.getTime();
+
+	        signedJWT = SignedJWT.parse(accessToken);
+	        String nonce = signedJWT.getJWTClaimsSet().getClaim("c_nonce").toString();
+
+	        JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+	                .audience(tempUrl)
+	                .claim("nonce", nonce)
+	                .issuer(clientId)
+	                .issueTime(currentTime)
+	                .expirationTime(expirationTime)
+	                .build();
+
+	        signedJWT = new SignedJWT(header, claimsSet);
+	        JWSSigner signer = new ECDSASigner(ecJWK);
+
+	        signedJWT.sign(signer);
+	        proofJWT = signedJWT.serialize();
+
+	    } catch (Exception e) {
+	        logger.error("Exception while signing proof_jwt with ES256: " + e.getMessage());
+	    }
+
+	    return proofJWT;
+	}
+
 	
 	public static String signED25519JWT(String clientId, String accessToken, String testCaseName, String tempUrl) {
 		int idTokenExpirySecs = Integer
