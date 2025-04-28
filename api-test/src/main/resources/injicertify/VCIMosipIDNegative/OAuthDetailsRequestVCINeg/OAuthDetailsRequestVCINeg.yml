@@ -17,7 +17,35 @@ OAuthDetailsRequestVCINeg:
       	"display": "popup",
       	"prompt": "login",
 	    "acrValues": "mosip:idp:acr:generated-code mosip:idp:acr:linked-wallet mosip:idp:acr:biometrics",
-	    "nonce": "973eieljzng",
+	    "nonce": "$UNIQUENONCEVALUE$",
+	    "state": "eree2311",
+	    "claimsLocales": "en",
+	    "codeChallenge": "$CODECHALLENGE$",
+        "codeChallengeMethod": "S256"
+}'
+      output: '{
+       
+}'
+
+   InjiCertify_ESignet_OAuthDetailsRequest_VCI_MOSIPID_uin_Diff_Scope_all_Valid_Smoke_sid_For_Neg_Flow:
+      endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/v2/oauth-details
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequestNeg_2
+      description: OAuth details request with different scope
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      inputTemplate: injicertify/VCIMosipIDNegative/OAuthDetailsRequestVCINeg/OAuthDetailsRequestVCINeg
+      outputTemplate: injicertify/VCIMosipIDNegative/OAuthDetailsRequestVCINeg/OAuthDetailsRequestVCIResultNeg
+      input: '{
+      	"requestTime": "$TIMESTAMP$",
+      	"clientId": "$ID:CreateOIDCClient_MOSIPID_all_Valid_Smoke_sid_clientId$",
+      	"scope": "openid profile",
+      	"responseType": "code",      	
+      	"redirectUri": "$IDPREDIRECTURI$",
+      	"display": "popup",
+      	"prompt": "login",
+	    "acrValues": "mosip:idp:acr:generated-code mosip:idp:acr:linked-wallet mosip:idp:acr:biometrics",
+	    "nonce": "$UNIQUENONCEVALUE$",
 	    "state": "eree2311",
 	    "claimsLocales": "en",
 	    "codeChallenge": "$CODECHALLENGE$",

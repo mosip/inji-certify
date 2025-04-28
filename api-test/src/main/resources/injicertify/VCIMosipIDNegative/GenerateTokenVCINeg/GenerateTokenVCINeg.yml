@@ -10,7 +10,29 @@ GenerateTokenVCINeg:
       outputTemplate: injicertify/VCIMosipIDNegative/GenerateTokenVCINeg/GenerateTokenVCIResultNeg
       input: '{
 		  "grant_type": "authorization_code",
-		  "code": "$ID:ESignet_AuthorizationCode_VCI_MOSIPID_uin_All_Valid_Smoke_sid_Neg_code$",
+		  "code": "$ID:ESignet_AuthorizationCode_VCI_MOSIPID_uin_All_Valid_Smoke_sid_For_Neg_flow_code$",
+		  "client_id": "$ID:CreateOIDCClient_MOSIPID_all_Valid_Smoke_sid_clientId$",
+		  "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+		  "client_assertion": "$CLIENT_ASSERTION_JWT$",
+		  "redirect_uri": "$IDPREDIRECTURI$",
+  		  "code_verifier": "$CODEVERIFIER$"
+}'
+      output: '{
+   		"token_type": "Bearer" 
+}'
+
+   InjiCertify_ESignet_GenerateTokenVCIMOSIPID_uin_Diff_Scope_Valid_Smoke_sid_Pos:
+      endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/oauth/v2/token
+      uniqueIdentifier: TC_esignetDependent_GenerateTokenNeg_2
+      description: Generate Token with diff scope
+      role: resident
+      restMethod: post
+      validityCheckRequired: true
+      inputTemplate: injicertify/VCIMosipIDNegative/GenerateTokenVCINeg/GenerateTokenVCINeg
+      outputTemplate: injicertify/VCIMosipIDNegative/GenerateTokenVCINeg/GenerateTokenVCIResultNeg
+      input: '{
+		  "grant_type": "authorization_code",
+		  "code": "$ID:ESignet_AuthorizationCode_VCI_MOSIPID_uin_Diff_Scope_All_Valid_Smoke_sid_For_Neg_flow_code$",
 		  "client_id": "$ID:CreateOIDCClient_MOSIPID_all_Valid_Smoke_sid_clientId$",
 		  "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
 		  "client_assertion": "$CLIENT_ASSERTION_JWT$",

@@ -33,3 +33,38 @@ AuthenticateUserVCI:
         "maskedEmail": "$IGNORE$"
     }
 }'
+
+   InjiCertify_ESignet_AuthenticateUserVCI_MOSIPID_Vid_Otp_Valid_Smoke:
+      endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/authenticate
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser      
+      description: Authenticate User with vid
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/VCIMosipID/AuthenticateUserVCI/AuthenticateUserVCI
+      outputTemplate: injicertify/VCIMosipID/AuthenticateUserVCI/AuthenticateUserVCIResult
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_VCI_MOSIPID_Vid_all_Valid_Smoke_sid_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_VCI_MOSIPID_Vid_all_Valid_Smoke_sid_transactionId$",
+      	"individualId": "$ID:CreateVID_MOSIPID_Smoke_Perpetual_sid_VID$",
+      	"authFactorType" : "OTP",
+      	"challenge" : "$ID:AddIdentity_Valid_Params_VCI_MOSIPID_uin_For_Vid_smoke_Pos_EMAIL$",
+        "sendOtp":{
+    "encodedHash": "$ID:ESignet_OAuthDetailsRequest_VCI_MOSIPID_Vid_all_Valid_Smoke_sid_encodedResp$",
+    "requestTime": "$TIMESTAMP$",
+    "transactionId": "$ID:ESignet_OAuthDetailsRequest_VCI_MOSIPID_Vid_all_Valid_Smoke_sid_transactionId$",
+	"individualId": "$ID:CreateVID_MOSIPID_Smoke_Perpetual_sid_VID$",
+    "otpChannels": [{channel: "email"},{channel: "phone"}],
+    "sendOtpReqTemplate": "injicertify/SendOtp/SendOtp",
+    "sendOtpEndPoint": "$ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/send-otp"
+    }
+    }'
+      output: '{
+  "sendOtpResp":{
+        "maskedMobile": "$IGNORE$",
+        "sendOtpResTemplate":"injicertify/SendOtp/SendOtpResult",
+        "maskedEmail": "$IGNORE$"
+    }
+}'
