@@ -10,11 +10,11 @@ on:
         type: string
 
 jobs:
-  build-inji-certify-with-plugins:
+  maven-build-inji-certify-with-plugins:
     uses: mosip/kattu/.github/workflows/maven-build.yml@master-java21
     with:
       SERVICE_LOCATION: ./certify-service-with-plugins
-      BUILD_ARTIFACT: inji-certify-with-plugins
+      BUILD_ARTIFACT: certify-with-plugins
       MAVEN_NON_EXEC_ARTIFACTS: "mock-certify-plugin.jar,mosip-identity-plugin.jar,sunbird-rc-plugin.jar"
     secrets:
       OSSRH_USER: ${{ secrets.OSSRH_USER }}
@@ -24,14 +24,14 @@ jobs:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
   build-docker-inji-certify-with-plugins:
-    needs: build-inji-certify-with-plugins
+    needs: maven-build-inji-certify-with-plugins
     if: ${{ github.event_name == 'workflow_dispatch' }}  # Runs only when triggered manually
     strategy:
       matrix:
         include:
           - SERVICE_LOCATION: 'certify-service-with-plugins'
-            SERVICE_NAME: 'inji-certify-with-plugins'
-            BUILD_ARTIFACT: 'inji-certify-with-plugins'
+            SERVICE_NAME: 'injicertify-with-plugins'
+            BUILD_ARTIFACT: 'certify-with-plugins'
       fail-fast: false
     name: ${{ matrix.SERVICE_NAME }}
     uses: mosip/kattu/.github/workflows/docker-build.yml@master-java21
