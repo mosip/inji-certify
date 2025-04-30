@@ -12,4 +12,6 @@ databases:
         name: postgres-postgresql
         key: postgres-password
     dml: 1
-    branch: develop
+    repoUrl: https://github.com/mosip/inji-certify.git
+    branch: INJICERT-1006
+
