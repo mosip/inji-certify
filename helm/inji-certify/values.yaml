@@ -52,7 +52,7 @@ service:
 
 image:
   registry: docker.io
-  repository: mosipid/inji-certify-with-plugins
+  repository: mosipqa/inji-certify-with-plugins
   tag: develop
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -240,7 +240,12 @@ updateStrategy:
 ##   - name: FOO
 ##     value: "bar"
 ##
-extraEnvVars: []
+extraEnvVars: |
+  - name: DB_DBUSER_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: db-common-secrets
+        key: db-dbuser-password
 
 ## ConfigMap with extra environment variables that used
 ##
@@ -460,11 +465,13 @@ istio:
     - matchType: exact
       uri: /.well-known/openid-credential-issuer
       rewriteUri: /v1/certify/issuance/.well-known/openid-credential-issuer
+      port: 80
     - matchType: exact
       uri: /.well-known/did.json
       rewriteUri: /v1/certify/issuance/.well-known/did.json
+      port: 80
     - matchType: prefix
       uri: /
       port: 80
 
-installHSMPlugin: true
+installHSMPlugin: "true"

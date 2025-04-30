@@ -13,7 +13,7 @@ echo Create $SOFTHSM_NS namespace
 kubectl create ns $SOFTHSM_NS
 
 NS=inji-certify
-CHART_VERSION=0.10.1-develop
+CHART_VERSION=0.11.0-develop
 
 echo Create $NS namespace
 kubectl create ns $NS
@@ -29,9 +29,9 @@ echo Installed Softhsm for certify
 
 DEFAULT_INJICERTIFY_HOST=$( kubectl get cm inji-stack-config -n config-server -o jsonpath={.data.injicertify-host} )
 # Check if INJICDERTIFY_HOST is present under configmap/inji-stack-config of configserver
-if echo "DEFAULT_INJICERTIFY_HOST" | grep -q "CERTIFY_HOST"; then
+if echo "$DEFAULT_INJIVERIFY_HOST" | grep -q "CERTIFY_HOST"; then
     echo "CERTIFY_HOST is already present in configmap/inji-stack-config of configserver"
-    MOSIP_INJICERTIFY_HOST=DEFAULT_INJICERTIFY_HOST
+    INJICERTIFY_HOST=DEFAULT_INJICERTIFY_HOST
 else
     read -p "Please provide injicertifyhost (eg: injicertify.sandbox.xyz.net ) : " INJICERTIFY_HOST
 
