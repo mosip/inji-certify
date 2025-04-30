@@ -133,9 +133,10 @@ jobs:
 
   maven-build-inji-certify-with-plugins:
     uses: mosip/kattu/.github/workflows/maven-build.yml@master-java21
-    SERVICE_LOCATION: ./certify-service-with-plugins
-    BUILD_ARTIFACT: certify-service-with-plugins
-    MAVEN_NON_EXEC_ARTIFACTS: "mock-certify-plugin.jar,mosip-identity-plugin.jar,sunbird-rc-plugin.jar"
+    with:
+      SERVICE_LOCATION: ./certify-service-with-plugins
+      BUILD_ARTIFACT: certify-service-with-plugins
+      MAVEN_NON_EXEC_ARTIFACTS: "mock-certify-plugin.jar,mosip-identity-plugin.jar,sunbird-rc-plugin.jar"
     secrets:
       OSSRH_USER: ${{ secrets.OSSRH_USER }}
       OSSRH_SECRET: ${{ secrets.OSSRH_SECRET }}
