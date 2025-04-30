@@ -1,0 +1,19 @@
+CreateVID:
+  IdRepository_CreateVID_MOSIPID_Smoke_Perpetual_sid:
+      endPoint: /idrepository/v1/vid
+      description: Create Perpetual VID passing valid parameters
+      uniqueIdentifier: TC_IDRepo_CreateVID_01
+      role: idrepo
+      restMethod: post
+      inputTemplate: injicertify/CreateVID/createVid
+      outputTemplate: injicertify/CreateVID/createVidResult
+      input: '{
+    "vidType": "Perpetual",
+    "UIN": "$ID:AddIdentity_Valid_Params_VCI_MOSIPID_uin_For_Vid_smoke_Pos_UIN$",
+    "version": "v1",
+    "id": "mosip.vid.create",
+    "requesttime": "$TIMESTAMP$"
+}'
+      output: '{
+  "vidStatus":"ACTIVE"
+}'

@@ -9,14 +9,15 @@ import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.jwk.*;
 import com.nimbusds.jose.util.Base64URL;
 import io.ipfs.multibase.Multibase;
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.ASN1Integer;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
 import org.bouncycastle.math.ec.ECCurve;
 
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.interfaces.RSAPublicKey;
-import java.security.spec.*;
+import java.io.IOException;
+import java.math.BigInteger;
+
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.math.ec.ECPoint;
 
@@ -41,7 +42,7 @@ public class DIDkeysProofManager implements JwtProofKeyManager {
             } catch (ParseException e) {
                 return null;
             }
-        } else if (b[0] == (byte) 0xe7 && b[1] == (byte) 0x01) {
+        } else if (b[0] == (byte) 0xe7 && b[1] == (byte) 0x01 && b.length == 35) {
             ECNamedCurveParameterSpec params = ECNamedCurveTable.getParameterSpec("secp256k1");
             ECCurve curve = params.getCurve();
             ECPoint ecPoint = curve.decodePoint(Arrays.copyOfRange(b, 2, b.length));
@@ -54,37 +55,36 @@ public class DIDkeysProofManager implements JwtProofKeyManager {
             yBytes = Arrays.copyOfRange(yBytes, yBytes.length - 32, yBytes.length);
             JWK j = new ECKey.Builder(Curve.SECP256K1, Base64URL.encode(xBytes), Base64URL.encode(yBytes)).build();
             return Optional.of(j);
-        } else if (b[0] == (byte) 0x80) {
+        } else if (b[0] == (byte) 0x80 && b[1] == (byte) 0x24 && b.length == 35) {
             // TODO: should be 0x1200 instead
             ECNamedCurveParameterSpec params = ECNamedCurveTable.getParameterSpec("secp256r1");
             ECCurve curve = params.getCurve();
             ECPoint ecPoint = curve.decodePoint(Arrays.copyOfRange(b, 2, b.length));
-            // Extract x and y coordinates
             byte[] xBytes = ecPoint.getAffineXCoord().toBigInteger().toByteArray();
             byte[] yBytes = ecPoint.getAffineYCoord().toBigInteger().toByteArray();
 
-            // Normalize to 32-byte arrays (secp256k1 uses 256-bit coordinates)
             xBytes = Arrays.copyOfRange(xBytes, xBytes.length - 32, xBytes.length);
             yBytes = Arrays.copyOfRange(yBytes, yBytes.length - 32, yBytes.length);
             JWK j = new ECKey.Builder(Curve.P_256, Base64URL.encode(xBytes), Base64URL.encode(yBytes)).build();
             return Optional.of(j);
         } else if (b[0] == (byte) 0x85 && b[1] == (byte) 0x24) {
-            // RSA
-            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(Arrays.copyOfRange(b, 2, b.length));
-            PublicKey publicKey;
+            // RSA2048
+            ASN1InputStream asn1 = new ASN1InputStream(Arrays.copyOfRange(b, 2, b.length));
             try {
-                publicKey = KeyFactory.getInstance("RSA").generatePublic(keySpec);
-            } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-                return null;
-            }
-            RSAPublicKey rsa = (RSAPublicKey) publicKey;
-            JWK rsaKey;
-            try {
-                rsaKey = JWK.parse(Map.of("kty", "RSA", "n",
-                        Base64.getUrlEncoder().withoutPadding().encodeToString(rsa.getModulus().toByteArray()),
-                        "e", Base64.getUrlEncoder().withoutPadding().encodeToString(rsa.getPublicExponent().toByteArray())));
+                ASN1Sequence seq = (ASN1Sequence) asn1.readObject();
+                if (seq.size() != 2) {
+                    // missing modulus or exponent
+                   return Optional.empty();
+                }
+                BigInteger modulus = ((ASN1Integer) seq.getObjectAt(0)).getPositiveValue();
+                BigInteger exponent = ((ASN1Integer) seq.getObjectAt(1)).getPositiveValue();
+
+                // Construct JWK
+                JWK rsaKey = new RSAKey.Builder(Base64URL.encode(modulus), Base64URL.encode(exponent))
+                        .build();
+
                 return Optional.of(rsaKey);
-            } catch (ParseException e) {
+            } catch (IOException e) {
                 return Optional.empty();
             }
         }

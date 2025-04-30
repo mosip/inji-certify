@@ -860,6 +860,5 @@
 			<class name="io.mosip.testrig.apirig.injicertify.testscripts.DeleteWithParam" />
 		</classes>
 	</test>		
-		
 	
 </suite>

@@ -36,7 +36,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import io.micrometer.tracing.SamplerFunction;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.RenderingTemplateException;
@@ -54,9 +53,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 
-import io.mosip.certify.credential.Credential;
-
-
 @Slf4j
 @Service
 public class VelocityTemplatingEngineImpl implements VCFormatter {
@@ -67,6 +63,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     CredentialConfigRepository credentialConfigRepository;
     @Autowired
     RenderingTemplateService renderingTemplateService;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Value("${mosip.certify.data-provider-plugin.vc-expiry-duration:P730d}")
     String defaultExpiryDuration;
@@ -83,7 +81,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         credentialConfigRepository.findAll().stream().forEach((template -> {
             Map<String, String> templateMap = new HashMap<>();
             ObjectMapper oMapper = new ObjectMapper();
-            templateMap = oMapper.convertValue(template , Map.class);
+            templateMap = objectMapper.convertValue(template , Map.class);
             //BeanUtils.copyProperties(template, templateMap);
             templateCache.put(String.join(DELIMITER, template.getCredentialType(), template.getContext(), template.getCredentialFormat()), templateMap);
          }));
@@ -174,26 +172,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         StringWriter writer = new StringWriter();
         // 1. Prepare map
         // TODO: Eventually, the credentialSubject from the plugin will be templated as-is
-        Map<String, Object> finalTemplate = new HashMap<>();
-        Iterator<String> keys = valueMap.keys();
-        while(keys.hasNext()) {
-            String key = keys.next();
-            Object value = valueMap.get(key);
-            if (value instanceof List) {
-                finalTemplate.put(key, new JSONArray((List<Object>) value));
-            } else if (value.getClass().isArray()) {
-                finalTemplate.put(key, new JSONArray(List.of(value)));
-            } else if (value instanceof Integer | value instanceof Float | value instanceof Long | value instanceof Double) {
-                // entities which don't need to be quoted
-                finalTemplate.put(key, value);
-            } else if (value instanceof String){
-                // entities which need to be quoted
-                finalTemplate.put(key, JSONObject.wrap(value));
-            } else {
-                //no conversion needed
-                finalTemplate.put(key, value);
-            }
-        }
+        Map<String, Object> finalTemplate = jsonify(valueMap.toMap());
         // Date: https://velocity.apache.org/tools/3.1/apidocs/org/apache/velocity/tools/generic/DateTool.html
         finalTemplate.put("_dateTool", new DateTool());
         // Escape: https://velocity.apache.org/tools/3.1/apidocs/org/apache/velocity/tools/generic/EscapeTool.html
@@ -234,6 +213,35 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     }
 
     /**
+     * jsonify wraps a complex object into it's JSON representation
+     * @param valueMap
+     * @return
+     */
+    protected static Map<String, Object> jsonify(Map<String, Object> valueMap) {
+        Map<String, Object> finalTemplate = new HashMap<>();
+        Iterator<String> keys = valueMap.keySet().iterator();
+        while(keys.hasNext()) {
+            String key = keys.next();
+            Object value = valueMap.get(key);
+            if (value instanceof List) {
+                finalTemplate.put(key, new JSONArray((List<Object>) value));
+            } else if (value.getClass().isArray()) {
+                finalTemplate.put(key, new JSONArray(List.of(value)));
+            } else if (value instanceof Integer | value instanceof Float | value instanceof Long | value instanceof Double) {
+                // entities which don't need to be quoted
+                finalTemplate.put(key, value);
+            } else if (value instanceof String){
+                // entities which need to be quoted
+                finalTemplate.put(key, JSONObject.wrap(value));
+            } else {
+                // no conversion needed
+                finalTemplate.put(key, value);
+            }
+        }
+        return finalTemplate;
+    }
+
+    /**
      * getTemplate fetches the VelocityTemplate from the DB or Spring Cache
      * @param key key is a combination of sorted credentialType & sorted
      *            context separated by a ':'.
@@ -267,11 +275,13 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         // TODO: Isn't template name becoming too complex with VC_CONTEXTS & CREDENTIAL_TYPES both?
         String templateName = templateInput.get(TEMPLATE_NAME).toString();
         String issuer = templateInput.get(ISSUER_URI).toString();
-        String t = templateCache.get(templateName).get("vcTemplate");
+        String t = Optional.ofNullable(templateCache.get(templateName))
+                           .map(template -> template.get("vcTemplate"))
+                           .orElseThrow(() -> new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND));
         StringWriter writer = new StringWriter();
         // 1. Prepare map
+        Map<String, Object> finalTemplate = jsonify(templateInput);
         // TODO: Eventually, the credentialSubject from the plugin will be templated as-is
-        Map<String, Object> finalTemplate = templateInput;
         // Date: https://velocity.apache.org/tools/3.1/apidocs/org/apache/velocity/tools/generic/DateTool.html
         finalTemplate.put("_dateTool", new DateTool());
         // Escape: https://velocity.apache.org/tools/3.1/apidocs/org/apache/velocity/tools/generic/EscapeTool.html

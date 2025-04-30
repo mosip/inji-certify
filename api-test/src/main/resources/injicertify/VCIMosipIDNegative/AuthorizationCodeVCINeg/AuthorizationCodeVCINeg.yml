@@ -10,9 +10,27 @@ AuthorizationCodeVCINeg:
       inputTemplate: injicertify/VCIMosipIDNegative/AuthorizationCodeVCINeg/AuthorizationCodeVCINeg
       outputTemplate: injicertify/VCIMosipIDNegative/AuthorizationCodeVCINeg/AuthorizationCodeVCIResultNeg
       input: '{
-        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_VCI_MOSIPID_uin_all_Valid_Smoke_sid_Neg_encodedResp$",
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_VCI_MOSIPID_uin_all_Valid_Smoke_sid_For_Neg_Flow_encodedResp$",
       	"requestTime": "$TIMESTAMP$",
-      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_VCI_MOSIPID_uin_all_Valid_Smoke_sid_Neg_transactionId$"
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_VCI_MOSIPID_uin_all_Valid_Smoke_sid_For_Neg_Flow_transactionId$"
+}'
+      output: '{
+}'
+
+   InjiCertify_ESignet_AuthorizationCode_VCI_MOSIPID_uin_Diff_Scope_All_Valid_Smoke_sid_For_Neg_flow:
+      endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/auth-code
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCodeNeg_2
+      description: Authorization Code with diff scope
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/VCIMosipIDNegative/AuthorizationCodeVCINeg/AuthorizationCodeVCINeg
+      outputTemplate: injicertify/VCIMosipIDNegative/AuthorizationCodeVCINeg/AuthorizationCodeVCIResultNeg
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_VCI_MOSIPID_uin_Diff_Scope_all_Valid_Smoke_sid_For_Neg_Flow_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_VCI_MOSIPID_uin_Diff_Scope_all_Valid_Smoke_sid_For_Neg_Flow_transactionId$"
 }'
       output: '{
 }'

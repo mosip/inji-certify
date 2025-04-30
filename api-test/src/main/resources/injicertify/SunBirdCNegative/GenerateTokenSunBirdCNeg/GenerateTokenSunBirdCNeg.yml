@@ -10,7 +10,7 @@ GenerateTokenSunBirdCNeg:
       outputTemplate: injicertify/SunBirdCNegative/GenerateTokenSunBirdCNeg/GenerateTokenSunBirdCResultNeg
       input: '{
 		  "grant_type": "authorization_code",
-		  "code": "$ID:ESignet_AuthorizationCode_SunBirdC_All_Valid_sid_Neg_code$",
+		  "code": "$ID:ESignet_AuthorizationCode_SunBirdC_All_Valid_sid_For_Neg_flow_code$",
 		  "client_id": "$ID:ESignet_CreateOIDCClientV2SunBirdC_all_Valid_Smoke_sid_clientId$",
 		  "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
 		  "client_assertion": "$CLIENT_ASSERTION_USER4_JWK$",
@@ -19,4 +19,26 @@ GenerateTokenSunBirdCNeg:
 }'
       output: '{
    		"token_type": "Bearer"
+}'
+
+   InjiCertify_ESignet_GenerateTokenSunBirdC_Diff_Scope_Valid_sid_For_Neg_flow:
+      endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/oauth/v2/token
+      uniqueIdentifier: TC_esignetDependent_GenerateTokenNeg      
+      description: Generate Token      
+      role: resident
+      restMethod: post
+      validityCheckRequired: true
+      inputTemplate: injicertify/SunBirdCNegative/GenerateTokenSunBirdCNeg/GenerateTokenSunBirdCNeg
+      outputTemplate: injicertify/error2
+      input: '{
+		  "grant_type": "authorization_code",
+		  "code": "$ID:ESignet_AuthorizationCode_SunBirdC_Diff_Scope_All_Valid_sid_For_Neg_flow_code$",
+		  "client_id": "$ID:ESignet_CreateOIDCClientV2SunBirdC_all_Valid_Smoke_sid_clientId$",
+		  "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+		  "client_assertion": "$CLIENT_ASSERTION_USER4_JWK$",
+		  "redirect_uri": "$IDPREDIRECTURI$",
+  		  "code_verifier": "$CODEVERIFIER$"
+}'
+      output: '{
+       "error": "not_implemented"
 }'

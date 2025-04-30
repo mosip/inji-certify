@@ -26,3 +26,31 @@ OAuthDetailsRequestSunBirdCNeg:
       output: '{
        
 }'
+
+   InjiCertify_ESignet_OAuthDetailsRequest_SunBirdC_Diff_Scope_Valid_sid_For_Neg_Flow:
+      endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/authorization/v2/oauth-details
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequestNeg_2
+      description: OAuth details request with different scope
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      inputTemplate: injicertify/SunBirdCNegative/OAuthDetailsRequestSunBirdCNeg/OAuthDetailsRequestSunBirdCNeg
+      outputTemplate: injicertify/SunBirdCNegative/OAuthDetailsRequestSunBirdCNeg/OAuthDetailsRequestSunBirdCResultNeg
+      input: '{
+      	"requestTime": "$TIMESTAMP$",
+      	"clientId": "$ID:ESignet_CreateOIDCClientV2SunBirdC_all_Valid_Smoke_sid_clientId$",
+      	"scope": "openid profile",
+      	"responseType": "code",
+      	"redirectUri": "$IDPREDIRECTURI$",
+      	"display": "popup",
+	    "prompt": "login",
+	    "acrValues": "mosip:idp:acr:knowledge",
+	    "nonce": "$UNIQUENONCEVALUE$",
+	    "state": "eree2311",
+	    "claimsLocales": "en",
+	    "codeChallenge": "$CODECHALLENGE$",
+	    "codeChallengeMethod": "S256"
+}'
+      output: '{
+       
+}'

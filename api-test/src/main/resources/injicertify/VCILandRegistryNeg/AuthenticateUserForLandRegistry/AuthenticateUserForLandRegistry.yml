@@ -70,3 +70,39 @@ AuthenticateUserForLandRegistry:
         "maskedEmail": "$IGNORE$"
     }
 }'
+
+   InjiCertify_ESignet_AuthenticateUserVCI_ForLandRegistry_uin_Otp_Pos_Without_DB_Insertion_For_NegFlow:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser
+      description: Authenticate User for mock ida without inserting data in DB
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/VCILandRegistryNeg/AuthenticateUserForLandRegistry/AuthenticateUserForLandRegistry
+      outputTemplate: injicertify/VCILandRegistryNeg/AuthenticateUserForLandRegistry/AuthenticateUserForLandRegistryResult
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_ForLandRegistry_uin_Pos_Without_DB_Insertion_For_NegFlow_sid_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_ForLandRegistry_uin_Pos_Without_DB_Insertion_For_NegFlow_sid_transactionId$",
+      	"individualId": "$ID:AddIdentity_For_LandRegistry_Without_DB_Insertion_Valid_smoke_Pos_UIN$",
+      	"authFactorType" : "OTP",
+      	"challenge" : "111111",
+        "format": "alpha-numeric",
+        "sendOtp":{
+    "encodedHash": "$ID:ESignet_OAuthDetailsRequest_ForLandRegistry_uin_Pos_Without_DB_Insertion_For_NegFlow_sid_encodedResp$",
+    "requestTime": "$TIMESTAMP$",
+    "transactionId": "$ID:ESignet_OAuthDetailsRequest_ForLandRegistry_uin_Pos_Without_DB_Insertion_For_NegFlow_sid_transactionId$",
+	"individualId": "$ID:AddIdentity_For_LandRegistry_Without_DB_Insertion_Valid_smoke_Pos_UIN$",
+    "otpChannels": [{channel: "email"},{channel: "phone"}],
+    "sendOtpReqTemplate": "injicertify/SendOtp/SendOtp",
+    "sendOtpEndPoint": "$ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/send-otp"
+    }
+    }'
+      output: '{
+  "sendOtpResp":{
+        "maskedMobile": "$IGNORE$",
+        "sendOtpResTemplate":"injicertify/SendOtp/SendOtpResult",
+        "maskedEmail": "$IGNORE$"
+    }
+}'

@@ -168,7 +168,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                             .filter(type -> !type.equals("VerifiableCredential"))
                             .findFirst()
                             .orElse(null);
-                    credentialConfigurationSupportedMap.put(credentialType, credentialConfigurationSupported);
+                    credentialConfigurationSupportedMap.put(credentialConfigurationDTO.getCredentialConfigKeyId(), credentialConfigurationSupported);
                 });
 
         credentialIssuerMetadata.setCredentialConfigurationSupportedDTO(credentialConfigurationSupportedMap);

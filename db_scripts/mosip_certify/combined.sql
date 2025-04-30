@@ -81,6 +81,7 @@ CREATE TABLE rendering_template (
 );
 DROP TABLE IF EXISTS credential_config CASCADE CONSTRAINTS;
 CREATE TABLE credential_config (
+    credential_config_key_id VARCHAR(255) NOT NULL UNIQUE,
     config_id VARCHAR(255),
     status VARCHAR(255),
     vc_template VARCHAR,

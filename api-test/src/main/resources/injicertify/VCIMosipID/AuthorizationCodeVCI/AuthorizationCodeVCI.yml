@@ -16,3 +16,21 @@ AuthorizationCodeVCI:
 }'
       output: '{
 }'
+
+   InjiCertify_ESignet_AuthorizationCode_VCI_MOSIPID_Vid_All_Valid_Smoke_sid:
+      endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/auth-code
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCode      
+      description: Authorization Code with vid
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/VCIMosipID/AuthorizationCodeVCI/AuthorizationCodeVCI
+      outputTemplate: injicertify/VCIMosipID/AuthorizationCodeVCI/AuthorizationCodeVCIResult
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_VCI_MOSIPID_Vid_all_Valid_Smoke_sid_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_VCI_MOSIPID_Vid_all_Valid_Smoke_sid_transactionId$"
+}'
+      output: '{
+}'
