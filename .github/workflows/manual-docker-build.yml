@@ -14,7 +14,7 @@ jobs:
     uses: mosip/kattu/.github/workflows/maven-build.yml@master-java21
     with:
       SERVICE_LOCATION: ./certify-service-with-plugins
-      BUILD_ARTIFACT: certify-with-plugins
+      BUILD_ARTIFACT: certify-service-with-plugins
       MAVEN_NON_EXEC_ARTIFACTS: "mock-certify-plugin.jar,mosip-identity-plugin.jar,sunbird-rc-plugin.jar"
     secrets:
       OSSRH_USER: ${{ secrets.OSSRH_USER }}
@@ -30,8 +30,8 @@ jobs:
       matrix:
         include:
           - SERVICE_LOCATION: 'certify-service-with-plugins'
-            SERVICE_NAME: 'injicertify-with-plugins'
-            BUILD_ARTIFACT: 'certify-with-plugins'
+            SERVICE_NAME: 'inji-certify-with-plugins'
+            BUILD_ARTIFACT: 'certify-service-with-plugins'
       fail-fast: false
     name: ${{ matrix.SERVICE_NAME }}
     uses: mosip/kattu/.github/workflows/docker-build.yml@master-java21
