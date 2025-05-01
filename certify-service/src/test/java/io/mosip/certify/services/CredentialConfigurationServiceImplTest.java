@@ -3,6 +3,8 @@ package io.mosip.certify.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.mosip.certify.core.dto.CredentialConfigResponse;
 import io.mosip.certify.core.dto.CredentialConfigurationDTO;
+import io.mosip.certify.core.dto.CredentialConfigurationSupportedDTO;
+import io.mosip.certify.core.dto.CredentialIssuerMetadataDTO;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.entity.CredentialConfig;
 import io.mosip.certify.mapper.CredentialConfigMapper;
@@ -49,6 +51,7 @@ public class CredentialConfigurationServiceImplTest {
         credentialConfig = new CredentialConfig();
         String id = UUID.randomUUID().toString();
         credentialConfig.setConfigId(id);
+        credentialConfig.setCredentialConfigKeyId("test-credential");
         credentialConfig.setStatus("active");
         credentialConfig.setVcTemplate("test_template");
         credentialConfig.setContext("https://www.w3.org/2018/credentials/v1");
@@ -63,6 +66,7 @@ public class CredentialConfigurationServiceImplTest {
         credentialConfig.setKeyManagerAppId("TEST2019");
 
         credentialConfigurationDTO = new CredentialConfigurationDTO();
+        credentialConfigurationDTO.setCredentialConfigKeyId("test-credential");
         credentialConfigurationDTO.setDisplay(List.of());
         credentialConfigurationDTO.setVcTemplate("test_template");
         credentialConfigurationDTO.setCredentialFormat("test_vc");
@@ -70,7 +74,7 @@ public class CredentialConfigurationServiceImplTest {
         credentialConfigurationDTO.setCredentialType(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"));
         credentialConfigurationDTO.setCredentialSubject(Map.of("name", "Full Name"));
 
-        ReflectionTestUtils.setField(credentialConfigurationService, "credentialIssuer", "http://example.com");
+        ReflectionTestUtils.setField(credentialConfigurationService, "credentialIssuer", "http://example.com/");
         ReflectionTestUtils.setField(credentialConfigurationService, "authServers", List.of("http://auth.com"));
         ReflectionTestUtils.setField(credentialConfigurationService, "servletPath", "v1/test");
         ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "DataProvider");
@@ -165,5 +169,106 @@ public class CredentialConfigurationServiceImplTest {
                 credentialConfigurationService.deleteCredentialConfigurationById("12345678"));
 
         assertEquals("Configuration not found with the provided id: 12345678", exception.getMessage());
+    }
+
+    @Test
+    public void fetchCredentialIssuerMetadata_Success() {
+        // Setup test data
+        List<CredentialConfig> credentialConfigList = List.of(credentialConfig);
+        when(credentialConfigRepository.findAll()).thenReturn(credentialConfigList);
+        when(credentialConfigMapper.toDto(any(CredentialConfig.class))).thenReturn(credentialConfigurationDTO);
+
+        // Call the method
+        CredentialIssuerMetadataDTO result = credentialConfigurationService.fetchCredentialIssuerMetadata("latest");
+
+        // Verify results
+        Assert.assertNotNull(result);
+        Assert.assertEquals("http://example.com/", result.getCredentialIssuer());
+        Assert.assertEquals(List.of("http://auth.com"), result.getAuthorizationServers());
+        Assert.assertEquals("http://example.com/v1/test/issuance/credential", result.getCredentialEndpoint());
+
+        // Verify credential configuration
+        Assert.assertNotNull(result.getCredentialConfigurationSupportedDTO());
+        Assert.assertEquals(1, result.getCredentialConfigurationSupportedDTO().size());
+        Assert.assertTrue(result.getCredentialConfigurationSupportedDTO().containsKey("test-credential"));
+
+        // Verify mapping was called
+        verify(credentialConfigRepository).findAll();
+        verify(credentialConfigMapper).toDto(credentialConfig);
+    }
+
+    @Test
+    public void fetchCredentialIssuerMetadata_SpecificVersion() {
+        // Setup minimal test data
+        List<CredentialConfig> credentialConfigList = List.of(credentialConfig);
+        when(credentialConfigRepository.findAll()).thenReturn(credentialConfigList);
+        when(credentialConfigMapper.toDto(any(CredentialConfig.class))).thenReturn(credentialConfigurationDTO);
+//        when(credentialConfigurationDTO.getCredentialConfigKeyId()).thenReturn("test-credential");
+
+        // Call with specific version
+        CredentialIssuerMetadataDTO result = credentialConfigurationService.fetchCredentialIssuerMetadata("v1");
+
+        // Verify version in endpoint
+        Assert.assertEquals("http://example.com/v1/test/issuance/v1/credential", result.getCredentialEndpoint());
+    }
+
+    @Test
+    public void fetchCredentialIssuerMetadata_EmptyCredentialConfigs() {
+        // Setup empty credential config list
+        when(credentialConfigRepository.findAll()).thenReturn(Collections.emptyList());
+
+        // Call the method
+        CredentialIssuerMetadataDTO result = credentialConfigurationService.fetchCredentialIssuerMetadata("latest");
+
+        // Verify core metadata still populated
+        Assert.assertNotNull(result);
+        Assert.assertEquals("http://example.com/", result.getCredentialIssuer());
+        Assert.assertEquals(List.of("http://auth.com"), result.getAuthorizationServers());
+
+        // Verify empty configurations map
+        Assert.assertNotNull(result.getCredentialConfigurationSupportedDTO());
+        Assert.assertTrue(result.getCredentialConfigurationSupportedDTO().isEmpty());
+
+        // Verify no mapping calls
+        verify(credentialConfigRepository).findAll();
+        verify(credentialConfigMapper, never()).toDto(any());
+    }
+
+    @Test
+    public void fetchCredentialIssuerMetadata_MsoMdocFormat() {
+        // Setup CredentialConfig with MSO_MDOC format
+        CredentialConfig mdocConfig = new CredentialConfig();
+        mdocConfig.setConfigId(UUID.randomUUID().toString());
+        mdocConfig.setStatus("active");
+        mdocConfig.setCredentialFormat("mso_mdoc");
+        mdocConfig.setClaims(Map.of("firstName", "First Name", "lastName", "Last Name"));
+        mdocConfig.setDocType("docType1");
+
+        List<CredentialConfig> credentialConfigList = List.of(mdocConfig);
+        when(credentialConfigRepository.findAll()).thenReturn(credentialConfigList);
+
+        // Setup DTO for MSO_MDOC
+        CredentialConfigurationDTO mdocDTO = new CredentialConfigurationDTO();
+        mdocDTO.setCredentialFormat("mso_mdoc");
+        mdocDTO.setCredentialConfigKeyId("mdoc-credential");
+        mdocDTO.setScope("mdoc_scope");
+        mdocDTO.setClaims(Map.of("firstName", "First Name", "lastName", "Last Name"));
+        mdocDTO.setDocType("docType1");
+
+        when(credentialConfigMapper.toDto(mdocConfig)).thenReturn(mdocDTO);
+
+        // Call the method
+        CredentialIssuerMetadataDTO result = credentialConfigurationService.fetchCredentialIssuerMetadata("latest");
+
+        // Verify MSO_MDOC configuration
+        Assert.assertNotNull(result.getCredentialConfigurationSupportedDTO());
+        Assert.assertEquals(1, result.getCredentialConfigurationSupportedDTO().size());
+
+        CredentialConfigurationSupportedDTO supportedDTO = result.getCredentialConfigurationSupportedDTO().get("mdoc-credential");
+        Assert.assertNotNull(supportedDTO);
+        Assert.assertEquals("mso_mdoc", supportedDTO.getFormat());
+        Assert.assertNotNull(supportedDTO.getClaims());
+        Assert.assertEquals("docType1", supportedDTO.getDocType());
+        Assert.assertNull(supportedDTO.getCredentialDefinition());
     }
 }

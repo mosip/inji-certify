@@ -81,7 +81,7 @@ public class SDJWT extends Credential{
             JWTClaimsSet claimsSet = JWTClaimsSet.parse(sdClaims);
             PlainJWT jwt = new PlainJWT(header, claimsSet);
             com.authlete.sd.SDJWT sdJwt = new com.authlete.sd.SDJWT(jwt.serialize(), disclosures);
-            return jwt.serialize();
+            return sdJwt.toString();
         } catch (JsonProcessingException ex) {
             log.error("JSON processing error", ex);
         }
@@ -103,7 +103,7 @@ public class SDJWT extends Credential{
      * <p>In the defaulat abstract implementation we assume 
      * ```Base64.getUrlEncoder().encodeToString(vcToSign)``` </p>
      * @param vcToSign actual vc as returned by the `createCredential` method. 
-     * @param heders headers to be added. Can be null.
+     * @param headers headers to be added. Can be null.
      * @param signAlgorithm as defined in com.danubetech.keyformats.jose.JWSAlgorithm
      * @param appID app id from the keymanager tables
      * @param refID referemce id from the keymanager tables
@@ -120,7 +120,7 @@ public class SDJWT extends Credential{
         payload.setApplicationId(appID);
         payload.setReferenceId(refID); 
         //TODO: Wait for keymanager fix here.
-        payload.setSignAlgorithm("ES256");
+        payload.setSignAlgorithm(signAlgorithm);
         payload.setIncludePayload(true);
         payload.setIncludeCertificate(true);
         payload.setIncludeCertHash(true);
