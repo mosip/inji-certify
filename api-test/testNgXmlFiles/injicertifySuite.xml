@@ -848,7 +848,7 @@
 	<test name="UpdateCredentialConfig">
 		<parameter name="ymlFile"
 			value="injicertify/CredentialConfig/UpdateCredentialConfiguration/UpdateCredentialConfiguration.yml" />
-		<parameter name="pathParams" value="id" />			
+		<parameter name="pathParams" value="configurationId" />			
 		<classes>
 			<class name="io.mosip.testrig.apirig.injicertify.testscripts.PutWithPathParamsAndBody" />
 		</classes>
