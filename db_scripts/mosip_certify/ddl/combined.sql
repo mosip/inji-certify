@@ -91,10 +91,8 @@ INSERT INTO key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_A
 INSERT INTO key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_VC_SIGN_RSA', 1095, 60, 'NA', true, 'mosipadmin', now());
 INSERT INTO key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_VC_SIGN_ED25519', 1095, 60, 'NA', true, 'mosipadmin', now());
 INSERT INTO key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('BASE', 1095, 60, 'NA', true, 'mosipadmin', now());
-INSERT INTO key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_MOCK_RSA', 1095, 60, 'NA', true, 'mosipadmin', now());
-INSERT INTO key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_MOCK_ED25519', 1095, 60, 'NA', true, 'mosipadmin', now());
-INSERT INTO key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_MOCK_ECCK1', 1095, 60, 'NA', true, 'mosipadmin', now());
-INSERT INTO key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_MOCK_ECCR1', 1095, 60, 'NA', true, 'mosipadmin', now());
+INSERT INTO key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_VC_SIGN_EC_K1', 1095, 60, 'NA', true, 'mosipadmin', now());
+INSERT INTO key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_VC_SIGN_EC_R1', 1095, 60, 'NA', true, 'mosipadmin', now());
 
 
 
@@ -129,7 +127,7 @@ INSERT INTO template_data (context, credential_type, template, credential_format
          "farmerID": "${farmerID}"
      }
 }
-', 'ldp_vc', 'CERTIFY_MOCK_ED25519','ED25519_SIGN','did:web:vharsh.github.io:DID:harsh#key-0', '2024-10-24 12:32:38.065994', NULL);
+', 'ldp_vc', 'CERTIFY_VC_SIGN_ED25519','ED25519_SIGN','did:web:vharsh.github.io:DID:harsh#key-0', '2024-10-24 12:32:38.065994', NULL);
 
 INSERT INTO template_data(context, credential_type, template, credential_format, key_manager_app_id, key_manager_ref_id, did_url, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/ns/credentials/v2', 'FarmerCredential,VerifiableCredential', '{
     "@context": [
@@ -161,7 +159,7 @@ INSERT INTO template_data(context, credential_type, template, credential_format,
         "face": "${face}",
         "farmerID": "${farmerID}"
     }
-}', 'ldp_vc', 'CERTIFY_MOCK_ED25519','ED25519_SIGN', 'did:web:vharsh.github.io:DID:harsh', '2024-10-24 12:32:38.065994', NULL);
+}', 'ldp_vc', 'CERTIFY_VC_SIGN_ED25519','ED25519_SIGN', 'did:web:vharsh.github.io:DID:harsh', '2024-10-24 12:32:38.065994', NULL);
 
 
 INSERT INTO template_data (context, credential_type, template, credential_format, key_manager_app_id, key_manager_ref_id, did_url, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/2018/credentials/v1', 'FarmerCredential,VerifiableCredential', '{
@@ -191,7 +189,7 @@ INSERT INTO template_data (context, credential_type, template, credential_format
       }
     }
   }
-', 'vc+sd-jwt', 'CERTIFY_MOCK_ECCR1','EC_SECP256R1_SIGN','did:web:vharsh.github.io:DID:harsh#key-0', '2024-10-24 12:32:38.065994', NULL);
+', 'vc+sd-jwt', 'CERTIFY_VC_SIGN_EC_R1','EC_SECP256R1_SIGN','did:web:vharsh.github.io:DID:harsh#key-0', '2024-10-24 12:32:38.065994', NULL);
 
 
 INSERT INTO template_data (context, credential_type, template, credential_format, key_manager_app_id, key_manager_ref_id, did_url, cr_dtimes, upd_dtimes) VALUES ('https://www.w3.org/2018/credentials/v1', 'FarmerCredential,VerifiableCredential', '{
@@ -221,4 +219,4 @@ INSERT INTO template_data (context, credential_type, template, credential_format
       }
     }
   }
-', 'dc+sd-jwt', 'CERTIFY_MOCK_ECCK1','EC_SECP256K1_SIGN','did:web:vharsh.github.io:DID:harsh#key-0', '2024-10-24 12:32:38.065994', NULL);
+', 'dc+sd-jwt', 'CERTIFY_VC_SIGN_EC_K1','EC_SECP256K1_SIGN','did:web:vharsh.github.io:DID:harsh#key-0', '2024-10-24 12:32:38.065994', NULL);

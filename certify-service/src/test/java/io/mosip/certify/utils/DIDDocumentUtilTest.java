@@ -16,7 +16,7 @@ class DIDDocumentUtilTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void testGenerateDIDDocumentEd25519Signature2020() throws Exception {
+    void testGenerateDIDDocumentEd25519Signature2020() {
         String vcSignAlgorithm = SignatureAlg.ED25519_SIGNATURE_SUITE_2020;
         String certificateString = "-----BEGIN CERTIFICATE-----\nMIIC2jCCAcKgAwIBAgIInbzaZeSXQqEwDQYJKoZIhvcNAQELBQAwgYsxCzAJBgNV\nBAYTAklOMQswCQYDVQQIDAJLQTESMBAGA1UEBwwJQkFOR0FMT1JFMQ4wDAYDVQQK\nDAVJSUlUQjEXMBUGA1UECwwORVhBTVBMRS1DRU5URVIxMjAwBgNVBAMMKXd3dy5l\neGFtcGxlLmNvbSAoQ0VSVElGWV9WQ19TSUdOX0VEMjU1MTkpMB4XDTI0MTIyOTA4\nNDY1OFoXDTI3MTIyOTA4NDY1OFowgYYxCzAJBgNVBAYTAklOMQswCQYDVQQIDAJL\nQTESMBAGA1UEBwwJQkFOR0FMT1JFMQ4wDAYDVQQKDAVJSUlUQjEXMBUGA1UECwwO\nRVhBTVBMRS1DRU5URVIxLTArBgNVBAMMJENFUlRJRllfVkNfU0lHTl9FRDI1NTE5\nLUVEMjU1MTlfU0lHTjAqMAUGAytlcAMhAOX8AiOEEHfyJRKJsjshaJps736mS4zS\ncZVcdUpZpEbxoz8wPTAMBgNVHRMBAf8EAjAAMB0GA1UdDgQWBBSVZaEpMbDVgrAy\nZP0ZlwMMXzhS9jAOBgNVHQ8BAf8EBAMCBSAwDQYJKoZIhvcNAQELBQADggEBAAJ4\nPZb+6A5Q5Z2X18B3PLNLs5It2UTu+qL8PhQyoVpEoq44Efl+10qaAiBp7l66sYcf\nsYVhREnJaBACqsEy5cFTZ7j+7Q0GhuepnkYTS9n8DwlOgZgPU0tBBwthbixwFyME\ne2VdtuhyuVnGK8+W6VWMg+lQGyQwPgrzAf6L81bADn+cW6tIVoYd4uuNfoXeM0pL\nTtKMGEyRVdx3Q+wcLEGZXCTYPkUgf+mq8kqf9dCDdDgblPU891msZpg0KGRkLD28\nPF7FPhK0Hq4DzwfhdpiQMe7W19FyH/IXRprJi8LKx4V9Y/rBAvR2loLR0PwVl+VB\nB55c6EluZ6hn9xuwr9w=\n-----END CERTIFICATE-----\n";
         String issuerURI = "did:example:123";
@@ -105,6 +105,28 @@ class DIDDocumentUtilTest {
         assertEquals(verificationMethod.get("id"), issuerPublicKeyURI);
         assertEquals(verificationMethod.get("type"), "EcdsaSecp256k1VerificationKey2019");
         assertEquals(verificationMethod.get("@context"), "https://w3id.org/security/v1");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void testGenerateDIDDocumentECR1Signature2019() {
+        String vcSignAlgorithm = SignatureAlg.EC_SECP256R1_2019;
+        String certificateString = "-----BEGIN CERTIFICATE-----\nMIIDEDCCAfigAwIBAgIIZ1nHaUeKLDMwDQYJKoZIhvcNAQELBQAweDELMAkGA1UE\nBhMCSU4xCzAJBgNVBAgMAktBMRIwEAYDVQQHDAlCQU5HQUxPUkUxDjAMBgNVBAoM\nBUlJSVRCMRcwFQYDVQQLDA5FWEFNUExFLUNFTlRFUjEfMB0GA1UEAwwWd3d3LmV4\nYW1wbGUuY29tIChST09UKTAeFw0yNTA0MDcwMTQ1MzVaFw0yODA0MDYwMTQ1MzVa\nMIGbMQswCQYDVQQGEwJJTjELMAkGA1UECAwCS0ExEjAQBgNVBAcMCUJBTkdBTE9S\nRTEOMAwGA1UECgwFSUlJVEIxFzAVBgNVBAsMDkVYQU1QTEUtQ0VOVEVSMUIwQAYD\nVQQDDDl3d3cuZXhhbXBsZS5jb20gKENFUlRJRllfVkNfU0lHTl9FQ19SMS1FQ19T\nRUNQMjU2UjFfU0lHTikwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAARnZrptfF7k\nyWism4kK6l8N6K4v8H3FyYzlkDc8/mP55pa+gTUvcEN4DF7jAZntyYUL8GE3Eupf\nd2ZdL7ojg2sgo0UwQzASBgNVHRMBAf8ECDAGAQH/AgEBMB0GA1UdDgQWBBRIWCn1\nRWbTDjYmBJLsnQ5jKyYudzAOBgNVHQ8BAf8EBAMCAoQwDQYJKoZIhvcNAQELBQAD\nggEBAIM3Mv1W3N5htKcNEhvtkRYhl0MthNRNzNOuNSRu8VHBgverGE438vdbCQ2f\n/CGBI+Jo2IHdsaFOFGvb6TOOjEZFPgGJyPBK1PGqZc/OiqIcLvPwQ0HVQbp6fgHC\nxocizOAZmrjCQSgQgcDQSuO9tv9JV3Vb7odnPFlbtpREN23AS4KMyVYRm06CrSac\nPW44fSP4GSbWHmgaBvhWxJcXJ/4LpK+UQ1Q0dszm6ofgppd18oSwix90NRDTej7J\nAXmfM3eCvGvMlJC3jHs4EFns9egC16hHqX7INpE1K/ZNyTgHhXpErqaDWw2xkkPC\nvVFPORPyyNumlhL/f36CtutMe2U=\n-----END CERTIFICATE-----\n";
+        String issuerURI = "did:example:123";
+        String issuerPublicKeyURI = "did:example:123#key-0";
+
+        Map<String, Object> didDocument = DIDDocumentUtil.generateDIDDocument(vcSignAlgorithm, certificateString, issuerURI, issuerPublicKeyURI);
+        assertEquals(didDocument.get("@context"), Collections.singletonList("https://www.w3.org/ns/did/v1"));
+        assertEquals(issuerURI, didDocument.get("id"));
+        assertEquals(Collections.singletonList(issuerPublicKeyURI), didDocument.get("authentication"));
+        assertEquals(Collections.singletonList(issuerPublicKeyURI), didDocument.get("assertionMethod"));
+
+        Map<String,Object> verificationMethod = ((List<Map<String,Object>>)didDocument.get("verificationMethod")).get(0);
+        assertEquals(verificationMethod.get("controller"), issuerURI);
+        assertEquals(verificationMethod.get("publicKeyMultibase"), "zDnaeXPbtiMpLqxAH31Q9iJgsX7VKtf4z7GQPj5FEGJfBDBGR");
+        assertEquals(verificationMethod.get("id"), issuerPublicKeyURI);
+        assertEquals(verificationMethod.get("type"), "EcdsaSecp256r1VerificationKey2019");
+        assertEquals(verificationMethod.get("@context"), "https://w3id.org/security/suites/ecdsa-2019/v1");
     }
 
     @Test
