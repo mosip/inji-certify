@@ -35,6 +35,65 @@ jobs:
       GPG_SECRET: ${{ secrets.GPG_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
+  check_snapshot_version:
+    runs-on: ubuntu-latest
+    outputs:
+      is_condition: ${{ steps.check_output.outputs.is_condition }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Check for -SNAPSHOT version in pom.xml files
+        id: check_output
+        shell: bash
+        run: |
+          # Initialize the flag that will hold the result
+          condition_met=false
+          echo "Initial condition_met: $condition_met"
+          
+          # Loop through each pom.xml file and check if -SNAPSHOT version is present in the parent block
+          for pom_file in $(find . -name "pom.xml"); do
+            echo "Processing $pom_file"
+          
+            # Extract the <parent> block from the pom.xml
+            parent_block=$(awk '/<parent>/,/<\/parent>/' "$pom_file")
+          
+            # If there's no <parent> block, skip this file and move to the next one
+            if [ -z "$parent_block" ]; then
+              echo "No <parent> block found in $pom_file, skipping this file."
+              continue
+            fi
+          
+            # Debug: Print the entire parent block for verification
+            echo "Checking the following parent block in $pom_file:"
+            echo "$parent_block"
+          
+            # Extract the <version> field from the <parent> block
+            version_in_parent=$(echo "$parent_block" | grep -oP '<version>\K.*(?=</version>)')
+          
+            # Debug the extracted version
+            echo "Extracted version in $pom_file: $version_in_parent"
+          
+            # Check if the version contains '-SNAPSHOT'
+            if [[ "$version_in_parent" == *"-SNAPSHOT"* ]]; then
+              echo "Found '-SNAPSHOT' version in $pom_file."
+              condition_met=true
+              break # Stop checking further files once we find '-SNAPSHOT'
+            else
+              echo "No '-SNAPSHOT' version found in $pom_file."
+            fi
+          done
+          
+          # Debug the final condition_met value
+          echo "Final condition_met value: $condition_met"
+          
+          # Set the output for the next step
+          echo "::set-output name=is_condition::$condition_met"
+
+      - name: Debug Condition Output
+        run: |
+          echo "Condition Met: ${{ steps.check_output.outputs.is_condition }}"
+
   publish_to_nexus:
     if: "${{ !contains(github.ref, 'master') && github.event_name != 'pull_request' }}"
     needs: build-maven-inji-certify
@@ -48,7 +107,6 @@ jobs:
       OSSRH_TOKEN: ${{ secrets.OSSRH_TOKEN }}
       GPG_SECRET: ${{ secrets.GPG_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
-
 
   build-dockers:
     needs: build-maven-inji-certify
@@ -71,76 +129,40 @@ jobs:
       RELEASE_DOCKER_HUB: ${{ secrets.RELEASE_DOCKER_HUB }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
-  build-inji-certify-with-plugins:
-    needs: [ build-dockers ]
-    runs-on: ubuntu-latest
-    env:
-      NAMESPACE: ${{ secrets.dev_namespace_docker_hub }}
+  maven-build-inji-certify-with-plugins:
+    uses: mosip/kattu/.github/workflows/maven-build.yml@master-java21
+    with:
       SERVICE_LOCATION: ./certify-service-with-plugins
-      BUILD_ARTIFACT: inji-certify-with-plugins
-      SERVICE_NAME: inji-certify-with-plugins
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK 21
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: 21
-          server-id: ossrh # Value of the distributionManagement/repository/id field of the pom.xml
-          settings-path: ${{ github.workspace }} # location for the settings.xml file
-      - name: Setup the settings file for ossrh server
-        run: echo "<settings> <servers>  <server>  <id>ossrh</id>    <username>${{secrets.ossrh_user}}</username> <password>${{secrets.ossrh_secret}}</password> </server> </servers> <profiles> <profile>     <id>ossrh</id> <activation> <activeByDefault>true</activeByDefault> </activation>  <properties> <gpg.executable>gpg2</gpg.executable> <gpg.passphrase>${{secrets.gpg_secret}}</gpg.passphrase> </properties> </profile> <profile> <id>allow-snapshots</id>       <activation><activeByDefault>true</activeByDefault></activation> <repositories> <repository>        <id>snapshots-repo</id> <url>https://oss.sonatype.org/content/repositories/snapshots</url> <releases><enabled>false</enabled></releases> <snapshots><enabled>true</enabled></snapshots> </repository>  <repository>         <id>releases-repo</id>  <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>         <releases><enabled>true</enabled></releases>         <snapshots><enabled>false</enabled></snapshots> </repository> </repositories>  </profile> <profile> <id>sonar</id> <properties>  <sonar.sources>.</sonar.sources> <sonar.host.url>https://sonarcloud.io</sonar.host.url>  </properties> <activation> <activeByDefault>false</activeByDefault> </activation> </profile> </profiles> </settings>" > $GITHUB_WORKSPACE/settings.xml
-      - name: Build Certify with plugin with Maven
-        run: |
-          cd ${{ env.SERVICE_LOCATION}}
-          mvn clean package -s $GITHUB_WORKSPACE/settings.xml
-      - name: Build check for Docker label
-        run: |
-          cd ${{ env.SERVICE_LOCATION }}
-          for layer in  ARG\\s+SOURCE ARG\\s+COMMIT_HASH ARG\\s+COMMIT_ID ARG\\s+BUILD_TIME LABEL\\s+source=\\$\\{SOURCE\\} LABEL\\s+commit_hash=\\$\\{COMMIT_HASH\\} LABEL\\s+commit_id=\\$\\{COMMIT_ID\\} LABEL\\s+build_time=\\$\\{BUILD_TIME\\}; do
-            layer_count=$( grep -Ev '^$' Dockerfile | grep -Ec "$layer" || true);
+      BUILD_ARTIFACT: certify-service-with-plugins
+      MAVEN_NON_EXEC_ARTIFACTS: "mock-certify-plugin.jar,mosip-identity-certify-plugin.jar,postgres-dataprovider-plugin.jar,sunbird-rc-certify-integration-impl.jar"
+    secrets:
+      OSSRH_USER: ${{ secrets.OSSRH_USER }}
+      OSSRH_SECRET: ${{ secrets.OSSRH_SECRET }}
+      OSSRH_TOKEN: ${{ secrets.OSSRH_TOKEN }}
+      GPG_SECRET: ${{ secrets.GPG_SECRET }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
-            if [[ $layer_count -ne 1 ]]; then
-              dlayer=$( echo $layer | sed -E 's/\\s\+/ /g' | sed -E 's/\\//g' )
-              echo "Docker layer : \"$dlayer\" not found; EXITING";
-              exit 1;
-            fi
-          done
-
-      - name: Setup branch and env
-        run: |
-          # Strip git ref prefix from version
-          echo "BRANCH_NAME=$(echo ${{ github.ref }} | sed -e 's,.*/\(.*\),\1,')" >> $GITHUB_ENV
-          echo "GPG_TTY=$(tty)" >> $GITHUB_ENV
-          echo "${{ toJSON(inputs) }}"
-
-      - name: Build image
-        run: |
-          cd ${{ env.SERVICE_LOCATION }}
-          docker build . --build-arg SOURCE=mosip --build-arg COMMIT_HASH=$(git rev-parse HEAD) --build-arg COMMIT_ID=$(git rev-parse --short HEAD) --build-arg BUILD_TIME=$BUILD_TIME --file Dockerfile --tag ${{ env.SERVICE_NAME }}
-
-      - name: Log into registry
-        if: "${{ github.event_name != 'pull_request' }}"
-        run: echo "${{secrets.RELEASE_DOCKER_HUB}}" | docker login -u ${{secrets.ACTOR_DOCKER_HUB}} --password-stdin
-
-      - name: Push image
-        if: "${{ github.event_name != 'pull_request' }}"
-        run: |
-          IMAGE_ID=$NAMESPACE/$SERVICE_NAME
-
-          # Change all uppercase to lowercase
-          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-          echo "push version ${{steps.getPomVersion.outputs.info}}"
-          if [[ $BRANCH_NAME == master ]]; then
-          VERSION=latest
-          else
-          VERSION=$BRANCH_NAME
-          fi
-          echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
-          docker tag $SERVICE_NAME $IMAGE_ID:$VERSION
-          docker push $IMAGE_ID:$VERSION
-
+  build-docker-inji-certify-with-plugins:
+    needs: [ maven-build-inji-certify-with-plugins, check_snapshot_version, publish_to_nexus ]
+    if: ${{ needs.check_snapshot_version.outputs.is_condition == 'true' }}
+    strategy:
+      matrix:
+        include:
+          - SERVICE_LOCATION: 'certify-service-with-plugins'
+            SERVICE_NAME: 'inji-certify-with-plugins'
+            BUILD_ARTIFACT: 'certify-service-with-plugins'
+      fail-fast: false
+    name: ${{ matrix.SERVICE_NAME }}
+    uses: mosip/kattu/.github/workflows/docker-build.yml@master-java21
+    with:
+      SERVICE_LOCATION: ${{ matrix.SERVICE_LOCATION }}
+      SERVICE_NAME: ${{ matrix.SERVICE_NAME }}
+      BUILD_ARTIFACT: ${{ matrix.BUILD_ARTIFACT }}
+    secrets:
+      DEV_NAMESPACE_DOCKER_HUB: ${{ secrets.DEV_NAMESPACE_DOCKER_HUB }}
+      ACTOR_DOCKER_HUB: ${{ secrets.ACTOR_DOCKER_HUB }}
+      RELEASE_DOCKER_HUB: ${{ secrets.RELEASE_DOCKER_HUB }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
   sonar_analysis:
     needs: build-maven-inji-certify

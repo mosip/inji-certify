@@ -17,6 +17,7 @@
     <version>0.11.0</version>
     <name>certify-service-with-plugins</name>
     <description>certify vci service</description>
+    <url>https://github.com/mosip/inji-certify</url>
 
     <licenses>
         <license>
