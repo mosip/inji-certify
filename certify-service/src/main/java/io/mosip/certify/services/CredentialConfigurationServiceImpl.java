@@ -164,10 +164,6 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                         credentialConfigurationSupported.setDocType(credentialConfig.getDocType());
                     }
 
-                    String credentialType = credentialConfigurationDTO.getCredentialType().stream()
-                            .filter(type -> !type.equals("VerifiableCredential"))
-                            .findFirst()
-                            .orElse(null);
                     credentialConfigurationSupportedMap.put(credentialConfigurationDTO.getCredentialConfigKeyId(), credentialConfigurationSupported);
                 });
 

@@ -41,7 +41,7 @@ CREATE TABLE credential_config (
 
 COMMENT ON TABLE credential_config IS 'Credential Config: Contains details of credential configuration.';
 
-COMMENT ON COLUMN credential_config.id IS 'Credential Config ID: Unique id assigned to save and identify configuration.';
+COMMENT ON COLUMN credential_config.config_id IS 'Credential Config ID: Unique id assigned to save and identify configuration.';
 COMMENT ON COLUMN credential_config.status IS 'Credential Config Status: Status of the credential configuration.';
 COMMENT ON COLUMN credential_config.vc_template IS 'VC Template: Template used for the verifiable credential.';
 COMMENT ON COLUMN credential_config.doctype IS 'Doc Type: Doc Type specifically for Mdoc VC.';
