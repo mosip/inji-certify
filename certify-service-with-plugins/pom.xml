@@ -36,7 +36,7 @@
     </developers>
 
     <properties>
-        <certify-plugins.location>target/certify-plugins</certify-plugins.location>
+        <certify-plugins.location>target</certify-plugins.location>
         <mock-certify-plugin.version>0.4.0</mock-certify-plugin.version>
         <mock-certify-plugin.fileName>mock-certify-plugin.jar</mock-certify-plugin.fileName>
         <mosip-identity-certify-plugin.version>0.4.0</mosip-identity-certify-plugin.version>
