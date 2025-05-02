@@ -15,5 +15,5 @@ public class SignatureAlg {
     // EC K1 curves
     public static final String EC_K1_2016 = "EcdsaKoblitzSignature2016";
     public static final String EC_SECP256K1_2019 = "EcdsaSecp256k1Signature2019"; // secp256k1
-
+    public static final String EC_SECP256R1_2019 = "EcdsaSecp256r1Signature2019"; // secp256r1
 }
