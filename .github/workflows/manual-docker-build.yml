@@ -1,0 +1,46 @@
+name: Manual Docker Build for without -SNAPSHOT
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: 'Message for manually triggering'
+        required: false
+        default: 'Triggered for Updates'
+        type: string
+
+jobs:
+  maven-build-inji-certify-with-plugins:
+    uses: mosip/kattu/.github/workflows/maven-build.yml@master-java21
+    with:
+      SERVICE_LOCATION: ./certify-service-with-plugins
+      BUILD_ARTIFACT: certify-service-with-plugins
+      MAVEN_NON_EXEC_ARTIFACTS: "mock-certify-plugin.jar,mosip-identity-plugin.jar,postgres-dataprovider-plugin.jar,sunbird-rc-plugin.jar"
+    secrets:
+      OSSRH_USER: ${{ secrets.OSSRH_USER }}
+      OSSRH_SECRET: ${{ secrets.OSSRH_SECRET }}
+      OSSRH_TOKEN: ${{ secrets.OSSRH_TOKEN }}
+      GPG_SECRET: ${{ secrets.GPG_SECRET }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+  build-docker-inji-certify-with-plugins:
+    needs: maven-build-inji-certify-with-plugins
+    if: ${{ github.event_name == 'workflow_dispatch' }}  # Runs only when triggered manually
+    strategy:
+      matrix:
+        include:
+          - SERVICE_LOCATION: 'certify-service-with-plugins'
+            SERVICE_NAME: 'inji-certify-with-plugins'
+            BUILD_ARTIFACT: 'certify-service-with-plugins'
+      fail-fast: false
+    name: ${{ matrix.SERVICE_NAME }}
+    uses: mosip/kattu/.github/workflows/docker-build.yml@master-java21
+    with:
+      SERVICE_LOCATION: ${{ matrix.SERVICE_LOCATION }}
+      SERVICE_NAME: ${{ matrix.SERVICE_NAME }}
+      BUILD_ARTIFACT: ${{ matrix.BUILD_ARTIFACT }}
+    secrets:
+      DEV_NAMESPACE_DOCKER_HUB: ${{ secrets.DEV_NAMESPACE_DOCKER_HUB }}
+      ACTOR_DOCKER_HUB: ${{ secrets.ACTOR_DOCKER_HUB }}
+      RELEASE_DOCKER_HUB: ${{ secrets.RELEASE_DOCKER_HUB }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
