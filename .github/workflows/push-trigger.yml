@@ -145,7 +145,7 @@ jobs:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
   build-docker-inji-certify-with-plugins:
-    needs: [ maven-build-inji-certify-with-plugins, check_snapshot_version ]
+    needs: [ maven-build-inji-certify-with-plugins, check_snapshot_version, publish_to_nexus ]
     if: ${{ needs.check_snapshot_version.outputs.is_condition == 'true' }}
     strategy:
       matrix:
