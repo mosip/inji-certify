@@ -79,8 +79,11 @@ public class VCIssuanceController {
             @RequestParam(name = "version", required = false, defaultValue = "latest") String version) {
         return vcIssuanceService.getCredentialIssuerMetadata(version);
     }
-
-    @GetMapping(value = "/.well-known/did.json")
+    /**
+     * Open endpoint to provide the DID document for the VC issuer
+     * @return DID document as a map containing standard W3C DID properties
+     */
+    @GetMapping(value = "/.well-known/did.json", produces = "application/json")
     public Map<String, Object> getDIDDocument() {
        return vcIssuanceService.getDIDDocument();
     }
