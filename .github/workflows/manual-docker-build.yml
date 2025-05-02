@@ -15,7 +15,7 @@ jobs:
     with:
       SERVICE_LOCATION: ./certify-service-with-plugins
       BUILD_ARTIFACT: certify-service-with-plugins
-      MAVEN_NON_EXEC_ARTIFACTS: "mock-certify-plugin.jar,mosip-identity-plugin.jar,postgres-dataprovider-plugin.jar,sunbird-rc-plugin.jar"
+      MAVEN_NON_EXEC_ARTIFACTS: "mock-certify-plugin.jar,mosip-identity-certify-plugin.jar,postgres-dataprovider-plugin.jar,sunbird-rc-certify-integration-impl.jar"
     secrets:
       OSSRH_USER: ${{ secrets.OSSRH_USER }}
       OSSRH_SECRET: ${{ secrets.OSSRH_SECRET }}
