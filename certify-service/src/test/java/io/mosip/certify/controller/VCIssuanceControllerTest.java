@@ -47,6 +47,35 @@ public class VCIssuanceControllerTest {
     @MockBean
     VCICacheService vciCacheService;
 
+
+    @Test
+    public void getDIDDocument_thenPass() throws Exception {
+        // Setup DID Document based on DIDDocumentUtil implementation
+        Map<String, Object> didDocument = new HashMap<>();
+        didDocument.put("id", "did:web:example.com");
+        didDocument.put("@context", Arrays.asList("https://www.w3.org/ns/did/v1"));
+        
+        Map<String, Object> verificationMethod = new HashMap<>();
+        verificationMethod.put("id", "did:web:example.com#key-0");
+        verificationMethod.put("type", "Ed25519VerificationKey2020");
+        verificationMethod.put("controller", "did:web:example.com");
+        didDocument.put("verificationMethod", Arrays.asList(verificationMethod));
+        didDocument.put("authentication", Arrays.asList("did:web:example.com#key-0"));
+        didDocument.put("assertionMethod", Arrays.asList("did:web:example.com#key-0"));
+        
+        Mockito.when(vcIssuanceService.getDIDDocument()).thenReturn(didDocument);
+        
+        // Try the correct endpoint path - it's likely one of these based on naming conventions
+        mockMvc.perform(get("/issuance/.well-known/did.json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("did:web:example.com"))
+                .andExpect(jsonPath("$.@context[0]").value("https://www.w3.org/ns/did/v1"))
+                .andExpect(jsonPath("$.verificationMethod").isArray())
+                .andExpect(header().string("Content-Type", "application/json"));
+                
+        Mockito.verify(vcIssuanceService).getDIDDocument();
+    }
+
     @Test
     public void getIssuerMetadata_noQueryParams_thenPass() throws Exception {
         Map<String, Object> issuerMetadata = new HashMap<>();
@@ -59,7 +88,7 @@ public class VCIssuanceControllerTest {
         mockMvc.perform(get("/issuance/.well-known/openid-credential-issuer"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.credential_issuer").exists())
-                .andExpect(jsonPath("$.credential_issuer").exists())
+                .andExpect(jsonPath("$.credential_endpoint").exists())
                 .andExpect(jsonPath("$.credential_configurations_supported").exists())
                 .andExpect(header().string("Content-Type", "application/json"));
 
