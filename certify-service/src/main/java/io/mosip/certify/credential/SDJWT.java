@@ -118,7 +118,7 @@ public class SDJWT extends Credential{
         JWSSignatureRequestDto payload = new JWSSignatureRequestDto();
         payload.setDataToSign(jwtPayload.length > 1?jwtPayload[1]:jwtPayload[0]);
         payload.setApplicationId(appID);
-        payload.setReferenceId(refID); 
+        payload.setReferenceId(refID);
         //TODO: Wait for keymanager fix here.
         payload.setSignAlgorithm(signAlgorithm);
         payload.setIncludePayload(true);
