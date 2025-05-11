@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 import io.mosip.certify.api.util.AuditHelper;
+import io.mosip.certify.core.dto.*;
+import io.mosip.certify.core.spi.CredentialConfigurationService;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,11 +42,6 @@ import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
-import io.mosip.certify.core.dto.CredentialMetadata;
-import io.mosip.certify.core.dto.CredentialRequest;
-import io.mosip.certify.core.dto.CredentialResponse;
-import io.mosip.certify.core.dto.ParsedAccessToken;
-import io.mosip.certify.core.dto.VCIssuanceTransaction;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import io.mosip.certify.core.exception.NotAuthenticatedException;
@@ -123,6 +120,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     private KeymanagerService keymanagerService;
 
     private Map<String, Object> didDocument;
+
+    @Autowired
+    private CredentialConfigurationService credentialConfigurationService;
 
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
@@ -401,20 +401,21 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     }
 
     private Optional<CredentialMetadata>  getScopeCredentialMapping(String scope, String format) {
-        Map<String, Object> vciMetadata = getCredentialIssuerMetadata("latest");
-        LinkedHashMap<String, Object> supportedCredentials = (LinkedHashMap<String, Object>) vciMetadata.get("credential_configurations_supported");
-        Optional<Map.Entry<String, Object>> result = supportedCredentials.entrySet().stream()
-                .filter(cm -> ((LinkedHashMap<String, Object>) cm.getValue()).get("scope").equals(scope)).findFirst();
+        Map<String, Object> vciMetadata;
+        CredentialIssuerMetadataDTO credentialIssuerMetadataDTO = credentialConfigurationService.fetchCredentialIssuerMetadata("latest");
+
+        Map<String, CredentialConfigurationSupportedDTO> supportedCredentials = credentialIssuerMetadataDTO.getCredentialConfigurationSupportedDTO();
+        Optional<Map.Entry<String, CredentialConfigurationSupportedDTO>> result = supportedCredentials.entrySet().stream()
+                .filter(cm -> cm.getValue().getScope().equals(scope)).findFirst();
 
         if(result.isPresent()) {
-            LinkedHashMap<String, Object> metadata = (LinkedHashMap<String, Object>)result.get().getValue();
+            CredentialConfigurationSupportedDTO metadata = result.get().getValue();
             CredentialMetadata credentialMetadata = new CredentialMetadata();
-            credentialMetadata.setFormat((String) metadata.get("format"));
-            credentialMetadata.setScope((String) metadata.get("scope"));
+            credentialMetadata.setFormat(metadata.getFormat());
+            credentialMetadata.setScope(metadata.getScope());
             credentialMetadata.setId(result.get().getKey());
             if(format.equals(VCFormats.LDP_VC) || format.equals(VCFormats.LDP_SD_JWT)){
-                LinkedHashMap<String, Object> credentialDefinition = (LinkedHashMap<String, Object>) metadata.get("credential_definition");
-                credentialMetadata.setTypes((List<String>) credentialDefinition.get("type"));
+                credentialMetadata.setTypes(metadata.getCredentialDefinition().getType());
             }
             return Optional.of(credentialMetadata);
         }
@@ -441,10 +442,23 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         int cNonceExpire = (transaction == null) ?
                 nonceExpireSeconds instanceof Long ? (int)(long)nonceExpireSeconds : (int)nonceExpireSeconds :
                 transaction.getCNonceExpireSeconds();
-        long issuedEpoch = (transaction == null) ?
-                ((Instant) parsedAccessToken.getClaims().getOrDefault(JwtClaimNames.IAT, Instant.MIN)).getEpochSecond():
-                transaction.getCNonceIssuedEpoch();
-
+        long issuedEpoch;
+        if (transaction == null) {
+            Object iatClaimValue = parsedAccessToken.getClaims().get(JwtClaimNames.IAT);
+            if (iatClaimValue == null) {
+                // IAT claim is missing, use the epoch second from Instant.MIN
+                // Or throw an exception if IAT is mandatory
+                issuedEpoch = Instant.MIN.getEpochSecond();
+            } else if (iatClaimValue instanceof Instant) {
+                issuedEpoch = ((Instant) iatClaimValue).getEpochSecond();
+            } else if (iatClaimValue instanceof Number) { // Catches Long, Integer, etc.
+                issuedEpoch = ((Number) iatClaimValue).longValue();
+            } else {
+                throw new IllegalStateException("IAT claim is of an unexpected type: " + iatClaimValue.getClass().getName());
+            }
+        } else {
+            issuedEpoch = transaction.getCNonceIssuedEpoch();
+        }
         if( cNonce == null ||
                 cNonceExpire <= 0 ||
                 (issuedEpoch+cNonceExpire) < LocalDateTime.now(ZoneOffset.UTC).toEpochSecond(ZoneOffset.UTC) ) {
