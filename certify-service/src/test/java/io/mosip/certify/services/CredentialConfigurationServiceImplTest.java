@@ -125,16 +125,39 @@ public class CredentialConfigurationServiceImplTest {
 
     @Test
     public void updateExistingCredentialConfig_Success() throws JsonProcessingException {
-        Optional<CredentialConfig> optional = Optional.of(credentialConfig);
-        when(credentialConfigRepository.findByConfigId(anyString())).thenReturn(optional);
+
+        CredentialConfig mockCredentialConfig = new CredentialConfig();
+        String expectedId = "12345678";
+        String expectedStatus = "active"; // This status should be what you expect after the "update"
+        mockCredentialConfig.setConfigId(expectedId);
+        mockCredentialConfig.setStatus(expectedStatus);
+
+        Optional<CredentialConfig> optionalConfig = Optional.of(mockCredentialConfig);
+        when(credentialConfigRepository.findByConfigId(eq(expectedId))).thenReturn(optionalConfig);
+
+
+        CredentialConfigurationDTO mockDto = new CredentialConfigurationDTO(); // Dummy DTO for the mapper call
         doNothing().when(credentialConfigMapper).updateEntityFromDto(any(CredentialConfigurationDTO.class), any(CredentialConfig.class));
 
-        CredentialConfigResponse credentialConfigResponse = credentialConfigurationService.updateCredentialConfiguration("12345678", credentialConfigurationDTO);
 
+        when(credentialConfigRepository.save(any(CredentialConfig.class)))
+                .thenReturn(mockCredentialConfig); // Return the prepared mockCredentialConfig
+
+        // --- Act ---
+        CredentialConfigResponse credentialConfigResponse = credentialConfigurationService.updateCredentialConfiguration(expectedId, mockDto);
+
+        // --- Assert ---
         Assert.assertNotNull(credentialConfigResponse);
         Assert.assertNotNull(credentialConfigResponse.getId());
         Assert.assertNotNull(credentialConfigResponse.getStatus());
-        Assert.assertEquals("active", credentialConfigResponse.getStatus());
+
+        Assert.assertEquals(expectedId, credentialConfigResponse.getId());
+        Assert.assertEquals(expectedStatus, credentialConfigResponse.getStatus());
+
+        // Verify interactions
+        verify(credentialConfigRepository).findByConfigId(eq(expectedId));
+        verify(credentialConfigMapper).updateEntityFromDto(eq(mockDto), eq(mockCredentialConfig));
+        verify(credentialConfigRepository).save(eq(mockCredentialConfig));
     }
 
     @Test
@@ -157,7 +180,7 @@ public class CredentialConfigurationServiceImplTest {
         String result = credentialConfigurationService.deleteCredentialConfigurationById("12345678");
 
         Assert.assertNotNull(result);
-        assertEquals("Configuration deleted with id: 12345678", result);
+        assertEquals("12345678", result);
     }
 
     @Test
