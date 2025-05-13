@@ -22,6 +22,7 @@ ALTER TABLE certify.credential_config
     ADD COLUMN config_id VARCHAR(255) DEFAULT gen_random_uuid(),
     ADD COLUMN status VARCHAR(255) DEFAULT 'active',
     ADD COLUMN doctype VARCHAR,
+    ADD COLUMN vct VARCHAR,
     ADD COLUMN credential_format VARCHAR(255) NOT NULL DEFAULT 'default_format', -- Adding a default value for NOT NULL constraint
     ADD COLUMN did_url VARCHAR NOT NULL DEFAULT '', -- Adding a default value for NOT NULL constraint
     ADD COLUMN key_manager_app_id VARCHAR(36) NOT NULL DEFAULT '', -- Adding a default value for NOT NULL constraint
@@ -50,12 +51,18 @@ ALTER TABLE certify.credential_config
 ALTER TABLE certify.credential_config DROP CONSTRAINT pk_template;
 ALTER TABLE certify.credential_config ADD CONSTRAINT pk_config_id PRIMARY KEY (context, credential_type, credential_format);
 
+-- Step 6: Create the unique index on vct
+CREATE UNIQUE INDEX idx_credential_config_vct_unique
+ON credential_config(vct)
+WHERE vct IS NOT NULL;
+
 COMMENT ON TABLE credential_config IS 'Credential Config: Contains details of credential configuration.';
 
 COMMENT ON COLUMN credential_config.config_id IS 'Credential Config ID: Unique id assigned to save and identify configuration.';
 COMMENT ON COLUMN credential_config.status IS 'Credential Config Status: Status of the credential configuration.';
 COMMENT ON COLUMN credential_config.vc_template IS 'VC Template: Template used for the verifiable credential.';
 COMMENT ON COLUMN credential_config.doctype IS 'Doc Type: Doc Type specifically for Mdoc VC.';
+COMMENT ON COLUMN credential_config.vct IS 'VCT field: VC Type specifically for SD-JWT VC.';
 COMMENT ON COLUMN credential_config.context IS 'Context: Array of context URIs for the credential.';
 COMMENT ON COLUMN credential_config.credential_type IS 'Credential Type: Array of credential types supported.';
 COMMENT ON COLUMN credential_config.credential_format IS 'Credential Format: Format of the credential (e.g., JWT, JSON-LD).';

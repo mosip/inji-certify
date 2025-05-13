@@ -7,6 +7,7 @@ package io.mosip.certify.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
@@ -74,14 +75,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
             throw new CertifyException("Credential Template is mandatory for this `DataProvider` plugin issuer.");
         }
 
-        if(credentialConfig.getCredentialFormat().equals("mso_mdoc")) {
-            if(credentialConfigurationDTO.getClaims() == null || credentialConfigurationDTO.getDocType() == null) {
-                throw new CertifyException("Claims and Doctype fields are mandatory for this credential format.");
-            }
-        } else if(credentialConfig.getCredentialSubject() == null) {
-            throw new CertifyException("Credential Subject field is mandatory for this credential format.");
-        }
-
+        validateCredentialConfiguration(credentialConfig);
         CredentialConfig savedConfig = credentialConfigRepository.save(credentialConfig);
         log.info("Added credential configuration: {}", savedConfig.getConfigId());
 
@@ -90,6 +84,28 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         credentialConfigResponse.setStatus(savedConfig.getStatus());
 
         return credentialConfigResponse;
+    }
+
+    private void validateCredentialConfiguration(CredentialConfig credentialConfig) {
+        switch (credentialConfig.getCredentialFormat()) {
+            case VCFormats.LDP_VC:
+                if (credentialConfig.getCredentialSubject() == null) {
+                    throw new CertifyException("CredentialSubject is mandatory for ldp_vc");
+                }
+                break;
+            case VCFormats.MSO_MDOC:
+                if (credentialConfig.getClaims() == null || credentialConfig.getDocType() == null) {
+                    throw new CertifyException("Claims and Doctype are mandatory for mso_mdoc");
+                }
+                break;
+            case VCFormats.LDP_SD_JWT:
+                if (credentialConfig.getClaims() == null || credentialConfig.getVct() == null) {
+                    throw new CertifyException("Claims and Vct fields are mandatory for vc+sd-jwt");
+                }
+                break;
+            default:
+                throw new CertifyException("Unsupported format: " + credentialConfig.getCredentialFormat());
+        }
     }
 
     @Override
@@ -159,43 +175,92 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
     @Override
     public CredentialIssuerMetadataDTO fetchCredentialIssuerMetadata(String version) {
-        CredentialIssuerMetadataDTO credentialIssuerMetadata = new CredentialIssuerMetadataDTO();
-        credentialIssuerMetadata.setCredentialIssuer(credentialIssuer);
-        credentialIssuerMetadata.setAuthorizationServers(authServers);
-        String credentialEndpoint = credentialIssuer + servletPath + "/issuance" + (!version.equals("latest") ? "/" +version : "") + "/credential" ;
-        credentialIssuerMetadata.setCredentialEndpoint(credentialEndpoint);
-        credentialIssuerMetadata.setDisplay(issuerDisplay);
         List<CredentialConfig> credentialConfigList = credentialConfigRepository.findAll();
-        Map<String, CredentialConfigurationSupportedDTO> credentialConfigurationSupportedMap = new HashMap<>();
-        credentialConfigList.stream()
-                .filter(config -> Constants.ACTIVE.equals(config.getStatus()))
-                .forEach(credentialConfig -> {
-                    CredentialConfigurationSupportedDTO credentialConfigurationSupported = new CredentialConfigurationSupportedDTO();
-                    CredentialConfigurationDTO credentialConfigurationDTO = credentialConfigMapper.toDto(credentialConfig);
-                    credentialConfigurationSupported.setFormat(credentialConfigurationDTO.getCredentialFormat());
-                    credentialConfigurationSupported.setScope(credentialConfigurationDTO.getScope());
-                    credentialConfigurationSupported.setCryptographicBindingMethodsSupported(credentialConfigurationDTO.getCryptographicBindingMethodsSupported());
-                    credentialConfigurationSupported.setCredentialSigningAlgValuesSupported(credentialConfigurationDTO.getCredentialSigningAlgValuesSupported());
-                    credentialConfigurationSupported.setProofTypesSupported(credentialConfigurationDTO.getProofTypesSupported());
 
-                    credentialConfigurationSupported.setDisplay(credentialConfigurationDTO.getDisplay());
-                    credentialConfigurationSupported.setOrder(credentialConfigurationDTO.getOrder());
+        if ("latest".equals(version)) {
+            CredentialIssuerMetadataVD13DTO credentialIssuerMetadata = new CredentialIssuerMetadataVD13DTO();
+            Map<String, CredentialConfigurationSupportedDTO> credentialConfigurationSupportedMap = new HashMap<>();
+            credentialConfigList.stream()
+                    .filter(config -> Constants.ACTIVE.equals(config.getStatus()))
+                    .forEach(credentialConfig -> {
+                        CredentialConfigurationSupportedDTO credentialConfigurationSupported = mapToSupportedDTO(credentialConfig);
+                        credentialConfigurationSupported.setCredentialSigningAlgValuesSupported(credentialConfig.getCredentialSigningAlgValuesSupported());
+                        credentialConfigurationSupportedMap.put(credentialConfig.getCredentialConfigKeyId(), credentialConfigurationSupported);
+                    });
+            credentialIssuerMetadata.setCredentialConfigurationSupportedDTO(credentialConfigurationSupportedMap);
+            credentialIssuerMetadata.setCredentialIssuer(credentialIssuer);
+            credentialIssuerMetadata.setAuthorizationServers(authServers);
+            String credentialEndpoint = credentialIssuer + servletPath + "/issuance" + (!version.equals("latest") ? "/" + version : "") + "/credential";
+            credentialIssuerMetadata.setCredentialEndpoint(credentialEndpoint);
+            credentialIssuerMetadata.setDisplay(issuerDisplay);
 
-                    if(credentialConfig.getCredentialSubject() != null) {
-                        CredentialDefinition credentialDefinition = new CredentialDefinition();
-                        credentialDefinition.setType(credentialConfigurationDTO.getCredentialType());
-                        credentialDefinition.setContext(credentialConfigurationDTO.getContext());
-                        credentialDefinition.setCredentialSubject(credentialConfig.getCredentialSubject());
-                        credentialConfigurationSupported.setCredentialDefinition(credentialDefinition);
-                    } else {
-                        credentialConfigurationSupported.setClaims(credentialConfig.getClaims());
-                        credentialConfigurationSupported.setDocType(credentialConfig.getDocType());
-                    }
+            return credentialIssuerMetadata;
+        } else if ("vd12".equals(version)) {
+            CredentialIssuerMetadataVD12DTO credentialIssuerMetadata = new CredentialIssuerMetadataVD12DTO();
+            Map<String, CredentialConfigurationSupportedDTO> credentialConfigurationSupportedMap = new HashMap<>();
+            credentialConfigList.stream()
+                    .filter(config -> Constants.ACTIVE.equals(config.getStatus()))
+                    .forEach(credentialConfig -> {
+                        CredentialConfigurationSupportedDTO credentialConfigurationSupported = mapToSupportedDTO(credentialConfig);
+                        credentialConfigurationSupported.setCryptographicSuitesSupported(credentialConfig.getCredentialSigningAlgValuesSupported());
+                        credentialConfigurationSupportedMap.put(credentialConfig.getCredentialConfigKeyId(), credentialConfigurationSupported);
+                    });
+            credentialIssuerMetadata.setCredentialConfigurationSupportedDTO(credentialConfigurationSupportedMap); // Use a different setter for vd12
+            credentialIssuerMetadata.setCredentialIssuer(credentialIssuer);
+            credentialIssuerMetadata.setAuthorizationServers(authServers);
+            String credentialEndpoint = credentialIssuer + servletPath + "/issuance/" + version + "/credential";
+            credentialIssuerMetadata.setCredentialEndpoint(credentialEndpoint);
+            credentialIssuerMetadata.setDisplay(issuerDisplay);
 
-                    credentialConfigurationSupportedMap.put(credentialConfigurationDTO.getCredentialConfigKeyId(), credentialConfigurationSupported);
-                });
+            return credentialIssuerMetadata;
+        } else if ("vd11".equals(version)) {
+            CredentialIssuerMetadataVD11DTO credentialIssuerMetadata = new CredentialIssuerMetadataVD11DTO();
+            List<CredentialConfigurationSupportedDTO> credentialConfigurationSupportedList = new ArrayList<>();
+            credentialConfigList.stream()
+                    .filter(config -> Constants.ACTIVE.equals(config.getStatus()))
+                    .forEach(credentialConfig -> {
+                        CredentialConfigurationSupportedDTO credentialConfigurationSupported = mapToSupportedDTO(credentialConfig);
+                        credentialConfigurationSupported.setId(credentialConfig.getCredentialConfigKeyId());
+                        credentialConfigurationSupported.setCryptographicSuitesSupported(credentialConfig.getCredentialSigningAlgValuesSupported());
+                        credentialConfigurationSupportedList.add(credentialConfigurationSupported);
+                    });
+            credentialIssuerMetadata.setCredentialConfigurationSupportedDTO(credentialConfigurationSupportedList); // Use a different setter for vd11
+            credentialIssuerMetadata.setCredentialIssuer(credentialIssuer);
+            credentialIssuerMetadata.setAuthorizationServers(authServers);
+            String credentialEndpoint = credentialIssuer + servletPath + "/issuance/" + version + "/credential";
+            credentialIssuerMetadata.setCredentialEndpoint(credentialEndpoint);
+            credentialIssuerMetadata.setDisplay(issuerDisplay);
 
-        credentialIssuerMetadata.setCredentialConfigurationSupportedDTO(credentialConfigurationSupportedMap);
-        return credentialIssuerMetadata;
+            return credentialIssuerMetadata;
+        }
+
+        throw new CertifyException("Unsupported version: " + version);
+    }
+
+    private CredentialConfigurationSupportedDTO mapToSupportedDTO(CredentialConfig credentialConfig) {
+        CredentialConfigurationSupportedDTO credentialConfigurationSupported = new CredentialConfigurationSupportedDTO();
+        CredentialConfigurationDTO credentialConfigurationDTO = credentialConfigMapper.toDto(credentialConfig);
+        credentialConfigurationSupported.setFormat(credentialConfigurationDTO.getCredentialFormat());
+        credentialConfigurationSupported.setScope(credentialConfigurationDTO.getScope());
+        credentialConfigurationSupported.setCryptographicBindingMethodsSupported(credentialConfigurationDTO.getCryptographicBindingMethodsSupported());
+        credentialConfigurationSupported.setProofTypesSupported(credentialConfigurationDTO.getProofTypesSupported());
+        credentialConfigurationSupported.setDisplay(credentialConfigurationDTO.getDisplay());
+        credentialConfigurationSupported.setOrder(credentialConfigurationDTO.getOrder());
+
+        if (VCFormats.LDP_VC.equals(credentialConfig.getCredentialFormat())) {
+            CredentialDefinition credentialDefinition = new CredentialDefinition();
+            credentialDefinition.setType(credentialConfigurationDTO.getCredentialType());
+            credentialDefinition.setContext(credentialConfigurationDTO.getContext());
+            credentialDefinition.setCredentialSubject(credentialConfig.getCredentialSubject());
+            credentialConfigurationSupported.setCredentialDefinition(credentialDefinition);
+        } else if (VCFormats.MSO_MDOC.equals(credentialConfig.getCredentialFormat())) {
+            credentialConfigurationSupported.setClaims(credentialConfig.getClaims());
+            credentialConfigurationSupported.setDocType(credentialConfig.getDocType());
+        } else if (VCFormats.LDP_SD_JWT.equals(credentialConfig.getCredentialFormat())) {
+            credentialConfigurationSupported.setClaims(credentialConfig.getClaims());
+            credentialConfigurationSupported.setVct(credentialConfig.getCredentialConfigKeyId());
+        }
+
+        return credentialConfigurationSupported;
     }
 }

@@ -237,7 +237,7 @@ public class VCIssuanceUtil {
             credentialMetadata.setFormat(metadata.getFormat());
             credentialMetadata.setScope(metadata.getScope());
             credentialMetadata.setId(result.get().getKey());
-            if(format.equals(VCFormats.LDP_VC) || format.equals(VCFormats.LDP_SD_JWT)){
+            if(format.equals(VCFormats.LDP_VC)){
                 credentialMetadata.setTypes(metadata.getCredentialDefinition().getType());
             }
             return Optional.of(credentialMetadata);
@@ -251,5 +251,11 @@ public class VCIssuanceUtil {
             throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_VC_TYPE);
 
         //TODO need to validate Credential_definition as JsonLD document, if invalid throw exception
+    }
+
+    public static void validateSdJwtVcFormatRequest(CredentialRequest credentialRequest) {
+        if(credentialRequest.getVct() == null)
+            throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_VC_TYPE);
+
     }
 }

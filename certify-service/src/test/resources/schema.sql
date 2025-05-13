@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS credential_config (
     status VARCHAR(255),
     vc_template VARCHAR(1000),
     doctype VARCHAR(255),
+    vct VARCHAR(255),
     context VARCHAR(255) NOT NULL,
     credential_type VARCHAR(255) NOT NULL,
     credential_format VARCHAR(255) NOT NULL,

@@ -6,6 +6,7 @@ import java.util.List;
 
 import io.mosip.certify.api.dto.VCRequestDto;
 import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.constants.VCFormats;
 
 public class CredentialUtils {
     // returns true for VC 2.0 VCI requests
@@ -20,6 +21,10 @@ public class CredentialUtils {
      */
     public static String getTemplateName(VCRequestDto vcRequestDto) {
         //TODO: Cache this entire data so we do not construct all the time.
+
+        if(vcRequestDto.getFormat().equals(VCFormats.LDP_SD_JWT)) {
+            return String.join(Constants.DELIMITER, vcRequestDto.getFormat(), vcRequestDto.getVct());
+        }
         List<String> c = new ArrayList<>(vcRequestDto.getContext());
         List<String> t = new ArrayList<>(vcRequestDto.getType());
         Collections.sort(c);

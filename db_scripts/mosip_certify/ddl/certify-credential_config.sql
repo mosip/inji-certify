@@ -17,6 +17,7 @@ CREATE TABLE credential_config (
     status VARCHAR(255),
     vc_template VARCHAR,
     doctype VARCHAR,
+    vct VARCHAR,
     context VARCHAR NOT NULL,
     credential_type VARCHAR NOT NULL,
     credential_format VARCHAR(255) NOT NULL,
@@ -39,12 +40,17 @@ CREATE TABLE credential_config (
     CONSTRAINT pk_config_id PRIMARY KEY (context, credential_type, credential_format)
 );
 
+CREATE UNIQUE INDEX idx_credential_config_vct_unique
+ON credential_config(vct)
+WHERE vct IS NOT NULL;
+
 COMMENT ON TABLE credential_config IS 'Credential Config: Contains details of credential configuration.';
 
 COMMENT ON COLUMN credential_config.config_id IS 'Credential Config ID: Unique id assigned to save and identify configuration.';
 COMMENT ON COLUMN credential_config.status IS 'Credential Config Status: Status of the credential configuration.';
 COMMENT ON COLUMN credential_config.vc_template IS 'VC Template: Template used for the verifiable credential.';
 COMMENT ON COLUMN credential_config.doctype IS 'Doc Type: Doc Type specifically for Mdoc VC.';
+COMMENT ON COLUMN credential_config.vct IS 'VCT field: VC Type specifically for SD-JWT VC.';
 COMMENT ON COLUMN credential_config.context IS 'Context: Array of context URIs for the credential.';
 COMMENT ON COLUMN credential_config.credential_type IS 'Credential Type: Array of credential types supported.';
 COMMENT ON COLUMN credential_config.credential_format IS 'Credential Format: Format of the credential (e.g., JWT, JSON-LD).';
