@@ -7,6 +7,7 @@ package io.mosip.certify.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
@@ -74,13 +75,15 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
             throw new CertifyException("Credential Template is mandatory for this `DataProvider` plugin issuer.");
         }
 
-        if(credentialConfig.getCredentialFormat().equals("mso_mdoc")) {
-            if(credentialConfigurationDTO.getClaims() == null || credentialConfigurationDTO.getDocType() == null) {
-                throw new CertifyException("Claims and Doctype fields are mandatory for this credential format.");
-            }
-        } else if(credentialConfig.getCredentialSubject() == null) {
-            throw new CertifyException("Credential Subject field is mandatory for this credential format.");
-        }
+//        if(credentialConfig.getCredentialFormat().equals("mso_mdoc")) {
+//            if(credentialConfigurationDTO.getClaims() == null || credentialConfigurationDTO.getDocType() == null) {
+//                throw new CertifyException("Claims and Doctype fields are mandatory for this credential format.");
+//            }
+//        } else if(credentialConfig.getCredentialSubject() == null) {
+//            throw new CertifyException("Credential Subject field is mandatory for this credential format.");
+//        }
+
+        validateCredentialConfiguration(credentialConfig);
 
         CredentialConfig savedConfig = credentialConfigRepository.save(credentialConfig);
         log.info("Added credential configuration: {}", savedConfig.getConfigId());
@@ -90,6 +93,28 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         credentialConfigResponse.setStatus(savedConfig.getStatus());
 
         return credentialConfigResponse;
+    }
+
+    private void validateCredentialConfiguration(CredentialConfig credentialConfig) {
+        switch (credentialConfig.getCredentialFormat()) {
+            case VCFormats.LDP_VC:
+                if (credentialConfig.getCredentialSubject() == null) {
+                    throw new CertifyException("CredentialSubject is mandatory for ldp_vc");
+                }
+                break;
+            case VCFormats.MSO_MDOC:
+                if (credentialConfig.getClaims() == null || credentialConfig.getDocType() == null) {
+                    throw new CertifyException("Claims and Doctype are mandatory for mso_mdoc");
+                }
+                break;
+            case VCFormats.LDP_SD_JWT:
+                if (credentialConfig.getClaims() == null || credentialConfig.getVct() == null) {
+                    throw new CertifyException("Claims and Vct fields are mandatory for vc+sd-jwt");
+                }
+                break;
+            default:
+                throw new CertifyException("Unsupported format: " + credentialConfig.getCredentialFormat());
+        }
     }
 
     @Override
@@ -181,15 +206,29 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                     credentialConfigurationSupported.setDisplay(credentialConfigurationDTO.getDisplay());
                     credentialConfigurationSupported.setOrder(credentialConfigurationDTO.getOrder());
 
-                    if(credentialConfig.getCredentialSubject() != null) {
+//                    if(credentialConfig.getCredentialSubject() != null) {
+//                        CredentialDefinition credentialDefinition = new CredentialDefinition();
+//                        credentialDefinition.setType(credentialConfigurationDTO.getCredentialType());
+//                        credentialDefinition.setContext(credentialConfigurationDTO.getContext());
+//                        credentialDefinition.setCredentialSubject(credentialConfig.getCredentialSubject());
+//                        credentialConfigurationSupported.setCredentialDefinition(credentialDefinition);
+//                    } else {
+//                        credentialConfigurationSupported.setClaims(credentialConfig.getClaims());
+//                        credentialConfigurationSupported.setDocType(credentialConfig.getDocType());
+//                    }
+
+                    if(credentialConfig.getCredentialFormat().equals(VCFormats.LDP_VC)) {
                         CredentialDefinition credentialDefinition = new CredentialDefinition();
                         credentialDefinition.setType(credentialConfigurationDTO.getCredentialType());
                         credentialDefinition.setContext(credentialConfigurationDTO.getContext());
                         credentialDefinition.setCredentialSubject(credentialConfig.getCredentialSubject());
                         credentialConfigurationSupported.setCredentialDefinition(credentialDefinition);
-                    } else {
+                    } else if(credentialConfig.getCredentialFormat().equals(VCFormats.MSO_MDOC)) {
                         credentialConfigurationSupported.setClaims(credentialConfig.getClaims());
                         credentialConfigurationSupported.setDocType(credentialConfig.getDocType());
+                    } else if(credentialConfigurationSupported.getFormat().equals(VCFormats.LDP_SD_JWT)) {
+                        credentialConfigurationSupported.setClaims(credentialConfig.getClaims());
+                        credentialConfigurationSupported.setVct(credentialConfig.getCredentialConfigKeyId());
                     }
 
                     credentialConfigurationSupportedMap.put(credentialConfigurationDTO.getCredentialConfigKeyId(), credentialConfigurationSupported);

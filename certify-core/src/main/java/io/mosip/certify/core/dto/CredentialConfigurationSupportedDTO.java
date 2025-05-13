@@ -1,5 +1,6 @@
 package io.mosip.certify.core.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
@@ -7,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CredentialConfigurationSupportedDTO {
 
     private String format;
@@ -33,4 +35,6 @@ public class CredentialConfigurationSupportedDTO {
     private List<Map<String, Object>> display;
 
     private List<String> order;
+
+    String vct;
 }

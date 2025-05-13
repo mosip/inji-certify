@@ -237,7 +237,8 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 vcRequestDto.setContext(credentialRequest.getCredential_definition().getContext());
                 vcRequestDto.setType(credentialRequest.getCredential_definition().getType());
                 vcRequestDto.setCredentialSubject(credentialRequest.getCredential_definition().getCredentialSubject());
-                validateLdpVcFormatRequest(credentialRequest, credentialMetadata);
+                vcRequestDto.setVct(credentialRequest.getVct());
+                validateSdJwtVcFormatRequest(credentialRequest);
                 try {
                     // TODO(multitenancy): later decide which plugin out of n plugins is the correct one
                     JSONObject jsonObject = dataProviderPlugin.fetchData(parsedAccessToken.getClaims());

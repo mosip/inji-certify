@@ -91,9 +91,18 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         }
 
         String[] parts = templateKey.split(DELIMITER, 3);
-        if (parts.length < 3) {
+        if (parts.length < 2) {
             log.error("Invalid templateKey format for getCachedCredentialConfig: {}. Expected 3 parts.", templateKey);
             throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "Template key format requires 3 parts: " + templateKey);
+        } else if(parts.length == 2) {
+            String credentialFormat = parts[0];
+            String vct = parts[1];
+
+            return credentialConfigRepository.findByCredentialFormatAndVct(credentialFormat, vct)
+                    .orElseThrow(() -> {
+                        log.error("CredentialConfig not found in DB for key: {}", templateKey);
+                        return new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "CredentialConfig not found for key: " + templateKey);
+                    });
         }
 
         String credentialType = parts[0];
