@@ -100,6 +100,9 @@ public class CredentialConfig {
     @Column(name = "claims", columnDefinition = "jsonb")
     private Map<String, Object> claims;
 
+    @Column(name = "vct")
+    private String vct;
+
     @Type(JsonBinaryType.class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "plugin_configurations", columnDefinition = "jsonb")

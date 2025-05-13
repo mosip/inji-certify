@@ -62,6 +62,7 @@ CREATE TABLE credential_config (
     status VARCHAR(255),
     vc_template VARCHAR,
     doctype VARCHAR,
+    vct VARCHAR,
     context VARCHAR NOT NULL,
     credential_type VARCHAR NOT NULL,
     credential_format VARCHAR(255) NOT NULL,

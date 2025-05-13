@@ -95,7 +95,7 @@ public class CertifyIssuanceServiceImplTest {
     CredentialRequest request;
     Map<String, Object> claimsFromAccessToken; // Renamed for clarity
     VCIssuanceTransaction transaction;
-    CredentialIssuerMetadataDTO mockGlobalCredentialIssuerMetadataDTO;
+    CredentialIssuerMetadataVD13DTO mockGlobalCredentialIssuerMetadataDTO;
 
 
     @Before
@@ -135,7 +135,7 @@ public class CertifyIssuanceServiceImplTest {
         transaction.setCNonceIssuedEpoch(LocalDateTime.now(ZoneOffset.UTC).toEpochSecond(ZoneOffset.UTC));
 
 
-        mockGlobalCredentialIssuerMetadataDTO = new CredentialIssuerMetadataDTO();
+        mockGlobalCredentialIssuerMetadataDTO = new CredentialIssuerMetadataVD13DTO();
         mockGlobalCredentialIssuerMetadataDTO.setCredentialIssuer("https://test.issuer.com");
         mockGlobalCredentialIssuerMetadataDTO.setAuthorizationServers(List.of("https://auth.server.com"));
         mockGlobalCredentialIssuerMetadataDTO.setCredentialEndpoint("https://test.issuer.com/credentials");
@@ -171,6 +171,7 @@ public class CertifyIssuanceServiceImplTest {
     private CredentialRequest createValidCredentialRequest(String format) {
         CredentialRequest req = new CredentialRequest();
         req.setFormat(format);
+        req.setVct("test_vct");
 
         // This is io.mosip.certify.core.dto.CredentialDefinition for the request object
         io.mosip.certify.core.dto.CredentialDefinition requestCredDef = new io.mosip.certify.core.dto.CredentialDefinition();

@@ -1,5 +1,6 @@
 package io.mosip.certify.core.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.mosip.certify.core.constants.ErrorConstants;
 import jakarta.validation.Valid;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CredentialConfigurationDTO {
 
     private String vcTemplate;
@@ -66,6 +68,8 @@ public class CredentialConfigurationDTO {
 
     @JsonProperty("doctype")
     private String docType;
+
+    private String vct;
 
     private List<Map<String, String>> pluginConfigurations;
 }
