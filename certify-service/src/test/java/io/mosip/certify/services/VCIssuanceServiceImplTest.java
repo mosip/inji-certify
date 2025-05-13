@@ -8,14 +8,7 @@ import io.mosip.certify.api.spi.AuditPlugin;
 import io.mosip.certify.api.spi.VCIssuancePlugin;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
-import io.mosip.certify.core.dto.CredentialConfigurationSupportedDTO;
-import io.mosip.certify.core.dto.CredentialDefinition; // DTO for configuration
-import io.mosip.certify.core.dto.CredentialIssuerMetadataDTO;
-import io.mosip.certify.core.dto.CredentialProof;
-import io.mosip.certify.core.dto.CredentialRequest;
-import io.mosip.certify.core.dto.CredentialResponse;
-import io.mosip.certify.core.dto.ParsedAccessToken;
-import io.mosip.certify.core.dto.VCIssuanceTransaction;
+import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import io.mosip.certify.core.exception.NotAuthenticatedException;
@@ -82,7 +75,7 @@ public class VCIssuanceServiceImplTest {
     CredentialRequest request;
     Map<String, Object> claimsFromAccessToken;
     VCIssuanceTransaction transaction;
-    CredentialIssuerMetadataDTO mockGlobalCredentialIssuerMetadataDTO;
+    CredentialIssuerMetadataVD13DTO mockGlobalCredentialIssuerMetadataDTO;
 
 
     @Before
@@ -119,7 +112,7 @@ public class VCIssuanceServiceImplTest {
         transaction.setCNonceIssuedEpoch(LocalDateTime.now(ZoneOffset.UTC).toEpochSecond(ZoneOffset.UTC));
 
         // Setup mockGlobalCredentialIssuerMetadataDTO using actual DTO structures
-        mockGlobalCredentialIssuerMetadataDTO = new CredentialIssuerMetadataDTO();
+        mockGlobalCredentialIssuerMetadataDTO = new CredentialIssuerMetadataVD13DTO();
         Map<String, CredentialConfigurationSupportedDTO> supportedCredsMap = new HashMap<>();
 
         // LDP Config DTO

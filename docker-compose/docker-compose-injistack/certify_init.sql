@@ -103,6 +103,7 @@ CREATE TABLE IF NOT EXISTS certify.credential_config (
     status VARCHAR(255),
     vc_template VARCHAR,
     doctype VARCHAR,
+    vct VARCHAR,
     context VARCHAR NOT NULL,
     credential_type VARCHAR NOT NULL,
     credential_format VARCHAR(255) NOT NULL,
@@ -131,6 +132,7 @@ INSERT INTO certify.credential_config (
     status,
     vc_template,
     doctype,
+    vct,
     context,
     credential_type,
     credential_format,
@@ -188,6 +190,7 @@ VALUES (
      }
     ',  -- the VC template from the JSON
     NULL,  -- doctype from JSON
+    NULL,  -- vct for SD-JWT VC
     'https://www.w3.org/2018/credentials/v1',  -- context as comma-separated string
     'FarmerCredential,VerifiableCredential',  -- credential_type as comma-separated string
     'ldp_vc',  -- credential_format
@@ -215,6 +218,7 @@ INSERT INTO certify.credential_config (
     status,
     vc_template,
     doctype,
+    vct,
     context,
     credential_type,
     credential_format,
@@ -272,6 +276,7 @@ VALUES (
      }
     ',  -- the VC template from the JSON
     NULL,  -- doctype from JSON
+    NULL,  -- vct for SD-JWT VC
     'https://www.w3.org/2018/credentials/v1,https://piyush7034.github.io/my-files/farmer.json',  -- context as comma-separated string
     'FarmerCredential,VerifiableCredential',  -- credential_type as comma-separated string
     'ldp_vc',  -- credential_format

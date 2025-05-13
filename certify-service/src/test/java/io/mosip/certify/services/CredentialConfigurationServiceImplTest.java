@@ -229,10 +229,10 @@ public class CredentialConfigurationServiceImplTest {
 //        when(credentialConfigurationDTO.getCredentialConfigKeyId()).thenReturn("test-credential");
 
         // Call with specific version
-        CredentialIssuerMetadataDTO result = credentialConfigurationService.fetchCredentialIssuerMetadata("v1");
+        CredentialIssuerMetadataDTO result = credentialConfigurationService.fetchCredentialIssuerMetadata("vd11");
 
         // Verify version in endpoint
-        Assert.assertEquals("http://example.com/v1/test/issuance/v1/credential", result.getCredentialEndpoint());
+        Assert.assertEquals("http://example.com/v1/test/issuance/vd11/credential", result.getCredentialEndpoint());
     }
 
     @Test
@@ -262,6 +262,8 @@ public class CredentialConfigurationServiceImplTest {
         // Setup CredentialConfig with MSO_MDOC format
         CredentialConfig mdocConfig = new CredentialConfig();
         mdocConfig.setConfigId(UUID.randomUUID().toString());
+        mdocConfig.setCredentialConfigKeyId("mdoc-credential");
+
         mdocConfig.setStatus("active");
         mdocConfig.setCredentialFormat("mso_mdoc");
         mdocConfig.setClaims(Map.of("firstName", "First Name", "lastName", "Last Name"));

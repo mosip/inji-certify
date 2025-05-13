@@ -16,12 +16,16 @@
 -- Step 1: Drop the new primary key constraint
 ALTER TABLE certify.credential_config DROP CONSTRAINT pk_config_id;
 
--- Step 2: Drop all the newly added columns
+-- Step 2: Drop the partial unique index
+DROP INDEX IF EXISTS idx_credential_config_vct_unique;
+
+-- Step 3: Drop all the newly added columns
 ALTER TABLE certify.credential_config
     DROP COLUMN credential_config_key_id,
     DROP COLUMN config_id,
     DROP COLUMN status,
     DROP COLUMN doctype,
+    DROP COLUMN vct,
     DROP COLUMN credential_format,
     DROP COLUMN did_url,
     DROP COLUMN key_manager_app_id,
@@ -38,19 +42,19 @@ ALTER TABLE certify.credential_config
     DROP COLUMN claims,
     DROP COLUMN plugin_configurations;
 
--- Step 3: Rename vc_template back to template
+-- Step 4: Rename vc_template back to template
 ALTER TABLE certify.credential_config RENAME COLUMN vc_template TO template;
 
--- Step 4: Restore the column types to original specifications
+-- Step 5: Restore the column types to original specifications
 ALTER TABLE certify.credential_config
     ALTER COLUMN context TYPE character varying(1024),
     ALTER COLUMN credential_type TYPE character varying(512),
     ALTER COLUMN template TYPE VARCHAR;
 
--- Step 5: Add back the original primary key constraint
+-- Step 6: Add back the original primary key constraint
 ALTER TABLE certify.credential_config ADD CONSTRAINT pk_template PRIMARY KEY (context, credential_type);
 
--- Step 6: Rename the table back to its original name
+-- Step 7: Rename the table back to its original name
 ALTER TABLE certify.credential_config RENAME TO credential_template;
 
 COMMENT ON TABLE credential_template IS 'Template Data: Contains velocity template for VC';

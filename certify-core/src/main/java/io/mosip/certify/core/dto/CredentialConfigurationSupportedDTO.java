@@ -18,8 +18,13 @@ public class CredentialConfigurationSupportedDTO {
 
     private String scope;
 
+    private String id;
+
     @JsonProperty("cryptographic_binding_methods_supported")
     private List<String> cryptographicBindingMethodsSupported;
+
+    @JsonProperty("cryptographic_suites_supported")
+    private List<String> cryptographicSuitesSupported;
 
     @JsonProperty("credential_signing_alg_values_supported")
     private List<String> credentialSigningAlgValuesSupported;
@@ -36,5 +41,5 @@ public class CredentialConfigurationSupportedDTO {
 
     private List<String> order;
 
-    String vct;
+    private String vct;
 }
