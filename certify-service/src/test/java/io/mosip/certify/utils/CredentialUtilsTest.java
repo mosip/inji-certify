@@ -39,7 +39,7 @@ public class CredentialUtilsTest  {
         request.setContext(List.of("https://www.w3.org/ns/credentials/v2", "https://example.org/Person.json"));
         request.setType(List.of("VerifiableCredential", "UniversityCredential"));
         request.setFormat("ldp_vc");
-        String expected = "UniversityCredential,VerifiableCredential:https://example.org/Person.json,https://www.w3.org/ns/credentials/v2:ldp_vc";
+        String expected = "UniversityCredential,VerifiableCredential::https://example.org/Person.json,https://www.w3.org/ns/credentials/v2::ldp_vc";
         assertEquals(expected, CredentialUtils.getTemplateName(request));
     }
 }

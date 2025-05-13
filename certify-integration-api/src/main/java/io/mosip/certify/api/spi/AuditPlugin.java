@@ -6,7 +6,6 @@
 package io.mosip.certify.api.spi;
 
 import io.mosip.certify.api.dto.AuditDTO;
-import io.mosip.certify.api.dto.AuditDTOV2;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
 
@@ -20,7 +19,7 @@ public interface AuditPlugin {
      +  @param audit @{@link AuditDTO} during this action
      +  @param t Any error / exception occurred during this action, null if no errors / exception found.
      */
-    void logAudit(Action action, ActionStatus status, AuditDTOV2 audit, Throwable t);
+    void logAudit(Action action, ActionStatus status, AuditDTO audit, Throwable t);
 
     /**
     + Plugin method to audit all the actions in certify service.
@@ -31,5 +30,5 @@ public interface AuditPlugin {
     +  @param audit @{@link AuditDTO} during this action
     +  @param t Any error / exception occurred during this action, null if no errors / exception found.
     */
-	void logAudit(String username, Action action, ActionStatus status, AuditDTOV2 audit, Throwable t);
+	void logAudit(String username, Action action, ActionStatus status, AuditDTO audit, Throwable t);
 }

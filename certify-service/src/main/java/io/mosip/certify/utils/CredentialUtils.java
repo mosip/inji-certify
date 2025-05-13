@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import io.mosip.certify.api.dto.VCRequestDto;
+import io.mosip.certify.core.constants.Constants;
 
 public class CredentialUtils {
     // returns true for VC 2.0 VCI requests
@@ -26,6 +27,6 @@ public class CredentialUtils {
         String contextKey = String.join(",", c);
         String typeKey = String.join(",", t);
       //  contextKey = StringUtils.hasText(vcRequestDto.getFormat())?contextKey.concat("-"+vcRequestDto.getFormat()):contextKey;
-        return String.join(":", typeKey, contextKey,vcRequestDto.getFormat());
+        return String.join(Constants.DELIMITER, typeKey, contextKey,vcRequestDto.getFormat());
     }
 }
