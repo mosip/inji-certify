@@ -1,3 +1,8 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 package io.mosip.certify.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -12,9 +17,10 @@ import io.mosip.certify.repository.CredentialConfigRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.transaction.Transactional;
 import java.util.*;
 
 @Slf4j
@@ -43,10 +49,12 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Value("#{${mosip.certify.credential-config.issuer.display}}")
     private List<Map<String, String>> issuerDisplay;
 
+    private static final String CREDENTIAL_CONFIG_CACHE_NAME = "credentialConfig";
+
     @Override
     public CredentialConfigResponse addCredentialConfiguration(CredentialConfigurationDTO credentialConfigurationDTO) throws JsonProcessingException {
         CredentialConfig credentialConfig = credentialConfigMapper.toEntity(credentialConfigurationDTO);
-        TemplateId templateId = new TemplateId();
+        TemplateId templateId = new TemplateId(); // Consider constructor TemplateId(context, type, format)
         templateId.setCredentialType(credentialConfig.getCredentialType());
         templateId.setContext(credentialConfig.getContext());
         templateId.setCredentialFormat(credentialConfig.getCredentialFormat());
@@ -54,6 +62,8 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         Optional<CredentialConfig> optional = credentialConfigRepository.findById(templateId);
 
         if(optional.isPresent()) {
+            log.warn("Attempt to add existing credential configuration: Type={}, Context={}, Format={}",
+                    credentialConfig.getCredentialType(), credentialConfig.getContext(), credentialConfig.getCredentialFormat());
             throw new CertifyException("Credential type already exists. Try updating the credential.");
         }
 
@@ -72,11 +82,12 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
             throw new CertifyException("Credential Subject field is mandatory for this credential format.");
         }
 
-        credentialConfigRepository.save(credentialConfig);
+        CredentialConfig savedConfig = credentialConfigRepository.save(credentialConfig);
+        log.info("Added credential configuration: {}", savedConfig.getConfigId());
 
         CredentialConfigResponse credentialConfigResponse = new CredentialConfigResponse();
-        credentialConfigResponse.setId(credentialConfig.getConfigId());
-        credentialConfigResponse.setStatus(credentialConfig.getStatus());
+        credentialConfigResponse.setId(savedConfig.getConfigId());
+        credentialConfigResponse.setStatus(savedConfig.getStatus());
 
         return credentialConfigResponse;
     }
@@ -94,40 +105,56 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
             throw new CertifyException("Configuration not active.");
         }
 
-        CredentialConfigurationDTO credentialConfigurationDTO = credentialConfigMapper.toDto(credentialConfig);
-
-        return credentialConfigurationDTO;
+        return credentialConfigMapper.toDto(credentialConfig);
     }
 
+    /**
+     * NOTE: Using @credentialCacheKeyGenerator.generateKeyFromConfigId(#id) will cause
+     * an additional database lookup for CredentialConfig by id within the key generator.
+     * This is a trade-off for using declarative @CacheEvict on this method signature.
+     * The alternative is manual CacheManager.evict() after fetching the object once in this method.
+     */
     @Override
+    @CacheEvict(cacheNames = CREDENTIAL_CONFIG_CACHE_NAME, key = "@credentialCacheKeyGenerator.generateKeyFromConfigId(#id)", condition = "#id != null")
     public CredentialConfigResponse updateCredentialConfiguration(String id, CredentialConfigurationDTO credentialConfigurationDTO) throws JsonProcessingException {
         Optional<CredentialConfig> optional = credentialConfigRepository.findByConfigId(id);
 
         if(optional.isEmpty()) {
+            log.warn("Configuration not found for update with id: {}", id);
             throw new CertifyException("Configuration not found with the provided id: " + id);
         }
 
         CredentialConfig credentialConfig = optional.get();
         credentialConfigMapper.updateEntityFromDto(credentialConfigurationDTO, credentialConfig);
-        credentialConfigRepository.save(credentialConfig);
+        CredentialConfig savedConfig = credentialConfigRepository.save(credentialConfig);
+        log.info("Updated credential configuration: {}", savedConfig.getConfigId());
 
         CredentialConfigResponse credentialConfigResponse = new CredentialConfigResponse();
-        credentialConfigResponse.setId(credentialConfig.getConfigId());
-        credentialConfigResponse.setStatus(credentialConfig.getStatus());
+        credentialConfigResponse.setId(savedConfig.getConfigId());
+        credentialConfigResponse.setStatus(savedConfig.getStatus());
 
         return credentialConfigResponse;
     }
 
+    /**
+     * NOTE: Using @credentialCacheKeyGenerator.generateKeyFromConfigId(#id) will cause
+     * an additional database lookup for CredentialConfig by id within the key generator.
+     * This is a trade-off for using declarative @CacheEvict on this method signature.
+     */
     @Override
+    @CacheEvict(cacheNames = CREDENTIAL_CONFIG_CACHE_NAME, key = "@credentialCacheKeyGenerator.generateKeyFromConfigId(#id)", condition = "#id != null")
     public String deleteCredentialConfigurationById(String id) {
         Optional<CredentialConfig> optional = credentialConfigRepository.findByConfigId(id);
 
         if(optional.isEmpty()) {
+            log.warn("Configuration not found for delete with id: {}", id);
             throw new CertifyException("Configuration not found with the provided id: " + id);
         }
-
+        // The object is fetched once here.
+        // The @CacheEvict's key SpEL will cause CredentialCacheKeyGenerator to fetch it again.
         credentialConfigRepository.delete(optional.get());
-        return "Configuration deleted with id: " + id;
+        log.info("Deleted credential configuration: {}", id);
+        return id;
     }
 
     @Override
@@ -141,6 +168,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         List<CredentialConfig> credentialConfigList = credentialConfigRepository.findAll();
         Map<String, CredentialConfigurationSupportedDTO> credentialConfigurationSupportedMap = new HashMap<>();
         credentialConfigList.stream()
+                .filter(config -> Constants.ACTIVE.equals(config.getStatus()))
                 .forEach(credentialConfig -> {
                     CredentialConfigurationSupportedDTO credentialConfigurationSupported = new CredentialConfigurationSupportedDTO();
                     CredentialConfigurationDTO credentialConfigurationDTO = credentialConfigMapper.toDto(credentialConfig);
