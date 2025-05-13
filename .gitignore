@@ -30,4 +30,3 @@ target/
 .project/
 helm/*/Chart.lock
 helm/*/charts/
-.qodo

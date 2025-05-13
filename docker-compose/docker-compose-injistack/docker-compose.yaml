@@ -14,7 +14,7 @@ services:
       - "5433:5432"
 
   certify:
-    image: certify_latest:2
+    image: mosipdev/inji-certify-with-plugins:develop
     user: root
     ports:
       - 8090:8090
@@ -42,7 +42,7 @@ services:
 
   mimoto-service:
     container_name: 'Mimoto-Service'
-    image: mimoto-revoke:v1
+    image: mosipid/mimoto:0.15.0
     user: root
     ports:
       - '8099:8099'
@@ -73,7 +73,6 @@ services:
       - ./config/mimoto-trusted-verifiers.json:/home/mosip/mimoto-trusted-verifiers.json
       - ./config/credential-template.html:/home/mosip/credential-template.html
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./config/Farmer-StudentCredential-template.html:/home/mosip/Farmer-StudentCredential-template.html
     depends_on:
       - mimoto-service
     networks:
