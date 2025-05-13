@@ -25,15 +25,15 @@ import io.mosip.certify.enums.CredentialFormat;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
-// import org.json.JSONObject; // Not directly used in this test file's setup
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-// import org.mockito.MockitoAnnotations; // Not needed if using MockitoJUnitRunner
+
 import org.mockito.junit.MockitoJUnitRunner;
-// import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty; // Not for unit test
+
 import org.springframework.test.util.ReflectionTestUtils;
 import io.mosip.certify.core.constants.Constants;
 

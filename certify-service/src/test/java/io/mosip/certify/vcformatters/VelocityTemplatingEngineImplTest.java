@@ -2,7 +2,7 @@ package io.mosip.certify.vcformatters;
 
 import java.util.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper; // Keep for test setup if needed for other things, though formatter doesn't use it directly anymore.
+
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCDM2Constants;
@@ -31,7 +31,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import io.mosip.certify.entity.CredentialConfig;
 import io.mosip.certify.repository.CredentialConfigRepository;
-import io.mosip.certify.core.spi.RenderingTemplateService; // Added from VelocityTemplatingEngineImpl source
+import io.mosip.certify.core.spi.RenderingTemplateService;
 
 import lombok.SneakyThrows;
 import net.javacrumbs.jsonunit.assertj.JsonAssertions;
@@ -40,11 +40,11 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 @RunWith(MockitoJUnitRunner.class)
 public class VelocityTemplatingEngineImplTest {
     @InjectMocks
-    private VelocityTemplatingEngineImpl formatter; // Target class
+    private VelocityTemplatingEngineImpl formatter;
     @Mock
-    CredentialConfigRepository credentialConfigRepository; // Mocked dependency
+    CredentialConfigRepository credentialConfigRepository;
     @Mock
-    RenderingTemplateService renderingTemplateService; // Added mock for this dependency
+    RenderingTemplateService renderingTemplateService;
 
     private CredentialConfig vc2;
     private CredentialConfig vc3;
@@ -145,23 +145,18 @@ public class VelocityTemplatingEngineImplTest {
                 vc4Type, vc4Context, vc4Format, "did:example:issuer4", "appId4", "refId4", "RSA", null
         );
 
-        // ObjectMapper is not directly used by the formatter's core logic anymore for template loading
-        // ReflectionTestUtils.setField(formatter, "objectMapper", new ObjectMapper());
+
         ReflectionTestUtils.setField(formatter, "defaultExpiryDuration", "P730d");
         ReflectionTestUtils.setField(formatter, "idPrefix", "uurn:uuid:");
 
-        // Default mock for findById to return vc2, as many tests use it.
-        // Individual tests can override this by re-mocking before calling formatter methods.
+
         when(credentialConfigRepository.findById(vc2TemplateIdObject)).thenReturn(Optional.of(vc2));
-        // Mock for other TemplateIds to avoid NullPointer if a test forgets to mock
+
         when(credentialConfigRepository.findById(Mockito.argThat(arg -> !arg.equals(vc2TemplateIdObject))))
                 .thenReturn(Optional.empty());
 
 
-        // No need to call formatter.initialize() if it only does VelocityEngine setup
-        // and template loading is on-demand via @Cacheable methods.
-        // The @PostConstruct initialize() will be called automatically if this were a Spring test.
-        // For a plain Mockito test, we call it manually to ensure engine is ready.
+
         formatter.initialize(); // Initializes VelocityEngine
     }
 
@@ -182,10 +177,7 @@ public class VelocityTemplatingEngineImplTest {
     @SneakyThrows
     @Test
     public void testTemplating() {
-        // This test uses vc2, which is mocked in setUp by default for findById
-        // Ensure vc2's template includes "${_id}" if ID is to be templated by Velocity,
-        // otherwise ID is added *after* templating if idPrefix is set.
-        // vc2 template updated to include "id": "${_id}" for this test.
+
 
         JSONObject ret = new JSONObject();
         ret.put("vcVer", "VC-V1");
@@ -202,10 +194,7 @@ public class VelocityTemplatingEngineImplTest {
         ret.put("region", "FakeRegion");
         ret.put("postalCode", 123); // Number
         ret.put("face", FACE_DATA);
-        // _id will be added by the formatter if idPrefix is set, or used from template if ${id} or ${_id} is present
-        // For this test, we assume idPrefix logic in format() method adds it *after* Velocity.
-        // Or, if template has "${_id}", then it should be in finalTemplate.
-        // The provided vc2 template now has "id": "${_id}"
+
 
         Map<String, Object> templateMap = Map.of(
                 Constants.TEMPLATE_NAME, vc2TemplateKey,
@@ -216,19 +205,12 @@ public class VelocityTemplatingEngineImplTest {
         assertNotNull(actualJSONString);
         JSONObject actualJsonObj = new JSONObject(actualJSONString);
 
-        // ID is now part of the template vc2 as "${_id}", and idPrefix logic in formatter adds it if not present
-        // The current formatter.format code adds idPrefix *after* templating if idPrefix is set.
-        // If template itself contains "id": "${_id}", then Velocity will fill it.
-        // The formatter's logic: evaluate template, then if idPrefix set, parse to JSON, add id, convert back to string.
+
         assertTrue(actualJsonObj.has("id"));
         assertTrue(actualJsonObj.getString("id").startsWith("uurn:uuid:")); // From idPrefix logic
         String idValue = actualJsonObj.getString("id"); // Capture before removing if needed for expected
 
 
-        // Rebuild expected JSON, also ensuring it includes the id generated by the formatter.
-        // For a stable test, we can't predict the UUID part of the ID.
-        // So, we assert its presence and prefix, then compare the rest.
-        // For now, let's check other fields.
 
         String expectedJsonPattern = """
                 {
@@ -312,10 +294,9 @@ public class VelocityTemplatingEngineImplTest {
 
     @Test
     public void getTemplate_ConfigFoundButTemplateStringIsNull_ReturnsNull() {
-        // formatter.getTemplate uses findByCredentialTypeAndContext
-        // vc4 has a null template string
+
         String vc4TypeForGetTemplate = "TestVerifiableCredential,VerifiableCredential";
-        // The context part for getTemplate's key, derived from vc4's full context and format
+
         String vc4ContextForGetTemplate = "https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1" + DELIMITER + "ldp_vc";
         String keyForVc4GetTemplate = vc4TypeForGetTemplate + DELIMITER + vc4ContextForGetTemplate;
 
@@ -399,10 +380,7 @@ public class VelocityTemplatingEngineImplTest {
 
     @Test
     public void testFormat_AddsIdPrefixIfIdNotInTemplate() {
-        // Uses vc2 by default. vc2 template now includes "id": "${_id}"
-        // The format method's idPrefix logic applies *after* Velocity templating.
-        // So, even if template has ${_id}, the post-processing will overwrite it if idPrefix is set.
-        // Let's ensure this behavior.
+
 
         JSONObject valueMap = new JSONObject();
         valueMap.put("vcVer", "VC-V1");
@@ -417,8 +395,7 @@ public class VelocityTemplatingEngineImplTest {
         valueMap.put("province", "N/A");
         valueMap.put("region", "N/A");
         valueMap.put("face", "N/A");
-        // We can also provide an _id to see it being overwritten by idPrefix logic
-        // valueMap.put("_id", "template-generated-id-123");
+
 
 
         Map<String, Object> templateSettings = Map.of(
@@ -430,7 +407,7 @@ public class VelocityTemplatingEngineImplTest {
         JSONObject jsonResult = new JSONObject(result);
         assertTrue(jsonResult.has("id"));
         assertTrue(jsonResult.getString("id").startsWith("uurn:uuid:")); // Verifies idPrefix logic
-        // Assert.assertNotEquals("template-generated-id-123", jsonResult.getString("id")); // If we provided _id
+
     }
 
     @Test

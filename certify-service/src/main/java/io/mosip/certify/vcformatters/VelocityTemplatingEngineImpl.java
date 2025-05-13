@@ -31,10 +31,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
 
-// ObjectMapper is removed as its primary use for populating templateCache is gone.
-// If jsonify or other methods require it for other purposes, it should be re-evaluated.
-// For now, assuming jsonify relies on org.json and doesn't need this specific ObjectMapper instance.
-// import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -117,7 +113,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
 
     /**
      * Gets the proof/signature algorithm for this template
-     * @param templateName is the name of the template. ("type:context:format")
+     * @param templateName is the name of the template.
      * @return Signature Algorithm name. This can also be null
      */
     @Override
@@ -128,7 +124,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
 
     /**
      * Get the URL of the public key for this template
-     * @param templateName is the name of the template. ("type:context:format")
+     * @param templateName is the name of the template.
      * @return URL of the public key.
      */
     @Override
@@ -139,7 +135,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
 
     /**
      * Get the refid of the key stored in keymanager.
-     * @param templateName is the name of the template. ("type:context:format")
+     * @param templateName is the name of the template.
      * @return refid for the keymanager.
      */
     @Override
@@ -150,12 +146,12 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
 
     /**
      * Get the appid of the key stored in keymanager
-     * @param templateName is the name of the template. ("type:context:format")
+     * @param templateName is the name of the template.
      * @return appid of the keymanager.
      */
     @Override
     public String getAppID(String templateName){
-        // return templateCache.get(templateName).get("keyManagerAppId"); // OLD
+
         return getCachedCredentialConfig(templateName).getKeyManagerAppId(); // NEW
     }
 
@@ -167,7 +163,6 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
      */
     @Override
     public List<String> getSelectiveDisclosureInfo(String templateName){
-        // String sdClaimValue = templateCache.get(templateName).get("sdClaim"); // OLD
         String sdClaimValue = getCachedCredentialConfig(templateName).getSdClaim(); // NEW
         return Optional.ofNullable(sdClaimValue)
                 .map(sd -> Arrays.asList(sd.split(",")))
@@ -187,9 +182,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     @SneakyThrows
     @Override
     public String format(JSONObject valueMap, Map<String, Object> templateSettings) {
-        String templateName = templateSettings.get(TEMPLATE_NAME).toString(); // This key must be "type:context:format"
+        String templateName = templateSettings.get(TEMPLATE_NAME).toString();
         String issuer = templateSettings.get(ISSUER_URI).toString();
-        // String template = templateCache.get(templateName).get("vcTemplate"); // OLD
         String vcTemplateString = getCachedCredentialConfig(templateName).getVcTemplate(); // NEW
         if (vcTemplateString == null) {
             log.error("Template {} not found (vcTemplate is null)", templateName);

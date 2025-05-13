@@ -1,4 +1,4 @@
-package io.mosip.certify.utils; // Or your chosen package like io.mosip.certify.common.util
+package io.mosip.certify.utils;
 
 import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.core.constants.Constants;

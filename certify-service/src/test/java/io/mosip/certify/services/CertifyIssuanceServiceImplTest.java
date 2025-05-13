@@ -2,8 +2,7 @@ package io.mosip.certify.services;
 
 import foundation.identity.jsonld.JsonLDException;
 import foundation.identity.jsonld.JsonLDObject;
-// import info.weboftrust.ldsignatures.LdProof; // Not directly used in mocks after refactor for LDP success test
-// import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer; // Not directly used in mocks
+
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.api.exception.DataProviderExchangeException;
 import io.mosip.certify.api.spi.AuditPlugin;
@@ -12,23 +11,18 @@ import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.SignatureAlg;
-// Import the DTOs you provided
-import io.mosip.certify.core.dto.*;
-// Assuming your CredentialDefinition DTO is also in io.mosip.certify.core.dto
-// If it's the same as the one used in CredentialRequest, that's fine.
-// For clarity, if it's a separate DTO, ensure correct import.
-// Let's assume io.mosip.certify.core.dto.CredentialDefinition is the DTO for config.
 
-// import io.mosip.certify.core.dto.CredentialResponse; // Not directly instantiated in most test logic
+import io.mosip.certify.core.dto.*;
+
 
 import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.credential.Credential; // Interface
+
 import io.mosip.certify.credential.CredentialFactory;
 import io.mosip.certify.credential.SDJWT; // Implementation
 import io.mosip.certify.credential.W3cJsonLd; // Implementation
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
-// import io.mosip.certify.proofgenerators.ProofGenerator;
+
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
@@ -37,10 +31,9 @@ import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
 import io.mosip.certify.core.util.SecurityHelperService;
 import io.mosip.certify.proof.ProofValidatorFactory;
-import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
+
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
-// import io.mosip.kernel.signature.dto.JWTSignatureResponseDto; // Not used directly after SDJWT mock change
-// import io.mosip.kernel.signature.service.SignatureService; // Only needed if SDJWT wasn't mocked
+
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +44,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
-// import java.net.URI; // Not directly used in mocks
+
 import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -82,8 +75,7 @@ public class CertifyIssuanceServiceImplTest {
     private AuditPlugin auditWrapper;
     @Mock
     private ProofValidator proofValidator;
-    // @Mock // SignatureService is a dependency of SDJWT, which we now mock directly
-    // private SignatureService signatureService;
+
     @Mock
     private CredentialFactory credentialFactory;
     @Mock
@@ -142,7 +134,7 @@ public class CertifyIssuanceServiceImplTest {
         transaction.setCNonceExpireSeconds(300);
         transaction.setCNonceIssuedEpoch(LocalDateTime.now(ZoneOffset.UTC).toEpochSecond(ZoneOffset.UTC));
 
-        // Setup mockGlobalCredentialIssuerMetadataDTO using the provided DTO structures
+
         mockGlobalCredentialIssuerMetadataDTO = new CredentialIssuerMetadataDTO();
         mockGlobalCredentialIssuerMetadataDTO.setCredentialIssuer("https://test.issuer.com");
         mockGlobalCredentialIssuerMetadataDTO.setAuthorizationServers(List.of("https://auth.server.com"));
