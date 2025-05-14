@@ -254,10 +254,4 @@ public class VCIssuanceUtil {
 
         //TODO need to validate Credential_definition as JsonLD document, if invalid throw exception
     }
-
-    public static void validateSdJwtVcFormatRequest(CredentialRequest credentialRequest) {
-        if(credentialRequest.getVct() == null)
-            throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_VC_TYPE);
-
-    }
 }

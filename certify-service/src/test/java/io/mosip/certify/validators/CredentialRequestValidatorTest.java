@@ -23,7 +23,7 @@ public class CredentialRequestValidatorTest {
         CredentialRequest cr = new CredentialRequest();
         cr.setFormat("fake-format");
         assertThrows(InvalidRequestException.class,
-                () -> factory.isValid(cr));
+                () -> CredentialRequestValidator.isValid(cr));
     }
 
     @ParameterizedTest
@@ -32,7 +32,7 @@ public class CredentialRequestValidatorTest {
         CredentialRequest cr = new CredentialRequest();
         cr.setFormat(format);
         cr.setCredential_definition(new CredentialDefinition());
-        assertTrue(factory.isValid(cr));
+        assertTrue(CredentialRequestValidator.isValid(cr));
     }
 
     @Test
@@ -45,6 +45,6 @@ public class CredentialRequestValidatorTest {
         cd.setType(List.of("VerifiableCredential", "MockDrivingLicense"));
         cd.setContext(List.of("https://example.context.page.sh"));
         cr.setCredential_definition(new CredentialDefinition());
-        assertTrue(factory.isValid(cr));
+        assertTrue(CredentialRequestValidator.isValid(cr));
     }
 }
