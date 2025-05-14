@@ -156,8 +156,8 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         // 3. Proof Validation
         ProofValidator proofValidator = proofValidatorFactory.getProofValidator(credentialRequest.getProof().getProof_type());
         String validCNonce = VCIssuanceUtil.getValidClientNonce(vciCacheService, parsedAccessToken, cNonceExpireSeconds, securityHelperService, log);
-        if(!proofValidator.validate((String)parsedAccessToken.getClaims().get(Constants.CLIENT_ID), validCNonce,
-                credentialRequest.getProof())) {
+        if(!proofValidator.validateV2((String)parsedAccessToken.getClaims().get(Constants.CLIENT_ID), validCNonce,
+                credentialRequest.getProof(), credentialMetadata.getProofTypesSupported())) {
             throw new CertifyException(ErrorConstants.INVALID_PROOF);
         }
 

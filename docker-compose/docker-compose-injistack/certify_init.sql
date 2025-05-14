@@ -199,9 +199,9 @@ VALUES (
     'ED25519_SIGN',  -- key_manager_ref_id (optional)
     'EdDSA',  -- signature_algo (optional)
     NULL,  -- sd_claim (optional)
-    '[{"name": "Farmer Verifiable Credential", "locale": "en", "logo": {"url": "https://example.com/logo.png", "alt_text": "Farmer Credential Logo"}, "background_color": "#12107c", "text_color": "#FFFFFF"}]'::JSONB,  -- display
+    '[{"name": "Farmer Verifiable Credential", "locale": "en", "logo": {"url": "https://example.com/logo.png", "alt_text": "Farmer Credential Logo"}, "background_color": "#12107c", "text_color": "#FFFFFF", "background_image": { "uri": "https://mosip.github.io/inji-config/logos/agro-vertias-logo.png" }}]'::JSONB,  -- display
     ARRAY['fullName', 'mobileNumber', 'dateOfBirth', 'gender', 'state', 'district', 'villageOrTown', 'postalCode', 'landArea', 'landOwnershipType', 'primaryCropType', 'secondaryCropType', 'farmerID'],  -- display_order
-    'farmer_identity_vc',  -- scope
+    'mock_identity_vc_ldp',  -- scope
     ARRAY['did:jwk'],  -- cryptographic_binding_methods_supported
     ARRAY['Ed25519Signature2020'],  -- credential_signing_alg_values_supported
     '{"jwt": {"proof_signing_alg_values_supported": ["RS256", "ES256"]}}'::JSONB,  -- proof_types_supported
@@ -285,7 +285,7 @@ VALUES (
     'ED25519_SIGN',  -- key_manager_ref_id (optional)
     'EdDSA',  -- signature_algo (optional)
     NULL,  -- sd_claim (optional)
-    '[{"name": "Farmer Verifiable Credential", "locale": "en", "logo": {"url": "https://example.com/logo.png", "alt_text": "Farmer Credential Logo"}, "background_color": "#12107c", "text_color": "#FFFFFF"}]'::JSONB,  -- display
+    '[{"name": "Farmer Verifiable Credential", "locale": "en", "logo": {"url": "https://example.com/logo.png", "alt_text": "Farmer Credential Logo"}, "background_color": "#12107c", "text_color": "#FFFFFF", "background_image": { "uri": "https://mosip.github.io/inji-config/logos/agro-vertias-logo.png" }}]'::JSONB,  -- display
     ARRAY['fullName', 'mobileNumber', 'dateOfBirth', 'gender', 'state', 'district', 'villageOrTown', 'postalCode', 'landArea', 'landOwnershipType', 'primaryCropType', 'secondaryCropType', 'farmerID'],  -- display_order
     'farmer_identity_vc',  -- scope
     ARRAY['did:jwk'],  -- cryptographic_binding_methods_supported
@@ -369,7 +369,7 @@ VALUES (
     'ED25519_SIGN',  -- key_manager_ref_id (optional)
     'EdDSA',  -- signature_algo (optional)
     NULL,  -- sd_claim (optional)
-    '[{"name": "Farmer Verifiable Credential", "locale": "en", "logo": {"url": "https://example.com/logo.png", "alt_text": "Farmer Credential Logo"}, "background_color": "#12107c", "text_color": "#FFFFFF"}]'::JSONB,  -- display
+    '[{"name": "Farmer Verifiable Credential", "locale": "en", "logo": {"url": "https://example.com/logo.png", "alt_text": "Farmer Credential Logo"}, "background_color": "#12107c", "text_color": "#FFFFFF", "background_image": { "uri": "https://mosip.github.io/inji-config/logos/agro-vertias-logo.png" }}]'::JSONB,  -- display
     ARRAY['fullName', 'mobileNumber', 'dateOfBirth', 'gender', 'state', 'district', 'villageOrTown', 'postalCode', 'landArea', 'landOwnershipType', 'primaryCropType', 'secondaryCropType', 'farmerID'],  -- display_order
     'farmer_identity_vc',  -- scope
     ARRAY['did:jwk'],  -- cryptographic_binding_methods_supported

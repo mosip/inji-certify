@@ -28,6 +28,7 @@ import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.CredentialProof;
+import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,6 +38,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.*;
 
+import static io.mosip.certify.core.constants.ErrorConstants.UNSUPPORTED_ALGORITHM;
 import static io.mosip.certify.proof.DIDkeysProofManager.DID_KEY_PREFIX;
 
 @Slf4j
@@ -75,7 +77,7 @@ public class JwtProofValidator implements ProofValidator {
 
         try {
             SignedJWT jwt = (SignedJWT) JWTParser.parse(credentialProof.getJwt());
-            validateHeaderClaims(jwt.getHeader());
+            validateHeaderClaims(jwt.getHeader(), supportedAlgorithms);
             JwtProofKeyManager jpkm = getInstance(jwt.getHeader().getKeyID());
             JWK jwk = jpkm.getKeyFromHeader(jwt.getHeader())
                     .orElseThrow(() -> new InvalidRequestException(ErrorConstants.PROOF_HEADER_AMBIGUOUS_KEY));
@@ -133,6 +135,81 @@ public class JwtProofValidator implements ProofValidator {
         return false;
     }
 
+    @Override
+    public boolean validateV2(String clientId, String cNonce, CredentialProof credentialProof, Map<String, Object> proofConfiguration) {
+        if(credentialProof.getJwt() == null || credentialProof.getJwt().isBlank()) {
+            log.error("Found invalid jwt in the credential proof");
+            return false;
+        }
+
+        try {
+            SignedJWT jwt = (SignedJWT) JWTParser.parse(credentialProof.getJwt());
+            Map<String, Object> jwtConfiguration;
+            if(proofConfiguration.get("jwt") != null) {
+             jwtConfiguration =(Map<String, Object>) proofConfiguration.get("jwt");
+            } else {
+                throw new InvalidRequestException(UNSUPPORTED_ALGORITHM);
+            }
+            List<String> algorithms = (List<String>) jwtConfiguration.getOrDefault("proof_signing_alg_values_supported", List.of());
+            validateHeaderClaims(jwt.getHeader(), algorithms);
+            JwtProofKeyManager jpkm = getInstance(jwt.getHeader().getKeyID());
+            JWK jwk = jpkm.getKeyFromHeader(jwt.getHeader())
+                    .orElseThrow(() -> new InvalidRequestException(ErrorConstants.PROOF_HEADER_AMBIGUOUS_KEY));
+            if(jwk.isPrivate()) {
+                log.error("Provided key material contains private key! Rejecting proof.");
+                throw new InvalidRequestException(ErrorConstants.PROOF_HEADER_INVALID_KEY);
+            }
+
+            JWTClaimsSet.Builder proofJwtClaimsBuilder = new JWTClaimsSet.Builder()
+                    .audience(credentialIdentifier)
+                    .claim("nonce", cNonce);
+
+            // if the proof contains issuer claim, then it should match with the client id ref: https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0-ID1.html#section-7.2.1.1-2.2.2.1
+            // https://github.com/openid/OpenID4VCI/issues/349
+            Set<String> requiredClaims = new HashSet<>(DEFAULT_REQUIRED_CLAIMS);
+            if(jwt.getJWTClaimsSet().getClaim("iss") != null) {
+                proofJwtClaimsBuilder.issuer(clientId);
+            }
+            if(jwt.getJWTClaimsSet().getClaim("exp") != null) {
+                requiredClaims.add("exp");
+            }
+
+            DefaultJWTClaimsVerifier claimsSetVerifier = new DefaultJWTClaimsVerifier(proofJwtClaimsBuilder.build(), requiredClaims);
+
+            claimsSetVerifier.setMaxClockSkew(0);
+            JWSKeySelector keySelector;
+            if(JWSAlgorithm.ES256K.equals(jwt.getHeader().getAlgorithm())) {
+                ECDSAVerifier verifier = new ECDSAVerifier((com.nimbusds.jose.jwk.ECKey) jwk);
+                verifier.getJCAContext().setProvider(BouncyCastleProviderSingleton.getInstance());
+                boolean verified = jwt.verify(verifier);
+                claimsSetVerifier.verify(jwt.getJWTClaimsSet(), null);
+                return verified;
+            } else if (JWSAlgorithm.Ed25519.equals(jwt.getHeader().getAlgorithm())) {
+                Ed25519Verifier verifier = new Ed25519Verifier(jwk.toOctetKeyPair());
+                boolean verified = jwt.verify(verifier);
+                claimsSetVerifier.verify(jwt.getJWTClaimsSet(), null);
+                return verified;
+            } else {
+                keySelector = new JWSVerificationKeySelector(allowedSignatureAlgorithms,
+                        new ImmutableJWKSet(new JWKSet(jwk)));
+                ConfigurableJWTProcessor jwtProcessor = new DefaultJWTProcessor();
+                jwtProcessor.setJWSKeySelector(keySelector);
+                jwtProcessor.setJWSTypeVerifier(new DefaultJOSEObjectTypeVerifier(new JOSEObjectType(HEADER_TYP)));
+                jwtProcessor.setJWTClaimsSetVerifier(claimsSetVerifier);
+                jwtProcessor.process(credentialProof.getJwt(), null);
+                return true;
+            }
+        } catch (InvalidRequestException e) {
+            log.error("Invalid proof : {}", e.getErrorCode());
+        } catch (ParseException e) {
+            log.error("Failed to parse jwt in the credential proof", e);
+        } catch (BadJOSEException | JOSEException e) {
+            log.error("JWT proof verification failed", e);
+        }
+        return false;
+    }
+
+
     /**
      * @param credentialProof proof from the credential request.
      * @return the key material from the proof in a did:jwk or did:key format
@@ -151,11 +228,11 @@ public class JwtProofValidator implements ProofValidator {
         throw new InvalidRequestException(ErrorConstants.PROOF_HEADER_INVALID_KEY);
     }
 
-    private void validateHeaderClaims(JWSHeader jwsHeader) {
+    private void validateHeaderClaims(JWSHeader jwsHeader, List<String> algorithms) {
         if(Objects.isNull(jwsHeader.getType()) || !HEADER_TYP.equals(jwsHeader.getType().getType()))
             throw new InvalidRequestException(ErrorConstants.PROOF_HEADER_INVALID_TYP);
 
-        if(Objects.isNull(jwsHeader.getAlgorithm()) || !supportedAlgorithms.contains(jwsHeader.getAlgorithm().getName()))
+        if(Objects.isNull(jwsHeader.getAlgorithm()) || !algorithms.contains(jwsHeader.getAlgorithm().getName()))
             throw new InvalidRequestException(ErrorConstants.PROOF_HEADER_INVALID_ALG);
 
         if ((Objects.isNull(jwsHeader.getKeyID()) && Objects.isNull(jwsHeader.getJWK()))
