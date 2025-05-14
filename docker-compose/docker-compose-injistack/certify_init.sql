@@ -126,6 +126,10 @@ CREATE TABLE IF NOT EXISTS certify.credential_config (
     CONSTRAINT pk_config_id PRIMARY KEY (context, credential_type, credential_format)
 );
 
+CREATE UNIQUE INDEX idx_credential_config_vct_unique
+ON certify.credential_config(vct)
+WHERE vct IS NOT NULL;
+
 INSERT INTO certify.credential_config (
     credential_config_key_id,
     config_id,
