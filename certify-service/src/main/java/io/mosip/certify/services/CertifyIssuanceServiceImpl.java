@@ -50,6 +50,8 @@ import org.springframework.stereotype.Service;
 import java.security.NoSuchAlgorithmException;
 
 import java.lang.reflect.Method;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -57,6 +59,7 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
+import io.mosip.certify.enums.CredentialStatus;
 
 @Slf4j
 @Service
@@ -132,6 +135,10 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     private static final int STATUS_LIST_MAX_INDEX = 131072;
 
+    @Value("${vc.search-field}")
+    private String configuredSearchFieldConfig;
+
+
     @Transactional
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
@@ -166,33 +173,33 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 credentialRequest.getProof())) {
             throw new CertifyException(ErrorConstants.INVALID_PROOF);
         }
-        String credentialSubjectHash;
+        List<String> configuredSearchFields = Arrays.stream(configuredSearchFieldConfig.split(","))
+                                            .map(String::trim)
+                                            .filter(s -> !s.isEmpty())
+                                            .collect(Collectors.toList());
+
         JSONObject jsonObject;
+        JSONObject searchFieldObject = new JSONObject();
 
         try {
             parsedAccessToken.getClaims().put("accessTokenHash", parsedAccessToken.getAccessTokenHash());
             jsonObject = dataProviderPlugin.fetchData(parsedAccessToken.getClaims());
-            credentialSubjectHash = hashCredentialSubject(jsonObject);
+            for (String field : configuredSearchFields) {
+                if (jsonObject.has(field)) {
+                    searchFieldObject.put(field, jsonObject.get(field));
+                } else {
+                    log.warn("Field {} not found in data provider response", field);
+                }
+            }
+            if (searchFieldObject.length() == 0) {
+                throw new CertifyException(ErrorConstants.INVALID_REQUEST);
+            }
 
         } catch (DataProviderExchangeException e) {
             throw new CertifyException(e.getErrorCode());
         } catch (Exception e) {
             log.error("Unexpected error occurred while fetching data from dataProviderPlugin", e);
             throw new CertifyException(ErrorConstants.VC_ISSUANCE_FAILED);
-        }
-
-        Optional<LedgerIssuanceTable> existingCredential = ledgerIssuanceTableRepository
-            .findByIssuerIdAndStatusPurposeAndCredentialSubjectHash(issuerId, "revocation", credentialSubjectHash);
-
-        if (existingCredential.isPresent()) {
-            log.info("VC already issued for issuerId={}, credentialSubjectHash={}", issuerId, credentialSubjectHash);
-            return getCredentialResponse(credentialRequest.getFormat(), getVerifiableCredential(
-                    credentialRequest,
-                    credentialMetadata,
-                    proofValidator.getKeyMaterial(credentialRequest.getProof()),
-                    existingCredential.get(),
-                    jsonObject
-            ));
         }
 
         Pair<String, Long> statusListInfo = getStatusListInfo(issuerId, "revocation");
@@ -203,43 +210,60 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         LedgerIssuanceTable ledgerIssuanceTable = new LedgerIssuanceTable();
         ledgerIssuanceTable.setId(statusListCredentialUrl+"#"+statusListIndex);
         ledgerIssuanceTable.setHolderId(proofValidator.getKeyMaterial(credentialRequest.getProof()));
-        ledgerIssuanceTable.setCredentialId(statusListCredentialUrl+"#"+statusListIndex);
         ledgerIssuanceTable.setIssuerId(issuerId);
         ledgerIssuanceTable.setStatusListIndex(statusListIndex);
         ledgerIssuanceTable.setStatusListCredential(statusListCredentialUrl);
         ledgerIssuanceTable.setStatusPurpose("revocation");
-        ledgerIssuanceTable.setCredentialStatus("valid");
-        ledgerIssuanceTable.setCredentialSubjectHash(credentialSubjectHash);
+        ledgerIssuanceTable.setCredentialStatus(CredentialStatus.VALID);
         ledgerIssuanceTable.setIssueDate(LocalDateTime.now());
-        ledgerIssuanceTableRepository.save(ledgerIssuanceTable);
+        ledgerIssuanceTable.setSearchField(searchFieldObject.toString());
 
         // 4. Get VC from configured plugin implementation
         VCResult<?> vcResult = getVerifiableCredential(credentialRequest, credentialMetadata,
                 proofValidator.getKeyMaterial(credentialRequest.getProof()), ledgerIssuanceTable, jsonObject);
 
+        JsonLDObject credential = (JsonLDObject) vcResult.getCredential();
+        String credentialId = credential.getJsonObject().get("id").toString();
+        ledgerIssuanceTable.setCredentialId(credentialId);
+
+        Object typeObj = credential.getJsonObject().get("type");
+        if (typeObj instanceof List<?>) {
+            List<?> typeList = (List<?>) typeObj;
+            if (typeList.size() > 1 && typeList.get(1) instanceof String) {
+                String credentialType = (String) typeList.get(1);
+                ledgerIssuanceTable.setCredentialType(credentialType);
+            } else {
+                ledgerIssuanceTable.setCredentialType("UNKNOWN");
+            }
+        } else if (typeObj instanceof String) {
+            ledgerIssuanceTable.setCredentialType((String) typeObj);
+        } else {
+            ledgerIssuanceTable.setCredentialType("UNKNOWN");
+        }
+
         auditWrapper.logAudit(Action.VC_ISSUANCE, ActionStatus.SUCCESS,
                 AuditHelper.buildAuditDto(parsedAccessToken.getAccessTokenHash(), "accessTokenHash"), null);
 
-        // ledgerIssuanceTableRepository.save(ledgerIssuanceTable);
+        ledgerIssuanceTableRepository.save(ledgerIssuanceTable);
         return getCredentialResponse(credentialRequest.getFormat(), vcResult);
     }
 
     @Override
     public Map<String, Object> getCredentialIssuerMetadata(String version) {
-        if(issuerMetadata.containsKey(version)) {
-            return issuerMetadata.get(version);
-        } else if(version != null && version.equals("vd12")) {
-            LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
-            Map<String, Object> vd12IssuerMetadata = convertLatestToVd12(originalIssuerMetadata);
-            issuerMetadata.put("vd12", (LinkedHashMap<String, Object>) vd12IssuerMetadata);
-            return vd12IssuerMetadata;
-        } else if(version != null && version.equals("vd11")) {
-            LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
-            Map<String, Object> vd11IssuerMetadata = convertLatestToVd11(originalIssuerMetadata);
-            issuerMetadata.put("vd11", (LinkedHashMap<String, Object>) vd11IssuerMetadata);
-            return vd11IssuerMetadata;
-        }
-        throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_OPENID_VERSION);
+       if(issuerMetadata.containsKey(version)) {
+           return issuerMetadata.get(version);
+       } else if(version != null && version.equals("vd12")) {
+           LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
+           Map<String, Object> vd12IssuerMetadata = convertLatestToVd12(originalIssuerMetadata);
+           issuerMetadata.put("vd12", (LinkedHashMap<String, Object>) vd12IssuerMetadata);
+           return vd12IssuerMetadata;
+       } else if(version != null && version.equals("vd11")) {
+           LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
+           Map<String, Object> vd11IssuerMetadata = convertLatestToVd11(originalIssuerMetadata);
+           issuerMetadata.put("vd11", (LinkedHashMap<String, Object>) vd11IssuerMetadata);
+           return vd11IssuerMetadata;
+       }
+       throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_OPENID_VERSION);
     }
 
     @Override
@@ -382,7 +406,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
 
         Map<String, Object> statusObject = new HashMap<>();
-        statusObject.put("id", ledgerIssuanceTable.getCredentialId());
+        statusObject.put("id", ledgerIssuanceTable.getId());
         statusObject.put("type", "BitstringStatusListEntry");
         statusObject.put("statusPurpose", ledgerIssuanceTable.getStatusPurpose());
         statusObject.put("statusListIndex", ledgerIssuanceTable.getStatusListIndex());
@@ -535,32 +559,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 statusListCredentialUrl
         );
     }
-    
-
-    public String hashCredentialSubject(JSONObject credentialSubject) {
-        try {
-            String credentialSubjectString = credentialSubject.toString();
-            // Get the MessageDigest instance for SHA-256 hashing
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            
-            // Convert the JSON string into a byte array
-            byte[] hashBytes = digest.digest(credentialSubjectString.getBytes());
-            
-            // Convert the byte array to a hex string
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hashBytes) {
-                hexString.append(String.format("%02x", b));
-            }
-            
-            // Print the hash
-            System.out.println("SHA-256 Hash: " + hexString.toString());
-            return hexString.toString();
-            
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            return null; 
-        }
-    }
 
     @Override
     public Map<String, Object> verifyCredentialStatus(String statusListCredentialId, long statusListIndex, String statusPurpose) {
@@ -580,16 +578,33 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     }
 
     @Override
-    public Map<String, Object> revokeCredentialV1(String credentialSubjectJson) {
+    public List<Map<String, Object>> searchCredentials(Map<String, String> searchFields) {
         try {
-            JSONObject requestJson = new JSONObject(credentialSubjectJson);
-            JSONObject credentialSubject = requestJson.getJSONObject("credentialSubject");
-            String hashedCredentialSubject = hashCredentialSubject(credentialSubject);
-            bitStringStatusListService.revokeCredentialV1(hashedCredentialSubject);
-            return Map.of("message", "Credential revoked successfully");
-        } catch (JSONException e) {
-            e.printStackTrace();
-            return Map.of("error", "Invalid JSON string provided");
+            JSONObject searchJson = new JSONObject(searchFields);
+            String searchKey = searchJson.toString();
+            List<LedgerIssuanceTable> records = ledgerIssuanceTableRepository.findBySearchField(searchKey);
+
+            if (records.isEmpty()) {
+                return List.of(Map.of("error", "Credential not found for the given searchField"));
+            }
+
+            List<Map<String, Object>> result = new ArrayList<>();
+
+            for (LedgerIssuanceTable record : records) {
+                Map<String, Object> data = Map.of(
+                    "credentialId", record.getCredentialId(),
+                    "statusListId", record.getStatusListCredential(),
+                    "revocationIndex", record.getStatusListIndex(),
+                    "credentialType", record.getCredentialType()
+                );
+                result.add(data);
+            }
+
+            return result;
+
+        } catch (Exception e) {
+            log.error("Error occurred while searching credentials", e);
+            return List.of(Map.of("error", "An error occurred while processing the request"));
         }
     }
 

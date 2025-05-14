@@ -9,7 +9,7 @@ import lombok.Data;
 public class CredentialRevokeRequest {
 
     @NotBlank(message = ErrorConstants.INVALID_STATUS_LIST_CREDENTIAL_URL)
-    private String statusListCredentialUrl;
+    private String statusListId;
 
     @NotNull(message = ErrorConstants.MISSING_STATUS_LIST_INDEX)
     private Long statusListIndex;

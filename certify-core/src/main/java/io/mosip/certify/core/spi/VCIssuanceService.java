@@ -9,6 +9,7 @@ import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
 
 import java.util.Map;
+import java.util.List;
 
 public interface VCIssuanceService {
 
@@ -25,8 +26,8 @@ public interface VCIssuanceService {
 
     Map<String, Object> verifyCredentialStatus(String statusListCredentialId, long statusListIndex, String statusPurpose);
 
-    Map<String, Object> revokeCredential(String statusListCredentialUrl, long statusListIndex, String statusPurpose);
+    Map<String, Object> revokeCredential(String statusListId, long statusListIndex, String statusPurpose);
 
-    Map<String, Object> revokeCredentialV1(String credentialSubject);
+    List<Map<String, Object>> searchCredentials(Map<String, String> searchField);
 
 }

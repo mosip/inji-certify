@@ -28,14 +28,18 @@ import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.core.util.AuditHelper;
 import io.mosip.certify.core.util.SecurityHelperService;
+import io.mosip.certify.entity.LedgerIssuanceTable;
 import io.mosip.certify.validators.CredentialRequestValidator;
+import jakarta.transaction.Transactional;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
+import io.mosip.certify.repository.LedgerIssuanceTableRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.stereotype.Service;
 
@@ -45,9 +49,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
-import io.mosip.certify.services.BitStringStatusListService;
-
-import org.json.JSONException;
 import org.json.JSONObject;
 
 @Slf4j
@@ -84,6 +85,9 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     @Value("${mosip.certify.domain.url}")
     private String domainUrl;
+
+    @Autowired
+    private LedgerIssuanceTableRepository ledgerIssuanceTableRepository;    
 
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
@@ -409,49 +413,39 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
     }
 
     @Override
-    public Map<String, Object> revokeCredential(String statusListCredentialUrl, long statusListIndex, String statusPurpose) {
-        bitStringStatusListService.revokeCredential(statusListCredentialUrl, statusListIndex, statusPurpose);
+    public Map<String, Object> revokeCredential(String statusListId, long statusListIndex, String statusPurpose) {
+        bitStringStatusListService.revokeCredential(statusListId, statusListIndex, statusPurpose);
         return Map.of("message", "Credential revoked successfully");
     }
 
     @Override
-    public Map<String, Object> revokeCredentialV1(String credentialSubjectJson) {
+    public List<Map<String, Object>> searchCredentials(Map<String, String> searchFields) {
         try {
-            JSONObject requestJson = new JSONObject(credentialSubjectJson);
-            JSONObject credentialSubject = requestJson.getJSONObject("credentialSubject");
-            String hashedCredentialSubject = hashCredentialSubject(credentialSubject);
-            bitStringStatusListService.revokeCredentialV1(hashedCredentialSubject);
-            return Map.of("message", "Credential revoked successfully");
-        } catch (JSONException e) {
-            e.printStackTrace();
-            return Map.of("error", "Invalid JSON string provided");
-        }
-    }
+            JSONObject searchJson = new JSONObject(searchFields);
+            String searchKey = searchJson.toString();
+            List<LedgerIssuanceTable> records = ledgerIssuanceTableRepository.findBySearchField(searchKey);
 
-
-    public String hashCredentialSubject(JSONObject credentialSubject) {
-        System.out.println("credentialSubject" + credentialSubject);
-        try {
-            String credentialSubjectString = credentialSubject.toString();
-            // Get the MessageDigest instance for SHA-256 hashing
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            
-            // Convert the JSON string into a byte array
-            byte[] hashBytes = digest.digest(credentialSubjectString.getBytes());
-            
-            // Convert the byte array to a hex string
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hashBytes) {
-                hexString.append(String.format("%02x", b));
+            if (records.isEmpty()) {
+                return List.of(Map.of("error", "Credential not found for the given searchField"));
             }
-            
-            // Print the hash
-            System.out.println("SHA-256 Hash: " + hexString.toString());
-            return hexString.toString();
-            
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            return null; 
+
+            List<Map<String, Object>> result = new ArrayList<>();
+
+            for (LedgerIssuanceTable record : records) {
+                Map<String, Object> data = Map.of(
+                    "credentialId", record.getCredentialId(),
+                    "statusListId", record.getStatusListCredential(),
+                    "revocationIndex", record.getStatusListIndex(),
+                    "credentialType", record.getCredentialType()
+                );
+                result.add(data);
+            }
+
+            return result;
+
+        } catch (Exception e) {
+            log.error("Error occurred while searching credentials", e);
+            return List.of(Map.of("error", "An error occurred while processing the request"));
         }
     }
 

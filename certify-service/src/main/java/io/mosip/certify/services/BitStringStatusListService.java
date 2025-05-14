@@ -1,6 +1,7 @@
 package io.mosip.certify.services;
 
 import io.mosip.certify.entity.StatusListCredential;
+import io.mosip.certify.enums.CredentialStatus;
 import io.mosip.certify.entity.LedgerIssuanceTable;
 import io.mosip.certify.repository.StatusListCredentialRepository;
 import io.mosip.certify.repository.LedgerIssuanceTableRepository;
@@ -171,9 +172,8 @@ public class BitStringStatusListService {
         }
     }
 
-    public void revokeCredential(String statusListCredentialUrl, long statusListIndex, String statusPurpose) {
-        Optional<StatusListCredential> statusListOptional = statusListCredentialRepository.findById(statusListCredentialUrl);
-        System.out.println("Status List Credential found: " + statusListOptional);
+    public void revokeCredential(String statusListId, long statusListIndex, String statusPurpose) {
+        Optional<StatusListCredential> statusListOptional = statusListCredentialRepository.findById(statusListId);
         if (statusListOptional.isEmpty()) {
             throw new RuntimeException("Status List Credential not found");
         }
@@ -183,10 +183,11 @@ public class BitStringStatusListService {
             throw new RuntimeException("Status Purpose mismatch");
         }
 
-        Optional<LedgerIssuanceTable> issuanceRecord = ledgerIssuanceTableRepository.findByStatusListIndex(statusListIndex);
-        if (issuanceRecord.isEmpty()) {
+        Optional<LedgerIssuanceTable> issuanceRecordOptional = ledgerIssuanceTableRepository.findByStatusListIndex(statusListIndex);
+        if (issuanceRecordOptional.isEmpty()) {
             throw new RuntimeException("Credential has not been issued for the provided index");
         }
+        LedgerIssuanceTable issuanceRecord = issuanceRecordOptional.get();
     
         byte[] bitstring = decompressAndDecodebitstring(statusList.getEncodedList());
         int index = (int) (statusListIndex * STATUS_SIZE);
@@ -201,21 +202,9 @@ public class BitStringStatusListService {
         statusList.setValidFrom(LocalDateTime.now());
     
         statusListCredentialRepository.save(statusList);
-    }
 
-    public void revokeCredentialV1(String hashedCredentialSubject) {
-        Optional<LedgerIssuanceTable> issuanceRecordOptional = ledgerIssuanceTableRepository.findByCredentialSubjectHash(hashedCredentialSubject);
-        if (issuanceRecordOptional.isEmpty()) {
-            throw new RuntimeException("Credential has not been issued for the provided hash");
-        }
-    
-        LedgerIssuanceTable ledgerIssuanceRecord = issuanceRecordOptional.get();
-        
-        String statusListCredentialUrl = ledgerIssuanceRecord.getStatusListCredential();
-        long statusListIndex = ledgerIssuanceRecord.getStatusListIndex();
-        String statusPurpose = ledgerIssuanceRecord.getStatusPurpose();
-    
-        revokeCredential(statusListCredentialUrl, statusListIndex, statusPurpose);
-    }
-    
+        issuanceRecord.setCredentialStatus(CredentialStatus.REVOKED);
+        issuanceRecord.setRevocationTimestamp(LocalDateTime.now());
+        ledgerIssuanceTableRepository.save(issuanceRecord);
+    }    
 }

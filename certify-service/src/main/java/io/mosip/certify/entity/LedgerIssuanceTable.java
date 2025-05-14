@@ -6,9 +6,13 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import io.mosip.certify.enums.CredentialStatus;
 
 @Entity
-@Table(name = "ledger_issuance_table")
+@Table(
+    name = "ledger_issuance_table",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"status_list_index"})
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -39,8 +43,9 @@ public class LedgerIssuanceTable {
     @Column(name = "status_purpose", nullable = false)
     private String statusPurpose;
 
-    @Column(name = "credential_status", nullable = false, columnDefinition = "VARCHAR(50) DEFAULT 'valid'")
-    private String credentialStatus = "valid";
+    @Enumerated(EnumType.STRING)
+    @Column(name = "credential_status", nullable = false)
+    private CredentialStatus credentialStatus;
 
     @Column(name = "status_size", columnDefinition = "integer DEFAULT 1")
     private Integer statusSize = 1;
@@ -67,6 +72,13 @@ public class LedgerIssuanceTable {
     @Column(name = "revocation_proof", length = 512)
     private String revocationProof;
 
-    @Column(name = "credential_subject_hash", nullable = false, unique = true)
-    private String credentialSubjectHash;
+    @Column (name = "search_field", nullable = false, columnDefinition = "TEXT")
+    private String searchField;
+
+    @Column(name = "credential_type", nullable = false)
+    private String credentialType;
+
+    @Version
+    @Column(name = "version")
+    private Long version;
 }

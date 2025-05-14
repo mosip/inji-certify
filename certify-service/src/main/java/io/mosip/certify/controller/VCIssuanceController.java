@@ -15,12 +15,14 @@ import io.mosip.certify.exception.InvalidNonceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.Locale;
 import java.util.Map;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -41,7 +43,20 @@ public class VCIssuanceController {
      */
     @PostMapping(value = "/credential",produces = "application/json")
     public CredentialResponse getCredential(@Valid @RequestBody CredentialRequest credentialRequest) throws CertifyException {
-        return vcIssuanceService.getCredential(credentialRequest);
+        int maxRetries = 2;  // Number of controller-level retries
+        int attempt = 0;
+
+        while (attempt < maxRetries) {
+            try {
+                return vcIssuanceService.getCredential(credentialRequest);
+            } catch (DataIntegrityViolationException ex) {
+                log.warn("Retrying credential issuance due to status_list_index conflict. Attempt {}", attempt + 1);
+                attempt++;
+                continue; 
+            }
+        }
+
+        throw new CertifyException("Credential issuance failed after retries due to status_list_index conflict");
     }
 
     @GetMapping("/credential/status/{id}")
@@ -55,16 +70,16 @@ public class VCIssuanceController {
     @PostMapping("/credential/revoke")
     public Map<String, Object> revokeCredential(@Valid @RequestBody CredentialRevokeRequest request) {
         return vcIssuanceService.revokeCredential(
-            request.getStatusListCredentialUrl(),
+            request.getStatusListId(),
             request.getStatusListIndex(),
             request.getStatusPurpose()
         );
     }
 
-
-    @PostMapping("/v1/revoke")
-    public Map<String, Object> revokeCredentialV1(@RequestBody String requestBody) {
-        return vcIssuanceService.revokeCredentialV1(requestBody);
+    @GetMapping("/credential/search")
+    public List<Map<String, Object>> searchCredentials(
+            @RequestParam Map<String, String> searchField) {
+        return vcIssuanceService.searchCredentials(searchField);
     }
 
 
