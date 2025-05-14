@@ -237,6 +237,8 @@ public class VCIssuanceUtil {
             credentialMetadata.setFormat(metadata.getFormat());
             credentialMetadata.setScope(metadata.getScope());
             credentialMetadata.setId(result.get().getKey());
+            Map<String, Object> proofTypesSupported =  result.get().getValue().getProofTypesSupported();
+            credentialMetadata.setProofTypesSupported(proofTypesSupported);
             if(format.equals(VCFormats.LDP_VC)){
                 credentialMetadata.setTypes(metadata.getCredentialDefinition().getType());
             }

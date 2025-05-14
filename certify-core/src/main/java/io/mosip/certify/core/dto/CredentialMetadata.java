@@ -8,6 +8,7 @@ package io.mosip.certify.core.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import java.util.List;
+import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
@@ -17,4 +18,6 @@ public class CredentialMetadata {
     private String format;
     private String scope;
     private List<String> types;
+    private Map<String, Object> proofTypesSupported;
+
 }
