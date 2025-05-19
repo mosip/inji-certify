@@ -103,6 +103,7 @@ CREATE TABLE IF NOT EXISTS certify.credential_config (
     status VARCHAR(255),
     vc_template VARCHAR,
     doctype VARCHAR,
+    vct VARCHAR,
     context VARCHAR NOT NULL,
     credential_type VARCHAR NOT NULL,
     credential_format VARCHAR(255) NOT NULL,
@@ -131,6 +132,7 @@ INSERT INTO certify.credential_config (
     status,
     vc_template,
     doctype,
+    vct,
     context,
     credential_type,
     credential_format,
@@ -188,6 +190,7 @@ VALUES (
      }
     ',  -- the VC template from the JSON
     NULL,  -- doctype from JSON
+    NULL,  -- vct for SD-JWT VC
     'https://www.w3.org/2018/credentials/v1',  -- context as comma-separated string
     'FarmerCredential,VerifiableCredential',  -- credential_type as comma-separated string
     'ldp_vc',  -- credential_format
@@ -196,9 +199,9 @@ VALUES (
     'ED25519_SIGN',  -- key_manager_ref_id (optional)
     'EdDSA',  -- signature_algo (optional)
     NULL,  -- sd_claim (optional)
-    '[{"name": "Farmer Verifiable Credential", "locale": "en", "logo": {"url": "https://example.com/logo.png", "alt_text": "Farmer Credential Logo"}, "background_color": "#12107c", "text_color": "#FFFFFF"}]'::JSONB,  -- display
+    '[{"name": "Farmer Verifiable Credential", "locale": "en", "logo": {"url": "https://example.com/logo.png", "alt_text": "Farmer Credential Logo"}, "background_color": "#12107c", "text_color": "#FFFFFF", "background_image": { "uri": "https://mosip.github.io/inji-config/logos/agro-vertias-logo.png" }}]'::JSONB,  -- display
     ARRAY['fullName', 'mobileNumber', 'dateOfBirth', 'gender', 'state', 'district', 'villageOrTown', 'postalCode', 'landArea', 'landOwnershipType', 'primaryCropType', 'secondaryCropType', 'farmerID'],  -- display_order
-    'farmer_identity_vc',  -- scope
+    'mock_identity_vc_ldp',  -- scope
     ARRAY['did:jwk'],  -- cryptographic_binding_methods_supported
     ARRAY['Ed25519Signature2020'],  -- credential_signing_alg_values_supported
     '{"jwt": {"proof_signing_alg_values_supported": ["RS256", "ES256"]}}'::JSONB,  -- proof_types_supported
@@ -215,6 +218,7 @@ INSERT INTO certify.credential_config (
     status,
     vc_template,
     doctype,
+    vct,
     context,
     credential_type,
     credential_format,
@@ -272,6 +276,7 @@ VALUES (
      }
     ',  -- the VC template from the JSON
     NULL,  -- doctype from JSON
+    NULL,  -- vct for SD-JWT VC
     'https://www.w3.org/2018/credentials/v1,https://piyush7034.github.io/my-files/farmer.json',  -- context as comma-separated string
     'FarmerCredential,VerifiableCredential',  -- credential_type as comma-separated string
     'ldp_vc',  -- credential_format
@@ -280,7 +285,7 @@ VALUES (
     'ED25519_SIGN',  -- key_manager_ref_id (optional)
     'EdDSA',  -- signature_algo (optional)
     NULL,  -- sd_claim (optional)
-    '[{"name": "Farmer Verifiable Credential", "locale": "en", "logo": {"url": "https://example.com/logo.png", "alt_text": "Farmer Credential Logo"}, "background_color": "#12107c", "text_color": "#FFFFFF"}]'::JSONB,  -- display
+    '[{"name": "Farmer Verifiable Credential", "locale": "en", "logo": {"url": "https://example.com/logo.png", "alt_text": "Farmer Credential Logo"}, "background_color": "#12107c", "text_color": "#FFFFFF", "background_image": { "uri": "https://mosip.github.io/inji-config/logos/agro-vertias-logo.png" }}]'::JSONB,  -- display
     ARRAY['fullName', 'mobileNumber', 'dateOfBirth', 'gender', 'state', 'district', 'villageOrTown', 'postalCode', 'landArea', 'landOwnershipType', 'primaryCropType', 'secondaryCropType', 'farmerID'],  -- display_order
     'farmer_identity_vc',  -- scope
     ARRAY['did:jwk'],  -- cryptographic_binding_methods_supported
@@ -364,7 +369,7 @@ VALUES (
     'ED25519_SIGN',  -- key_manager_ref_id (optional)
     'EdDSA',  -- signature_algo (optional)
     NULL,  -- sd_claim (optional)
-    '[{"name": "Farmer Verifiable Credential", "locale": "en", "logo": {"url": "https://example.com/logo.png", "alt_text": "Farmer Credential Logo"}, "background_color": "#12107c", "text_color": "#FFFFFF"}]'::JSONB,  -- display
+    '[{"name": "Farmer Verifiable Credential", "locale": "en", "logo": {"url": "https://example.com/logo.png", "alt_text": "Farmer Credential Logo"}, "background_color": "#12107c", "text_color": "#FFFFFF", "background_image": { "uri": "https://mosip.github.io/inji-config/logos/agro-vertias-logo.png" }}]'::JSONB,  -- display
     ARRAY['fullName', 'mobileNumber', 'dateOfBirth', 'gender', 'state', 'district', 'villageOrTown', 'postalCode', 'landArea', 'landOwnershipType', 'primaryCropType', 'secondaryCropType', 'farmerID'],  -- display_order
     'farmer_identity_vc',  -- scope
     ARRAY['did:jwk'],  -- cryptographic_binding_methods_supported

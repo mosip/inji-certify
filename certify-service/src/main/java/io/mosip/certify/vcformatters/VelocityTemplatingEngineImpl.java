@@ -31,7 +31,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -40,31 +39,29 @@ import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.RenderingTemplateException;
 import io.mosip.certify.entity.CredentialConfig;
+import io.mosip.certify.entity.TemplateId; // Ensure this import is present
 import io.mosip.certify.repository.CredentialConfigRepository;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.constants.VCDMConstants;
 import io.mosip.certify.core.spi.RenderingTemplateService;
 import io.mosip.certify.services.CredentialUtils;
-import static io.mosip.certify.core.constants.Constants.ISSUER_URI;
-import static io.mosip.certify.core.constants.Constants.TEMPLATE_NAME;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+
+import static io.mosip.certify.core.constants.Constants.*;
 
 
 @Slf4j
 @Service
 public class VelocityTemplatingEngineImpl implements VCFormatter {
     VelocityEngine engine;
-    public static final String DELIMITER = ":";
-    Map<String, Map<String, String>> templateCache;
+
     @Autowired
     CredentialConfigRepository credentialConfigRepository;
     @Autowired
     RenderingTemplateService renderingTemplateService;
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @Value("${mosip.certify.data-provider-plugin.vc-expiry-duration:P730d}")
     String defaultExpiryDuration;
@@ -75,22 +72,52 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     @PostConstruct
     public void initialize() {
         engine = new VelocityEngine();
-        // TODO: The DataSourceResourceLoader can be used instead if there's a
-        //  single primary key column and the table has a last modified date.
-        templateCache = new HashMap<>();
-        credentialConfigRepository.findAll().stream().forEach((template -> {
-            Map<String, String> templateMap = new HashMap<>();
-            ObjectMapper oMapper = new ObjectMapper();
-            templateMap = objectMapper.convertValue(template , Map.class);
-            //BeanUtils.copyProperties(template, templateMap);
-            templateCache.put(String.join(DELIMITER, template.getCredentialType(), template.getContext(), template.getCredentialFormat()), templateMap);
-         }));
         engine.setProperty(RuntimeConstants.INPUT_ENCODING, "UTF-8");
         engine.setProperty(RuntimeConstants.OUTPUT_ENCODING, "UTF-8");
         engine.init();
+        log.info("VelocityTemplatingEngineImpl initialized. Using Spring Cache for CredentialConfig.");
     }
 
-    // TODO: Add a public method for updating the Velocity template cache
+    /**
+     * Internal method to fetch CredentialConfig, leveraging Spring Cache.
+     * The key is expected to be "credentialType:context:credentialFormat".
+     */
+    @Cacheable(cacheNames = "credentialConfig", key = "#templateKey")
+    protected CredentialConfig getCachedCredentialConfig(String templateKey) {
+        log.debug("Cache miss for credentialConfig with key: {}. Fetching from DB.", templateKey);
+        if (templateKey == null || !templateKey.contains(DELIMITER)) {
+            log.error("Invalid templateKey format for getCachedCredentialConfig: {}", templateKey);
+            throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "Invalid template key format: " + templateKey);
+        }
+
+        String[] parts = templateKey.split(DELIMITER, 3);
+        if (parts.length < 2) {
+            log.error("Invalid templateKey format for getCachedCredentialConfig: {}. Expected 3 parts.", templateKey);
+            throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "Template key format requires 3 parts: " + templateKey);
+        } else if(parts.length == 2) {
+            String credentialFormat = parts[0];
+            String vct = parts[1];
+
+            return credentialConfigRepository.findByCredentialFormatAndVct(credentialFormat, vct)
+                    .orElseThrow(() -> {
+                        log.error("CredentialConfig not found in DB for key: {}", templateKey);
+                        return new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "CredentialConfig not found for key: " + templateKey);
+                    });
+        }
+
+        String credentialType = parts[0];
+        String context = parts[1];
+        String credentialFormat = parts[2];
+
+        // TemplateId constructor order: context, credentialType, credentialFormat
+        TemplateId tid = new TemplateId(context, credentialType, credentialFormat);
+
+        return credentialConfigRepository.findById(tid)
+                .orElseThrow(() -> {
+                    log.error("CredentialConfig not found in DB for key: {}", templateKey);
+                    return new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "CredentialConfig not found for key: " + templateKey);
+                });
+    }
 
 
     /**
@@ -100,7 +127,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
      */
     @Override
     public String getProofAlgorithm(String templateName){
-        return templateCache.get(templateName).get("signatureAlgo");
+        // return templateCache.get(templateName).get("signatureAlgo"); // OLD
+        return getCachedCredentialConfig(templateName).getSignatureAlgo(); // NEW
     }
 
     /**
@@ -110,7 +138,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
      */
     @Override
     public String getDidUrl(String templateName){
-        return templateCache.get(templateName).get("didUrl");
+        // return templateCache.get(templateName).get("didUrl"); // OLD
+        return getCachedCredentialConfig(templateName).getDidUrl(); // NEW
     }
 
     /**
@@ -120,7 +149,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
      */
     @Override
     public String getRefID(String templateName){
-        return templateCache.get(templateName).get("keyManagerRefId");
+        // return templateCache.get(templateName).get("keyManagerRefId"); // OLD
+        return getCachedCredentialConfig(templateName).getKeyManagerRefId(); // NEW
     }
 
     /**
@@ -130,7 +160,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
      */
     @Override
     public String getAppID(String templateName){
-        return templateCache.get(templateName).get("keyManagerAppId");
+
+        return getCachedCredentialConfig(templateName).getKeyManagerAppId(); // NEW
     }
 
     /**
@@ -141,10 +172,10 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
      */
     @Override
     public List<String> getSelectiveDisclosureInfo(String templateName){
-
-        return Optional.ofNullable(templateCache.get(templateName).get("sdClaim"))
-                          .map(sd -> Arrays.asList(sd.split(",")))
-                          .orElse(new ArrayList<>());
+        String sdClaimValue = getCachedCredentialConfig(templateName).getSdClaim(); // NEW
+        return Optional.ofNullable(sdClaimValue)
+                .map(sd -> Arrays.asList(sd.split(",")))
+                .orElseGet(ArrayList::new);
     }
 
     /**
@@ -160,18 +191,14 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     @SneakyThrows
     @Override
     public String format(JSONObject valueMap, Map<String, Object> templateSettings) {
-        // TODO: Isn't template name becoming too complex with VC_CONTEXTS & CREDENTIAL_TYPES both?
         String templateName = templateSettings.get(TEMPLATE_NAME).toString();
         String issuer = templateSettings.get(ISSUER_URI).toString();
-        String template = templateCache.get(templateName).get("vcTemplate");
-
-        if (template == null) {
-            log.error("Template {} not found", templateName);
+        String vcTemplateString = getCachedCredentialConfig(templateName).getVcTemplate(); // NEW
+        if (vcTemplateString == null) {
+            log.error("Template {} not found (vcTemplate is null)", templateName);
             throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND);
         }
         StringWriter writer = new StringWriter();
-        // 1. Prepare map
-        // TODO: Eventually, the credentialSubject from the plugin will be templated as-is
         Map<String, Object> finalTemplate = jsonify(valueMap.toMap());
         // Date: https://velocity.apache.org/tools/3.1/apidocs/org/apache/velocity/tools/generic/DateTool.html
         finalTemplate.put("_dateTool", new DateTool());
@@ -203,7 +230,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
             finalTemplate.put(VCDM2Constants.VALID_FROM, ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN)));
         }
         VelocityContext context = new VelocityContext(finalTemplate);
-        engine.evaluate(context, writer, /*logTag */ templateName,template.toString());
+        engine.evaluate(context, writer, /*logTag */ templateName, vcTemplateString);
         if (StringUtils.isNotEmpty(idPrefix)) {
             JSONObject j = new JSONObject(writer.toString());
             j.put(VCDMConstants.ID, idPrefix + UUID.randomUUID());
@@ -275,9 +302,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         // TODO: Isn't template name becoming too complex with VC_CONTEXTS & CREDENTIAL_TYPES both?
         String templateName = templateInput.get(TEMPLATE_NAME).toString();
         String issuer = templateInput.get(ISSUER_URI).toString();
-        String t = Optional.ofNullable(templateCache.get(templateName))
-                           .map(template -> template.get("vcTemplate"))
-                           .orElseThrow(() -> new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND));
+        String vcTemplateString = getCachedCredentialConfig(templateName).getVcTemplate(); // NEW
         StringWriter writer = new StringWriter();
         // 1. Prepare map
         Map<String, Object> finalTemplate = jsonify(templateInput);
@@ -306,7 +331,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
             finalTemplate.put(VCDM2Constants.VALID_UNITL, expiryTime);
         }
         VelocityContext context = new VelocityContext(finalTemplate);
-        engine.evaluate(context, writer, /*logTag */ templateName,t.toString());
+        engine.evaluate(context, writer, /*logTag */ templateName, vcTemplateString); // use vcTemplateString
         if (StringUtils.isNotEmpty(idPrefix)) {
             JSONObject j = new JSONObject(writer.toString());
             j.put(VCDMConstants.ID, idPrefix + UUID.randomUUID());

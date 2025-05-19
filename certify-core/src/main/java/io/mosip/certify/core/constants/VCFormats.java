@@ -12,4 +12,6 @@ public class VCFormats {
     public static final String LDP_VC = "ldp_vc";
     public static final String SD_JWT = "dc+sd-jwt";
     public static final String LDP_SD_JWT = "vc+sd-jwt";
+    public static final String JWT_VC_JSON = "jwt_vc_json";
+    public static final String JWT_VC_JSON_LD = "jwt_vc_json-ld";
 }

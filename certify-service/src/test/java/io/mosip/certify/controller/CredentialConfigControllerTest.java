@@ -123,7 +123,7 @@ public class CredentialConfigControllerTest {
 
         @Test
     public void getIssuerMetadata_noQueryParams_thenPass() throws Exception {
-        CredentialIssuerMetadataDTO credentialIssuerMetadata = new CredentialIssuerMetadataDTO();
+        CredentialIssuerMetadataVD13DTO credentialIssuerMetadata = new CredentialIssuerMetadataVD13DTO();
         credentialIssuerMetadata.setCredentialIssuer("https://localhost:9090");
         credentialIssuerMetadata.setAuthorizationServers(List.of("https://example.com/auth"));
         credentialIssuerMetadata.setCredentialEndpoint("https://localhost:9090/v1/certify/issuance/credential");
