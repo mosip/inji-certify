@@ -50,8 +50,8 @@ public class VCIssuanceControllerTest {
     @Test
     public void getIssuerMetadata_noQueryParams_thenPass() throws Exception {
         Map<String, Object> issuerMetadata = new HashMap<>();
-        issuerMetadata.put("credential_issuer", "https://localhost:9090");
-        issuerMetadata.put("credential_endpoint", "https://localhost:9090/v1/certify/issuance/credential");
+        issuerMetadata.put("credential_issuer", "https://10.255.5.178:9090");
+        issuerMetadata.put("credential_endpoint", "https://10.255.5.178:9090/v1/certify/issuance/credential");
         issuerMetadata.put("credential_configurations_supported", Arrays.asList());
 
         Mockito.when(vcIssuanceService.getCredentialIssuerMetadata(Mockito.anyString())).thenReturn(issuerMetadata);
@@ -69,8 +69,8 @@ public class VCIssuanceControllerTest {
     @Test
     public void getIssuerMetadata_withValidQueryParam_thenPass() throws Exception {
         Map<String, Object> issuerMetadata = new HashMap<>();
-        issuerMetadata.put("credential_issuer", "https://localhost:9090");
-        issuerMetadata.put("credential_endpoint", "https://localhost:9090/v1/certify/issuance/credential");
+        issuerMetadata.put("credential_issuer", "https://10.255.5.178:9090");
+        issuerMetadata.put("credential_endpoint", "https://10.255.5.178:9090/v1/certify/issuance/credential");
         issuerMetadata.put("credentials_supported", Arrays.asList());
 
         Mockito.when(vcIssuanceService.getCredentialIssuerMetadata("vd11")).thenReturn(issuerMetadata);

@@ -206,7 +206,7 @@ public class VelocityTemplatingEngineImplTest extends TestCase {
     public void testTemplating_localOnly() {
         // This test is written to rapidly test out changes against a hosted mock-identity system
         RestTemplate r = new RestTemplate();
-        Map<String, Object> x = r.getForObject("http://localhost:8082/v1/mock-identity-system/identity/12345678",
+        Map<String, Object> x = r.getForObject("http://10.255.5.178:8082/v1/mock-identity-system/identity/12345678",
                 HashMap.class);
         Map<String, Object> res = (Map<String, Object>) x.get("response");
         JSONObject ret = new JSONObject(res);

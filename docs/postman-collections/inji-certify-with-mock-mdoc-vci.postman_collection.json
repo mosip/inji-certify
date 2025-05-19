@@ -450,7 +450,7 @@
 									"console.log(\"Getting c_nonce >> \" +  pm.environment.get('c_nonce'));",
 									"",
 									"const signed_jwt = pmlib.jwtSign(JSON.parse(pm.environment.get(\"holder_private_key\")), {",
-									"    // \"aud\" : 'http://localhost:8090',",
+									"    // \"aud\" : 'http://10.255.5.178:8090',",
 									"    \"aud\": pm.environment.get(\"vci_aud\"),",
 									"\t\"nonce\": pm.environment.get('c_nonce'),",
 									"    \"iss\" : pm.environment.get('clientId'),",
@@ -597,7 +597,7 @@
 		},
 		{
 			"key": "url",
-			"value": "http://localhost:8088/v1/idp"
+			"value": "http://10.255.5.178:8088/v1/idp"
 		},
 		{
 			"key": "url",

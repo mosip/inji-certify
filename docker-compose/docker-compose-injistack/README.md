@@ -115,7 +115,7 @@ mosip.certify.data-provider-plugin.issuer-uri=did:web:someuser.github.io:somerep
 mosip.certify.data-provider-plugin.issuer-public-key-uri=did:web:someuser.github.io:somerepo:somedirectory#key-0
 ```
 
-- (required for Farmer setup) Certify will automatically generate the DID document for your usecase at [this endpoint](http://localhost:8090/v1/certify/issuance/.well-known/did.json), please copy the contents of the HTTP response and host it appropriately in the same location.
+- (required for Farmer setup) Certify will automatically generate the DID document for your usecase at [this endpoint](http://10.255.5.178:8090/v1/certify/issuance/.well-known/did.json), please copy the contents of the HTTP response and host it appropriately in the same location.
     - A did with the ID `did:web:someuser.github.io:somerepo:somedirectory` will have be accessible at `https://someuser.github.io/somerepo/somedirectory/did.json`, i.e. if GitHub Pages is used to host the file, the contents should go in https://github.com/someuser/somerepo/blob/gh-pages/somedirectory/did.json assuming `gh-pages` is the branch for publishing GitHub Pages as per repository settings.
     - To verify if everything is working you can try to resolve the DID via public DID resolvers such as [Uniresolver](https://dev.uniresolver.io/).
 
@@ -164,17 +164,17 @@ docker-compose ps
 
 The following services will be available:
 
-- Database (PostgreSQL): `localhost:5433`
-- Certify Service: `localhost:8090`
-- Certify Nginx: `localhost:8091`
-- Mimoto Service: `localhost:8099`
-- Inji Web: `localhost:3001`
+- Database (PostgreSQL): `10.255.5.178:5433`
+- Certify Service: `10.255.5.178:8090`
+- Certify Nginx: `10.255.5.178:8091`
+- Mimoto Service: `10.255.5.178:8099`
+- Inji Web: `10.255.5.178:3001`
 
 ## Using the Application
 
 ### Recommended: Accessing the Web Interface
 
-1. Open your browser and navigate to `http://localhost:3001`
+1. Open your browser and navigate to `http://10.255.5.178:3001`
 2. You can:
     - Download credentials
     - View credential status at a Standards Compliant VC Verfier such as [Inji Verify](https://injiverify.collab.mosip.net).
@@ -208,7 +208,7 @@ The digest multibase can be hardcoded or if the template has been stored with Ce
 
 2. Deploying Inji Certify over a public URL, _using ngrok to demonstrate this_
 
-- change the value of the `mosipbox_public_url` to point to the public URL in ./docker-compose.yaml where Certify service will be accessible, when using locally with ngrok create an HTTP tunnel for the port `8090`, which is the port for Certify and access the Inji Web at http://localhost:3001, to access Inji Web you may have to create another client with the Authorization service and more configuration should be required at Mimoto side
+- change the value of the `mosipbox_public_url` to point to the public URL in ./docker-compose.yaml where Certify service will be accessible, when using locally with ngrok create an HTTP tunnel for the port `8090`, which is the port for Certify and access the Inji Web at http://10.255.5.178:3001, to access Inji Web you may have to create another client with the Authorization service and more configuration should be required at Mimoto side
 
 ## Troubleshooting
 
@@ -237,7 +237,7 @@ The digest multibase can be hardcoded or if the template has been stored with Ce
 
 7. VC download is failing with Mimoto error logs stating that VC Verification is failing.
     - Check if the DID is updated & resolvable. The Multibase hash changes on each restart, please update it whenever a newer instance of Certify is setup.
-    - Check if the hosted DID matches with the [DID endpoint](http://localhost:8090/v1/certify/issuance/.well-known/did.json)
+    - Check if the hosted DID matches with the [DID endpoint](http://10.255.5.178:8090/v1/certify/issuance/.well-known/did.json)
     - As of now, Mimoto/Inji Web only supports downloads for Ed25519Signature2020 signed VerifiableCredential due to a limitation of the integrated VC-Verification module.
 
 
@@ -251,7 +251,7 @@ docker logs [container_name]
 
 ## Hosting a public key in the form of a DID
 
-1. Extract the certificate from the [Ceritfy Endpoint](http://localhost:8090/v1/certify/system-info/certificate?applicationId=CERTIFY_VC_SIGN_ED25519&referenceId=ED25519_SIGN)
+1. Extract the certificate from the [Ceritfy Endpoint](http://10.255.5.178:8090/v1/certify/system-info/certificate?applicationId=CERTIFY_VC_SIGN_ED25519&referenceId=ED25519_SIGN)
 2. Use `openssl x509 -pubkey -noout -in filename.pem`  to convert the certificate to a public key.
 3. Convert the public key to a publicKeyMultibase as per the [spec](https://www.w3.org/community/reports/credentials/CG-FINAL-di-eddsa-2020-20220724/).
 

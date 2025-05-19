@@ -7,7 +7,7 @@ info:
     url: 'https://docs.mosip.io/platform/license'
   version: '1.0'
 servers:
-  - url: 'http://localhost:8090/v1/certify'
+  - url: 'http://10.255.5.178:8090/v1/certify'
     description: for swagger
 paths:
   /issuance/.well-known/openid-credential-issuer:
@@ -190,10 +190,10 @@ paths:
                   ```
               x-examples:
                 Example vd11:
-                  credential_issuer: 'http://localhost:8090'
-                  credential_endpoint: 'http://localhost:8090/v1/certify/issuance/credential?version=vd11'
+                  credential_issuer: 'http://10.255.5.178:8090'
+                  credential_endpoint: 'http://10.255.5.178:8090/v1/certify/issuance/credential?version=vd11'
                   authorization_servers:
-                    - 'http://localhost:8080'
+                    - 'http://10.255.5.178:8080'
                   display:
                     - name: Insurance
                       locale: en
@@ -352,10 +352,10 @@ paths:
                         - benefits
                         - email
                 Example vd12:
-                  credential_issuer: 'http://localhost:8090'
-                  credential_endpoint: 'http://localhost:8090/v1/certify/issuance/credential?version=vd12'
+                  credential_issuer: 'http://10.255.5.178:8090'
+                  credential_endpoint: 'http://10.255.5.178:8090/v1/certify/issuance/credential?version=vd12'
                   authorization_servers:
-                    - 'http://localhost:8080'
+                    - 'http://10.255.5.178:8080'
                   display:
                     - name: Insurance
                       locale: en
@@ -514,8 +514,8 @@ paths:
                         - benefits
                         - email
                 Example vd13:
-                  credential_issuer: 'http://localhost:8090'
-                  credential_endpoint: 'http://localhost:8090/v1/certify/issuance/credential'
+                  credential_issuer: 'http://10.255.5.178:8090'
+                  credential_endpoint: 'http://10.255.5.178:8090/v1/certify/issuance/credential'
                   display:
                     - name: Insurance
                       locale: en
@@ -668,8 +668,8 @@ paths:
               examples:
                 Success response:
                   value:
-                    credential_issuer: 'http://localhost:8090'
-                    credential_endpoint: 'http://localhost:8090/v1/certify/issuance/credential'
+                    credential_issuer: 'http://10.255.5.178:8090'
+                    credential_endpoint: 'http://10.255.5.178:8090/v1/certify/issuance/credential'
                     display:
                       - name: Farmer Credential
                         locale: en

@@ -103,8 +103,8 @@ public class CertifyIssuanceServiceImplTest {
         vcConfig.put("credential_definition", credDef);
         credentialConfig.put("test-credential", vcConfig);
         latestMetadata.put("credential_configurations_supported", credentialConfig);
-        latestMetadata.put("credential_issuer", "https://localhost:9090");
-        latestMetadata.put("credential_endpoint", "https://localhost:9090/v1/certify/issuance/credential");
+        latestMetadata.put("credential_issuer", "https://10.255.5.178:9090");
+        latestMetadata.put("credential_endpoint", "https://10.255.5.178:9090/v1/certify/issuance/credential");
         issuerMetadata.put("latest", latestMetadata);
 
         ReflectionTestUtils.setField(issuanceService, "issuerMetadata", issuerMetadata);
@@ -263,7 +263,7 @@ public class CertifyIssuanceServiceImplTest {
         assertNotNull(actual);
         assertTrue(actual.containsKey("credential_issuer"));
         assertTrue(actual.containsKey("credential_endpoint"));
-        assertEquals("https://localhost:9090/v1/certify/issuance/vd11/credential", actual.get("credential_endpoint"));
+        assertEquals("https://10.255.5.178:9090/v1/certify/issuance/vd11/credential", actual.get("credential_endpoint"));
     }
 
     @Test
@@ -272,7 +272,7 @@ public class CertifyIssuanceServiceImplTest {
         assertNotNull(actual);
         assertTrue(actual.containsKey("credential_issuer"));
         assertTrue(actual.containsKey("credential_endpoint"));
-        assertEquals("https://localhost:9090/v1/certify/issuance/vd12/credential", actual.get("credential_endpoint"));
+        assertEquals("https://10.255.5.178:9090/v1/certify/issuance/vd12/credential", actual.get("credential_endpoint"));
     }
 
     @Test
