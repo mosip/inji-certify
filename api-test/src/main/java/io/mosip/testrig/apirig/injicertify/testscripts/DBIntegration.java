@@ -25,6 +25,7 @@ import io.mosip.testrig.apirig.injicertify.utils.InjiCertifyUtil;
 import io.mosip.testrig.apirig.testrunner.HealthChecker;
 import io.mosip.testrig.apirig.utils.AdminTestException;
 import io.mosip.testrig.apirig.utils.GlobalConstants;
+import io.mosip.testrig.apirig.utils.SecurityXSSException;
 import io.restassured.response.Response;
 
 public class DBIntegration extends InjiCertifyUtil implements ITest {
@@ -70,7 +71,7 @@ public class DBIntegration extends InjiCertifyUtil implements ITest {
 	 * @throws Exception 
 	 */
 	@Test(dataProvider = "testcaselist")
-	public void test(TestCaseDTO testCaseDTO) throws Exception {
+	public void test(TestCaseDTO testCaseDTO) throws Exception, SecurityXSSException{
 		testCaseName = testCaseDTO.getTestCaseName();
 		testCaseDTO = InjiCertifyUtil.isTestCaseValidForExecution(testCaseDTO);
 		if (HealthChecker.signalTerminateExecution) {

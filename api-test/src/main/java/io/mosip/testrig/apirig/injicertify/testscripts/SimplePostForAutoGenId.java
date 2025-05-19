@@ -34,6 +34,7 @@ import io.mosip.testrig.apirig.utils.AuthenticationTestException;
 import io.mosip.testrig.apirig.utils.GlobalConstants;
 import io.mosip.testrig.apirig.utils.OutputValidationUtil;
 import io.mosip.testrig.apirig.utils.ReportUtil;
+import io.mosip.testrig.apirig.utils.SecurityXSSException;
 import io.restassured.response.Response;
 
 public class SimplePostForAutoGenId extends InjiCertifyUtil implements ITest {
@@ -86,7 +87,7 @@ public class SimplePostForAutoGenId extends InjiCertifyUtil implements ITest {
 	 */
 	@Test(dataProvider = "testcaselist")
 	public void test(TestCaseDTO testCaseDTO)
-			throws AuthenticationTestException, AdminTestException, NoSuchAlgorithmException {
+			throws AuthenticationTestException, AdminTestException, NoSuchAlgorithmException, SecurityXSSException {
 		testCaseName = testCaseDTO.getTestCaseName();
 		testCaseDTO = InjiCertifyUtil.isTestCaseValidForExecution(testCaseDTO);
 		if (HealthChecker.signalTerminateExecution) {
