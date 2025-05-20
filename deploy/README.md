@@ -7,6 +7,7 @@
    cd db_scripts
   ./init_db.sh
   ```
+
 ## Install inji certify
 
   ```
