@@ -111,7 +111,7 @@ spec:
             {{- end }}
             {{- if .Values.installHSMPlugin }}
             - name: install_hsm_client
-              value: {{ .Values.installHSMPlugin }}
+              value: {{ .Values.installHSMPlugin | quote }}
             {{- end }}
           envFrom:
             {{- if .Values.extraEnvVarsCM }}
