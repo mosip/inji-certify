@@ -13,5 +13,6 @@ public interface CredentialConfigRepository extends JpaRepository<CredentialConf
     // NOTE: best practice? .save()
     Optional<CredentialConfig> findByConfigId(String configId);
     void deleteByConfigId(String configId);
+    Optional<CredentialConfig> findByCredentialFormatAndVct(String credentialFormat, String vct);
 }
 

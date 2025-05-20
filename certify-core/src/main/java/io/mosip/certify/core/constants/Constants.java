@@ -31,4 +31,5 @@ public class Constants {
     public static final String EC_SECP256R1_SIGN = "EC_SECP256R1_SIGN";
     public static final String ACTIVE = "active";
     public static final String INACTIVE = "inactive";
+    public static final String DELIMITER = "::";  // delimiter is ::  its not used by url or within any context of VC name and is distinct
 }
