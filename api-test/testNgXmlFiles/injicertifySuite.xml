@@ -859,6 +859,14 @@
 		<classes>
 			<class name="io.mosip.testrig.apirig.injicertify.testscripts.DeleteWithParam" />
 		</classes>
-	</test>		
+	</test>
+	<test name="GetSVGTemplate">
+		<parameter name="ymlFile"
+			value="injicertify/SVGTemplate/GetSVGTemplate/getSVGTemplate.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.injicertify.testscripts.GetWithParam" />
+		</classes>
+	</test>	
+		
 	
 </suite>
