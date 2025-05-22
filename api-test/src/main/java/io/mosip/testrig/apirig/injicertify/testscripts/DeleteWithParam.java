@@ -131,7 +131,18 @@ public class DeleteWithParam extends InjiCertifyUtil implements ITest {
 						testCaseDTO.getRole(), testCaseDTO.getTestCaseName());
 
 			} else {
-				response = deleteWithPathParamAndCookie(ApplnURI + testCaseDTO.getEndPoint(), inputJson, COOKIENAME,
+				String tempUrl = ApplnURI;
+				String endPointKeyWord = "";
+
+				if (testCaseDTO.getEndPoint().contains("BASEURL$")) {
+					tempUrl = InjiCertifyUtil.getTempURL(testCaseDTO);
+					endPointKeyWord = InjiCertifyUtil.getKeyWordFromEndPoint(testCaseDTO.getEndPoint());
+
+					if (!(endPointKeyWord.isBlank()) && testCaseDTO.getEndPoint().startsWith(endPointKeyWord)) {
+						testCaseDTO.setEndPoint(testCaseDTO.getEndPoint().replace(endPointKeyWord, ""));
+					}
+				}				
+				response = deleteWithPathParamAndCookie(tempUrl + testCaseDTO.getEndPoint(), inputJson, COOKIENAME,
 						testCaseDTO.getRole(), testCaseDTO.getTestCaseName());
 			}
 			Map<String, List<OutputValidationDto>> ouputValid = OutputValidationUtil.doJsonOutputValidation(
