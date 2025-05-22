@@ -147,8 +147,8 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 && credentialRequest.getProof().getJwt() != null) {
             // issue a c_nonce and return the error
             try {
-                SignedJWT sj = SignedJWT.parse(credentialRequest.getProof().getJwt());
-                String proofJwtNonce = Optional.ofNullable(sj.getJWTClaimsSet().getStringClaim("nonce")).orElse("");
+                SignedJWT proofJwt = SignedJWT.parse(credentialRequest.getProof().getJwt());
+                String proofJwtNonce = Optional.ofNullable(proofJwt.getJWTClaimsSet().getStringClaim("nonce")).orElse("");
                 String authZServerNonce = Optional.ofNullable(parsedAccessToken.getClaims().get(Constants.C_NONCE)).map(Object::toString).orElse("");
                 if (authZServerNonce.equals(StringUtils.EMPTY) || !cNonce.equals(proofJwtNonce)) {
                     // AuthZ server didn't give in a protected c_nonce

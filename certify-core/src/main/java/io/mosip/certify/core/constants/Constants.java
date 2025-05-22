@@ -12,6 +12,8 @@ public class Constants {
     public static final String APPLICATION_ID = "applicationId";
     public static final String REFERENCE_ID = "referenceId";
 
+    // NOTE: This is how the nonce is set in the accessToken from the AuthZ server, in the proofJwt this is set as "nonce"
+    // ref: https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-8.2.1.1 (draft-15 reference)
     public static final String C_NONCE = "c_nonce";
     public static final String C_NONCE_EXPIRES_IN = "c_nonce_expires_in";
     public static final String CLIENT_ID = "client_id";
