@@ -8,6 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CredentialRequestValidatorFactory {
      public boolean isValid(CredentialRequest credentialRequest) {
+        if (credentialRequest.getFormat() == null) {
+            log.debug("Request format is null");
+            return false;
+        }
         switch (credentialRequest.getFormat()) {
             case VCFormats.LDP_VC:
                 return new LdpVcCredentialRequestValidator().isValidCheck(credentialRequest);
