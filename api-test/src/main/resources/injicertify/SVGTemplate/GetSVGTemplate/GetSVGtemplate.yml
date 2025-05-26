@@ -1,0 +1,52 @@
+GetSVGTemplate:
+  InjiCertify_GetSVGTemplate_all_Valid_Smoke:
+    endPoint: $INJICERTIFYBASEURL$/v1/certify/rendering-template/{id}
+    uniqueIdentifier: TC_InjiCertify_GetSVGTemplate_01
+    description: Get SVG rendering template for given Id
+    checkErrorsOnlyInResponse: true
+    restMethod: get
+    validityCheckRequired: true
+    inputTemplate: injicertify/SVGTemplate/GetSVGTemplate/GetSVGTemplate
+    outputTemplate: injicertify/SVGTemplate/GetSVGTemplate/GetSVGTemplateResult
+    input: '{
+          "id": "5b9c2a12-810a-7388-2dc8-13ee7ad88bac"
+      }'
+    output: '{
+    }'
+    
+  InjiCertify_GetSVGTemplate_without_id:
+    endPoint: $INJICERTIFYBASEURL$/v1/certify/rendering-template/{id}
+    uniqueIdentifier: TC_InjiCertify_GetSVGTemplate_02
+    description: Get SVG rendering template without id value given
+    restMethod: get
+    validityCheckRequired: true
+    inputTemplate: injicertify/SVGTemplate/GetSVGTemplate/GetSVGTemplate
+    outputTemplate: injicertify/error
+    input: '{
+          "id": "$REMOVE$"
+      }'
+    output: '{
+      "errors": [
+      {
+       "errorCode": "invalid_request"
+       }
+       ]
+    }'
+  InjiCertify_GetSVGTemplate_invalid_id:
+    endPoint: $INJICERTIFYBASEURL$/v1/certify/rendering-template/{id}
+    uniqueIdentifier: TC_InjiCertify_GetSVGTemplate_03
+    description: Get SVG rendering template invalid id value given
+    restMethod: get
+    validityCheckRequired: true
+    inputTemplate: injicertify/SVGTemplate/GetSVGTemplate/GetSVGTemplate
+    outputTemplate: injicertify/error
+    input: '{
+          "id": "123456-56785-9876"
+      }'
+    output: '{
+      "errors": [
+      {
+       "errorCode": "invalid_request"
+       }
+       ]
+    }'
