@@ -99,7 +99,7 @@ public class PostWithAutogenIdWithOtpGenerate extends InjiCertifyUtil implements
 			}
 		}
 
-		String inputJson = testCaseDTO.getInput().toString();
+//		String inputJson = testCaseDTO.getInput().toString();
 		JSONObject req = new JSONObject(testCaseDTO.getInput());
 
 		auditLogCheck = testCaseDTO.isAuditLogCheck();
