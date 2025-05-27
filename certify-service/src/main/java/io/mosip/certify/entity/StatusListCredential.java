@@ -1,4 +1,3 @@
-// StatusListCredential.java
 package io.mosip.certify.entity;
 
 import jakarta.persistence.*;
@@ -9,23 +8,26 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "status_list_credential")
+@Table(name = "status_list_credential", indexes = {
+        @Index(name = "idx_slc_status_purpose", columnList = "status_purpose")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class StatusListCredential {
 
     @Id
+    @Column(length = 255)
     private String id;
 
     @Column(name = "vc_document", nullable = false)
     @Lob
     private byte[] vcDocument;
 
-    @Column(name = "credential_type", nullable = false)
+    @Column(name = "credential_type", length = 100, nullable = false)
     private String credentialType;
 
-    @Column(name = "status_purpose")
+    @Column(name = "status_purpose", length = 100)
     private String statusPurpose;
 
     @Column(name = "capacity")
@@ -52,6 +54,17 @@ public class StatusListCredential {
     }
 
     public enum CredentialStatus {
-        AVAILABLE, FULL
+        AVAILABLE("available"),
+        FULL("full");
+
+        private final String value;
+
+        CredentialStatus(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
     }
 }
