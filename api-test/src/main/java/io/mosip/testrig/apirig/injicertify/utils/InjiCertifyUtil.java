@@ -1067,7 +1067,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 						GlobalConstants.MOSIP_ESIGNET_ID_TOKEN_EXPIRE_SECONDS));
 		JWSSigner signer;
 		String proofJWT = "";
-		String typ = "openid4vci-proof+jwt";
+//		String typ = "openid4vci-proof+jwt";
 		SignedJWT signedJWT = null;
 
 		try {
