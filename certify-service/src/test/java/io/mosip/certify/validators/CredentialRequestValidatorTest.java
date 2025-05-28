@@ -26,12 +26,19 @@ public class CredentialRequestValidatorTest {
                 () -> CredentialRequestValidator.isValid(cr));
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {VCFormats.LDP_VC, VCFormats.SD_JWT})
-    public void isValid(String format) {
+    @Test
+    public void isValid_Ldp_VC() {
         CredentialRequest cr = new CredentialRequest();
-        cr.setFormat(format);
+        cr.setFormat(VCFormats.LDP_VC);
         cr.setCredential_definition(new CredentialDefinition());
+        assertTrue(CredentialRequestValidator.isValid(cr));
+    }
+
+    @Test
+    public void isValid_Sd_Jwt() {
+        CredentialRequest cr = new CredentialRequest();
+        cr.setFormat(VCFormats.LDP_SD_JWT);
+        cr.setVct("vct-fake");
         assertTrue(CredentialRequestValidator.isValid(cr));
     }
 
