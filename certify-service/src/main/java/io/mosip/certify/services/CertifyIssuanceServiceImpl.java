@@ -242,11 +242,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     throw new CertifyException(ErrorConstants.UNKNOWN_ERROR);
                 }
                 case "vc+sd-jwt":
-                vcRequestDto.setContext(credentialRequest.getCredential_definition().getContext());
-                vcRequestDto.setType(credentialRequest.getCredential_definition().getType());
-                vcRequestDto.setCredentialSubject(credentialRequest.getCredential_definition().getCredentialSubject());
                 vcRequestDto.setVct(credentialRequest.getVct());
-                validateSdJwtVcFormatRequest(credentialRequest);
                 try {
                     // TODO(multitenancy): later decide which plugin out of n plugins is the correct one
                     JSONObject jsonObject = dataProviderPlugin.fetchData(parsedAccessToken.getClaims());
