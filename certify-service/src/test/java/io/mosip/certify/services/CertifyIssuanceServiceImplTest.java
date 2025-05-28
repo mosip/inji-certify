@@ -312,7 +312,7 @@ public class CertifyIssuanceServiceImplTest {
         request = createValidCredentialRequest(DEFAULT_FORMAT_LDP);
         request.setFormat("invalid format with spaces");
         InvalidRequestException ex = assertThrows(InvalidRequestException.class, () -> issuanceService.getCredential(request));
-        assertEquals(ErrorConstants.INVALID_VC_FORMAT, ex.getErrorCode());
+        assertEquals(ErrorConstants.UNSUPPORTED_VC_FORMAT, ex.getErrorCode());
     }
 
     @Test

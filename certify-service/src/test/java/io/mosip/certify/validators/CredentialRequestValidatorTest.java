@@ -9,6 +9,8 @@ import org.junit.Test;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.CredentialDefinition;
 import io.mosip.certify.core.dto.CredentialRequest;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.Assert.*;
 
@@ -24,10 +26,11 @@ public class CredentialRequestValidatorTest {
                 () -> factory.isValid(cr));
     }
 
-    @Test
-    public void isValid_LDP_true() {
+    @ParameterizedTest
+    @ValueSource(strings = {VCFormats.LDP_VC, VCFormats.SD_JWT})
+    public void isValid(String format) {
         CredentialRequest cr = new CredentialRequest();
-        cr.setFormat(VCFormats.LDP_VC);
+        cr.setFormat(format);
         cr.setCredential_definition(new CredentialDefinition());
         assertTrue(factory.isValid(cr));
     }
