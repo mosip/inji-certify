@@ -5,16 +5,10 @@
  */
 package io.mosip.certify.services;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.Optional;
+import java.text.ParseException;
+import java.util.*;
 
+import com.nimbusds.jwt.SignedJWT;
 import io.mosip.certify.api.util.AuditHelper;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
@@ -24,10 +18,7 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.stereotype.Service;
-
-import org.json.JSONObject;
 
 import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.dto.VCRequestDto;
@@ -36,20 +27,16 @@ import io.mosip.certify.api.exception.DataProviderExchangeException;
 import io.mosip.certify.api.spi.AuditPlugin;
 import io.mosip.certify.api.spi.DataProviderPlugin;
 import io.mosip.certify.vcformatters.VCFormatter;
-import io.mosip.certify.vcsigners.VCSigner;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
 import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
-import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.core.util.SecurityHelperService;
-import io.mosip.certify.api.spi.DataProviderPlugin;
-import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.certify.validators.CredentialRequestValidator;
 import io.mosip.certify.credential.Credential;
 import io.mosip.certify.credential.CredentialFactory;
@@ -154,6 +141,27 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         }
 
         // 3. Proof Validation
+        String cNonce = VCIssuanceUtil.getValidClientNonce(vciCacheService, parsedAccessToken, cNonceExpireSeconds, securityHelperService, log);
+        // c_nonce present in accessToken but not in proofjwt
+        if (parsedAccessToken.getClaims().containsKey(Constants.C_NONCE)
+                && credentialRequest.getProof().getJwt() != null) {
+            // issue a c_nonce and return the error
+            try {
+                SignedJWT proofJwt = SignedJWT.parse(credentialRequest.getProof().getJwt());
+                String proofJwtNonce = Optional.ofNullable(proofJwt.getJWTClaimsSet().getStringClaim("nonce")).orElse("");
+                String authZServerNonce = Optional.ofNullable(parsedAccessToken.getClaims().get(Constants.C_NONCE)).map(Object::toString).orElse("");
+                if (authZServerNonce.equals(StringUtils.EMPTY) || !cNonce.equals(proofJwtNonce)) {
+                    // AuthZ server didn't give in a protected c_nonce
+                    //  and c_nonce given in proofJwt doesn't match Certify generated c_nonce
+                    throw new InvalidNonceException(cNonce, cNonceExpireSeconds);
+                }
+            } catch (ParseException e) {
+                // check iff specific error exists for invalid holderKey
+                throw new CertifyException(ErrorConstants.INVALID_PROOF, "error parsing proof jwt");
+            }
+        } else {
+            throw new InvalidNonceException(cNonce, cNonceExpireSeconds);
+        }
         ProofValidator proofValidator = proofValidatorFactory.getProofValidator(credentialRequest.getProof().getProof_type());
         String validCNonce = VCIssuanceUtil.getValidClientNonce(vciCacheService, parsedAccessToken, cNonceExpireSeconds, securityHelperService, log);
         if(!proofValidator.validateV2((String)parsedAccessToken.getClaims().get(Constants.CLIENT_ID), validCNonce,
@@ -262,5 +270,4 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
             }
     }
-
 }
