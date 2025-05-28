@@ -17,7 +17,7 @@ import org.testng.annotations.Test;
 import org.testng.internal.BaseTestMethod;
 import org.testng.internal.TestResult;
 
-import io.mosip.testrig.apirig.dbaccess.DBManager;
+//import io.mosip.testrig.apirig.dbaccess.DBManager;
 import io.mosip.testrig.apirig.dto.TestCaseDTO;
 import io.mosip.testrig.apirig.injicertify.utils.ExtendedDBManager;
 import io.mosip.testrig.apirig.injicertify.utils.InjiCertifyConfigManager;
