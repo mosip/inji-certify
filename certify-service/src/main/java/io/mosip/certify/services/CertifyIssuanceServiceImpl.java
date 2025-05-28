@@ -8,6 +8,8 @@ package io.mosip.certify.services;
 import java.text.ParseException;
 import java.util.*;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
 import io.mosip.certify.api.util.AuditHelper;
 import io.mosip.certify.core.dto.*;
@@ -113,6 +115,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     @Autowired
     private CredentialConfigurationService credentialConfigurationService;
+
+    @Value("${mosip.certify.identifier}")
+    private String certifyIssuer;
 
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
@@ -255,6 +260,11 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     }
                     Credential cred = credentialFactory.getCredential(CredentialFormat.VC_SD_JWT.toString()).orElseThrow(()-> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
                     jsonObject.put("_holderId", holderId);
+                    jsonObject.put("_vct", vcRequestDto.getVct());
+                    // This is with reference to the Representation of a Key ID for a Proof-of-Possession Key
+                    // Ref: https://datatracker.ietf.org/doc/html/rfc7800#section-3.4
+                    jsonObject.put("_cnf", Map.of("kid", holderId));
+                    jsonObject.put("_iss", certifyIssuer);
                     templateParams.putAll(jsonObject.toMap());
                     String unsignedCredential=cred.createCredential(templateParams, templateName);
                     return cred.addProof(unsignedCredential,"", vcFormatter.getProofAlgorithm(templateName), vcFormatter.getAppID(templateName), vcFormatter.getRefID(templateName),vcFormatter.getDidUrl(templateName));
