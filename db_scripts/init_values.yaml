@@ -2,7 +2,7 @@
 #  dbuserPassword: ""
 
 databases:
-  inji_certify:
+  mosip_certify:
     enabled: true
     host: "postgres-postgresql.postgres"
     port: 5432
@@ -12,4 +12,4 @@ databases:
         name: postgres-postgresql
         key: postgres-password
     dml: 1
-    branch: develop
+    branch: v0.10.2
