@@ -46,9 +46,6 @@ public class CredentialConfigurationServiceImplTest {
     @Mock
     private CredentialConfig credentialConfig;
 
-    @Mock
-    private CredentialCacheKeyGenerator credentialCacheKeyGenerator;
-
     @Before
     public void setup() {
         MockitoAnnotations.openMocks(this);
@@ -181,7 +178,6 @@ public class CredentialConfigurationServiceImplTest {
         Optional<CredentialConfig> optional = Optional.of(credentialConfig);
         when(credentialConfigRepository.findByConfigId(anyString())).thenReturn(optional);
         doNothing().when(credentialConfigRepository).delete(any(CredentialConfig.class));
-        when(credentialCacheKeyGenerator.generateKeyFromConfigId(anyString())).thenReturn("cacheKey");
         String result = credentialConfigurationService.deleteCredentialConfigurationById("12345678");
 
         Assert.assertNotNull(result);
