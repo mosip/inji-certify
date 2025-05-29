@@ -15,6 +15,7 @@ import io.mosip.certify.entity.CredentialConfig;
 import io.mosip.certify.entity.TemplateId;
 import io.mosip.certify.mapper.CredentialConfigMapper;
 import io.mosip.certify.repository.CredentialConfigRepository;
+import io.mosip.certify.utils.CredentialCacheKeyGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,6 +55,9 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     private List<Map<String, String>> issuerDisplay;
 
     private static final String CREDENTIAL_CONFIG_CACHE_NAME = "credentialConfig";
+
+    @Autowired
+    private CredentialCacheKeyGenerator credentialCacheKeyGenerator;
 
     @Override
     public CredentialConfigResponse addCredentialConfiguration(CredentialConfigurationDTO credentialConfigurationDTO) throws JsonProcessingException {
@@ -161,13 +165,20 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
      * This is a trade-off for using declarative @CacheEvict on this method signature.
      */
     @Override
-    @CacheEvict(cacheNames = CREDENTIAL_CONFIG_CACHE_NAME, key = "@credentialCacheKeyGenerator.generateKeyFromConfigId(#id)", condition = "#id != null")
+    @CacheEvict(cacheNames = CREDENTIAL_CONFIG_CACHE_NAME, key = "cacheKey", condition = "#cacheKey != null")
     public String deleteCredentialConfigurationById(String id) {
         Optional<CredentialConfig> optional = credentialConfigRepository.findByConfigId(id);
 
         if(optional.isEmpty()) {
             log.warn("Configuration not found for delete with id: {}", id);
             throw new CertifyException("Configuration not found with the provided id: " + id);
+        }
+
+        // Generate the cache key before deletion
+        String cacheKey = credentialCacheKeyGenerator.generateKeyFromConfigId(id);
+        if (cacheKey == null) {
+            log.error("Cache key generation failed for id: {}", id);
+            throw new CertifyException("Error deleting configuration: " + id);
         }
         // The object is fetched once here.
         // The @CacheEvict's key SpEL will cause CredentialCacheKeyGenerator to fetch it again.
