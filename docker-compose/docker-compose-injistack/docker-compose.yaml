@@ -14,13 +14,13 @@ services:
       - "5433:5432"
 
   certify:
-    image: mosipid/inji-certify:0.10.1
+    image: inji-certify:local
     user: root
     ports:
       - 8090:8090
     environment:
       - container_user=mosip
-      - active_profile_env=default, csvdp-farmer
+      - active_profile_env=default, driving-license
       - SPRING_CONFIG_NAME=certify
       - SPRING_CONFIG_LOCATION=/home/mosip/config/
       - enable_certify_artifactory=false
@@ -29,11 +29,13 @@ services:
     volumes:
       - ./config/certify-default.properties:/home/mosip/config/certify-default.properties
       - ./config/certify-csvdp-farmer.properties:/home/mosip/config/certify-csvdp-farmer.properties
+      - ./config/certify-driving-license.properties:/home/mosip/config/certify-driving-license.properties
       - ./config/certify-mock-mdl.properties:/home/mosip/config/certify-mock-mdl.properties
       - ./data/CERTIFY_PKCS12:/home/mosip/CERTIFY_PKCS12
       - ./loader_path/certify/:/home/mosip/additional_jars/
       # modify the below file to change the identity fields in the VC
       - ./config/farmer_identity_data.csv:/home/mosip/config/farmer_identity_data.csv
+      - ./config/driving_license_data.csv:/home/mosip/config/driving_license_data.csv
     networks:
       - network
     depends_on:
@@ -41,7 +43,7 @@ services:
 
   mimoto-service:
     container_name: 'Mimoto-Service'
-    image: mosipid/mimoto:release-0.15.0
+    image: mimoto:local
     user: root
     ports:
       - '8099:8099'
@@ -60,12 +62,12 @@ services:
 
   inji-web:
     container_name: 'inji-web'
-    image: mosipid/inji-web:release-0.11.0
+    image: inji-web:local
     ports:
       - '3001:3004'
     environment:
       - DEFAULT_LANG=en
-      - MIMOTO_HOST=http://localhost:3001/v1/mimoto
+      - MIMOTO_HOST=http://174.138.82.219:3001/v1/mimoto
     volumes:
       - ./config/mimoto-default.properties:/home/mosip/mimoto-default.properties
       - ./config/mimoto-issuers-config.json:/home/mosip/mimoto-issuers-config.json

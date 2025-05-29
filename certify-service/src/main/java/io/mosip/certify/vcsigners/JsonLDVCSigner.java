@@ -50,6 +50,8 @@ public class JsonLDVCSigner implements VCSigner {
 
     @Override
     public VCResult<JsonLDObject> attachSignature(String unSignedVC, Map<String, String> keyReferenceDetails) {
+        log.info(unSignedVC);
+	log.info("tiene algo" + unSignedVC);
         // Can the below lines be done at Templating side itself ?
         VCResult<JsonLDObject> VC = new VCResult<>();
         JsonLDObject jsonLDObject = JsonLDObject.fromJson(unSignedVC);

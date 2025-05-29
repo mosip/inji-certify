@@ -16,15 +16,41 @@
           "language": "en"
         }
       ],
-      "client_id": "wallet-demo",
+      "client_id": "mpartner-default-eugo",
       "redirect_uri": "io.mosip.residentapp.inji://oauthredirect",
-      "token_endpoint": "http://localhost:8099/v1/mimoto/get-token/Farmer",
+      "token_endpoint": "https://ff24-174-138-82-219.ngrok-free.app/v1/mimoto/get-token/Farmer",
       "authorization_audience": "https://esignet-mock.collab.mosip.net/v1/esignet/oauth/v2/token",
       "proxy_token_endpoint": "https://esignet-mock.collab.mosip.net/v1/esignet/oauth/v2/token",
-      "client_alias": "wallet-demo-client",
+      "client_alias": "mosip-default-eugo",
       "qr_code_type": "EmbeddedVC",
       "enabled": "true",
-      "wellknown_endpoint": "http://certify:8090/v1/certify/issuance/.well-known/openid-credential-issuer"
+      "wellknown_endpoint": "https://5e6b-174-138-82-219.ngrok-free.app/v1/certify/issuance/.well-known/openid-credential-issuer"
+    },
+    {
+      "credential_issuer": "MontevideoCityHall",
+      "issuer_id": "MontevideoCityHall",
+      "protocol": "OpenId4VCI",
+      "display": [
+        {
+          "name": "Montevideo City Hall",
+          "logo": {
+            "url": "https://emmanuelacostaiugo.github.io/images/logogub.png",
+            "alt_text": "mdeo-logo"
+          },
+          "title": "Montevideo City Hall",
+          "description": "Download Driver License Credentials",
+          "language": "en"
+        }
+      ],
+      "client_id": "mpartner-default-eugo",
+      "redirect_uri": "io.mosip.residentapp.inji://oauthredirect",
+      "token_endpoint": "https://ff24-174-138-82-219.ngrok-free.app/v1/mimoto/get-token/MontevideoCityHall",
+      "authorization_audience": "https://esignet-mock.collab.mosip.net/v1/esignet/oauth/v2/token",
+      "proxy_token_endpoint": "https://esignet-mock.collab.mosip.net/v1/esignet/oauth/v2/token",
+      "client_alias": "mosip-default-eugo",
+      "qr_code_type": "EmbeddedVC",
+      "enabled": "true",
+      "wellknown_endpoint": "https://5e6b-174-138-82-219.ngrok-free.app/v1/certify/issuance/.well-known/openid-credential-issuer"
     },
     {
       "issuer_id": "MockMdl",
