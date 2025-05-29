@@ -38,6 +38,9 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Value("${mosip.certify.identifier}")
     private String credentialIssuer;
 
+    @Value("${mosip.certify.domain.url:}")
+    private String credentialIssuerDomainUrl;
+
     @Value("#{'${mosip.certify.authorization.url}'.split(',')}")
     private List<String> authServers;
 
@@ -176,6 +179,9 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Override
     public CredentialIssuerMetadataDTO fetchCredentialIssuerMetadata(String version) {
         List<CredentialConfig> credentialConfigList = credentialConfigRepository.findAll();
+        if(!credentialIssuerDomainUrl.isEmpty()) {
+            credentialIssuer = credentialIssuerDomainUrl;
+        }
 
         if ("latest".equals(version)) {
             CredentialIssuerMetadataVD13DTO credentialIssuerMetadata = new CredentialIssuerMetadataVD13DTO();

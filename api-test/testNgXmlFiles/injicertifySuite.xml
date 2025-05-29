@@ -827,6 +827,46 @@
 			<class
 				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
 		</classes>
+	</test>
+	<test name="AddCredentialConfig">
+		<parameter name="ymlFile"
+			value="injicertify/CredentialConfig/NewCredentialConfiguration/AddCredentialConfiguration.yml" />
+		<parameter name="idKeyName" value="id" />
+		<parameter name="prerequisite" value="Yes" />			
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="GetCredentialConfig">
+		<parameter name="ymlFile"
+			value="injicertify/CredentialConfig/GetCredentialConfiguration/GetCredentialConfiguration.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.injicertify.testscripts.GetWithParam" />
+		</classes>
+	</test>
+	<test name="UpdateCredentialConfig">
+		<parameter name="ymlFile"
+			value="injicertify/CredentialConfig/UpdateCredentialConfiguration/UpdateCredentialConfiguration.yml" />
+		<parameter name="pathParams" value="configurationId" />			
+		<classes>
+			<class name="io.mosip.testrig.apirig.injicertify.testscripts.PutWithPathParamsAndBody" />
+		</classes>
 	</test>	
+	<test name="DeleteCredentialConfig">
+		<parameter name="ymlFile"
+			value="injicertify/CredentialConfig/DeleteCredentialConfiguration/DeleteCredentialConfiguration.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.injicertify.testscripts.DeleteWithParam" />
+		</classes>
+	</test>
+	<test name="GetSVGTemplate">
+		<parameter name="ymlFile"
+			value="injicertify/SVGTemplate/GetSVGTemplate/getSVGTemplate.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.injicertify.testscripts.GetWithParam" />
+		</classes>
+	</test>	
+		
 	
 </suite>

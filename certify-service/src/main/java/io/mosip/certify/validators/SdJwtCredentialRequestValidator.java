@@ -4,7 +4,7 @@ import io.mosip.certify.core.dto.CredentialRequest;
 
 public class SdJwtCredentialRequestValidator {
     public static boolean isValidCheck(CredentialRequest credentialRequest) {
-        return credentialRequest.getCredential_definition() != null;
+        return credentialRequest.getVct() != null && !credentialRequest.getVct().isEmpty();
     }
     
 }

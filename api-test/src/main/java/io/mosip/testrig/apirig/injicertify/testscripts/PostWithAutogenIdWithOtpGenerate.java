@@ -32,6 +32,7 @@ import io.mosip.testrig.apirig.utils.AuthenticationTestException;
 import io.mosip.testrig.apirig.utils.GlobalConstants;
 import io.mosip.testrig.apirig.utils.OutputValidationUtil;
 import io.mosip.testrig.apirig.utils.ReportUtil;
+import io.mosip.testrig.apirig.utils.SecurityXSSException;
 import io.restassured.response.Response;
 
 public class PostWithAutogenIdWithOtpGenerate extends InjiCertifyUtil implements ITest {
@@ -83,7 +84,7 @@ public class PostWithAutogenIdWithOtpGenerate extends InjiCertifyUtil implements
 	 */
 	@Test(dataProvider = "testcaselist")
 	public void test(TestCaseDTO testCaseDTO)
-			throws AuthenticationTestException, AdminTestException, NumberFormatException, InterruptedException {
+			throws AuthenticationTestException, AdminTestException, NumberFormatException, InterruptedException, SecurityXSSException {
 		testCaseName = testCaseDTO.getTestCaseName();
 		testCaseDTO = InjiCertifyUtil.isTestCaseValidForExecution(testCaseDTO);
 		if (HealthChecker.signalTerminateExecution) {
@@ -98,7 +99,7 @@ public class PostWithAutogenIdWithOtpGenerate extends InjiCertifyUtil implements
 			}
 		}
 
-		String inputJson = testCaseDTO.getInput().toString();
+//		String inputJson = testCaseDTO.getInput().toString();
 		JSONObject req = new JSONObject(testCaseDTO.getInput());
 
 		auditLogCheck = testCaseDTO.isAuditLogCheck();
