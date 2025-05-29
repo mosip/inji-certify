@@ -37,6 +37,8 @@ public class InjiCertifyConfigManager extends ConfigManager{
 		return "jdbc:postgresql://" + getproperty("db-server") + ":" + getproperty("db-port") + "/" + getproperty("inji_certify_db_table");
 	}
 
-
+	public static void add(Map<String, Object> additionalPropertiesMap) {
+		propertiesMap.putAll(additionalPropertiesMap);
+	}
 
 }
