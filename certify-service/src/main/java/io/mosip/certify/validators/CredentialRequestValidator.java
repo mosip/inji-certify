@@ -14,6 +14,6 @@ public class CredentialRequestValidator {
         } else if (credentialRequest.getFormat().equals(CredentialFormat.VC_DC_SD_JWT.toString()) || credentialRequest.getFormat().equals(CredentialFormat.VC_SD_JWT.toString())) {
             return SdJwtCredentialRequestValidator.isValidCheck(credentialRequest);
         }
-        throw new InvalidRequestException(ErrorConstants.INVALID_VC_FORMAT);
+        throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
     }
 }

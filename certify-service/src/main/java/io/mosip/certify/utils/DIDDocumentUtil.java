@@ -26,6 +26,7 @@ import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.certify.core.exception.CertifyException;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.util.BigIntegers;
 
 @Slf4j
 public class DIDDocumentUtil {
@@ -83,7 +84,7 @@ public class DIDDocumentUtil {
         // Compressed format: 0x02 or 0x03 || X
         byte[] compressed = ByteBuffer.allocate(1 + 32)
                 .put(prefixByte)
-                .put(ecPublicKey.getW().getAffineX().toByteArray())
+                .put(BigIntegers.asUnsignedByteArray(ecPublicKey.getW().getAffineX()))
                 .array();
 
         // P-256 compressed public key multicodec prefix: 0x1201(varint form of 0x8024)

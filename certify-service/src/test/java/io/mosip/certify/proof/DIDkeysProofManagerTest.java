@@ -179,9 +179,53 @@ public class DIDkeysProofManagerTest {
                 .provider(new BouncyCastleProvider())
                 .issueTime(new Date())
                 .generate();
+        // convert this to a did:key form as well
         DIDkeysProofManager manager = new DIDkeysProofManager();
         JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256)
                 .jwk(jwk.toPublicJWK())
+                .build();
+        SignedJWT signedJWT = new SignedJWT(jwsHeader, new JWTClaimsSet.Builder().build());
+        JWK actualJWK = manager.getKeyFromHeader(signedJWT.getHeader()).get();
+        assertEquals(jwk.toPublicJWK(), actualJWK);
+    }
+
+    // TODO: it needs to be discussed what should happen when the signed jwt has both a 
+    // 'jwk' & a 'kid' which may or may not refer to the same key.
+    @Test
+    void testGetKeyFromHeader_genKeySECPK1_multipleKeys() throws JOSEException {
+        ECKey jwk = new ECKeyGenerator(Curve.SECP256K1)
+                .keyUse(KeyUse.SIGNATURE)
+                .keyID(UUID.randomUUID().toString())
+                .provider(new BouncyCastleProvider())
+                .issueTime(new Date())
+                .generate();
+        // convert this to a did:key form as well
+        DIDkeysProofManager manager = new DIDkeysProofManager();
+        // DIDjwkProofManager manager = new DIDjwkProofManager();
+        JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256)
+                .jwk(jwk.toPublicJWK())
+                .keyID("did:key:z6MktwAJhFN5fDccQ8k1nDtcTAhaW6YuvVcV5xmjKXH9E6zi")
+                // valid did:key value but has different key than which is present in the jwk object
+                .build();
+        SignedJWT signedJWT = new SignedJWT(jwsHeader, new JWTClaimsSet.Builder().build());
+        JWK actualJWK = manager.getKeyFromHeader(signedJWT.getHeader()).get();
+        assertEquals(jwk.toPublicJWK(), actualJWK);
+    }
+
+    @Test
+    void testGetKeyFromHeader_genKeySECPK1_validJWK_invalidDidKey() throws JOSEException {
+        ECKey jwk = new ECKeyGenerator(Curve.SECP256K1)
+                .keyUse(KeyUse.SIGNATURE)
+                .keyID(UUID.randomUUID().toString())
+                .provider(new BouncyCastleProvider())
+                .issueTime(new Date())
+                .generate();
+        // convert this to a did:key form as well
+        DIDkeysProofManager manager = new DIDkeysProofManager();
+        // DIDjwkProofManager manager = new DIDjwkProofManager();
+        JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256)
+                .jwk(jwk.toPublicJWK())
+                .keyID("did:key:some garbage value")
                 .build();
         SignedJWT signedJWT = new SignedJWT(jwsHeader, new JWTClaimsSet.Builder().build());
         JWK actualJWK = manager.getKeyFromHeader(signedJWT.getHeader()).get();

@@ -10,6 +10,9 @@ import io.mosip.certify.core.constants.ErrorConstants;
 public class CertifyException extends RuntimeException {
 
     private String errorCode;
+    // TODO: should we add an optional errorDescription
+    //  field to simplify debugging as per spec
+    //  https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0-ID1.html#section-7.3.1.2-3.2
 
     public CertifyException() {
         super(ErrorConstants.UNKNOWN_ERROR);

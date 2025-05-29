@@ -162,6 +162,10 @@ public class VelocityTemplatingEngineImplTest {
 
     private CredentialConfig initTemplate(String template, String type, String context, String format, String didUrl, String keyManagerAppId, String keyManagerRefId, String signatureAlgo, String sdClaim) {
         CredentialConfig t = new CredentialConfig();
+        if(template != null) {
+            template = Base64.getEncoder().encodeToString(template.getBytes());
+        }
+
         t.setVcTemplate(template);
         t.setCredentialType(type);
         t.setContext(context);

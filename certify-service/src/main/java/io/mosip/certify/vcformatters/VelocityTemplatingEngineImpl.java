@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -198,6 +199,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
             log.error("Template {} not found (vcTemplate is null)", templateName);
             throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND);
         }
+        vcTemplateString = new String(Base64.decodeBase64(vcTemplateString));
         StringWriter writer = new StringWriter();
         Map<String, Object> finalTemplate = jsonify(valueMap.toMap());
         // Date: https://velocity.apache.org/tools/3.1/apidocs/org/apache/velocity/tools/generic/DateTool.html
@@ -303,6 +305,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         String templateName = templateInput.get(TEMPLATE_NAME).toString();
         String issuer = templateInput.get(ISSUER_URI).toString();
         String vcTemplateString = getCachedCredentialConfig(templateName).getVcTemplate(); // NEW
+        vcTemplateString = new String(Base64.decodeBase64(vcTemplateString));
         StringWriter writer = new StringWriter();
         // 1. Prepare map
         Map<String, Object> finalTemplate = jsonify(templateInput);
@@ -337,6 +340,15 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
             j.put(VCDMConstants.ID, idPrefix + UUID.randomUUID());
             return j.toString();
         }
+        if( templateInput.containsKey("_vct") && templateInput.containsKey("_cnf")
+                && templateInput.containsKey("_iss")) {
+            JSONObject j = new JSONObject(writer.toString());
+            j.put("vct", templateInput.get("_vct"));
+            j.put("cnf", templateInput.get("_cnf"));
+            j.put("iss", templateInput.get("_iss"));
+            return j.toString();
+        }
+
         return writer.toString();
     }
 }
