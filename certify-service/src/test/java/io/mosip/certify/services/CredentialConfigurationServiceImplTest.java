@@ -9,6 +9,7 @@ import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.entity.CredentialConfig;
 import io.mosip.certify.mapper.CredentialConfigMapper;
 import io.mosip.certify.repository.CredentialConfigRepository;
+import io.mosip.certify.utils.CredentialCacheKeyGenerator;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,6 +45,9 @@ public class CredentialConfigurationServiceImplTest {
 
     @Mock
     private CredentialConfig credentialConfig;
+
+    @Mock
+    private CredentialCacheKeyGenerator credentialCacheKeyGenerator;
 
     @Before
     public void setup() {
@@ -177,7 +181,7 @@ public class CredentialConfigurationServiceImplTest {
         Optional<CredentialConfig> optional = Optional.of(credentialConfig);
         when(credentialConfigRepository.findByConfigId(anyString())).thenReturn(optional);
         doNothing().when(credentialConfigRepository).delete(any(CredentialConfig.class));
-
+        when(credentialCacheKeyGenerator.generateKeyFromConfigId(anyString())).thenReturn("cacheKey");
         String result = credentialConfigurationService.deleteCredentialConfigurationById("12345678");
 
         Assert.assertNotNull(result);
