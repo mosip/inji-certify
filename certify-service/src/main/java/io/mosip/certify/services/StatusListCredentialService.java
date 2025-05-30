@@ -1,19 +1,16 @@
 package io.mosip.certify.services;
 
-import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.core.constants.Constants;
-import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.entity.StatusListAvailableIndices;
 import io.mosip.certify.entity.StatusListCredential;
 import io.mosip.certify.repository.StatusListAvailableIndicesRepository;
 import io.mosip.certify.repository.StatusListCredentialRepository;
-import io.mosip.certify.utils.BitStringUtils;
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.certify.vcsigners.VCSigner;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
@@ -22,10 +19,8 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -61,6 +56,9 @@ public class StatusListCredentialService {
 
     @Autowired
     private EntityManagerFactory entityManagerFactory;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Value("${mosip.certify.data-provider-plugin.issuer.vc-sign-algo:Ed25519Signature2020}")
     private String vcSignAlgorithm;
@@ -170,16 +168,10 @@ public class StatusListCredentialService {
             statusListCredential.setCreatedDtimes(LocalDateTime.now());
 
             // Save to database
-            StatusListCredential savedCredential = statusListCredentialRepository.save(statusListCredential);
-            log.info("Saved StatusListCredential: ID={}, CreatedDtimes={}",
-                    savedCredential.getId(), savedCredential.getCreatedDtimes());
-            statusListCredentialRepository.flush();
-            log.info("Transaction explicitly flushed and committed for StatusListCredential ID: {}", savedCredential.getId());
-
-            // Initialize available indices for the new status list
+            StatusListCredential savedCredential = statusListCredentialRepository.saveAndFlush(statusListCredential);
+            log.info("Saved StatusListCredential: ID={}, CreatedDtimes={}", savedCredential.getId(), savedCredential.getCreatedDtimes());
             initializeAvailableIndices(savedCredential);
 
-//            return savedCredential;
             return savedCredential;
 
         } catch (JSONException e) {
@@ -196,41 +188,31 @@ public class StatusListCredentialService {
      *
      * @param statusListCredential the status list credential
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    private void initializeAvailableIndices(StatusListCredential statusListCredential) {
+    @Transactional
+    public void initializeAvailableIndices(StatusListCredential statusListCredential) {
         log.info("Initializing available indices for status list: {}", statusListCredential.getId());
 
         try {
 
-            EntityManager entityManager = entityManagerFactory.createEntityManager();
-            Query checkQuery = entityManager.createNativeQuery(
-                    "SELECT COUNT(*) FROM status_list_credential WHERE id = ?");
+            Query checkQuery = entityManager.createNativeQuery("SELECT COUNT(*) FROM status_list_credential WHERE id = ?");
             checkQuery.setParameter(1, statusListCredential.getId());
             Object count = checkQuery.getSingleResult();
-            log.info("StatusListCredential with ID {} exists in DB: {}",
-                    statusListCredential.getId(), count);
-            // Use native SQL for bulk insert
-            String insertSql = """
-            INSERT INTO status_list_available_indices
-            (status_list_credential_id, list_index, is_assigned, cr_dtimes)
-            SELECT ?, generate_series(0, ? - 1), false, NOW()
-            """;
+            log.info("StatusListCredential with ID {} exists in DB: {}", statusListCredential.getId(), count);
 
-            // Get the entity manager for native query execution
+            String insertSql = """
+                    INSERT INTO status_list_available_indices
+                    (status_list_credential_id, list_index, is_assigned, cr_dtimes)
+                    SELECT ?, generate_series(0, ? - 1), false, NOW()
+                    """;
 
             try {
-                entityManager.getTransaction().begin();
-
                 Query nativeQuery = entityManager.createNativeQuery(insertSql);
                 nativeQuery.setParameter(1, statusListCredential.getId());
                 nativeQuery.setParameter(2, statusListCredential.getCapacity());
 
                 int rowsInserted = nativeQuery.executeUpdate();
 
-                entityManager.getTransaction().commit();
-
-                log.info("Successfully initialized {} available indices for status list: {}",
-                        rowsInserted, statusListCredential.getId());
+                log.info("Successfully initialized {} available indices for status list: {}", rowsInserted, statusListCredential.getId());
 
             } catch (Exception e) {
                 if (entityManager.getTransaction().isActive()) {
@@ -242,48 +224,10 @@ public class StatusListCredentialService {
             }
 
         } catch (Exception e) {
-            log.error("Error initializing available indices for status list: {}",
-                    statusListCredential.getId(), e);
+            log.error("Error initializing available indices for status list: {}", statusListCredential.getId(), e);
             throw new CertifyException("STATUS_LIST_INDEX_INITIALIZATION_FAILED");
         }
     }
-
-//    /**
-//     * Initialize available indices for a newly created status list
-//     * Populates the status_list_available_indices table with all indices set to unassigned
-//     *
-//     * @param statusListCredential the status list credential
-//     */
-//    @Transactional
-//    private void initializeAvailableIndices(StatusListCredential statusListCredential) {
-//        log.info("Initializing available indices for status list: {}", statusListCredential.getId());
-//
-//        try {
-//            List<StatusListAvailableIndices> availableIndices = new ArrayList<>();
-//
-//            // Create entries for all indices from 0 to capacity-1
-//            for (long i = 0; i < statusListCredential.getCapacity(); i++) {
-//                StatusListAvailableIndices indexEntry = new StatusListAvailableIndices();
-//                indexEntry.setStatusListCredentialId(statusListCredential.getId());
-//                indexEntry.setListIndex(i);
-//                indexEntry.setIsAssigned(false);
-//                indexEntry.setCreatedDtimes(LocalDateTime.now());
-//
-//                availableIndices.add(indexEntry);
-//            }
-//
-//            // Batch save all indices
-//            statusListAvailableIndicesRepository.saveAll(availableIndices);
-//
-//            log.info("Successfully initialized {} available indices for status list: {}",
-//                    statusListCredential.getCapacity(), statusListCredential.getId());
-//
-//        } catch (Exception e) {
-//            log.error("Error initializing available indices for status list: {}",
-//                    statusListCredential.getId(), e);
-//            throw new CertifyException("STATUS_LIST_INDEX_INITIALIZATION_FAILED");
-//        }
-//    }
 
     /**
      * Find or create a suitable status list for the given purpose
@@ -300,6 +244,7 @@ public class StatusListCredentialService {
         Optional<StatusListCredential> existingStatusList = findSuitableStatusList(statusPurpose);
 
         if (existingStatusList.isPresent()) {
+            log.info("suitable status list found, returning the existing one");
             return existingStatusList.get();
         }
 
@@ -318,230 +263,5 @@ public class StatusListCredentialService {
     public long findNextAvailableIndex(String statusListId) {
         Optional<Long> availableIndex = statusListIndexProvider.acquireIndex(statusListId, Map.of());
         return availableIndex.orElse(-1L);
-    }
-
-//    /**
-//     * Find next available index using Database Query Approach with Skip Lock
-//     *
-//     * @param statusListId the ID of the status list
-//     * @return the next available index, or -1 if the list is full
-//     */
-//    @Transactional
-//    public long findNextAvailableIndex(String statusListId) {
-//        log.info("Finding next available index for status list: {}", statusListId);
-//
-//        Optional<StatusListCredential> statusListOpt = statusListCredentialRepository.findById(statusListId);
-//
-//        if (statusListOpt.isEmpty()) {
-//            log.error("Status list not found with ID: {}", statusListId);
-//            throw new CertifyException("STATUS_LIST_NOT_FOUND");
-//        }
-//
-//        StatusListCredential statusList = statusListOpt.get();
-//
-//        // Check if list is already marked as full
-//        if (statusList.getCredentialStatus() == StatusListCredential.CredentialStatus.FULL) {
-//            log.info("Status list is already marked as full: {}", statusListId);
-//            return -1;
-//        }
-//
-//        // Get usable capacity from configuration (defaulting to 50% if not configured)
-//        long effectiveThresholdCount = (long) Math.floor(statusList.getCapacity() * (usableCapacityPercentage / 100.0));
-//
-//        // Preliminary usable capacity check
-//        long currentAssignedCount = statusListAvailableIndicesRepository.countByStatusListCredentialIdAndIsAssigned(statusListId, true);
-//
-//        if (currentAssignedCount >= effectiveThresholdCount) {
-//            log.info("Status list {} has reached usable capacity limit ({}/{})",
-//                    statusListId, currentAssignedCount, effectiveThresholdCount);
-//
-//            // Mark the status list as full
-//            statusList.setCredentialStatus(StatusListCredential.CredentialStatus.FULL);
-//            statusListCredentialRepository.save(statusList);
-//
-//            return -1;
-//        }
-//
-//        // Attempt to atomically claim an index using skip lock
-//        Optional<Long> claimedIndex = statusListAvailableIndicesRepository.claimNextAvailableIndex(statusListId);
-//
-//        if (claimedIndex.isPresent()) {
-//            log.info("Successfully claimed index {} for status list {}", claimedIndex.get(), statusListId);
-//
-//            // Check if we've reached the threshold after this assignment
-//            long newAssignedCount = currentAssignedCount + 1;
-//            if (newAssignedCount >= effectiveThresholdCount) {
-//                statusList.setCredentialStatus(StatusListCredential.CredentialStatus.FULL);
-//                statusListCredentialRepository.save(statusList);
-//                log.info("Status list {} marked as full after reaching threshold", statusListId);
-//            }
-//
-//            return claimedIndex.get();
-//        } else {
-//            log.warn("No available index could be claimed for status list {}", statusListId);
-//            return -1;
-//        }
-//    }
-
-//    /**
-//     * Find next available index in the status list
-//     *
-//     * @param statusListId the ID of the status list
-//     * @return the next available index, or -1 if the list is full
-//     */
-//    public long findNextAvailableIndex(String statusListId) {
-//        Optional<StatusListCredential> statusListOpt = statusListCredentialRepository.findById(statusListId);
-//
-//        if (statusListOpt.isEmpty()) {
-//            log.error("Status list not found with ID: {}", statusListId);
-//            throw new CertifyException("STATUS_LIST_NOT_FOUND");
-//        }
-//
-//        StatusListCredential statusList = statusListOpt.get();
-//        if (statusList.getCredentialStatus() == StatusListCredential.CredentialStatus.FULL) {
-//            log.info("Status list is full: {}", statusListId);
-//            return -1;
-//        }
-//
-//        // Get the status list data and find next available index
-//        JsonLDObject statusListVC = deserializeVC(statusList.getVcDocument());
-//        String encodedList = getEncodedListFromVC(statusListVC);
-//
-//        long nextIndex = bitStringStatusListService.findNextAvailableIndex(encodedList);
-//
-//        // Check if the list is now full after this allocation
-//        if (nextIndex == -1 || nextIndex >= statusList.getCapacity() - 1) {
-//            statusList.setCredentialStatus(StatusListCredential.CredentialStatus.FULL);
-//            statusListCredentialRepository.save(statusList);
-//
-//            if (nextIndex == -1) {
-//                return -1; // No available index found
-//            }
-//        }
-//
-//        return nextIndex;
-//    }
-
-    /**
-     * Get the status list credential by ID
-     *
-     * @param statusListId the ID of the status list
-     * @return StatusListCredential
-     */
-    public StatusListCredential getStatusListCredential(String statusListId) {
-        return statusListCredentialRepository.findById(statusListId)
-                .orElseThrow(() -> new CertifyException("STATUS_LIST_NOT_FOUND"));
-    }
-
-    // Helper methods
-
-    /**
-     * Deserialize VC document from byte array
-     *
-     * @param vcDocument byte array of VC document
-     * @return JsonLDObject representation of the VC
-     */
-    private JsonLDObject deserializeVC(byte[] vcDocument) {
-        try {
-            String vcString = new String(vcDocument);
-            return JsonLDObject.fromJson(vcString);
-        } catch (Exception e) {
-            log.error("Error deserializing VC document", e);
-            throw new CertifyException("INVALID_VC_DOCUMENT");
-        }
-    }
-
-    /**
-     * Extract encodedList from VC
-     *
-     * @param statusListVC the status list VC
-     * @return encodedList string
-     */
-    private String getEncodedListFromVC(JsonLDObject statusListVC) {
-        try {
-            Map<String, Object> credentialSubject = (Map<String, Object>) statusListVC.getJsonObject().get("credentialSubject");
-            Map<String, Object> statusList = (Map<String, Object>) credentialSubject.get("statusList");
-            return (String) statusList.get("encodedList");
-        } catch (Exception e) {
-            log.error("Error extracting encodedList from VC", e);
-            throw new CertifyException("INVALID_VC_DOCUMENT");
-        }
-    }
-
-    /**
-     * Assign the next available index from a status list and mark it as used
-     * Uses Database Query Approach with FOR UPDATE SKIP LOCKED for concurrent safety
-     *
-     * @param statusListId the ID of the status list credential
-     * @return the assigned index, or -1 if no index is available
-     */
-    @Transactional
-    public long assignIndexAndMarkUsed(String statusListId) {
-        log.debug("Attempting to assign index for status list: {}", statusListId);
-
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-
-        try {
-            entityManager.getTransaction().begin();
-
-            // Database approach for index assignment with atomic operation
-            String sql = """
-            WITH available_slot AS (
-                SELECT list_index
-                FROM status_list_available_indices
-                WHERE status_list_credential_id = ?
-                AND is_assigned = FALSE
-                ORDER BY RANDOM()
-                LIMIT 1
-                FOR UPDATE SKIP LOCKED
-            )
-            UPDATE status_list_available_indices sla
-            SET is_assigned = TRUE, upd_dtimes = NOW()
-            FROM available_slot avs
-            WHERE sla.status_list_credential_id = ?
-            AND sla.list_index = avs.list_index
-            AND sla.is_assigned = FALSE
-            RETURNING sla.list_index
-            """;
-
-            Query nativeQuery = entityManager.createNativeQuery(sql);
-            nativeQuery.setParameter(1, statusListId);
-            nativeQuery.setParameter(2, statusListId);
-
-            List<?> results = nativeQuery.getResultList();
-
-            entityManager.getTransaction().commit();
-
-            if (!results.isEmpty()) {
-                Object result = results.get(0);
-                long assignedIndex;
-
-                // Handle different return types (BigInteger, Integer, Long)
-                if (result instanceof BigInteger) {
-                    assignedIndex = ((BigInteger) result).longValue();
-                } else if (result instanceof Integer) {
-                    assignedIndex = ((Integer) result).longValue();
-                } else if (result instanceof Long) {
-                    assignedIndex = (Long) result;
-                } else {
-                    assignedIndex = Long.parseLong(result.toString());
-                }
-
-                log.debug("Successfully assigned index {} for status list: {}", assignedIndex, statusListId);
-                return assignedIndex;
-            } else {
-                log.warn("No available index found for status list: {}", statusListId);
-                return -1;
-            }
-
-        } catch (Exception e) {
-            if (entityManager.getTransaction().isActive()) {
-                entityManager.getTransaction().rollback();
-            }
-            log.error("Error assigning index for status list: {}", statusListId, e);
-            throw new CertifyException("STATUS_LIST_INDEX_ASSIGNMENT_FAILED");
-        } finally {
-            entityManager.close();
-        }
     }
 }
