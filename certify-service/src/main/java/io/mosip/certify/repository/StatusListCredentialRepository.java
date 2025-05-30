@@ -19,7 +19,7 @@ public interface StatusListCredentialRepository extends JpaRepository<StatusList
      * @return An optional containing the first available status list credential, or empty if none found
      */
     @Query("SELECT s FROM StatusListCredential s WHERE s.statusPurpose = :statusPurpose " +
-            "AND s.credentialStatus = io.mosip.certify.entities.StatusListCredential.CredentialStatusEnum.AVAILABLE " +
+            "AND s.credentialStatus = io.mosip.certify.entity.StatusListCredential$CredentialStatus.AVAILABLE " +
             "ORDER BY s.createdDtimes DESC")
     Optional<StatusListCredential> findSuitableStatusList(@Param("statusPurpose") String statusPurpose);
 
@@ -84,4 +84,10 @@ public interface StatusListCredentialRepository extends JpaRepository<StatusList
     long countByStatusPurposeAndCredentialStatus(
             String statusPurpose,
             StatusListCredential.CredentialStatus credentialStatus);
+
+    /**
+     * Find capacity of status list by ID
+     */
+    @Query("SELECT s.capacity FROM StatusListCredential s WHERE s.id = :id")
+    Optional<Long> findCapacityById(@Param("id") String id);
 }

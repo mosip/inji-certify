@@ -28,6 +28,10 @@ import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.core.util.AuditHelper;
 import io.mosip.certify.core.util.SecurityHelperService;
 import io.mosip.certify.api.spi.DataProviderPlugin;
+import io.mosip.certify.entity.Ledger;
+import io.mosip.certify.entity.StatusListCredential;
+import io.mosip.certify.repository.LedgerRepository;
+import io.mosip.certify.repository.StatusListCredentialRepository;
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.certify.validators.CredentialRequestValidator;
 import io.mosip.certify.exception.InvalidNonceException;
@@ -38,6 +42,7 @@ import io.mosip.certify.utils.DIDDocumentUtil;
 import io.mosip.certify.vcsigners.VCSigner;
 import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
@@ -49,6 +54,7 @@ import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 
@@ -77,7 +83,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Autowired
     private VCFormatter vcFormatter;
 
-    @Autowired
+@Autowired
     private VCSigner vcSigner;
 
     @Autowired
@@ -107,9 +113,25 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Autowired
     private KeymanagerService keymanagerService;
 
+    @Autowired
+    private StatusListCredentialService statusListCredentialService;
+
+    @Autowired
+    private StatusListCredentialRepository statusListCredentialRepository;
+
+    @Autowired
+    private LedgerRepository ledgerRepository;
+
+    @Value("${mosip.certify.statuslist.enabled:true}")
+    private boolean statusListEnabled;
+
+    @Value("${mosip.certify.statuslist.default-purpose:revocation}")
+    private String defaultStatusPurpose;
+
     private Map<String, Object> didDocument;
 
     @Override
+    @Transactional
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
         // 1. Credential Request validation
         boolean isValidCredentialRequest = CredentialRequestValidator.isValid(credentialRequest);
@@ -300,7 +322,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
         return transformedConfig;
     }
-
+    @Transactional
     private VCResult<?> getVerifiableCredential(CredentialRequest credentialRequest, CredentialMetadata credentialMetadata,
                                                 String holderId) {
         parsedAccessToken.getClaims().put("accessTokenHash", parsedAccessToken.getAccessTokenHash());
@@ -318,6 +340,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 try {
                     // TODO(multitenancy): later decide which plugin out of n plugins is the correct one
                     JSONObject jsonObject = dataProviderPlugin.fetchData(parsedAccessToken.getClaims());
+                    if (statusListEnabled) {
+                        addCredentialStatus(jsonObject);
+                    }
                     Map<String, Object> templateParams = new HashMap<>();
                     templateParams.put(Constants.TEMPLATE_NAME, CredentialUtils.getTemplateName(vcRequestDto));
                     templateParams.put(Constants.ISSUER_URI, issuerURI);
@@ -420,5 +445,132 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         transaction.setCNonceIssuedEpoch(LocalDateTime.now(ZoneOffset.UTC).toEpochSecond(ZoneOffset.UTC));
         transaction.setCNonceExpireSeconds(cNonceExpireSeconds);
         return vciCacheService.setVCITransaction(parsedAccessToken.getAccessTokenHash(), transaction);
+    }
+
+    /**
+     * Add credential status information to the VC data and store in ledger
+     */
+    @Transactional
+    private void addCredentialStatus(JSONObject jsonObject) {
+        try {
+            log.info("Adding credential status for status list integration");
+
+            // Find or create a suitable status list
+            StatusListCredential statusList = statusListCredentialService.findOrCreateStatusList(defaultStatusPurpose);
+
+            // Assign next available index using database approach
+//            long assignedIndex = statusListCredentialService.assignIndexAndMarkUsed(statusList.getId());
+//
+//            // If the current list is full, create a new one
+//            if (assignedIndex == -1) {
+//                log.info("Current status list is full, creating a new one");
+//                statusList = statusListCredentialService.generateStatusListCredential(defaultStatusPurpose);
+//                assignedIndex = statusListCredentialService.assignIndexAndMarkUsed(statusList.getId());
+//
+//                if (assignedIndex == -1) {
+//                    log.error("Failed to get available index even from new status list");
+//                    throw new CertifyException("STATUS_LIST_INDEX_UNAVAILABLE");
+//                }
+//            }
+            long assignedIndex = 1;
+            // Create credential status object for VC
+            JSONObject credentialStatus = new JSONObject();
+            String statusId = statusList.getId() + "#" + assignedIndex;
+            credentialStatus.put("id", statusId);
+            credentialStatus.put("type", "BitstringStatusListEntry");
+            credentialStatus.put("statusPurpose", defaultStatusPurpose);
+            credentialStatus.put("statusListIndex", String.valueOf(assignedIndex));
+            credentialStatus.put("statusListCredential", statusList.getId());
+
+            // Add credential status to the VC data
+            jsonObject.put("credentialStatus", credentialStatus);
+
+            // Extract credential details for ledger storage
+            String credentialId = jsonObject.optString("id", UUID.randomUUID().toString());
+            String credentialType = extractCredentialType(jsonObject);
+
+            // Prepare status details for ledger
+            Map<String, Object> statusDetails = new HashMap<>();
+            statusDetails.put("status_purpose", defaultStatusPurpose);
+            statusDetails.put("status_value", false); // Initially not revoked
+            statusDetails.put("status_list_credential_id", statusList.getId());
+            statusDetails.put("status_list_index", assignedIndex);
+            statusDetails.put("cr_dtimes", System.currentTimeMillis());
+
+            // Store in ledger
+//            storeLedgerEntry(
+//                    credentialId,
+//                    issuerURI,
+//                    credentialType,
+//                    statusDetails,
+//                    extractIndexedAttributes(jsonObject)
+//            );
+
+//            log.info("Successfully added credential status with index {} in status list {} and stored in ledger",
+//                    assignedIndex, statusList.getId());
+
+        } catch (Exception e) {
+            log.error("Error adding credential status", e);
+            throw new CertifyException("CREDENTIAL_STATUS_ASSIGNMENT_FAILED");
+        }
+    }
+
+    private String extractCredentialType(JSONObject jsonObject) {
+        try {
+            if (jsonObject.has("type")) {
+                Object typeObj = jsonObject.get("type");
+                if (typeObj instanceof org.json.JSONArray) {
+                    org.json.JSONArray typeArray = (org.json.JSONArray) typeObj;
+                    // Return the last type (usually the specific credential type)
+                    return typeArray.getString(typeArray.length() - 1);
+                }
+                return typeObj.toString();
+            }
+            return "VerifiableCredential";
+        } catch (Exception e) {
+            log.warn("Error extracting credential type, using default", e);
+            return "VerifiableCredential";
+        }
+    }
+
+    private Map<String, Object> extractIndexedAttributes(JSONObject jsonObject) {
+        Map<String, Object> indexed = new HashMap<>();
+        try {
+            // Extract key attributes for searching
+            if (jsonObject.has("credentialSubject")) {
+                JSONObject subject = jsonObject.getJSONObject("credentialSubject");
+                if (subject.has("id")) {
+                    indexed.put("subject_id", subject.getString("id"));
+                }
+            }
+            if (jsonObject.has("issuanceDate")) {
+                indexed.put("issuance_date", jsonObject.getString("issuanceDate"));
+            }
+        } catch (Exception e) {
+            log.warn("Error extracting indexed attributes", e);
+        }
+        return indexed;
+    }
+    public void storeLedgerEntry(String credentialId, String issuerId, String credentialType,
+                                 Map<String, Object> statusDetails, Map<String, Object> indexedAttributes) {
+        try {
+            Ledger ledger = new Ledger();
+            ledger.setCredentialId(credentialId);
+            ledger.setIssuerId(issuerId);
+            ledger.setIssueDate(OffsetDateTime.now());
+            ledger.setCredentialType(credentialType);
+            ledger.setIndexedAttributes(indexedAttributes);
+
+            // Store status details as array
+            List<Map<String, Object>> statusDetailsList = new ArrayList<>();
+            statusDetailsList.add(statusDetails);
+            ledger.setCredentialStatusDetails(statusDetailsList);
+
+            ledgerRepository.save(ledger);
+            log.info("Ledger entry stored for credential: {}", credentialId);
+        } catch (Exception e) {
+            log.error("Error storing ledger entry for credential: {}", credentialId, e);
+            throw new RuntimeException("Failed to store ledger entry", e);
+        }
     }
 }

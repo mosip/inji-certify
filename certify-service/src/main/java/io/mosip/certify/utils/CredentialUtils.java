@@ -24,6 +24,7 @@ public class CredentialUtils {
         Collections.sort(t);
         String contextKey = String.join(",", c);
         String typeKey = String.join(",", t);
+        String temp = String.join(":", typeKey, contextKey);
         return String.join(":", typeKey, contextKey);
     }
 }
