@@ -75,6 +75,22 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			logger.setLevel(Level.ERROR);
 	}
 	
+	public static void configureOtp() {
+		// For mock, mdoc and landregistry usecase also the OTP value is hard coded and not configurable.
+
+		if (currentUseCase != null && !currentUseCase.isEmpty() && (currentUseCase.equals("mock")
+				|| currentUseCase.equals("landregistry") || currentUseCase.equals("mdoc"))) {
+
+			Map<String, Object> additionalPropertiesMap = new HashMap<>();
+			additionalPropertiesMap.put(InjiCertifyConstants.USE_PRE_CONFIGURED_OTP_STRING,
+					InjiCertifyConstants.TRUE_STRING);
+			additionalPropertiesMap.put(InjiCertifyConstants.PRE_CONFIGURED_OTP_STRING,
+					InjiCertifyConstants.ALL_ONE_OTP_STRING);
+			InjiCertifyConfigManager.add(additionalPropertiesMap);
+		}
+		// else do nothing
+	}
+	
 	public static void dBCleanup() {
 		DBManager.executeDBQueries(InjiCertifyConfigManager.getKMDbUrl(), InjiCertifyConfigManager.getKMDbUser(),
 				InjiCertifyConfigManager.getKMDbPass(), InjiCertifyConfigManager.getKMDbSchema(),
