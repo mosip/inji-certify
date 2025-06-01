@@ -24,68 +24,6 @@ public interface StatusListCredentialRepository extends JpaRepository<StatusList
     Optional<StatusListCredential> findSuitableStatusList(@Param("statusPurpose") String statusPurpose);
 
     /**
-     * Find all status list credentials for a specific purpose
-     *
-     * @param statusPurpose The purpose of the status list
-     * @return List of status list credentials
-     */
-    List<StatusListCredential> findByStatusPurpose(String statusPurpose);
-
-    /**
-     * Find all status list credentials with a specific credential status
-     *
-     * @param credentialStatus The status of the credential (AVAILABLE or FULL)
-     * @return List of status list credentials
-     */
-    List<StatusListCredential> findByCredentialStatus(StatusListCredential.CredentialStatus credentialStatus);
-
-    /**
-     * Find available status list credentials by purpose
-     */
-    List<StatusListCredential> findByStatusPurposeAndCredentialStatus(
-            String statusPurpose,
-            StatusListCredential.CredentialStatus credentialStatus);
-
-    /**
-     * Find status list credentials by credential type
-     */
-    List<StatusListCredential> findByCredentialType(String credentialType);
-
-    /**
-     * Find available status list credentials with capacity greater than specified value
-     */
-    @Query("SELECT s FROM StatusListCredential s WHERE s.credentialStatus = :status AND s.capacity > :minCapacity")
-    List<StatusListCredential> findAvailableWithMinCapacity(
-            @Param("status") StatusListCredential.CredentialStatus status,
-            @Param("minCapacity") Long minCapacity);
-
-    /**
-     * Find the first available status list credential for a given purpose
-     */
-    Optional<StatusListCredential> findFirstByStatusPurposeAndCredentialStatusOrderByCreatedDtimesAsc(
-            String statusPurpose,
-            StatusListCredential.CredentialStatus credentialStatus);
-
-    /**
-     * Check if any available status list exists for a purpose
-     */
-    boolean existsByStatusPurposeAndCredentialStatus(
-            String statusPurpose,
-            StatusListCredential.CredentialStatus credentialStatus);
-
-    /**
-     * Count credentials by status
-     */
-    long countByCredentialStatus(StatusListCredential.CredentialStatus credentialStatus);
-
-    /**
-     * Count credentials by purpose and status
-     */
-    long countByStatusPurposeAndCredentialStatus(
-            String statusPurpose,
-            StatusListCredential.CredentialStatus credentialStatus);
-
-    /**
      * Find capacity of status list by ID
      */
     @Query("SELECT s.capacity FROM StatusListCredential s WHERE s.id = :id")

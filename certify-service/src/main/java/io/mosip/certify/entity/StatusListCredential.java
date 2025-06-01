@@ -20,10 +20,10 @@ public class StatusListCredential {
     @Column(length = 255)
     private String id;
 
-    @Lob
+//    @Lob
     @Column(name = "vc_document", columnDefinition = "TEXT", nullable = false)
-//    private byte[] vcDocument;
     private String vcDocument;
+//    private byte[] vcDocument;
 
     @Column(name = "credential_type", length = 100, nullable = false)
     private String credentialType;

@@ -29,6 +29,4 @@ public interface StatusListIndexProvider {
      */
     Optional<Long> acquireIndex(String listId, Map<String, Object> options);
 
-//    void populateAvailableIndices(String statusListId, long capacity);
-
 }

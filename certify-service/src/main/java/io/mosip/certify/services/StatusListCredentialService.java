@@ -79,6 +79,23 @@ public class StatusListCredentialService {
     private long usableCapacityPercentage;
 
     /**
+     * Find status list credential by ID
+     *
+     * @param id the ID of the status list credential
+     * @return Optional containing StatusListCredential if found
+     */
+    public Optional<StatusListCredential> findStatusListById(String id) {
+        log.info("Finding status list credential by ID: {}", id);
+
+        try {
+            return statusListCredentialRepository.findById(id);
+        } catch (Exception e) {
+            log.error("Error finding status list credential by ID: {}", id, e);
+            return Optional.empty();
+        }
+    }
+
+    /**
      * Find a suitable status list for the given purpose
      *
      * @param statusPurpose the purpose of the status list (e.g., "revocation", "suspension")
@@ -101,7 +118,7 @@ public class StatusListCredentialService {
         try {
             // Generate unique ID for status list
             String id = UUID.randomUUID().toString();
-            String statusListId = domainUrl + "/status-list-credentials/" + id;
+            String statusListId = domainUrl + "/status-list/" + id;
 
             // Create the template data for the status list VC
             JSONObject statusListData = new JSONObject();
@@ -144,7 +161,6 @@ public class StatusListCredentialService {
                 log.error("Failed to generate status list VC - vcResult.getCredential() returned null");
                 throw new CertifyException("VC_ISSUANCE_FAILED");
             }
-            log.info("VC signed");
 
             // Convert to byte array for storage
             byte[] vcDocument;
@@ -154,9 +170,10 @@ public class StatusListCredentialService {
                 log.error("Error converting VC to byte array", e);
                 throw new CertifyException("VC_SERIALIZATION_FAILED");
             }
-            log.info("VC document created");
+
             String vcDocS = vcResult.getCredential().toString();
-            log.info(vcDocS);
+            log.info("Signed VC document: {}", vcDocS);
+
             // Create and save the status list credential entity
             StatusListCredential statusListCredential = new StatusListCredential();
             statusListCredential.setId(id);
@@ -261,7 +278,7 @@ public class StatusListCredentialService {
      * @return the next available index, or -1 if the list is full
      */
     public long findNextAvailableIndex(String statusListId) {
-        Optional<Long> availableIndex = statusListIndexProvider.acquireIndex(statusListId, Map.of());
+        Optional<Long> availableIndex = indexProvider.acquireIndex(statusListId, Map.of());
         return availableIndex.orElse(-1L);
     }
 }
