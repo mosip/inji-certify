@@ -124,6 +124,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Value("${mosip.certify.statuslist.default-purpose:revocation}")
     private String defaultStatusPurpose;
 
+    @Value("${mosip.certify.domain.url}")
+    private String domainUrl;
+
     private Map<String, Object> didDocument;
 
     @Override
@@ -444,7 +447,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 statusList = statusListCredentialService.generateStatusListCredential(defaultStatusPurpose);
                 assignedIndex = statusListCredentialService.findNextAvailableIndex(statusList.getId());
 
-
                 if (assignedIndex == -1) {
                     log.error("Failed to get available index even from new status list");
                     throw new CertifyException("STATUS_LIST_INDEX_UNAVAILABLE");
@@ -452,7 +454,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             }
             // Create credential status object for VC
             JSONObject credentialStatus = new JSONObject();
-            String statusId = statusList.getId() + "#" + assignedIndex;
+            String statusId = domainUrl + "/status-list-credentials/" + statusList.getId() + "#" + assignedIndex;
             credentialStatus.put("id", statusId);
             credentialStatus.put("type", "BitstringStatusListEntry");
             credentialStatus.put("statusPurpose", defaultStatusPurpose);
@@ -463,7 +465,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             jsonObject.put("credentialStatus", credentialStatus);
 
             // Extract credential details for ledger storage
-            String credentialId = jsonObject.optString("id", UUID.randomUUID().toString());
             String credentialType = extractCredentialType(jsonObject);
 
             // Prepare status details for ledger
@@ -475,7 +476,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             statusDetails.put("cr_dtimes", System.currentTimeMillis());
 
             // Store in ledger
-            storeLedgerEntry(credentialId, issuerURI, credentialType, statusDetails, extractIndexedAttributes(jsonObject));
+            storeLedgerEntry(issuerURI, credentialType, statusDetails, extractIndexedAttributes(jsonObject));
 
             log.info("Successfully added credential status with index {} in status list {} and stored in ledger", assignedIndex, statusList.getId());
 
@@ -522,9 +523,11 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         return indexed;
     }
 
-    public void storeLedgerEntry(String credentialId, String issuerId, String credentialType, Map<String, Object> statusDetails, Map<String, Object> indexedAttributes) {
+    @Transactional
+    public void storeLedgerEntry(String issuerId, String credentialType, Map<String, Object> statusDetails, Map<String, Object> indexedAttributes) {
         try {
             Ledger ledger = new Ledger();
+            String credentialId = UUID.randomUUID().toString();;
             ledger.setCredentialId(credentialId);
             ledger.setIssuerId(issuerId);
             ledger.setIssueDate(OffsetDateTime.now());
@@ -539,7 +542,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             ledgerRepository.save(ledger);
             log.info("Ledger entry stored for credential: {}", credentialId);
         } catch (Exception e) {
-            log.error("Error storing ledger entry for credential: {}", credentialId, e);
+            log.error("Error storing ledger entry", e);
             throw new RuntimeException("Failed to store ledger entry", e);
         }
     }
