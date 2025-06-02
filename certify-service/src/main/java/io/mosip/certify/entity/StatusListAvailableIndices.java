@@ -42,7 +42,6 @@ public class StatusListAvailableIndices {
     @Column(name = "upd_dtimes")
     private LocalDateTime updatedDtimes;
 
-    // Foreign key relationship
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "status_list_credential_id",
             foreignKey = @ForeignKey(name = "fk_status_list_credential"),
