@@ -16,4 +16,12 @@ public class SignatureAlg {
     public static final String EC_K1_2016 = "EcdsaKoblitzSignature2016";
     public static final String EC_SECP256K1_2019 = "EcdsaSecp256k1Signature2019"; // secp256k1
     public static final String EC_SECP256R1_2019 = "EcdsaSecp256r1Signature2019"; // secp256r1
+
+    // DOUBT(later): should this be in its own constants class?
+    public static final String DATA_INTEGRITY = "DataIntegrity";
+    // CryptoSuite names
+    public static final String EC_RDFC_2019 = "ecdsa-rdfc-2019";
+    public static final String EC_JCS_2019 = "ecdsa-jcs-2019";
+
+    public static final String EC_SD_2023 = "ecdsa-sd-2023";
 }

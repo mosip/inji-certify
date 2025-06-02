@@ -1,4 +1,4 @@
-package io.mosip.certify.proofgenerators;
+package io.mosip.certify.proofgenerators.dip;
 
 import com.danubetech.keyformats.jose.JWSAlgorithm;
 import info.weboftrust.ldsignatures.LdProof;
@@ -6,6 +6,7 @@ import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
 import info.weboftrust.ldsignatures.canonicalizer.URDNA2015Canonicalizer;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.SignatureAlg;
+import io.mosip.certify.proofgenerators.ProofGenerator;
 import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import io.mosip.kernel.signature.service.SignatureService;
@@ -16,13 +17,17 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 /**
- * DataIntegrity VC signing
- *  as per https://www.w3.org/TR/vc-data-integrity/
+ * EcdsaKoblitzSignature2016 as per https://w3c-ccg.github.io/lds-koblitz2016/
+ * - secp256k1
+ * - used by Bitcoin & Etherium
+ * - from W3C Web Payments Community Group
+ *
+ * // NOTE: Avoid using this signature and use the 2019 EC K1 instead.
  */
 @Component
-@ConditionalOnProperty(name = "mosip.certify.data-provider-plugin.issuer.vc-sign-algo",
-        havingValue = SignatureAlg.ED25519_SIGNATURE_SUITE_2018)
-public class Ed25519Signature2018ProofGenerator implements ProofGenerator {
+@ConditionalOnProperty(name = "mosip.certify.data-provider-plugin.issuer.vc-sign-algo", havingValue = SignatureAlg.EC_RDFC_2019)
+public class EcdsaRdfc2019DataIntegrityProofGenerator implements ProofGenerator {
+
     @Autowired
     SignatureService signatureService;
 
@@ -30,7 +35,7 @@ public class Ed25519Signature2018ProofGenerator implements ProofGenerator {
 
     @Override
     public String getName() {
-        return SignatureAlg.DATA_INTEGRITY;
+        return SignatureAlg.EC_K1_2016;
     }
 
     @Override
@@ -40,7 +45,6 @@ public class Ed25519Signature2018ProofGenerator implements ProofGenerator {
 
     @Override
     public LdProof generateProof(LdProof vcLdProof, String vcEncodedHash, Map<String, String> keyID) {
-        // based on keyID
         JWSSignatureRequestDto payload = new JWSSignatureRequestDto();
         payload.setDataToSign(vcEncodedHash);
         payload.setApplicationId(keyID.get(Constants.APPLICATION_ID));
@@ -51,7 +55,7 @@ public class Ed25519Signature2018ProofGenerator implements ProofGenerator {
         payload.setValidateJson(false);
         payload.setB64JWSHeaderParam(false);
         payload.setCertificateUrl("");
-        payload.setSignAlgorithm(JWSAlgorithm.EdDSA); // RSSignature2018 --> RS256, PS256, ES256
+        payload.setSignAlgorithm(JWSAlgorithm.ES256K);
         JWTSignatureResponseDto jwsSignedData = signatureService.jwsSign(payload);
         return LdProof.builder().base(vcLdProof).defaultContexts(false)
                 .jws(jwsSignedData.getJwtSignedData()).build();

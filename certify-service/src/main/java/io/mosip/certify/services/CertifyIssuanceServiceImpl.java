@@ -193,7 +193,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         if(didDocument != null)
             return didDocument;
 
-        KeyPairGenerateResponseDto keyPairGenerateResponseDto = keymanagerService.getCertificate(keyChooser.get(vcSignAlgorithm).getFirst(), Optional.of(keyChooser.get(vcSignAlgorithm).getLast()));
+        KeyPairGenerateResponseDto keyPairGenerateResponseDto = keymanagerService.getCertificate(
+                keyChooser.get(vcSignAlgorithm).getFirst(),
+                Optional.of(keyChooser.get(vcSignAlgorithm).getLast()));
         String certificateString = keyPairGenerateResponseDto.getCertificate();
 
         didDocument = DIDDocumentUtil.generateDIDDocument(vcSignAlgorithm, certificateString, issuerURI, issuerPublicKeyURI);
