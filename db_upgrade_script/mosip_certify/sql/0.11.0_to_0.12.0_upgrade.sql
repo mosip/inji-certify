@@ -24,8 +24,8 @@ ALTER TABLE certify.credential_config
     ADD COLUMN doctype VARCHAR,
     ADD COLUMN vct VARCHAR,
     ADD COLUMN credential_format VARCHAR(255) NOT NULL DEFAULT 'default_format', -- Adding a default value for NOT NULL constraint
-    ADD COLUMN did_url VARCHAR NOT NULL DEFAULT '', -- Adding a default value for NOT NULL constraint
-    ADD COLUMN key_manager_app_id VARCHAR(36) NOT NULL DEFAULT '', -- Adding a default value for NOT NULL constraint
+    ADD COLUMN did_url VARCHAR DEFAULT 'did:web:mosip.github.io:inji-config:default', -- Adding a default value for NOT NULL constraint
+    ADD COLUMN key_manager_app_id VARCHAR(36) DEFAULT '', -- Adding a default value for NOT NULL constraint
     ADD COLUMN key_manager_ref_id VARCHAR(128),
     ADD COLUMN signature_algo VARCHAR(36),
     ADD COLUMN sd_claim VARCHAR,
@@ -50,6 +50,7 @@ ALTER TABLE certify.credential_config
 -- Step 5: Update the primary key constraint
 ALTER TABLE certify.credential_config DROP CONSTRAINT pk_template;
 ALTER TABLE certify.credential_config ADD CONSTRAINT pk_config_id PRIMARY KEY (context, credential_type, credential_format);
+ALTER TABLE certify.credential_config ALTER COLUMN vc_template DROP NOT NULL;
 
 -- Step 6: Create the unique index on vct
 CREATE UNIQUE INDEX idx_credential_config_vct_unique

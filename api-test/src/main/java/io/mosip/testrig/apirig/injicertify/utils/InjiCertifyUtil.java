@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.PublicKey;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECGenParameterSpec;
@@ -23,6 +24,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.bitcoinj.core.Base58;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.testng.SkipException;
@@ -73,6 +75,22 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			logger.setLevel(Level.ALL);
 		else
 			logger.setLevel(Level.ERROR);
+	}
+	
+	public static void configureOtp() {
+		// For mock, mdoc and landregistry usecase also the OTP value is hard coded and not configurable.
+
+		if (currentUseCase != null && !currentUseCase.isEmpty() && (currentUseCase.equals("mock")
+				|| currentUseCase.equals("landregistry") || currentUseCase.equals("mdoc"))) {
+
+			Map<String, Object> additionalPropertiesMap = new HashMap<>();
+			additionalPropertiesMap.put(InjiCertifyConstants.USE_PRE_CONFIGURED_OTP_STRING,
+					InjiCertifyConstants.TRUE_STRING);
+			additionalPropertiesMap.put(InjiCertifyConstants.PRE_CONFIGURED_OTP_STRING,
+					InjiCertifyConstants.ALL_ONE_OTP_STRING);
+			InjiCertifyConfigManager.add(additionalPropertiesMap);
+		}
+		// else do nothing
 	}
 	
 	public static void dBCleanup() {
@@ -1059,6 +1077,23 @@ public class InjiCertifyUtil extends AdminTestUtil {
 
 	    return proofJWT;
 	}
+	
+	public static String generateEd25519DidKey(byte[] rawEd25519PublicKey) {
+	    // Ed25519 public keys are 32 bytes
+	    if (rawEd25519PublicKey == null || rawEd25519PublicKey.length != 32) {
+	        throw new IllegalArgumentException("Invalid Ed25519 public key: must be 32 bytes");
+	    }
+
+	    // Multicodec prefix for Ed25519 (0xED01)
+	    byte[] prefix = new byte[]{(byte) 0xED, 0x01};
+
+	    byte[] combined = new byte[prefix.length + rawEd25519PublicKey.length];
+	    System.arraycopy(prefix, 0, combined, 0, prefix.length);
+	    System.arraycopy(rawEd25519PublicKey, 0, combined, prefix.length, rawEd25519PublicKey.length);
+
+	    return "did:key:z" + Base58.encode(combined);
+	}
+
 
 	
 	public static String signED25519JWT(String clientId, String accessToken, String testCaseName, String tempUrl) {
@@ -1069,12 +1104,25 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		String proofJWT = "";
 //		String typ = "openid4vci-proof+jwt";
 		SignedJWT signedJWT = null;
+		JWSHeader header = null;
 
 		try {
 			OctetKeyPair edJWK = new OctetKeyPairGenerator(Curve.Ed25519).generate();
+			
+			if(testCaseName.contains("_Did_Key_Sign_")) {
+				
+				byte[] rawPublicKey = edJWK.getX().decode();
 
-			JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.Ed25519)
-					.type(new JOSEObjectType("openid4vci-proof+jwt")).jwk(edJWK.toPublicJWK()).build();
+				String didKey = generateEd25519DidKey(rawPublicKey);
+				
+				header = new JWSHeader.Builder(JWSAlgorithm.Ed25519)
+						.type(new JOSEObjectType("openid4vci-proof+jwt")).keyID(didKey).build();
+			}else {
+				header = new JWSHeader.Builder(JWSAlgorithm.Ed25519)
+						.type(new JOSEObjectType("openid4vci-proof+jwt")).jwk(edJWK.toPublicJWK()).build();
+			}
+
+			
 
 			Date currentTime = new Date();
 

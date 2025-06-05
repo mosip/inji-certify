@@ -44,6 +44,10 @@ ALTER TABLE certify.credential_config
 
 -- Step 4: Rename vc_template back to template
 ALTER TABLE certify.credential_config RENAME COLUMN vc_template TO template;
+-- Update existing rows to ensure no NULL values
+UPDATE certify.credential_config SET template = 'default_value' WHERE template IS NULL;
+-- Make the column NOT NULL
+ALTER TABLE certify.credential_config ALTER COLUMN template SET NOT NULL;
 
 -- Step 5: Restore the column types to original specifications
 ALTER TABLE certify.credential_config

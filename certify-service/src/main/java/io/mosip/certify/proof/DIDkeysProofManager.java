@@ -20,6 +20,7 @@ import java.math.BigInteger;
 
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.math.ec.ECPoint;
+import org.bouncycastle.util.BigIntegers;
 
 import java.text.ParseException;
 import java.util.*;
@@ -47,12 +48,8 @@ public class DIDkeysProofManager implements JwtProofKeyManager {
             ECCurve curve = params.getCurve();
             ECPoint ecPoint = curve.decodePoint(Arrays.copyOfRange(b, 2, b.length));
             // Extract x and y coordinates
-            byte[] xBytes = ecPoint.getAffineXCoord().toBigInteger().toByteArray();
-            byte[] yBytes = ecPoint.getAffineYCoord().toBigInteger().toByteArray();
-
-            // Normalize to 32-byte arrays (secp256k1 uses 256-bit coordinates)
-            xBytes = Arrays.copyOfRange(xBytes, xBytes.length - 32, xBytes.length);
-            yBytes = Arrays.copyOfRange(yBytes, yBytes.length - 32, yBytes.length);
+            byte[] xBytes = BigIntegers.asUnsignedByteArray(ecPoint.getAffineXCoord().toBigInteger());
+            byte[] yBytes = BigIntegers.asUnsignedByteArray(ecPoint.getAffineYCoord().toBigInteger());
             JWK j = new ECKey.Builder(Curve.SECP256K1, Base64URL.encode(xBytes), Base64URL.encode(yBytes)).build();
             return Optional.of(j);
         } else if (b[0] == (byte) 0x80 && b[1] == (byte) 0x24 && b.length == 35) {
@@ -60,11 +57,8 @@ public class DIDkeysProofManager implements JwtProofKeyManager {
             ECNamedCurveParameterSpec params = ECNamedCurveTable.getParameterSpec("secp256r1");
             ECCurve curve = params.getCurve();
             ECPoint ecPoint = curve.decodePoint(Arrays.copyOfRange(b, 2, b.length));
-            byte[] xBytes = ecPoint.getAffineXCoord().toBigInteger().toByteArray();
-            byte[] yBytes = ecPoint.getAffineYCoord().toBigInteger().toByteArray();
-
-            xBytes = Arrays.copyOfRange(xBytes, xBytes.length - 32, xBytes.length);
-            yBytes = Arrays.copyOfRange(yBytes, yBytes.length - 32, yBytes.length);
+            byte[] xBytes = BigIntegers.asUnsignedByteArray(ecPoint.getAffineXCoord().toBigInteger());
+            byte[] yBytes = BigIntegers.asUnsignedByteArray(ecPoint.getAffineYCoord().toBigInteger());
             JWK j = new ECKey.Builder(Curve.P_256, Base64URL.encode(xBytes), Base64URL.encode(yBytes)).build();
             return Optional.of(j);
         } else if (b[0] == (byte) 0x85 && b[1] == (byte) 0x24) {

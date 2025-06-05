@@ -97,6 +97,8 @@ public class MosipTestRunner {
 
 			BaseTestCase.getLanguageList();
 			InjiCertifyUtil.getSupportedCredentialSigningAlg();
+			
+			InjiCertifyUtil.configureOtp();
 
 			if (useCaseToExecute.equalsIgnoreCase("mosipid")) {
 
