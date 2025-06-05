@@ -2,6 +2,7 @@ package io.mosip.certify.repository;
 
 import io.mosip.certify.entity.CredentialStatusTransaction;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,46 +15,31 @@ import java.util.List;
 @Repository
 public interface CredentialStatusTransactionRepository extends JpaRepository<CredentialStatusTransaction, Long> {
 
-    List<CredentialStatusTransaction> findByCredentialIdOrderByCreatedDtimesDesc(String credentialId);
-    Page<CredentialStatusTransaction> findByCredentialIdOrderByCreatedDtimesDesc(String credentialId, Pageable pageable);
-    List<CredentialStatusTransaction> findByStatusPurpose(String statusPurpose);
-    List<CredentialStatusTransaction> findByStatusValue(Boolean statusValue);
-    List<CredentialStatusTransaction> findByStatusListCredentialId(String statusListCredentialId);
-    List<CredentialStatusTransaction> findByCreatedDtimesBetween(LocalDateTime startDate, LocalDateTime endDate);
-    List<CredentialStatusTransaction> findByCredentialIdAndStatusPurposeOrderByCreatedDtimesDesc(
-            String credentialId, String statusPurpose);
-    long countByCredentialId(String credentialId);
-    long countByStatusPurpose(String statusPurpose);
-    List<CredentialStatusTransaction> findByStatusListCredentialIdAndStatusListIndex(
-            String statusListCredentialId, Long statusListIndex);
+    /**
+     * Find all transactions created since the given timestamp, ordered by creation time
+     * Limited by the specified batch size
+     */
+    @Query("SELECT t FROM CredentialStatusTransaction t WHERE t.createdDtimes > :since ORDER BY t.createdDtimes ASC")
+    List<CredentialStatusTransaction> findTransactionsSince(@Param("since") LocalDateTime since, Pageable pageable);
 
     /**
-     * Find latest transaction for a credential
+     * Convenience method for batch processing
      */
-    @Query("SELECT t FROM CredentialStatusTransaction t WHERE t.credentialId = :credentialId " +
-            "ORDER BY t.createdDtimes DESC LIMIT 1")
-    CredentialStatusTransaction findLatestByCredentialId(@Param("credentialId") String credentialId);
+    default List<CredentialStatusTransaction> findTransactionsSince(LocalDateTime since, int batchSize) {
+        return findTransactionsSince(since, PageRequest.of(0, batchSize));
+    }
 
     /**
-     * Find latest transaction for a credential with specific purpose
+     * Find the latest status transaction for each credential in a specific status list
+     * This helps to get the current state of all credentials in a status list
      */
-    @Query("SELECT t FROM CredentialStatusTransaction t WHERE t.credentialId = :credentialId " +
-            "AND t.statusPurpose = :statusPurpose ORDER BY t.createdDtimes DESC LIMIT 1")
-    CredentialStatusTransaction findLatestByCredentialIdAndStatusPurpose(
-            @Param("credentialId") String credentialId,
-            @Param("statusPurpose") String statusPurpose);
-
-    /**
-     * Find all revoked credentials (status_value = true for revocation purpose)
-     */
-    @Query("SELECT DISTINCT t.credentialId FROM CredentialStatusTransaction t " +
-            "WHERE t.statusPurpose = 'revocation' AND t.statusValue = true")
-    List<String> findRevokedCredentialIds();
-
-    /**
-     * Find recent transactions (last N days)
-     */
-    @Query("SELECT t FROM CredentialStatusTransaction t WHERE t.createdDtimes >= :sinceDate " +
-            "ORDER BY t.createdDtimes DESC")
-    List<CredentialStatusTransaction> findRecentTransactions(@Param("sinceDate") LocalDateTime sinceDate);
+//    @Query(value = """
+//    SELECT DISTINCT ON (t.credential_id) t.*
+//    FROM credential_status_transaction t
+//    WHERE t.status_list_credential_id = :statusListId
+//    ORDER BY t.credential_id, t.cr_dtimes DESC
+//    """, nativeQuery = true)
+//    List<CredentialStatusTransaction> findLatestStatusByStatusListId(@Param("statusListId") String statusListId);
+    @Query("SELECT t FROM CredentialStatusTransaction t WHERE t.statusListCredentialId = :statusListId ORDER BY t.credentialId, t.createdDtimes DESC")
+    List<CredentialStatusTransaction> findLatestStatusByStatusListId(@Param("statusListId") String statusListId);
 }

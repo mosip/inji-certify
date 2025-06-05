@@ -137,7 +137,7 @@ public class StatusListCredentialService {
             statusListData.put("validFrom", new Date().toInstant().toString());
 
             JSONObject credentialSubject = new JSONObject();
-            credentialSubject.put("id", statusListId + "#list");
+            credentialSubject.put("id", statusListId);
             credentialSubject.put("type", "BitstringStatusList");
             credentialSubject.put("statusPurpose", statusPurpose);
 
@@ -280,5 +280,51 @@ public class StatusListCredentialService {
     public long findNextAvailableIndex(String statusListId) {
         Optional<Long> availableIndex = indexProvider.acquireIndex(statusListId, Map.of());
         return availableIndex.orElse(-1L);
+    }
+
+    // Add this method to StatusListCredentialService.java
+
+    /**
+     * Re-sign a status list credential with updated content
+     *
+     * @param vcDocumentJson The updated VC document as JSON string
+     * @return The re-signed VC document as JSON string
+     */
+    @Transactional
+    public String resignStatusListCredential(String vcDocumentJson) {
+        log.info("Re-signing status list credential");
+
+        try {
+            // Prepare signer settings
+            Map<String, String> signerSettings = new HashMap<>();
+            signerSettings.put(Constants.APPLICATION_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignAlgorithm).getFirst());
+            signerSettings.put(Constants.REFERENCE_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignAlgorithm).getLast());
+
+            // Remove existing proof if present before re-signing
+            JSONObject vcDocument = new JSONObject(vcDocumentJson);
+            if (vcDocument.has("proof")) {
+                vcDocument.remove("proof");
+            }
+
+            // Update validFrom timestamp to current time
+            vcDocument.put("validFrom", new Date().toInstant().toString());
+
+            // Sign the updated VC
+            VCResult<?> vcResult = vcSigner.attachSignature(vcDocument.toString(), signerSettings);
+
+            if (vcResult.getCredential() == null) {
+                log.error("Failed to re-sign status list VC - vcResult.getCredential() returned null");
+                throw new CertifyException("VC_RESIGNATION_FAILED");
+            }
+
+            String resignedVcDocument = vcResult.getCredential().toString();
+            log.debug("Successfully re-signed status list credential");
+
+            return resignedVcDocument;
+
+        } catch (Exception e) {
+            log.error("Error re-signing status list credential", e);
+            throw new CertifyException("VC_RESIGNATION_FAILED");
+        }
     }
 }

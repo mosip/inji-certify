@@ -44,16 +44,6 @@ public class StatusListCredential {
     @Column(name = "upd_dtimes")
     private LocalDateTime updatedDtimes;
 
-    @PrePersist
-    protected void onCreate() {
-        createdDtimes = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedDtimes = LocalDateTime.now();
-    }
-
     public enum CredentialStatus {
         AVAILABLE("available"),
         FULL("full");

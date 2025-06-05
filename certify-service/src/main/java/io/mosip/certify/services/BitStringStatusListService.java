@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Base64;
+import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 /**
  * Service to handle bit string operations for status lists
@@ -17,7 +18,52 @@ import java.util.zip.GZIPOutputStream;
 @Slf4j
 @Service
 public class BitStringStatusListService {
+    /**
+     * Generate encoded list from a map of index-status pairs
+     *
+     * @param statusMap Map containing index -> status mappings
+     * @param capacity Total capacity of the status list
+     * @return Base64URL encoded compressed bitstring
+     */
+    public String generateEncodedList(Map<Long, Boolean> statusMap, long capacity) {
+        log.info("Generating encoded list from status map with {} entries for capacity {}",
+                statusMap.size(), capacity);
 
+        try {
+            // Create bitstring array initialized to false (0)
+            boolean[] bitstring = new boolean[(int) capacity];
+
+            // Set the appropriate bits based on the status map
+            for (Map.Entry<Long, Boolean> entry : statusMap.entrySet()) {
+                long index = entry.getKey();
+                boolean status = entry.getValue();
+
+                if (index >= 0 && index < capacity) {
+                    bitstring[(int) index] = status;
+                } else {
+                    log.warn("Index {} is out of bounds for capacity {}", index, capacity);
+                }
+            }
+
+            // Convert bitstring to byte array
+            byte[] byteArray = convertBitstringToByteArray(bitstring);
+
+            // Compress the byte array
+            byte[] compressedBytes = compressByteArray(byteArray);
+
+            // Encode to base64url
+            String encodedList = Base64.getUrlEncoder().withoutPadding().encodeToString(compressedBytes);
+
+            log.info("Generated encoded list of length {} from {} status entries",
+                    encodedList.length(), statusMap.size());
+
+            return encodedList;
+
+        } catch (Exception e) {
+            log.error("Error generating encoded list from status map", e);
+            throw new CertifyException("ENCODED_LIST_GENERATION_FAILED");
+        }
+    }
     /**
      * Creates an empty encoded list (all bits set to 0) according to W3C Bitstring Status List v1.0
      *
@@ -31,11 +77,8 @@ public class BitStringStatusListService {
         // Ensure minimum size of 16KB (131,072 bits) as per specification
         long actualCapacity = Math.max(capacity, 131072L);
 
-        // Calculate number of bytes needed
         int numBytes = (int) Math.ceil(actualCapacity / 8.0);
         byte[] emptyBitstring = new byte[numBytes];
-
-        // All bytes initialized to 0 by default in Java (which is what we want)
 
         try {
             // GZIP compress the bitstring as required by the specification
@@ -46,7 +89,6 @@ public class BitStringStatusListService {
             byte[] compressedBitstring = baos.toByteArray();
 
             // Multibase-encode using base64url (with no padding) as required by specification
-            // Note: The 'u' prefix indicates base64url encoding in Multibase
             String base64urlEncoded = Base64.getUrlEncoder().withoutPadding()
                     .encodeToString(compressedBitstring);
 
@@ -54,6 +96,39 @@ public class BitStringStatusListService {
 
         } catch (IOException e) {
             throw new RuntimeException("Failed to compress bitstring", e);
+        }
+    }
+
+    /**
+     * Convert bitstring boolean array to byte array
+     * Each byte contains 8 bits
+     */
+    private byte[] convertBitstringToByteArray(boolean[] bitstring) {
+        int byteLength = (bitstring.length + 7) / 8; // Round up to nearest byte
+        byte[] byteArray = new byte[byteLength];
+
+        for (int i = 0; i < bitstring.length; i++) {
+            if (bitstring[i]) {
+                int byteIndex = i / 8;
+                int bitIndex = i % 8;
+                byteArray[byteIndex] |= (1 << (7 - bitIndex)); // Set bit (MSB first)
+            }
+        }
+
+        return byteArray;
+    }
+
+    /**
+     * Compress byte array using GZIP compression
+     */
+    private byte[] compressByteArray(byte[] input) throws IOException {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             GZIPOutputStream gzipOut = new GZIPOutputStream(baos)) {
+
+            gzipOut.write(input);
+            gzipOut.finish();
+
+            return baos.toByteArray();
         }
     }
 

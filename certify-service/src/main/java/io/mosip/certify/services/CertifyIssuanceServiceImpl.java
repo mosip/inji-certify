@@ -454,12 +454,12 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             }
             // Create credential status object for VC
             JSONObject credentialStatus = new JSONObject();
-            String statusId = domainUrl + "/v1/certify/status-list/" + statusList.getId() + "#" + assignedIndex;
-            credentialStatus.put("id", statusId);
+            String statusId = domainUrl + "/v1/certify/status-list/" + statusList.getId();
+            credentialStatus.put("id", statusId + "#" + assignedIndex);
             credentialStatus.put("type", "BitstringStatusListEntry");
             credentialStatus.put("statusPurpose", defaultStatusPurpose);
             credentialStatus.put("statusListIndex", String.valueOf(assignedIndex));
-            credentialStatus.put("statusListCredential", statusList.getId());
+            credentialStatus.put("statusListCredential", statusId);
 
             // Add credential status to the VC data
             jsonObject.put("credentialStatus", credentialStatus);
