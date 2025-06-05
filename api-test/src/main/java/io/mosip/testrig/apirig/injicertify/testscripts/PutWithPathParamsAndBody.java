@@ -2,6 +2,7 @@ package io.mosip.testrig.apirig.injicertify.testscripts;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,6 +100,16 @@ public class PutWithPathParamsAndBody extends InjiCertifyUtil implements ITest {
 		testCaseDTO = AdminTestUtil.filterHbs(testCaseDTO);
 		String inputJson = filterInputHbs(testCaseDTO);
 		inputJson = InjiCertifyUtil.inputStringKeyWordHandeler(inputJson, testCaseName);
+		
+		JSONObject responseJson = new JSONObject(inputJson);
+        // Check and encode vcTemplate
+        if (responseJson.has("vcTemplate") && responseJson.get("vcTemplate") instanceof JSONObject) {
+            JSONObject vcTemplate = responseJson.getJSONObject("vcTemplate");
+            String base64Encoded = Base64.getEncoder().encodeToString(vcTemplate.toString().getBytes());
+           // Replace vcTemplate with Base64 string
+            responseJson.put("vcTemplate", base64Encoded);
+            inputJson = responseJson.toString();
+        }		
 
 		if (testCaseDTO.getTemplateFields() != null && templateFields.length > 0) {
 			ArrayList<JSONObject> inputtestCases = AdminTestUtil.getInputTestCase(testCaseDTO);
