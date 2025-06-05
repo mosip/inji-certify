@@ -770,9 +770,14 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		} else if (testCaseName.contains("_GenerateToken_ForLandRegistry")) {
 			tempURL = getValueFromEsignetWellKnownEndPoint("token_endpoint",
 					InjiCertifyConfigManager.getEsignetBaseUrl());
+		} else if (testCaseName.contains("_GenerateToken_FormDoc")) {
+			tempURL = getValueFromEsignetWellKnownEndPoint("token_endpoint",
+					InjiCertifyConfigManager.getEsignetBaseUrl());			
 		} else if (testCaseName.contains("_GetCredentialForMockIDA")) {
 			tempURL = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer", baseURL);
 		} else if (testCaseName.contains("_GetCredentialForLandRegistry")) {
+			tempURL = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer", baseURL);
+		} else if (testCaseName.contains("_GetCredentialFormDoc")) {
 			tempURL = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer", baseURL);
 		}
 

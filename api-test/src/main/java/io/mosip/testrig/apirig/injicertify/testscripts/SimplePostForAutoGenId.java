@@ -3,6 +3,7 @@ package io.mosip.testrig.apirig.injicertify.testscripts;
 import java.lang.reflect.Field;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,6 +106,16 @@ public class SimplePostForAutoGenId extends InjiCertifyUtil implements ITest {
 		String inputJson = "";
 
 		inputJson = getJsonFromTemplate(testCaseDTO.getInput(), testCaseDTO.getInputTemplate());
+		
+		JSONObject responseJson = new JSONObject(inputJson);
+        // Check and encode vcTemplate
+        if (responseJson.has("vcTemplate") && responseJson.get("vcTemplate") instanceof JSONObject) {
+            JSONObject vcTemplate = responseJson.getJSONObject("vcTemplate");
+            String base64Encoded = Base64.getEncoder().encodeToString(vcTemplate.toString().getBytes());
+           // Replace vcTemplate with Base64 string
+            responseJson.put("vcTemplate", base64Encoded);
+            inputJson = responseJson.toString();
+        }
 
 //		String outputJson = getJsonFromTemplate(testCaseDTO.getOutput(), testCaseDTO.getOutputTemplate());
 
