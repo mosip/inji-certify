@@ -56,9 +56,6 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
     private static final String CREDENTIAL_CONFIG_CACHE_NAME = "credentialConfig";
 
-    @Autowired
-    private CredentialCacheKeyGenerator credentialCacheKeyGenerator;
-
     @Override
     public CredentialConfigResponse addCredentialConfiguration(CredentialConfigurationDTO credentialConfigurationDTO) throws JsonProcessingException {
         CredentialConfig credentialConfig = credentialConfigMapper.toEntity(credentialConfigurationDTO);
@@ -165,7 +162,10 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
      * This is a trade-off for using declarative @CacheEvict on this method signature.
      */
     @Override
-    @CacheEvict(cacheNames = CREDENTIAL_CONFIG_CACHE_NAME, key = "cacheKey", condition = "#cacheKey != null")
+    @Transactional
+    @CacheEvict(cacheNames = CREDENTIAL_CONFIG_CACHE_NAME,
+            key = "@credentialCacheKeyGenerator.generateKeyFromConfigId(#id)",
+            beforeInvocation = true)
     public String deleteCredentialConfigurationById(String id) {
         Optional<CredentialConfig> optional = credentialConfigRepository.findByConfigId(id);
 
@@ -174,12 +174,6 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
             throw new CertifyException("Configuration not found with the provided id: " + id);
         }
 
-        // Generate the cache key before deletion
-        String cacheKey = credentialCacheKeyGenerator.generateKeyFromConfigId(id);
-        if (cacheKey == null) {
-            log.error("Cache key generation failed for id: {}", id);
-            throw new CertifyException("Error deleting configuration: " + id);
-        }
         // The object is fetched once here.
         // The @CacheEvict's key SpEL will cause CredentialCacheKeyGenerator to fetch it again.
         credentialConfigRepository.delete(optional.get());
