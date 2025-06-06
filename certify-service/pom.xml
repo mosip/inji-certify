@@ -99,11 +99,18 @@
             <version>3.4.1</version>
             <scope>test</scope>
         </dependency>
+        <!-- below weboftrust library is deprecated and has to be replaced with data-integrity-java -->
         <dependency>
             <groupId>info.weboftrust</groupId>
             <artifactId>ld-signatures-java</artifactId>
             <version>1.0.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.danubetech</groupId>
+            <artifactId>data-integrity-java</artifactId>
+            <version>1.17.0</version> <!-- 1.18.0-SNAPSHOT is under the works atm -->
+        </dependency>
+
         <dependency>
             <groupId>com.google.crypto.tink</groupId>
             <artifactId>tink</artifactId>

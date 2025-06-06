@@ -18,7 +18,7 @@ public class SignatureAlg {
     public static final String EC_SECP256R1_2019 = "EcdsaSecp256r1Signature2019"; // secp256r1
 
     // DOUBT(later): should this be in its own constants class?
-    public static final String DATA_INTEGRITY = "DataIntegrity";
+    public static final String DATA_INTEGRITY = "DataIntegrityProof";
     // CryptoSuite names
     public static final String EC_RDFC_2019 = "ecdsa-rdfc-2019";
     public static final String EC_JCS_2019 = "ecdsa-jcs-2019";
