@@ -26,10 +26,10 @@ The issuance process involves communication between four key participants:
 
 ```mermaid
 sequenceDiagram
-    participant W as Wallet
-    participant IC as Inji Certify<br/>(OAuth AS + VCI)
-    participant IVP as VP Verifier (openid4vp)<br/>
-    participant U as User
+    participant W as 👜 Wallet
+    participant IC as 🛡️ Inji Certify<br/>(OAuth AS + VCI)
+    participant IVP as 🕵️ VP Verifier (openid4vp)<br/>
+    participant U as 👤 User
 
     Note over W,IC: 0. Discovery
     W->>IC: 1. GET /.well-known/openid-credential-issuer
@@ -38,11 +38,10 @@ sequenceDiagram
     IC-->>W: 4. OAuth AS metadata (no authorization_endpoint is sent here)
     
     Note over W,IC: 1. Initial Credential Request (Browser-less)
-    W->>IC: 5. POST /authorize-challenge<br/>{client_id, authorization_details}
-    IC->>IC: 6. Evaluate presentation policy
-    IC->>IVP: 7. Create presentation request
-    IVP-->>IC: 8. {request_id,transaction_id, request_uri: /oid4vp/request/{id}} (non-normative)
-    IC->>IC: 6. store transaction id for the presentation request mapped to Auth Session
+    W->>IC: 5. POST /authorize-challenge<br/>{client_id, authorization_details(auth_session)}
+    IC->>IVP: 6. Create presentation request
+    IVP-->>IC: 7. {request_id,transaction_id, request_uri: /oid4vp/request/{id}} (non-normative)
+    IC->>IC: 8. store transaction id for the presentation request mapped to Auth Session
     IC-->>W: 9. 400 insufficient_authorization<br/>{auth_session, presentation: {request_uri}}
     
     Note over W,IVP: 2. Presentation Flow
@@ -88,7 +87,7 @@ The Wallet discovers the Credential Issuer's (Inji Certify) capabilities.
 ### Phase 1: Initial Credential Request & Presentation Trigger
 
 The Wallet initiates the request, and the Issuer determines if a presentation is needed.
-5\.  **Wallet to Inji Certify**: `POST /authorize-challenge` (Includes `client_id`, `authorization_details` for the desired credential).
+5.  **Wallet to Inji Certify**: `POST /authorize-challenge` (Includes `client_id`, `authorization_details` for the desired credential).
 6.  **Inji Certify (Internal)**: Evaluates its presentation policy.
 7.  **Inji Certify to VP Verifier**: Instructs the VP Verifier to create a presentation request.
 8.  **VP Verifier to Inji Certify**: Returns `request_id`, `transaction_id`, and `request_uri` (e.g., `/oid4vp/request/{id}`). Inji Certify stores `transaction_id` mapped to the Auth Session.
@@ -97,7 +96,7 @@ The Wallet initiates the request, and the Issuer determines if a presentation is
 ### Phase 2: Presentation Flow with VP Verifier
 
 The Wallet interacts with the VP Verifier.
-10\. **Wallet to VP Verifier**: `GET /oid4vp/request/{request_id}` (using the `request_uri`).
+10. **Wallet to VP Verifier**: `GET /oid4vp/request/{request_id}` (using the `request_uri`).
 11. **VP Verifier to Wallet**: Responds with the Presentation Request details.
 12. **Wallet to User**: Prompts User for consent.
 13. **User to Wallet**: User approves.
@@ -107,7 +106,7 @@ The Wallet interacts with the VP Verifier.
 ### Phase 3: Continue Authorization with Inji Certify
 
 The Wallet returns to the Issuer.
-17\. **Wallet to Inji Certify**: `POST /authorize-challenge` (includes `auth_session` from step 9).
+17. **Wallet to Inji Certify**: `POST /authorize-challenge` (includes `auth_session` from step 9).
 18. **Inji Certify (Internal)**: Validates `auth_session`.
 19. **Inji Certify to VP Verifier**: Gets VP verification status for the `transaction_id`.
 20. **VP Verifier to Inji Certify**: Sends VP verification status.
@@ -117,7 +116,7 @@ The Wallet returns to the Issuer.
 ### Phase 4: Token Exchange & Credential Issuance
 
 The Wallet gets tokens and then the credential.
-23\. **Wallet to Inji Certify**: `POST /oauth/token` (grant_type=`authorization_code`, `code`).
+23. **Wallet to Inji Certify**: `POST /oauth/token` (grant_type=`authorization_code`, `code`).
 24. **Inji Certify to Wallet**: Responds with `access_token`, `c_nonce`.
 25. **Wallet to Inji Certify**: `POST /credential` (includes `format`, `proof` with `c_nonce`, authenticated with `access_token`).
 26. **Inji Certify to Wallet**: Validates and returns the `credential`.
@@ -134,4 +133,5 @@ This flow is based on concepts and standards from the following documents:
 
 *  [EUDI Wallet Blueprint - Presentation During Issuance (Conceptual basis for the Presentation During Issuance flow)](https://bmi.usercontent.opencode.de/eudi-wallet/eidas-2.0-architekturkonzept/flows/Presentation-During-Issuance/)
 
+* [Github issue from oidvci](https://github.com/openid/OpenID4VCI/issues/473)
 ---
