@@ -88,6 +88,7 @@ function installing_inji-certify() {
         read -p "Please provide mosip ida client secret: " IDA_CLIENT_SECRET
         read -p "Please provide certify misp licence key: " CERTIFY_MISP_KEY
         read -p "Please provide the hostname for the redis server : " REDIS_HOST
+        read -p "Please provide the port for the redis server : " REDIS_PORT
         read -p "Please provide the password for the redis server : " REDIS_PASSWORD
 
         kubectl patch configmap inji-stack-config -n config-server --type merge -p "{\"data\": {\"injicertify-mosipid-host\": \"$INJICERTIFY_HOST\"}}"
@@ -97,6 +98,7 @@ function installing_inji-certify() {
         kubectl patch configmap inji-stack-config -n config-server --type merge -p "{\"data\": {\"mosip-api-cre-internal-host\": \"$IDA_EXTERNAL_HOST\"}}"
         kubectl patch configmap inji-stack-config -n default --type merge -p "{\"data\": {\"mosip-api-cre-internal-host\": \"$IDA_EXTERNAL_HOST\"}}"
         kubectl create configmap redis-config --from-literal=redis-host="$REDIS_HOST" -n config-server --dry-run=client -o yaml | kubectl apply -f -
+        kubectl create configmap redis-config --from-literal=redis-port="$REDIS_PORT" -n config-server --dry-run=client -o yaml | kubectl apply -f -
         kubectl create secret generic certify-misp-onboarder-key --from-literal=certify-misp-key="$CERTIFY_MISP_KEY" -n config-server --dry-run=client -o yaml | kubectl apply -f -
         kubectl create secret generic keycloak-client-secrets --from-literal=mosip_ida_client_secret="$IDA_CLIENT_SECRET" -n config-server --dry-run=client -o yaml | kubectl apply -f -
         kubectl create secret generic redis --from-literal=redis-password="$REDIS_PASSWORD" -n config-server --dry-run=client -o yaml | kubectl apply -f -
@@ -105,6 +107,7 @@ function installing_inji-certify() {
         kubectl -n config-server set env --keys=mosipid-identity-esignet-host --from configmap/inji-stack-config deployment/config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_
         kubectl -n config-server set env --keys=mosip-api-cre-internal-host --from configmap/inji-stack-config deployment/config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_
         kubectl -n config-server set env --keys=redis-host --from configmap/redis-config deployment/config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_
+        kubectl -n config-server set env --keys=redis-port --from configmap/redis-config deployment/config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_
 
         kubectl -n config-server set env --keys=certify-misp-key --from secret/certify-misp-onboarder-key deployment/config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_MOSIP_
         kubectl -n config-server set env --keys=mosip_ida_client_secret --from secret/keycloak-client-secrets deployment/config-server --prefix=SPRING_CLOUD_CONFIG_SERVER_OVERRIDES_
