@@ -234,7 +234,7 @@ function installing_inji-certify() {
   fi
 
   echo "Installing inji-certify service..."
-  helm -n $NS install inji-certify /d/inji-certify/helm/inji-certify \
+  helm -n $NS install inji-certify mosip/inji-certify \
     --set istio.hosts[0]=$INJICERTIFY_HOST \
     --version $CHART_VERSION $ENABLE_INSECURE
 
