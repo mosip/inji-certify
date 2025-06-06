@@ -56,7 +56,7 @@ public class StatusListUpdateBatchJob {
      * Scheduled method that runs every hour to update status lists
      * Uses @Scheduled with fixedRate to run every hour (3600000 ms)
      */
-    @Scheduled(fixedRate = 60000) // Run every hour
+    @Scheduled(fixedRate = 3600000) // Run every hour
     @SchedulerLock(name = "updateStatusLists", lockAtMostFor = "55m", lockAtLeastFor = "5m")
     @Transactional
     public void updateStatusLists() {
