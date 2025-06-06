@@ -35,7 +35,7 @@ sequenceDiagram
     W->>IC: 1. GET /.well-known/openid-credential-issuer
     IC-->>W: 2. Credential Issuer metadata
     W->>IC: 3. GET /.well-known/oauth-authorization-server
-    IC-->>W: 4. OAuth AS metadata (no authorization_endpoint is sent here)
+    IC-->>W: 4. OAuth AS metadata 
     
     Note over W,IC: 1. Initial Credential Request (Browser-less)
     W->>IC: 5. POST /authorize-challenge<br/>{client_id, authorization_details(auth_session)}
@@ -133,5 +133,5 @@ This flow is based on concepts and standards from the following documents:
 
 *  [EUDI Wallet Blueprint - Presentation During Issuance (Conceptual basis for the Presentation During Issuance flow)](https://bmi.usercontent.opencode.de/eudi-wallet/eidas-2.0-architekturkonzept/flows/Presentation-During-Issuance/)
 
-* [Github issue from oidvci](https://github.com/openid/OpenID4VCI/issues/473)
+* [GitHub issue from OpenID4VCI](https://github.com/openid/OpenID4VCI/issues/473)
 ---
