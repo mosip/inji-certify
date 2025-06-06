@@ -87,8 +87,10 @@ function installing_inji-certify() {
 
         read -p "Please provide mosip ida client secret: " IDA_CLIENT_SECRET
         read -p "Please provide certify misp licence key: " CERTIFY_MISP_KEY
-        read -p "Please provide the hostname for the redis server : " REDIS_HOST
-        read -p "Please provide the port for the redis server : " REDIS_PORT
+        read -p "Please provide the hostname for the redis server ( default: redis-master-0.redis-headless.redis.svc.cluster.local ): " REDIS_HOST
+        REDIS_HOST=${REDIS_HOST:-redis-master-0.redis-headless.redis.svc.cluster.local}
+        read -p "Please provide the port for the redis server ( default: 6379 ): " REDIS_PORT
+        REDIS_PORT=${REDIS_PORT:-6379}
         read -p "Please provide the password for the redis server : " REDIS_PASSWORD
 
         kubectl patch configmap inji-stack-config -n config-server --type merge -p "{\"data\": {\"injicertify-mosipid-host\": \"$INJICERTIFY_HOST\"}}"
