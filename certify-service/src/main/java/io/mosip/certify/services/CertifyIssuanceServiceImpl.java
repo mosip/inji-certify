@@ -5,6 +5,10 @@
  */
 package io.mosip.certify.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.Option;
 import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.dto.VCRequestDto;
 import io.mosip.certify.api.dto.VCResult;
@@ -12,6 +16,7 @@ import io.mosip.certify.api.exception.DataProviderExchangeException;
 import io.mosip.certify.api.spi.*;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
+import io.mosip.certify.config.IndexedAttributesConfig;
 import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.CredentialMetadata;
@@ -117,6 +122,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     @Autowired
     private LedgerRepository ledgerRepository;
+
+    @Autowired
+    private IndexedAttributesConfig indexedAttributesConfig;
 
     @Value("${mosip.certify.statuslist.enabled:true}")
     private boolean statusListEnabled;
@@ -332,12 +340,12 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 try {
                     // TODO(multitenancy): later decide which plugin out of n plugins is the correct one
                     JSONObject jsonObject = dataProviderPlugin.fetchData(parsedAccessToken.getClaims());
-                    if (statusListEnabled) {
-                        addCredentialStatus(jsonObject);
-                    }
                     Map<String, Object> templateParams = new HashMap<>();
                     templateParams.put(Constants.TEMPLATE_NAME, CredentialUtils.getTemplateName(vcRequestDto));
                     templateParams.put(Constants.ISSUER_URI, issuerURI);
+                    if (statusListEnabled) {
+                        addCredentialStatus(jsonObject);
+                    }
                     if (!StringUtils.isEmpty(renderTemplateId)) {
                         templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
                     }
@@ -452,6 +460,8 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     throw new CertifyException("STATUS_LIST_INDEX_UNAVAILABLE");
                 }
             }
+            Map<String, Object> indexedAttributes = extractIndexedAttributes(jsonObject);
+
             // Create credential status object for VC
             JSONObject credentialStatus = new JSONObject();
             String statusId = domainUrl + "/v1/certify/status-list/" + statusList.getId();
@@ -476,7 +486,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             statusDetails.put("cr_dtimes", System.currentTimeMillis());
 
             // Store in ledger
-            storeLedgerEntry(issuerURI, credentialType, statusDetails, extractIndexedAttributes(jsonObject));
+            storeLedgerEntry(issuerURI, credentialType, statusDetails, indexedAttributes);
 
             log.info("Successfully added credential status with index {} in status list {} and stored in ledger", assignedIndex, statusList.getId());
 
@@ -504,23 +514,100 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         }
     }
 
-    private Map<String, Object> extractIndexedAttributes(JSONObject jsonObject) {
-        Map<String, Object> indexed = new HashMap<>();
+    // Enhanced version with better complex field support
+    public Map<String, Object> extractIndexedAttributes(JSONObject jsonObject) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        Configuration jsonPathConfig = Configuration.defaultConfiguration().addOptions(Option.SUPPRESS_EXCEPTIONS);
+        Map<String, Object> indexedAttributes = new HashMap<>();
+
+        if (jsonObject == null) {
+            return indexedAttributes;
+        }
+
+        Map<String, String> indexedMappings = indexedAttributesConfig.getIndexedMappings();
+        if (indexedMappings.isEmpty()) {
+            log.info("No indexed mappings configured, returning empty attributes");
+            return indexedAttributes;
+        }
+        log.info("Indexed Mapping Found: {}", indexedMappings);
+
         try {
-            // Extract key attributes for searching
-            if (jsonObject.has("credentialSubject")) {
-                JSONObject subject = jsonObject.getJSONObject("credentialSubject");
-                if (subject.has("id")) {
-                    indexed.put("subject_id", subject.getString("id"));
+
+            // Convert credential subject to JSON string for JsonPath processing
+            String sourceJsonString = jsonObject.toString();
+
+            for (Map.Entry<String, String> entry : indexedMappings.entrySet()) {
+                String targetKey = entry.getKey();
+                String pathsConfig = entry.getValue();
+
+
+                // Support multiple paths separated by pipe (|) for fallback
+                String[] paths = pathsConfig.split("\\|");
+                Object extractedValue = null;
+
+                for (String jsonPath : paths) {
+                    jsonPath = jsonPath.trim();
+
+                    try {
+                        // Use JsonPath to read the value from the source JSON
+                        extractedValue = JsonPath.using(jsonPathConfig)
+                                .parse(sourceJsonString)
+                                .read(jsonPath);
+
+                    } catch (Exception e) {
+                        log.warn("Error extracting value for path '{}' and key '{}': {}",
+                                jsonPath, targetKey, e.getMessage());
+                    }
+                }
+
+                // Handle different types of extracted values
+                if (extractedValue != null) {
+                    Object processedValue = processExtractedValue(extractedValue);
+                    indexedAttributes.put(targetKey, processedValue);
+                    log.info("Added processed value '{}' to indexed attributes under key '{}'",
+                            processedValue, targetKey);
+                } else {
+                    log.info("No value extracted for key '{}'; skipping indexing.", targetKey);
                 }
             }
-            if (jsonObject.has("issuanceDate")) {
-                indexed.put("issuance_date", jsonObject.getString("issuanceDate"));
-            }
+
+            log.info("Completed extraction and processing of indexed attributes.");
+
         } catch (Exception e) {
-            log.warn("Error extracting indexed attributes", e);
+            log.error("Error processing credential subject for indexed attributes: {}", e.getMessage(), e);
         }
-        return indexed;
+
+
+        return indexedAttributes;
+    }
+
+    /**
+     * Process extracted values to handle complex types appropriately
+     */
+    private Object processExtractedValue(Object extractedValue) {
+        if (extractedValue == null) {
+            return null;
+        }
+
+        if (extractedValue instanceof List) {
+            List<?> list = (List<?>) extractedValue;
+            if (list.isEmpty()) {
+                return null;
+            }
+            if (list.size() == 1) {
+                return list.get(0);
+            }
+            return extractedValue; // Keep as array
+        }
+        else if (extractedValue instanceof Map) {
+            return extractedValue;
+        }
+        else if (extractedValue instanceof String) {
+            String stringValue = (String) extractedValue;
+            return stringValue.trim().isEmpty() ? null : stringValue;
+        }
+
+        return extractedValue;
     }
 
     @Transactional
