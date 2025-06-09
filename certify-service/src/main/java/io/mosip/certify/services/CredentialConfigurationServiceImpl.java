@@ -15,6 +15,7 @@ import io.mosip.certify.entity.CredentialConfig;
 import io.mosip.certify.entity.TemplateId;
 import io.mosip.certify.mapper.CredentialConfigMapper;
 import io.mosip.certify.repository.CredentialConfigRepository;
+import io.mosip.certify.utils.CredentialCacheKeyGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,6 +38,9 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
     @Value("${mosip.certify.identifier}")
     private String credentialIssuer;
+
+    @Value("${mosip.certify.domain.url:}")
+    private String credentialIssuerDomainUrl;
 
     @Value("#{'${mosip.certify.authorization.url}'.split(',')}")
     private List<String> authServers;
@@ -158,7 +162,10 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
      * This is a trade-off for using declarative @CacheEvict on this method signature.
      */
     @Override
-    @CacheEvict(cacheNames = CREDENTIAL_CONFIG_CACHE_NAME, key = "@credentialCacheKeyGenerator.generateKeyFromConfigId(#id)", condition = "#id != null")
+    @Transactional
+    @CacheEvict(cacheNames = CREDENTIAL_CONFIG_CACHE_NAME,
+            key = "@credentialCacheKeyGenerator.generateKeyFromConfigId(#id)",
+            beforeInvocation = true)
     public String deleteCredentialConfigurationById(String id) {
         Optional<CredentialConfig> optional = credentialConfigRepository.findByConfigId(id);
 
@@ -166,6 +173,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
             log.warn("Configuration not found for delete with id: {}", id);
             throw new CertifyException("Configuration not found with the provided id: " + id);
         }
+
         // The object is fetched once here.
         // The @CacheEvict's key SpEL will cause CredentialCacheKeyGenerator to fetch it again.
         credentialConfigRepository.delete(optional.get());
@@ -176,6 +184,9 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Override
     public CredentialIssuerMetadataDTO fetchCredentialIssuerMetadata(String version) {
         List<CredentialConfig> credentialConfigList = credentialConfigRepository.findAll();
+        if(!credentialIssuerDomainUrl.isEmpty()) {
+            credentialIssuer = credentialIssuerDomainUrl;
+        }
 
         if ("latest".equals(version)) {
             CredentialIssuerMetadataVD13DTO credentialIssuerMetadata = new CredentialIssuerMetadataVD13DTO();

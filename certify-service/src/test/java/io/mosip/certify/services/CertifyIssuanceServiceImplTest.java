@@ -1,6 +1,11 @@
 package io.mosip.certify.services;
 
-import foundation.identity.jsonld.JsonLDException;
+import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 import foundation.identity.jsonld.JsonLDObject;
 
 import io.mosip.certify.api.dto.VCResult;
@@ -43,9 +48,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.io.IOException;
-
-import java.security.GeneralSecurityException;
+import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -128,6 +131,7 @@ public class CertifyIssuanceServiceImplTest {
         claimsFromAccessToken = new HashMap<>();
         claimsFromAccessToken.put("scope", DEFAULT_SCOPE);
         claimsFromAccessToken.put("client_id", "test-client");
+        claimsFromAccessToken.put(Constants.C_NONCE, TEST_CNONCE);
 
         transaction = new VCIssuanceTransaction();
         transaction.setCNonce(TEST_CNONCE);
@@ -186,14 +190,40 @@ public class CertifyIssuanceServiceImplTest {
         req.setCredential_definition(requestCredDef);
 
         CredentialProof proof = new CredentialProof();
-        proof.setProof_type("jwt");
-        proof.setJwt("dummy.jwt.token");
+        proof.setProof_type("openid4vci-proof+jwt");
+
+        RSAKeyGenerator rsaKeyGenerator = new RSAKeyGenerator(2048);
+        RSAKey r;
+        try {
+            r = rsaKeyGenerator.generate();
+        } catch (JOSEException e) {
+            fail("failed to generate an RSA Keypair");
+            throw new RuntimeException(e);
+        }
+        JWSHeader proofJwtHeader = new JWSHeader(JWSAlgorithm.RS256, new JOSEObjectType("openid4vci-proof+jwt"), null, null, null,
+                r.toPublicJWK(), null, null, null, null, null, null, null);
+        JWTClaimsSet proofJwtBody;
+        try {
+            Map<String, Object> pj = Map.of("aud", "fake-aud", "nonce", TEST_CNONCE, "iss", "test-client");
+            proofJwtBody = JWTClaimsSet.parse(pj);
+        } catch (ParseException e) {
+            fail("failed to create a JWTClaimsSet");
+            throw new RuntimeException(e);
+        }
+        SignedJWT requestProofJWT = new SignedJWT(proofJwtHeader, proofJwtBody);
+        try {
+            JWSSigner rsaSigner = new RSASSASigner(r);
+            requestProofJWT.sign(rsaSigner);
+        } catch (JOSEException e) {
+            fail("failed to create a signer");
+        }
+        proof.setJwt(requestProofJWT.serialize());
         req.setProof(proof);
         return req;
     }
 
     @Test
-    public void getCredential_LDP_WithValidTransaction_Success() throws DataProviderExchangeException, JsonLDException, GeneralSecurityException, IOException {
+    public void getCredential_LDP_WithValidTransaction_Success() throws DataProviderExchangeException {
         request = createValidCredentialRequest(DEFAULT_FORMAT_LDP);
 
         when(parsedAccessToken.isActive()).thenReturn(true);
@@ -312,7 +342,7 @@ public class CertifyIssuanceServiceImplTest {
         request = createValidCredentialRequest(DEFAULT_FORMAT_LDP);
         request.setFormat("invalid format with spaces");
         InvalidRequestException ex = assertThrows(InvalidRequestException.class, () -> issuanceService.getCredential(request));
-        assertEquals(ErrorConstants.INVALID_VC_FORMAT, ex.getErrorCode());
+        assertEquals(ErrorConstants.UNSUPPORTED_VC_FORMAT, ex.getErrorCode());
     }
 
     @Test

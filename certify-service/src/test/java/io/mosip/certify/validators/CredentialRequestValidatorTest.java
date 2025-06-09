@@ -9,6 +9,8 @@ import org.junit.Test;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.CredentialDefinition;
 import io.mosip.certify.core.dto.CredentialRequest;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.Assert.*;
 
@@ -21,15 +23,23 @@ public class CredentialRequestValidatorTest {
         CredentialRequest cr = new CredentialRequest();
         cr.setFormat("fake-format");
         assertThrows(InvalidRequestException.class,
-                () -> factory.isValid(cr));
+                () -> CredentialRequestValidator.isValid(cr));
     }
 
     @Test
-    public void isValid_LDP_true() {
+    public void isValid_Ldp_VC() {
         CredentialRequest cr = new CredentialRequest();
         cr.setFormat(VCFormats.LDP_VC);
         cr.setCredential_definition(new CredentialDefinition());
-        assertTrue(factory.isValid(cr));
+        assertTrue(CredentialRequestValidator.isValid(cr));
+    }
+
+    @Test
+    public void isValid_Sd_Jwt() {
+        CredentialRequest cr = new CredentialRequest();
+        cr.setFormat(VCFormats.LDP_SD_JWT);
+        cr.setVct("vct-fake");
+        assertTrue(CredentialRequestValidator.isValid(cr));
     }
 
     @Test
@@ -42,6 +52,6 @@ public class CredentialRequestValidatorTest {
         cd.setType(List.of("VerifiableCredential", "MockDrivingLicense"));
         cd.setContext(List.of("https://example.context.page.sh"));
         cr.setCredential_definition(new CredentialDefinition());
-        assertTrue(factory.isValid(cr));
+        assertTrue(CredentialRequestValidator.isValid(cr));
     }
 }

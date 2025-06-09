@@ -305,7 +305,7 @@ public class VCIssuanceServiceImplTest {
         request.setFormat("invalid format with spaces"); // Should cause validator to fail
 
         InvalidRequestException ex = assertThrows(InvalidRequestException.class, () -> issuanceService.getCredential(request));
-        assertEquals(ErrorConstants.INVALID_VC_FORMAT, ex.getErrorCode());
+        assertEquals(ErrorConstants.UNSUPPORTED_VC_FORMAT, ex.getErrorCode());
     }
 
 
