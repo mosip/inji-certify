@@ -30,4 +30,5 @@ public class ErrorConstants {
     public static final String UNSUPPORTED_ALGORITHM = "unsupported_algorithm";
     public static final String INVALID_CERTIFICATE = "invalid_certificate";
     public static final String VERIFICATION_METHOD_GENERATION_FAILED = "verification_method_generation_failed";
+    public static final String MISSING_APPLICATION_OR_REFERENCE_ID = "missing_application_or_reference_id";
 }
