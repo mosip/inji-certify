@@ -10,6 +10,7 @@ import io.mosip.certify.repository.CredentialConfigRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 import java.util.Optional;
 
@@ -22,8 +23,11 @@ public class CredentialCacheKeyGenerator {
     @Autowired
     private CredentialConfigRepository credentialConfigRepository;
 
+    @Autowired
+    private CacheManager cacheManager;
+
     public String generateKeyFromConfigId(String configId) {
-        String key = null;
+        String key = "default-key";
         if (configId == null) {
             log.warn("generateKeyFromConfigId called with null configId for cache key generation.");
             return null;
@@ -34,7 +38,7 @@ public class CredentialCacheKeyGenerator {
            CredentialConfig config = configOpt.get();
             if (config.getCredentialType() == null || config.getContext() == null || config.getCredentialFormat() == null) {
 
-                return null;
+                return "default-key";
             }
             key = String.join(DELIMITER,
                     config.getCredentialType(),

@@ -10,6 +10,7 @@ import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
+import io.mosip.certify.core.exception.CredentialConfigException;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
 import io.mosip.certify.entity.CredentialConfig;
 import io.mosip.certify.entity.TemplateId;
@@ -117,7 +118,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         Optional<CredentialConfig> optional = credentialConfigRepository.findByConfigId(id);
 
         if(optional.isEmpty()) {
-            throw new CertifyException("Configuration not found with the provided id: " + id);
+            throw new CredentialConfigException("Configuration not found with the provided id: " + id);
         }
 
         CredentialConfig credentialConfig = optional.get();
@@ -141,7 +142,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
         if(optional.isEmpty()) {
             log.warn("Configuration not found for update with id: {}", id);
-            throw new CertifyException("Configuration not found with the provided id: " + id);
+            throw new CredentialConfigException("Configuration not found with the provided id: " + id);
         }
 
         CredentialConfig credentialConfig = optional.get();
@@ -171,7 +172,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
         if(optional.isEmpty()) {
             log.warn("Configuration not found for delete with id: {}", id);
-            throw new CertifyException("Configuration not found with the provided id: " + id);
+            throw new CredentialConfigException("Configuration not found with the provided id: " + id);
         }
 
         // The object is fetched once here.
