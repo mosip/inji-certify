@@ -56,8 +56,12 @@ public class StatusListUpdateBatchJob {
      * Scheduled method that runs every hour to update status lists
      * Uses @Scheduled with fixedRate to run every hour (3600000 ms)
      */
-    @Scheduled(fixedRate = 3600000) // Run every hour
-    @SchedulerLock(name = "updateStatusLists", lockAtMostFor = "55m", lockAtLeastFor = "5m")
+    @Scheduled(cron = "${mosip.certify.batch.status-list-update.cron-expression:0 0 * * * *}")
+    @SchedulerLock(
+            name = "updateStatusLists",
+            lockAtMostFor = "${mosip.certify.batch.status-list-update.lock-at-most-for:50m}",
+            lockAtLeastFor = "${mosip.certify.batch.status-list-update.lock-at-least-for:5m}"
+    )
     @Transactional
     public void updateStatusLists() {
         LockAssert.assertLocked();
@@ -287,3 +291,6 @@ public class StatusListUpdateBatchJob {
         }
     }
 }
+
+//H4sIAAAAAAAA_-3OMQ0AAAgDsEnAv1o87CEhrYImAHTmOgAAAAAAAAAAAAAAAAAAwCML9WKdBQBAAAA
+//H4sIAAAAAAAA_-3OMQkAAAgAMCMY2ehiBRF8tgSLAGAnvwMAAAAAAAAAAAAAwI36DgAAAMBoH-LL9QBAAAA
