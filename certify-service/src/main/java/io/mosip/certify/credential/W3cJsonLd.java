@@ -15,15 +15,19 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import com.apicatalog.jsonld.lang.Keywords;
 import com.danubetech.dataintegrity.DataIntegrityProof;
+import com.danubetech.dataintegrity.canonicalizer.*;
+import com.danubetech.dataintegrity.signer.DataIntegrityProofLdSigner;
 import com.danubetech.dataintegrity.signer.LdSigner;
+import com.danubetech.dataintegrity.signer.LdSignerRegistry;
+import com.danubetech.dataintegrity.suites.DataIntegrityProofDataIntegritySuite;
 import com.danubetech.dataintegrity.suites.DataIntegritySuite;
-import info.weboftrust.ldsignatures.canonicalizer.URDNA2015Canonicalizer;
+import com.danubetech.dataintegrity.suites.DataIntegritySuites;
+import com.danubetech.keyformats.jose.JWSAlgorithm;
+import foundation.identity.jsonld.JsonLDUtils;
 import io.mosip.certify.core.constants.*;
 import io.mosip.certify.proofgenerators.dip.KeymanagerByteSigner;
 import io.mosip.certify.vcformatters.VCFormatter;
@@ -46,10 +50,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class W3cJsonLd extends Credential{
-    public static final Map<String, String> cryptoSuiteCanonicalizerMap = Map.of(
-            SignatureAlg.EC_JCS_2019, "jcs",
-            SignatureAlg.EC_RDFC_2019, "urdna2015" // this is the canonicalizer name used by DanubeTech
-    );
     //TODO: This has to move to a factory
     @Autowired
     ProofGenerator proofGenerator;
@@ -57,6 +57,7 @@ public class W3cJsonLd extends Credential{
     SignatureServicev2 signatureService;
     @Value("${mosip.certify.data-provider-plugin.data-integrity.crypto-suite:}")
     private String dataIntegrityCryptoSuite;
+
     /**
      * Constructor for credentials
      *
@@ -127,20 +128,38 @@ public class W3cJsonLd extends Credential{
             LdProof ldProofWithJWS = proofGenerator.generateProof(vcLdProof, vcEncodedHash, keyReferenceDetails);
             ldProofWithJWS.addToJsonLDObject(j);
         } else {
+            LdSigner signer = LdSignerRegistry.getLdSignerByDataIntegritySuiteTerm(SignatureAlg.DATA_INTEGRITY);
+            KeymanagerByteSigner keymanagerByteSigner = new KeymanagerByteSigner(appID, refID,
+                    signatureService, signAlgorithm);
+            signer.setSigner(keymanagerByteSigner);
+            signer.setCryptosuite(dataIntegrityCryptoSuite);
             DataIntegrityProof d = DataIntegrityProof.builder()
                     .created(createDate)
                     .proofPurpose(VCDMConstants.ASSERTION_METHOD)
                     .cryptosuite(dataIntegrityCryptoSuite)
                     .verificationMethod(URI.create(publicKeyURL))
                     .type(SignatureAlg.DATA_INTEGRITY).build();
-            // Canonicalize the DI VC
-            // assume that DataIntegrityProof cryptoSuite always has a '-' in the name
-            com.danubetech.dataintegrity.canonicalizer.Canonicalizer c =
-                    com.danubetech.dataintegrity.canonicalizer.Canonicalizers
-                            .findDefaultCanonicalizerByAlgorithm(cryptoSuiteCanonicalizerMap.get(dataIntegrityCryptoSuite));
-            byte cano[];
+
+            DataIntegrityProof.Builder<? extends DataIntegrityProof.Builder<?>> ldProofBuilder = DataIntegrityProof.builder()
+                    .base(d)
+                    .defaultContexts(false);
+
             try {
-                cano = c.canonicalize(d, j);
+                signer.initialize(ldProofBuilder);
+            } catch (GeneralSecurityException e) {
+                throw new RuntimeException(e);
+            }
+
+            DataIntegrityProof ldProofOptions = DataIntegrityProof.fromJson(d.toJson());
+            if (ldProofOptions.getContexts() == null || ldProofOptions.getContexts().isEmpty()) {
+                JsonLDUtils.jsonLdAdd(ldProofOptions, Keywords.CONTEXT, j.getContexts().stream().map(JsonLDUtils::uriToString).filter(Objects::nonNull).toList());
+            }
+
+            com.danubetech.dataintegrity.canonicalizer.Canonicalizer canonicalizer = signer.getCanonicalizer(ldProofOptions);
+
+            byte[] canonicalizationResult;
+            try {
+                canonicalizationResult = canonicalizer.canonicalize(ldProofOptions, j);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             } catch (GeneralSecurityException e) {
@@ -148,21 +167,15 @@ public class W3cJsonLd extends Credential{
             } catch (JsonLDException e) {
                 throw new RuntimeException(e);
             }
-            // Call KeymanagerByteSigner to sign the data with d
-            KeymanagerByteSigner k = new KeymanagerByteSigner(dataIntegrityCryptoSuite, appID, refID,
-                    signatureService);
+
             try {
-                // TODO: replace null with the actual canonicalized byte input
-                byte[] output = k.sign(cano, dataIntegrityCryptoSuite); // already multibase bas58btc
-                String s = new String(output, StandardCharsets.UTF_8);
-                d.setJsonObjectKeyValue("proofValue", s);
-                // TODO: check source and destination of the JSONLD Object addition
-                d.addToJsonLDObject(j);
-                // convert the byte array to a string
+                signer.sign(ldProofBuilder, canonicalizationResult);
             } catch (GeneralSecurityException e) {
                 throw new RuntimeException(e);
             }
-            // add to the VC(j)
+
+            d = ldProofBuilder.build();
+            d.addToJsonLDObject(j);
         }
         VC.setCredential(j);
         VC.setFormat("ldp_vc");

@@ -1,11 +1,17 @@
 package io.mosip.certify.proofgenerators.dip;
 
 import com.danubetech.keyformats.crypto.ByteSigner;
+import com.danubetech.keyformats.jose.JWSAlgorithm;
 import com.google.common.collect.ImmutableMap;
+import io.ipfs.multibase.Multibase;
+import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.certify.core.exception.CertifyException;
+import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
+import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import io.mosip.kernel.signature.dto.SignRequestDtoV2;
+import io.mosip.kernel.signature.service.SignatureService;
 import io.mosip.kernel.signature.service.SignatureServicev2;
 import org.apache.logging.log4j.util.Strings;
 
@@ -28,7 +34,7 @@ public class KeymanagerByteSigner extends ByteSigner {
 
     private String appId;
     private String refId;
-    //    private String crytoSuite;
+    private String jwsAlgorithm;
     private SignatureServicev2 signatureService;
 
     public final static Set<String> SUPPORTED_ALGORITHMS = Set.of(SignatureAlg.EC_RDFC_2019);
@@ -36,18 +42,18 @@ public class KeymanagerByteSigner extends ByteSigner {
             SignatureAlg.EC_RDFC_2019, "ES256K");
 
     /**
-     * @param cryptoSuite -- DataIntegritySuite suite for VC signing, JWSAlgorithm can be found out
      * @param appId
      * @param refId
      * @param signatureService
+     * @param jwsAlgorithm
      */
-    public KeymanagerByteSigner(String cryptoSuite,
-                                String appId, String refId,
-                                SignatureServicev2 signatureService) {
-        super(cryptoSuite);
+    public KeymanagerByteSigner(String appId, String refId,
+                                SignatureServicev2 signatureService, String jwsAlgorithm) {
+        super(jwsAlgorithm);
         this.appId = appId;
         this.refId = refId;
         this.signatureService = signatureService;
+        this.jwsAlgorithm = jwsAlgorithm;
     }
 
     /**
@@ -60,7 +66,7 @@ public class KeymanagerByteSigner extends ByteSigner {
      *  supported or sufficient data is not provided
      */
     @Override
-    protected byte[] sign(byte[] bytes) throws GeneralSecurityException {
+    public byte[] sign(byte[] bytes) throws GeneralSecurityException {
         if (Strings.isEmpty(appId) || Strings.isEmpty(refId)) {
             throw new CertifyException(ErrorConstants.MISSING_APPLICATION_OR_REFERENCE_ID);
         }
@@ -69,11 +75,11 @@ public class KeymanagerByteSigner extends ByteSigner {
         s.setApplicationId(appId);
         s.setReferenceId(refId);
         // TODO: Get the relevant key from the Keymanager based on appId and refId
-        s.setSignAlgorithm("ES256");
+        s.setSignAlgorithm(jwsAlgorithm);
         s.setDataToSign(Base64.getUrlEncoder().encodeToString(bytes));
         s.setResponseEncodingFormat("base58btc");
         String sign = signatureService.signv2(s).getSignature();
-        return sign.getBytes(StandardCharsets.UTF_8);
+        return Multibase.decode(sign);
         // business logic to call keymanager correctly based on appId, referenceId,
         //  algo, format and spit out the signature
     }
