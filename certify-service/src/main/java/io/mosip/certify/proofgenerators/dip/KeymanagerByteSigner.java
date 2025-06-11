@@ -37,10 +37,6 @@ public class KeymanagerByteSigner extends ByteSigner {
     private String jwsAlgorithm;
     private SignatureServicev2 signatureService;
 
-    public final static Set<String> SUPPORTED_ALGORITHMS = Set.of(SignatureAlg.EC_RDFC_2019);
-    public final static Map<String, String> CRYPTO_SUITE_TO_JWA_ALGO = ImmutableMap.of(
-            SignatureAlg.EC_RDFC_2019, "ES256K");
-
     /**
      * @param appId
      * @param refId

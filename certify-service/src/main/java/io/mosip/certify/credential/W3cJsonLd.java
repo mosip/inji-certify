@@ -19,17 +19,13 @@ import java.util.*;
 
 import com.apicatalog.jsonld.lang.Keywords;
 import com.danubetech.dataintegrity.DataIntegrityProof;
-import com.danubetech.dataintegrity.canonicalizer.*;
-import com.danubetech.dataintegrity.signer.DataIntegrityProofLdSigner;
 import com.danubetech.dataintegrity.signer.LdSigner;
 import com.danubetech.dataintegrity.signer.LdSignerRegistry;
-import com.danubetech.dataintegrity.suites.DataIntegrityProofDataIntegritySuite;
-import com.danubetech.dataintegrity.suites.DataIntegritySuite;
-import com.danubetech.dataintegrity.suites.DataIntegritySuites;
-import com.danubetech.keyformats.jose.JWSAlgorithm;
 import foundation.identity.jsonld.JsonLDUtils;
 import io.mosip.certify.core.constants.*;
 import io.mosip.certify.proofgenerators.dip.KeymanagerByteSigner;
+import io.mosip.certify.proofgenerators.dip.KeymanagerByteSignerFactory;
+import io.mosip.certify.utils.CredentialUtils;
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.kernel.signature.service.SignatureService;
 import io.mosip.kernel.signature.service.SignatureServicev2;
@@ -116,66 +112,24 @@ public class W3cJsonLd extends Credential{
                     .created(createDate).proofPurpose(VCDMConstants.ASSERTION_METHOD)
                     .verificationMethod(URI.create(publicKeyURL))
                     .build();
-            Canonicalizer canonicalizer = proofGenerator.getCanonicalizer();
-            byte[] vcHashBytes;
-            try {
-                vcHashBytes = canonicalizer.canonicalize(vcLdProof, j);
-            } catch (IOException | GeneralSecurityException | JsonLDException e) {
-                log.error("Error during canonicalization", e.getMessage());
-                throw new CertifyException("Error during canonicalization");
-            }
-            String vcEncodedHash = Base64.getUrlEncoder().encodeToString(vcHashBytes);
-            LdProof ldProofWithJWS = proofGenerator.generateProof(vcLdProof, vcEncodedHash, keyReferenceDetails);
+            LdProof ldProofWithJWS = CredentialUtils.generateLdProof(vcLdProof, j,
+                    keyReferenceDetails, proofGenerator);
             ldProofWithJWS.addToJsonLDObject(j);
         } else {
             LdSigner signer = LdSignerRegistry.getLdSignerByDataIntegritySuiteTerm(SignatureAlg.DATA_INTEGRITY);
-            KeymanagerByteSigner keymanagerByteSigner = new KeymanagerByteSigner(appID, refID,
-                    signatureService, signAlgorithm);
+            KeymanagerByteSigner keymanagerByteSigner = KeymanagerByteSignerFactory.getInstance(appID, refID, signatureService, signAlgorithm);
             signer.setSigner(keymanagerByteSigner);
             signer.setCryptosuite(dataIntegrityCryptoSuite);
-            DataIntegrityProof d = DataIntegrityProof.builder()
+
+            DataIntegrityProof dataIntegrityProof = DataIntegrityProof.builder()
                     .created(createDate)
                     .proofPurpose(VCDMConstants.ASSERTION_METHOD)
                     .cryptosuite(dataIntegrityCryptoSuite)
                     .verificationMethod(URI.create(publicKeyURL))
                     .type(SignatureAlg.DATA_INTEGRITY).build();
 
-            DataIntegrityProof.Builder<? extends DataIntegrityProof.Builder<?>> ldProofBuilder = DataIntegrityProof.builder()
-                    .base(d)
-                    .defaultContexts(false);
-
-            try {
-                signer.initialize(ldProofBuilder);
-            } catch (GeneralSecurityException e) {
-                throw new RuntimeException(e);
-            }
-
-            DataIntegrityProof ldProofOptions = DataIntegrityProof.fromJson(d.toJson());
-            if (ldProofOptions.getContexts() == null || ldProofOptions.getContexts().isEmpty()) {
-                JsonLDUtils.jsonLdAdd(ldProofOptions, Keywords.CONTEXT, j.getContexts().stream().map(JsonLDUtils::uriToString).filter(Objects::nonNull).toList());
-            }
-
-            com.danubetech.dataintegrity.canonicalizer.Canonicalizer canonicalizer = signer.getCanonicalizer(ldProofOptions);
-
-            byte[] canonicalizationResult;
-            try {
-                canonicalizationResult = canonicalizer.canonicalize(ldProofOptions, j);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            } catch (GeneralSecurityException e) {
-                throw new RuntimeException(e);
-            } catch (JsonLDException e) {
-                throw new RuntimeException(e);
-            }
-
-            try {
-                signer.sign(ldProofBuilder, canonicalizationResult);
-            } catch (GeneralSecurityException e) {
-                throw new RuntimeException(e);
-            }
-
-            d = ldProofBuilder.build();
-            d.addToJsonLDObject(j);
+            dataIntegrityProof = CredentialUtils.generateDataIntegrityProof(dataIntegrityProof, j, signer);
+            dataIntegrityProof.addToJsonLDObject(j);
         }
         VC.setCredential(j);
         VC.setFormat("ldp_vc");
