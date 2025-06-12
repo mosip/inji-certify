@@ -113,12 +113,11 @@ public class CredentialConfigControllerTest {
 
     @Test
     public void deleteExistingCredentialConfiguration_Success() throws Exception {
-        String response = "Configuration deleted with id: 1";
-        Mockito.when(credentialConfigurationService.deleteCredentialConfigurationById(Mockito.anyString())).thenReturn(response);
+        Mockito.when(credentialConfigurationService.deleteCredentialConfigurationById(Mockito.anyString())).thenReturn("1");
 
         mockMvc.perform(delete("/credentials/configurations/1"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(response));
+                .andExpect(content().string("Deleted configuration with id: 1"));
     }
 
         @Test
