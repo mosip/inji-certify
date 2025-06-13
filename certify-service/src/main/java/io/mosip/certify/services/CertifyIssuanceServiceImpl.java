@@ -69,7 +69,12 @@ import java.util.*;
 @ConditionalOnProperty(value = "mosip.certify.plugin-mode", havingValue = "DataProvider")
 public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
-    public static final Map<String, List<String>> keyChooser = Map.of(SignatureAlg.RSA_SIGNATURE_SUITE_2018, List.of(Constants.CERTIFY_VC_SIGN_RSA, Constants.EMPTY_REF_ID), SignatureAlg.ED25519_SIGNATURE_SUITE_2018, List.of(Constants.CERTIFY_VC_SIGN_ED25519, Constants.ED25519_REF_ID), SignatureAlg.ED25519_SIGNATURE_SUITE_2020, List.of(Constants.CERTIFY_VC_SIGN_ED25519, Constants.ED25519_REF_ID), SignatureAlg.EC_K1_2016, List.of(Constants.CERTIFY_VC_SIGN_EC_K1, Constants.EC_SECP256K1_SIGN), SignatureAlg.EC_SECP256K1_2019, List.of(Constants.CERTIFY_VC_SIGN_EC_K1, Constants.EC_SECP256K1_SIGN));
+    public static final Map<String, List<String>> keyChooser = Map.of(
+        SignatureAlg.RSA_SIGNATURE_SUITE_2018, List.of(Constants.CERTIFY_VC_SIGN_RSA, Constants.EMPTY_REF_ID), 
+        SignatureAlg.ED25519_SIGNATURE_SUITE_2018, List.of(Constants.CERTIFY_VC_SIGN_ED25519, Constants.ED25519_REF_ID), 
+        SignatureAlg.ED25519_SIGNATURE_SUITE_2020, List.of(Constants.CERTIFY_VC_SIGN_ED25519, Constants.ED25519_REF_ID), 
+        SignatureAlg.EC_K1_2016, List.of(Constants.CERTIFY_VC_SIGN_EC_K1, Constants.EC_SECP256K1_SIGN), 
+        SignatureAlg.EC_SECP256K1_2019, List.of(Constants.CERTIFY_VC_SIGN_EC_K1, Constants.EC_SECP256K1_SIGN));
     @Value("${mosip.certify.data-provider-plugin.issuer.vc-sign-algo:Ed25519Signature2020}")
     private String vcSignAlgorithm;
     @Value("#{${mosip.certify.key-values}}")
@@ -160,20 +165,23 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         }
 
         if(credentialMetadata == null) {
-            log.error("No credential mapping found forthe provided scope {}", scopeClaim);
+            log.error("No credential mapping found for the provided scope {}", scopeClaim);
             throw new CertifyException(ErrorConstants.INVALID_SCOPE);
         }
 
         // 3. Proof Validation
         ProofValidator proofValidator = proofValidatorFactory.getProofValidator(credentialRequest.getProof().getProof_type());
-        if(!proofValidator.validate((String) parsedAccessToken.getClaims().get(Constants.CLIENT_ID), getValidClientNonce(), credentialRequest.getProof())) {
+        if(!proofValidator.validate((String) parsedAccessToken.getClaims().get(Constants.CLIENT_ID), getValidClientNonce(), 
+                                    credentialRequest.getProof())) {
             throw new CertifyException(ErrorConstants.INVALID_PROOF);
         }
 
         // 4. Get VC from configured plugin implementation
-        VCResult<?> vcResult = getVerifiableCredential(credentialRequest, credentialMetadata, proofValidator.getKeyMaterial(credentialRequest.getProof()));
+        VCResult<?> vcResult = getVerifiableCredential(credentialRequest, credentialMetadata, 
+                                                       proofValidator.getKeyMaterial(credentialRequest.getProof()));
 
-        auditWrapper.logAudit(Action.VC_ISSUANCE, ActionStatus.SUCCESS, AuditHelper.buildAuditDto(parsedAccessToken.getAccessTokenHash(), "accessTokenHash"), null);
+        auditWrapper.logAudit(Action.VC_ISSUANCE, ActionStatus.SUCCESS, 
+                              AuditHelper.buildAuditDto(parsedAccessToken.getAccessTokenHash(), "accessTokenHash"), null);
         return getCredentialResponse(credentialRequest.getFormat(), vcResult);
     }
 
