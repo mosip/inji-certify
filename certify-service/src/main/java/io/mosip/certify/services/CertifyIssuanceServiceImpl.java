@@ -142,30 +142,31 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
         // 1. Credential Request validation
         boolean isValidCredentialRequest = CredentialRequestValidator.isValid(credentialRequest);
-        if (!isValidCredentialRequest) {
+        if(!isValidCredentialRequest) {
             throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
         }
 
-        if (!parsedAccessToken.isActive()) throw new NotAuthenticatedException();
+        if(!parsedAccessToken.isActive())
+            throw new NotAuthenticatedException();
         // 2. Scope Validation
         String scopeClaim = (String) parsedAccessToken.getClaims().getOrDefault("scope", "");
         CredentialMetadata credentialMetadata = null;
-        for (String scope : scopeClaim.split(Constants.SPACE)) {
+        for(String scope : scopeClaim.split(Constants.SPACE)) {
             Optional<CredentialMetadata> result = getScopeCredentialMapping(scope, credentialRequest.getFormat());
-            if (result.isPresent()) {
+            if(result.isPresent()) {
                 credentialMetadata = result.get(); //considering only first credential scope
                 break;
             }
         }
 
-        if (credentialMetadata == null) {
-            log.error("No credential mapping found for the provided scope {}", scopeClaim);
+        if(credentialMetadata == null) {
+            log.error("No credential mapping found forthe provided scope {}", scopeClaim);
             throw new CertifyException(ErrorConstants.INVALID_SCOPE);
         }
 
         // 3. Proof Validation
         ProofValidator proofValidator = proofValidatorFactory.getProofValidator(credentialRequest.getProof().getProof_type());
-        if (!proofValidator.validate((String) parsedAccessToken.getClaims().get(Constants.CLIENT_ID), getValidClientNonce(), credentialRequest.getProof())) {
+        if(!proofValidator.validate((String) parsedAccessToken.getClaims().get(Constants.CLIENT_ID), getValidClientNonce(), credentialRequest.getProof())) {
             throw new CertifyException(ErrorConstants.INVALID_PROOF);
         }
 
@@ -178,14 +179,14 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     @Override
     public Map<String, Object> getCredentialIssuerMetadata(String version) {
-        if (issuerMetadata.containsKey(version)) {
+        if(issuerMetadata.containsKey(version)) {
             return issuerMetadata.get(version);
-        } else if (version != null && version.equals("vd12")) {
+        } else if(version != null && version.equals("vd12")) {
             LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
             Map<String, Object> vd12IssuerMetadata = convertLatestToVd12(originalIssuerMetadata);
             issuerMetadata.put("vd12", (LinkedHashMap<String, Object>) vd12IssuerMetadata);
             return vd12IssuerMetadata;
-        } else if (version != null && version.equals("vd11")) {
+        } else if(version != null && version.equals("vd11")) {
             LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
             Map<String, Object> vd11IssuerMetadata = convertLatestToVd11(originalIssuerMetadata);
             issuerMetadata.put("vd11", (LinkedHashMap<String, Object>) vd11IssuerMetadata);
@@ -196,7 +197,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     @Override
     public Map<String, Object> getDIDDocument() {
-        if (didDocument != null) return didDocument;
+        if(didDocument != null) return didDocument;
 
         KeyPairGenerateResponseDto keyPairGenerateResponseDto = keymanagerService.getCertificate(keyChooser.get(vcSignAlgorithm).getFirst(), Optional.of(keyChooser.get(vcSignAlgorithm).getLast()));
         String certificateString = keyPairGenerateResponseDto.getCertificate();
@@ -209,13 +210,13 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         // Create a list to hold the transformed credentials
         List<Map<String, Object>> credentialsList = new ArrayList<>();
 
-        // Check if the original config contains 'credential_configurations_supported'
-        if (vciMetadata.containsKey("credential_configurations_supported")) {
+        // Check ifthe original config contains 'credential_configurations_supported'
+        if(vciMetadata.containsKey("credential_configurations_supported")) {
             // Cast the value to a Map
             Map<String, Object> originalCredentials = (Map<String, Object>) vciMetadata.get("credential_configurations_supported");
 
             // Iterate through each credential
-            for (Map.Entry<String, Object> entry : originalCredentials.entrySet()) {
+            for(Map.Entry<String, Object> entry : originalCredentials.entrySet()) {
                 // Cast the credential configuration
                 Map<String, Object> credConfig = (Map<String, Object>) entry.getValue();
 
@@ -226,20 +227,20 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 transformedCredential.put("id", entry.getKey());
 
                 // Rename 'credential_signing_alg_values_supported' to 'cryptographic_suites_supported'
-                if (transformedCredential.containsKey("credential_signing_alg_values_supported")) {
+                if(transformedCredential.containsKey("credential_signing_alg_values_supported")) {
                     transformedCredential.put("cryptographic_suites_supported", transformedCredential.remove("credential_signing_alg_values_supported"));
                 }
 
                 // Modify proof_types_supported
-                if (transformedCredential.containsKey("proof_types_supported")) {
+                if(transformedCredential.containsKey("proof_types_supported")) {
                     Map<String, Object> proofTypes = (Map<String, Object>) transformedCredential.get("proof_types_supported");
                     transformedCredential.put("proof_types_supported", proofTypes.keySet());
                 }
 
-                if (transformedCredential.containsKey("display")) {
+                if(transformedCredential.containsKey("display")) {
                     List<Map<String, Object>> displayMapList = new ArrayList<>((List<Map<String, Object>>) transformedCredential.get("display"));
                     List<Map<String, Object>> newDisplayMapList = new ArrayList<>();
-                    for (Map<String, Object> map : displayMapList) {
+                    for(Map<String, Object> map : displayMapList) {
                         Map<String, Object> displayMap = new HashMap<>(map);
                         displayMap.remove("background_image");
                         newDisplayMapList.add(displayMap);
@@ -247,7 +248,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     transformedCredential.put("display", newDisplayMapList);
                 }
 
-                // Remove 'order' if it exists
+                // Remove 'order' ifit exists
                 transformedCredential.remove("order");
 
                 // Add the transformed credential to the list
@@ -270,7 +271,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     private Map<String, Object> convertLatestToVd12(LinkedHashMap<String, Object> vciMetadata) {
         // Create a new map to store the transformed configuration
-        if (vciMetadata.containsKey("credential_configurations_supported")) {
+        if(vciMetadata.containsKey("credential_configurations_supported")) {
             LinkedHashMap<String, Object> supportedCredentials = (LinkedHashMap<String, Object>) vciMetadata.get("credential_configurations_supported");
             Map<String, Object> transformedMap = transformCredentialConfiguration(supportedCredentials);
             vciMetadata.put("credentials_supported", transformedMap);
@@ -287,28 +288,28 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     private static Map<String, Object> transformCredentialConfiguration(LinkedHashMap<String, Object> originalConfig) {
         Map<String, Object> transformedConfig = new LinkedHashMap<>();
 
-        for (Map.Entry<String, Object> entry : originalConfig.entrySet()) {
+        for(Map.Entry<String, Object> entry : originalConfig.entrySet()) {
             Map<String, Object> credentialDetails = (Map<String, Object>) entry.getValue();
 
             // Create a new map to store modified credential details
             Map<String, Object> transformedCredential = new LinkedHashMap<>(credentialDetails);
 
             // Replace 'credential_signing_alg_values_supported' with 'cryptographic_suites_supported'
-            if (transformedCredential.containsKey("credential_signing_alg_values_supported")) {
+            if(transformedCredential.containsKey("credential_signing_alg_values_supported")) {
                 Object signingAlgs = transformedCredential.remove("credential_signing_alg_values_supported");
                 transformedCredential.put("cryptographic_suites_supported", signingAlgs);
             }
 
             // Modify proof_types_supported
-            if (transformedCredential.containsKey("proof_types_supported")) {
+            if(transformedCredential.containsKey("proof_types_supported")) {
                 Map<String, Object> proofTypes = (Map<String, Object>) transformedCredential.get("proof_types_supported");
                 transformedCredential.put("proof_types_supported", proofTypes.keySet());
             }
 
-            if (transformedCredential.containsKey("display")) {
+            if(transformedCredential.containsKey("display")) {
                 List<Map<String, Object>> displayMapList = new ArrayList<>((List<Map<String, Object>>) transformedCredential.get("display"));
                 List<Map<String, Object>> newDisplayMapList = new ArrayList<>();
-                for (Map<String, Object> map : displayMapList) {
+                for(Map<String, Object> map : displayMapList) {
                     Map<String, Object> displayMap = new HashMap<>(map);
                     displayMap.remove("background_image");
                     newDisplayMapList.add(displayMap);
@@ -343,16 +344,16 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     Map<String, Object> templateParams = new HashMap<>();
                     templateParams.put(Constants.TEMPLATE_NAME, CredentialUtils.getTemplateName(vcRequestDto));
                     templateParams.put(Constants.ISSUER_URI, issuerURI);
-                    if (statusListEnabled) {
+                    if(statusListEnabled) {
                         addCredentialStatus(jsonObject);
                     }
-                    if (!StringUtils.isEmpty(renderTemplateId)) {
+                    if(!StringUtils.isEmpty(renderTemplateId)) {
                         templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
                     }
                     jsonObject.put("_holderId", holderId);
                     String unSignedVC = vcFormatter.format(jsonObject, templateParams);
                     Map<String, String> signerSettings = new HashMap<>();
-                    // NOTE: This is a quasi implementation to add support for multi-tenancy.
+                    // NOTE: This is a quasi implementation to add support formulti-tenancy.
                     signerSettings.put(Constants.APPLICATION_ID, keyChooser.get(vcSignAlgorithm).getFirst());
                     signerSettings.put(Constants.REFERENCE_ID, keyChooser.get(vcSignAlgorithm).getLast());
                     vcResult = vcSigner.attachSignature(unSignedVC, signerSettings);
@@ -367,7 +368,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
         }
 
-        if (vcResult != null && vcResult.getCredential() != null) return vcResult;
+        if(vcResult != null && vcResult.getCredential() != null) return vcResult;
 
         log.error("Failed to generate VC : {}", vcResult);
         auditWrapper.logAudit(Action.VC_ISSUANCE, ActionStatus.ERROR, AuditHelper.buildAuditDto(parsedAccessToken.getAccessTokenHash(), "accessTokenHash"), null);
@@ -389,13 +390,13 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         LinkedHashMap<String, Object> supportedCredentials = (LinkedHashMap<String, Object>) vciMetadata.get("credential_configurations_supported");
         Optional<Map.Entry<String, Object>> result = supportedCredentials.entrySet().stream().filter(cm -> ((LinkedHashMap<String, Object>) cm.getValue()).get("scope").equals(scope)).findFirst();
 
-        if (result.isPresent()) {
+        if(result.isPresent()) {
             LinkedHashMap<String, Object> metadata = (LinkedHashMap<String, Object>) result.get().getValue();
             CredentialMetadata credentialMetadata = new CredentialMetadata();
             credentialMetadata.setFormat((String) metadata.get("format"));
             credentialMetadata.setScope((String) metadata.get("scope"));
             credentialMetadata.setId(result.get().getKey());
-            if (format.equals(VCFormats.LDP_VC)) {
+            if(format.equals(VCFormats.LDP_VC)) {
                 LinkedHashMap<String, Object> credentialDefinition = (LinkedHashMap<String, Object>) metadata.get("credential_definition");
                 credentialMetadata.setTypes((List<String>) credentialDefinition.get("type"));
             }
@@ -405,10 +406,10 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     }
 
     private void validateLdpVcFormatRequest(CredentialRequest credentialRequest, CredentialMetadata credentialMetadata) {
-        if (!credentialRequest.getCredential_definition().getType().containsAll(credentialMetadata.getTypes()))
+        if(!credentialRequest.getCredential_definition().getType().containsAll(credentialMetadata.getTypes()))
             throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_VC_TYPE);
 
-        //TODO need to validate Credential_definition as JsonLD document, if invalid throw exception
+        //TODO need to validate Credential_definition as JsonLD document, ifinvalid throw exception
     }
 
     private String getValidClientNonce() {
@@ -419,7 +420,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         int cNonceExpire = (transaction == null) ? nonceExpireSeconds instanceof Long ? (int) (long) nonceExpireSeconds : (int) nonceExpireSeconds : transaction.getCNonceExpireSeconds();
         long issuedEpoch = (transaction == null) ? ((Instant) parsedAccessToken.getClaims().getOrDefault(JwtClaimNames.IAT, Instant.MIN)).getEpochSecond() : transaction.getCNonceIssuedEpoch();
 
-        if (cNonce == null || cNonceExpire <= 0 || (issuedEpoch + cNonceExpire) < LocalDateTime.now(ZoneOffset.UTC).toEpochSecond(ZoneOffset.UTC)) {
+        if(cNonce == null || cNonceExpire <= 0 || (issuedEpoch + cNonceExpire) < LocalDateTime.now(ZoneOffset.UTC).toEpochSecond(ZoneOffset.UTC)) {
             log.error("Client Nonce not found / expired in the access token, generate new cNonce");
             transaction = createVCITransaction();
             throw new InvalidNonceException(transaction.getCNonce(), transaction.getCNonceExpireSeconds());
@@ -441,7 +442,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Transactional
     private void addCredentialStatus(JSONObject jsonObject) {
         try {
-            log.info("Adding credential status for status list integration");
+            log.info("Adding credential status forstatus list integration");
 
             // Find or create a suitable status list
             StatusListCredential statusList = statusListCredentialService.findOrCreateStatusList(defaultStatusPurpose);
@@ -450,19 +451,19 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             long assignedIndex = statusListCredentialService.findNextAvailableIndex(statusList.getId());
 
             // If the current list is full, create a new one
-            if (assignedIndex == -1) {
+            if(assignedIndex == -1) {
                 log.info("Current status list is full, creating a new one");
                 statusList = statusListCredentialService.generateStatusListCredential(defaultStatusPurpose);
                 assignedIndex = statusListCredentialService.findNextAvailableIndex(statusList.getId());
 
-                if (assignedIndex == -1) {
+                if(assignedIndex == -1) {
                     log.error("Failed to get available index even from new status list");
                     throw new CertifyException("STATUS_LIST_INDEX_UNAVAILABLE");
                 }
             }
             Map<String, Object> indexedAttributes = extractIndexedAttributes(jsonObject);
 
-            // Create credential status object for VC
+            // Create credential status object forVC
             JSONObject credentialStatus = new JSONObject();
             String statusId = domainUrl + "/v1/certify/status-list/" + statusList.getId();
             credentialStatus.put("id", statusId + "#" + assignedIndex);
@@ -474,10 +475,10 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             // Add credential status to the VC data
             jsonObject.put("credentialStatus", credentialStatus);
 
-            // Extract credential details for ledger storage
+            // Extract credential details forledger storage
             String credentialType = extractCredentialType(jsonObject);
 
-            // Prepare status details for ledger
+            // Prepare status details forledger
             Map<String, Object> statusDetails = new HashMap<>();
             statusDetails.put("status_purpose", defaultStatusPurpose);
             statusDetails.put("status_value", false); // Initially not revoked
@@ -498,9 +499,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     private String extractCredentialType(JSONObject jsonObject) {
         try {
-            if (jsonObject.has("type")) {
+            if(jsonObject.has("type")) {
                 Object typeObj = jsonObject.get("type");
-                if (typeObj instanceof org.json.JSONArray) {
+                if(typeObj instanceof org.json.JSONArray) {
                     org.json.JSONArray typeArray = (org.json.JSONArray) typeObj;
                     // Return the last type (usually the specific credential type)
                     return typeArray.getString(typeArray.length() - 1);
@@ -520,12 +521,12 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         Configuration jsonPathConfig = Configuration.defaultConfiguration().addOptions(Option.SUPPRESS_EXCEPTIONS);
         Map<String, Object> indexedAttributes = new HashMap<>();
 
-        if (jsonObject == null) {
+        if(jsonObject == null) {
             return indexedAttributes;
         }
 
         Map<String, String> indexedMappings = indexedAttributesConfig.getIndexedMappings();
-        if (indexedMappings.isEmpty()) {
+        if(indexedMappings.isEmpty()) {
             log.info("No indexed mappings configured, returning empty attributes");
             return indexedAttributes;
         }
@@ -533,19 +534,19 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
         try {
 
-            // Convert credential subject to JSON string for JsonPath processing
+            // Convert credential subject to JSON string forJsonPath processing
             String sourceJsonString = jsonObject.toString();
 
-            for (Map.Entry<String, String> entry : indexedMappings.entrySet()) {
+            for(Map.Entry<String, String> entry : indexedMappings.entrySet()) {
                 String targetKey = entry.getKey();
                 String pathsConfig = entry.getValue();
 
 
-                // Support multiple paths separated by pipe (|) for fallback
+                // Support multiple paths separated by pipe (|) forfallback
                 String[] paths = pathsConfig.split("\\|");
                 Object extractedValue = null;
 
-                for (String jsonPath : paths) {
+                for(String jsonPath : paths) {
                     jsonPath = jsonPath.trim();
 
                     try {
@@ -555,26 +556,26 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                                 .read(jsonPath);
 
                     } catch (Exception e) {
-                        log.warn("Error extracting value for path '{}' and key '{}': {}",
+                        log.warn("Error extracting value forpath '{}' and key '{}': {}",
                                 jsonPath, targetKey, e.getMessage());
                     }
                 }
 
                 // Handle different types of extracted values
-                if (extractedValue != null) {
+                if(extractedValue != null) {
                     Object processedValue = processExtractedValue(extractedValue);
                     indexedAttributes.put(targetKey, processedValue);
                     log.info("Added processed value '{}' to indexed attributes under key '{}'",
                             processedValue, targetKey);
                 } else {
-                    log.info("No value extracted for key '{}'; skipping indexing.", targetKey);
+                    log.info("No value extracted forkey '{}'; skipping indexing.", targetKey);
                 }
             }
 
             log.info("Completed extraction and processing of indexed attributes.");
 
         } catch (Exception e) {
-            log.error("Error processing credential subject for indexed attributes: {}", e.getMessage(), e);
+            log.error("Error processing credential subject forindexed attributes: {}", e.getMessage(), e);
         }
 
 
@@ -585,24 +586,24 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
      * Process extracted values to handle complex types appropriately
      */
     private Object processExtractedValue(Object extractedValue) {
-        if (extractedValue == null) {
+        if(extractedValue == null) {
             return null;
         }
 
-        if (extractedValue instanceof List) {
+        if(extractedValue instanceof List) {
             List<?> list = (List<?>) extractedValue;
-            if (list.isEmpty()) {
+            if(list.isEmpty()) {
                 return null;
             }
-            if (list.size() == 1) {
+            if(list.size() == 1) {
                 return list.get(0);
             }
             return extractedValue; // Keep as array
         }
-        else if (extractedValue instanceof Map) {
+        else if(extractedValue instanceof Map) {
             return extractedValue;
         }
-        else if (extractedValue instanceof String) {
+        else if(extractedValue instanceof String) {
             String stringValue = (String) extractedValue;
             return stringValue.trim().isEmpty() ? null : stringValue;
         }
@@ -627,7 +628,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             ledger.setCredentialStatusDetails(statusDetailsList);
 
             ledgerRepository.save(ledger);
-            log.info("Ledger entry stored for credential: {}", credentialId);
+            log.info("Ledger entry stored forcredential: {}", credentialId);
         } catch (Exception e) {
             log.error("Error storing ledger entry", e);
             throw new RuntimeException("Failed to store ledger entry", e);
