@@ -8,6 +8,7 @@ import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.entity.StatusListCredential;
 import io.mosip.certify.repository.StatusListAvailableIndicesRepository;
 import io.mosip.certify.repository.StatusListCredentialRepository;
+import io.mosip.certify.utils.BitStringStatusListUtils;
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.certify.vcsigners.VCSigner;
 import jakarta.persistence.EntityManager;
@@ -43,9 +44,6 @@ public class StatusListCredentialService {
 
     @Autowired
     private VCSigner vcSigner;
-
-    @Autowired
-    private BitStringStatusListService bitStringStatusListService;
 
     @Autowired
     private StatusListAvailableIndicesRepository statusListAvailableIndicesRepository;
@@ -179,7 +177,7 @@ public class StatusListCredentialService {
             credentialSubject.put("statusPurpose", statusPurpose);
 
             // Create empty encoded list (all 0s)
-            String encodedList = bitStringStatusListService.createEmptyEncodedList(defaultCapacity);
+            String encodedList = BitStringStatusListUtils.createEmptyEncodedList(defaultCapacity);
             credentialSubject.put("encodedList", encodedList);
 
             statusListData.put("credentialSubject", credentialSubject);

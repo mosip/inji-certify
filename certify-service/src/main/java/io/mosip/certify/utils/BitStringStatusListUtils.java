@@ -1,23 +1,26 @@
-package io.mosip.certify.services;
+package io.mosip.certify.utils;
 
-import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.utils.BitStringUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
+
 /**
- * Service to handle bit string operations for status lists
- * This service is responsible for manipulating the encoded status list
+ * Utility class to handle bit string operations for status lists
+ * This utility provides static methods for manipulating encoded status lists
  */
 @Slf4j
-@Service
-public class BitStringStatusListService {
+public final class BitStringStatusListUtils {
+
+    // Private constructor to prevent instantiation
+    private BitStringStatusListUtils() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+    }
+
     /**
      * Generate encoded list from a map of index-status pairs
      *
@@ -25,7 +28,7 @@ public class BitStringStatusListService {
      * @param capacity Total capacity of the status list
      * @return Base64URL encoded compressed bitstring
      */
-    public String generateEncodedList(Map<Long, Boolean> statusMap, long capacity) {
+    public static String generateEncodedList(Map<Long, Boolean> statusMap, long capacity) {
         log.info("Generating encoded list from status map with {} entries for capacity {}",
                 statusMap.size(), capacity);
 
@@ -64,6 +67,7 @@ public class BitStringStatusListService {
             throw new CertifyException("ENCODED_LIST_GENERATION_FAILED");
         }
     }
+
     /**
      * Creates an empty encoded list (all bits set to 0) according to W3C Bitstring Status List v1.0
      *
@@ -71,7 +75,7 @@ public class BitStringStatusListService {
      * @return Multibase-encoded base64url (with no padding) string representing the GZIP-compressed bit array
      * @throws RuntimeException if compression fails
      */
-    public String createEmptyEncodedList(long capacity) {
+    public static String createEmptyEncodedList(long capacity) {
         log.debug("Creating empty encoded list with capacity {}", capacity);
 
         // Ensure minimum size of 16KB (131,072 bits) as per specification
@@ -103,7 +107,7 @@ public class BitStringStatusListService {
      * Convert bitstring boolean array to byte array
      * Each byte contains 8 bits
      */
-    private byte[] convertBitstringToByteArray(boolean[] bitstring) {
+    private static byte[] convertBitstringToByteArray(boolean[] bitstring) {
         int byteLength = (bitstring.length + 7) / 8; // Round up to nearest byte
         byte[] byteArray = new byte[byteLength];
 
@@ -121,7 +125,7 @@ public class BitStringStatusListService {
     /**
      * Compress byte array using GZIP compression
      */
-    private byte[] compressByteArray(byte[] input) throws IOException {
+    private static byte[] compressByteArray(byte[] input) throws IOException {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              GZIPOutputStream gzipOut = new GZIPOutputStream(baos)) {
 
@@ -131,5 +135,4 @@ public class BitStringStatusListService {
             return baos.toByteArray();
         }
     }
-
 }

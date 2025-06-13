@@ -5,6 +5,7 @@ import io.mosip.certify.entity.CredentialStatusTransaction;
 import io.mosip.certify.entity.StatusListCredential;
 import io.mosip.certify.repository.CredentialStatusTransactionRepository;
 import io.mosip.certify.repository.StatusListCredentialRepository;
+import io.mosip.certify.utils.BitStringStatusListUtils;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.core.LockAssert;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
@@ -33,9 +34,6 @@ public class StatusListUpdateBatchJob {
 
     @Autowired
     private StatusListCredentialRepository statusListRepository;
-
-    @Autowired
-    private BitStringStatusListService bitStringStatusListService;
 
     @Autowired
     private StatusListCredentialService statusListCredentialService;
@@ -196,7 +194,7 @@ public class StatusListUpdateBatchJob {
             Map<Long, Boolean> updatedStatuses = applyTransactionUpdates(currentStatuses, transactions);
 
             // Generate new encoded list
-            String newEncodedList = bitStringStatusListService.generateEncodedList(updatedStatuses, statusListCredential.getCapacity());
+            String newEncodedList = BitStringStatusListUtils.generateEncodedList(updatedStatuses, statusListCredential.getCapacity());
 
             // Update the status list credential with new encoded list
             updateStatusListCredential(statusListCredential, newEncodedList);
