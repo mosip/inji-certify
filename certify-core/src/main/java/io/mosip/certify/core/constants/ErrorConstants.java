@@ -30,4 +30,10 @@ public class ErrorConstants {
     public static final String UNSUPPORTED_ALGORITHM = "unsupported_algorithm";
     public static final String INVALID_CERTIFICATE = "invalid_certificate";
     public static final String VERIFICATION_METHOD_GENERATION_FAILED = "verification_method_generation_failed";
+    public static final String STATUS_LIST_NOT_FOUND = "status_list_not_found_for_the_given_id";
+    public static final String STATUS_RETRIEVAL_ERROR = "error_parsing_status_list_credential_document";
+    public static final String INDEX_OUT_OF_BOUNDS = "requested_index_is_out_of_bounds_for_status_list_capacity";
+    public static final String INVALID_FRAGMENT = "invalid_fragment_format_must_be_a_valid_number";
+
+
 }

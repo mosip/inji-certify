@@ -1,7 +1,9 @@
 package io.mosip.certify.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.entity.StatusListCredential;
 import io.mosip.certify.repository.StatusListAvailableIndicesRepository;
@@ -77,6 +79,41 @@ public class StatusListCredentialService {
 
     @Value("${mosip.certify.statuslist.usable-capacity-percentage:50}")
     private long usableCapacityPercentage;
+
+
+    public String getStatusListCredential(String id) throws CertifyException {
+        log.info("Processing status list credential request for ID: {}", id);
+
+        try {
+            // Find the status list credential by ID
+            Optional<StatusListCredential> statusListOpt = findStatusListById(id);
+
+            if (statusListOpt.isEmpty()) {
+                log.warn("Status list credential not found for ID: {}", id);
+                throw new CertifyException(ErrorConstants.STATUS_LIST_NOT_FOUND);
+            }
+
+            StatusListCredential statusList = statusListOpt.get();
+
+            // Parse the VC document
+            JSONObject vcDocument;
+            try {
+                vcDocument = new JSONObject(statusList.getVcDocument());
+            } catch (Exception e) {
+                log.error("Error parsing VC document for status list ID: {}", id, e);
+                throw new CertifyException(ErrorConstants.STATUS_RETRIEVAL_ERROR);
+            }
+
+            log.info("Successfully retrieved status list credential for ID: {}", id);
+
+            // Convert JSONObject to Map for consistent return type
+            return vcDocument.toString();
+
+        } catch (Exception e) {
+            log.error("Unexpected error retrieving status list credential with ID: {}", id, e);
+            throw new CertifyException(ErrorConstants.STATUS_RETRIEVAL_ERROR);
+        }
+    }
 
     /**
      * Find status list credential by ID

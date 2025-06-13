@@ -13,15 +13,6 @@ import java.util.List;
 import java.util.Map;
 
 @Entity
-@Table(name = "ledger",
-        uniqueConstraints = {
-                @UniqueConstraint(name = "uq_ledger_tracked_credential_id", columnNames = "credential_id")
-        },
-        indexes = {
-                @Index(name = "idx_ledger_issuer_id", columnList = "issuer_id"),
-                @Index(name = "idx_gin_ledger_indexed_attrs", columnList = "indexed_attributes")
-        }
-)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

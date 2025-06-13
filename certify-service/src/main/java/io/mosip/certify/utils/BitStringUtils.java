@@ -1,6 +1,6 @@
 package io.mosip.certify.utils;
 
-import io.mosip.certify.exception.BitstringStatusListException;
+import io.mosip.certify.exception.StatusListException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -124,9 +124,9 @@ public class BitStringUtils {
      *
      * @param compressedBitstring Base64url encoded compressed bitstring
      * @return Expanded BitSet
-     * @throws BitstringStatusListException if expansion fails
+     * @throws StatusListException if expansion fails
      */
-    public static BitSet expandCompressedList(String compressedBitstring) throws BitstringStatusListException {
+    public static BitSet expandCompressedList(String compressedBitstring) throws StatusListException {
         try {
             // Decode Base64url
             byte[] compressedBytes = Base64.getUrlDecoder().decode(compressedBitstring);
@@ -148,7 +148,7 @@ public class BitStringUtils {
             // Convert to BitSet
             return fromByteArray(expandedBytes);
         } catch (IOException | IllegalArgumentException e) {
-            throw new BitstringStatusListException("EXPANSION_ERROR",
+            throw new StatusListException("EXPANSION_ERROR",
                     "Error expanding bitstring: " + e.getMessage());
         }
     }
