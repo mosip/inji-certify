@@ -487,7 +487,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             }
             Map<String, Object> indexedAttributes = extractIndexedAttributes(jsonObject);
 
-            // Create credential status object forVC
+            // Create credential status object for VC
             JSONObject credentialStatus = new JSONObject();
             String statusId = domainUrl + "/v1/certify/status-list/" + statusList.getId();
             credentialStatus.put("id", statusId + "#" + assignedIndex);
@@ -499,10 +499,10 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             // Add credential status to the VC data
             jsonObject.put("credentialStatus", credentialStatus);
 
-            // Extract credential details forledger storage
+            // Extract credential details for ledger storage
             String credentialType = extractCredentialType(jsonObject);
 
-            // Prepare status details forledger
+            // Prepare status details for ledger
             Map<String, Object> statusDetails = new HashMap<>();
             statusDetails.put("status_purpose", defaultStatusPurpose);
             statusDetails.put("status_value", false); // Initially not revoked
@@ -521,16 +521,34 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         }
     }
 
-    private String extractCredentialType(JSONObject jsonObject) {
+    private static String extractCredentialType(JSONObject jsonObject) {
         try {
             if(jsonObject.has("type")) {
                 Object typeObj = jsonObject.get("type");
                 if(typeObj instanceof org.json.JSONArray) {
                     org.json.JSONArray typeArray = (org.json.JSONArray) typeObj;
-                    // Return the last type (usually the specific credential type)
-                    return typeArray.getString(typeArray.length() - 1);
+                    List<String> types = new ArrayList<>();
+
+                    // Extract all types from the array
+                    for(int i = 0; i < typeArray.length(); i++) {
+                        String type = typeArray.getString(i);
+                        if(type != null && !type.trim().isEmpty()) {
+                            types.add(type.trim());
+                        }
+                    }
+
+                    if(!types.isEmpty()) {
+                        // Sort the types and join with comma
+                        Collections.sort(types);
+                        return String.join(",", types);
+                    }
+                } else {
+                    // Single type as string
+                    String singleType = typeObj.toString().trim();
+                    if(!singleType.isEmpty()) {
+                        return singleType;
+                    }
                 }
-                return typeObj.toString();
             }
             return "VerifiableCredential";
         } catch (Exception e) {
@@ -541,7 +559,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     // Enhanced version with better complex field support
     public Map<String, Object> extractIndexedAttributes(JSONObject jsonObject) {
-        ObjectMapper objectMapper = new ObjectMapper();
         Configuration jsonPathConfig = Configuration.defaultConfiguration().addOptions(Option.SUPPRESS_EXCEPTIONS);
         Map<String, Object> indexedAttributes = new HashMap<>();
 
@@ -557,14 +574,11 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         log.info("Indexed Mapping Found: {}", indexedMappings);
 
         try {
-
             // Convert credential subject to JSON string forJsonPath processing
             String sourceJsonString = jsonObject.toString();
-
             for(Map.Entry<String, String> entry : indexedMappings.entrySet()) {
                 String targetKey = entry.getKey();
                 String pathsConfig = entry.getValue();
-
 
                 // Support multiple paths separated by pipe (|) forfallback
                 String[] paths = pathsConfig.split("\\|");
@@ -572,22 +586,19 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
                 for(String jsonPath : paths) {
                     jsonPath = jsonPath.trim();
-
                     try {
                         // Use JsonPath to read the value from the source JSON
                         extractedValue = JsonPath.using(jsonPathConfig)
                                 .parse(sourceJsonString)
                                 .read(jsonPath);
-
                     } catch (Exception e) {
                         log.warn("Error extracting value forpath '{}' and key '{}': {}",
                                 jsonPath, targetKey, e.getMessage());
                     }
                 }
-
                 // Handle different types of extracted values
                 if(extractedValue != null) {
-                    Object processedValue = processExtractedValue(extractedValue);
+                    Object processedValue = processExtractedIndexedAttributes(extractedValue);
                     indexedAttributes.put(targetKey, processedValue);
                     log.info("Added processed value '{}' to indexed attributes under key '{}'",
                             processedValue, targetKey);
@@ -595,21 +606,16 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     log.info("No value extracted forkey '{}'; skipping indexing.", targetKey);
                 }
             }
-
-            log.info("Completed extraction and processing of indexed attributes.");
-
         } catch (Exception e) {
             log.error("Error processing credential subject forindexed attributes: {}", e.getMessage(), e);
         }
-
-
         return indexedAttributes;
     }
 
     /**
      * Process extracted values to handle complex types appropriately
      */
-    private Object processExtractedValue(Object extractedValue) {
+    private Object processExtractedIndexedAttributes(Object extractedValue) {
         if(extractedValue == null) {
             return null;
         }
