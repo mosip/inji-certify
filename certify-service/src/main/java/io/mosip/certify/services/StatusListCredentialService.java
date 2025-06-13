@@ -46,16 +46,7 @@ public class StatusListCredentialService {
     private VCSigner vcSigner;
 
     @Autowired
-    private StatusListAvailableIndicesRepository statusListAvailableIndicesRepository;
-
-    @Autowired
     private DatabaseStatusListIndexProvider indexProvider;
-
-    @Autowired
-    private StatusListIndexProvider statusListIndexProvider;
-
-    @Autowired
-    private EntityManagerFactory entityManagerFactory;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -69,15 +60,8 @@ public class StatusListCredentialService {
     @Value("${mosip.certify.domain.url}")
     private String domainUrl;
 
-    @Value("${mosip.certify.statuslist.default-capacity:131072}")
+    @Value("#{${mosip.certify.statuslist.default-capacity:16} * 1024 * 8}") // value in kb
     private long defaultCapacity;
-
-    @Value("${mosip.certify.statuslist.template-name:StatusList2021Credential}")
-    private String statusListTemplateName;
-
-    @Value("${mosip.certify.statuslist.usable-capacity-percentage:50}")
-    private long usableCapacityPercentage;
-
 
     public String getStatusListCredential(String id) throws CertifyException {
         log.info("Processing status list credential request for ID: {}", id);

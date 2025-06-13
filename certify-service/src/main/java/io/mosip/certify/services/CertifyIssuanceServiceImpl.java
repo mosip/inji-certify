@@ -528,22 +528,17 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 if(typeObj instanceof org.json.JSONArray) {
                     org.json.JSONArray typeArray = (org.json.JSONArray) typeObj;
                     List<String> types = new ArrayList<>();
-
-                    // Extract all types from the array
                     for(int i = 0; i < typeArray.length(); i++) {
                         String type = typeArray.getString(i);
                         if(type != null && !type.trim().isEmpty()) {
                             types.add(type.trim());
                         }
                     }
-
                     if(!types.isEmpty()) {
-                        // Sort the types and join with comma
                         Collections.sort(types);
                         return String.join(",", types);
                     }
                 } else {
-                    // Single type as string
                     String singleType = typeObj.toString().trim();
                     if(!singleType.isEmpty()) {
                         return singleType;
