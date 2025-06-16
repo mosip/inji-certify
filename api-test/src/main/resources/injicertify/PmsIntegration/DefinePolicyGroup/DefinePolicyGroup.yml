@@ -13,8 +13,5 @@ definePolicyGroup:
     "requesttime": "$TIMESTAMP$"
   }'
       output: ' {
-      "id": "$IGNORE$",
-        "name": "$IGNORE$",
-        "desc": "$IGNORE$",
         "is_Active": true
 }'
