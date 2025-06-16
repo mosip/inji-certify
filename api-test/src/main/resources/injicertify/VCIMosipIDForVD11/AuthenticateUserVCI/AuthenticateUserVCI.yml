@@ -28,8 +28,6 @@ AuthenticateUserVCI:
     }'
       output: '{
   "sendOtpResp":{
-        "maskedMobile": "$IGNORE$",
-        "sendOtpResTemplate":"injicertify/SendOtp/SendOtpResult",
-        "maskedEmail": "$IGNORE$"
+        "sendOtpResTemplate":"injicertify/SendOtp/SendOtpResult"
     }
 }'
