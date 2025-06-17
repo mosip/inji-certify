@@ -101,7 +101,7 @@ public class CredentialConfigurationServiceImplTest {
     @Test
     public void getCredentialConfigById_Success() throws JsonProcessingException {
         Optional<CredentialConfig> optional = Optional.of(credentialConfig);
-        when(credentialConfigRepository.findByConfigId(anyString())).thenReturn(optional);
+        when(credentialConfigRepository.findById(anyString())).thenReturn(optional);
         when(credentialConfigMapper.toDto(any(CredentialConfig.class))).thenReturn(credentialConfigurationDTO);
         CredentialConfigurationDTO credentialConfigurationDTOResponse = credentialConfigurationService.getCredentialConfigurationById("test");
 
@@ -118,7 +118,7 @@ public class CredentialConfigurationServiceImplTest {
 
     @Test
     public void getCredentialConfigurationById_ConfigNotFound() {
-        when(credentialConfigRepository.findByConfigId("12345678"))
+        when(credentialConfigRepository.findById("12345678"))
                 .thenReturn(Optional.empty());
 
         CredentialConfigException exception = assertThrows(CredentialConfigException.class, () ->
@@ -137,7 +137,7 @@ public class CredentialConfigurationServiceImplTest {
         mockCredentialConfig.setStatus(expectedStatus);
 
         Optional<CredentialConfig> optionalConfig = Optional.of(mockCredentialConfig);
-        when(credentialConfigRepository.findByConfigId(eq(expectedId))).thenReturn(optionalConfig);
+        when(credentialConfigRepository.findById(eq(expectedId))).thenReturn(optionalConfig);
 
 
         CredentialConfigurationDTO mockDto = new CredentialConfigurationDTO(); // Dummy DTO for the mapper call
@@ -159,14 +159,14 @@ public class CredentialConfigurationServiceImplTest {
         Assert.assertEquals(expectedStatus, credentialConfigResponse.getStatus());
 
         // Verify interactions
-        verify(credentialConfigRepository).findByConfigId(eq(expectedId));
+        verify(credentialConfigRepository).findById(eq(expectedId));
         verify(credentialConfigMapper).updateEntityFromDto(eq(mockDto), eq(mockCredentialConfig));
         verify(credentialConfigRepository).save(eq(mockCredentialConfig));
     }
 
     @Test
     public void updateExistingCredentialConfiguration_ConfigNotFound() {
-        when(credentialConfigRepository.findByConfigId(anyString()))
+        when(credentialConfigRepository.findById(anyString()))
                 .thenReturn(Optional.empty());
 
         CredentialConfigException exception = assertThrows(CredentialConfigException.class, () ->
@@ -178,7 +178,7 @@ public class CredentialConfigurationServiceImplTest {
     @Test
     public void deleteCredentialConfig_Success() throws JsonProcessingException {
         Optional<CredentialConfig> optional = Optional.of(credentialConfig);
-        when(credentialConfigRepository.findByConfigId(anyString())).thenReturn(optional);
+        when(credentialConfigRepository.findById(anyString())).thenReturn(optional);
         doNothing().when(credentialConfigRepository).delete(any(CredentialConfig.class));
         String result = credentialConfigurationService.deleteCredentialConfigurationById("12345678");
 
@@ -188,7 +188,7 @@ public class CredentialConfigurationServiceImplTest {
 
     @Test
     public void deleteCredentialConfiguration_ConfigNotFound() {
-        when(credentialConfigRepository.findByConfigId(anyString()))
+        when(credentialConfigRepository.findById(anyString()))
                 .thenReturn(Optional.empty());
 
         CredentialConfigException exception = assertThrows(CredentialConfigException.class, () ->

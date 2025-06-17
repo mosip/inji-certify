@@ -99,7 +99,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
             String credentialFormat = parts[0];
             String vct = parts[1];
 
-            return credentialConfigRepository.findByCredentialFormatAndVct(credentialFormat, vct)
+            return credentialConfigRepository.findByCredentialFormatAndSdJwtVct(credentialFormat, vct)
                     .orElseThrow(() -> {
                         log.error("CredentialConfig not found in DB for key: {}", templateKey);
                         return new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "CredentialConfig not found for key: " + templateKey);
@@ -113,7 +113,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         // TemplateId constructor order: context, credentialType, credentialFormat
         TemplateId tid = new TemplateId(context, credentialType, credentialFormat);
 
-        return credentialConfigRepository.findById(tid)
+        return credentialConfigRepository
+                .findByCredentialFormatAndCredentialTypeAndContext(credentialFormat, credentialType, context)
                 .orElseThrow(() -> {
                     log.error("CredentialConfig not found in DB for key: {}", templateKey);
                     return new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "CredentialConfig not found for key: " + templateKey);

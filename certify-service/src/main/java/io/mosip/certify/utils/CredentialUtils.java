@@ -41,7 +41,7 @@ public class CredentialUtils {
         //TODO: Cache this entire data so we do not construct all the time.
 
         if(vcRequestDto.getFormat().equals(VCFormats.LDP_SD_JWT)) {
-            return String.join(Constants.DELIMITER, vcRequestDto.getFormat(), vcRequestDto.getVct());
+            return String.join(Constants.DELIMITER, vcRequestDto.getFormat(), vcRequestDto.getSdJwtVct());
         }
         List<String> c = new ArrayList<>(vcRequestDto.getContext());
         List<String> t = new ArrayList<>(vcRequestDto.getType());

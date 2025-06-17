@@ -52,5 +52,5 @@ public class CredentialRequest {
      */
     private Map<String,Object> claims;
 
-    String vct;
+    String sdJwtVct;
 }
