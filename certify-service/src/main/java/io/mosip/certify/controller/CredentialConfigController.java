@@ -46,7 +46,7 @@ public class CredentialConfigController {
     public ResponseEntity<String> deleteCredentialConfigurationById(@PathVariable String configurationId) {
 
         String response = credentialConfigurationService.deleteCredentialConfigurationById(configurationId);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>("Deleted configuration with id: " + response, HttpStatus.OK);
     }
 
     @GetMapping(value = "/.well-known/openid-credential-issuer", produces = "application/json")

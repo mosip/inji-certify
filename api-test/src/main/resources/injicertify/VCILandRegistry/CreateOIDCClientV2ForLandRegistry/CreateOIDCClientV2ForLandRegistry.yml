@@ -27,7 +27,6 @@ CreateOIDCClientV2VCIForLandRegistry:
       	"clientNameLang": "MOSIP OIDC Client"
 }'
       output: '{
-        "clientId": "$IGNORE$",
     	"status": "ACTIVE"
 }'
 CreateOIDCClientV2VCIForLandRegistryEccR1:

@@ -94,19 +94,20 @@ jobs:
         run: |
           echo "Condition Met: ${{ steps.check_output.outputs.is_condition }}"
 
-  publish_to_nexus:
-    if: "${{ !contains(github.ref, 'master') && github.event_name != 'pull_request' }}"
-    needs: build-maven-inji-certify
-    uses: mosip/kattu/.github/workflows/maven-publish-to-nexus.yml@master-java21
-    with:
-      SERVICE_LOCATION: ./
-    secrets:
-      OSSRH_USER: ${{ secrets.OSSRH_USER }}
-      OSSRH_SECRET: ${{ secrets.OSSRH_SECRET }}
-      OSSRH_URL: ${{ secrets.OSSRH_SNAPSHOT_URL }}
-      OSSRH_TOKEN: ${{ secrets.OSSRH_TOKEN }}
-      GPG_SECRET: ${{ secrets.GPG_SECRET }}
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+# Ignorning for now until migration to central nexus is done.
+#  publish_to_nexus:
+#    if: "${{ !contains(github.ref, 'master') && github.event_name != 'pull_request' }}"
+#    needs: build-maven-inji-certify
+#    uses: mosip/kattu/.github/workflows/maven-publish-to-nexus.yml@master-java21
+#    with:
+#      SERVICE_LOCATION: ./
+#    secrets:
+#      OSSRH_USER: ${{ secrets.OSSRH_USER }}
+#      OSSRH_SECRET: ${{ secrets.OSSRH_SECRET }}
+#      OSSRH_URL: ${{ secrets.OSSRH_SNAPSHOT_URL }}
+#      OSSRH_TOKEN: ${{ secrets.OSSRH_TOKEN }}
+#      GPG_SECRET: ${{ secrets.GPG_SECRET }}
+#      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
   build-dockers:
     needs: build-maven-inji-certify
@@ -144,8 +145,9 @@ jobs:
       GPG_SECRET: ${{ secrets.GPG_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
+# Removing publish_to_nexus for now from the list until migration to central nexus is done.
   build-docker-inji-certify-with-plugins:
-    needs: [ maven-build-inji-certify-with-plugins, check_snapshot_version, publish_to_nexus ]
+    needs: [ maven-build-inji-certify-with-plugins, check_snapshot_version ]
     if: ${{ needs.check_snapshot_version.outputs.is_condition == 'true' }}
     strategy:
       matrix:

@@ -117,7 +117,6 @@ public class SimplePostForAutoGenId extends InjiCertifyUtil implements ITest {
             inputJson = responseJson.toString();
         }
 
-//		String outputJson = getJsonFromTemplate(testCaseDTO.getOutput(), testCaseDTO.getOutputTemplate());
 
 		if (testCaseDTO.getTemplateFields() != null && templateFields.length > 0) {
 			ArrayList<JSONObject> inputtestCases = AdminTestUtil.getInputTestCase(testCaseDTO);
