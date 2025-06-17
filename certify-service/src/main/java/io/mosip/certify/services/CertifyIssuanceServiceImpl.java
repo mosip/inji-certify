@@ -5,6 +5,10 @@
  */
 package io.mosip.certify.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.Option;
 import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.dto.VCRequestDto;
 import io.mosip.certify.api.dto.VCResult;
@@ -12,6 +16,7 @@ import io.mosip.certify.api.exception.DataProviderExchangeException;
 import io.mosip.certify.api.spi.*;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
+import io.mosip.certify.config.IndexedAttributesConfig;
 import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.CredentialMetadata;
@@ -28,6 +33,10 @@ import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.core.util.AuditHelper;
 import io.mosip.certify.core.util.SecurityHelperService;
 import io.mosip.certify.api.spi.DataProviderPlugin;
+import io.mosip.certify.entity.Ledger;
+import io.mosip.certify.entity.StatusListCredential;
+import io.mosip.certify.repository.LedgerRepository;
+import io.mosip.certify.repository.StatusListCredentialRepository;
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.certify.validators.CredentialRequestValidator;
 import io.mosip.certify.exception.InvalidNonceException;
@@ -38,6 +47,7 @@ import io.mosip.certify.utils.DIDDocumentUtil;
 import io.mosip.certify.vcsigners.VCSigner;
 import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
@@ -47,8 +57,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.stereotype.Service;
+
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 
@@ -107,6 +119,27 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Autowired
     private KeymanagerService keymanagerService;
 
+    @Autowired
+    private StatusListCredentialService statusListCredentialService;
+
+    @Autowired
+    private StatusListCredentialRepository statusListCredentialRepository;
+
+    @Autowired
+    private LedgerRepository ledgerRepository;
+
+    @Autowired
+    private IndexedAttributesConfig indexedAttributesConfig;
+
+    @Value("${mosip.certify.statuslist.enabled:true}")
+    private boolean statusListEnabled;
+
+    @Value("${mosip.certify.statuslist.default-purpose:revocation}")
+    private String defaultStatusPurpose;
+
+    @Value("${mosip.certify.domain.url}")
+    private String domainUrl;
+
     private Map<String, Object> didDocument;
 
     @Override
@@ -153,20 +186,20 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     @Override
     public Map<String, Object> getCredentialIssuerMetadata(String version) {
-       if(issuerMetadata.containsKey(version)) {
-           return issuerMetadata.get(version);
-       } else if(version != null && version.equals("vd12")) {
-           LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
-           Map<String, Object> vd12IssuerMetadata = convertLatestToVd12(originalIssuerMetadata);
-           issuerMetadata.put("vd12", (LinkedHashMap<String, Object>) vd12IssuerMetadata);
-           return vd12IssuerMetadata;
-       } else if(version != null && version.equals("vd11")) {
-           LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
-           Map<String, Object> vd11IssuerMetadata = convertLatestToVd11(originalIssuerMetadata);
-           issuerMetadata.put("vd11", (LinkedHashMap<String, Object>) vd11IssuerMetadata);
-           return vd11IssuerMetadata;
-       }
-       throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_OPENID_VERSION);
+        if(issuerMetadata.containsKey(version)) {
+            return issuerMetadata.get(version);
+        } else if(version != null && version.equals("vd12")) {
+            LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
+            Map<String, Object> vd12IssuerMetadata = convertLatestToVd12(originalIssuerMetadata);
+            issuerMetadata.put("vd12", (LinkedHashMap<String, Object>) vd12IssuerMetadata);
+            return vd12IssuerMetadata;
+        } else if(version != null && version.equals("vd11")) {
+            LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
+            Map<String, Object> vd11IssuerMetadata = convertLatestToVd11(originalIssuerMetadata);
+            issuerMetadata.put("vd11", (LinkedHashMap<String, Object>) vd11IssuerMetadata);
+            return vd11IssuerMetadata;
+        }
+        throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_OPENID_VERSION);
     }
 
     @Override
@@ -301,6 +334,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         return transformedConfig;
     }
 
+    @Transactional
     private VCResult<?> getVerifiableCredential(CredentialRequest credentialRequest, CredentialMetadata credentialMetadata,
                                                 String holderId) {
         parsedAccessToken.getClaims().put("accessTokenHash", parsedAccessToken.getAccessTokenHash());
@@ -321,6 +355,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     Map<String, Object> templateParams = new HashMap<>();
                     templateParams.put(Constants.TEMPLATE_NAME, CredentialUtils.getTemplateName(vcRequestDto));
                     templateParams.put(Constants.ISSUER_URI, issuerURI);
+                    if (statusListEnabled) {
+                        addCredentialStatus(jsonObject);
+                    }
                     if (!StringUtils.isEmpty(renderTemplateId)) {
                         templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
                     }
@@ -385,7 +422,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     private void validateLdpVcFormatRequest(CredentialRequest credentialRequest,
                                             CredentialMetadata credentialMetadata) {
         if(!credentialRequest.getCredential_definition().getType().containsAll(credentialMetadata.getTypes()))
-             throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_VC_TYPE);
+            throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_VC_TYPE);
 
         //TODO need to validate Credential_definition as JsonLD document, if invalid throw exception
     }
@@ -420,5 +457,210 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         transaction.setCNonceIssuedEpoch(LocalDateTime.now(ZoneOffset.UTC).toEpochSecond(ZoneOffset.UTC));
         transaction.setCNonceExpireSeconds(cNonceExpireSeconds);
         return vciCacheService.setVCITransaction(parsedAccessToken.getAccessTokenHash(), transaction);
+    }
+
+    /**
+     * Add credential status information to the VC data and store in ledger
+     */
+    @Transactional
+    private void addCredentialStatus(JSONObject jsonObject) {
+        try {
+            log.info("Adding credential status forstatus list integration");
+
+            // Find or create a suitable status list
+            StatusListCredential statusList = statusListCredentialService.findOrCreateStatusList(defaultStatusPurpose);
+
+            // Assign next available index using database approach
+            long assignedIndex = statusListCredentialService.findNextAvailableIndex(statusList.getId());
+
+            // If the current list is full, create a new one
+            if(assignedIndex == -1) {
+                log.info("Current status list is full, creating a new one");
+                statusList = statusListCredentialService.generateStatusListCredential(defaultStatusPurpose);
+                assignedIndex = statusListCredentialService.findNextAvailableIndex(statusList.getId());
+
+                if(assignedIndex == -1) {
+                    log.error("Failed to get available index even from new status list");
+                    throw new CertifyException("STATUS_LIST_INDEX_UNAVAILABLE");
+                }
+            }
+            Map<String, Object> indexedAttributes = extractIndexedAttributes(jsonObject);
+
+            // Create credential status object for VC
+            JSONObject credentialStatus = new JSONObject();
+            String statusId = domainUrl + "/v1/certify/status-list/" + statusList.getId();
+            credentialStatus.put("id", statusId + "#" + assignedIndex);
+            credentialStatus.put("type", "BitstringStatusListEntry");
+            credentialStatus.put("statusPurpose", defaultStatusPurpose);
+            credentialStatus.put("statusListIndex", String.valueOf(assignedIndex));
+            credentialStatus.put("statusListCredential", statusId);
+
+            // Add credential status to the VC data
+            jsonObject.put("credentialStatus", credentialStatus);
+
+            // Extract credential details for ledger storage
+            String credentialType = extractCredentialType(jsonObject);
+
+            // Prepare status details for ledger
+            Map<String, Object> statusDetails = new HashMap<>();
+            statusDetails.put("status_purpose", defaultStatusPurpose);
+            statusDetails.put("status_value", false); // Initially not revoked
+            statusDetails.put("status_list_credential_id", statusList.getId());
+            statusDetails.put("status_list_index", assignedIndex);
+            statusDetails.put("cr_dtimes", System.currentTimeMillis());
+
+            // Store in ledger
+            storeLedgerEntry(issuerURI, credentialType, statusDetails, indexedAttributes);
+
+            log.info("Successfully added credential status with index {} in status list {} and stored in ledger", assignedIndex, statusList.getId());
+
+        } catch (Exception e) {
+            log.error("Error adding credential status", e);
+            throw new CertifyException("CREDENTIAL_STATUS_ASSIGNMENT_FAILED");
+        }
+    }
+
+    private static String extractCredentialType(JSONObject jsonObject) {
+        try {
+            if(jsonObject.has("type")) {
+                Object typeObj = jsonObject.get("type");
+                if(typeObj instanceof org.json.JSONArray) {
+                    org.json.JSONArray typeArray = (org.json.JSONArray) typeObj;
+                    List<String> types = new ArrayList<>();
+
+                    // Extract all types from the array
+                    for(int i = 0; i < typeArray.length(); i++) {
+                        String type = typeArray.getString(i);
+                        if(type != null && !type.trim().isEmpty()) {
+                            types.add(type.trim());
+                        }
+                    }
+
+                    if(!types.isEmpty()) {
+                        // Sort the types and join with comma
+                        Collections.sort(types);
+                        return String.join(",", types);
+                    }
+                } else {
+                    // Single type as string
+                    String singleType = typeObj.toString().trim();
+                    if(!singleType.isEmpty()) {
+                        return singleType;
+                    }
+                }
+            }
+            return "VerifiableCredential";
+        } catch (Exception e) {
+            log.warn("Error extracting credential type, using default", e);
+            return "VerifiableCredential";
+        }
+    }
+
+    // Enhanced version with better complex field support
+    public Map<String, Object> extractIndexedAttributes(JSONObject jsonObject) {
+        Configuration jsonPathConfig = Configuration.defaultConfiguration().addOptions(Option.SUPPRESS_EXCEPTIONS);
+        Map<String, Object> indexedAttributes = new HashMap<>();
+
+        if(jsonObject == null) {
+            return indexedAttributes;
+        }
+
+        Map<String, String> indexedMappings = indexedAttributesConfig.getIndexedMappings();
+        if(indexedMappings.isEmpty()) {
+            log.info("No indexed mappings configured, returning empty attributes");
+            return indexedAttributes;
+        }
+        log.info("Indexed Mapping Found: {}", indexedMappings);
+
+        try {
+            // Convert credential subject to JSON string forJsonPath processing
+            String sourceJsonString = jsonObject.toString();
+            for(Map.Entry<String, String> entry : indexedMappings.entrySet()) {
+                String targetKey = entry.getKey();
+                String pathsConfig = entry.getValue();
+
+                // Support multiple paths separated by pipe (|) forfallback
+                String[] paths = pathsConfig.split("\\|");
+                Object extractedValue = null;
+
+                for(String jsonPath : paths) {
+                    jsonPath = jsonPath.trim();
+                    try {
+                        // Use JsonPath to read the value from the source JSON
+                        extractedValue = JsonPath.using(jsonPathConfig)
+                                .parse(sourceJsonString)
+                                .read(jsonPath);
+                    } catch (Exception e) {
+                        log.warn("Error extracting value forpath '{}' and key '{}': {}",
+                                jsonPath, targetKey, e.getMessage());
+                    }
+                }
+                // Handle different types of extracted values
+                if(extractedValue != null) {
+                    Object processedValue = processExtractedIndexedAttributes(extractedValue);
+                    indexedAttributes.put(targetKey, processedValue);
+                    log.info("Added processed value '{}' to indexed attributes under key '{}'",
+                            processedValue, targetKey);
+                } else {
+                    log.info("No value extracted forkey '{}'; skipping indexing.", targetKey);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error processing credential subject forindexed attributes: {}", e.getMessage(), e);
+        }
+        return indexedAttributes;
+    }
+
+    /**
+     * Process extracted values to handle complex types appropriately
+     */
+    private Object processExtractedIndexedAttributes(Object extractedValue) {
+        if(extractedValue == null) {
+            return null;
+        }
+
+        if(extractedValue instanceof List) {
+            List<?> list = (List<?>) extractedValue;
+            if(list.isEmpty()) {
+                return null;
+            }
+            if(list.size() == 1) {
+                return list.get(0);
+            }
+            return extractedValue; // Keep as array
+        }
+        else if(extractedValue instanceof Map) {
+            return extractedValue;
+        }
+        else if(extractedValue instanceof String) {
+            String stringValue = (String) extractedValue;
+            return stringValue.trim().isEmpty() ? null : stringValue;
+        }
+
+        return extractedValue;
+    }
+
+    @Transactional
+    public void storeLedgerEntry(String issuerId, String credentialType, Map<String, Object> statusDetails, Map<String, Object> indexedAttributes) {
+        try {
+            Ledger ledger = new Ledger();
+            String credentialId = UUID.randomUUID().toString();;
+            ledger.setCredentialId(credentialId);
+            ledger.setIssuerId(issuerId);
+            ledger.setIssueDate(OffsetDateTime.now());
+            ledger.setCredentialType(credentialType);
+            ledger.setIndexedAttributes(indexedAttributes);
+
+            // Store status details as array
+            List<Map<String, Object>> statusDetailsList = new ArrayList<>();
+            statusDetailsList.add(statusDetails);
+            ledger.setCredentialStatusDetails(statusDetailsList);
+
+            ledgerRepository.save(ledger);
+            log.info("Ledger entry stored forcredential: {}", credentialId);
+        } catch (Exception e) {
+            log.error("Error storing ledger entry", e);
+            throw new RuntimeException("Failed to store ledger entry", e);
+        }
     }
 }
