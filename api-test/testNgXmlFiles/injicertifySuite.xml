@@ -939,7 +939,14 @@
 			<class
 				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
 		</classes>
-	</test>		
+	</test>
+	<test name="DeleteCredentialConfigForEccR1">
+		<parameter name="ymlFile"
+			value="injicertify/EccR1/DeleteCredentialConfiguration/DeleteCredentialConfiguration.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.injicertify.testscripts.DeleteWithParam" />
+		</classes>
+	</test>
 		
 	
 </suite>
