@@ -160,6 +160,7 @@ public class CertifyIssuanceServiceImplTest {
         CredentialConfigurationSupportedDTO supportedDTO_SDJWT = new CredentialConfigurationSupportedDTO();
         supportedDTO_SDJWT.setScope(DEFAULT_SCOPE);
         supportedDTO_SDJWT.setFormat(DEFAULT_FORMAT_SDJWT);
+        supportedDTO_SDJWT.setVct("test_vct");
         CredentialDefinition credDefDtoForSDJWT = new CredentialDefinition(); // Using your DTO structure
         credDefDtoForSDJWT.setContext(List.of("https://www.w3.org/2018/credentials/v1", "https://example.org/sd-jwt/v1"));
         credDefDtoForSDJWT.setType(List.of("VerifiableCredential", "TestCredential", "SDJWTCredential"));

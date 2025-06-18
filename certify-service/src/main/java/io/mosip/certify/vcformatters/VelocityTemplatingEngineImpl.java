@@ -111,7 +111,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         String credentialFormat = parts[2];
 
         // TemplateId constructor order: context, credentialType, credentialFormat
-        TemplateId tid = new TemplateId(context, credentialType, credentialFormat);
+//        TemplateId tid = new TemplateId(context, credentialType, credentialFormat);
 
         return credentialConfigRepository
                 .findByCredentialFormatAndCredentialTypeAndContext(credentialFormat, credentialType, context)
@@ -320,13 +320,13 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         finalTemplate.put("_esc", new EscapeTool());
         // add the issuer value
         finalTemplate.put("_issuer", issuer);
-        if (templateInput.containsKey(Constants.TEMPLATE_NAME) && templateName.contains(VCDM2Constants.URL)) {
+        if (templateInput.containsKey(Constants.RENDERING_TEMPLATE_ID) && templateName.contains(VCDM2Constants.URL)) {
             try {
                 finalTemplate.put("_renderMethodSVGdigest",
                         CredentialUtils.getDigestMultibase(renderingTemplateService.getTemplate(
-                                (String) templateInput.get(Constants.TEMPLATE_NAME)).getTemplate()));
+                                (String) templateInput.get(Constants.RENDERING_TEMPLATE_ID)).getTemplate()));
             } catch (RenderingTemplateException e) {
-                log.error("Template: " + templateInput.get(Constants.TEMPLATE_NAME) + " not available in DB", e);
+                log.error("Template: " + templateInput.get(Constants.RENDERING_TEMPLATE_ID) + " not available in DB", e);
             }
         }
         if (!(templateInput.containsKey(VCDM2Constants.VALID_FROM)
