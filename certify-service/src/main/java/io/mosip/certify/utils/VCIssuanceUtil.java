@@ -229,7 +229,9 @@ public class VCIssuanceUtil {
 
         Map<String, CredentialConfigurationSupportedDTO> supportedCredentials = credentialIssuerMetadataDTO.getCredentialConfigurationSupportedDTO();
         Optional<Map.Entry<String, CredentialConfigurationSupportedDTO>> result = supportedCredentials.entrySet().stream()
-                .filter(cm -> cm.getValue().getScope().equals(scope)).findFirst();
+                .filter(cm -> cm.getValue().getScope().equals(scope)
+                        && cm.getValue().getFormat().equals(format))
+                .findFirst();
 
         if(result.isPresent()) {
             CredentialConfigurationSupportedDTO metadata = result.get().getValue();
