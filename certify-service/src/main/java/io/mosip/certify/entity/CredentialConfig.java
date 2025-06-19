@@ -22,7 +22,6 @@ import org.hibernate.type.SqlTypes;
 @Table(name = "credential_config",uniqueConstraints = {
         @UniqueConstraint(name = "uk_credential_config_key_id", columnNames = "credential_config_key_id")
 })
-//@IdClass(TemplateId.class)
 public class CredentialConfig {
 
     @Id
@@ -37,13 +36,10 @@ public class CredentialConfig {
     @Column(name = "credential_config_key_id", unique = true, nullable = false)
     private String credentialConfigKeyId;
 
-//    @Id
     private String context;
 
-//    @Id
     private String credentialType;
 
-//    @Id
     private String credentialFormat;
 
     @Comment("URL for the public key. Should point to the exact key. Supports DID document or public key")

@@ -62,18 +62,6 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Override
     public CredentialConfigResponse addCredentialConfiguration(CredentialConfigurationDTO credentialConfigurationDTO) throws JsonProcessingException {
         CredentialConfig credentialConfig = credentialConfigMapper.toEntity(credentialConfigurationDTO);
-//        TemplateId templateId = new TemplateId(); // Consider constructor TemplateId(context, type, format)
-//        templateId.setCredentialType(credentialConfig.getCredentialType());
-//        templateId.setContext(credentialConfig.getContext());
-//        templateId.setCredentialFormat(credentialConfig.getCredentialFormat());
-//
-//        Optional<CredentialConfig> optional = credentialConfigRepository.findById(templateId);
-//
-//        if(optional.isPresent()) {
-//            log.warn("Attempt to add existing credential configuration: Type={}, Context={}, Format={}",
-//                    credentialConfig.getCredentialType(), credentialConfig.getContext(), credentialConfig.getCredentialFormat());
-//            throw new CertifyException("Credential type already exists. Try updating the credential.");
-//        }
 
         credentialConfig.setConfigId(UUID.randomUUID().toString());
         credentialConfig.setStatus(Constants.ACTIVE);
