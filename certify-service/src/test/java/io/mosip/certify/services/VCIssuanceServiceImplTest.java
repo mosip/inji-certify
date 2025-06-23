@@ -152,28 +152,36 @@ public class VCIssuanceServiceImplTest {
 
     private CredentialRequest createValidCredentialRequest(String format) {
         CredentialRequest req = new CredentialRequest();
-        req.setFormat(format);
+        req.setFormat(format); // Use the passed format string directly
 
         io.mosip.certify.core.dto.CredentialDefinition requestInnerCredDef = new io.mosip.certify.core.dto.CredentialDefinition();
         if (VCFormats.MSO_MDOC.equals(format)) {
             req.setDoctype("org.iso.18013.5.1.mDL"); // For mso_mdoc
-            req.setFormat(VCFormats.MSO_MDOC.toString());
             req.setClaims( Map.ofEntries(Map.entry("claim1","claim2")));
-        } else if (VCFormats.SD_JWT.equals(format)) {
-            req.setFormat(CredentialFormat.VC_SD_JWT.toString());
+            // No credential_definition needed for MSO_MDOC as per validator logic
+        } else if (VCFormats.SD_JWT.equals(format)) { // Assuming VCFormats.SD_JWT is "vc+sd-jwt"
+            // For SD-JWT, credential_definition might be used for structure, claims to be selectively disclosed, etc.
             requestInnerCredDef.setContext(List.of("https://www.w3.org/2018/credentials/v1"));
-            requestInnerCredDef.setType(List.of("VerifiableCredential", "TestJWTCredential"));
-        } else if (VCFormats.JWT_VC_JSON.equals(format)) {
-            req.setFormat(CredentialFormat.VC_JWT.toString());
+            requestInnerCredDef.setType(List.of("VerifiableCredential", "TestSDJWTCredential"));
+            requestInnerCredDef.setCredentialSubject(new HashMap<>());
+            req.setCredential_definition(requestInnerCredDef);
+        } else if (VCFormats.JWT_VC_JSON.equals(format) || VCFormats.JWT_VC_JSON_LD.equals(format)) {
             requestInnerCredDef.setContext(List.of("https://www.w3.org/2018/credentials/v1"));
-            requestInnerCredDef.setType(List.of("VerifiableCredential", "TestJWTCredential"));
-        } else { // LDP_VC default
-            req.setFormat(CredentialFormat.VC_LDP.toString());
+            requestInnerCredDef.setType(List.of("VerifiableCredential", "TestJWTCredential")); // Common type for JWT based VCs
+            requestInnerCredDef.setCredentialSubject(new HashMap<>());
+            req.setCredential_definition(requestInnerCredDef);
+        } else if (VCFormats.LDP_VC.equals(format)) { // LDP_VC default
             requestInnerCredDef.setContext(List.of("https://www.w3.org/2018/credentials/v1"));
             requestInnerCredDef.setType(List.of("VerifiableCredential", "TestCredential"));
+            requestInnerCredDef.setCredentialSubject(new HashMap<>());
+            req.setCredential_definition(requestInnerCredDef);
+        } else {
+             // Fallback or throw error for unknown format if necessary
+            requestInnerCredDef.setContext(List.of("https://www.w3.org/2018/credentials/v1"));
+            requestInnerCredDef.setType(List.of("VerifiableCredential", "UnknownFormatTestCredential"));
+            requestInnerCredDef.setCredentialSubject(new HashMap<>());
+            req.setCredential_definition(requestInnerCredDef);
         }
-        requestInnerCredDef.setCredentialSubject(new HashMap<>()); // Common for LDP/JWT types
-        req.setCredential_definition(requestInnerCredDef);
 
 
         CredentialProof proof = new CredentialProof();
@@ -382,4 +390,76 @@ public class VCIssuanceServiceImplTest {
         InvalidRequestException ex = assertThrows(InvalidRequestException.class, () -> issuanceService.getDIDDocument());
         assertEquals(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE, ex.getErrorCode());
     }
+
+    @Test
+    public void getCredential_JwtVcJson_Success() throws VCIExchangeException {
+        request = createValidCredentialRequest(VCFormats.JWT_VC_JSON);
+        when(parsedAccessToken.isActive()).thenReturn(true);
+        when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
+        when(vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH)).thenReturn(transaction);
+        when(proofValidatorFactory.getProofValidator(anyString())).thenReturn(proofValidator);
+        when(proofValidator.validateV2(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
+        when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn(HOLDER_ID);
+
+        VCResult<String> jwtVcResult = new VCResult<>();
+        String dummyJwtVc = "dummy.jwt.vc.string";
+        jwtVcResult.setCredential(dummyJwtVc);
+        when(vcIssuancePlugin.getVerifiableCredential(any(VCRequestDto.class), eq(HOLDER_ID), eq(claimsFromAccessToken)))
+                .thenReturn(jwtVcResult);
+
+        CredentialResponse<?> response = issuanceService.getCredential(request);
+
+        assertNotNull(response);
+        assertEquals(VCFormats.JWT_VC_JSON, response.getFormat());
+        assertEquals(dummyJwtVc, response.getCredential());
+        assertNull(response.getCNonce()); // c_nonce should be null for successful JWT issuance
+        assertNull(response.getCNonceExpiresIn());
+        verify(auditWrapper).logAudit(eq(Action.VC_ISSUANCE), eq(ActionStatus.SUCCESS), any(), isNull());
+    }
+
+    @Test
+    public void getCredential_JwtVcJsonLd_Success() throws VCIExchangeException {
+        request = createValidCredentialRequest(VCFormats.JWT_VC_JSON_LD); // Using the constant
+        when(parsedAccessToken.isActive()).thenReturn(true);
+        when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
+        when(vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH)).thenReturn(transaction);
+        when(proofValidatorFactory.getProofValidator(anyString())).thenReturn(proofValidator);
+        when(proofValidator.validateV2(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
+        when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn(HOLDER_ID);
+
+        VCResult<String> jwtVcJsonLdResult = new VCResult<>();
+        String dummyJwtVcJsonLd = "dummy.jwt.vc.jsonld.string";
+        jwtVcJsonLdResult.setCredential(dummyJwtVcJsonLd);
+        when(vcIssuancePlugin.getVerifiableCredential(any(VCRequestDto.class), eq(HOLDER_ID), eq(claimsFromAccessToken)))
+                .thenReturn(jwtVcJsonLdResult);
+
+        CredentialResponse<?> response = issuanceService.getCredential(request);
+
+        assertNotNull(response);
+        assertEquals(VCFormats.JWT_VC_JSON_LD, response.getFormat());
+        assertEquals(dummyJwtVcJsonLd, response.getCredential());
+        assertNull(response.getCNonce());
+        assertNull(response.getCNonceExpiresIn());
+        verify(auditWrapper).logAudit(eq(Action.VC_ISSUANCE), eq(ActionStatus.SUCCESS), any(), isNull());
+    }
+
+    @Test
+    public void getCredential_PluginThrowsVCIExchangeException_Fail() throws VCIExchangeException {
+        request = createValidCredentialRequest(VCFormats.LDP_VC); // Using LDP_VC path for this test
+        when(parsedAccessToken.isActive()).thenReturn(true);
+        when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
+        when(vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH)).thenReturn(transaction);
+        when(proofValidatorFactory.getProofValidator(anyString())).thenReturn(proofValidator);
+        when(proofValidator.validateV2(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
+        when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn(HOLDER_ID);
+
+        // Mock the plugin to throw the specific exception
+        when(vcIssuancePlugin.getVerifiableCredentialWithLinkedDataProof(any(VCRequestDto.class), eq(HOLDER_ID), eq(claimsFromAccessToken)))
+                .thenThrow(new VCIExchangeException(ErrorConstants.INVALID_CREDENTIAL_TYPE));
+
+        CertifyException ex = assertThrows(CertifyException.class, () -> issuanceService.getCredential(request));
+        assertEquals(ErrorConstants.INVALID_CREDENTIAL_TYPE, ex.getErrorCode());
+        verify(auditWrapper).logAudit(eq(Action.VC_ISSUANCE), eq(ActionStatus.ERROR), any(), isNull());
+    }
+
 }

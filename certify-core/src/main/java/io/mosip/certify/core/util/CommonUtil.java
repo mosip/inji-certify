@@ -62,6 +62,11 @@ public class CommonUtil {
      * @throws CertifyException
      */
     public static String generateOIDCAtHash(String accessToken) throws CertifyException {
+        if (accessToken == null) {
+            // Assuming ErrorConstants.INVALID_ACCESS_TOKEN is suitable or a new one like NULL_ACCESS_TOKEN would be defined.
+            // For this exercise, using a descriptive message directly.
+            throw new CertifyException(ErrorConstants.INVALID_REQUEST, "Access token cannot be null");
+        }
         try {
             MessageDigest digest = MessageDigest.getInstance(ALGO_SHA_256);
             byte[] hash = digest.digest(accessToken.getBytes(StandardCharsets.UTF_8));
@@ -75,6 +80,9 @@ public class CommonUtil {
     }
 
     public static String generateRandomAlphaNumeric(int length) {
+        if (length < 0) {
+            throw new IllegalArgumentException("Length cannot be negative");
+        }
         StringBuilder builder = new StringBuilder();
         for(int i=0; i<length; i++) {
             int index = ThreadLocalRandom.current().nextInt(CHARACTERS.length());	//NOSONAR This random number generator is safe here.

@@ -251,4 +251,33 @@ public class VCIssuanceControllerTest {
                 .andExpect(jsonPath("$.format").exists())
                 .andExpect(jsonPath("$.credential").exists());
     }
+
+    @Test
+    public void getDIDDocument_Success() throws Exception {
+        Map<String, Object> didDocument = new HashMap<>();
+        didDocument.put("@context", "https://www.w3.org/ns/did/v1");
+        didDocument.put("id", "did:example:123");
+        didDocument.put("verificationMethod", Arrays.asList(Map.of(
+                "id", "did:example:123#keys-1",
+                "type", "JsonWebKey2020",
+                "controller", "did:example:123",
+                "publicKeyJwk", Map.of(
+                        "kty", "RSA",
+                        "n", "some_modulus",
+                        "e", "AQAB"
+                )
+        )));
+        // Add other relevant DID document fields if needed for more comprehensive testing
+
+        Mockito.when(vcIssuanceService.getDIDDocument()).thenReturn(didDocument);
+
+        mockMvc.perform(get("/issuance/.well-known/did.json"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/json"))
+                .andExpect(jsonPath("$.id").value("did:example:123"))
+                .andExpect(jsonPath("$.@context").value("https://www.w3.org/ns/did/v1"))
+                .andExpect(jsonPath("$.verificationMethod[0].id").value("did:example:123#keys-1"));
+
+        Mockito.verify(vcIssuanceService, Mockito.times(1)).getDIDDocument();
+    }
 }
