@@ -93,6 +93,13 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		// else do nothing
 	}
 	
+	public static String extractAndEncodeVcTemplate(String requestJsonStr) {
+		JSONObject requestJson = new JSONObject(requestJsonStr);
+		JSONObject vcTemplate = requestJson.getJSONObject("vcTemplate");
+		String base64Encoded = Base64.getEncoder()
+				.encodeToString(vcTemplate.toString().getBytes(StandardCharsets.UTF_8));
+		return requestJson.put("vcTemplate", base64Encoded).toString();
+	}
 	public static void dBCleanup() {
 		DBManager.executeDBQueries(InjiCertifyConfigManager.getKMDbUrl(), InjiCertifyConfigManager.getKMDbUser(),
 				InjiCertifyConfigManager.getKMDbPass(), InjiCertifyConfigManager.getKMDbSchema(),
@@ -785,17 +792,12 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		} else if (testCaseName.contains("_GenerateToken_ForMockIDA")) {
 			tempURL = getValueFromEsignetWellKnownEndPoint("token_endpoint",
 					InjiCertifyConfigManager.getEsignetBaseUrl());
-		} else if (testCaseName.contains("_GenerateToken_ForLandRegistry")) {
+		} else if (testCaseName.contains("_GenerateToken_ForLandRegistry")|| testCaseName.contains("_GenerateToken_FormDoc")) {
 			tempURL = getValueFromEsignetWellKnownEndPoint("token_endpoint",
 					InjiCertifyConfigManager.getEsignetBaseUrl());
-		} else if (testCaseName.contains("_GenerateToken_FormDoc")) {
-			tempURL = getValueFromEsignetWellKnownEndPoint("token_endpoint",
-					InjiCertifyConfigManager.getEsignetBaseUrl());			
 		} else if (testCaseName.contains("_GetCredentialForMockIDA")) {
 			tempURL = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer", baseURL);
-		} else if (testCaseName.contains("_GetCredentialForLandRegistry")) {
-			tempURL = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer", baseURL);
-		} else if (testCaseName.contains("_GetCredentialFormDoc")) {
+		} else if (testCaseName.contains("_GetCredentialForLandRegistry")|| testCaseName.contains("_GetCredentialFormDoc")) {
 			tempURL = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer", baseURL);
 		}
 

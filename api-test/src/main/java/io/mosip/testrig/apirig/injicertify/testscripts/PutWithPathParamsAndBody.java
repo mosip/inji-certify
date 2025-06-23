@@ -101,15 +101,12 @@ public class PutWithPathParamsAndBody extends InjiCertifyUtil implements ITest {
 		String inputJson = filterInputHbs(testCaseDTO);
 		inputJson = InjiCertifyUtil.inputStringKeyWordHandeler(inputJson, testCaseName);
 		
-		JSONObject responseJson = new JSONObject(inputJson);
+		JSONObject requestJson = new JSONObject(inputJson);
         // Check and encode vcTemplate
-        if (responseJson.has("vcTemplate") && responseJson.get("vcTemplate") instanceof JSONObject) {
-            JSONObject vcTemplate = responseJson.getJSONObject("vcTemplate");
-            String base64Encoded = Base64.getEncoder().encodeToString(vcTemplate.toString().getBytes());
-           // Replace vcTemplate with Base64 string
-            responseJson.put("vcTemplate", base64Encoded);
-            inputJson = responseJson.toString();
-        }		
+        if (requestJson.has("vcTemplate") && requestJson.get("vcTemplate") instanceof JSONObject) {
+        	
+        	inputJson = extractAndEncodeVcTemplate(requestJson.toString());
+        }	
 
 		if (testCaseDTO.getTemplateFields() != null && templateFields.length > 0) {
 			ArrayList<JSONObject> inputtestCases = AdminTestUtil.getInputTestCase(testCaseDTO);
