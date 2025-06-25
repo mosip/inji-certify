@@ -29,7 +29,6 @@ CreateOIDCClientV2VCIForLandRegistry:
       output: '{
     	"status": "ACTIVE"
 }'
-CreateOIDCClientV2VCIForLandRegistryEccR1:
    InjiCertify_ESignet_CreateOIDCClientV2_For_LandRegistry_EccR1_all_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/client-mgmt/oauth-client
       uniqueIdentifier: TC_esignetDependent_CreateOidc_For_EccR1
