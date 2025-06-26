@@ -6,10 +6,12 @@ import io.mosip.certify.core.dto.CredentialConfigurationDTO;
 import io.mosip.certify.core.dto.CredentialConfigurationSupportedDTO;
 import io.mosip.certify.core.dto.CredentialIssuerMetadataDTO;
 import io.mosip.certify.core.exception.CertifyException;
+import io.mosip.certify.core.exception.CredentialConfigException;
 import io.mosip.certify.entity.CredentialConfig;
 import io.mosip.certify.mapper.CredentialConfigMapper;
 import io.mosip.certify.repository.CredentialConfigRepository;
 import io.mosip.certify.utils.CredentialCacheKeyGenerator;
+import org.checkerframework.checker.units.qual.C;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -119,7 +121,7 @@ public class CredentialConfigurationServiceImplTest {
         when(credentialConfigRepository.findByConfigId("12345678"))
                 .thenReturn(Optional.empty());
 
-        CertifyException exception = assertThrows(CertifyException.class, () ->
+        CredentialConfigException exception = assertThrows(CredentialConfigException.class, () ->
                 credentialConfigurationService.getCredentialConfigurationById("12345678"));
 
         assertEquals("Configuration not found with the provided id: " + "12345678", exception.getMessage());
@@ -167,7 +169,7 @@ public class CredentialConfigurationServiceImplTest {
         when(credentialConfigRepository.findByConfigId(anyString()))
                 .thenReturn(Optional.empty());
 
-        CertifyException exception = assertThrows(CertifyException.class, () ->
+        CredentialConfigException exception = assertThrows(CredentialConfigException.class, () ->
                 credentialConfigurationService.updateCredentialConfiguration("12345678", new CredentialConfigurationDTO()));
 
         assertEquals("Configuration not found with the provided id: " + "12345678", exception.getMessage());
@@ -189,7 +191,7 @@ public class CredentialConfigurationServiceImplTest {
         when(credentialConfigRepository.findByConfigId(anyString()))
                 .thenReturn(Optional.empty());
 
-        CertifyException exception = assertThrows(CertifyException.class, () ->
+        CredentialConfigException exception = assertThrows(CredentialConfigException.class, () ->
                 credentialConfigurationService.deleteCredentialConfigurationById("12345678"));
 
         assertEquals("Configuration not found with the provided id: 12345678", exception.getMessage());
