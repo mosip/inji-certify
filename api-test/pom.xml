@@ -32,7 +32,7 @@
 			<organizationUrl>https://github.com/mosip/inji-certify</organizationUrl>
 		</developer>
 	</developers>
-	
+
 	<repositories>
 		<repository>
 			<id>ossrh-central</id>
@@ -42,6 +42,10 @@
 			<snapshots>
 				<enabled>true</enabled>
 			</snapshots>
+		</repository>
+		<repository>
+			<id>danubetech-maven-public</id>
+			<url>https://repo.danubetech.com/repository/maven-public/</url>
 		</repository>
 	</repositories>
 
@@ -71,25 +75,47 @@
 			<version>1.3.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
+			<groupId>com.danubetech</groupId>
+			<artifactId>verifiable-credentials-java</artifactId>
+			<version>1.7.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.danubetech</groupId>
+			<artifactId>data-integrity-java</artifactId>
+			<version>1.12.0</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.squareup.okhttp3</groupId>
+					<artifactId>okhttp</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
 			<groupId>com.github.openjson</groupId>
 			<artifactId>openjson</artifactId>
 			<version>1.0.11</version>
 		</dependency>
 		<dependency>
-		    <groupId>com.nimbusds</groupId>
-		    <artifactId>nimbus-jose-jwt</artifactId>
-		    <version>9.41.2</version>
+			<groupId>com.nimbusds</groupId>
+			<artifactId>nimbus-jose-jwt</artifactId>
+			<version>9.41.2</version>
 		</dependency>
 
 		<dependency>
-		    <groupId>com.google.crypto.tink</groupId>
-		    <artifactId>tink</artifactId>
-		    <version>1.13.0</version>
+			<groupId>com.google.crypto.tink</groupId>
+			<artifactId>tink</artifactId>
+			<version>1.13.0</version>
 		</dependency>
 		<dependency>
-		    <groupId>org.bitcoinj</groupId>
-		    <artifactId>bitcoinj-core</artifactId>
-		    <version>0.15.10</version>
+			<groupId>org.bitcoinj</groupId>
+			<artifactId>bitcoinj-core</artifactId>
+			<version>0.15.10</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.squareup.okhttp3</groupId>
+					<artifactId>okhttp</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 	</dependencies>
