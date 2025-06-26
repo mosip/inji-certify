@@ -262,7 +262,10 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
             } else if (value instanceof String){
                 // entities which need to be quoted
                 finalTemplate.put(key, JSONObject.wrap(value));
-            } else {
+            } else if( value instanceof Map<?,?>) {
+                finalTemplate.put(key,JSONObject.wrap(value));
+            }
+            else {
                 // no conversion needed
                 finalTemplate.put(key, value);
             }
