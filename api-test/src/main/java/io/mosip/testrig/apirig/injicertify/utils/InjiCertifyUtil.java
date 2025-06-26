@@ -26,6 +26,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.bitcoinj.core.Base58;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 
@@ -56,6 +57,7 @@ import io.mosip.testrig.apirig.injicertify.testrunner.MosipTestRunner;
 import io.mosip.testrig.apirig.testrunner.OTPListener;
 import io.mosip.testrig.apirig.utils.AdminTestUtil;
 import io.mosip.testrig.apirig.utils.GlobalConstants;
+import io.mosip.testrig.apirig.utils.GlobalMethods;
 import io.mosip.testrig.apirig.utils.JWKKeyUtil;
 import io.mosip.testrig.apirig.utils.RestClient;
 import io.mosip.testrig.apirig.utils.SkipTestCaseHandler;
@@ -508,41 +510,59 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	
 	public static JSONArray esignetActuatorResponseArray = null;
 
-	public static String getValueFromEsignetActuator(String section, String key) {
-		String url = InjiCertifyConfigManager.getEsignetBaseUrl() + InjiCertifyConfigManager.getproperty("actuatorEsignetEndpoint");
-		String actuatorCacheKey = url + section + key;
-		String value = actuatorValueCache.get(actuatorCacheKey);
-		if (value != null && !value.isEmpty())
-			return value;
+	/*
+	 * public static String getValueFromEsignetActuator(String section, String key)
+	 * { String url = InjiCertifyConfigManager.getEsignetBaseUrl() +
+	 * InjiCertifyConfigManager.getproperty("actuatorEsignetEndpoint"); String
+	 * actuatorCacheKey = url + section + key; String value =
+	 * actuatorValueCache.get(actuatorCacheKey); if (value != null &&
+	 * !value.isEmpty()) return value;
+	 * 
+	 * try { if (esignetActuatorResponseArray == null) { Response response = null;
+	 * JSONObject responseJson = null; response = RestClient.getRequest(url,
+	 * MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON); responseJson = new
+	 * JSONObject(response.getBody().asString()); esignetActuatorResponseArray =
+	 * responseJson.getJSONArray("propertySources"); }
+	 * 
+	 * for (int i = 0, size = esignetActuatorResponseArray.length(); i < size; i++)
+	 * { JSONObject eachJson = esignetActuatorResponseArray.getJSONObject(i); if
+	 * (eachJson.get("name").toString().contains(section)) { value =
+	 * eachJson.getJSONObject(GlobalConstants.PROPERTIES).getJSONObject(key)
+	 * .get(GlobalConstants.VALUE).toString(); if
+	 * (InjiCertifyConfigManager.IsDebugEnabled()) logger.info("Actuator: " + url +
+	 * " key: " + key + " value: " + value); break; } }
+	 * actuatorValueCache.put(actuatorCacheKey, value);
+	 * 
+	 * return value; } catch (Exception e) {
+	 * logger.error(GlobalConstants.EXCEPTION_STRING_2 + e); return value; }
+	 * 
+	 * }
+	 */
+	
+	public static JSONArray esignetActiveProfiles = null;
+	
+	public static JSONArray getActiveProfilesFromActuator(String url, String key) {
+		JSONArray activeProfiles = null;
 
 		try {
-			if (esignetActuatorResponseArray == null) {
-				Response response = null;
-				JSONObject responseJson = null;
-				response = RestClient.getRequest(url, MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON);
-				responseJson = new JSONObject(response.getBody().asString());
-				esignetActuatorResponseArray = responseJson.getJSONArray("propertySources");
+			Response response = RestClient.getRequest(url, MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON);
+			JSONObject responseJson = new JSONObject(response.getBody().asString());
+
+			// If the key exists in the response, return the associated JSONArray
+			if (responseJson.has(key)) {
+				activeProfiles = responseJson.getJSONArray(key);
+			} else {
+				logger.warn("The key '" + key + "' was not found in the response.");
 			}
 
-			for (int i = 0, size = esignetActuatorResponseArray.length(); i < size; i++) {
-				JSONObject eachJson = esignetActuatorResponseArray.getJSONObject(i);
-				if (eachJson.get("name").toString().contains(section)) {
-					value = eachJson.getJSONObject(GlobalConstants.PROPERTIES).getJSONObject(key)
-							.get(GlobalConstants.VALUE).toString();
-					if (InjiCertifyConfigManager.IsDebugEnabled())
-						logger.info("Actuator: " + url + " key: " + key + " value: " + value);
-					break;
-				}
-			}
-			actuatorValueCache.put(actuatorCacheKey, value);
-
-			return value;
 		} catch (Exception e) {
-			logger.error(GlobalConstants.EXCEPTION_STRING_2 + e);
-			return value;
+			// Handle other errors like network issues, etc.
+			logger.error("Error fetching active profiles from the actuator: " + e.getMessage());
 		}
 
+		return activeProfiles;
 	}
+	
 	
 	public static Map<String, List<String>> proofSigningAlgorithmsMap = new HashMap<>();
 	
@@ -863,6 +883,14 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	
 	public static TestCaseDTO isTestCaseValidForExecution(TestCaseDTO testCaseDTO) {
 		String testCaseName = testCaseDTO.getTestCaseName();
+		
+		//When the captcha is enabled we cannot execute the test case as we can not generate the captcha token
+		if (isCaptchaEnabled() == true) {
+			GlobalMethods.reportCaptchaStatus(GlobalConstants.CAPTCHA_ENABLED, true);
+			throw new SkipException(GlobalConstants.CAPTCHA_ENABLED_MESSAGE);
+		}else {
+			GlobalMethods.reportCaptchaStatus(GlobalConstants.CAPTCHA_ENABLED, false);
+		}
 
 		if (MosipTestRunner.skipAll == true) {
 			throw new SkipException(GlobalConstants.PRE_REQUISITE_FAILED_MESSAGE);
@@ -1093,9 +1121,6 @@ public class InjiCertifyUtil extends AdminTestUtil {
 
 	    return "did:key:z" + Base58.encode(combined);
 	}
-
-
-	
 	public static String signED25519JWT(String clientId, String accessToken, String testCaseName, String tempUrl) {
 		int idTokenExpirySecs = Integer
 				.parseInt(getValueFromEsignetActuator(InjiCertifyConfigManager.getEsignetActuatorPropertySection(),

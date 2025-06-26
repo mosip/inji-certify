@@ -8,7 +8,7 @@
 	<name>apitest-injicertify</name>
 	<description>Parent project of apitest-injicertify</description>
 	<url>https://github.com/mosip/inji-certify</url>
-	<version>0.12.0-develop-SNAPSHOT</version>
+	<version>1.2.1-SNAPSHOT</version>
 
 	<licenses>
 		<license>
@@ -32,7 +32,18 @@
 			<organizationUrl>https://github.com/mosip/inji-certify</organizationUrl>
 		</developer>
 	</developers>
-
+	
+	<repositories>
+		<repository>
+			<id>ossrh-central</id>
+			<name>MavenCentralRepository</name>
+			<url>https://central.sonatype.com/repository/maven-snapshots/</url>
+			<layout>default</layout>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 
 	<properties>
 		<!-- kernel versions -->
@@ -51,7 +62,7 @@
 		<maven.source.plugin.version>2.2.1</maven.source.plugin.version>
 
 		<git.commit.id.plugin.version>3.0.1</git.commit.id.plugin.version>
-		<fileName>apitest-injicertify-0.12.0-develop-SNAPSHOT-jar-with-dependencies</fileName>
+		<fileName>apitest-injicertify-1.2.1-SNAPSHOT-jar-with-dependencies</fileName>
 	</properties>
 	<dependencies>
 		<dependency>
