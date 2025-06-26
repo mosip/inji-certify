@@ -510,59 +510,41 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	
 	public static JSONArray esignetActuatorResponseArray = null;
 
-	/*
-	 * public static String getValueFromEsignetActuator(String section, String key)
-	 * { String url = InjiCertifyConfigManager.getEsignetBaseUrl() +
-	 * InjiCertifyConfigManager.getproperty("actuatorEsignetEndpoint"); String
-	 * actuatorCacheKey = url + section + key; String value =
-	 * actuatorValueCache.get(actuatorCacheKey); if (value != null &&
-	 * !value.isEmpty()) return value;
-	 * 
-	 * try { if (esignetActuatorResponseArray == null) { Response response = null;
-	 * JSONObject responseJson = null; response = RestClient.getRequest(url,
-	 * MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON); responseJson = new
-	 * JSONObject(response.getBody().asString()); esignetActuatorResponseArray =
-	 * responseJson.getJSONArray("propertySources"); }
-	 * 
-	 * for (int i = 0, size = esignetActuatorResponseArray.length(); i < size; i++)
-	 * { JSONObject eachJson = esignetActuatorResponseArray.getJSONObject(i); if
-	 * (eachJson.get("name").toString().contains(section)) { value =
-	 * eachJson.getJSONObject(GlobalConstants.PROPERTIES).getJSONObject(key)
-	 * .get(GlobalConstants.VALUE).toString(); if
-	 * (InjiCertifyConfigManager.IsDebugEnabled()) logger.info("Actuator: " + url +
-	 * " key: " + key + " value: " + value); break; } }
-	 * actuatorValueCache.put(actuatorCacheKey, value);
-	 * 
-	 * return value; } catch (Exception e) {
-	 * logger.error(GlobalConstants.EXCEPTION_STRING_2 + e); return value; }
-	 * 
-	 * }
-	 */
-	
-	public static JSONArray esignetActiveProfiles = null;
-	
-	public static JSONArray getActiveProfilesFromActuator(String url, String key) {
-		JSONArray activeProfiles = null;
+	public static String getValueFromEsignetActuator(String section, String key) {
+		String url = InjiCertifyConfigManager.getEsignetBaseUrl() + InjiCertifyConfigManager.getproperty("actuatorEsignetEndpoint");
+		String actuatorCacheKey = url + section + key;
+		String value = actuatorValueCache.get(actuatorCacheKey);
+		if (value != null && !value.isEmpty())
+			return value;
 
 		try {
-			Response response = RestClient.getRequest(url, MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON);
-			JSONObject responseJson = new JSONObject(response.getBody().asString());
-
-			// If the key exists in the response, return the associated JSONArray
-			if (responseJson.has(key)) {
-				activeProfiles = responseJson.getJSONArray(key);
-			} else {
-				logger.warn("The key '" + key + "' was not found in the response.");
+			if (esignetActuatorResponseArray == null) {
+				Response response = null;
+				JSONObject responseJson = null;
+				response = RestClient.getRequest(url, MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON);
+				responseJson = new JSONObject(response.getBody().asString());
+				esignetActuatorResponseArray = responseJson.getJSONArray("propertySources");
 			}
 
+			for (int i = 0, size = esignetActuatorResponseArray.length(); i < size; i++) {
+				JSONObject eachJson = esignetActuatorResponseArray.getJSONObject(i);
+				if (eachJson.get("name").toString().contains(section)) {
+					value = eachJson.getJSONObject(GlobalConstants.PROPERTIES).getJSONObject(key)
+							.get(GlobalConstants.VALUE).toString();
+					if (InjiCertifyConfigManager.IsDebugEnabled())
+						logger.info("Actuator: " + url + " key: " + key + " value: " + value);
+					break;
+				}
+			}
+			actuatorValueCache.put(actuatorCacheKey, value);
+
+			return value;
 		} catch (Exception e) {
-			// Handle other errors like network issues, etc.
-			logger.error("Error fetching active profiles from the actuator: " + e.getMessage());
+			logger.error(GlobalConstants.EXCEPTION_STRING_2 + e);
+			return value;
 		}
 
-		return activeProfiles;
 	}
-	
 	
 	public static Map<String, List<String>> proofSigningAlgorithmsMap = new HashMap<>();
 	
@@ -1145,8 +1127,6 @@ public class InjiCertifyUtil extends AdminTestUtil {
 				header = new JWSHeader.Builder(JWSAlgorithm.Ed25519)
 						.type(new JOSEObjectType("openid4vci-proof+jwt")).jwk(edJWK.toPublicJWK()).build();
 			}
-
-			
 
 			Date currentTime = new Date();
 
