@@ -1,9 +1,9 @@
 {
 	"info": {
-		"_postman_id": "71d7ab55-0817-40ad-97c7-c95f939a3e3e",
+		"_postman_id": "b14bec64-68c7-4af6-ba8c-384255475146",
 		"name": "eSignet with Sunbird RC",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "24329429"
+		"_exporter_id": "8424573"
 	},
 	"item": [
 		{
@@ -955,6 +955,135 @@
 							],
 							"path": [
 								"vci",
+								".well-known",
+								"openid-credential-issuer"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Credential Configuration",
+			"item": [
+				{
+					"name": "Add New Config",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"credentialConfigKeyId\": \"InsuranceCredential\",\r\n    \"keyManagerAppId\": \"\",\r\n    \"keyManagerRefId\": \"\",\r\n    \"signatureAlgo\": \"\",\r\n    \"vcTemplate\": \"\",\r\n  \"context\": [\r\n    \"https://www.w3.org/2018/credentials/v1\"\r\n  ],\r\n  \"credentialType\": [\r\n    \"VerifiableCredential\",\r\n    \"InsuranceCredential\"\r\n  ],\r\n  \"credentialFormat\": \"ldp_vc\",\r\n  \"didUrl\": \"\",\r\n  \"display\": [{\r\n    \"name\": \"Insurance Credential\",\r\n    \"locale\": \"en\",\r\n    \"logo\": {\r\n      \"url\": \"https://mosip.github.io/inji-config/logos/mosipid-logo.png\",\r\n      \"alt_text\": \"a square logo of a MOSIP\"\r\n    },\r\n    \"background_image\": { \"uri\": \"https://mosip.github.io/inji-config/vcbackground/default-background.png\" },\r\n    \"background_color\": \"#12107c\",\r\n    \"text_color\": \"#FFFFFF\"\r\n  }],\r\n  \"order\": [\r\n    \"fullName\",\r\n    \"policyName\",\r\n    \"policyExpiresOn\",\r\n    \"policyIssuedOn\",\r\n    \"policyNumber\",\r\n    \"mobile\",\r\n    \"dob\",\r\n    \"gender\",\r\n    \"benefits\",\r\n    \"email\"\r\n  ],\r\n  \"scope\": \"sunbird_rc_insurance_vc_ldp\",\r\n  \"cryptographic_binding_methods_supported\": [\r\n    \"did:jwk\"\r\n  ],\r\n  \"credential_signing_alg_values_supported\": [\r\n    \"Ed25519Signature2020\"\r\n  ],\r\n  \"proof_types_supported\": {\r\n    \"jwt\": {\r\n      \"proof_signing_alg_values_supported\": [\r\n        \"RS256\",\r\n        \"ES256\"\r\n      ]\r\n    }\r\n  },\r\n  \"doctype\": null,\r\n  \"credentialSubject\": {\r\n    \"fullName\": {\r\n        \"display\": [\r\n            {\r\n                \"name\": \"Name\", \r\n                \"locale\": \"en\"\r\n            }\r\n        ]\r\n    },\r\n    \"mobile\": {\r\n        \"display\": [\r\n            {\r\n                \"name\": \"Phone Number\", \r\n                \"locale\": \"en\"\r\n            }\r\n        ]\r\n    },\r\n    \"dob\": {\r\n        \"display\": [\r\n            {\r\n                \"name\": \"Date of Birth\", \r\n                \"locale\": \"en\"\r\n            }\r\n        ]\r\n    },\r\n    \"gender\": {\r\n        \"display\": [\r\n            {\r\n                \"name\": \"Gender\", \r\n                \"locale\": \"en\"\r\n            }\r\n        ]\r\n    },\r\n    \"benefits\": {\r\n        \"display\": [\r\n            {\r\n                \"name\": \"Benefits\", \r\n                \"locale\": \"en\"\r\n            }\r\n        ]\r\n    },\r\n    \"email\": {\r\n        \"display\": [\r\n            {\r\n                \"name\": \"Email Id\", \r\n                \"locale\": \"en\"\r\n            }\r\n        ]\r\n    },\r\n    \"policyIssuedOn\": {\r\n        \"display\": [\r\n            {\r\n                \"name\": \"Policy Issued On\", \r\n                \"locale\": \"en\"\r\n            }\r\n        ]\r\n    },\r\n    \"policyExpiresOn\": {\r\n        \"display\": [\r\n            {\r\n                \"name\": \"Policy Expires On\", \r\n                \"locale\": \"en\"\r\n            }\r\n        ]\r\n    },\r\n    \"policyName\": {\r\n        \"display\": [\r\n            {\r\n                \"name\": \"Policy Name\", \r\n                \"locale\": \"en\"\r\n            }\r\n        ]\r\n    },\r\n    \"policyNumber\": {\r\n        \"display\": [\r\n            {\r\n                \"name\": \"'Policy Number\", \r\n                \"locale\": \"en\"\r\n            }\r\n        ]\r\n    }\r\n  },\r\n  \"pluginConfigurations\": null\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{certifyurl}}/credentials/configurations",
+							"host": [
+								"{{certifyurl}}"
+							],
+							"path": [
+								"credentials",
+								"configurations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Configuration By Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{certifyurl}}/credentials/configurations/{{configId}}",
+							"host": [
+								"{{certifyurl}}"
+							],
+							"path": [
+								"credentials",
+								"configurations",
+								"{{configId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Configuration By Id",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"vcTemplate\": \"ewogICAgICAgICAiQGNvbnRleHQiOiBbCiAgICAgICAgICAgICAgICAgImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL3YxIiwKICAgICAgICAgICAgICAgICAiaHR0cHM6Ly9tb3NpcC5naXRodWIuaW8vaW5qaS1jb25maWcvY29sbGFiL2NvbnRleHRzL3VuaXZlcnNpdHkuanNvbiIsCiAgICAgICAgICAgICAgICAgImh0dHBzOi8vdzNpZC5vcmcvc2VjdXJpdHkvc3VpdGVzL2VkMjU1MTktMjAyMC92MSIKICAgICAgICAgXSwKICAgICAgICAgImlzc3VlciI6ICIke19pc3N1ZXJ9IiwKICAgICAgICAgInR5cGUiOiBbCiAgICAgICAgICAgICAiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLAogICAgICAgICAgICAgIlVuaXZlcnNpdHlDcmVkZW50aWFsIgogICAgICAgICBdLAogICAgICAgICAiaXNzdWFuY2VEYXRlIjogIiR7dmFsaWRGcm9tfSIsCiAgICAgICAgICJleHBpcmF0aW9uRGF0ZSI6ICIke3ZhbGlkVW50aWx9IiwKICAgICAgICAgICJjcmVkZW50aWFsU3ViamVjdCI6IHsKICAgICAgICAgICAgImlkIjogIiR7X2hvbGRlcklkfSIsCiAgICAgICAgICAgICJzdHVkZW50TmFtZSI6ICIke3N0dWRlbnRfbmFtZX0iLAogICAgICAgICAgICAicm9sbE51bWJlciI6ICIke3JvbGxfbnVtYmVyfSIsCiAgICAgICAgICAgICJkYXRlT2ZCaXJ0aCI6ICIke2RhdGVfb2ZfYmlydGh9IiwKICAgICAgICAgICAgImdlbmRlciI6ICIke2dlbmRlcn0iLAogICAgICAgICAgICAiY291cnNlTmFtZSI6ICIke2NvdXJzZV9uYW1lfSIsCiAgICAgICAgICAgICJjb3Vyc2VEaXZpc2lvbk5hbWUiOiAiJHtjb3Vyc2VfZGl2aXNpb25fbmFtZX0iLAogICAgICAgICAgICAiY291cnNlRHVyYXRpb24iOiAiJHtjb3Vyc2VfZHVyYXRpb259IiwKICAgICAgICAgICAgInJlc3VsdCI6ICIke3Jlc3VsdH0iLAogICAgICAgICAgICAic3RhcnREYXRlIjogIiR7c3RhcnRfZGF0ZX0iLAogICAgICAgICAgICAiY29tcGxldGlvbkRhdGUiOiAiJHtjb21wbGV0aW9uX2RhdGV9IgogICAgICAgIH0KICAgICB9\",\r\n    \"credentialConfigKeyId\": \"UniversityCredential\",\r\n    \"context\": [\r\n        \"https://www.w3.org/2018/credentials/v1\"\r\n    ],\r\n    \"credentialType\": [\r\n        \"UniversityCredential\",\r\n        \"VerifiableCredential\"\r\n    ],\r\n    \"credentialFormat\": \"ldp_vc\",\r\n    \"didUrl\": \"did:web:mosip.github.io:inji-config:dev-int-inji:academic-ed25519#key-0\",\r\n    \"keyManagerAppId\": \"CERTIFY_VC_SIGN_ED25519\",\r\n    \"keyManagerRefId\": \"ED25519_SIGN\",\r\n    \"signatureAlgo\": \"EdDSA\",\r\n    \"display\": [\r\n        {\r\n            \"logo\": {\r\n                \"url\": \"https://mosip.github.io/inji-config/logos/veridonia-university.png\",\r\n                \"alt_text\": \"Certificate logo\"\r\n            },\r\n            \"name\": \"Graduation Certificate\",\r\n            \"locale\": \"en\",\r\n            \"text_color\": \"#000000\",\r\n            \"background_color\": \"#f8efea\"\r\n        }\r\n    ],\r\n    \"order\": [\r\n        \"studentName\",\r\n        \"rollNumber\",\r\n        \"gender\",\r\n        \"dateOfBirth\",\r\n        \"courseName\",\r\n        \"courseDivisionName\",\r\n        \"courseDuration\",\r\n        \"result\",\r\n        \"startDate\",\r\n        \"completionDate\"\r\n    ],\r\n    \"scope\": \"university_vc_ldp\",\r\n    \"cryptographic_binding_methods_supported\": [\r\n        \"did:jwk\"\r\n    ],\r\n    \"credential_signing_alg_values_supported\": [\r\n        \"Ed25519Signature2020\"\r\n    ],\r\n    \"proof_types_supported\": {\r\n        \"jwt\": {\r\n            \"proof_signing_alg_values_supported\": [\r\n                \"RS256\",\r\n                \"ES256\",\r\n                \"PS256\",\r\n                \"EdDSA\",\r\n                \"Ed25519\"\r\n            ]\r\n        }\r\n    },\r\n    \"credentialSubject\": {\r\n        \"gender\": {\r\n            \"display\": [\r\n                {\r\n                    \"name\": \"Gender\",\r\n                    \"locale\": \"en\"\r\n                }\r\n            ]\r\n        },\r\n        \"result\": {\r\n            \"display\": [\r\n                {\r\n                    \"name\": \"Result\",\r\n                    \"locale\": \"en\"\r\n                }\r\n            ]\r\n        },\r\n        \"startDate\": {\r\n            \"display\": [\r\n                {\r\n                    \"name\": \"Start Date\",\r\n                    \"locale\": \"en\"\r\n                }\r\n            ]\r\n        },\r\n        \"courseName\": {\r\n            \"display\": [\r\n                {\r\n                    \"name\": \"Course Name\",\r\n                    \"locale\": \"en\"\r\n                }\r\n            ]\r\n        },\r\n        \"rollNumber\": {\r\n            \"display\": [\r\n                {\r\n                    \"name\": \"Roll Number\",\r\n                    \"locale\": \"en\"\r\n                }\r\n            ]\r\n        },\r\n        \"dateOfBirth\": {\r\n            \"display\": [\r\n                {\r\n                    \"name\": \"Date Of Birth\",\r\n                    \"locale\": \"en\"\r\n                }\r\n            ]\r\n        },\r\n        \"studentName\": {\r\n            \"display\": [\r\n                {\r\n                    \"name\": \"Student Name\",\r\n                    \"locale\": \"en\"\r\n                }\r\n            ]\r\n        },\r\n        \"completionDate\": {\r\n            \"display\": [\r\n                {\r\n                    \"name\": \"Completion Date\",\r\n                    \"locale\": \"en\"\r\n                }\r\n            ]\r\n        },\r\n        \"courseDuration\": {\r\n            \"display\": [\r\n                {\r\n                    \"name\": \"Course Duration\",\r\n                    \"locale\": \"en\"\r\n                }\r\n            ]\r\n        },\r\n        \"courseDivisionName\": {\r\n            \"display\": [\r\n                {\r\n                    \"name\": \"Course Division Name\",\r\n                    \"locale\": \"en\"\r\n                }\r\n            ]\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{certifyurl}}/credentials/configurations/{{configId}}",
+							"host": [
+								"{{certifyurl}}"
+							],
+							"path": [
+								"credentials",
+								"configurations",
+								"{{configId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Configuration By Id Copy",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{certifyurl}}/credentials/configurations/{{configId}}",
+							"host": [
+								"{{certifyurl}}"
+							],
+							"path": [
+								"credentials",
+								"configurations",
+								"{{configId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Well-Known Configuration",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{certifyurl}}/credentials/.well-known/openid-credential-issuer",
+							"host": [
+								"{{certifyurl}}"
+							],
+							"path": [
+								"credentials",
 								".well-known",
 								"openid-credential-issuer"
 							]
