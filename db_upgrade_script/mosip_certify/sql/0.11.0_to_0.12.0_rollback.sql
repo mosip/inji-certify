@@ -68,3 +68,50 @@ COMMENT ON COLUMN credential_template.credential_type IS 'Credential Type: Crede
 COMMENT ON COLUMN credential_template.template IS 'Template Content: Velocity Template to generate the VC';
 COMMENT ON COLUMN credential_template.cr_dtimes IS 'Date when the template was inserted in table.';
 COMMENT ON COLUMN credential_template.upd_dtimes IS 'Date when the template was last updated in table.';
+
+
+-- Indexes for credential_status_transaction
+DROP INDEX IF EXISTS certify.idx_cst_credential_id;
+DROP INDEX IF EXISTS certify.idx_cst_status_purpose;
+DROP INDEX IF EXISTS certify.idx_cst_status_list_credential_id;
+DROP INDEX IF EXISTS certify.idx_cst_status_list_index;
+DROP INDEX IF EXISTS certify.idx_cst_cr_dtimes;
+DROP INDEX IF EXISTS certify.idx_cst_status_value;
+
+-- Indexes for status_list_available_indices
+DROP INDEX IF EXISTS certify.idx_sla_available_indices;
+DROP INDEX IF EXISTS certify.idx_sla_status_list_credential_id;
+DROP INDEX IF EXISTS certify.idx_sla_is_assigned;
+DROP INDEX IF EXISTS certify.idx_sla_list_index;
+DROP INDEX IF EXISTS certify.idx_sla_cr_dtimes;
+
+-- Indexes for ledger
+DROP INDEX IF EXISTS certify.idx_ledger_credential_id;
+DROP INDEX IF EXISTS certify.idx_ledger_issuer_id;
+DROP INDEX IF EXISTS certify.idx_ledger_credential_type;
+DROP INDEX IF EXISTS certify.idx_ledger_issue_date;
+DROP INDEX IF EXISTS certify.idx_ledger_expiration_date;
+DROP INDEX IF EXISTS certify.idx_ledger_cr_dtimes;
+DROP INDEX IF EXISTS certify.idx_gin_ledger_indexed_attrs;
+DROP INDEX IF EXISTS certify.idx_gin_ledger_status_details;
+
+-- Indexes for status_list_credential
+DROP INDEX IF EXISTS certify.idx_slc_status_purpose;
+DROP INDEX IF EXISTS certify.idx_slc_credential_type;
+DROP INDEX IF EXISTS certify.idx_slc_credential_status;
+DROP INDEX IF EXISTS certify.idx_slc_cr_dtimes;
+
+
+-- ========= Step 2: Drop the newly created tables =========
+-- The order is important to respect foreign key constraints.
+-- We drop tables with foreign keys first, then the tables they reference.
+
+DROP TABLE IF EXISTS certify.credential_status_transaction;
+DROP TABLE IF EXISTS certify.status_list_available_indices;
+DROP TABLE IF EXISTS certify.ledger;
+DROP TABLE IF EXISTS certify.status_list_credential;
+
+
+-- ========= Step 3: Drop the custom ENUM type =========
+-- This can only be done after all tables using the type have been dropped.
+DROP TYPE IF EXISTS certify.credential_status_enum;
