@@ -7,16 +7,18 @@ package io.mosip.certify.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.CredentialConfigException;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
 import io.mosip.certify.entity.CredentialConfig;
-import io.mosip.certify.entity.TemplateId;
 import io.mosip.certify.mapper.CredentialConfigMapper;
 import io.mosip.certify.repository.CredentialConfigRepository;
-import io.mosip.certify.utils.CredentialCacheKeyGenerator;
+import io.mosip.certify.validators.credentialconfigvalidators.LdpVcCredentialConfigValidator;
+import io.mosip.certify.validators.credentialconfigvalidators.MsoMdocCredentialConfigValidator;
+import io.mosip.certify.validators.credentialconfigvalidators.SdJwtCredentialConfigValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,23 +62,11 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Override
     public CredentialConfigResponse addCredentialConfiguration(CredentialConfigurationDTO credentialConfigurationDTO) throws JsonProcessingException {
         CredentialConfig credentialConfig = credentialConfigMapper.toEntity(credentialConfigurationDTO);
-        TemplateId templateId = new TemplateId(); // Consider constructor TemplateId(context, type, format)
-        templateId.setCredentialType(credentialConfig.getCredentialType());
-        templateId.setContext(credentialConfig.getContext());
-        templateId.setCredentialFormat(credentialConfig.getCredentialFormat());
-
-        Optional<CredentialConfig> optional = credentialConfigRepository.findById(templateId);
-
-        if(optional.isPresent()) {
-            log.warn("Attempt to add existing credential configuration: Type={}, Context={}, Format={}",
-                    credentialConfig.getCredentialType(), credentialConfig.getContext(), credentialConfig.getCredentialFormat());
-            throw new CertifyException("Credential type already exists. Try updating the credential.");
-        }
 
         credentialConfig.setConfigId(UUID.randomUUID().toString());
         credentialConfig.setStatus(Constants.ACTIVE);
 
-        if(pluginMode.equals("DataProvider") && credentialConfig.getVcTemplate() == null) {
+        if(pluginMode.equals("DataProvider") && (credentialConfig.getVcTemplate() == null || credentialConfig.getVcTemplate().isEmpty())) {
             throw new CertifyException("Credential Template is mandatory for this `DataProvider` plugin issuer.");
         }
 
@@ -94,18 +84,27 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     private void validateCredentialConfiguration(CredentialConfig credentialConfig) {
         switch (credentialConfig.getCredentialFormat()) {
             case VCFormats.LDP_VC:
-                if (credentialConfig.getCredentialSubject() == null) {
-                    throw new CertifyException("CredentialSubject is mandatory for ldp_vc");
+                if (!LdpVcCredentialConfigValidator.isValidCheck(credentialConfig)) {
+                    throw new CertifyException("Context and credentialType are mandatory for ldp_vc format");
+                }
+                if(LdpVcCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
+                    throw new CertifyException("Configuration already exists for the given context and credentialType");
                 }
                 break;
             case VCFormats.MSO_MDOC:
-                if (credentialConfig.getClaims() == null || credentialConfig.getDocType() == null) {
-                    throw new CertifyException("Claims and Doctype are mandatory for mso_mdoc");
+                if (!MsoMdocCredentialConfigValidator.isValidCheck(credentialConfig)) {
+                    throw new CertifyException("Doctype field is mandatory for mso_mdoc");
+                }
+                if(MsoMdocCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
+                    throw new CertifyException("Configuration already exists for the given doctype");
                 }
                 break;
             case VCFormats.LDP_SD_JWT:
-                if (credentialConfig.getClaims() == null || credentialConfig.getVct() == null) {
-                    throw new CertifyException("Claims and Vct fields are mandatory for vc+sd-jwt");
+                if (!SdJwtCredentialConfigValidator.isValidCheck(credentialConfig)) {
+                    throw new CertifyException("Vct field is mandatory for vc+sd-jwt");
+                }
+                if(SdJwtCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
+                    throw new CertifyException("Configuration already exists for the given vct");
                 }
                 break;
             default:
@@ -115,7 +114,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
     @Override
     public CredentialConfigurationDTO getCredentialConfigurationById(String id) throws JsonProcessingException {
-        Optional<CredentialConfig> optional = credentialConfigRepository.findByConfigId(id);
+        Optional<CredentialConfig> optional = credentialConfigRepository.findById(id);
 
         if(optional.isEmpty()) {
             throw new CredentialConfigException("Configuration not found with the provided id: " + id);
@@ -138,7 +137,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Override
     @CacheEvict(cacheNames = CREDENTIAL_CONFIG_CACHE_NAME, key = "@credentialCacheKeyGenerator.generateKeyFromConfigId(#id)", condition = "#id != null")
     public CredentialConfigResponse updateCredentialConfiguration(String id, CredentialConfigurationDTO credentialConfigurationDTO) throws JsonProcessingException {
-        Optional<CredentialConfig> optional = credentialConfigRepository.findByConfigId(id);
+        Optional<CredentialConfig> optional = credentialConfigRepository.findById(id);
 
         if(optional.isEmpty()) {
             log.warn("Configuration not found for update with id: {}", id);
@@ -168,7 +167,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
             key = "@credentialCacheKeyGenerator.generateKeyFromConfigId(#id)",
             beforeInvocation = true)
     public String deleteCredentialConfigurationById(String id) {
-        Optional<CredentialConfig> optional = credentialConfigRepository.findByConfigId(id);
+        Optional<CredentialConfig> optional = credentialConfigRepository.findById(id);
 
         if(optional.isEmpty()) {
             log.warn("Configuration not found for delete with id: {}", id);
@@ -270,7 +269,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
             credentialConfigurationSupported.setDocType(credentialConfig.getDocType());
         } else if (VCFormats.LDP_SD_JWT.equals(credentialConfig.getCredentialFormat())) {
             credentialConfigurationSupported.setClaims(credentialConfig.getClaims());
-            credentialConfigurationSupported.setVct(credentialConfig.getCredentialConfigKeyId());
+            credentialConfigurationSupported.setVct(credentialConfig.getSdJwtVct());
         }
 
         return credentialConfigurationSupported;

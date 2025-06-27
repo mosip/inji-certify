@@ -17,7 +17,9 @@
 ALTER TABLE certify.credential_config DROP CONSTRAINT pk_config_id;
 
 -- Step 2: Drop the partial unique index
-DROP INDEX IF EXISTS idx_credential_config_vct_unique;
+DROP INDEX IF EXISTS idx_credential_config_sd_jwt_vct_unique;
+DROP INDEX IF EXISTS idx_credential_config_type_context_unique;
+DROP INDEX IF EXISTS idx_credential_config_doctype_unique;
 
 -- Step 3: Drop all the newly added columns
 ALTER TABLE certify.credential_config
@@ -25,7 +27,7 @@ ALTER TABLE certify.credential_config
     DROP COLUMN config_id,
     DROP COLUMN status,
     DROP COLUMN doctype,
-    DROP COLUMN vct,
+    DROP COLUMN sd_jwt_vct,
     DROP COLUMN credential_format,
     DROP COLUMN did_url,
     DROP COLUMN key_manager_app_id,
@@ -44,10 +46,22 @@ ALTER TABLE certify.credential_config
 
 -- Step 4: Rename vc_template back to template
 ALTER TABLE certify.credential_config RENAME COLUMN vc_template TO template;
+
 -- Update existing rows to ensure no NULL values
-UPDATE certify.credential_config SET template = 'default_value' WHERE template IS NULL;
+UPDATE certify.credential_config
+SET
+    template = CASE WHEN template IS NULL THEN '{}'::text ELSE template END,
+    context = CASE WHEN context IS NULL THEN gen_random_uuid()::text ELSE context END,
+    credential_type = CASE WHEN credential_type IS NULL THEN gen_random_uuid()::text ELSE credential_type END
+WHERE
+    template IS NULL OR context IS NULL OR credential_type IS NULL;
+
+
 -- Make the column NOT NULL
-ALTER TABLE certify.credential_config ALTER COLUMN template SET NOT NULL;
+ALTER TABLE certify.credential_config
+    ALTER COLUMN template SET NOT NULL,
+    ALTER COLUMN context SET NOT NULL,
+    ALTER COLUMN credential_type SET NOT NULL;
 
 -- Step 5: Restore the column types to original specifications
 ALTER TABLE certify.credential_config

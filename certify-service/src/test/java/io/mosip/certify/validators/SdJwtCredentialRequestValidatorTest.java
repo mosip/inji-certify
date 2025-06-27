@@ -4,38 +4,29 @@ import io.mosip.certify.core.dto.CredentialRequest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Map;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class MsoMdocCredentialRequestValidatorTest {
+public class SdJwtCredentialRequestValidatorTest {
     @InjectMocks
-    MsoMdocCredentialRequestValidator msoMdocCredentialRequestValidator;
+    SdJwtCredentialRequestValidator sdJwtCredentialRequestValidator;
 
     @Test
     public void checkMsoMdocValidatorWithValidCredentialRequest_thenPass() {
         CredentialRequest credentialRequest = new CredentialRequest();
-        credentialRequest.setDoctype("mdoc-doctype");
+        credentialRequest.setSdJwtVct("sd_jwt_vct");
         credentialRequest.setClaims(Map.of("client_id", "test-client-id"));
-        assertTrue(MsoMdocCredentialRequestValidator.isValidCheck(credentialRequest));
+        assertTrue(SdJwtCredentialRequestValidator.isValidCheck(credentialRequest));
     }
 
     @Test
     public void checkMsoMdocValidatorWithInvalidDoctype_thenFail() {
         CredentialRequest credentialRequest = new CredentialRequest();
         credentialRequest.setClaims(Map.of("client_id", "test-client-id"));
-        assertFalse(MsoMdocCredentialRequestValidator.isValidCheck(credentialRequest));
-    }
-
-    @Test
-    public void checkMsoMdocValidatorWithEmptyClaims_thenFail() {
-        CredentialRequest credentialRequest = new CredentialRequest();
-        credentialRequest.setDoctype("mdoc-doctype");
-        assertFalse(MsoMdocCredentialRequestValidator.isValidCheck(credentialRequest));
+        assertFalse(SdJwtCredentialRequestValidator.isValidCheck(credentialRequest));
     }
 }
