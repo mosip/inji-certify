@@ -13,16 +13,16 @@
 
 CREATE TABLE credential_config (
     credential_config_key_id VARCHAR(255) NOT NULL UNIQUE,
-    config_id VARCHAR(255),
+    config_id VARCHAR(255) NOT NULL,
     status VARCHAR(255),
     vc_template VARCHAR,
     doctype VARCHAR,
-    vct VARCHAR,
-    context VARCHAR NOT NULL,
-    credential_type VARCHAR NOT NULL,
+    sd_jwt_vct VARCHAR,
+    context VARCHAR,
+    credential_type VARCHAR,
     credential_format VARCHAR(255) NOT NULL,
-    did_url VARCHAR NOT NULL,
-    key_manager_app_id VARCHAR(36) NOT NULL,
+    did_url VARCHAR,
+    key_manager_app_id VARCHAR(36),
     key_manager_ref_id VARCHAR(128),
     signature_algo VARCHAR(36),
     sd_claim VARCHAR,
@@ -37,12 +37,21 @@ CREATE TABLE credential_config (
     plugin_configurations JSONB,
     cr_dtimes TIMESTAMP NOT NULL,
     upd_dtimes TIMESTAMP,
-    CONSTRAINT pk_config_id PRIMARY KEY (context, credential_type, credential_format)
+    CONSTRAINT pk_config_id PRIMARY KEY (config_id)
 );
 
-CREATE UNIQUE INDEX idx_credential_config_vct_unique
-ON credential_config(vct)
-WHERE vct IS NOT NULL;
+CREATE UNIQUE INDEX idx_credential_config_type_context_unique
+ON credential_config(credential_type, context, credential_format)
+WHERE credential_type IS NOT NULL AND credential_type <> ''
+AND context IS NOT NULL AND context <> '';
+
+CREATE UNIQUE INDEX idx_credential_config_sd_jwt_vct_unique
+ON credential_config(sd_jwt_vct, credential_format)
+WHERE sd_jwt_vct IS NOT NULL and sd_jwt_vct <> '';
+
+CREATE UNIQUE INDEX idx_credential_config_doctype_unique
+ON credential_config(doctype, credential_format)
+WHERE doctype IS NOT NULL and doctype <> '';
 
 COMMENT ON TABLE credential_config IS 'Credential Config: Contains details of credential configuration.';
 
@@ -50,7 +59,7 @@ COMMENT ON COLUMN credential_config.config_id IS 'Credential Config ID: Unique i
 COMMENT ON COLUMN credential_config.status IS 'Credential Config Status: Status of the credential configuration.';
 COMMENT ON COLUMN credential_config.vc_template IS 'VC Template: Template used for the verifiable credential.';
 COMMENT ON COLUMN credential_config.doctype IS 'Doc Type: Doc Type specifically for Mdoc VC.';
-COMMENT ON COLUMN credential_config.vct IS 'VCT field: VC Type specifically for SD-JWT VC.';
+COMMENT ON COLUMN credential_config.sd_jwt_vct IS 'VCT field: VC Type specifically for SD-JWT VC.';
 COMMENT ON COLUMN credential_config.context IS 'Context: Array of context URIs for the credential.';
 COMMENT ON COLUMN credential_config.credential_type IS 'Credential Type: Array of credential types supported.';
 COMMENT ON COLUMN credential_config.credential_format IS 'Credential Format: Format of the credential (e.g., JWT, JSON-LD).';

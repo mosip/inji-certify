@@ -20,10 +20,8 @@ public class CredentialConfigurationDTO {
 
     private String credentialConfigKeyId;
 
-    @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private List<String> context;
 
-    @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private List<String> credentialType;
 
     @NotNull(message = ErrorConstants.INVALID_REQUEST)
@@ -69,7 +67,8 @@ public class CredentialConfigurationDTO {
     @JsonProperty("doctype")
     private String docType;
 
-    private String vct;
+    @JsonProperty("sdJwtVct")
+    private String sdJwtVct;
 
     private List<Map<String, String>> pluginConfigurations;
 }

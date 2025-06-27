@@ -225,12 +225,24 @@ public class VCIssuanceUtil {
         }
     }
 
-    public static Optional<CredentialMetadata> getScopeCredentialMapping(String scope, String format, CredentialIssuerMetadataDTO credentialIssuerMetadataDTO) {
-
+    public static Optional<CredentialMetadata> getScopeCredentialMapping(String scope, String format, CredentialIssuerMetadataDTO credentialIssuerMetadataDTO, CredentialRequest credentialRequest) {
         Map<String, CredentialConfigurationSupportedDTO> supportedCredentials = credentialIssuerMetadataDTO.getCredentialConfigurationSupportedDTO();
         Optional<Map.Entry<String, CredentialConfigurationSupportedDTO>> result = supportedCredentials.entrySet().stream()
-                .filter(cm -> cm.getValue().getScope().equals(scope)
-                        && cm.getValue().getFormat().equals(format))
+                .filter(cm -> cm.getValue().getScope().equals(scope) && cm.getValue().getFormat().equals(format))
+                .filter(cm -> {
+                    CredentialConfigurationSupportedDTO dto = cm.getValue();
+                    switch (format) {
+                        case VCFormats.LDP_VC:
+                            return new HashSet<>(dto.getCredentialDefinition().getContext()).containsAll(credentialRequest.getCredential_definition().getContext()) &&
+                                    new HashSet<>(dto.getCredentialDefinition().getType()).containsAll(credentialRequest.getCredential_definition().getType());
+                        case VCFormats.MSO_MDOC:
+                            return Objects.equals(dto.getDocType(), credentialRequest.getDoctype());
+                        case VCFormats.LDP_SD_JWT:
+                            return Objects.equals(dto.getVct(), credentialRequest.getSdJwtVct());
+                        default:
+                            return false;
+                    }
+                })
                 .findFirst();
 
         if(result.isPresent()) {

@@ -19,12 +19,15 @@ import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
 
+import io.mosip.certify.utils.VCIssuanceUtil;
+import io.mosip.certify.validators.CredentialRequestValidator;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import org.springframework.test.util.ReflectionTestUtils;
@@ -381,5 +384,115 @@ public class VCIssuanceServiceImplTest {
     public void getDIDDocument_ThrowsUnsupportedException() {
         InvalidRequestException ex = assertThrows(InvalidRequestException.class, () -> issuanceService.getDIDDocument());
         assertEquals(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE, ex.getErrorCode());
+    }
+
+    @Test
+    public void getCredential_InvalidCredentialRequest_ThrowsInvalidRequestException() {
+        CredentialRequest invalidRequest = new CredentialRequest();
+        invalidRequest.setFormat("invalid_format"); // Invalid format
+
+        InvalidRequestException ex = assertThrows(InvalidRequestException.class, () -> issuanceService.getCredential(invalidRequest));
+        assertEquals(ErrorConstants.UNSUPPORTED_VC_FORMAT, ex.getErrorCode());
+    }
+
+    @Test
+    public void getCredential_LDP_WithValidTransaction_throwVciExchangeException() throws VCIExchangeException {
+        request = createValidCredentialRequest(VCFormats.LDP_VC);
+        when(parsedAccessToken.isActive()).thenReturn(true);
+        when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
+        when(vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH)).thenReturn(transaction);
+        when(proofValidatorFactory.getProofValidator(anyString())).thenReturn(proofValidator);
+        when(proofValidator.validateV2(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
+        when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn(HOLDER_ID);
+
+        VCIExchangeException pluginException = new VCIExchangeException("PLUGIN_ERROR_CODE");
+        when(vcIssuancePlugin.getVerifiableCredentialWithLinkedDataProof(any(VCRequestDto.class), eq(HOLDER_ID), eq(claimsFromAccessToken)))
+                .thenThrow(pluginException);
+
+
+        CertifyException ex = assertThrows(CertifyException.class, () -> issuanceService.getCredential(request));
+        assertEquals("PLUGIN_ERROR_CODE", ex.getErrorCode());
+    }
+
+    @Test
+    public void getCredential_JwtVcJson_Success() throws VCIExchangeException {
+        try (
+                MockedStatic<CredentialRequestValidator> validatorMock = org.mockito.Mockito.mockStatic(CredentialRequestValidator.class);
+                MockedStatic<VCIssuanceUtil> utilMock = org.mockito.Mockito.mockStatic(VCIssuanceUtil.class)
+        ) {
+            validatorMock.when(() -> CredentialRequestValidator.isValid(any(CredentialRequest.class))).thenReturn(true);
+
+            request = createValidCredentialRequest(VCFormats.JWT_VC_JSON);
+            when(parsedAccessToken.isActive()).thenReturn(true);
+            when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
+            when(proofValidatorFactory.getProofValidator(anyString())).thenReturn(proofValidator);
+            when(proofValidator.validateV2(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
+            when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn(HOLDER_ID);
+
+            // Mock CredentialMetadata and its getProofTypesSupported()
+            CredentialMetadata mockMetadata = org.mockito.Mockito.mock(CredentialMetadata.class);
+            utilMock.when(() -> VCIssuanceUtil.getScopeCredentialMapping(
+                    anyString(), anyString(), any(), any(CredentialRequest.class)
+            )).thenReturn(Optional.of(mockMetadata));
+            utilMock.when(() -> VCIssuanceUtil.getValidClientNonce(
+                    any(VCICacheService.class), eq(parsedAccessToken), anyInt(), any(SecurityHelperService.class), any()
+            )).thenReturn(TEST_CNONCE);
+
+            VCResult<String> jwtVcResult = new VCResult<>();
+            jwtVcResult.setCredential("jwt_vc_credential_string");
+            when(vcIssuancePlugin.getVerifiableCredential(any(VCRequestDto.class), eq(HOLDER_ID), eq(claimsFromAccessToken)))
+                    .thenReturn(jwtVcResult);
+
+            CredentialResponse<String> jwtVcResponse = new CredentialResponse<>();
+            jwtVcResponse.setCredential("jwt_vc_credential_string");
+
+            utilMock.when(() -> VCIssuanceUtil.getCredentialResponse(
+                    anyString(), any(VCResult.class)
+            )).thenReturn(jwtVcResponse);
+
+            CredentialResponse<?> response = issuanceService.getCredential(request);
+            assertNotNull(response);
+            assertEquals("jwt_vc_credential_string", response.getCredential());
+            verify(auditWrapper).logAudit(eq(io.mosip.certify.api.util.Action.VC_ISSUANCE), eq(io.mosip.certify.api.util.ActionStatus.SUCCESS), any(), isNull());
+        }
+    }
+
+    @Test
+    public void getCredential_JwtVcJson_InvalidFormat() throws VCIExchangeException {
+        try (
+                MockedStatic<CredentialRequestValidator> validatorMock = org.mockito.Mockito.mockStatic(CredentialRequestValidator.class);
+                MockedStatic<VCIssuanceUtil> utilMock = org.mockito.Mockito.mockStatic(VCIssuanceUtil.class)
+        ) {
+            validatorMock.when(() -> CredentialRequestValidator.isValid(any(CredentialRequest.class))).thenReturn(true);
+
+            request = new CredentialRequest();
+            request.setFormat("invalid_format");
+            io.mosip.certify.core.dto.CredentialDefinition requestInnerCredDef = new io.mosip.certify.core.dto.CredentialDefinition();
+            requestInnerCredDef.setContext(List.of("https://www.w3.org/2018/credentials/v1"));
+            requestInnerCredDef.setType(List.of("VerifiableCredential", "TestCredential"));
+            requestInnerCredDef.setCredentialSubject(new HashMap<>()); // Common for LDP/JWT types
+            request.setCredential_definition(requestInnerCredDef);
+            CredentialProof proof = new CredentialProof();
+            proof.setProof_type("jwt"); // Example proof type
+            proof.setJwt("dummy.jwt.token");
+            request.setProof(proof);
+            when(parsedAccessToken.isActive()).thenReturn(true);
+            when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
+            when(proofValidatorFactory.getProofValidator(anyString())).thenReturn(proofValidator);
+            when(proofValidator.validateV2(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
+            when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn(HOLDER_ID);
+
+            // Mock CredentialMetadata and its getProofTypesSupported()
+            CredentialMetadata mockMetadata = org.mockito.Mockito.mock(CredentialMetadata.class);
+            utilMock.when(() -> VCIssuanceUtil.getScopeCredentialMapping(
+                    anyString(), anyString(), any(), any(CredentialRequest.class)
+            )).thenReturn(Optional.of(mockMetadata));
+            utilMock.when(() -> VCIssuanceUtil.getValidClientNonce(
+                    any(VCICacheService.class), eq(parsedAccessToken), anyInt(), any(SecurityHelperService.class), any()
+            )).thenReturn(TEST_CNONCE);
+
+            CertifyException ex = assertThrows(CertifyException.class, () -> issuanceService.getCredential(request));
+            assertEquals(ErrorConstants.UNSUPPORTED_VC_FORMAT, ex.getErrorCode());
+        }
     }
 }
