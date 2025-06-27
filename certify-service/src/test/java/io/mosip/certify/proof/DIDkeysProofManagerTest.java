@@ -231,5 +231,30 @@ public class DIDkeysProofManagerTest {
         JWK actualJWK = manager.getKeyFromHeader(signedJWT.getHeader()).get();
         assertEquals(jwk.toPublicJWK(), actualJWK);
     }
+
+    @Test
+    void testGetDID_WhenKeyIDIsDIDKey() {
+        JWSHeader header = Mockito.mock(JWSHeader.class);
+        String didKey = "did:key:z6MktwAJhFN5fDccQ8k1nDtcTAhaW6YuvVcV5xmjKXH9E6zi";
+        when(header.getKeyID()).thenReturn(didKey);
+
+        DIDkeysProofManager manager = new DIDkeysProofManager();
+        Optional<String> result = manager.getDID(header);
+
+        assertTrue(result.isPresent());
+        assertEquals(didKey, result.get());
+    }
+
+    @Test
+    void testGetDID_WhenKeyIDIsNotDIDKey() {
+        JWSHeader header = Mockito.mock(JWSHeader.class);
+        String notDidKey = "some-other-key-id";
+        when(header.getKeyID()).thenReturn(notDidKey);
+
+        DIDkeysProofManager manager = new DIDkeysProofManager();
+        Optional<String> result = manager.getDID(header);
+
+        assertFalse(result.isPresent());
+    }
 }
 
