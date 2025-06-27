@@ -5,6 +5,8 @@ import io.mosip.certify.core.dto.CredentialDefinition;
 import io.mosip.certify.core.dto.CredentialRequest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Map;
@@ -14,6 +16,9 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(MockitoJUnitRunner.class)
 public class LdpVcCredentialRequestValidatorTest {
+    @InjectMocks
+    LdpVcCredentialRequestValidator ldpVcCredentialRequestValidator;
+
     @Test
     public void checkLdpVcValidatorWithValidCredentialRequest_thenPass() {
         CredentialRequest credentialRequest = new CredentialRequest();
