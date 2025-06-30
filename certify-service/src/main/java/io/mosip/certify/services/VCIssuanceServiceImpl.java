@@ -198,7 +198,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     @Override
     public CredentialStatusResponse updateCredential(UpdateCredentialStatusRequest request) {
-        throw new UnsupportedOperationException("This method is not supported in VCIssuanceServiceImpl");
+        throw new CertifyException("This method is not supported in VCIssuanceServiceImpl");
     }
 
 }

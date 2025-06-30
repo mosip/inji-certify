@@ -55,7 +55,7 @@ public class VCIssuanceController {
         return vcIssuanceService.getCredential(credentialRequest);
     }
 
-    @PostMapping("/credentials/status")
+    @PostMapping("/credential/status")
     public ResponseEntity<CredentialStatusResponse> updateCredential(
         @Valid @RequestBody UpdateCredentialStatusRequest updateCredentialStatusRequest) {
         CredentialStatusResponse result = vcIssuanceService.updateCredential(updateCredentialStatusRequest);
