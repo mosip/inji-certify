@@ -495,4 +495,6 @@ public class VCIssuanceServiceImplTest {
             assertEquals(ErrorConstants.UNSUPPORTED_VC_FORMAT, ex.getErrorCode());
         }
     }
+
+    
 }
