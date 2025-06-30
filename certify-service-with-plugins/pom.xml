@@ -46,16 +46,6 @@
         <sunbird-rc-certify-integration-plugin.version>0.4.0</sunbird-rc-certify-integration-plugin.version>
         <sunbird-rc-certify-integration-plugin.fileName>sunbird-rc-certify-integration-impl.jar</sunbird-rc-certify-integration-plugin.fileName>
     </properties>
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
-        </snapshotRepository>
-        <repository>
-            <id>ossrh</id>
-            <url>https://central.sonatype.com/api/v1/publisher</url>
-        </repository>
-    </distributionManagement>
     <build>
         <plugins>
             <plugin>
