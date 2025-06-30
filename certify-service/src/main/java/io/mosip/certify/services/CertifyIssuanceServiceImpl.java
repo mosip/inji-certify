@@ -164,7 +164,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         String scopeClaim = (String) parsedAccessToken.getClaims().getOrDefault("scope", "");
         CredentialMetadata credentialMetadata = null;
         for(String scope : scopeClaim.split(Constants.SPACE)) {
-            Optional<CredentialMetadata> result = getScopeCredentialMapping(scope, credentialRequest.getFormat(), credentialConfigurationService.fetchCredentialIssuerMetadata("latest"));
+            Optional<CredentialMetadata> result = getScopeCredentialMapping(scope, credentialRequest.getFormat(), credentialConfigurationService.fetchCredentialIssuerMetadata("latest"), credentialRequest);
             if(result.isPresent()) {
                 credentialMetadata = result.get(); //considering only first credential scope
                 break;
@@ -281,7 +281,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     throw new CertifyException(ErrorConstants.UNKNOWN_ERROR);
                 }
                 case "vc+sd-jwt":
-                vcRequestDto.setVct(credentialRequest.getVct());
+                vcRequestDto.setSdJwtVct(credentialRequest.getSdJwtVct());
                 try {
                     // TODO(multitenancy): later decide which plugin out of n plugins is the correct one
                     JSONObject jsonObject = dataProviderPlugin.fetchData(parsedAccessToken.getClaims());
@@ -294,12 +294,12 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     }
                     Credential cred = credentialFactory.getCredential(CredentialFormat.VC_SD_JWT.toString()).orElseThrow(()-> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
                     jsonObject.put("_holderId", holderId);
-                    jsonObject.put("_vct", vcRequestDto.getVct());
+                    templateParams.putAll(jsonObject.toMap());
+                    templateParams.put("_vct", vcRequestDto.getSdJwtVct());
                     // This is with reference to the Representation of a Key ID for a Proof-of-Possession Key
                     // Ref: https://datatracker.ietf.org/doc/html/rfc7800#section-3.4
-                    jsonObject.put("_cnf", Map.of("kid", holderId));
-                    jsonObject.put("_iss", certifyIssuer);
-                    templateParams.putAll(jsonObject.toMap());
+                    templateParams.put("_cnf", Map.of("kid", holderId));
+                    templateParams.put("_iss", certifyIssuer);
                     String unsignedCredential=cred.createCredential(templateParams, templateName);
                     return cred.addProof(unsignedCredential,"", vcFormatter.getProofAlgorithm(templateName), vcFormatter.getAppID(templateName), vcFormatter.getRefID(templateName),vcFormatter.getDidUrl(templateName));
                 } catch(DataProviderExchangeException e) {

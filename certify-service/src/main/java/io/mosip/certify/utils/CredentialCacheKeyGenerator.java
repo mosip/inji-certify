@@ -32,7 +32,7 @@ public class CredentialCacheKeyGenerator {
             log.warn("generateKeyFromConfigId called with null configId for cache key generation.");
             return null;
         }
-        Optional<CredentialConfig> configOpt = credentialConfigRepository.findByConfigId(configId);
+        Optional<CredentialConfig> configOpt = credentialConfigRepository.findById(configId);
 
         if (configOpt.isPresent()) {
            CredentialConfig config = configOpt.get();

@@ -6,15 +6,11 @@ import java.util.List;
 import java.util.Map;
 
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.hibernate.annotations.Comment;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
@@ -23,10 +19,13 @@ import org.hibernate.type.SqlTypes;
 @Data
 @Entity
 @NoArgsConstructor
-@Table(name = "credential_config")
-@IdClass(TemplateId.class)
+@Table(name = "credential_config",uniqueConstraints = {
+        @UniqueConstraint(name = "uk_credential_config_key_id", columnNames = "credential_config_key_id")
+})
 public class CredentialConfig {
 
+    @Id
+    @Column(name = "config_id", nullable = false, updatable = false)
     private String configId;
 
     private String status;
@@ -34,16 +33,13 @@ public class CredentialConfig {
     private String vcTemplate;
 
     @NotNull(message = "Invalid request")
-    @Column(name = "credential_config_key_id", unique = true)
+    @Column(name = "credential_config_key_id", unique = true, nullable = false)
     private String credentialConfigKeyId;
 
-    @Id
     private String context;
 
-    @Id
     private String credentialType;
 
-    @Id
     private String credentialFormat;
 
     @Comment("URL for the public key. Should point to the exact key. Supports DID document or public key")
@@ -100,8 +96,8 @@ public class CredentialConfig {
     @Column(name = "claims", columnDefinition = "jsonb")
     private Map<String, Object> claims;
 
-    @Column(name = "vct")
-    private String vct;
+    @Column(name = "sd_jwt_vct")
+    private String sdJwtVct;
 
     @Type(JsonBinaryType.class)
     @JdbcTypeCode(SqlTypes.JSON)
