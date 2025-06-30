@@ -18,7 +18,9 @@ import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.CredentialMetadata;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
+import io.mosip.certify.core.dto.CredentialStatusResponse;
 import io.mosip.certify.core.dto.ParsedAccessToken;
+import io.mosip.certify.core.dto.UpdateCredentialStatusRequest;
 import io.mosip.certify.core.dto.VCIssuanceTransaction;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
@@ -192,6 +194,11 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         auditWrapper.logAudit(Action.VC_ISSUANCE, ActionStatus.ERROR,
                 AuditHelper.buildAuditDto(parsedAccessToken.getAccessTokenHash(), "accessTokenHash"), null);
         throw new CertifyException(ErrorConstants.VC_ISSUANCE_FAILED);
+    }
+
+    @Override
+    public CredentialStatusResponse updateCredential(UpdateCredentialStatusRequest request) {
+        throw new CertifyException("This method is not supported in VCIssuanceServiceImpl");
     }
 
 }
