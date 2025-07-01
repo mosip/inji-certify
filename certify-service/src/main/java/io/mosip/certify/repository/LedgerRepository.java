@@ -51,4 +51,5 @@ public interface LedgerRepository extends JpaRepository<Ledger, Long> {
             @Param("credentialType") String credentialType,
             @Param("searchJson") String searchJson
     );
+    Optional<Ledger> findByCredentialId(String credentialId);
 }

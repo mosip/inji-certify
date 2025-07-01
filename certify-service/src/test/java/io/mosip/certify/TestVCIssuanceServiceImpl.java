@@ -3,6 +3,8 @@ package io.mosip.certify;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
+import io.mosip.certify.core.dto.CredentialStatusResponse;
+import io.mosip.certify.core.dto.UpdateCredentialStatusRequest;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -30,5 +32,11 @@ public class TestVCIssuanceServiceImpl implements VCIssuanceService {
     @Override
     public Map<String, Object> getDIDDocument() {
         throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE);
+    }
+
+    @Override
+    public CredentialStatusResponse updateCredential(UpdateCredentialStatusRequest request) {
+        System.out.println("updateCredential called with: " + request);
+        throw new UnsupportedOperationException("updateCredential is not implemented yet");
     }
 }
