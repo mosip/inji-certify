@@ -94,11 +94,9 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	}
 	
 	public static String extractAndEncodeVcTemplate(String requestJsonStr) {
-		JSONObject requestJson = new JSONObject(requestJsonStr);
-		JSONObject vcTemplate = requestJson.getJSONObject("vcTemplate");
-		String base64Encoded = Base64.getEncoder()
-				.encodeToString(vcTemplate.toString().getBytes(StandardCharsets.UTF_8));
-		return requestJson.put("vcTemplate", base64Encoded).toString();
+		JSONObject vcTemplate = new JSONObject(requestJsonStr).getJSONObject("vcTemplate");
+		return new JSONObject(requestJsonStr).put("vcTemplate", AdminTestUtil.encodeBase64(vcTemplate.toString()))
+				.toString();
 	}
 	public static void dBCleanup() {
 		DBManager.executeDBQueries(InjiCertifyConfigManager.getKMDbUrl(), InjiCertifyConfigManager.getKMDbUser(),
