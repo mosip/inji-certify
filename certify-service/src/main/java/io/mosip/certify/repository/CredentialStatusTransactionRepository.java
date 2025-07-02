@@ -38,4 +38,11 @@ public interface CredentialStatusTransactionRepository extends JpaRepository<Cre
     List<CredentialStatusTransaction> findLatestStatusByStatusListId(@Param("statusListId") String statusListId);
 
     Optional<CredentialStatusTransaction> findByCredentialId(String credentialId);
+
+    /**
+     * Find latest transaction for a credential
+     */
+    @Query("SELECT t FROM CredentialStatusTransaction t WHERE t.credentialId = :credentialId " +
+            "ORDER BY t.createdDtimes DESC LIMIT 1")
+    CredentialStatusTransaction findLatestByCredentialId(@Param("credentialId") String credentialId);
 }

@@ -8,6 +8,7 @@ package io.mosip.certify.services;
 import java.text.ParseException;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -551,5 +552,45 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         dto.setStatusPurpose(request.getCredentialStatus().getStatusPurpose());
         dto.setStatusTimestamp(savedTransaction.getCreatedDtimes());
         return dto;        
+    }
+
+    @Override
+    public List<CredentialStatusResponse> searchCredentials(CredentialLedgerSearchRequest request) {
+        try {
+            System.out.println("started the searchCredentials" + request);
+            List<Ledger> records = ledgerRepository.findBySearchRequest(request);
+            System.out.println("records: " + records);
+            
+            if (records.isEmpty()) {
+                return Collections.emptyList();
+            }
+        
+            return records.stream()
+                .map(this::mapToSearchResponse)
+                .collect(Collectors.toList());
+    
+        } catch (Exception e) {
+            throw new RuntimeException("An error occurred while processing the request", e);
+        }
+    }
+
+    private CredentialStatusResponse mapToSearchResponse(Ledger record) {
+        CredentialStatusResponse response = new CredentialStatusResponse();
+        response.setCredentialId(record.getCredentialId());
+        response.setIssuerId(record.getIssuerId());
+        response.setIssueDate(record.getIssueDate().toLocalDateTime());
+        response.setExpirationDate(record.getExpirationDate() != null ? record.getExpirationDate().toLocalDateTime() : null);
+        response.setCredentialType(record.getCredentialType());
+        response.setCredentialStatusDetails(record.getCredentialStatusDetails());
+
+        CredentialStatusTransaction latestStatus =
+            credentialStatusTransactionRepository.findLatestByCredentialId(record.getCredentialId());
+        if (latestStatus != null) {
+            response.setStatusListCredentialUrl(latestStatus.getStatusListCredentialId());
+            response.setStatusListIndex(latestStatus.getStatusListIndex());
+            response.setStatusPurpose(latestStatus.getStatusPurpose());
+            response.setStatusTimestamp(latestStatus.getCreatedDtimes());
+        }
+        return response;
     }
 }

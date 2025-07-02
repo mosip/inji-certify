@@ -15,6 +15,7 @@ import io.mosip.certify.api.spi.VCIssuancePlugin;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
 import io.mosip.certify.core.constants.VCFormats;
+import io.mosip.certify.core.dto.CredentialLedgerSearchRequest;
 import io.mosip.certify.core.dto.CredentialMetadata;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
@@ -198,6 +199,11 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     @Override
     public CredentialStatusResponse updateCredential(UpdateCredentialStatusRequest request) {
+        throw new CertifyException("This method is not supported in VCIssuanceServiceImpl");
+    }
+
+    @Override
+    public List<CredentialStatusResponse> searchCredentials(CredentialLedgerSearchRequest request) {
         throw new CertifyException("This method is not supported in VCIssuanceServiceImpl");
     }
 

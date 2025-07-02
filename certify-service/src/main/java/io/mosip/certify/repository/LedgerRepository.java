@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface LedgerRepository extends JpaRepository<Ledger, Long> {
+public interface LedgerRepository extends JpaRepository<Ledger, Long>, LedgerIssuanceTableCustomRepository {
 
 
     /**
