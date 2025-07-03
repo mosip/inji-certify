@@ -3,7 +3,7 @@ GenerateTokenForLandRegistry:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/oauth/v2/token
       uniqueIdentifier: TC_esignetDependent_GenerateToken
       description: Generate Token for mock ida
-      role: resident
+      role: noauth
       restMethod: post
       validityCheckRequired: true
       inputTemplate: injicertify/EccR1/GenerateTokenForLandRegistryEccR1/GenerateTokenForLandRegistry
