@@ -3,7 +3,7 @@ AuthenticateUserForLandRegistry:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
       uniqueIdentifier: TC_esignetDependent_AuthenticateUser
       description: Authenticate User for mock ida
-      role: resident
+      role: noauth
       restMethod: post
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true

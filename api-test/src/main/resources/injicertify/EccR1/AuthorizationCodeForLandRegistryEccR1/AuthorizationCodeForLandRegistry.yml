@@ -3,7 +3,7 @@ AuthorizationCodeForLandRegistry:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
       uniqueIdentifier: TC_esignetDependent_AuthorizationCode
       description: Authorization Code for mock ida
-      role: resident
+      role: noauth
       restMethod: post
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
