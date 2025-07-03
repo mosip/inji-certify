@@ -557,7 +557,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Override
     public List<CredentialStatusResponse> searchCredentials(CredentialLedgerSearchRequest request) {
         try {
-            Map<String, String> indexedAttrs = request.getIndexedAttributes();
+            Map<String, String> indexedAttrs = request.getIndexedAttributesEquals();
             if (indexedAttrs == null || indexedAttrs.isEmpty()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid search criteria provided.");
             }
@@ -569,7 +569,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid search criteria provided.");
             }
             List<Ledger> records = ledgerRepository.findBySearchRequest(request);
-            System.out.println("records: " + records);
             
             if (records.isEmpty()) {
                 return Collections.emptyList();

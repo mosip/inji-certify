@@ -24,7 +24,6 @@ public class LedgerIssuanceTableCustomRepositoryImpl implements LedgerIssuanceTa
         try {
             StringBuilder sql = new StringBuilder("SELECT * FROM ledger WHERE 1=1 ");
             Map<String, Object> params = new HashMap<>();
-            System.out.println("params: " + params);
 
             if (request.getIssuerId() != null) {
                 sql.append(" AND issuer_id = :issuerId ");
@@ -41,14 +40,13 @@ public class LedgerIssuanceTableCustomRepositoryImpl implements LedgerIssuanceTa
                 params.put("credentialId", request.getCredentialId());
             }
 
-            if (request.getIndexedAttributes() != null && !request.getIndexedAttributes().isEmpty()) {
+            if (request.getIndexedAttributesEquals() != null && !request.getIndexedAttributesEquals().isEmpty()) {
                 int i = 0;
-                for (Map.Entry<String, String> entry : request.getIndexedAttributes().entrySet()) {
+                for (Map.Entry<String, String> entry : request.getIndexedAttributesEquals().entrySet()) {
                     String key = entry.getKey();
                     String value = entry.getValue();
-                    if (key == null || key.isBlank() || value == null || value.isBlank()) {
-                        continue;
-                    }
+                    if (key == null || key.isBlank() || value == null || value.isBlank()) continue;
+
                     String paramName = "indexedAttr" + i;
                     sql.append(" AND indexed_attributes @> cast(:" + paramName + " AS jsonb) ");
                     params.put(paramName, new ObjectMapper().writeValueAsString(Map.of(key, value)));
@@ -57,7 +55,6 @@ public class LedgerIssuanceTableCustomRepositoryImpl implements LedgerIssuanceTa
             }
 
             var query = entityManager.createNativeQuery(sql.toString(), Ledger.class);
-            System.out.println(query.toString() + "query.toString()");
 
             for (Map.Entry<String, Object> entry : params.entrySet()) {
                 query.setParameter(entry.getKey(), entry.getValue());

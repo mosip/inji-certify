@@ -14,5 +14,5 @@ public class CredentialLedgerSearchRequest {
     @NotBlank(message = "credentialType is mandatory")
     private String credentialType;
 
-    private Map<String, String> indexedAttributes;
+    private Map<String, String> indexedAttributesEquals;
 }
