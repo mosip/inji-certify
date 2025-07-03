@@ -557,7 +557,17 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Override
     public List<CredentialStatusResponse> searchCredentials(CredentialLedgerSearchRequest request) {
         try {
-            System.out.println("started the searchCredentials" + request);
+            Map<String, String> indexedAttrs = request.getIndexedAttributes();
+            if (indexedAttrs == null || indexedAttrs.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid search criteria provided.");
+            }
+            boolean hasValid = indexedAttrs.entrySet().stream()
+            .anyMatch(e -> e.getKey() != null && !e.getKey().isBlank()
+                        && e.getValue() != null && !e.getValue().isBlank());
+
+            if (!hasValid) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid search criteria provided.");
+            }
             List<Ledger> records = ledgerRepository.findBySearchRequest(request);
             System.out.println("records: " + records);
             
@@ -569,6 +579,8 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 .map(this::mapToSearchResponse)
                 .collect(Collectors.toList());
     
+        }  catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("An error occurred while processing the request", e);
         }
@@ -581,15 +593,35 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         response.setIssueDate(record.getIssueDate().toLocalDateTime());
         response.setExpirationDate(record.getExpirationDate() != null ? record.getExpirationDate().toLocalDateTime() : null);
         response.setCredentialType(record.getCredentialType());
-        response.setCredentialStatusDetails(record.getCredentialStatusDetails());
+        List<Map<String, Object>> statusDetails = record.getCredentialStatusDetails();
+        if (statusDetails != null && !statusDetails.isEmpty()) {
+            Map<String, Object> latestStatus = statusDetails.get(0);
+            Object statusListCredentialId = latestStatus.get("status_list_credential_id");
+            Object statusListIndex = latestStatus.get("status_list_index");
+            Object statusPurpose = latestStatus.get("status_purpose");
+            Object createdDtimes = latestStatus.get("cr_dtimes");
 
-        CredentialStatusTransaction latestStatus =
-            credentialStatusTransactionRepository.findLatestByCredentialId(record.getCredentialId());
-        if (latestStatus != null) {
-            response.setStatusListCredentialUrl(latestStatus.getStatusListCredentialId());
-            response.setStatusListIndex(latestStatus.getStatusListIndex());
-            response.setStatusPurpose(latestStatus.getStatusPurpose());
-            response.setStatusTimestamp(latestStatus.getCreatedDtimes());
+            if (statusListCredentialId != null) {
+                response.setStatusListCredentialUrl(statusListCredentialId.toString());
+            }
+        
+            if (statusListIndex instanceof Number) {
+                Long index = ((Number) statusListIndex).longValue();
+                response.setStatusListIndex(index);
+            }
+        
+            if (statusPurpose != null) {
+                response.setStatusPurpose(statusPurpose.toString());
+            }
+
+            if (createdDtimes instanceof Number) {
+                long timestampMillis = ((Number) createdDtimes).longValue();
+                OffsetDateTime createdDateTime = OffsetDateTime.ofInstant(
+                    java.time.Instant.ofEpochMilli(timestampMillis),
+                    java.time.ZoneOffset.UTC
+                );
+                response.setStatusTimestamp(createdDateTime.toLocalDateTime());
+            }
         }
         return response;
     }

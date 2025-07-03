@@ -42,9 +42,18 @@ public class LedgerIssuanceTableCustomRepositoryImpl implements LedgerIssuanceTa
             }
 
             if (request.getIndexedAttributes() != null && !request.getIndexedAttributes().isEmpty()) {
-                String jsonString = new ObjectMapper().writeValueAsString(request.getIndexedAttributes());
-                sql.append(" AND indexed_attributes @> cast(:indexedAttributes AS jsonb) ");
-                params.put("indexedAttributes", jsonString);
+                int i = 0;
+                for (Map.Entry<String, String> entry : request.getIndexedAttributes().entrySet()) {
+                    String key = entry.getKey();
+                    String value = entry.getValue();
+                    if (key == null || key.isBlank() || value == null || value.isBlank()) {
+                        continue;
+                    }
+                    String paramName = "indexedAttr" + i;
+                    sql.append(" AND indexed_attributes @> cast(:" + paramName + " AS jsonb) ");
+                    params.put(paramName, new ObjectMapper().writeValueAsString(Map.of(key, value)));
+                    i++;
+                }
             }
 
             var query = entityManager.createNativeQuery(sql.toString(), Ledger.class);
