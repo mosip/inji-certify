@@ -6,7 +6,7 @@ GetSVGTemplate:
     checkErrorsOnlyInResponse: true
     restMethod: get
     validityCheckRequired: true
-    inputTemplate: injicertify/SVGTemplate/GetSVGTemplate/GetSVGTemplate
+    inputTemplate: injicertify/SVGTemplate/GetSVGTemplate/GetSVGtemplate
     outputTemplate: injicertify/SVGTemplate/GetSVGTemplate/GetSVGTemplateResult
     input: '{
           "id": "5b9c2a12-810a-7388-2dc8-13ee7ad88bac"
@@ -20,7 +20,7 @@ GetSVGTemplate:
     description: Get SVG rendering template without id value given
     restMethod: get
     validityCheckRequired: true
-    inputTemplate: injicertify/SVGTemplate/GetSVGTemplate/GetSVGTemplate
+    inputTemplate: injicertify/SVGTemplate/GetSVGTemplate/GetSVGtemplate
     outputTemplate: injicertify/error
     input: '{
           "id": "$REMOVE$"
@@ -38,7 +38,7 @@ GetSVGTemplate:
     description: Get SVG rendering template invalid id value given
     restMethod: get
     validityCheckRequired: true
-    inputTemplate: injicertify/SVGTemplate/GetSVGTemplate/GetSVGTemplate
+    inputTemplate: injicertify/SVGTemplate/GetSVGTemplate/GetSVGtemplate
     outputTemplate: injicertify/error
     input: '{
           "id": "123456-56785-9876"

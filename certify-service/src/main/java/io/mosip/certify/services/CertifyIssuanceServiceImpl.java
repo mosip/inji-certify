@@ -19,8 +19,10 @@ import io.mosip.certify.api.util.AuditHelper;
 import io.mosip.certify.config.IndexedAttributesConfig;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
+import io.mosip.certify.entity.CredentialStatusTransaction;
 import io.mosip.certify.entity.Ledger;
 import io.mosip.certify.entity.StatusListCredential;
+import io.mosip.certify.repository.CredentialStatusTransactionRepository;
 import io.mosip.certify.repository.LedgerRepository;
 import io.mosip.certify.repository.StatusListCredentialRepository;
 import io.mosip.certify.utils.VCIssuanceUtil;
@@ -31,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.dto.VCRequestDto;
@@ -62,6 +65,7 @@ import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
+import org.springframework.http.HttpStatus;
 
 import static io.mosip.certify.utils.VCIssuanceUtil.*;
 
@@ -137,6 +141,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     @Autowired
     private LedgerRepository ledgerRepository;
+
+    @Autowired
+    private CredentialStatusTransactionRepository credentialStatusTransactionRepository;
 
     @Autowired
     private IndexedAttributesConfig indexedAttributesConfig;
@@ -511,5 +518,38 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             log.error("Error storing ledger entry", e);
             throw new RuntimeException("Failed to store ledger entry", e);
         }
+    }
+
+    @Transactional
+    @Override
+    public CredentialStatusResponse updateCredential(UpdateCredentialStatusRequest request) {
+        Ledger ledger = ledgerRepository.findByCredentialId(request.getCredentialId())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Credential not found: " + request.getCredentialId()));
+
+        Optional<CredentialStatusTransaction> existingTransaction = credentialStatusTransactionRepository.findByCredentialId(request.getCredentialId());
+    
+        CredentialStatusTransaction transaction = existingTransaction.orElse(new CredentialStatusTransaction());
+
+        if (transaction.getTransactionLogId() == null) {
+            transaction.setCredentialId(request.getCredentialId());
+        }
+
+        transaction.setStatusPurpose(request.getCredentialStatus().getStatusPurpose());
+        transaction.setStatusValue(request.getStatus());
+        transaction.setStatusListCredentialId(request.getCredentialStatus().getStatusListCredential());
+        transaction.setStatusListIndex(request.getCredentialStatus().getStatusListIndex());
+        CredentialStatusTransaction savedTransaction =credentialStatusTransactionRepository.save(transaction);
+
+        CredentialStatusResponse dto = new CredentialStatusResponse();
+        dto.setCredentialId(ledger.getCredentialId());
+        dto.setIssuerId(ledger.getIssuerId());
+        dto.setCredentialType(ledger.getCredentialType());
+        dto.setIssueDate(ledger.getIssueDate().toLocalDateTime());
+        dto.setExpirationDate(ledger.getExpirationDate() != null ? ledger.getExpirationDate().toLocalDateTime() : null);
+        dto.setStatusListCredentialUrl(request.getCredentialStatus().getStatusListCredential());
+        dto.setStatusListIndex(request.getCredentialStatus().getStatusListIndex());
+        dto.setStatusPurpose(request.getCredentialStatus().getStatusPurpose());
+        dto.setStatusTimestamp(savedTransaction.getCreatedDtimes());
+        return dto;        
     }
 }
