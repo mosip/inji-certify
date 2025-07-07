@@ -312,3 +312,112 @@ INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('BASE', 1095, 60, 'NA', true, 'mosipadmin', now());
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_VC_SIGN_EC_K1', 1095, 60, 'NA', true, 'mosipadmin', now());
 INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_VC_SIGN_EC_R1', 1095, 60, 'NA', true, 'mosipadmin', now());
+
+CREATE TYPE credential_status_enum AS ENUM ('AVAILABLE', 'FULL');
+
+-- Create status_list_credential table
+CREATE TABLE status_list_credential (
+    id VARCHAR(255) PRIMARY KEY,          -- The unique ID (URL/DID/URN) extracted from the VC's 'id' field.
+    vc_document VARCHAR NOT NULL,           -- Stores the entire Verifiable Credential JSON document.
+    credential_type VARCHAR(100) NOT NULL, -- Type of the status list (e.g., 'StatusList2021Credential')
+    status_purpose VARCHAR(100),             -- Intended purpose of this list within the system (e.g., 'revocation', 'suspension', 'general'). NULLABLE.
+    capacity BIGINT,                        --- length of status list
+    credential_status credential_status_enum, -- Use the created ENUM type here
+    cr_dtimes timestamp NOT NULL default now(),
+    upd_dtimes timestamp                    -- When this VC record was last updated in the system
+);
+
+
+CREATE INDEX IF NOT EXISTS idx_slc_status_purpose ON status_list_credential(status_purpose);
+CREATE INDEX IF NOT EXISTS idx_slc_credential_type ON status_list_credential(credential_type);
+CREATE INDEX IF NOT EXISTS idx_slc_credential_status ON status_list_credential(credential_status);
+CREATE INDEX IF NOT EXISTS idx_slc_cr_dtimes ON status_list_credential(cr_dtimes);
+
+-- Create the ledger table
+CREATE TABLE ledger (
+    id SERIAL PRIMARY KEY,                          -- Auto-incrementing serial primary key
+    credential_id VARCHAR(255) NOT NULL,            -- Unique ID of the Verifiable Credential WHOSE STATUS IS BEING TRACKED
+    issuer_id VARCHAR(255) NOT NULL,                -- Issuer of the TRACKED credential
+    issue_date TIMESTAMPTZ NOT NULL,                -- Issuance date of the TRACKED credential
+    expiration_date TIMESTAMPTZ,                    -- Expiration date of the TRACKED credential, if any
+    credential_type VARCHAR(100) NOT NULL,          -- Type of the TRACKED credential (e.g., 'VerifiableId')
+    indexed_attributes JSONB,                       -- Optional searchable attributes from the TRACKED credential
+    credential_status_details JSONB NOT NULL DEFAULT '[]'::jsonb,    -- Stores a list of status objects for this credential, defaults to an empty array.
+    cr_dtimes TIMESTAMP NOT NULL DEFAULT NOW(),     -- Creation timestamp of this ledger entry for the tracked credential
+
+    -- Constraints
+    CONSTRAINT uq_ledger_tracked_credential_id UNIQUE (credential_id), -- Ensure tracked credential_id is unique
+    CONSTRAINT ensure_credential_status_details_is_array CHECK (jsonb_typeof(credential_status_details) = 'array') -- Ensure it's always a JSON array
+);
+
+
+CREATE INDEX IF NOT EXISTS idx_ledger_credential_id ON ledger(credential_id);
+CREATE INDEX IF NOT EXISTS idx_ledger_issuer_id ON ledger(issuer_id);
+CREATE INDEX IF NOT EXISTS idx_ledger_credential_type ON ledger(credential_type);
+CREATE INDEX IF NOT EXISTS idx_ledger_issue_date ON ledger(issue_date);
+CREATE INDEX IF NOT EXISTS idx_ledger_expiration_date ON ledger(expiration_date);
+CREATE INDEX IF NOT EXISTS idx_ledger_cr_dtimes ON ledger(cr_dtimes);
+CREATE INDEX IF NOT EXISTS idx_gin_ledger_indexed_attrs ON ledger USING GIN (indexed_attributes);
+CREATE INDEX IF NOT EXISTS idx_gin_ledger_status_details ON ledger USING GIN (credential_status_details);
+
+CREATE TABLE IF NOT EXISTS credential_status_transaction (
+    transaction_log_id SERIAL PRIMARY KEY,        -- Unique ID for this transaction log entry
+    credential_id VARCHAR(255) NOT NULL,          -- The ID of the credential this transaction pertains to (should exist in ledger.credential_id)
+    status_purpose VARCHAR(100),                  -- The purpose of this status update
+    status_value boolean,                         -- The status value (true/false)
+    status_list_credential_id VARCHAR(255),       -- The ID of the status list credential involved, if any
+    status_list_index BIGINT,                     -- The index on the status list, if any
+    cr_dtimes TIMESTAMP NOT NULL DEFAULT NOW(),   -- Creation timestamp
+    upd_dtimes TIMESTAMP,                         -- Update timestamp
+
+    -- Foreign key constraint to ledger table
+    CONSTRAINT fk_credential_status_transaction_ledger
+        FOREIGN KEY(credential_id)
+        REFERENCES ledger(credential_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+
+    -- Foreign key constraint to status_list_credential table
+    CONSTRAINT fk_credential_status_transaction_status_list
+        FOREIGN KEY(status_list_credential_id)
+        REFERENCES status_list_credential(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_cst_credential_id ON credential_status_transaction(credential_id);
+CREATE INDEX IF NOT EXISTS idx_cst_status_purpose ON credential_status_transaction(status_purpose);
+CREATE INDEX IF NOT EXISTS idx_cst_status_list_credential_id ON credential_status_transaction(status_list_credential_id);
+CREATE INDEX IF NOT EXISTS idx_cst_status_list_index ON credential_status_transaction(status_list_index);
+CREATE INDEX IF NOT EXISTS idx_cst_cr_dtimes ON credential_status_transaction(cr_dtimes);
+CREATE INDEX IF NOT EXISTS idx_cst_status_value ON credential_status_transaction(status_value);
+
+CREATE TABLE status_list_available_indices (
+    id SERIAL PRIMARY KEY,                         -- Serial primary key
+    status_list_credential_id VARCHAR(255) NOT NULL, -- References status_list_credential.id
+    list_index BIGINT NOT NULL,                    -- The numerical index within the status list
+    is_assigned BOOLEAN NOT NULL DEFAULT FALSE,   -- Flag indicating if this index has been assigned
+    cr_dtimes TIMESTAMP NOT NULL DEFAULT NOW(),   -- Creation timestamp
+    upd_dtimes TIMESTAMP,                          -- Update timestamp
+
+    -- Foreign key constraint
+    CONSTRAINT fk_status_list_credential
+        FOREIGN KEY(status_list_credential_id)
+        REFERENCES status_list_credential(id)
+        ON DELETE CASCADE -- If a status list credential is deleted, its available index entries are also deleted.
+        ON UPDATE CASCADE, -- If the ID of a status list credential changes, update it here too.
+
+    -- Unique constraint to ensure each index within a list is represented only once
+    CONSTRAINT uq_list_id_and_index
+        UNIQUE (status_list_credential_id, list_index)
+);
+
+CREATE INDEX IF NOT EXISTS idx_sla_available_indices
+    ON status_list_available_indices (status_list_credential_id, is_assigned, list_index)
+    WHERE is_assigned = FALSE;
+
+-- Additional indexes for performance
+CREATE INDEX IF NOT EXISTS idx_sla_status_list_credential_id ON status_list_available_indices(status_list_credential_id);
+CREATE INDEX IF NOT EXISTS idx_sla_is_assigned ON status_list_available_indices(is_assigned);
+CREATE INDEX IF NOT EXISTS idx_sla_list_index ON status_list_available_indices(list_index);
+CREATE INDEX IF NOT EXISTS idx_sla_cr_dtimes ON status_list_available_indices(cr_dtimes);
