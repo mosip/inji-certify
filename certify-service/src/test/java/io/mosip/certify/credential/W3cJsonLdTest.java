@@ -67,7 +67,6 @@ public class W3cJsonLdTest {
 //        w3cJsonLd = new W3cJsonLd(vcFormatter, signatureService);
 //        w3cJsonLd.proofGenerator = proofGenerator;
 
-//        ReflectionTestUtils.setField(w3cJsonLd, "proofGenerator", proofGenerator);
         ReflectionTestUtils.setField(w3cJsonLd, "proofGeneratorFactory", proofGeneratorFactory);
         when(proofGeneratorFactory.getProofGenerator(any())).thenReturn(Optional.of(proofGenerator));
         ReflectionTestUtils.setField(w3cJsonLd, "dataIntegrityCryptoSuite", "");

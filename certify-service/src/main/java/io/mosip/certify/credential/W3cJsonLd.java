@@ -47,10 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class W3cJsonLd extends Credential{
-//    //TODO: This has to move to a factory
-//    @Autowired
-//    ProofGenerator proofGenerator;
-
+    //TODO: This has to move to a factory
     @Autowired
     ProofGeneratorFactory proofGeneratorFactory;
     @Autowired

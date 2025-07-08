@@ -18,7 +18,7 @@ public class SdJwtCredentialRequestValidatorTest {
     @Test
     public void checkMsoMdocValidatorWithValidCredentialRequest_thenPass() {
         CredentialRequest credentialRequest = new CredentialRequest();
-        credentialRequest.setSdJwtVct("sd_jwt_vct");
+        credentialRequest.setVct("sd_jwt_vct");
         credentialRequest.setClaims(Map.of("client_id", "test-client-id"));
         assertTrue(SdJwtCredentialRequestValidator.isValidCheck(credentialRequest));
     }

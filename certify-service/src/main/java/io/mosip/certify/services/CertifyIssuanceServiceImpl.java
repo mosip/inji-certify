@@ -8,6 +8,7 @@ package io.mosip.certify.services;
 import java.text.ParseException;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -77,8 +78,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             SignatureAlg.EC_K1_2016, List.of(Constants.CERTIFY_VC_SIGN_EC_K1, Constants.EC_SECP256K1_SIGN),
             SignatureAlg.EC_SECP256K1_2019, List.of(Constants.CERTIFY_VC_SIGN_EC_K1, Constants.EC_SECP256K1_SIGN),
             SignatureAlg.EC_SECP256R1_2019, List.of(Constants.CERTIFY_VC_SIGN_EC_R1, Constants.EC_SECP256R1_SIGN));
-//    @Value("${mosip.certify.data-provider-plugin.issuer.vc-sign-algo:Ed25519Signature2020}")
-//    private String vcSignAlgorithm;
+
     @Value("#{${mosip.certify.key-values}}")
     private LinkedHashMap<String, LinkedHashMap<String, Object>> issuerMetadata;
 
@@ -141,7 +141,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Autowired
     private IndexedAttributesConfig indexedAttributesConfig;
 
-    @Value("${mosip.certify.statuslist.enabled:true}")
+    @Value("${mosip.certify.statuslist.enabled:false}")
     private boolean statusListEnabled;
 
     @Value("${mosip.certify.statuslist.default-purpose:revocation}")
@@ -233,14 +233,22 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     }
 
     @Override
-    public Map<String, Object> getDIDDocument(String vcSignCryptoSuite) {
+    public Map<String, Object> getDIDDocument() {
         if(didDocument != null)
             return didDocument;
 
-        KeyPairGenerateResponseDto keyPairGenerateResponseDto = keymanagerService.getCertificate(keyChooser.get(vcSignCryptoSuite).getFirst(), Optional.of(keyChooser.get(vcSignCryptoSuite).getLast()));
-        String certificateString = keyPairGenerateResponseDto.getCertificate();
+        didDocument = keyChooser.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> {
+                            List<String> keyParams = entry.getValue();
+                            KeyPairGenerateResponseDto keyPairGenerateResponseDto = keymanagerService.getCertificate(
+                                    keyParams.getFirst(), Optional.of(keyParams.getLast()));
+                            String certificateString = keyPairGenerateResponseDto.getCertificate();
+                            return DIDDocumentUtil.generateDIDDocument(entry.getKey(), certificateString, issuerURI, issuerPublicKeyURI);
+                        }
+                ));
 
-        didDocument = DIDDocumentUtil.generateDIDDocument(vcSignCryptoSuite, certificateString, issuerURI, issuerPublicKeyURI);
         return didDocument;
     }
 
@@ -264,7 +272,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     templateParams.put(Constants.TEMPLATE_NAME, templateName);
                     templateParams.put(Constants.ISSUER_URI, issuerURI);
                     if (statusListEnabled) {
-                        addCredentialStatus(jsonObject, vcFormatter.getVcSignCryptoSuite(templateName));
+                        addCredentialStatus(jsonObject);
                     }
                     if (!StringUtils.isEmpty(renderTemplateId)) {
                         templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
@@ -281,7 +289,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     throw new CertifyException(ErrorConstants.UNKNOWN_ERROR);
                 }
                 case "vc+sd-jwt":
-                vcRequestDto.setSdJwtVct(credentialRequest.getSdJwtVct());
+                vcRequestDto.setVct(credentialRequest.getVct());
                 try {
                     // TODO(multitenancy): later decide which plugin out of n plugins is the correct one
                     JSONObject jsonObject = dataProviderPlugin.fetchData(parsedAccessToken.getClaims());
@@ -295,7 +303,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     Credential cred = credentialFactory.getCredential(CredentialFormat.VC_SD_JWT.toString()).orElseThrow(()-> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
                     jsonObject.put("_holderId", holderId);
                     templateParams.putAll(jsonObject.toMap());
-                    templateParams.put("_vct", vcRequestDto.getSdJwtVct());
+                    templateParams.put("_vct", vcRequestDto.getVct());
                     // This is with reference to the Representation of a Key ID for a Proof-of-Possession Key
                     // Ref: https://datatracker.ietf.org/doc/html/rfc7800#section-3.4
                     templateParams.put("_cnf", Map.of("kid", holderId));
@@ -312,12 +320,12 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     }
 
     @Transactional
-    private void addCredentialStatus(JSONObject jsonObject, String vcSignCryptoSuite) {
+    private void addCredentialStatus(JSONObject jsonObject) {
         try {
             log.info("Adding credential status forstatus list integration");
 
             // Find or create a suitable status list
-            StatusListCredential statusList = statusListCredentialService.findOrCreateStatusList(defaultStatusPurpose, vcSignCryptoSuite);
+            StatusListCredential statusList = statusListCredentialService.findOrCreateStatusList(defaultStatusPurpose);
 
             // Assign next available index using database approach
             long assignedIndex = statusListCredentialService.findNextAvailableIndex(statusList.getId());
@@ -325,7 +333,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             // If the current list is full, create a new one
             if(assignedIndex == -1) {
                 log.info("Current status list is full, creating a new one");
-                statusList = statusListCredentialService.generateStatusListCredential(defaultStatusPurpose, vcSignCryptoSuite);
+                statusList = statusListCredentialService.generateStatusListCredential(defaultStatusPurpose);
                 assignedIndex = statusListCredentialService.findNextAvailableIndex(statusList.getId());
 
                 if(assignedIndex == -1) {

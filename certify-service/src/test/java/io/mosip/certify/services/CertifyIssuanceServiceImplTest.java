@@ -175,7 +175,7 @@ public class CertifyIssuanceServiceImplTest {
     private CredentialRequest createValidCredentialRequest(String format) {
         CredentialRequest req = new CredentialRequest();
         req.setFormat(format);
-        req.setSdJwtVct("test_vct");
+        req.setVct("test_vct");
 
         // This is io.mosip.certify.core.dto.CredentialDefinition for the request object
         io.mosip.certify.core.dto.CredentialDefinition requestCredDef = new io.mosip.certify.core.dto.CredentialDefinition();
@@ -250,7 +250,7 @@ public class CertifyIssuanceServiceImplTest {
 
         // Corrected declaration of mockVcResultLdp
         VCResult mockVcResultLdp = new VCResult<JsonLDObject>();
-        JsonLDObject signedCredObj = JsonLDObject.fromJson("{\"signed\":\"credential\"}");
+        JsonLDObject signedCredObj = JsonLDObject.fromJson("{\"signed\":\"credential\", \"proof\":{}}");
         mockVcResultLdp.setCredential(signedCredObj);
 
         // The holderId argument to addProof in the service is "" for LDP
@@ -476,7 +476,7 @@ public class CertifyIssuanceServiceImplTest {
         ReflectionTestUtils.setField(issuanceService, "didDocument", expectedDocument); // assuming a setter or constructor to set it
 
         // Act
-        Map<String, Object> result = issuanceService.getDIDDocument("test-vc-sign-crypto-suite");
+        Map<String, Object> result = issuanceService.getDIDDocument();
 
         // Assert
         assertEquals(expectedDocument, result);

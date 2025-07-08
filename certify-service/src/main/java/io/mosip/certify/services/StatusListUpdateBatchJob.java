@@ -1,15 +1,11 @@
 package io.mosip.certify.services;
 
-import io.mosip.certify.api.dto.VCRequestDto;
-import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.entity.CredentialStatusTransaction;
 import io.mosip.certify.entity.StatusListCredential;
 import io.mosip.certify.repository.CredentialStatusTransactionRepository;
 import io.mosip.certify.repository.StatusListCredentialRepository;
 import io.mosip.certify.utils.BitStringStatusListUtils;
-import io.mosip.certify.utils.CredentialUtils;
-import io.mosip.certify.vcformatters.VCFormatter;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.core.LockAssert;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
@@ -41,9 +37,6 @@ public class StatusListUpdateBatchJob {
 
     @Autowired
     private StatusListCredentialService statusListCredentialService;
-
-    @Autowired
-    private VCFormatter vcFormatter;
 
     @Value("${mosip.certify.batch.status-list-update.enabled:true}")
     private boolean batchJobEnabled;
@@ -270,21 +263,6 @@ public class StatusListUpdateBatchJob {
             log.info("Parsed VC document for StatusListCredential ID: {}", statusListCredential.getId());
 
             // Update the encodedList in the credential subject
-            VCRequestDto vcRequestDto = new VCRequestDto();
-            List<String> contextList = vcDocument.getJSONArray("@context")
-                    .toList()
-                    .stream()
-                    .map(Object::toString)
-                    .collect(Collectors.toList());
-            vcRequestDto.setContext(contextList);
-            List<String> credentialTypes = vcDocument.getJSONArray("type")
-                    .toList()
-                    .stream()
-                    .map(Object::toString)
-                    .collect(Collectors.toList());
-            vcRequestDto.setType(credentialTypes);
-            vcRequestDto.setFormat(VCFormats.LDP_VC);
-            String templateName = CredentialUtils.getTemplateName(vcRequestDto);
             JSONObject credentialSubject = vcDocument.getJSONObject("credentialSubject");
             credentialSubject.put("encodedList", newEncodedList);
             log.info("Updated encodedList for StatusListCredential ID: {}", newEncodedList);
@@ -295,7 +273,7 @@ public class StatusListUpdateBatchJob {
             log.info("Set new validFrom timestamp: {} for StatusListCredential ID: {}", newValidFrom, statusListCredential.getId());
 
             // Re-sign the status list credential
-            String updatedVcDocument = statusListCredentialService.resignStatusListCredential(vcDocument.toString(), vcFormatter.getVcSignCryptoSuite(templateName));
+            String updatedVcDocument = statusListCredentialService.resignStatusListCredential(vcDocument.toString());
             log.info("Re-signed VC document for StatusListCredential ID: {}", statusListCredential.getId());
 
             // Update the database record

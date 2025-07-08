@@ -59,6 +59,9 @@ public class DIDDocumentUtil {
                 case SignatureAlg.RSA_SIGNATURE_SUITE_2018:
                     verificationMethod = generateRSAVerificationMethod(publicKey, issuerURI, issuerPublicKeyURI);
                     break;
+                case SignatureAlg.EC_K1_2016:
+                    verificationMethod = generateEcdsaKoblitz2016VerificationMethod(publicKey, issuerURI, issuerPublicKeyURI);
+                    break;
                 case SignatureAlg.EC_SECP256R1_2019:
                     verificationMethod = generateECR1VerificationMethod(publicKey, issuerURI, issuerPublicKeyURI);
                     break;
@@ -168,6 +171,18 @@ public class DIDDocumentUtil {
 
         // As per the below spec, publicKeyBase58 is also supported
         // ref: https://w3c-ccg.github.io/ld-cryptosuite-registry/#ecdsasecp256k1signature2019
+        return verificationMethod;
+    }
+
+    private static Map<String, Object> generateEcdsaKoblitz2016VerificationMethod(PublicKey publicKey, String issuerURI, String issuerPublicKeyURI) {
+        ECKey nimbusKey = new ECKey.Builder(Curve.SECP256K1, (ECPublicKey) publicKey).build();
+
+        Map<String, Object> verificationMethod = new HashMap<>();
+        verificationMethod.put("id", issuerPublicKeyURI);
+        verificationMethod.put("type", "EcdsaKoblitzSignature2016");
+        verificationMethod.put("@context", "https://w3id.org/security/v1");
+        verificationMethod.put("controller", issuerURI);
+        verificationMethod.put("publicKeyJwk", nimbusKey.toJSONObject());
         return verificationMethod;
     }
 }

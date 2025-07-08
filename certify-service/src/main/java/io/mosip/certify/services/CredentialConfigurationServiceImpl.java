@@ -66,8 +66,9 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         credentialConfig.setConfigId(UUID.randomUUID().toString());
         credentialConfig.setStatus(Constants.ACTIVE);
 
-        if(pluginMode.equals("DataProvider") && (credentialConfig.getVcTemplate() == null || credentialConfig.getVcTemplate().isEmpty())) {
-            throw new CertifyException("Credential Template is mandatory for this `DataProvider` plugin issuer.");
+        if(pluginMode.equals("DataProvider") && (credentialConfig.getVcTemplate() == null || credentialConfig.getVcTemplate().isEmpty() ||
+                credentialConfig.getVcSignCryptoSuite() == null || credentialConfig.getVcSignCryptoSuite().isEmpty())) {
+            throw new CertifyException("Credential Template and VC Sign Crypto Suite is mandatory for the DataProvider plugin issuer.");
         }
 
         validateCredentialConfiguration(credentialConfig);

@@ -19,7 +19,7 @@ public class ProofGeneratorFactory {
      */
     public Optional<ProofGenerator> getProofGenerator(String vcSignCryptoSuite) {
         if(vcSignCryptoSuite == null) {
-            return null;
+            return Optional.empty();
         }
         return proofGenerators.stream()
                 .filter(proofGenerator -> proofGenerator.getName().equals(vcSignCryptoSuite))
