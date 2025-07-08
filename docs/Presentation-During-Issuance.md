@@ -38,11 +38,11 @@ sequenceDiagram
     IC-->>W: 4. OAuth AS metadata 
     
     Note over W,IC: 1. Initial Credential Request (Browser-less)
-    W->>IC: 5. POST /authorize-challenge<br/>{client_id, authorization_details(auth_session)}
+    W->>IC: 5. POST /iar<br/>{response_type="code", client_id, code_challenge, code_challenge_method:"S256", redirect_uri, authorization_details}
     IC->>IVP: 6. Create presentation request
     IVP-->>IC: 7. {request_id,transaction_id, request_uri: /oid4vp/request/{id}} (non-normative)
     IC->>IC: 8. store transaction id for the presentation request mapped to Auth Session
-    IC-->>W: 9. 400 insufficient_authorization<br/>{auth_session, presentation: {request_uri}}
+    IC-->>W: 9. 200 Interactive Authorization Response<br/>{status:"require_interaction", type:"openid4vp_presentation", auth_session:"..random string", openid4vp_presentation: {standard ovp request by reference/value}}
     
     Note over W,IVP: 2. Presentation Flow
     W->>IVP: 10. GET /oid4vp/request/{request_id}
@@ -54,12 +54,12 @@ sequenceDiagram
     
     
     Note over W,IC: 3. Continue with Inji Certify
-    W->>IC: 17. POST /authorize-challenge<br/>{auth_session}
+    W->>IC: 17. POST /iar<br/>{auth_session}
     IC->>IC: 18. Validate auth_session 
     IC->>IVP: 19. get VP verification status for transaction id
     IVP->>IC: 20. Send VP verification status
     IC->>IC: 21. VC is Valid (positive flow)
-    IC-->>W: 22. 200 OK {authorization_code}
+    IC-->>W: 22. 200 OK {status:"ok", authorization_code:"..."}
     
     W->>IC: 23. POST /oauth/token<br/>{grant_type=authorization_code, code}
     IC-->>W: 24. {access_token, c_nonce}
@@ -77,49 +77,46 @@ The process is broken down into several key phases:
 The Wallet discovers the Credential Issuer's (Inji Certify) capabilities.
 
 1. **Wallet to Inji Certify**: `GET /.well-known/openid-credential-issuer` (The Wallet requests Inji Certify's OpenID Credential Issuer metadata).
-
 2. **Inji Certify to Wallet**: Returns Credential Issuer metadata.
-
 3. **Wallet to Inji Certify**: `GET /.well-known/oauth-authorization-server` (The Wallet requests Inji Certify's OAuth Authorization Server metadata).
-
 4. **Inji Certify to Wallet**: Returns OAuth AS metadata.
 
-### Phase 1: Initial Credential Request & Presentation Trigger
+### Phase 1: Initial Credential Request & Presentation Trigger{#phase-1}
 
 The Wallet initiates the request, and the Issuer determines if a presentation is needed.
-5.  **Wallet to Inji Certify**: `POST /authorize-challenge` (Includes `client_id`, `authorization_details` for the desired credential).
-6.  **Inji Certify (Internal)**: Evaluates its presentation policy.
-7.  **Inji Certify to VP Verifier**: Instructs the VP Verifier to create a presentation request.
-8.  **VP Verifier to Inji Certify**: Returns `request_id`, `transaction_id`, and `request_uri` (e.g., `/oid4vp/request/{id}`). Inji Certify stores `transaction_id` mapped to the Auth Session.
-9.  **Inji Certify to Wallet**: Responds with `400 insufficient_authorization`. Includes `auth_session` and `presentation: {request_uri}`.
+1. **Wallet to Inji Certify**: `POST /iar` (Includes `response_type="code"`, `client_id`, `code_challenge`, `code_challenge_method:"S256"`, `redirect_uri`, `authorization_details` for the desired credential).
+2. **Inji Certify (Internal)**: Evaluates its presentation policy.
+3. **Inji Certify to VP Verifier**: Instructs the VP Verifier to create a presentation request.
+4. **VP Verifier to Inji Certify**: Returns `request_id`, `transaction_id`, and `request_uri` (e.g., `/oid4vp/request/{id}`). Inji Certify stores `transaction_id` mapped to the Auth Session.
+5. **Inji Certify to Wallet**: Responds with `200 Interactive Authorization Response`. Includes `status:"require_interaction"`, `type:"openid4vp_presentation"`, `auth_session` and `presentation: {request_uri}`.
 
 ### Phase 2: Presentation Flow with VP Verifier
 
 The Wallet interacts with the VP Verifier.
-10. **Wallet to VP Verifier**: `GET /oid4vp/request/{request_id}` (using the `request_uri`).
-11. **VP Verifier to Wallet**: Responds with the Presentation Request details.
-12. **Wallet to User**: Prompts User for consent.
-13. **User to Wallet**: User approves.
-14. **Wallet to VP Verifier**: `POST /oid4vp/response` (submits `vp_token`, `presentation_submission`).
-15. **VP Verifier (Internal)**: Stores the verification result.
+1. **Wallet to VP Verifier**: `GET /oid4vp/request/{request_id}` (using the `request_uri`).
+2. **VP Verifier to Wallet**: Responds with the Presentation Request details.
+3. **Wallet to User**: Prompts User for consent.
+4. **User to Wallet**: User approves.
+5. **Wallet to VP Verifier**: `POST /oid4vp/response` (submits `vp_token`, `presentation_submission`).
+6. **VP Verifier (Internal)**: Stores the verification result.
 
 ### Phase 3: Continue Authorization with Inji Certify
 
 The Wallet returns to the Issuer.
-17. **Wallet to Inji Certify**: `POST /authorize-challenge` (includes `auth_session` from step 9).
-18. **Inji Certify (Internal)**: Validates `auth_session`.
-19. **Inji Certify to VP Verifier**: Gets VP verification status for the `transaction_id`.
-20. **VP Verifier to Inji Certify**: Sends VP verification status.
-21. **Inji Certify (Internal)**: Confirms VC is Valid (positive flow).
-22. **Inji Certify to Wallet**: Responds `200 OK` with an `authorization_code`.
+1. **Wallet to Inji Certify**: `POST /iar` (includes `auth_session` from step 5 of Phase 1).
+2. **Inji Certify (Internal)**: Validates `auth_session`.
+3. **Inji Certify to VP Verifier**: Gets VP verification status for the `transaction_id`.
+4. **VP Verifier to Inji Certify**: Sends VP verification status.
+5. **Inji Certify (Internal)**: Confirms VC is Valid (positive flow).
+6. **Inji Certify to Wallet**: Responds `200 OK` with `status:"ok"` and  `authorization_code`.
 
 ### Phase 4: Token Exchange & Credential Issuance
 
 The Wallet gets tokens and then the credential.
-23. **Wallet to Inji Certify**: `POST /oauth/token` (grant_type=`authorization_code`, `code`).
-24. **Inji Certify to Wallet**: Responds with `access_token`, `c_nonce`.
-25. **Wallet to Inji Certify**: `POST /credential` (includes `format`, `proof` with `c_nonce`, authenticated with `access_token`).
-26. **Inji Certify to Wallet**: Validates and returns the `credential`.
+1. **Wallet to Inji Certify**: `POST /oauth/token` (grant_type=`authorization_code`, `code`).
+2. **Inji Certify to Wallet**: Responds with `access_token`, `c_nonce`.
+3. **Wallet to Inji Certify**: `POST /credential` (includes `format`, `proof` with `c_nonce`, authenticated with `access_token`).
+4. **Inji Certify to Wallet**: Validates and returns the `credential`.
 
 ## Specifications Used
 
