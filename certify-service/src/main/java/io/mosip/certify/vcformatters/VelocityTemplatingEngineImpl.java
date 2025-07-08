@@ -181,6 +181,16 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     }
 
     /**
+     * Gets the crypto suite used for VC signature or proof generation
+     * @param templateName is the name of the template
+     * @return the crypto suite used for VC signature or proof generation
+     */
+    @Override
+    public String getVcSignCryptoSuite(String templateName) {
+        return getCachedCredentialConfig(templateName).getVcSignCryptoSuite(); // NEW
+    }
+
+    /**
      * performs the templating
      * NOTE: the defaultSettings map should have the "templateName" key set to
      *  "${sort(CREDENTIALTYPE1,CREDENTIALTYPE2,CREDENTIALTYPE3...)}:${sort(VC_CONTEXT1,VC_CONTENXT2,VC_CONTEXT3...)}"

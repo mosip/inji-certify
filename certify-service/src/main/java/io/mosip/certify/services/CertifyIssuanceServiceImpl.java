@@ -77,8 +77,8 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             SignatureAlg.EC_K1_2016, List.of(Constants.CERTIFY_VC_SIGN_EC_K1, Constants.EC_SECP256K1_SIGN),
             SignatureAlg.EC_SECP256K1_2019, List.of(Constants.CERTIFY_VC_SIGN_EC_K1, Constants.EC_SECP256K1_SIGN),
             SignatureAlg.EC_SECP256R1_2019, List.of(Constants.CERTIFY_VC_SIGN_EC_R1, Constants.EC_SECP256R1_SIGN));
-    @Value("${mosip.certify.data-provider-plugin.issuer.vc-sign-algo:Ed25519Signature2020}")
-    private String vcSignAlgorithm;
+//    @Value("${mosip.certify.data-provider-plugin.issuer.vc-sign-algo:Ed25519Signature2020}")
+//    private String vcSignAlgorithm;
     @Value("#{${mosip.certify.key-values}}")
     private LinkedHashMap<String, LinkedHashMap<String, Object>> issuerMetadata;
 
@@ -233,14 +233,14 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     }
 
     @Override
-    public Map<String, Object> getDIDDocument() {
+    public Map<String, Object> getDIDDocument(String vcSignCryptoSuite) {
         if(didDocument != null)
             return didDocument;
 
-        KeyPairGenerateResponseDto keyPairGenerateResponseDto = keymanagerService.getCertificate(keyChooser.get(vcSignAlgorithm).getFirst(), Optional.of(keyChooser.get(vcSignAlgorithm).getLast()));
+        KeyPairGenerateResponseDto keyPairGenerateResponseDto = keymanagerService.getCertificate(keyChooser.get(vcSignCryptoSuite).getFirst(), Optional.of(keyChooser.get(vcSignCryptoSuite).getLast()));
         String certificateString = keyPairGenerateResponseDto.getCertificate();
 
-        didDocument = DIDDocumentUtil.generateDIDDocument(vcSignAlgorithm, certificateString, issuerURI, issuerPublicKeyURI);
+        didDocument = DIDDocumentUtil.generateDIDDocument(vcSignCryptoSuite, certificateString, issuerURI, issuerPublicKeyURI);
         return didDocument;
     }
 
@@ -264,7 +264,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     templateParams.put(Constants.TEMPLATE_NAME, templateName);
                     templateParams.put(Constants.ISSUER_URI, issuerURI);
                     if (statusListEnabled) {
-                        addCredentialStatus(jsonObject);
+                        addCredentialStatus(jsonObject, vcFormatter.getVcSignCryptoSuite(templateName));
                     }
                     if (!StringUtils.isEmpty(renderTemplateId)) {
                         templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
@@ -273,7 +273,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     Credential cred = credentialFactory.getCredential(credentialRequest.getFormat()).orElseThrow(()-> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
                     templateParams.putAll(jsonObject.toMap());
                     String unsignedCredential=cred.createCredential(templateParams, templateName);
-                    return cred.addProof(unsignedCredential,"", vcFormatter.getProofAlgorithm(templateName), vcFormatter.getAppID(templateName), vcFormatter.getRefID(templateName),vcFormatter.getDidUrl(templateName));
+                    return cred.addProof(unsignedCredential,"", vcFormatter.getProofAlgorithm(templateName), vcFormatter.getAppID(templateName), vcFormatter.getRefID(templateName),vcFormatter.getDidUrl(templateName), vcFormatter.getVcSignCryptoSuite(templateName));
                 } catch(DataProviderExchangeException e) {
                     throw new CertifyException(e.getErrorCode());
                 } catch (JSONException e) {
@@ -301,7 +301,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     templateParams.put("_cnf", Map.of("kid", holderId));
                     templateParams.put("_iss", certifyIssuer);
                     String unsignedCredential=cred.createCredential(templateParams, templateName);
-                    return cred.addProof(unsignedCredential,"", vcFormatter.getProofAlgorithm(templateName), vcFormatter.getAppID(templateName), vcFormatter.getRefID(templateName),vcFormatter.getDidUrl(templateName));
+                    return cred.addProof(unsignedCredential,"", vcFormatter.getProofAlgorithm(templateName), vcFormatter.getAppID(templateName), vcFormatter.getRefID(templateName),vcFormatter.getDidUrl(templateName), vcFormatter.getVcSignCryptoSuite(templateName));
                 } catch(DataProviderExchangeException e) {
                     log.error("Error processing the SD-JWT :", e);
                     throw new CertifyException(ErrorConstants.VC_ISSUANCE_FAILED);
@@ -312,12 +312,12 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     }
 
     @Transactional
-    private void addCredentialStatus(JSONObject jsonObject) {
+    private void addCredentialStatus(JSONObject jsonObject, String vcSignCryptoSuite) {
         try {
             log.info("Adding credential status forstatus list integration");
 
             // Find or create a suitable status list
-            StatusListCredential statusList = statusListCredentialService.findOrCreateStatusList(defaultStatusPurpose);
+            StatusListCredential statusList = statusListCredentialService.findOrCreateStatusList(defaultStatusPurpose, vcSignCryptoSuite);
 
             // Assign next available index using database approach
             long assignedIndex = statusListCredentialService.findNextAvailableIndex(statusList.getId());
@@ -325,7 +325,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             // If the current list is full, create a new one
             if(assignedIndex == -1) {
                 log.info("Current status list is full, creating a new one");
-                statusList = statusListCredentialService.generateStatusListCredential(defaultStatusPurpose);
+                statusList = statusListCredentialService.generateStatusListCredential(defaultStatusPurpose, vcSignCryptoSuite);
                 assignedIndex = statusListCredentialService.findNextAvailableIndex(statusList.getId());
 
                 if(assignedIndex == -1) {

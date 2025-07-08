@@ -382,7 +382,7 @@ public class VCIssuanceServiceImplTest {
 
     @Test
     public void getDIDDocument_ThrowsUnsupportedException() {
-        InvalidRequestException ex = assertThrows(InvalidRequestException.class, () -> issuanceService.getDIDDocument());
+        InvalidRequestException ex = assertThrows(InvalidRequestException.class, () -> issuanceService.getDIDDocument("test-crypto-suite"));
         assertEquals(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE, ex.getErrorCode());
     }
 

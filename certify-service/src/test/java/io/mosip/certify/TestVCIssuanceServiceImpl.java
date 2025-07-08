@@ -28,7 +28,7 @@ public class TestVCIssuanceServiceImpl implements VCIssuanceService {
     }
 
     @Override
-    public Map<String, Object> getDIDDocument() {
+    public Map<String, Object> getDIDDocument(String vcSignCryptoSuite) {
         throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE);
     }
 }

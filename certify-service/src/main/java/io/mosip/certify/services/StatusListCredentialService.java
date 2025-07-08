@@ -131,7 +131,7 @@ public class StatusListCredentialService {
      * @return the generated StatusListCredential
      */
     @Transactional
-    public StatusListCredential generateStatusListCredential(String statusPurpose) {
+    public StatusListCredential generateStatusListCredential(String statusPurpose, String vcSignCryptoSuite) {
         log.info("Generating new status list credential with purpose: {}", statusPurpose);
 
         try {
@@ -170,8 +170,9 @@ public class StatusListCredentialService {
 
             // Sign the status list credential
             Map<String, String> signerSettings = new HashMap<>();
-            signerSettings.put(Constants.APPLICATION_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignAlgorithm).getFirst());
-            signerSettings.put(Constants.REFERENCE_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignAlgorithm).getLast());
+            signerSettings.put(Constants.APPLICATION_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignCryptoSuite).getFirst());
+            signerSettings.put(Constants.REFERENCE_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignCryptoSuite).getLast());
+            signerSettings.put(Constants.VC_SIGN_CRYPTO_SUITE, vcSignCryptoSuite);
 
             // Attach signature to the VC
             VCResult<?> vcResult = vcSigner.attachSignature(statusListData.toString(), signerSettings);
@@ -274,7 +275,7 @@ public class StatusListCredentialService {
      * @return StatusListCredential that can be used for the given purpose
      */
     @Transactional
-    public StatusListCredential findOrCreateStatusList(String statusPurpose) {
+    public StatusListCredential findOrCreateStatusList(String statusPurpose, String vcSignCryptoSuite) {
         log.info("Finding or creating status list for purpose: {}", statusPurpose);
 
         // Try to find an existing suitable status list
@@ -287,7 +288,7 @@ public class StatusListCredentialService {
 
         // No suitable status list found, generate a new one
         log.info("No suitable status list found, generating a new one");
-        StatusListCredential statusListCredential = generateStatusListCredential(statusPurpose);
+        StatusListCredential statusListCredential = generateStatusListCredential(statusPurpose, vcSignCryptoSuite);
         return statusListCredential;
     }
 
@@ -311,14 +312,14 @@ public class StatusListCredentialService {
      * @return The re-signed VC document as JSON string
      */
     @Transactional
-    public String resignStatusListCredential(String vcDocumentJson) {
+    public String resignStatusListCredential(String vcDocumentJson, String vcSignCryptoSuite) {
         log.info("Re-signing status list credential");
 
         try {
             // Prepare signer settings
             Map<String, String> signerSettings = new HashMap<>();
-            signerSettings.put(Constants.APPLICATION_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignAlgorithm).getFirst());
-            signerSettings.put(Constants.REFERENCE_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignAlgorithm).getLast());
+            signerSettings.put(Constants.APPLICATION_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignCryptoSuite).getFirst());
+            signerSettings.put(Constants.REFERENCE_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignCryptoSuite).getLast());
 
             // Remove existing proof if present before re-signing
             JSONObject vcDocument = new JSONObject(vcDocumentJson);

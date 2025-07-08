@@ -17,6 +17,8 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
 
+import io.mosip.certify.proofgenerators.ProofGeneratorFactory;
+import io.mosip.certify.vcformatters.VCFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -47,8 +49,14 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class JsonLDVCSigner implements VCSigner {
 
+//    @Autowired
+//    ProofGenerator proofGenerator;
+
     @Autowired
-    ProofGenerator proofGenerator;
+    ProofGeneratorFactory proofGeneratorFactory;
+
+    @Autowired
+    VCFormatter vcFormatter;
     @Value("${mosip.certify.data-provider-plugin.issuer-public-key-uri}")
     private String issuerPublicKeyURI;
 
@@ -70,6 +78,13 @@ public class JsonLDVCSigner implements VCSigner {
         }
         // TODO: VC Data Model spec doesn't specify a single date format or a
         //  timezone restriction, this will have to be supported timely.
+
+        String vcSignCryptoSuite = keyReferenceDetails.getOrDefault(
+                Constants.VC_SIGN_CRYPTO_SUITE, "Ed25519Signature2020");
+
+        ProofGenerator proofGenerator = proofGeneratorFactory.getProofGenerator(vcSignCryptoSuite)
+                .orElseThrow(() ->
+                        new CertifyException("Proof generator not found for algorithm: " + vcSignCryptoSuite));
         Date createDate = Date
                 .from(LocalDateTime
                         .parse(validFrom,

@@ -98,7 +98,7 @@ public class VelocityTemplatingEngineImplTest {
                             }
                         }
                 """,
-                vc2Type, vc2Context, vc2Format, "did:example:issuer2", "appId2", "refId2", "EdDSA", "$.phone"
+                vc2Type, vc2Context, vc2Format, "did:example:issuer2", "appId2", "refId2", "EdDSA", "$.phone", "testCryptoSuite"
         );
 
         // vc3 definition - with quotes fixed for string template variables
@@ -131,7 +131,7 @@ public class VelocityTemplatingEngineImplTest {
                             }
                         }
                 """,
-                vc3Type, vc3Context, vc3Format, "did:example:issuer3", "appId3", "refId3", "EdDSA", null
+                vc3Type, vc3Context, vc3Format, "did:example:issuer3", "appId3", "refId3", "EdDSA", null, "testCryptoSuite"
         );
 
 
@@ -142,7 +142,7 @@ public class VelocityTemplatingEngineImplTest {
         vc4TemplateKey = vc4Type + DELIMITER + vc4Context + DELIMITER + vc4Format;
         vc4TemplateIdObject = new TemplateId(vc4Context, vc4Type, vc4Format);
         vc4 = initTemplate(null,
-                vc4Type, vc4Context, vc4Format, "did:example:issuer4", "appId4", "refId4", "RSA", null
+                vc4Type, vc4Context, vc4Format, "did:example:issuer4", "appId4", "refId4", "RSA", null, "testCryptoSuite"
         );
 
 
@@ -163,7 +163,7 @@ public class VelocityTemplatingEngineImplTest {
         formatter.initialize(); // Initializes VelocityEngine
     }
 
-    private CredentialConfig initTemplate(String template, String type, String context, String format, String didUrl, String keyManagerAppId, String keyManagerRefId, String signatureAlgo, String sdClaim) {
+    private CredentialConfig initTemplate(String template, String type, String context, String format, String didUrl, String keyManagerAppId, String keyManagerRefId, String signatureAlgo, String sdClaim, String vcSignCryptoSuite) {
         CredentialConfig t = new CredentialConfig();
         if(template != null) {
             template = Base64.getEncoder().encodeToString(template.getBytes());
@@ -178,6 +178,7 @@ public class VelocityTemplatingEngineImplTest {
         t.setKeyManagerRefId(keyManagerRefId);
         t.setSignatureAlgo(signatureAlgo);
         t.setSdClaim(sdClaim);
+        t.setVcSignCryptoSuite(vcSignCryptoSuite);
         return t;
     }
 
@@ -352,6 +353,13 @@ public class VelocityTemplatingEngineImplTest {
         // Uses vc2 by default
         List<String> expectedList = Arrays.asList(vc2.getSdClaim().split(","));
         Assert.assertEquals(expectedList, formatter.getSelectiveDisclosureInfo(vc2TemplateKey));
+    }
+
+    @Test
+    public void testGetVcSignCryptoSuite() {
+        // Uses vc2 by default
+        String expected = vc2.getVcSignCryptoSuite();
+        Assert.assertEquals(expected, formatter.getVcSignCryptoSuite(vc2TemplateKey));
     }
 
     @Test

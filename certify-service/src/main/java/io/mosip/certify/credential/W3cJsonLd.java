@@ -23,6 +23,7 @@ import com.danubetech.dataintegrity.signer.LdSigner;
 import com.danubetech.dataintegrity.signer.LdSignerRegistry;
 import foundation.identity.jsonld.JsonLDUtils;
 import io.mosip.certify.core.constants.*;
+import io.mosip.certify.proofgenerators.ProofGeneratorFactory;
 import io.mosip.certify.proofgenerators.dip.KeymanagerByteSigner;
 import io.mosip.certify.proofgenerators.dip.KeymanagerByteSignerFactory;
 import io.mosip.certify.utils.CredentialUtils;
@@ -46,9 +47,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class W3cJsonLd extends Credential{
-    //TODO: This has to move to a factory
+//    //TODO: This has to move to a factory
+//    @Autowired
+//    ProofGenerator proofGenerator;
+
     @Autowired
-    ProofGenerator proofGenerator;
+    ProofGeneratorFactory proofGeneratorFactory;
     @Autowired
     SignatureServicev2 signatureService;
     @Value("${mosip.certify.data-provider-plugin.data-integrity.crypto-suite:}")
@@ -83,7 +87,7 @@ public class W3cJsonLd extends Credential{
      * @param headers headers to be added. Can be null.
      */
     @Override
-    public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm, String appID, String refID, String publicKeyURL){
+    public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm, String appID, String refID, String publicKeyURL, String vcSignCryptoSuite){
         VCResult<JsonLDObject> VC = new VCResult<>();
 //        signAlgorithm = "ecdsa-rdfc-2019"; // TODO: this should be configurable
         Map<String,String> keyReferenceDetails = Map.of(Constants.APPLICATION_ID, appID, Constants.REFERENCE_ID, refID);
@@ -106,6 +110,9 @@ public class W3cJsonLd extends Credential{
                         .parse(validFrom,
                                 DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN))
                         .atZone(ZoneId.systemDefault()).toInstant());
+        ProofGenerator proofGenerator = proofGeneratorFactory.getProofGenerator(vcSignCryptoSuite)
+                .orElseThrow(() ->
+                        new CertifyException("Proof generator not found for algorithm: " + vcSignCryptoSuite));
         if (dataIntegrityCryptoSuite.isEmpty()) {
             // legacy signature algos such as Ed25519Signature{2018,2020}
             LdProof vcLdProof = LdProof.builder().defaultContexts(false).defaultTypes(false).type(proofGenerator.getName())

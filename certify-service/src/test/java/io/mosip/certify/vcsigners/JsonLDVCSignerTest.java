@@ -3,8 +3,10 @@ package io.mosip.certify.vcsigners;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import io.mosip.certify.core.exception.CertifyException;
+import io.mosip.certify.proofgenerators.ProofGeneratorFactory;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,6 +34,8 @@ public class JsonLDVCSignerTest {
     SignatureService signatureService;
     @Mock
     ProofGenerator signProps;
+    @Mock
+    ProofGeneratorFactory proofGeneratorFactory;
     @InjectMocks
     private JsonLDVCSigner jsonLDVCSigner;
     private static final String VC_1 = """
@@ -99,6 +103,7 @@ public class JsonLDVCSignerTest {
             when(signProps.getCanonicalizer()).thenReturn(new URDNA2015Canonicalizer());
             LdProof l = LdProof.builder().jws("fake-jws-proof").type("FakeSignature2018").proofPurpose("assertionMethod").build();
             when(signProps.generateProof(any(), any(), any())).thenReturn(l);
+            when(proofGeneratorFactory.getProofGenerator(any())).thenReturn(Optional.of(signProps));
             Map<String, String> defaultSettings = new HashMap<>();
             defaultSettings.put(Constants.APPLICATION_ID, "fake-application-id");
             defaultSettings.put(Constants.REFERENCE_ID, "fake-reference-id");
@@ -125,12 +130,6 @@ public class JsonLDVCSignerTest {
         }
     """;
         Map<String, String> keyDetails = new HashMap<>();
-        Canonicalizer mockCanonicalizer = org.mockito.Mockito.mock(Canonicalizer.class);
-        when(signProps.getCanonicalizer()).thenReturn(mockCanonicalizer);
-        when(signProps.getName()).thenReturn("FakeSignature2018");
-        // Simulate exception
-        when(mockCanonicalizer.canonicalize(any(), any()))
-                .thenThrow(new IOException("Simulated IO error"));
 
         // Act & Assert
         jsonLDVCSigner.attachSignature(vc, keyDetails);

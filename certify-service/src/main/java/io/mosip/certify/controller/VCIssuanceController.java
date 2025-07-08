@@ -90,8 +90,11 @@ public class VCIssuanceController {
     }
 
     @GetMapping(value = "/.well-known/did.json")
-    public Map<String, Object> getDIDDocument() {
-       return vcIssuanceService.getDIDDocument();
+    public Map<String, Object> getDIDDocument(@RequestParam(name = "vcSignCryptoSuite", required = false) String vcSignCryptoSuite) {
+        if (vcSignCryptoSuite == null || vcSignCryptoSuite.isEmpty()) {
+            throw new CertifyException("VC Sign Crypto Suite is required to fetch DID Document");
+        }
+       return vcIssuanceService.getDIDDocument(vcSignCryptoSuite);
     }
 
 

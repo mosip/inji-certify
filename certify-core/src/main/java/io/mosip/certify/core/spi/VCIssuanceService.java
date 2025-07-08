@@ -21,5 +21,5 @@ public interface VCIssuanceService {
 
     Map<String, Object> getCredentialIssuerMetadata(String version);
 
-    Map<String, Object> getDIDDocument();
+    Map<String, Object> getDIDDocument(String vcSignCryptoSuite);
 }

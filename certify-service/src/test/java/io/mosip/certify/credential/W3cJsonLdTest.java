@@ -9,6 +9,7 @@ import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.credential.W3cJsonLd;
 import io.mosip.certify.proofgenerators.ProofGenerator;
+import io.mosip.certify.proofgenerators.ProofGeneratorFactory;
 import io.mosip.certify.proofgenerators.dip.KeymanagerByteSigner;
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.kernel.signature.service.SignatureService;
@@ -31,6 +32,7 @@ import java.security.GeneralSecurityException;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -53,6 +55,9 @@ public class W3cJsonLdTest {
     @Mock
     private ProofGenerator proofGenerator;
 
+    @Mock
+    private ProofGeneratorFactory proofGeneratorFactory;
+
     @Before
     public void setUp() {
 //        vcFormatter = mock(VCFormatter.class);
@@ -62,7 +67,9 @@ public class W3cJsonLdTest {
 //        w3cJsonLd = new W3cJsonLd(vcFormatter, signatureService);
 //        w3cJsonLd.proofGenerator = proofGenerator;
 
-        ReflectionTestUtils.setField(w3cJsonLd, "proofGenerator", proofGenerator);
+//        ReflectionTestUtils.setField(w3cJsonLd, "proofGenerator", proofGenerator);
+        ReflectionTestUtils.setField(w3cJsonLd, "proofGeneratorFactory", proofGeneratorFactory);
+        when(proofGeneratorFactory.getProofGenerator(any())).thenReturn(Optional.of(proofGenerator));
         ReflectionTestUtils.setField(w3cJsonLd, "dataIntegrityCryptoSuite", "");
     }
 
@@ -96,7 +103,7 @@ public class W3cJsonLdTest {
 
         when(proofGenerator.generateProof(any(LdProof.class), anyString(), anyMap())).thenReturn(ldProof);
 
-        VCResult<?> result = w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key");
+        VCResult<?> result = w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "Ed25519Signature2020");
 
         assertEquals("ldp_vc", result.getFormat());
         assertNotNull(result.getCredential());
@@ -122,7 +129,7 @@ public class W3cJsonLdTest {
 
         when(proofGenerator.generateProof(any(LdProof.class), anyString(), anyMap())).thenReturn(ldProof);
 
-        VCResult<?> result = w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key");
+        VCResult<?> result = w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "Ed25519Signature2020");
 
         assertEquals("ldp_vc", result.getFormat());
         assertNotNull(result.getCredential());
@@ -149,7 +156,7 @@ public class W3cJsonLdTest {
 
         when(proofGenerator.generateProof(any(), any(), anyMap())).thenReturn(ldProof);
 
-        VCResult<?> result = w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key");
+        VCResult<?> result = w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "Ed25519Signature2020");
 
         assertNotNull(result);
         assertEquals("ldp_vc", result.getFormat());
@@ -169,7 +176,7 @@ public class W3cJsonLdTest {
                 .thenThrow(new IOException("Mocked IO failure"));
 
         // This will trigger the catch and rethrow CertifyException
-        w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key");
+        w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "Ed25519Signature2020");
     }
 
     @Test
@@ -195,7 +202,7 @@ public class W3cJsonLdTest {
             when(canonicalizer.canonicalize(any(), any())).thenReturn("canonicalized".getBytes());
 
             String vcJson = "{\"@context\":[],\"issuanceDate\":\"2023-01-01T00:00:00.000Z\"}";
-            VCResult<?> result = w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key");
+            VCResult<?> result = w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "Ed25519Signature2020");
 
             assertNotNull(result);
             assertEquals("ldp_vc", result.getFormat());
@@ -221,7 +228,7 @@ public class W3cJsonLdTest {
 
         when(proofGenerator.generateProof(any(LdProof.class), anyString(), anyMap())).thenReturn(ldProof);
 
-        VCResult<?> result = w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key");
+        VCResult<?> result = w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "Ed25519Signature2020");
         assertNotNull(result);
         assertEquals("ldp_vc", result.getFormat());
     }
@@ -244,7 +251,7 @@ public class W3cJsonLdTest {
             when(canonicalizer.canonicalize(any(), any())).thenThrow(new IOException("Mocked IO failure"));
 
             String vcJson = "{\"@context\":[],\"issuanceDate\":\"2023-01-01T00:00:00.000Z\"}";
-            w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key");
+            w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "Ed25519Signature2020");
         }
     }
 
@@ -264,7 +271,7 @@ public class W3cJsonLdTest {
 
 
             String vcJson = "{\"@context\":[],\"issuanceDate\":\"2023-01-01T00:00:00.000Z\"}";
-            w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key");
+            w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "Ed25519Signature2020");
         }
     }
 
@@ -286,7 +293,7 @@ public class W3cJsonLdTest {
             when(canonicalizer.canonicalize(any(), any())).thenThrow(new GeneralSecurityException("Mocked IO failure"));
 
             String vcJson = "{\"@context\":[],\"issuanceDate\":\"2023-01-01T00:00:00.000Z\"}";
-            w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key");
+            w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "Ed25519Signature2020");
         }
     }
 
@@ -308,7 +315,7 @@ public class W3cJsonLdTest {
             when(canonicalizer.canonicalize(any(), any())).thenThrow(new JsonLDException(new JsonLdError(JsonLdErrorCode.CONFLICTING_INDEXES)));
 
             String vcJson = "{\"@context\":[],\"issuanceDate\":\"2023-01-01T00:00:00.000Z\"}";
-            w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key");
+            w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "Ed25519Signature2020");
         }
     }
 }
