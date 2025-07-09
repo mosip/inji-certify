@@ -31,6 +31,7 @@ public class ErrorConstants {
     public static final String INVALID_CERTIFICATE = "invalid_certificate";
     public static final String VERIFICATION_METHOD_GENERATION_FAILED = "verification_method_generation_failed";
     public static final String MISSING_APPLICATION_OR_REFERENCE_ID = "missing_application_or_reference_id";
+    public static final String INVALID_CONFIG_REQUEST = "invalid_config_request";
     public static final String STATUS_LIST_NOT_FOUND = "status_list_not_found_for_the_given_id";
     public static final String STATUS_RETRIEVAL_ERROR = "error_parsing_status_list_credential_document";
     public static final String INDEX_OUT_OF_BOUNDS = "requested_index_is_out_of_bounds_for_status_list_capacity";

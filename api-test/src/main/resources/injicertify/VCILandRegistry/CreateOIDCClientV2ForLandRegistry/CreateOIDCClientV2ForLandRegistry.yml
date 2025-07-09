@@ -29,3 +29,34 @@ CreateOIDCClientV2VCIForLandRegistry:
       output: '{
     	"status": "ACTIVE"
 }'
+   InjiCertify_ESignet_CreateOIDCClientV2_For_LandRegistry_EccR1_all_Valid_Smoke_sid:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/client-mgmt/oauth-client
+      uniqueIdentifier: TC_esignetDependent_CreateOidc_For_EccR1
+      description: Create OIDC client
+      role: partner
+      restMethod: post
+      inputTemplate: injicertify/VCILandRegistry/CreateOIDCClientV2ForLandRegistry/CreateOIDCClientV2ForLandRegistry
+      outputTemplate: injicertify/VCILandRegistry/CreateOIDCClientV2ForLandRegistry/CreateOIDCClientV2ForLandRegistryResult
+      input: '{
+      	"requestTime": "$TIMESTAMP$",
+      	"clientId": "$RANDOMID$",
+      	"clientName": "MOSIP OIDC Client",
+      	"logoUri": "https://health-services.com/logo.png",
+      	"relyingPartyId": "Bharathi-Inc",
+      	"redirectUris": "$IDPREDIRECTURI$",
+      	"publicKey": "$OIDCJWKKEY$",
+      	"userClaims1": "name",
+      	"userClaims2": "email",
+      	"userClaims3": "gender",
+      	"userClaims4": "phone_number",
+      	"userClaims5": "birthdate",
+      	"authContextRefs": [{acrValues: "mosip:idp:acr:static-code"},{acrValues: "mosip:idp:acr:generated-code"},{acrValues: "mosip:idp:acr:biometrics"},{acrValues: "mosip:idp:acr:knowledge"}],
+      	"grantTypes": "authorization_code",
+      	"clientAuthMethods": "private_key_jwt",
+      	"keyLang1": "$1STLANG$",
+      	"clientNameLang": "MOSIP OIDC Client"
+}'
+      output: '{
+        "clientId": "$IGNORE$",
+    	"status": "ACTIVE"
+}'

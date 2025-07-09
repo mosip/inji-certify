@@ -3,6 +3,8 @@ package io.mosip.certify.validators;
 import io.mosip.certify.core.dto.CredentialRequest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Map;
@@ -12,6 +14,9 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MsoMdocCredentialRequestValidatorTest {
+    @InjectMocks
+    MsoMdocCredentialRequestValidator msoMdocCredentialRequestValidator;
+
     @Test
     public void checkMsoMdocValidatorWithValidCredentialRequest_thenPass() {
         CredentialRequest credentialRequest = new CredentialRequest();

@@ -99,16 +99,16 @@ CREATE TABLE certify.rendering_template (
 
 CREATE TABLE IF NOT EXISTS certify.credential_config (
     credential_config_key_id VARCHAR(255) NOT NULL UNIQUE,
-    config_id VARCHAR(255),
+    config_id VARCHAR(255) NOT NULL,
     status VARCHAR(255),
     vc_template VARCHAR,
     doctype VARCHAR,
-    vct VARCHAR,
-    context VARCHAR NOT NULL,
-    credential_type VARCHAR NOT NULL,
+    sd_jwt_vct VARCHAR,
+    context VARCHAR,
+    credential_type VARCHAR,
     credential_format VARCHAR(255) NOT NULL,
-    did_url VARCHAR NOT NULL,
-    key_manager_app_id VARCHAR(36) NOT NULL,
+    did_url VARCHAR,
+    key_manager_app_id VARCHAR(36),
     key_manager_ref_id VARCHAR(128),
     signature_algo VARCHAR(36),
     sd_claim VARCHAR,
@@ -118,17 +118,26 @@ CREATE TABLE IF NOT EXISTS certify.credential_config (
     cryptographic_binding_methods_supported TEXT[] NOT NULL,
     credential_signing_alg_values_supported TEXT[] NOT NULL,
     proof_types_supported JSONB NOT NULL,
-	credential_subject JSONB,
-	claims JSONB,
+    credential_subject JSONB,
+    claims JSONB,
     plugin_configurations JSONB,
-	cr_dtimes TIMESTAMP NOT NULL,
+    cr_dtimes TIMESTAMP NOT NULL,
     upd_dtimes TIMESTAMP,
-    CONSTRAINT pk_config_id PRIMARY KEY (context, credential_type, credential_format)
+    CONSTRAINT pk_config_id PRIMARY KEY (config_id)
 );
 
-CREATE UNIQUE INDEX idx_credential_config_vct_unique
-ON certify.credential_config(vct)
-WHERE vct IS NOT NULL;
+CREATE UNIQUE INDEX idx_credential_config_type_context_unique
+ON certify.credential_config(credential_type, context, credential_format)
+WHERE credential_type IS NOT NULL AND credential_type <> ''
+AND context IS NOT NULL AND context <> '';
+
+CREATE UNIQUE INDEX idx_credential_config_sd_jwt_vct_unique
+ON certify.credential_config(sd_jwt_vct, credential_format)
+WHERE sd_jwt_vct IS NOT NULL and sd_jwt_vct <> '';
+
+CREATE UNIQUE INDEX idx_credential_config_doctype_unique
+ON certify.credential_config(doctype, credential_format)
+WHERE doctype IS NOT NULL and doctype <> '';
 
 INSERT INTO certify.credential_config (
     credential_config_key_id,
@@ -136,7 +145,7 @@ INSERT INTO certify.credential_config (
     status,
     vc_template,
     doctype,
-    vct,
+    sd_jwt_vct,
     context,
     credential_type,
     credential_format,
@@ -161,38 +170,7 @@ VALUES (
     'FarmerCredential',
     gen_random_uuid()::VARCHAR(255),  -- generating a unique config_id
     'active',  -- assuming an active status
-    '{
-          "@context": [
-              "https://www.w3.org/2018/credentials/v1",
-              "https://piyush7034.github.io/my-files/farmer.json",
-              "https://w3id.org/security/suites/ed25519-2020/v1"
-          ],
-          "issuer": "${_issuer}",
-          "type": [
-              "VerifiableCredential",
-              "FarmerCredential"
-          ],
-          "issuanceDate": "${validFrom}",
-          "expirationDate": "${validUntil}",
-          "credentialSubject": {
-              "id": "${_holderId}",
-              "fullName": "${fullName}",
-              "mobileNumber": "${mobileNumber}",
-              "dateOfBirth": "${dateOfBirth}",
-              "gender": "${gender}",
-              "state": "${state}",
-              "district": "${district}",
-              "villageOrTown": "${villageOrTown}",
-              "postalCode": "${postalCode}",
-              "landArea": "${landArea}",
-              "landOwnershipType": "${landOwnershipType}",
-              "primaryCropType": "${primaryCropType}",
-              "secondaryCropType": "${secondaryCropType}",
-              "face": "${face}",
-              "farmerID": "${farmerID}"
-          }
-     }
-    ',  -- the VC template from the JSON
+    'ewogICAgICAgICAgIkBjb250ZXh0IjogWwogICAgICAgICAgICAgICJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsCiAgICAgICAgICAgICAgImh0dHBzOi8vcGl5dXNoNzAzNC5naXRodWIuaW8vbXktZmlsZXMvZmFybWVyLmpzb24iLAogICAgICAgICAgICAgICJodHRwczovL3czaWQub3JnL3NlY3VyaXR5L3N1aXRlcy9lZDI1NTE5LTIwMjAvdjEiCiAgICAgICAgICBdLAogICAgICAgICAgImlzc3VlciI6ICIke19pc3N1ZXJ9IiwKICAgICAgICAgICJ0eXBlIjogWwogICAgICAgICAgICAgICJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsCiAgICAgICAgICAgICAgIkZhcm1lckNyZWRlbnRpYWwiCiAgICAgICAgICBdLAogICAgICAgICAgImlzc3VhbmNlRGF0ZSI6ICIke3ZhbGlkRnJvbX0iLAogICAgICAgICAgImV4cGlyYXRpb25EYXRlIjogIiR7dmFsaWRVbnRpbH0iLAogICAgICAgICAgImNyZWRlbnRpYWxTdWJqZWN0IjogewogICAgICAgICAgICAgICJpZCI6ICIke19ob2xkZXJJZH0iLAogICAgICAgICAgICAgICJmdWxsTmFtZSI6ICIke2Z1bGxOYW1lfSIsCiAgICAgICAgICAgICAgIm1vYmlsZU51bWJlciI6ICIke21vYmlsZU51bWJlcn0iLAogICAgICAgICAgICAgICJkYXRlT2ZCaXJ0aCI6ICIke2RhdGVPZkJpcnRofSIsCiAgICAgICAgICAgICAgImdlbmRlciI6ICIke2dlbmRlcn0iLAogICAgICAgICAgICAgICJzdGF0ZSI6ICIke3N0YXRlfSIsCiAgICAgICAgICAgICAgImRpc3RyaWN0IjogIiR7ZGlzdHJpY3R9IiwKICAgICAgICAgICAgICAidmlsbGFnZU9yVG93biI6ICIke3ZpbGxhZ2VPclRvd259IiwKICAgICAgICAgICAgICAicG9zdGFsQ29kZSI6ICIke3Bvc3RhbENvZGV9IiwKICAgICAgICAgICAgICAibGFuZEFyZWEiOiAiJHtsYW5kQXJlYX0iLAogICAgICAgICAgICAgICJsYW5kT3duZXJzaGlwVHlwZSI6ICIke2xhbmRPd25lcnNoaXBUeXBlfSIsCiAgICAgICAgICAgICAgInByaW1hcnlDcm9wVHlwZSI6ICIke3ByaW1hcnlDcm9wVHlwZX0iLAogICAgICAgICAgICAgICJzZWNvbmRhcnlDcm9wVHlwZSI6ICIke3NlY29uZGFyeUNyb3BUeXBlfSIsCiAgICAgICAgICAgICAgImZhY2UiOiAiJHtmYWNlfSIsCiAgICAgICAgICAgICAgImZhcm1lcklEIjogIiR7ZmFybWVySUR9IgogICAgICAgICAgfQogICAgIH0=',  -- the VC template from the JSON
     NULL,  -- doctype from JSON
     NULL,  -- vct for SD-JWT VC
     'https://www.w3.org/2018/credentials/v1',  -- context as comma-separated string
@@ -222,7 +200,7 @@ INSERT INTO certify.credential_config (
     status,
     vc_template,
     doctype,
-    vct,
+    sd_jwt_vct,
     context,
     credential_type,
     credential_format,
@@ -247,41 +225,10 @@ VALUES (
     'FarmerCredential_ldp_vc_DM1.1',
     gen_random_uuid()::VARCHAR(255),  -- generating a unique config_id
     'active',  -- assuming an active status
-    '{
-          "@context": [
-              "https://www.w3.org/2018/credentials/v1",
-              "https://piyush7034.github.io/my-files/farmer.json",
-              "https://w3id.org/security/suites/ed25519-2020/v1"
-          ],
-          "issuer": "${_issuer}",
-          "type": [
-              "VerifiableCredential",
-              "FarmerCredential"
-          ],
-          "issuanceDate": "${validFrom}",
-          "expirationDate": "${validUntil}",
-          "credentialSubject": {
-              "id": "${_holderId}",
-              "fullName": "${fullName}",
-              "mobileNumber": "${mobileNumber}",
-              "dateOfBirth": "${dateOfBirth}",
-              "gender": "${gender}",
-              "state": "${state}",
-              "district": "${district}",
-              "villageOrTown": "${villageOrTown}",
-              "postalCode": "${postalCode}",
-              "landArea": "${landArea}",
-              "landOwnershipType": "${landOwnershipType}",
-              "primaryCropType": "${primaryCropType}",
-              "secondaryCropType": "${secondaryCropType}",
-              "face": "${face}",
-              "farmerID": "${farmerID}"
-          }
-     }
-    ',  -- the VC template from the JSON
+    'ewogICAgICAgICAgIkBjb250ZXh0IjogWwogICAgICAgICAgICAgICJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsCiAgICAgICAgICAgICAgImh0dHBzOi8vcGl5dXNoNzAzNC5naXRodWIuaW8vbXktZmlsZXMvZmFybWVyLmpzb24iLAogICAgICAgICAgICAgICJodHRwczovL3czaWQub3JnL3NlY3VyaXR5L3N1aXRlcy9lZDI1NTE5LTIwMjAvdjEiCiAgICAgICAgICBdLAogICAgICAgICAgImlzc3VlciI6ICIke19pc3N1ZXJ9IiwKICAgICAgICAgICJ0eXBlIjogWwogICAgICAgICAgICAgICJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsCiAgICAgICAgICAgICAgIkZhcm1lckNyZWRlbnRpYWwiCiAgICAgICAgICBdLAogICAgICAgICAgImlzc3VhbmNlRGF0ZSI6ICIke3ZhbGlkRnJvbX0iLAogICAgICAgICAgImV4cGlyYXRpb25EYXRlIjogIiR7dmFsaWRVbnRpbH0iLAogICAgICAgICAgImNyZWRlbnRpYWxTdWJqZWN0IjogewogICAgICAgICAgICAgICJpZCI6ICIke19ob2xkZXJJZH0iLAogICAgICAgICAgICAgICJmdWxsTmFtZSI6ICIke2Z1bGxOYW1lfSIsCiAgICAgICAgICAgICAgIm1vYmlsZU51bWJlciI6ICIke21vYmlsZU51bWJlcn0iLAogICAgICAgICAgICAgICJkYXRlT2ZCaXJ0aCI6ICIke2RhdGVPZkJpcnRofSIsCiAgICAgICAgICAgICAgImdlbmRlciI6ICIke2dlbmRlcn0iLAogICAgICAgICAgICAgICJzdGF0ZSI6ICIke3N0YXRlfSIsCiAgICAgICAgICAgICAgImRpc3RyaWN0IjogIiR7ZGlzdHJpY3R9IiwKICAgICAgICAgICAgICAidmlsbGFnZU9yVG93biI6ICIke3ZpbGxhZ2VPclRvd259IiwKICAgICAgICAgICAgICAicG9zdGFsQ29kZSI6ICIke3Bvc3RhbENvZGV9IiwKICAgICAgICAgICAgICAibGFuZEFyZWEiOiAiJHtsYW5kQXJlYX0iLAogICAgICAgICAgICAgICJsYW5kT3duZXJzaGlwVHlwZSI6ICIke2xhbmRPd25lcnNoaXBUeXBlfSIsCiAgICAgICAgICAgICAgInByaW1hcnlDcm9wVHlwZSI6ICIke3ByaW1hcnlDcm9wVHlwZX0iLAogICAgICAgICAgICAgICJzZWNvbmRhcnlDcm9wVHlwZSI6ICIke3NlY29uZGFyeUNyb3BUeXBlfSIsCiAgICAgICAgICAgICAgImZhY2UiOiAiJHtmYWNlfSIsCiAgICAgICAgICAgICAgImZhcm1lcklEIjogIiR7ZmFybWVySUR9IgogICAgICAgICAgfQogICAgIH0=',  -- the VC template from the JSON
     NULL,  -- doctype from JSON
     NULL,  -- vct for SD-JWT VC
-    'https://www.w3.org/2018/credentials/v1,https://piyush7034.github.io/my-files/farmer.json',  -- context as comma-separated string
+    'https://piyush7034.github.io/my-files/farmer.json,https://www.w3.org/2018/credentials/v1',  -- context as comma-separated string
     'FarmerCredential,VerifiableCredential',  -- credential_type as comma-separated string
     'ldp_vc',  -- credential_format
     'did:web:mosip.github.io:inji-config:vc-local-ed25519#key-0',  -- did_url
@@ -291,7 +238,7 @@ VALUES (
     NULL,  -- sd_claim (optional)
     '[{"name": "Farmer Verifiable Credential", "locale": "en", "logo": {"url": "https://example.com/logo.png", "alt_text": "Farmer Credential Logo"}, "background_color": "#12107c", "text_color": "#FFFFFF", "background_image": { "uri": "https://mosip.github.io/inji-config/logos/agro-vertias-logo.png" }}]'::JSONB,  -- display
     ARRAY['fullName', 'mobileNumber', 'dateOfBirth', 'gender', 'state', 'district', 'villageOrTown', 'postalCode', 'landArea', 'landOwnershipType', 'primaryCropType', 'secondaryCropType', 'farmerID'],  -- display_order
-    'farmer_identity_vc',  -- scope
+    'mock_identity_vc_ldp',  -- scope
     ARRAY['did:jwk'],  -- cryptographic_binding_methods_supported
     ARRAY['Ed25519Signature2020'],  -- credential_signing_alg_values_supported
     '{"jwt": {"proof_signing_alg_values_supported": ["RS256", "ES256"]}}'::JSONB,  -- proof_types_supported
@@ -308,6 +255,7 @@ INSERT INTO certify.credential_config (
     status,
     vc_template,
     doctype,
+    sd_jwt_vct,
     context,
     credential_type,
     credential_format,
@@ -332,39 +280,9 @@ VALUES (
     'FarmerCredential_ldp_vc_DM2.0',
     gen_random_uuid()::VARCHAR(255),  -- generating a unique config_id
     'active',  -- assuming an active status
-    '{
-          "@context": [
-              "https://www.w3.org/ns/credentials/v2",
-        "https://mosip.github.io/inji-config/contexts/farmer.json",
-              "https://w3id.org/security/suites/ed25519-2020/v1"
-          ],
-          "issuer": "${_issuer}",
-          "type": [
-              "VerifiableCredential",
-              "FarmerCredential"
-          ],
-    "validFrom": "${validFrom}",
-    "validUntil": "${validUntil}",
-          "credentialSubject": {
-              "id": "${_holderId}",
-              "fullName": "${fullName}",
-              "mobileNumber": "${mobileNumber}",
-              "dateOfBirth": "${dateOfBirth}",
-              "gender": "${gender}",
-              "state": "${state}",
-              "district": "${district}",
-              "villageOrTown": "${villageOrTown}",
-              "postalCode": "${postalCode}",
-              "landArea": "${landArea}",
-              "landOwnershipType": "${landOwnershipType}",
-              "primaryCropType": "${primaryCropType}",
-              "secondaryCropType": "${secondaryCropType}",
-              "face": "${face}",
-              "farmerID": "${farmerID}"
-          }
-     }
-    ',  -- the VC template from the JSON
+    'ewogICAgICAgICAgIkBjb250ZXh0IjogWwogICAgICAgICAgICAgICJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvdjIiLAogICAgICAgICAgICAgICJodHRwczovL21vc2lwLmdpdGh1Yi5pby9pbmppLWNvbmZpZy9jb250ZXh0cy9mYXJtZXIuanNvbiIsCiAgICAgICAgICAgICAgImh0dHBzOi8vdzNpZC5vcmcvc2VjdXJpdHkvc3VpdGVzL2VkMjU1MTktMjAyMC92MSIKICAgICAgICAgIF0sCiAgICAgICAgICAiaXNzdWVyIjogIiR7X2lzc3Vlcn0iLAogICAgICAgICAgInR5cGUiOiBbCiAgICAgICAgICAgICAgIlZlcmlmaWFibGVDcmVkZW50aWFsIiwKICAgICAgICAgICAgICAiRmFybWVyQ3JlZGVudGlhbCIKICAgICAgICAgIF0sCiAgICAgICAgInZhbGlkRnJvbSI6ICIke3ZhbGlkRnJvbX0iLAogICAgICAgICJ2YWxpZFVudGlsIjogIiR7dmFsaWRVbnRpbH0iLAogICAgICAgICAgImNyZWRlbnRpYWxTdWJqZWN0IjogewogICAgICAgICAgICAgICJpZCI6ICIke19ob2xkZXJJZH0iLAogICAgICAgICAgICAgICJmdWxsTmFtZSI6ICIke2Z1bGxOYW1lfSIsCiAgICAgICAgICAgICAgIm1vYmlsZU51bWJlciI6ICIke21vYmlsZU51bWJlcn0iLAogICAgICAgICAgICAgICJkYXRlT2ZCaXJ0aCI6ICIke2RhdGVPZkJpcnRofSIsCiAgICAgICAgICAgICAgImdlbmRlciI6ICIke2dlbmRlcn0iLAogICAgICAgICAgICAgICJzdGF0ZSI6ICIke3N0YXRlfSIsCiAgICAgICAgICAgICAgImRpc3RyaWN0IjogIiR7ZGlzdHJpY3R9IiwKICAgICAgICAgICAgICAidmlsbGFnZU9yVG93biI6ICIke3ZpbGxhZ2VPclRvd259IiwKICAgICAgICAgICAgICAicG9zdGFsQ29kZSI6ICIke3Bvc3RhbENvZGV9IiwKICAgICAgICAgICAgICAibGFuZEFyZWEiOiAiJHtsYW5kQXJlYX0iLAogICAgICAgICAgICAgICJsYW5kT3duZXJzaGlwVHlwZSI6ICIke2xhbmRPd25lcnNoaXBUeXBlfSIsCiAgICAgICAgICAgICAgInByaW1hcnlDcm9wVHlwZSI6ICIke3ByaW1hcnlDcm9wVHlwZX0iLAogICAgICAgICAgICAgICJzZWNvbmRhcnlDcm9wVHlwZSI6ICIke3NlY29uZGFyeUNyb3BUeXBlfSIsCiAgICAgICAgICAgICAgImZhY2UiOiAiJHtmYWNlfSIsCiAgICAgICAgICAgICAgImZhcm1lcklEIjogIiR7ZmFybWVySUR9IgogICAgICAgICAgfQogICAgIH0=',  -- the VC template from the JSON
     NULL,  -- doctype from JSON
+    NULL, -- vct for SD-JWT VC
     'https://piyush7034.github.io/my-files/farmer.json,https://www.w3.org/ns/credentials/v2',  -- context as comma-separated string
     'FarmerCredential,VerifiableCredential',  -- credential_type as comma-separated string
     'ldp_vc',  -- credential_format
@@ -375,7 +293,7 @@ VALUES (
     NULL,  -- sd_claim (optional)
     '[{"name": "Farmer Verifiable Credential", "locale": "en", "logo": {"url": "https://example.com/logo.png", "alt_text": "Farmer Credential Logo"}, "background_color": "#12107c", "text_color": "#FFFFFF", "background_image": { "uri": "https://mosip.github.io/inji-config/logos/agro-vertias-logo.png" }}]'::JSONB,  -- display
     ARRAY['fullName', 'mobileNumber', 'dateOfBirth', 'gender', 'state', 'district', 'villageOrTown', 'postalCode', 'landArea', 'landOwnershipType', 'primaryCropType', 'secondaryCropType', 'farmerID'],  -- display_order
-    'farmer_identity_vc',  -- scope
+    'mock_identity_vc_ldp',  -- scope
     ARRAY['did:jwk'],  -- cryptographic_binding_methods_supported
     ARRAY['Ed25519Signature2020'],  -- credential_signing_alg_values_supported
     '{"jwt": {"proof_signing_alg_values_supported": ["RS256", "ES256"]}}'::JSONB,  -- proof_types_supported

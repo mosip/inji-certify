@@ -150,10 +150,13 @@ public class VelocityTemplatingEngineImplTest {
         ReflectionTestUtils.setField(formatter, "idPrefix", "uurn:uuid:");
 
 
-        when(credentialConfigRepository.findById(vc2TemplateIdObject)).thenReturn(Optional.of(vc2));
+        when(credentialConfigRepository.findByCredentialFormatAndCredentialTypeAndContext(vc2Format, vc2Type, vc2Context)).thenReturn(Optional.of(vc2));
 
-        when(credentialConfigRepository.findById(Mockito.argThat(arg -> !arg.equals(vc2TemplateIdObject))))
-                .thenReturn(Optional.empty());
+//        when(credentialConfigRepository.findByCredentialFormatAndCredentialTypeAndContext(
+//                Mockito.argThat(arg -> !arg.equals(vc2Format)),
+//                Mockito.argThat(arg -> !arg.equals(vc2Type)),
+//                Mockito.argThat(arg -> !arg.equals(vc2Context))
+//        )).thenReturn(Optional.empty());
 
 
 
@@ -249,7 +252,10 @@ public class VelocityTemplatingEngineImplTest {
     @Test
     public void testTemplating_templateStringIsNull_thenFailWithCertifyException() {
         // Mock repository to return vc4 (which has vcTemplate = null) for its TemplateId
-        when(credentialConfigRepository.findById(vc4TemplateIdObject)).thenReturn(Optional.of(vc4));
+        String vc4Type = "TestVerifiableCredential,VerifiableCredential";
+        String vc4Context = "https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1";
+        String vc4Format = "ldp_vc";
+        when(credentialConfigRepository.findByCredentialFormatAndCredentialTypeAndContext(vc4Format, vc4Type, vc4Context)).thenReturn(Optional.of(vc4));
 
         JSONObject ret = new JSONObject(); // Minimal input
         ret.put("someKey", "someValue");
@@ -418,7 +424,10 @@ public class VelocityTemplatingEngineImplTest {
     @SneakyThrows
     public void testFormat_WithMapInput_HappyPath() {
         // Mock for vc3
-        when(credentialConfigRepository.findById(vc3TemplateIdObject)).thenReturn(Optional.of(vc3));
+        String vc3Type = "MockVerifiableCredential,VerifiableCredential";
+        String vc3Context = "https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1";
+        String vc3Format = "ldp_vc";
+        when(credentialConfigRepository.findByCredentialFormatAndCredentialTypeAndContext(vc3Format, vc3Type, vc3Context)).thenReturn(Optional.of(vc3));
 
         Map<String, Object> templateInput = new HashMap<>();
         templateInput.put(Constants.TEMPLATE_NAME, vc3TemplateKey);
