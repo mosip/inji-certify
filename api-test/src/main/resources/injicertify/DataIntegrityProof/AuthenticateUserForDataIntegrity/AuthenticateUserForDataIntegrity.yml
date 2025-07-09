@@ -1,5 +1,5 @@
 AuthenticateUserForDataIntegrity:
-   InjiCertify_ESignet_AuthenticateUserVCI_For_landregistry_Cred1_uin_Otp_Valid_Smoke:
+   InjiCertify_ESignet_AuthenticateUserVCI_For_landregistry_Cred1_dataIntegrity_uin_Otp_Valid_Smoke:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
       uniqueIdentifier: TC_esignetDependent_AuthenticateUser
       description: Authenticate User for data integrity proof for cred1
@@ -10,17 +10,17 @@ AuthenticateUserForDataIntegrity:
       inputTemplate: injicertify/DataIntegrityProof/AuthenticateUserForDataIntegrity/AuthenticateUserForDataIntegrity
       outputTemplate: injicertify/DataIntegrityProof/AuthenticateUserForDataIntegrity/AuthenticateUserForDataIntegrityResult
       input: '{
-        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred1_uin_all_Valid_Smoke_sid_encodedResp$",
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred1_dataIntegrity_uin_all_Valid_Smoke_sid_encodedResp$",
       	"requestTime": "$TIMESTAMP$",
-      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred1_uin_all_Valid_Smoke_sid_transactionId$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred1_dataIntegrity_uin_all_Valid_Smoke_sid_transactionId$",
       	"individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
       	"authFactorType" : "OTP",
       	"challenge" : "111111",
         "format": "alpha-numeric",
         "sendOtp":{
-    "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred1_uin_all_Valid_Smoke_sid_encodedResp$",
+    "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred1_dataIntegrity_uin_all_Valid_Smoke_sid_encodedResp$",
     "requestTime": "$TIMESTAMP$",
-    "transactionId": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred1_uin_all_Valid_Smoke_sid_transactionId$",
+    "transactionId": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred1_dataIntegrity_uin_all_Valid_Smoke_sid_transactionId$",
 	"individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
     "otpChannels": [{channel: "email"},{channel: "phone"}],
     "sendOtpReqTemplate": "injicertify/SendOtp/SendOtp",
@@ -34,7 +34,7 @@ AuthenticateUserForDataIntegrity:
         "maskedEmail": "$IGNORE$"
     }
 }'
-   InjiCertify_ESignet_AuthenticateUserVCI_For_landregistry_Cred2_uin_Otp_Valid_Smoke:
+   InjiCertify_ESignet_AuthenticateUserVCI_For_landregistry_Cred2_dataIntegrity_uin_Otp_Valid_Smoke:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
       uniqueIdentifier: TC_esignetDependent_AuthenticateUser
       description: Authenticate User for data integrity proof for cred2
@@ -45,17 +45,17 @@ AuthenticateUserForDataIntegrity:
       inputTemplate: injicertify/DataIntegrityProof/AuthenticateUserForDataIntegrity/AuthenticateUserForDataIntegrity
       outputTemplate: injicertify/DataIntegrityProof/AuthenticateUserForDataIntegrity/AuthenticateUserForDataIntegrityResult
       input: '{
-        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred2_uin_all_Valid_Smoke_sid_encodedResp$",
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred2_dataIntegrity_uin_all_Valid_Smoke_sid_encodedResp$",
       	"requestTime": "$TIMESTAMP$",
-      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred2_uin_all_Valid_Smoke_sid_transactionId$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred2_dataIntegrity_uin_all_Valid_Smoke_sid_transactionId$",
       	"individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
       	"authFactorType" : "OTP",
       	"challenge" : "111111",
         "format": "alpha-numeric",
         "sendOtp":{
-    "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred2_uin_all_Valid_Smoke_sid_encodedResp$",
+    "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred2_dataIntegrity_uin_all_Valid_Smoke_sid_encodedResp$",
     "requestTime": "$TIMESTAMP$",
-    "transactionId": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred2_uin_all_Valid_Smoke_sid_transactionId$",
+    "transactionId": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred2_dataIntegrity_uin_all_Valid_Smoke_sid_transactionId$",
 	"individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
     "otpChannels": [{channel: "email"},{channel: "phone"}],
     "sendOtpReqTemplate": "injicertify/SendOtp/SendOtp",

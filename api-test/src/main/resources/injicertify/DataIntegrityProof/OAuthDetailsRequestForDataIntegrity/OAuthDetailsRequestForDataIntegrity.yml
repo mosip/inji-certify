@@ -1,5 +1,5 @@
 OAuthDetailsRequestForDataIntegrity:
-   InjiCertify_ESignet_OAuthDetailsRequest_For_landregistry_Cred1_uin_all_Valid_Smoke_sid:
+   InjiCertify_ESignet_OAuthDetailsRequest_For_landregistry_Cred1_dataIntegrity_uin_all_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
       uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest
       description: OAuth details request for data integrity for Cred1
@@ -26,7 +26,7 @@ OAuthDetailsRequestForDataIntegrity:
       output: '{
        
 }'
-   InjiCertify_ESignet_OAuthDetailsRequest_For_landregistry_Cred2_uin_all_Valid_Smoke_sid:
+   InjiCertify_ESignet_OAuthDetailsRequest_For_landregistry_Cred2_dataIntegrity_uin_all_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
       uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest
       description: OAuth details request for data integrity for Cred1

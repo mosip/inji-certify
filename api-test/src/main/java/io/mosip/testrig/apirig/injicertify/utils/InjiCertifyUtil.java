@@ -56,6 +56,7 @@ import io.mosip.testrig.apirig.dto.TestCaseDTO;
 import io.mosip.testrig.apirig.injicertify.testrunner.MosipTestRunner;
 import io.mosip.testrig.apirig.testrunner.OTPListener;
 import io.mosip.testrig.apirig.utils.AdminTestUtil;
+import io.mosip.testrig.apirig.utils.ConfigManager;
 import io.mosip.testrig.apirig.utils.GlobalConstants;
 import io.mosip.testrig.apirig.utils.GlobalMethods;
 import io.mosip.testrig.apirig.utils.JWKKeyUtil;
@@ -550,6 +551,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		}
 
 	}
+
 	
 	public static Map<String, List<String>> proofSigningAlgorithmsMap = new HashMap<>();
 	
@@ -915,6 +917,14 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			} else if (testCaseName.contains("_GetCredentialForLandRegistry")
 					&& !(isSignatureSupportedForTheTestCase(testCaseDTO))) {
 				throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+			} else if (testCaseName.contains("_dataIntegrity")) {
+
+				String cryptoSuite = getValueFromCertifyActuator(InjiCertifyConstants.INJICERTIFY_ACTUATOR_PROPERTY,
+						"mosip.certify.data-provider-plugin.data-integrity.crypto-suite");
+
+				if (cryptoSuite == null || !cryptoSuite.contains("eddsa-rdfc-2022")) {
+					throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+				}
 			}
 		}
 		if (currentUseCase.toLowerCase().equals("mdoc") && testCaseName.toLowerCase().contains("mdoc") == false) {
@@ -1173,6 +1183,85 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		LocalDate dob = faker.date().birthday().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		return dob.format(formatter);
+	}
+
+	public static String getValueFromCertifyActuator(String section, String key) {
+		String value = null;
+		if (value == null) {
+			value = getValueFromCertifyActuator(InjiCertifyConstants.POSTGRES_LANDREGISTRY_PROPERTIES_STRING, key,
+					InjiCertifyConstants.INJICERTIFY_ACTUATOR_URL);
+		}
+		if (value == null) {
+			value = getValueFromCertifyActuator(InjiCertifyConstants.CERTIFY_DEFAULT_PROPERTIES_STRING, key,
+					InjiCertifyConstants.INJICERTIFY_ACTUATOR_URL);
+		}
+		if (value == null) {
+			value = getValueFromCertifyActuator(InjiCertifyConfigManager.getproperty("actuatorcertifyEndpoint"), key,
+					InjiCertifyConstants.INJICERTIFY_ACTUATOR_URL);
+		}
+		if (value == null) {
+			logger.error("Value not found for Certify actuator - section: " + section + ", key: " + key);
+		}
+		return value;
+	}
+	
+	public static JSONArray certifyActuatorResponseArray = null;
+	
+	public static String getValueFromCertifyActuator(String section, String key, String url) {
+		// Combine the cache key to uniquely identify each request
+		String actuatorCacheKey = url + section + key;
+
+		// Check if the value is already cached
+		String value = actuatorValueCache.get(actuatorCacheKey);
+		if (value != null) {
+			return value; // Return cached value if available
+		}
+
+		try {
+			// Fetch the actuator response array if it's not already populated
+			if (certifyActuatorResponseArray == null) {
+				Response response = RestClient.getRequest(url, MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON);
+				JSONObject responseJson = new JSONObject(response.getBody().asString());
+				certifyActuatorResponseArray = responseJson.getJSONArray("propertySources");
+			}
+
+			// Loop through the "propertySources" to find the matching section and key
+			for (int i = 0, size = certifyActuatorResponseArray.length(); i < size; i++) {
+				JSONObject eachJson = certifyActuatorResponseArray.getJSONObject(i);
+				// Check if the section matches
+				if (eachJson.get("name").toString().contains(section)) {
+					// Get the value from the properties object
+					JSONObject properties = eachJson.getJSONObject(GlobalConstants.PROPERTIES);
+					if (properties.has(key)) {
+						value = properties.getJSONObject(key).get(GlobalConstants.VALUE).toString();
+						// Log the value if debug is enabled
+						if (InjiCertifyConfigManager.IsDebugEnabled()) {
+							logger.info("Actuator: " + url + " key: " + key + " value: " + value);
+						}
+						break; // Exit the loop once the value is found
+					} else {
+						logger.warn("Key '" + key + "' not found in section '" + section + "'.");
+					}
+				}
+			}
+
+			// Cache the retrieved value for future lookups
+			if (value != null) {
+				actuatorValueCache.put(actuatorCacheKey, value);
+			} else {
+				logger.warn("No value found for section: " + section + ", key: " + key);
+			}
+
+			return value;
+		} catch (JSONException e) {
+			// Handle JSON parsing exceptions separately
+			logger.error("JSON parsing error for section: " + section + ", key: " + key + " - " + e.getMessage());
+			return null; // Return null if JSON parsing fails
+		} catch (Exception e) {
+			// Catch any other exceptions (e.g., network issues)
+			logger.error("Error fetching value for section: " + section + ", key: " + key + " - " + e.getMessage());
+			return null; // Return null if any other exception occurs
+		}
 	}
 	
 }
