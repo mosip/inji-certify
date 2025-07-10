@@ -917,12 +917,17 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			} else if (testCaseName.contains("_GetCredentialForLandRegistry")
 					&& !(isSignatureSupportedForTheTestCase(testCaseDTO))) {
 				throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
-			} else if (testCaseName.contains("_dataIntegrity")) {
+			}
+			String cryptoSuite = getValueFromCertifyActuator(InjiCertifyConstants.INJICERTIFY_ACTUATOR_PROPERTY,
+					"mosip.certify.data-provider-plugin.data-integrity.crypto-suite");
 
-				String cryptoSuite = getValueFromCertifyActuator(InjiCertifyConstants.INJICERTIFY_ACTUATOR_PROPERTY,
-						"mosip.certify.data-provider-plugin.data-integrity.crypto-suite");
-
+			if (testCaseName.contains("_dataIntegrity")) {
 				if (cryptoSuite == null || !cryptoSuite.contains("eddsa-rdfc-2022")) {
+					throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+				}
+			} else if (testCaseName.contains("_EccR1")) {
+				if (cryptoSuite == null
+						|| !(cryptoSuite.equals("ecdsa-rdfc-2019") || cryptoSuite.equals("ecdsa-jcs-2019"))) {
 					throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
 				}
 			}

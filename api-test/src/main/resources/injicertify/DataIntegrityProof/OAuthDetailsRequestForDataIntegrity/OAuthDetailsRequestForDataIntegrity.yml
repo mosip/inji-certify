@@ -10,7 +10,7 @@ OAuthDetailsRequestForDataIntegrity:
       outputTemplate: injicertify/DataIntegrityProof/OAuthDetailsRequestForDataIntegrity/OAuthDetailsRequestForDataIntegrityResult
       input: '{
       	"requestTime": "$TIMESTAMP$",
-      	"clientId": "$ID:ESignet_CreateOIDCClientV2_For_LandRegistry_EccR1_all_Valid_Smoke_sid_clientId$",
+      	"clientId": "$ID:ESignet_CreateOIDCClientV2_For_LandRegistry2_all_Valid_Smoke_sid_clientId$",
       	"scope": "land_statement_vc_ldp",
       	"responseType": "code",
       	"redirectUri": "$IDPREDIRECTURI$",
@@ -37,7 +37,7 @@ OAuthDetailsRequestForDataIntegrity:
       outputTemplate: injicertify/DataIntegrityProof/OAuthDetailsRequestForDataIntegrity/OAuthDetailsRequestForDataIntegrityResult
       input: '{
       	"requestTime": "$TIMESTAMP$",
-      	"clientId": "$ID:ESignet_CreateOIDCClientV2_For_LandRegistry_EccR1_all_Valid_Smoke_sid_clientId$",
+      	"clientId": "$ID:ESignet_CreateOIDCClientV2_For_LandRegistry2_all_Valid_Smoke_sid_clientId$",
       	"scope": "land_registry_vc_ldp",
       	"responseType": "code",
       	"redirectUri": "$IDPREDIRECTURI$",

@@ -1,5 +1,5 @@
 OAuthDetailsRequestForEccR1:
-   InjiCertify_ESignet_OAuthDetailsRequest_For_LandRegistry_uin_all_Valid_Smoke_sid:
+   InjiCertify_ESignet_OAuthDetailsRequest_For_LandRegistry_EccR1_uin_all_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
       uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest
       description: OAuth details request for Mock
@@ -10,7 +10,7 @@ OAuthDetailsRequestForEccR1:
       outputTemplate: injicertify/EccR1/OAuthDetailsRequestForLandRegistryEccR1/OAuthDetailsRequestForLandRegistryResult
       input: '{
       	"requestTime": "$TIMESTAMP$",
-      	"clientId": "$ID:ESignet_CreateOIDCClientV2_For_LandRegistry_EccR1_all_Valid_Smoke_sid_clientId$",
+      	"clientId": "$ID:ESignet_CreateOIDCClientV2_For_LandRegistry2_all_Valid_Smoke_sid_clientId$",
       	"scope": "land_statement_vc_ldp",
       	"responseType": "code",
       	"redirectUri": "$IDPREDIRECTURI$",
