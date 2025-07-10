@@ -68,7 +68,7 @@ public abstract class Credential{
      * @param refID reference id as per the keyamanger table
      * @param publicKeyURL URL/URI of the public key
      */
-    public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm, String appID, String refID, String publicKeyURL, String vcSignCryptoSuite) {
+    public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm, String appID, String refID, String publicKeyURL, String signatureCryptoSuite) {
 
         JWSSignatureRequestDto payload = new JWSSignatureRequestDto();
         payload.setDataToSign(vcToSign);

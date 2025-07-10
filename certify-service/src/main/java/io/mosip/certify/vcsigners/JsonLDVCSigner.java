@@ -73,12 +73,12 @@ public class JsonLDVCSigner implements VCSigner {
         // TODO: VC Data Model spec doesn't specify a single date format or a
         //  timezone restriction, this will have to be supported timely.
 
-        String vcSignCryptoSuite = keyReferenceDetails.getOrDefault(
-                Constants.VC_SIGN_CRYPTO_SUITE, "Ed25519Signature2020");
+        String signatureCryptoSuite = keyReferenceDetails.getOrDefault(
+                Constants.SIGNATURE_CRYPTO_SUITE, "Ed25519Signature2020");
 
-        ProofGenerator proofGenerator = proofGeneratorFactory.getProofGenerator(vcSignCryptoSuite)
+        ProofGenerator proofGenerator = proofGeneratorFactory.getProofGenerator(signatureCryptoSuite)
                 .orElseThrow(() ->
-                        new CertifyException("Proof generator not found for algorithm: " + vcSignCryptoSuite));
+                        new CertifyException("Proof generator not found for algorithm: " + signatureCryptoSuite));
         Date createDate = Date
                 .from(LocalDateTime
                         .parse(validFrom,

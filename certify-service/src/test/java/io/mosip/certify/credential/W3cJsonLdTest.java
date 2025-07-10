@@ -69,7 +69,6 @@ public class W3cJsonLdTest {
 
         ReflectionTestUtils.setField(w3cJsonLd, "proofGeneratorFactory", proofGeneratorFactory);
         when(proofGeneratorFactory.getProofGenerator(any())).thenReturn(Optional.of(proofGenerator));
-        ReflectionTestUtils.setField(w3cJsonLd, "dataIntegrityCryptoSuite", "");
     }
 
     @Test
@@ -180,9 +179,6 @@ public class W3cJsonLdTest {
 
     @Test
     public void testAddProof_DataIntegrityCryptoSuitePath() throws Exception {
-        // Set up to use dataIntegrityCryptoSuite path
-        ReflectionTestUtils.setField(w3cJsonLd, "dataIntegrityCryptoSuite", "test-suite");
-
         // Mock LdSignerRegistry and dependencies
         LdSigner signer = mock(LdSigner.class);
         KeymanagerByteSigner keymanagerByteSigner = mock(KeymanagerByteSigner.class);
@@ -201,7 +197,7 @@ public class W3cJsonLdTest {
             when(canonicalizer.canonicalize(any(), any())).thenReturn("canonicalized".getBytes());
 
             String vcJson = "{\"@context\":[],\"issuanceDate\":\"2023-01-01T00:00:00.000Z\"}";
-            VCResult<?> result = w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "Ed25519Signature2020");
+            VCResult<?> result = w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "testSignatureSuite");
 
             assertNotNull(result);
             assertEquals("ldp_vc", result.getFormat());
@@ -234,8 +230,6 @@ public class W3cJsonLdTest {
 
     @Test(expected = CertifyException.class)
     public void testAddProof_DataIntegrityCryptoSuitePath_CanonicalizerThrows() throws Exception {
-        ReflectionTestUtils.setField(w3cJsonLd, "dataIntegrityCryptoSuite", "test-suite");
-
         LdSigner signer = mock(LdSigner.class);
         com.danubetech.dataintegrity.canonicalizer.Canonicalizer canonicalizer = mock(com.danubetech.dataintegrity.canonicalizer.Canonicalizer.class);
 
@@ -250,14 +244,12 @@ public class W3cJsonLdTest {
             when(canonicalizer.canonicalize(any(), any())).thenThrow(new IOException("Mocked IO failure"));
 
             String vcJson = "{\"@context\":[],\"issuanceDate\":\"2023-01-01T00:00:00.000Z\"}";
-            w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "Ed25519Signature2020");
+            w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "testSignatureSuite");
         }
     }
 
     @Test(expected = CertifyException.class)
     public void testAddProof_DataIntegrityCryptoSuitePath_SignerInitializerThrows() throws Exception {
-        ReflectionTestUtils.setField(w3cJsonLd, "dataIntegrityCryptoSuite", "test-suite");
-
         LdSigner signer = mock(LdSigner.class);
         com.danubetech.dataintegrity.canonicalizer.Canonicalizer canonicalizer = mock(com.danubetech.dataintegrity.canonicalizer.Canonicalizer.class);
 
@@ -270,14 +262,12 @@ public class W3cJsonLdTest {
 
 
             String vcJson = "{\"@context\":[],\"issuanceDate\":\"2023-01-01T00:00:00.000Z\"}";
-            w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "Ed25519Signature2020");
+            w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "testSignatureSuite");
         }
     }
 
     @Test(expected = CertifyException.class)
     public void testAddProof_DataIntegrityCryptoSuitePath_CanonicalizerThrowsSecurityException() throws Exception {
-        ReflectionTestUtils.setField(w3cJsonLd, "dataIntegrityCryptoSuite", "test-suite");
-
         LdSigner signer = mock(LdSigner.class);
         com.danubetech.dataintegrity.canonicalizer.Canonicalizer canonicalizer = mock(com.danubetech.dataintegrity.canonicalizer.Canonicalizer.class);
 
@@ -292,14 +282,12 @@ public class W3cJsonLdTest {
             when(canonicalizer.canonicalize(any(), any())).thenThrow(new GeneralSecurityException("Mocked IO failure"));
 
             String vcJson = "{\"@context\":[],\"issuanceDate\":\"2023-01-01T00:00:00.000Z\"}";
-            w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "Ed25519Signature2020");
+            w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "testSignatureSuite");
         }
     }
 
     @Test(expected = CertifyException.class)
     public void testAddProof_DataIntegrityCryptoSuitePath_CanonicalizerThrowsJsonLdException() throws Exception {
-        ReflectionTestUtils.setField(w3cJsonLd, "dataIntegrityCryptoSuite", "test-suite");
-
         LdSigner signer = mock(LdSigner.class);
         com.danubetech.dataintegrity.canonicalizer.Canonicalizer canonicalizer = mock(com.danubetech.dataintegrity.canonicalizer.Canonicalizer.class);
 
@@ -314,7 +302,7 @@ public class W3cJsonLdTest {
             when(canonicalizer.canonicalize(any(), any())).thenThrow(new JsonLDException(new JsonLdError(JsonLdErrorCode.CONFLICTING_INDEXES)));
 
             String vcJson = "{\"@context\":[],\"issuanceDate\":\"2023-01-01T00:00:00.000Z\"}";
-            w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "Ed25519Signature2020");
+            w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "testSignatureSuite");
         }
     }
 }

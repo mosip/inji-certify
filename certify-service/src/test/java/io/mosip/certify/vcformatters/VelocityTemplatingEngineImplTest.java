@@ -163,7 +163,7 @@ public class VelocityTemplatingEngineImplTest {
         formatter.initialize(); // Initializes VelocityEngine
     }
 
-    private CredentialConfig initTemplate(String template, String type, String context, String format, String didUrl, String keyManagerAppId, String keyManagerRefId, String signatureAlgo, String sdClaim, String vcSignCryptoSuite) {
+    private CredentialConfig initTemplate(String template, String type, String context, String format, String didUrl, String keyManagerAppId, String keyManagerRefId, String signatureAlgo, String sdClaim, String signatureCryptoSuite) {
         CredentialConfig t = new CredentialConfig();
         if(template != null) {
             template = Base64.getEncoder().encodeToString(template.getBytes());
@@ -178,7 +178,7 @@ public class VelocityTemplatingEngineImplTest {
         t.setKeyManagerRefId(keyManagerRefId);
         t.setSignatureAlgo(signatureAlgo);
         t.setSdClaim(sdClaim);
-        t.setVcSignCryptoSuite(vcSignCryptoSuite);
+        t.setSignatureCryptoSuite(signatureCryptoSuite);
         return t;
     }
 
@@ -356,10 +356,10 @@ public class VelocityTemplatingEngineImplTest {
     }
 
     @Test
-    public void testGetVcSignCryptoSuite() {
+    public void testGetSignatureCryptoSuite() {
         // Uses vc2 by default
-        String expected = vc2.getVcSignCryptoSuite();
-        Assert.assertEquals(expected, formatter.getVcSignCryptoSuite(vc2TemplateKey));
+        String expected = vc2.getSignatureCryptoSuite();
+        Assert.assertEquals(expected, formatter.getSignatureCryptoSuite(vc2TemplateKey));
     }
 
     @Test

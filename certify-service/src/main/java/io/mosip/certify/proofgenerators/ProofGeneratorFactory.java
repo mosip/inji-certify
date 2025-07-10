@@ -14,15 +14,15 @@ public class ProofGeneratorFactory {
     /**
      * Factory method to create ProofGenerator based on the given algorithm name.
      *
-     * @param vcSignCryptoSuite the name of the algorithm
+     * @param signatureCryptoSuite the name of the algorithm
      * @return an instance of ProofGenerator
      */
-    public Optional<ProofGenerator> getProofGenerator(String vcSignCryptoSuite) {
-        if(vcSignCryptoSuite == null) {
+    public Optional<ProofGenerator> getProofGenerator(String signatureCryptoSuite) {
+        if(signatureCryptoSuite == null) {
             return Optional.empty();
         }
         return proofGenerators.stream()
-                .filter(proofGenerator -> proofGenerator.getName().equals(vcSignCryptoSuite))
+                .filter(proofGenerator -> proofGenerator.getName().equals(signatureCryptoSuite))
                 .findFirst();
     }
 }

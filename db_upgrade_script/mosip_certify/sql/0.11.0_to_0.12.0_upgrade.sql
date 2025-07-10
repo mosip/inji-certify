@@ -28,7 +28,7 @@ ALTER TABLE certify.credential_config
     ADD COLUMN key_manager_app_id VARCHAR(36) DEFAULT '', -- Adding a default value for NOT NULL constraint
     ADD COLUMN key_manager_ref_id VARCHAR(128),
     ADD COLUMN signature_algo VARCHAR(36),
-    ADD COLUMN vc_sign_crypto_suite VARCHAR(128) DEFAULT 'Ed25519Signature2020', -- Adding a default value for NOT NULL constraint
+    ADD COLUMN signature_crypto_suite VARCHAR(128) DEFAULT 'Ed25519Signature2020', -- Adding a default value for NOT NULL constraint
     ADD COLUMN sd_claim VARCHAR,
     ADD COLUMN display JSONB NOT NULL DEFAULT '[]'::jsonb, -- Adding a default value for NOT NULL constraint
     ADD COLUMN display_order TEXT[] DEFAULT ARRAY[]::TEXT[], -- Adding a default value for NOT NULL constraint

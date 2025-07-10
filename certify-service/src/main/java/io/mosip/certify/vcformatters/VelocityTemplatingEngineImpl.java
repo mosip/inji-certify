@@ -186,8 +186,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
      * @return the crypto suite used for VC signature or proof generation
      */
     @Override
-    public String getVcSignCryptoSuite(String templateName) {
-        return getCachedCredentialConfig(templateName).getVcSignCryptoSuite(); // NEW
+    public String getSignatureCryptoSuite(String templateName) {
+        return getCachedCredentialConfig(templateName).getSignatureCryptoSuite(); // NEW
     }
 
     /**

@@ -62,5 +62,5 @@ public interface VCFormatter {
      * @param templateName
      * @return
      */
-    String getVcSignCryptoSuite(String templateName);
+    String getSignatureCryptoSuite(String templateName);
 }

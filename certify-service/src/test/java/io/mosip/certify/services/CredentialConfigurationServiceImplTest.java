@@ -70,7 +70,7 @@ public class CredentialConfigurationServiceImplTest {
         credentialConfig.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
         credentialConfig.setCredentialSubject(Map.of("name", "Full Name"));
         credentialConfig.setKeyManagerAppId("TEST2019");
-        credentialConfig.setVcSignCryptoSuite("Ed25519Signature2020");
+        credentialConfig.setSignatureCryptoSuite("Ed25519Signature2020");
 
         credentialConfigurationDTO = new CredentialConfigurationDTO();
         credentialConfigurationDTO.setCredentialConfigKeyId("test-credential");
@@ -371,7 +371,7 @@ public class CredentialConfigurationServiceImplTest {
         mdocConfig.setVcTemplate("mdoc_template");
         mdocConfig.setCredentialFormat("mso_mdoc");
         mdocConfig.setDocType("docType1");
-        mdocConfig.setVcSignCryptoSuite("Ed25519Signature2020");
+        mdocConfig.setSignatureCryptoSuite("Ed25519Signature2020");
 
         CredentialConfigurationDTO mdocDTO = new CredentialConfigurationDTO();
         mdocDTO.setCredentialFormat("mso_mdoc");
@@ -399,7 +399,7 @@ public class CredentialConfigurationServiceImplTest {
         sdJwtConfig.setStatus("active");
         sdJwtConfig.setCredentialFormat("vc+sd-jwt");
         sdJwtConfig.setSdJwtVct("test-vct");
-        sdJwtConfig.setVcSignCryptoSuite("Ed25519Signature2020");
+        sdJwtConfig.setSignatureCryptoSuite("Ed25519Signature2020");
 
         CredentialConfigurationDTO sdJwtDTO = new CredentialConfigurationDTO();
         sdJwtDTO.setCredentialFormat("vc+sd-jwt");

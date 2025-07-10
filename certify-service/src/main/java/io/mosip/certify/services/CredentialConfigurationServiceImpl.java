@@ -5,6 +5,8 @@
  */
 package io.mosip.certify.services;
 
+import com.danubetech.dataintegrity.suites.DataIntegrityProofDataIntegritySuite;
+import com.danubetech.dataintegrity.suites.DataIntegritySuites;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
@@ -67,8 +69,25 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         credentialConfig.setStatus(Constants.ACTIVE);
 
         if(pluginMode.equals("DataProvider") && (credentialConfig.getVcTemplate() == null || credentialConfig.getVcTemplate().isEmpty() ||
-                credentialConfig.getVcSignCryptoSuite() == null || credentialConfig.getVcSignCryptoSuite().isEmpty())) {
+                credentialConfig.getSignatureCryptoSuite() == null || credentialConfig.getSignatureCryptoSuite().isEmpty())) {
             throw new CertifyException("Credential Template and VC Sign Crypto Suite is mandatory for the DataProvider plugin issuer.");
+        }
+
+        if(credentialConfig.getCredentialFormat().equals(VCFormats.LDP_VC)) {
+            String signatureCryptoSuite = credentialConfig.getSignatureCryptoSuite();
+            if (!CertifyIssuanceServiceImpl.keyChooser.containsKey(signatureCryptoSuite)) {
+                DataIntegrityProofDataIntegritySuite dataIntegrityProofDataIntegritySuite = DataIntegritySuites.DATA_INTEGRITY_SUITE_DATAINTEGRITYPROOF;
+                List<String> signatureCryptoSuitesByJwsAlgo = dataIntegrityProofDataIntegritySuite.findCryptosuitesForJwsAlgorithm(credentialConfig.getSignatureAlgo());
+
+                if (signatureCryptoSuitesByJwsAlgo.isEmpty()) {
+                    throw new CertifyException("Unsupported signature algorithm: " + credentialConfig.getSignatureAlgo());
+                }
+
+                if (!signatureCryptoSuitesByJwsAlgo.contains(credentialConfig.getSignatureCryptoSuite())) {
+                    throw new CertifyException("Signature crypto suite " + credentialConfig.getSignatureCryptoSuite() +
+                            " is not supported for the signature algorithm: " + credentialConfig.getSignatureAlgo());
+                }
+            }
         }
 
         validateCredentialConfiguration(credentialConfig);

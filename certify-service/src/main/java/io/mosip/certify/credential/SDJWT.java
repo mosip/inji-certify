@@ -110,7 +110,7 @@ public class SDJWT extends Credential{
      * @param publicKeyURL url where the public key is accesible.
      */
     @Override
-    public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm, String appID, String refID, String publicKeyURL, String vcSignCryptoSuite) {
+    public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm, String appID, String refID, String publicKeyURL, String signatureCryptoSuite) {
         VCResult<String> VC = new VCResult<>();
         String[] jwt = vcToSign.split("~");
         String[] jwtPayload = jwt[0].split("\\.");

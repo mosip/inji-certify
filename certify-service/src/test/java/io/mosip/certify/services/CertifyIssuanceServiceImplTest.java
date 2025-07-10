@@ -246,7 +246,7 @@ public class CertifyIssuanceServiceImplTest {
         when(vcFormatter.getAppID(anyString())).thenReturn("testAppIdLdp");   // Example value
         when(vcFormatter.getRefID(anyString())).thenReturn("testRefIdLdp");   // Example value
         when(vcFormatter.getDidUrl(anyString())).thenReturn("did:example:ldp"); // Example value
-        when(vcFormatter.getVcSignCryptoSuite(anyString())).thenReturn("testVcSignCryptoSuite"); // Example Value
+        when(vcFormatter.getSignatureCryptoSuite(anyString())).thenReturn("testSignatureCryptoSuite"); // Example Value
 
         // Corrected declaration of mockVcResultLdp
         VCResult mockVcResultLdp = new VCResult<JsonLDObject>();
@@ -446,7 +446,7 @@ public class CertifyIssuanceServiceImplTest {
         when(vcFormatter.getAppID(anyString())).thenReturn("testAppId");       // Example value
         when(vcFormatter.getRefID(anyString())).thenReturn("testRefId");       // Example value
         when(vcFormatter.getDidUrl(anyString())).thenReturn("did:example:123"); // Example value
-        when(vcFormatter.getVcSignCryptoSuite(anyString())).thenReturn("testVcSignCryptoSuite"); // Example Value
+        when(vcFormatter.getSignatureCryptoSuite(anyString())).thenReturn("testSignatureCryptoSuite"); // Example Value
 
         when(mockSdJwt.addProof(
                 eq("{\"unsigned\":\"sdjwt_payload\"}"), // unsignedCredential

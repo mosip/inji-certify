@@ -51,8 +51,8 @@ public class StatusListCredentialService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    @Value("${mosip.certify.status-list.vc-sign-algo:Ed25519Signature2020}")
-    private String vcSignAlgorithm;
+    @Value("${mosip.certify.status-list.signature-crypto-suite:Ed25519Signature2020}")
+    private String signatureCryptoSuite;
 
     @Value("${mosip.certify.data-provider-plugin.issuer-uri}")
     private String issuerId;
@@ -170,9 +170,9 @@ public class StatusListCredentialService {
 
             // Sign the status list credential
             Map<String, String> signerSettings = new HashMap<>();
-            signerSettings.put(Constants.APPLICATION_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignAlgorithm).getFirst());
-            signerSettings.put(Constants.REFERENCE_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignAlgorithm).getLast());
-            signerSettings.put(Constants.VC_SIGN_CRYPTO_SUITE, vcSignAlgorithm);
+            signerSettings.put(Constants.APPLICATION_ID, CertifyIssuanceServiceImpl.keyChooser.get(signatureCryptoSuite).getFirst());
+            signerSettings.put(Constants.REFERENCE_ID, CertifyIssuanceServiceImpl.keyChooser.get(signatureCryptoSuite).getLast());
+            signerSettings.put(Constants.SIGNATURE_CRYPTO_SUITE, signatureCryptoSuite);
 
             // Attach signature to the VC
             VCResult<?> vcResult = vcSigner.attachSignature(statusListData.toString(), signerSettings);
@@ -318,8 +318,9 @@ public class StatusListCredentialService {
         try {
             // Prepare signer settings
             Map<String, String> signerSettings = new HashMap<>();
-            signerSettings.put(Constants.APPLICATION_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignAlgorithm).getFirst());
-            signerSettings.put(Constants.REFERENCE_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignAlgorithm).getLast());
+            signerSettings.put(Constants.APPLICATION_ID, CertifyIssuanceServiceImpl.keyChooser.get(signatureCryptoSuite).getFirst());
+            signerSettings.put(Constants.REFERENCE_ID, CertifyIssuanceServiceImpl.keyChooser.get(signatureCryptoSuite).getLast());
+            signerSettings.put(Constants.SIGNATURE_CRYPTO_SUITE, signatureCryptoSuite);
 
             // Remove existing proof if present before re-signing
             JSONObject vcDocument = new JSONObject(vcDocumentJson);
