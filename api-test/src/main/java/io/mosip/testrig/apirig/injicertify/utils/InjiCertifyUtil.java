@@ -513,44 +513,6 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		}
 	}
 	
-	public static JSONArray esignetActuatorResponseArray = null;
-
-	public static String getValueFromEsignetActuator(String section, String key) {
-		String url = InjiCertifyConfigManager.getEsignetBaseUrl() + InjiCertifyConfigManager.getproperty("actuatorEsignetEndpoint");
-		String actuatorCacheKey = url + section + key;
-		String value = actuatorValueCache.get(actuatorCacheKey);
-		if (value != null && !value.isEmpty())
-			return value;
-
-		try {
-			if (esignetActuatorResponseArray == null) {
-				Response response = null;
-				JSONObject responseJson = null;
-				response = RestClient.getRequest(url, MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON);
-				responseJson = new JSONObject(response.getBody().asString());
-				esignetActuatorResponseArray = responseJson.getJSONArray("propertySources");
-			}
-
-			for (int i = 0, size = esignetActuatorResponseArray.length(); i < size; i++) {
-				JSONObject eachJson = esignetActuatorResponseArray.getJSONObject(i);
-				if (eachJson.get("name").toString().contains(section)) {
-					value = eachJson.getJSONObject(GlobalConstants.PROPERTIES).getJSONObject(key)
-							.get(GlobalConstants.VALUE).toString();
-					if (InjiCertifyConfigManager.IsDebugEnabled())
-						logger.info("Actuator: " + url + " key: " + key + " value: " + value);
-					break;
-				}
-			}
-			actuatorValueCache.put(actuatorCacheKey, value);
-
-			return value;
-		} catch (Exception e) {
-			logger.error(GlobalConstants.EXCEPTION_STRING_2 + e);
-			return value;
-		}
-
-	}
-	
 	public static Map<String, List<String>> proofSigningAlgorithmsMap = new HashMap<>();
 	
 	public static String getJsonFromInjiCertifyWellKnownEndPoint() {
@@ -875,8 +837,6 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		if (isCaptchaEnabled() == true) {
 			GlobalMethods.reportCaptchaStatus(GlobalConstants.CAPTCHA_ENABLED, true);
 			throw new SkipException(GlobalConstants.CAPTCHA_ENABLED_MESSAGE);
-		}else {
-			GlobalMethods.reportCaptchaStatus(GlobalConstants.CAPTCHA_ENABLED, false);
 		}
 
 		if (MosipTestRunner.skipAll == true) {
