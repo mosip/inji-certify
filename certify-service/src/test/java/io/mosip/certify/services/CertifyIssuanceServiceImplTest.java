@@ -122,8 +122,7 @@ public class CertifyIssuanceServiceImplTest {
 
         ReflectionTestUtils.setField(issuanceService, "issuerMetadata", testIssuerMetadataMap);
         ReflectionTestUtils.setField(issuanceService, "cNonceExpireSeconds", 300);
-        ReflectionTestUtils.setField(issuanceService, "issuerURI", "https://test.issuer.com");
-        ReflectionTestUtils.setField(issuanceService, "issuerPublicKeyURI", "http://example.com/issuer#key-1");
+        ReflectionTestUtils.setField(issuanceService, "didUrl", "https://test.issuer.com");
 
         when(parsedAccessToken.getAccessTokenHash()).thenReturn(TEST_ACCESS_TOKEN_HASH);
 

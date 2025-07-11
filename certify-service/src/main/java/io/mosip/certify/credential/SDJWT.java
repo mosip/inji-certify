@@ -107,10 +107,10 @@ public class SDJWT extends Credential{
      * @param signAlgorithm as defined in com.danubetech.keyformats.jose.JWSAlgorithm
      * @param appID app id from the keymanager tables
      * @param refID referemce id from the keymanager tables
-     * @param publicKeyURL url where the public key is accesible.
+     * @param didUrl url where the public key is accesible.
      */
     @Override
-    public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm, String appID, String refID, String publicKeyURL, String signatureCryptoSuite) {
+    public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm, String appID, String refID, String didUrl, String signatureCryptoSuite) {
         VCResult<String> VC = new VCResult<>();
         String[] jwt = vcToSign.split("~");
         String[] jwtPayload = jwt[0].split("\\.");

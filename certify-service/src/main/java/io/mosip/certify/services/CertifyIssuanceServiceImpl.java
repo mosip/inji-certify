@@ -8,10 +8,7 @@ package io.mosip.certify.services;
 import java.text.ParseException;
 import java.time.OffsetDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
@@ -59,7 +56,6 @@ import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
 import io.mosip.certify.utils.CredentialUtils;
 import io.mosip.certify.utils.DIDDocumentUtil;
-import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
@@ -97,11 +93,8 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Autowired
     private DataProviderPlugin dataProviderPlugin;
 
-    @Value("${mosip.certify.data-provider-plugin.issuer-uri}")
-    private String issuerURI;
-
-    @Value("${mosip.certify.data-provider-plugin.issuer-public-key-uri}")
-    private String issuerPublicKeyURI;
+    @Value("${mosip.certify.data-provider-plugin.did-url}")
+    private String didUrl;
 
     @Value("${mosip.certify.data-provider-plugin.rendering-template-id:}")
     private String renderTemplateId;
@@ -149,6 +142,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     @Value("${mosip.certify.domain.url}")
     private String domainUrl;
+
+    @Autowired
+    private DIDDocumentUtil didDocumentUtil;
 
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
@@ -237,18 +233,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         if(didDocument != null)
             return didDocument;
 
-        didDocument = keyChooser.entrySet().stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> {
-                            List<String> keyParams = entry.getValue();
-                            KeyPairGenerateResponseDto keyPairGenerateResponseDto = keymanagerService.getCertificate(
-                                    keyParams.getFirst(), Optional.of(keyParams.getLast()));
-                            String certificateString = keyPairGenerateResponseDto.getCertificate();
-                            return DIDDocumentUtil.generateDIDDocument(entry.getKey(), certificateString, issuerURI, issuerPublicKeyURI);
-                        }
-                ));
-
+        didDocument = didDocumentUtil.generateDIDDocument(didUrl);
         return didDocument;
     }
 
@@ -270,7 +255,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     Map<String, Object> templateParams = new HashMap<>();
                     String templateName = CredentialUtils.getTemplateName(vcRequestDto);
                     templateParams.put(Constants.TEMPLATE_NAME, templateName);
-                    templateParams.put(Constants.ISSUER_URI, issuerURI);
+                    templateParams.put(Constants.DID_URL, didUrl);
                     if (statusListEnabled) {
                         addCredentialStatus(jsonObject);
                     }
@@ -296,7 +281,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     Map<String, Object> templateParams = new HashMap<>();
                     String templateName = CredentialUtils.getTemplateName(vcRequestDto);
                     templateParams.put(Constants.TEMPLATE_NAME, templateName);
-                    templateParams.put(Constants.ISSUER_URI, issuerURI);
+                    templateParams.put(Constants.DID_URL, didUrl);
                     if (!StringUtils.isEmpty(renderTemplateId)) {
                         templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
                     }
@@ -367,7 +352,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             statusDetails.put("cr_dtimes", System.currentTimeMillis());
 
             // Store in ledger
-            storeLedgerEntry(issuerURI, credentialType, statusDetails, indexedAttributes);
+            storeLedgerEntry(didUrl, credentialType, statusDetails, indexedAttributes);
 
             log.info("Successfully added credential status with index {} in status list {} and stored in ledger", assignedIndex, statusList.getId());
 

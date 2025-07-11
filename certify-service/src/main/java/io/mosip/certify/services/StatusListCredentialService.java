@@ -54,8 +54,8 @@ public class StatusListCredentialService {
     @Value("${mosip.certify.status-list.signature-crypto-suite:Ed25519Signature2020}")
     private String signatureCryptoSuite;
 
-    @Value("${mosip.certify.data-provider-plugin.issuer-uri}")
-    private String issuerId;
+    @Value("${mosip.certify.data-provider-plugin.did-url}")
+    private String didUrl;
 
     @Value("${mosip.certify.domain.url}")
     private String domainUrl;
@@ -152,7 +152,7 @@ public class StatusListCredentialService {
             statusListData.put("type", typeList);
 
             statusListData.put("id", statusListId);
-            statusListData.put("issuer", issuerId);
+            statusListData.put("issuer", didUrl);
             statusListData.put("validFrom", new Date().toInstant().toString());
 
             JSONObject credentialSubject = new JSONObject();

@@ -6,10 +6,7 @@
 
 package io.mosip.certify.credential;
 
-import java.io.IOException;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -26,7 +23,9 @@ import io.mosip.certify.proofgenerators.dip.KeymanagerByteSigner;
 import io.mosip.certify.proofgenerators.dip.KeymanagerByteSignerFactory;
 import io.mosip.certify.services.CertifyIssuanceServiceImpl;
 import io.mosip.certify.utils.CredentialUtils;
+import io.mosip.certify.utils.DIDDocumentUtil;
 import io.mosip.certify.vcformatters.VCFormatter;
+import io.mosip.kernel.keymanagerservice.dto.CertificateDataResponseDto;
 import io.mosip.kernel.signature.service.SignatureService;
 import io.mosip.kernel.signature.service.SignatureServicev2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +47,9 @@ public class W3cJsonLd extends Credential{
     ProofGeneratorFactory proofGeneratorFactory;
     @Autowired
     SignatureServicev2 signatureService;
+    @Autowired
+    DIDDocumentUtil didDocumentUtil;
+
 
     /**
      * Constructor for credentials
@@ -78,7 +80,7 @@ public class W3cJsonLd extends Credential{
      * @param headers headers to be added. Can be null.
      */
     @Override
-    public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm, String appID, String refID, String publicKeyURL, String signatureCryptoSuite){
+    public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm, String appID, String refID, String didUrl, String signatureCryptoSuite){
         VCResult<JsonLDObject> VC = new VCResult<>();
 //        signAlgorithm = "ecdsa-rdfc-2019"; // TODO: this should be configurable
         Map<String,String> keyReferenceDetails = Map.of(Constants.APPLICATION_ID, appID, Constants.REFERENCE_ID, refID);
@@ -102,6 +104,8 @@ public class W3cJsonLd extends Credential{
                                 DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN))
                         .atZone(ZoneId.systemDefault()).toInstant());
 
+        CertificateDataResponseDto certificateDataResponseDto = didDocumentUtil.getCertificateDataResponseDto(appID, refID);
+        String kid = certificateDataResponseDto.getKeyId();
         if (CertifyIssuanceServiceImpl.keyChooser.containsKey(signatureCryptoSuite)) {
             // legacy signature algos such as Ed25519Signature{2018,2020}
             ProofGenerator proofGenerator = proofGeneratorFactory.getProofGenerator(signatureCryptoSuite)
@@ -109,7 +113,7 @@ public class W3cJsonLd extends Credential{
                             new CertifyException("Proof generator not found for algorithm: " + signatureCryptoSuite));
             LdProof vcLdProof = LdProof.builder().defaultContexts(false).defaultTypes(false).type(proofGenerator.getName())
                     .created(createDate).proofPurpose(VCDMConstants.ASSERTION_METHOD)
-                    .verificationMethod(URI.create(publicKeyURL))
+                    .verificationMethod(URI.create(didUrl + "#" + kid))
                     .build();
             LdProof ldProofWithJWS = CredentialUtils.generateLdProof(vcLdProof, j,
                     keyReferenceDetails, proofGenerator);
@@ -124,7 +128,7 @@ public class W3cJsonLd extends Credential{
                     .created(createDate)
                     .proofPurpose(VCDMConstants.ASSERTION_METHOD)
                     .cryptosuite(signatureCryptoSuite)
-                    .verificationMethod(URI.create(publicKeyURL))
+                    .verificationMethod(URI.create(didUrl + "#" + kid))
                     .type(SignatureAlg.DATA_INTEGRITY).build();
 
             dataIntegrityProof = CredentialUtils.generateDataIntegrityProof(dataIntegrityProof, j, signer);

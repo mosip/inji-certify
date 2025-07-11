@@ -3,19 +3,22 @@ package io.mosip.certify.utils;
 import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.security.Key;
 import java.security.PublicKey;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HexFormat;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
+import io.mosip.certify.services.CertifyIssuanceServiceImpl;
+import io.mosip.kernel.keymanagerservice.dto.AllCertificatesDataResponseDto;
+import io.mosip.kernel.keymanagerservice.dto.CertificateDataResponseDto;
+import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 import org.bouncycastle.jcajce.provider.asymmetric.edec.BCEdDSAPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
@@ -27,46 +30,69 @@ import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.certify.core.exception.CertifyException;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.BigIntegers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Component;
 
 @Slf4j
+@Component
 public class DIDDocumentUtil {
+    @Autowired
+    KeymanagerService keymanagerService;
 
     private static final String MULTICODEC_PREFIX = "ed01";
 
-    public static Map<String, Object> generateDIDDocument(String vcSignAlgorithm, String certificateString, String issuerURI, String issuerPublicKeyURI) {
-
+    public Map<String, Object> generateDIDDocument(String didUrl) {
         HashMap<String,Object> didDocument = new HashMap<String,Object>();
         didDocument.put("@context", Collections.singletonList("https://www.w3.org/ns/did/v1"));
         didDocument.put("alsoKnownAs", new ArrayList<>());
         didDocument.put("service", new ArrayList<>());
-        didDocument.put("id", issuerURI);
-        didDocument.put("authentication", Collections.singletonList(issuerPublicKeyURI));
-        didDocument.put("assertionMethod", Collections.singletonList(issuerPublicKeyURI));
+        didDocument.put("id", didUrl);
+        didDocument.put("authentication", Collections.singletonList(didUrl));
+        didDocument.put("assertionMethod", Collections.singletonList(didUrl));
 
-        Map<String, Object> verificationMethod = null;
+        List<Map<String, Object>> verificationMethods = CertifyIssuanceServiceImpl.keyChooser.entrySet().stream()
+                .map(entry -> {
+                    List<String> keyParams = entry.getValue();
+                    CertificateDataResponseDto certificateDataResponseDto = getCertificateDataResponseDto(keyParams.getFirst(), keyParams.getLast());
+                    String certificateString = certificateDataResponseDto.getCertificateData();
+                    String kid = certificateDataResponseDto.getKeyId();
+
+                    // Generate verification method for each key
+                    return generateVerificationMethod(entry.getKey(), certificateString, didUrl, kid);
+                })
+                .collect(Collectors.toCollection(() ->
+                        new TreeSet<>(Comparator.comparing(vm -> vm.get("id").toString()))
+                ))
+                .stream()
+                .toList();
+        didDocument.put("verificationMethod", verificationMethods);
+
+        return didDocument;
+    }
+
+    private static Map<String, Object> generateVerificationMethod(String signatureCryptoSuite, String certificateString, String didUrl, String kid) {
         PublicKey publicKey = loadPublicKeyFromCertificate(certificateString);
+        Map<String, Object> verificationMethod = null;
+
         try {
-            switch (vcSignAlgorithm) {
+            switch (signatureCryptoSuite) {
+                case SignatureAlg.EC_K1_2016:
                 case SignatureAlg.EC_SECP256K1_2019:
-                    verificationMethod = generateECK12019VerificationMethod(publicKey, issuerURI, issuerPublicKeyURI);
+                    verificationMethod = generateECK12019VerificationMethod(publicKey, didUrl);
                     break;
                 case SignatureAlg.ED25519_SIGNATURE_SUITE_2018:
-                    verificationMethod = generateEd25519VerificationMethod(publicKey, issuerURI, issuerPublicKeyURI);
-                    break;
                 case SignatureAlg.ED25519_SIGNATURE_SUITE_2020:
-                    verificationMethod = generateEd25519VerificationMethod(publicKey, issuerURI, issuerPublicKeyURI);
+                    verificationMethod = generateEd25519VerificationMethod(publicKey, didUrl);
                     break;
                 case SignatureAlg.RSA_SIGNATURE_SUITE_2018:
-                    verificationMethod = generateRSAVerificationMethod(publicKey, issuerURI, issuerPublicKeyURI);
-                    break;
-                case SignatureAlg.EC_K1_2016:
-                    verificationMethod = generateEcdsaKoblitz2016VerificationMethod(publicKey, issuerURI, issuerPublicKeyURI);
+                    verificationMethod = generateRSAVerificationMethod(publicKey, didUrl);
                     break;
                 case SignatureAlg.EC_SECP256R1_2019:
-                    verificationMethod = generateECR1VerificationMethod(publicKey, issuerURI, issuerPublicKeyURI);
+                    verificationMethod = generateECR1VerificationMethod(publicKey, didUrl);
                     break;
                 default:
-                    log.error("Unsupported signature algorithm provided :" + vcSignAlgorithm);
+                    log.error("Unsupported signature algorithm provided :" + signatureCryptoSuite);
                     throw new CertifyException(ErrorConstants.UNSUPPORTED_ALGORITHM);
             }
         } catch(CertifyException e) {
@@ -76,11 +102,11 @@ public class DIDDocumentUtil {
             throw new CertifyException(ErrorConstants.VERIFICATION_METHOD_GENERATION_FAILED);
         }
 
-        didDocument.put("verificationMethod", Collections.singletonList(verificationMethod));
-        return didDocument;
+        verificationMethod.put("id", didUrl + "#" + kid);
+        return verificationMethod;
     }
 
-    private static Map<String, Object> generateECR1VerificationMethod(PublicKey publicKey, String issuerURI, String issuerPublicKeyURI) {
+    private static Map<String, Object> generateECR1VerificationMethod(PublicKey publicKey, String didUrl) {
         ECPublicKey ecPublicKey = (ECPublicKey) publicKey;
         BigInteger yBI = ecPublicKey.getW().getAffineY();
         byte prefixByte = yBI.testBit(0) ? (byte) 0x03 : (byte) 0x02;
@@ -98,10 +124,9 @@ public class DIDDocumentUtil {
         String publicKeyMultibase = Multibase.encode(Multibase.Base.Base58BTC, finalBytes);
 
         Map<String, Object> verificationMethod = new HashMap<>();
-        verificationMethod.put("id", issuerPublicKeyURI);
         verificationMethod.put("type", "EcdsaSecp256r1VerificationKey2019");
         verificationMethod.put("@context", "https://w3id.org/security/suites/ecdsa-2019/v1");
-        verificationMethod.put("controller", issuerURI);
+        verificationMethod.put("controller", didUrl);
         verificationMethod.put("publicKeyMultibase", publicKeyMultibase);
         return verificationMethod;
     }
@@ -118,7 +143,7 @@ public class DIDDocumentUtil {
         }
     }
 
-     private static Map<String, Object> generateEd25519VerificationMethod(PublicKey publicKey, String issuerURI, String issuerPublicKeyURI) throws Exception {
+     private static Map<String, Object> generateEd25519VerificationMethod(PublicKey publicKey, String didUrl) throws Exception {
 
         BCEdDSAPublicKey edKey = (BCEdDSAPublicKey) publicKey;
         byte[] rawBytes = edKey.getPointEncoding();
@@ -129,41 +154,37 @@ public class DIDDocumentUtil {
         String publicKeyMultibase = Multibase.encode(Multibase.Base.Base58BTC, finalBytes);
         
         Map<String, Object> verificationMethod = new HashMap<>();
-        verificationMethod.put("id", issuerPublicKeyURI);
         verificationMethod.put("type", "Ed25519VerificationKey2020");
         verificationMethod.put("@context", "https://w3id.org/security/suites/ed25519-2020/v1");
-        verificationMethod.put("controller", issuerURI);
+        verificationMethod.put("controller", didUrl);
         verificationMethod.put("publicKeyMultibase", publicKeyMultibase);
         return verificationMethod;
     }
 
-    private static Map<String, Object> generateRSAVerificationMethod(PublicKey publicKey, String issuerURI, String issuerPublicKeyURI) throws Exception {
+    private static Map<String, Object> generateRSAVerificationMethod(PublicKey publicKey, String didUrl) throws Exception {
         RSAKey rsaKey = new RSAKey.Builder((RSAPublicKey) publicKey).build();
         Map<String,Object> publicKeyJwk = rsaKey.toJSONObject();
 
         Map<String, Object> verificationMethod = new HashMap<>();
-        verificationMethod.put("id", issuerPublicKeyURI);
         verificationMethod.put("type", "JsonWebKey2020");
         verificationMethod.put("@context", "https://w3id.org/security/suites/jws-2020/v1");
-        verificationMethod.put("controller", issuerURI);
+        verificationMethod.put("controller", didUrl);
         verificationMethod.put("publicKeyJwk", publicKeyJwk);
         return verificationMethod;
     }
 
-    private static Map<String, Object> generateECK12019VerificationMethod(PublicKey publicKey, String issuerURI, String issuerPublicKeyURI) {
+    private static Map<String, Object> generateECK12019VerificationMethod(PublicKey publicKey, String didUrl) {
         // TODO: can validate the key or directly assume the curve here and
         //  go ahead or use P_256 only if `nimbusCurve` is having same value.
         ECKey nimbusKey = new ECKey.Builder(Curve.SECP256K1, (ECPublicKey) publicKey)
                 .build();
 
         Map<String, Object> verificationMethod = new HashMap<>();
-        verificationMethod.put("id", issuerPublicKeyURI);
-
         // ref: https://github.com/w3c-ccg/lds-ecdsa-secp256k1-2019/issues/8
         verificationMethod.put("type", "EcdsaSecp256k1VerificationKey2019");
         verificationMethod.put("@context", "https://w3id.org/security/v1");
         // (improvement): can also add expires key here
-        verificationMethod.put("controller", issuerURI);
+        verificationMethod.put("controller", didUrl);
         verificationMethod.put("publicKeyJwk", nimbusKey.toJSONObject());
         // NOTE: Advice against using publicKeyHex by the spec author
         // ref: https://github.com/w3c-ccg/lds-ecdsa-secp256k1-2019/issues/4
@@ -174,15 +195,21 @@ public class DIDDocumentUtil {
         return verificationMethod;
     }
 
-    private static Map<String, Object> generateEcdsaKoblitz2016VerificationMethod(PublicKey publicKey, String issuerURI, String issuerPublicKeyURI) {
-        ECKey nimbusKey = new ECKey.Builder(Curve.SECP256K1, (ECPublicKey) publicKey).build();
+    @Cacheable(value = "certificatedatacache", key = "#appId + '-' + #refId")
+    public CertificateDataResponseDto getCertificateDataResponseDto(String appId, String refId) {
+        AllCertificatesDataResponseDto kidResponse = keymanagerService.getAllCertificates(appId, Optional.of(refId));
+        if (kidResponse == null || kidResponse.getAllCertificates() == null || kidResponse.getAllCertificates().length == 0) {
+            log.error("No certificates found for appId: {} and refId: {}", appId, refId);
+            throw new CertifyException("No certificates found");
+        }
 
-        Map<String, Object> verificationMethod = new HashMap<>();
-        verificationMethod.put("id", issuerPublicKeyURI);
-        verificationMethod.put("type", "EcdsaKoblitzSignature2016");
-        verificationMethod.put("@context", "https://w3id.org/security/v1");
-        verificationMethod.put("controller", issuerURI);
-        verificationMethod.put("publicKeyJwk", nimbusKey.toJSONObject());
-        return verificationMethod;
+        return Arrays.stream(kidResponse.getAllCertificates())
+                .filter(certificateDataResponseDto -> certificateDataResponseDto.getExpiryAt() != null
+                        && certificateDataResponseDto.getExpiryAt().isAfter(LocalDateTime.now()))
+                .findFirst()
+                .orElseThrow(() -> {
+                    log.error("No valid certificates found for appId: {} and refId: {}", appId, refId);
+                    return new CertifyException("No valid certificates found");
+                });
     }
 }

@@ -206,7 +206,7 @@ public class VelocityTemplatingEngineImplTest {
 
         Map<String, Object> templateMap = Map.of(
                 Constants.TEMPLATE_NAME, vc2TemplateKey,
-                Constants.ISSUER_URI, "https://example.com/fake-issuer"
+                Constants.DID_URL, "https://example.com/fake-issuer"
         );
 
         String actualJSONString = formatter.format(ret, templateMap);
@@ -264,7 +264,7 @@ public class VelocityTemplatingEngineImplTest {
 
         Map<String, Object> templateMap = Map.of(
                 Constants.TEMPLATE_NAME, vc4TemplateKey,
-                Constants.ISSUER_URI, "https://example.com/fake-issuer"
+                Constants.DID_URL, "https://example.com/fake-issuer"
         );
         // formatter.format calls getCachedCredentialConfig().getVcTemplate(). If null, it throws.
         CertifyException exception = assertThrows(CertifyException.class, () -> formatter.format(ret, templateMap));
@@ -383,7 +383,7 @@ public class VelocityTemplatingEngineImplTest {
 
         Map<String, Object> templateSettings = Map.of(
                 Constants.TEMPLATE_NAME, vc2TemplateKey,
-                Constants.ISSUER_URI, "https://example.com/fake-issuer"
+                Constants.DID_URL, "https://example.com/fake-issuer"
         );
 
         String result = formatter.format(valueMap, templateSettings);
@@ -418,7 +418,7 @@ public class VelocityTemplatingEngineImplTest {
 
         Map<String, Object> templateSettings = Map.of(
                 Constants.TEMPLATE_NAME, vc2TemplateKey,
-                Constants.ISSUER_URI, "https://example.com/fake-issuer"
+                Constants.DID_URL, "https://example.com/fake-issuer"
         );
 
         String result = formatter.format(valueMap, templateSettings);
@@ -439,7 +439,7 @@ public class VelocityTemplatingEngineImplTest {
 
         Map<String, Object> templateInput = new HashMap<>();
         templateInput.put(Constants.TEMPLATE_NAME, vc3TemplateKey);
-        templateInput.put(Constants.ISSUER_URI, "https://example.com/fake-issuer");
+        templateInput.put(Constants.DID_URL, "https://example.com/fake-issuer");
         templateInput.put("vcVer", "VC-V3");
         templateInput.put("fullName", "Test User Three"); // String, template vc3 now quotes it.
         templateInput.put("UIN", 789012L);

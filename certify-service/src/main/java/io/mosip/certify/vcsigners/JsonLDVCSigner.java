@@ -18,6 +18,8 @@ import java.util.Date;
 import java.util.Map;
 
 import io.mosip.certify.proofgenerators.ProofGeneratorFactory;
+import io.mosip.certify.utils.DIDDocumentUtil;
+import io.mosip.kernel.keymanagerservice.dto.CertificateDataResponseDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -51,8 +53,11 @@ public class JsonLDVCSigner implements VCSigner {
     @Autowired
     ProofGeneratorFactory proofGeneratorFactory;
 
-    @Value("${mosip.certify.data-provider-plugin.issuer-public-key-uri}")
-    private String issuerPublicKeyURI;
+    @Value("${mosip.certify.data-provider-plugin.did-url}")
+    private String didUrl;
+
+    @Autowired
+    DIDDocumentUtil didDocumentUtil;
 
     @Override
     public VCResult<JsonLDObject> attachSignature(String unSignedVC, Map<String, String> keyReferenceDetails) {
@@ -84,9 +89,14 @@ public class JsonLDVCSigner implements VCSigner {
                         .parse(validFrom,
                                 DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN))
                         .atZone(ZoneId.systemDefault()).toInstant());
+
+        String appID = keyReferenceDetails.get(Constants.APPLICATION_ID);
+        String refID = keyReferenceDetails.get(Constants.REFERENCE_ID);
+        CertificateDataResponseDto certificateDataResponseDto = didDocumentUtil.getCertificateDataResponseDto(appID, refID);
+        String kid = certificateDataResponseDto.getKeyId();
         LdProof vcLdProof = LdProof.builder().defaultContexts(false).defaultTypes(false).type(proofGenerator.getName())
                 .created(createDate).proofPurpose(VCDMConstants.ASSERTION_METHOD)
-                .verificationMethod(URI.create(issuerPublicKeyURI))
+                .verificationMethod(URI.create(didUrl + "#" + kid))
                 .build();
         // 1. Canonicalize
         Canonicalizer canonicalizer = proofGenerator.getCanonicalizer();

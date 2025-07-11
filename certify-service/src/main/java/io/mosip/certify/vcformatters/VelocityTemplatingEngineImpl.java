@@ -204,7 +204,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     @Override
     public String format(JSONObject valueMap, Map<String, Object> templateSettings) {
         String templateName = templateSettings.get(TEMPLATE_NAME).toString();
-        String issuer = templateSettings.get(ISSUER_URI).toString();
+        String issuer = templateSettings.get(DID_URL).toString();
         String vcTemplateString = getCachedCredentialConfig(templateName).getVcTemplate(); // NEW
         if (vcTemplateString == null) {
             log.error("Template {} not found (vcTemplate is null)", templateName);
@@ -317,7 +317,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     public String format(Map<String, Object> templateInput) {
         // TODO: Isn't template name becoming too complex with VC_CONTEXTS & CREDENTIAL_TYPES both?
         String templateName = templateInput.get(TEMPLATE_NAME).toString();
-        String issuer = templateInput.get(ISSUER_URI).toString();
+        String issuer = templateInput.get(DID_URL).toString();
         String vcTemplateString = getCachedCredentialConfig(templateName).getVcTemplate(); // NEW
         vcTemplateString = new String(Base64.decodeBase64(vcTemplateString));
         StringWriter writer = new StringWriter();
