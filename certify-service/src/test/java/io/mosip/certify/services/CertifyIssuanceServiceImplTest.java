@@ -49,7 +49,6 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.boot.actuate.autoconfigure.metrics.MetricsProperties.System;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.text.ParseException;
@@ -606,7 +605,6 @@ public class CertifyIssuanceServiceImplTest {
         when(ledgerRepository.findBySearchRequest(request)).thenReturn(List.of(ledger));
 
         List<CredentialStatusResponse> results = issuanceService.searchCredentials(request);
-        java.lang.System.out.println("Results: " + results);
 
         assertEquals(1, results.size());
         assertEquals("67823e96-fda0-4eba-9828-a32a8d22cc42", results.get(0).getCredentialId());
