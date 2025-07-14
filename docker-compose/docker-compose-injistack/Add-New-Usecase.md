@@ -77,6 +77,7 @@ Current usecases include:
         key_manager_app_id,
         key_manager_ref_id,
         signature_algo,
+        signature_crupto_suite,
         sd_claim,
         display,
         display_order,
@@ -104,6 +105,7 @@ Current usecases include:
      'CERTIFY_VC_SIGN_ED25519',  -- key_manager_app_id
      'ED25519_SIGN',  -- key_manager_ref_id (optional)
      'EdDSA',  -- signature_algo (optional)
+     'Ed25519Signature2020',  -- signature_crupto_suite
      NULL,  -- sd_claim (optional)
      ''::JSONB,  -- display
      ARRAY[],  -- display_order
