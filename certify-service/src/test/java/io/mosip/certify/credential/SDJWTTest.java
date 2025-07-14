@@ -90,7 +90,7 @@ public class SDJWTTest {
 
         when(mockSignatureService.jwsSign(any(JWSSignatureRequestDto.class))).thenReturn(signedResponse);
 
-        VCResult<?> result = sdjwt.addProof(unsignedVC, null, "RS256", "appID", "refID", "url");
+        VCResult<?> result = sdjwt.addProof(unsignedVC, null, "RS256", "appID", "refID", "url", "Ed25519Signature2020");
 
         assertNotNull(result);
         assertTrue(((String) result.getCredential()).startsWith("signed.header.payload"));
@@ -104,7 +104,7 @@ public class SDJWTTest {
         response.setJwtSignedData("signed.jwt");
         when(mockSignatureService.jwsSign(any(JWSSignatureRequestDto.class))).thenReturn(response);
 
-        sdjwt.addProof(unsignedVC, null, "PS256", "myApp", "myRef", "https://example.com");
+        sdjwt.addProof(unsignedVC, null, "PS256", "myApp", "myRef", "https://example.com", "Ed25519Signature2020");
 
         verify(mockSignatureService).jwsSign(argThat(dto ->
                 "myApp".equals(dto.getApplicationId()) &&

@@ -129,10 +129,8 @@ public class CertifyIssuanceServiceImplTest {
 
 
         ReflectionTestUtils.setField(issuanceService, "issuerMetadata", testIssuerMetadataMap);
-        ReflectionTestUtils.setField(issuanceService, "vcSignAlgorithm", SignatureAlg.ED25519_SIGNATURE_SUITE_2020);
         ReflectionTestUtils.setField(issuanceService, "cNonceExpireSeconds", 300);
-        ReflectionTestUtils.setField(issuanceService, "issuerURI", "https://test.issuer.com");
-        ReflectionTestUtils.setField(issuanceService, "issuerPublicKeyURI", "http://example.com/issuer#key-1");
+        ReflectionTestUtils.setField(issuanceService, "didUrl", "https://test.issuer.com");
 
         when(parsedAccessToken.getAccessTokenHash()).thenReturn(TEST_ACCESS_TOKEN_HASH);
 
@@ -184,7 +182,7 @@ public class CertifyIssuanceServiceImplTest {
     private CredentialRequest createValidCredentialRequest(String format) {
         CredentialRequest req = new CredentialRequest();
         req.setFormat(format);
-        req.setSdJwtVct("test_vct");
+        req.setVct("test_vct");
 
         // This is io.mosip.certify.core.dto.CredentialDefinition for the request object
         io.mosip.certify.core.dto.CredentialDefinition requestCredDef = new io.mosip.certify.core.dto.CredentialDefinition();
@@ -255,6 +253,7 @@ public class CertifyIssuanceServiceImplTest {
         when(vcFormatter.getAppID(anyString())).thenReturn("testAppIdLdp");   // Example value
         when(vcFormatter.getRefID(anyString())).thenReturn("testRefIdLdp");   // Example value
         when(vcFormatter.getDidUrl(anyString())).thenReturn("did:example:ldp"); // Example value
+        when(vcFormatter.getSignatureCryptoSuite(anyString())).thenReturn("testSignatureCryptoSuite"); // Example Value
 
         // Corrected declaration of mockVcResultLdp
         VCResult mockVcResultLdp = new VCResult<JsonLDObject>();
@@ -265,6 +264,7 @@ public class CertifyIssuanceServiceImplTest {
         when(mockW3cJsonLd.addProof(
                 eq("{\"unsigned\":\"credential\"}"),
                 eq(""),  // Service code passes "" for LDP's addProof holderId
+                anyString(),
                 anyString(),
                 anyString(),
                 anyString(),
@@ -453,7 +453,7 @@ public class CertifyIssuanceServiceImplTest {
         when(vcFormatter.getAppID(anyString())).thenReturn("testAppId");       // Example value
         when(vcFormatter.getRefID(anyString())).thenReturn("testRefId");       // Example value
         when(vcFormatter.getDidUrl(anyString())).thenReturn("did:example:123"); // Example value
-
+        when(vcFormatter.getSignatureCryptoSuite(anyString())).thenReturn("testSignatureCryptoSuite"); // Example Value
 
         when(mockSdJwt.addProof(
                 eq("{\"unsigned\":\"sdjwt_payload\"}"), // unsignedCredential
@@ -461,7 +461,8 @@ public class CertifyIssuanceServiceImplTest {
                 anyString(),                            // proofAlgorithm
                 anyString(),                            // keyManagerAppId
                 anyString(),                            // keyManagerRefId
-                anyString()                             // didUrl
+                anyString(),                             // didUrl
+                anyString()
         )).thenReturn(mockVcResultSdJwt);           // Use thenReturn for now
 
         CredentialResponse<?> response = issuanceService.getCredential(request);

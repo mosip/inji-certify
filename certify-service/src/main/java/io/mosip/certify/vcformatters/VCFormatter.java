@@ -56,4 +56,11 @@ public interface VCFormatter {
      * @return
      */
     List<String> getSelectiveDisclosureInfo(String templateName);
+
+    /**
+     * returns the crypto suite used for VC signature or proof generation
+     * @param templateName
+     * @return
+     */
+    String getSignatureCryptoSuite(String templateName);
 }

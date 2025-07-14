@@ -35,6 +35,8 @@ public class CredentialConfigurationDTO {
 
     private String signatureAlgo; //Can be called as Proof algorithm
 
+    private String signatureCryptoSuite;
+
     private String sdClaim;
 
     @Valid

@@ -238,7 +238,7 @@ public class VCIssuanceUtil {
                         case VCFormats.MSO_MDOC:
                             return Objects.equals(dto.getDocType(), credentialRequest.getDoctype());
                         case VCFormats.LDP_SD_JWT:
-                            return Objects.equals(dto.getVct(), credentialRequest.getSdJwtVct());
+                            return Objects.equals(dto.getVct(), credentialRequest.getVct());
                         default:
                             return false;
                     }

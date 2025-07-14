@@ -94,6 +94,7 @@ CREATE TABLE credential_config (
     key_manager_app_id VARCHAR(36),
     key_manager_ref_id VARCHAR(128),
     signature_algo VARCHAR(36),
+    signature_crypto_suite VARCHAR(128),
     sd_claim VARCHAR,
     display JSONB NOT NULL,
     display_order TEXT[] NOT NULL,
