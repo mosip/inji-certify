@@ -556,32 +556,20 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     @Override
     public List<CredentialStatusResponse> searchCredentials(CredentialLedgerSearchRequest request) {
+        validateSearchRequest(request);
         try {
-            Map<String, String> indexedAttrs = request.getIndexedAttributesEquals();
-            if (indexedAttrs == null || indexedAttrs.isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid search criteria provided.");
-            }
-            boolean hasValid = indexedAttrs.entrySet().stream()
-            .anyMatch(e -> e.getKey() != null && !e.getKey().isBlank()
-                        && e.getValue() != null && !e.getValue().isBlank());
-
-            if (!hasValid) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid search criteria provided.");
-            }
             List<Ledger> records = ledgerRepository.findBySearchRequest(request);
-            
+
             if (records.isEmpty()) {
                 return Collections.emptyList();
             }
-        
+
             return records.stream()
-                .map(this::mapToSearchResponse)
-                .collect(Collectors.toList());
-    
-        }  catch (ResponseStatusException e) {
-            throw e;
+                    .map(this::mapToSearchResponse)
+                    .collect(Collectors.toList());
+
         } catch (Exception e) {
-            throw new RuntimeException("An error occurred while processing the request", e);
+            throw new CertifyException("SEARCH_CREDENTIALS_FAILED");
         }
     }
 
@@ -623,5 +611,18 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             }
         }
         return response;
+    }
+
+    private void validateSearchRequest(CredentialLedgerSearchRequest request) {
+        Map<String, String> indexedAttrs = request.getIndexedAttributesEquals();
+    
+        boolean hasValid = indexedAttrs != null && !indexedAttrs.isEmpty() &&
+                indexedAttrs.entrySet().stream()
+                        .anyMatch(e -> e.getKey() != null && !e.getKey().isBlank()
+                                && e.getValue() != null && !e.getValue().isBlank());
+    
+        if (!hasValid) {
+            throw new CertifyException("INVALID_SEARCH_CRITERIA");
+        }
     }
 }
