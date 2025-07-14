@@ -98,7 +98,7 @@ public class VelocityTemplatingEngineImplTest {
                             }
                         }
                 """,
-                vc2Type, vc2Context, vc2Format, "did:example:issuer2", "appId2", "refId2", "EdDSA", "$.phone"
+                vc2Type, vc2Context, vc2Format, "did:example:issuer2", "appId2", "refId2", "EdDSA", "$.phone", "testCryptoSuite"
         );
 
         // vc3 definition - with quotes fixed for string template variables
@@ -131,7 +131,7 @@ public class VelocityTemplatingEngineImplTest {
                             }
                         }
                 """,
-                vc3Type, vc3Context, vc3Format, "did:example:issuer3", "appId3", "refId3", "EdDSA", null
+                vc3Type, vc3Context, vc3Format, "did:example:issuer3", "appId3", "refId3", "EdDSA", null, "testCryptoSuite"
         );
 
 
@@ -142,7 +142,7 @@ public class VelocityTemplatingEngineImplTest {
         vc4TemplateKey = vc4Type + DELIMITER + vc4Context + DELIMITER + vc4Format;
         vc4TemplateIdObject = new TemplateId(vc4Context, vc4Type, vc4Format);
         vc4 = initTemplate(null,
-                vc4Type, vc4Context, vc4Format, "did:example:issuer4", "appId4", "refId4", "RSA", null
+                vc4Type, vc4Context, vc4Format, "did:example:issuer4", "appId4", "refId4", "RSA", null, "testCryptoSuite"
         );
 
 
@@ -163,7 +163,7 @@ public class VelocityTemplatingEngineImplTest {
         formatter.initialize(); // Initializes VelocityEngine
     }
 
-    private CredentialConfig initTemplate(String template, String type, String context, String format, String didUrl, String keyManagerAppId, String keyManagerRefId, String signatureAlgo, String sdClaim) {
+    private CredentialConfig initTemplate(String template, String type, String context, String format, String didUrl, String keyManagerAppId, String keyManagerRefId, String signatureAlgo, String sdClaim, String signatureCryptoSuite) {
         CredentialConfig t = new CredentialConfig();
         if(template != null) {
             template = Base64.getEncoder().encodeToString(template.getBytes());
@@ -178,6 +178,7 @@ public class VelocityTemplatingEngineImplTest {
         t.setKeyManagerRefId(keyManagerRefId);
         t.setSignatureAlgo(signatureAlgo);
         t.setSdClaim(sdClaim);
+        t.setSignatureCryptoSuite(signatureCryptoSuite);
         return t;
     }
 
@@ -205,7 +206,7 @@ public class VelocityTemplatingEngineImplTest {
 
         Map<String, Object> templateMap = Map.of(
                 Constants.TEMPLATE_NAME, vc2TemplateKey,
-                Constants.ISSUER_URI, "https://example.com/fake-issuer"
+                Constants.DID_URL, "https://example.com/fake-issuer"
         );
 
         String actualJSONString = formatter.format(ret, templateMap);
@@ -263,7 +264,7 @@ public class VelocityTemplatingEngineImplTest {
 
         Map<String, Object> templateMap = Map.of(
                 Constants.TEMPLATE_NAME, vc4TemplateKey,
-                Constants.ISSUER_URI, "https://example.com/fake-issuer"
+                Constants.DID_URL, "https://example.com/fake-issuer"
         );
         // formatter.format calls getCachedCredentialConfig().getVcTemplate(). If null, it throws.
         CertifyException exception = assertThrows(CertifyException.class, () -> formatter.format(ret, templateMap));
@@ -355,6 +356,13 @@ public class VelocityTemplatingEngineImplTest {
     }
 
     @Test
+    public void testGetSignatureCryptoSuite() {
+        // Uses vc2 by default
+        String expected = vc2.getSignatureCryptoSuite();
+        Assert.assertEquals(expected, formatter.getSignatureCryptoSuite(vc2TemplateKey));
+    }
+
+    @Test
     public void testFormat_AddsDefaultExpiryWhenMissing() {
         // Uses vc2 by default from setUp's findById mock
         JSONObject valueMap = new JSONObject();
@@ -375,7 +383,7 @@ public class VelocityTemplatingEngineImplTest {
 
         Map<String, Object> templateSettings = Map.of(
                 Constants.TEMPLATE_NAME, vc2TemplateKey,
-                Constants.ISSUER_URI, "https://example.com/fake-issuer"
+                Constants.DID_URL, "https://example.com/fake-issuer"
         );
 
         String result = formatter.format(valueMap, templateSettings);
@@ -410,7 +418,7 @@ public class VelocityTemplatingEngineImplTest {
 
         Map<String, Object> templateSettings = Map.of(
                 Constants.TEMPLATE_NAME, vc2TemplateKey,
-                Constants.ISSUER_URI, "https://example.com/fake-issuer"
+                Constants.DID_URL, "https://example.com/fake-issuer"
         );
 
         String result = formatter.format(valueMap, templateSettings);
@@ -431,7 +439,7 @@ public class VelocityTemplatingEngineImplTest {
 
         Map<String, Object> templateInput = new HashMap<>();
         templateInput.put(Constants.TEMPLATE_NAME, vc3TemplateKey);
-        templateInput.put(Constants.ISSUER_URI, "https://example.com/fake-issuer");
+        templateInput.put(Constants.DID_URL, "https://example.com/fake-issuer");
         templateInput.put("vcVer", "VC-V3");
         templateInput.put("fullName", "Test User Three"); // String, template vc3 now quotes it.
         templateInput.put("UIN", 789012L);

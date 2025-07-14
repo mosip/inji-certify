@@ -51,11 +51,11 @@ public class StatusListCredentialService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    @Value("${mosip.certify.data-provider-plugin.issuer.vc-sign-algo:Ed25519Signature2020}")
-    private String vcSignAlgorithm;
+    @Value("${mosip.certify.status-list.signature-crypto-suite:Ed25519Signature2020}")
+    private String signatureCryptoSuite;
 
-    @Value("${mosip.certify.data-provider-plugin.issuer-uri}")
-    private String issuerId;
+    @Value("${mosip.certify.data-provider-plugin.did-url}")
+    private String didUrl;
 
     @Value("${mosip.certify.domain.url}")
     private String domainUrl;
@@ -152,7 +152,7 @@ public class StatusListCredentialService {
             statusListData.put("type", typeList);
 
             statusListData.put("id", statusListId);
-            statusListData.put("issuer", issuerId);
+            statusListData.put("issuer", didUrl);
             statusListData.put("validFrom", new Date().toInstant().toString());
 
             JSONObject credentialSubject = new JSONObject();
@@ -170,8 +170,9 @@ public class StatusListCredentialService {
 
             // Sign the status list credential
             Map<String, String> signerSettings = new HashMap<>();
-            signerSettings.put(Constants.APPLICATION_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignAlgorithm).getFirst());
-            signerSettings.put(Constants.REFERENCE_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignAlgorithm).getLast());
+            signerSettings.put(Constants.APPLICATION_ID, CertifyIssuanceServiceImpl.keyChooser.get(signatureCryptoSuite).getFirst());
+            signerSettings.put(Constants.REFERENCE_ID, CertifyIssuanceServiceImpl.keyChooser.get(signatureCryptoSuite).getLast());
+            signerSettings.put(Constants.SIGNATURE_CRYPTO_SUITE, signatureCryptoSuite);
 
             // Attach signature to the VC
             VCResult<?> vcResult = vcSigner.attachSignature(statusListData.toString(), signerSettings);
@@ -317,8 +318,9 @@ public class StatusListCredentialService {
         try {
             // Prepare signer settings
             Map<String, String> signerSettings = new HashMap<>();
-            signerSettings.put(Constants.APPLICATION_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignAlgorithm).getFirst());
-            signerSettings.put(Constants.REFERENCE_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignAlgorithm).getLast());
+            signerSettings.put(Constants.APPLICATION_ID, CertifyIssuanceServiceImpl.keyChooser.get(signatureCryptoSuite).getFirst());
+            signerSettings.put(Constants.REFERENCE_ID, CertifyIssuanceServiceImpl.keyChooser.get(signatureCryptoSuite).getLast());
+            signerSettings.put(Constants.SIGNATURE_CRYPTO_SUITE, signatureCryptoSuite);
 
             // Remove existing proof if present before re-signing
             JSONObject vcDocument = new JSONObject(vcDocumentJson);

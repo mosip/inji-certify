@@ -54,6 +54,9 @@ public class CredentialConfig {
     @Comment("This for VC signature or proof algorithm")
     private String signatureAlgo; //Can be called as Proof algorithm
 
+    @Comment("This is the crypto suite used for VC signature or proof generation")
+    private String signatureCryptoSuite;
+
     @Comment("This is a comma seperated list for selective disclosure.")
     private String sdClaim;
 

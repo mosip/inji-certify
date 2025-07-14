@@ -3,8 +3,12 @@ package io.mosip.certify.vcsigners;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import io.mosip.certify.core.exception.CertifyException;
+import io.mosip.certify.proofgenerators.ProofGeneratorFactory;
+import io.mosip.certify.utils.DIDDocumentUtil;
+import io.mosip.kernel.keymanagerservice.dto.CertificateDataResponseDto;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,6 +36,10 @@ public class JsonLDVCSignerTest {
     SignatureService signatureService;
     @Mock
     ProofGenerator signProps;
+    @Mock
+    ProofGeneratorFactory proofGeneratorFactory;
+    @Mock
+    DIDDocumentUtil didDocumentUtil;
     @InjectMocks
     private JsonLDVCSigner jsonLDVCSigner;
     private static final String VC_1 = """
@@ -83,7 +91,11 @@ public class JsonLDVCSignerTest {
 
     @Before
     public void setup() {
-        ReflectionTestUtils.setField(jsonLDVCSigner, "issuerPublicKeyURI", "https://example.com/sample.pub.key.json/");
+        ReflectionTestUtils.setField(jsonLDVCSigner, "didUrl", "https://example.com/sample.pub.key.json/");
+        CertificateDataResponseDto ecR1CertDto = new CertificateDataResponseDto();
+        ecR1CertDto.setCertificateData("-----BEGIN CERTIFICATE-----\nMIIDEDCCAfigAwIBAgIIZ1nHaUeKLDMwDQYJKoZIhvcNAQELBQAweDELMAkGA1UE\nBhMCSU4xCzAJBgNVBAgMAktBMRIwEAYDVQQHDAlCQU5HQUxPUkUxDjAMBgNVBAoM\nBUlJSVRCMRcwFQYDVQQLDA5FWEFNUExFLUNFTlRFUjEfMB0GA1UEAwwWd3d3LmV4\nYW1wbGUuY29tIChST09UKTAeFw0yNTA0MDcwMTQ1MzVaFw0yODA0MDYwMTQ1MzVa\nMIGbMQswCQYDVQQGEwJJTjELMAkGA1UECAwCS0ExEjAQBgNVBAcMCUJBTkdBTE9S\nRTEOMAwGA1UECgwFSUlJVEIxFzAVBgNVBAsMDkVYQU1QTEUtQ0VOVEVSMUIwQAYD\nVQQDDDl3d3cuZXhhbXBsZS5jb20gKENFUlRJRllfVkNfU0lHTl9FQ19SMS1FQ19T\nRUNQMjU2UjFfU0lHTikwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAARnZrptfF7k\nyWism4kK6l8N6K4v8H3FyYzlkDc8/mP55pa+gTUvcEN4DF7jAZntyYUL8GE3Eupf\nd2ZdL7ojg2sgo0UwQzASBgNVHRMBAf8ECDAGAQH/AgEBMB0GA1UdDgQWBBRIWCn1\nRWbTDjYmBJLsnQ5jKyYudzAOBgNVHQ8BAf8EBAMCAoQwDQYJKoZIhvcNAQELBQAD\nggEBAIM3Mv1W3N5htKcNEhvtkRYhl0MthNRNzNOuNSRu8VHBgverGE438vdbCQ2f\n/CGBI+Jo2IHdsaFOFGvb6TOOjEZFPgGJyPBK1PGqZc/OiqIcLvPwQ0HVQbp6fgHC\nxocizOAZmrjCQSgQgcDQSuO9tv9JV3Vb7odnPFlbtpREN23AS4KMyVYRm06CrSac\nPW44fSP4GSbWHmgaBvhWxJcXJ/4LpK+UQ1Q0dszm6ofgppd18oSwix90NRDTej7J\nAXmfM3eCvGvMlJC3jHs4EFns9egC16hHqX7INpE1K/ZNyTgHhXpErqaDWw2xkkPC\nvVFPORPyyNumlhL/f36CtutMe2U=\n-----END CERTIFICATE-----\n");
+        ecR1CertDto.setKeyId("EC_SECP256R1_SIGN");
+        when(didDocumentUtil.getCertificateDataResponseDto(any(), any())).thenReturn(ecR1CertDto);
     }
 
     @Test
@@ -99,6 +111,7 @@ public class JsonLDVCSignerTest {
             when(signProps.getCanonicalizer()).thenReturn(new URDNA2015Canonicalizer());
             LdProof l = LdProof.builder().jws("fake-jws-proof").type("FakeSignature2018").proofPurpose("assertionMethod").build();
             when(signProps.generateProof(any(), any(), any())).thenReturn(l);
+            when(proofGeneratorFactory.getProofGenerator(any())).thenReturn(Optional.of(signProps));
             Map<String, String> defaultSettings = new HashMap<>();
             defaultSettings.put(Constants.APPLICATION_ID, "fake-application-id");
             defaultSettings.put(Constants.REFERENCE_ID, "fake-reference-id");
@@ -125,12 +138,6 @@ public class JsonLDVCSignerTest {
         }
     """;
         Map<String, String> keyDetails = new HashMap<>();
-        Canonicalizer mockCanonicalizer = org.mockito.Mockito.mock(Canonicalizer.class);
-        when(signProps.getCanonicalizer()).thenReturn(mockCanonicalizer);
-        when(signProps.getName()).thenReturn("FakeSignature2018");
-        // Simulate exception
-        when(mockCanonicalizer.canonicalize(any(), any()))
-                .thenThrow(new IOException("Simulated IO error"));
 
         // Act & Assert
         jsonLDVCSigner.attachSignature(vc, keyDetails);

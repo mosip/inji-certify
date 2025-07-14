@@ -70,6 +70,7 @@ public class CredentialConfigurationServiceImplTest {
         credentialConfig.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
         credentialConfig.setCredentialSubject(Map.of("name", "Full Name"));
         credentialConfig.setKeyManagerAppId("TEST2019");
+        credentialConfig.setSignatureCryptoSuite("Ed25519Signature2020");
 
         credentialConfigurationDTO = new CredentialConfigurationDTO();
         credentialConfigurationDTO.setCredentialConfigKeyId("test-credential");
@@ -115,7 +116,7 @@ public class CredentialConfigurationServiceImplTest {
         CertifyException exception = assertThrows(CertifyException.class, () ->
                 credentialConfigurationService.addCredentialConfiguration(dto)
         );
-        org.junit.Assert.assertEquals("Credential Template is mandatory for this `DataProvider` plugin issuer.", exception.getMessage());
+        org.junit.Assert.assertEquals("Credential Template and VC Sign Crypto Suite is mandatory for the DataProvider plugin issuer.", exception.getMessage());
     }
 
     @Test
@@ -370,6 +371,7 @@ public class CredentialConfigurationServiceImplTest {
         mdocConfig.setVcTemplate("mdoc_template");
         mdocConfig.setCredentialFormat("mso_mdoc");
         mdocConfig.setDocType("docType1");
+        mdocConfig.setSignatureCryptoSuite("Ed25519Signature2020");
 
         CredentialConfigurationDTO mdocDTO = new CredentialConfigurationDTO();
         mdocDTO.setCredentialFormat("mso_mdoc");
@@ -397,6 +399,7 @@ public class CredentialConfigurationServiceImplTest {
         sdJwtConfig.setStatus("active");
         sdJwtConfig.setCredentialFormat("vc+sd-jwt");
         sdJwtConfig.setSdJwtVct("test-vct");
+        sdJwtConfig.setSignatureCryptoSuite("Ed25519Signature2020");
 
         CredentialConfigurationDTO sdJwtDTO = new CredentialConfigurationDTO();
         sdJwtDTO.setCredentialFormat("vc+sd-jwt");

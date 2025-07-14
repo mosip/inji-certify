@@ -22,7 +22,6 @@ import java.util.Map;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-@ConditionalOnProperty(name = "mosip.certify.data-provider-plugin.issuer.vc-sign-algo", havingValue = SignatureAlg.EC_K1_2016)
 public class EcdsaKoblitzSignature2016ProofGeneratorTest {
 
     @InjectMocks

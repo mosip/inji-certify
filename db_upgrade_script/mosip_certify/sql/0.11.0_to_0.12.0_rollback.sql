@@ -33,6 +33,7 @@ ALTER TABLE certify.credential_config
     DROP COLUMN key_manager_app_id,
     DROP COLUMN key_manager_ref_id,
     DROP COLUMN signature_algo,
+    DROP COLUMN signature_crypto_suite,
     DROP COLUMN sd_claim,
     DROP COLUMN display,
     DROP COLUMN display_order,

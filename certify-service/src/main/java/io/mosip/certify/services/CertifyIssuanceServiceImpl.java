@@ -9,8 +9,6 @@ import java.text.ParseException;
 import java.time.OffsetDateTime;
 import java.util.*;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
@@ -58,7 +56,6 @@ import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
 import io.mosip.certify.utils.CredentialUtils;
 import io.mosip.certify.utils.DIDDocumentUtil;
-import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
@@ -77,8 +74,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             SignatureAlg.EC_K1_2016, List.of(Constants.CERTIFY_VC_SIGN_EC_K1, Constants.EC_SECP256K1_SIGN),
             SignatureAlg.EC_SECP256K1_2019, List.of(Constants.CERTIFY_VC_SIGN_EC_K1, Constants.EC_SECP256K1_SIGN),
             SignatureAlg.EC_SECP256R1_2019, List.of(Constants.CERTIFY_VC_SIGN_EC_R1, Constants.EC_SECP256R1_SIGN));
-    @Value("${mosip.certify.data-provider-plugin.issuer.vc-sign-algo:Ed25519Signature2020}")
-    private String vcSignAlgorithm;
+
     @Value("#{${mosip.certify.key-values}}")
     private LinkedHashMap<String, LinkedHashMap<String, Object>> issuerMetadata;
 
@@ -97,11 +93,8 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Autowired
     private DataProviderPlugin dataProviderPlugin;
 
-    @Value("${mosip.certify.data-provider-plugin.issuer-uri}")
-    private String issuerURI;
-
-    @Value("${mosip.certify.data-provider-plugin.issuer-public-key-uri}")
-    private String issuerPublicKeyURI;
+    @Value("${mosip.certify.data-provider-plugin.did-url}")
+    private String didUrl;
 
     @Value("${mosip.certify.data-provider-plugin.rendering-template-id:}")
     private String renderTemplateId;
@@ -141,7 +134,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Autowired
     private IndexedAttributesConfig indexedAttributesConfig;
 
-    @Value("${mosip.certify.statuslist.enabled:true}")
+    @Value("${mosip.certify.statuslist.enabled:false}")
     private boolean statusListEnabled;
 
     @Value("${mosip.certify.statuslist.default-purpose:revocation}")
@@ -149,6 +142,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     @Value("${mosip.certify.domain.url}")
     private String domainUrl;
+
+    @Autowired
+    private DIDDocumentUtil didDocumentUtil;
 
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
@@ -237,10 +233,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         if(didDocument != null)
             return didDocument;
 
-        KeyPairGenerateResponseDto keyPairGenerateResponseDto = keymanagerService.getCertificate(keyChooser.get(vcSignAlgorithm).getFirst(), Optional.of(keyChooser.get(vcSignAlgorithm).getLast()));
-        String certificateString = keyPairGenerateResponseDto.getCertificate();
-
-        didDocument = DIDDocumentUtil.generateDIDDocument(vcSignAlgorithm, certificateString, issuerURI, issuerPublicKeyURI);
+        didDocument = didDocumentUtil.generateDIDDocument(didUrl);
         return didDocument;
     }
 
@@ -262,7 +255,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     Map<String, Object> templateParams = new HashMap<>();
                     String templateName = CredentialUtils.getTemplateName(vcRequestDto);
                     templateParams.put(Constants.TEMPLATE_NAME, templateName);
-                    templateParams.put(Constants.ISSUER_URI, issuerURI);
+                    templateParams.put(Constants.DID_URL, didUrl);
                     if (statusListEnabled) {
                         addCredentialStatus(jsonObject);
                     }
@@ -273,7 +266,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     Credential cred = credentialFactory.getCredential(credentialRequest.getFormat()).orElseThrow(()-> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
                     templateParams.putAll(jsonObject.toMap());
                     String unsignedCredential=cred.createCredential(templateParams, templateName);
-                    return cred.addProof(unsignedCredential,"", vcFormatter.getProofAlgorithm(templateName), vcFormatter.getAppID(templateName), vcFormatter.getRefID(templateName),vcFormatter.getDidUrl(templateName));
+                    return cred.addProof(unsignedCredential,"", vcFormatter.getProofAlgorithm(templateName), vcFormatter.getAppID(templateName), vcFormatter.getRefID(templateName),vcFormatter.getDidUrl(templateName), vcFormatter.getSignatureCryptoSuite(templateName));
                 } catch(DataProviderExchangeException e) {
                     throw new CertifyException(e.getErrorCode());
                 } catch (JSONException e) {
@@ -281,27 +274,27 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     throw new CertifyException(ErrorConstants.UNKNOWN_ERROR);
                 }
                 case "vc+sd-jwt":
-                vcRequestDto.setSdJwtVct(credentialRequest.getSdJwtVct());
+                vcRequestDto.setVct(credentialRequest.getVct());
                 try {
                     // TODO(multitenancy): later decide which plugin out of n plugins is the correct one
                     JSONObject jsonObject = dataProviderPlugin.fetchData(parsedAccessToken.getClaims());
                     Map<String, Object> templateParams = new HashMap<>();
                     String templateName = CredentialUtils.getTemplateName(vcRequestDto);
                     templateParams.put(Constants.TEMPLATE_NAME, templateName);
-                    templateParams.put(Constants.ISSUER_URI, issuerURI);
+                    templateParams.put(Constants.DID_URL, didUrl);
                     if (!StringUtils.isEmpty(renderTemplateId)) {
                         templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
                     }
                     Credential cred = credentialFactory.getCredential(CredentialFormat.VC_SD_JWT.toString()).orElseThrow(()-> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
                     jsonObject.put("_holderId", holderId);
                     templateParams.putAll(jsonObject.toMap());
-                    templateParams.put("_vct", vcRequestDto.getSdJwtVct());
+                    templateParams.put("_vct", vcRequestDto.getVct());
                     // This is with reference to the Representation of a Key ID for a Proof-of-Possession Key
                     // Ref: https://datatracker.ietf.org/doc/html/rfc7800#section-3.4
                     templateParams.put("_cnf", Map.of("kid", holderId));
                     templateParams.put("_iss", certifyIssuer);
                     String unsignedCredential=cred.createCredential(templateParams, templateName);
-                    return cred.addProof(unsignedCredential,"", vcFormatter.getProofAlgorithm(templateName), vcFormatter.getAppID(templateName), vcFormatter.getRefID(templateName),vcFormatter.getDidUrl(templateName));
+                    return cred.addProof(unsignedCredential,"", vcFormatter.getProofAlgorithm(templateName), vcFormatter.getAppID(templateName), vcFormatter.getRefID(templateName),vcFormatter.getDidUrl(templateName), vcFormatter.getSignatureCryptoSuite(templateName));
                 } catch(DataProviderExchangeException e) {
                     log.error("Error processing the SD-JWT :", e);
                     throw new CertifyException(ErrorConstants.VC_ISSUANCE_FAILED);
@@ -359,7 +352,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             statusDetails.put("cr_dtimes", System.currentTimeMillis());
 
             // Store in ledger
-            storeLedgerEntry(issuerURI, credentialType, statusDetails, indexedAttributes);
+            storeLedgerEntry(didUrl, credentialType, statusDetails, indexedAttributes);
 
             log.info("Successfully added credential status with index {} in status list {} and stored in ledger", assignedIndex, statusList.getId());
 
