@@ -588,6 +588,9 @@ components:
         doctype:
           type: string
           description: Document type identifier for the credential. Mandatory for mso_mdoc credential format.
+        signatureCryptoSuite:
+          type: string
+          description: 'Holds value for signature crypto suites supported for key algorithms like Ed25519Signature2020,EcdsaSecp256k1Signature2019, etc. It will also be applicable for data integrity proof crypto suites, for e.g. ecds-rdfc-2019, eddsa-rdfc-2022, etc. Mandatory for DataProvider plugin. The values should be only be those supported by certify.'
     CredentialConfigResponse:
       type: object
       properties:
