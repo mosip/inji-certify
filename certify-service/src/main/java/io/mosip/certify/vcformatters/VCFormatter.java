@@ -3,6 +3,7 @@ package io.mosip.certify.vcformatters;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.certify.entity.CredentialConfig;
 import org.json.JSONObject;
 
 import io.mosip.certify.api.spi.DataProviderPlugin;
@@ -63,4 +64,11 @@ public interface VCFormatter {
      * @return
      */
     String getSignatureCryptoSuite(String templateName);
+
+    /**
+     * returns the signature algorithm used for VC signature or proof generation
+     * @param templateName
+     * @return
+     */
+    CredentialConfig.CredentialStatusPurpose getCredentialStatusPurpose(String templateName);
 }

@@ -10,6 +10,7 @@ import com.danubetech.dataintegrity.suites.DataIntegritySuites;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
+import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
@@ -88,6 +89,13 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                             " is not supported for the signature algorithm: " + credentialConfig.getSignatureAlgo());
                 }
             }
+
+            // To ensure that credential status is enabled for DM 2.0 VCs
+            if(credentialConfig.getContext().contains(VCDM2Constants.URL)) {
+                if(credentialConfigurationDTO.getCredentialStatusPurpose() != null) {
+                    credentialConfig.setCredentialStatusPurpose(CredentialConfig.CredentialStatusPurpose.valueOf(credentialConfigurationDTO.getCredentialStatusPurpose().toUpperCase()));
+                }
+            }
         }
 
         validateCredentialConfiguration(credentialConfig);
@@ -145,7 +153,12 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
             throw new CertifyException("Configuration not active.");
         }
 
-        return credentialConfigMapper.toDto(credentialConfig);
+        CredentialConfigurationDTO credentialConfigurationDTO = credentialConfigMapper.toDto(credentialConfig);
+        if(credentialConfig.getCredentialStatusPurpose() != null) {
+            credentialConfigurationDTO.setCredentialStatusPurpose(credentialConfig.getCredentialStatusPurpose().name().toLowerCase());
+        }
+
+        return credentialConfigurationDTO;
     }
 
     /**

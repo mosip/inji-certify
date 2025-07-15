@@ -107,6 +107,10 @@ public class CredentialConfig {
     @Column(name = "plugin_configurations", columnDefinition = "jsonb")
     private List<Map<String, String>> pluginConfigurations;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "Credential_status_purpose", nullable = true)
+    private CredentialStatusPurpose credentialStatusPurpose;
+
     @NotNull
     @Column(name = "cr_dtimes")
     private LocalDateTime createdTimes;
@@ -114,4 +118,8 @@ public class CredentialConfig {
     @Column(name = "upd_dtimes")
     private LocalDateTime updatedTimes;
 
+    public enum CredentialStatusPurpose {
+        REVOCATION,
+        SUSPENSION
+    }
 }

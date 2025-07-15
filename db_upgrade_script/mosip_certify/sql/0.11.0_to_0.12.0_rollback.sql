@@ -44,6 +44,7 @@ ALTER TABLE certify.credential_config
     DROP COLUMN credential_subject,
     DROP COLUMN claims,
     DROP COLUMN plugin_configurations;
+    DROP COLUMN credential_status_purpose;
 
 -- Step 4: Rename vc_template back to template
 ALTER TABLE certify.credential_config RENAME COLUMN vc_template TO template;
