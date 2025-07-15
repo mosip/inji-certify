@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import io.mosip.certify.enums.CredentialStatusPurpose;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.VelocityContext;
@@ -191,10 +192,9 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     }
 
     @Override
-    public CredentialConfig.CredentialStatusPurpose getCredentialStatusPurpose(String templateName) {
+    public CredentialStatusPurpose getCredentialStatusPurpose(String templateName) {
         return getCachedCredentialConfig(templateName).getCredentialStatusPurpose();
     }
-
 
     /**
      * performs the templating
@@ -362,11 +362,11 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         if(templateInput.containsKey(VCDM2Constants.CREDENTIAL_STATUS) && templateName.contains(VCDM2Constants.URL)) {
             jsonObject.put(VCDM2Constants.CREDENTIAL_STATUS, templateInput.get(VCDM2Constants.CREDENTIAL_STATUS));
         }
-        if( templateInput.containsKey("_vct") && templateInput.containsKey("_cnf")
-                && templateInput.containsKey("_iss")) {
-            jsonObject.put("vct", templateInput.get("_vct"));
-            jsonObject.put("cnf", templateInput.get("_cnf"));
-            jsonObject.put("iss", templateInput.get("_iss"));
+        if( templateInput.containsKey(VCT) && templateInput.containsKey(CNF)
+                && templateInput.containsKey(ISS)) {
+            jsonObject.put(VCT, templateInput.get(VCT));
+            jsonObject.put(CNF, templateInput.get(CNF));
+            jsonObject.put(ISS, templateInput.get(ISS));
         }
 
         return jsonObject.toString();

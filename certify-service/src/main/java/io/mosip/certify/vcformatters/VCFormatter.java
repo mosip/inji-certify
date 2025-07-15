@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.mosip.certify.entity.CredentialConfig;
+import io.mosip.certify.enums.CredentialStatusPurpose;
 import org.json.JSONObject;
 
 import io.mosip.certify.api.spi.DataProviderPlugin;
@@ -66,9 +67,9 @@ public interface VCFormatter {
     String getSignatureCryptoSuite(String templateName);
 
     /**
-     * returns the signature algorithm used for VC signature or proof generation
+     * returns the credential status purpose used for adding credentialStatus to the VC.
      * @param templateName
      * @return
      */
-    CredentialConfig.CredentialStatusPurpose getCredentialStatusPurpose(String templateName);
+    CredentialStatusPurpose getCredentialStatusPurpose(String templateName);
 }
