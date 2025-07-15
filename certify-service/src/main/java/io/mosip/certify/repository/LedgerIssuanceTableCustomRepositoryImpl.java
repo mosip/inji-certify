@@ -19,21 +19,19 @@ public class LedgerIssuanceTableCustomRepositoryImpl implements LedgerIssuanceTa
     @PersistenceContext
     private EntityManager entityManager;
 
+    private final ObjectMapper objectMapper;
+
+    public LedgerIssuanceTableCustomRepositoryImpl(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
     @Override
     public List<Ledger> findBySearchRequest(CredentialLedgerSearchRequest request) {
         try {
-            StringBuilder sql = new StringBuilder("SELECT * FROM ledger WHERE 1=1 ");
+            StringBuilder sql = new StringBuilder("SELECT * FROM ledger WHERE issuer_id = :issuerId AND credential_type = :credentialType ");
             Map<String, Object> params = new HashMap<>();
-
-            if (request.getIssuerId() != null) {
-                sql.append(" AND issuer_id = :issuerId ");
-                params.put("issuerId", request.getIssuerId());
-            }
-
-            if (request.getCredentialType() != null) {
-                sql.append(" AND credential_type = :credentialType ");
-                params.put("credentialType", request.getCredentialType());
-            }
+            params.put("issuerId", request.getIssuerId());
+            params.put("credentialType", request.getCredentialType());
 
             if (request.getCredentialId() != null) {
                 sql.append(" AND credential_id = :credentialId ");
@@ -49,7 +47,7 @@ public class LedgerIssuanceTableCustomRepositoryImpl implements LedgerIssuanceTa
 
                     String paramName = "indexedAttr" + i;
                     sql.append(" AND indexed_attributes @> cast(:" + paramName + " AS jsonb) ");
-                    params.put(paramName, new ObjectMapper().writeValueAsString(Map.of(key, value)));
+                    params.put(paramName, objectMapper.writeValueAsString(Map.of(key, value)));
                     i++;
                 }
             }
