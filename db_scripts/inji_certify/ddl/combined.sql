@@ -82,7 +82,7 @@ CREATE TABLE credential_config (
     credential_subject JSONB,
     claims JSONB,
     plugin_configurations JSONB,
-    credential_status_purpose VARCHAR(50),
+    credential_status_purpose TEXT[],
     cr_dtimes TIMESTAMP NOT NULL,
     upd_dtimes TIMESTAMP,
     CONSTRAINT pk_config_id PRIMARY KEY (config_id)

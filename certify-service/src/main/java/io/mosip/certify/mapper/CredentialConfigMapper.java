@@ -2,7 +2,6 @@ package io.mosip.certify.mapper;
 
 import io.mosip.certify.core.dto.CredentialConfigurationDTO;
 import io.mosip.certify.entity.CredentialConfig;
-import io.mosip.certify.enums.CredentialStatusPurpose;
 import org.mapstruct.*;
 
 import java.util.ArrayList;
@@ -18,13 +17,12 @@ public interface CredentialConfigMapper {
     @Mapping(target = "updatedTimes", ignore = true)
     @Mapping(target = "context", source = "context", qualifiedByName = "listToCommaSeparatedString")
     @Mapping(target = "credentialType", source = "credentialType", qualifiedByName = "listToCommaSeparatedString")
-    @Mapping(target = "credentialStatusPurpose", source = "credentialStatusPurpose", qualifiedByName = "mapCredentialStatusPurpose")
+    @Mapping(target = "credentialStatusPurpose", ignore = true)
     CredentialConfig toEntity(CredentialConfigurationDTO dto);
 
     // Convert Entity to DTO
     @Mapping(target = "context", source = "context", qualifiedByName = "commaSeparatedStringToList")
     @Mapping(target = "credentialType", source = "credentialType", qualifiedByName = "commaSeparatedStringToList")
-    @Mapping(target = "credentialStatusPurpose", source = "credentialStatusPurpose", qualifiedByName = "mapCredentialStatusPurposeToString")
     CredentialConfigurationDTO toDto(CredentialConfig entity);
 
     // Update existing entity with DTO data
@@ -34,7 +32,7 @@ public interface CredentialConfigMapper {
     @Mapping(target = "updatedTimes", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "context", source = "context", qualifiedByName = "listToCommaSeparatedString")
     @Mapping(target = "credentialType", source = "credentialType", qualifiedByName = "listToCommaSeparatedString")
-    @Mapping(target = "credentialStatusPurpose", source = "credentialStatusPurpose", qualifiedByName = "mapCredentialStatusPurpose")
+    @Mapping(target = "credentialStatusPurpose", ignore = true)
     void updateEntityFromDto(CredentialConfigurationDTO dto, @MappingTarget CredentialConfig entity);
 
     @Named("listToCommaSeparatedString")
@@ -55,17 +53,5 @@ public interface CredentialConfigMapper {
         return Arrays.stream(str.split(","))
                 .map(String::trim)
                 .collect(Collectors.toList());
-    }
-
-    @Named("mapCredentialStatusPurpose")
-    default io.mosip.certify.enums.CredentialStatusPurpose mapCredentialStatusPurpose(String credentialStatusPurpose) {
-        return credentialStatusPurpose != null
-                ? CredentialStatusPurpose.fromString(credentialStatusPurpose)
-                : null;
-    }
-
-    @Named("mapCredentialStatusPurposeToString")
-    default String mapCredentialStatusPurposeToString(CredentialStatusPurpose credentialStatusPurpose) {
-        return credentialStatusPurpose != null ? credentialStatusPurpose.toString() : null;
     }
 }

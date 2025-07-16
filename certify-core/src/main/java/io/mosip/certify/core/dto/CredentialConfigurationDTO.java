@@ -74,5 +74,5 @@ public class CredentialConfigurationDTO {
 
     private List<Map<String, String>> pluginConfigurations;
 
-    private String credentialStatusPurpose;
+    private List<String> credentialStatusPurpose;
 }

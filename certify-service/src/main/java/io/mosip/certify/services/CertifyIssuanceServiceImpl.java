@@ -20,7 +20,6 @@ import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
 import io.mosip.certify.entity.Ledger;
 import io.mosip.certify.entity.StatusListCredential;
-import io.mosip.certify.enums.CredentialStatusPurpose;
 import io.mosip.certify.repository.LedgerRepository;
 import io.mosip.certify.repository.StatusListCredentialRepository;
 import io.mosip.certify.utils.VCIssuanceUtil;
@@ -253,9 +252,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     templateParams.put(Constants.TEMPLATE_NAME, templateName);
                     templateParams.put(Constants.DID_URL, didUrl);
                     jsonObject.put(Constants.TYPE, credentialRequest.getCredential_definition().getType());
-                    CredentialStatusPurpose credentialStatusPurpose = vcFormatter.getCredentialStatusPurpose(templateName);
-                    if (credentialStatusPurpose != null) {
-                        addCredentialStatus(jsonObject, credentialStatusPurpose.toString());
+                    List<String> credentialStatusPurposeList = vcFormatter.getCredentialStatusPurpose(templateName);
+                    if (credentialStatusPurposeList != null && !credentialStatusPurposeList.isEmpty()) {
+                        addCredentialStatus(jsonObject, credentialStatusPurposeList.getFirst());
                     }
                     if (!StringUtils.isEmpty(renderTemplateId)) {
                         templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);

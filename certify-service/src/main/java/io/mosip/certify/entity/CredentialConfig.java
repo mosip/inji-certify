@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
-import io.mosip.certify.enums.CredentialStatusPurpose;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -108,9 +107,8 @@ public class CredentialConfig {
     @Column(name = "plugin_configurations", columnDefinition = "jsonb")
     private List<Map<String, String>> pluginConfigurations;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "credential_status_purpose")
-    private CredentialStatusPurpose credentialStatusPurpose;
+    @Column(name = "credential_status_purpose", columnDefinition = "TEXT[]")
+    private List<String> credentialStatusPurpose;
 
     @NotNull
     @Column(name = "cr_dtimes")

@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import io.mosip.certify.enums.CredentialStatusPurpose;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.VelocityContext;
@@ -192,7 +191,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     }
 
     @Override
-    public CredentialStatusPurpose getCredentialStatusPurpose(String templateName) {
+    public List<String> getCredentialStatusPurpose(String templateName) {
         return getCachedCredentialConfig(templateName).getCredentialStatusPurpose();
     }
 

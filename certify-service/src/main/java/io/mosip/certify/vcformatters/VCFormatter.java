@@ -3,8 +3,6 @@ package io.mosip.certify.vcformatters;
 import java.util.List;
 import java.util.Map;
 
-import io.mosip.certify.entity.CredentialConfig;
-import io.mosip.certify.enums.CredentialStatusPurpose;
 import org.json.JSONObject;
 
 import io.mosip.certify.api.spi.DataProviderPlugin;
@@ -71,5 +69,5 @@ public interface VCFormatter {
      * @param templateName
      * @return
      */
-    CredentialStatusPurpose getCredentialStatusPurpose(String templateName);
+    List<String> getCredentialStatusPurpose(String templateName);
 }

@@ -17,7 +17,6 @@ import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.CredentialConfigException;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
 import io.mosip.certify.entity.CredentialConfig;
-import io.mosip.certify.enums.CredentialStatusPurpose;
 import io.mosip.certify.mapper.CredentialConfigMapper;
 import io.mosip.certify.repository.CredentialConfigRepository;
 import io.mosip.certify.validators.credentialconfigvalidators.LdpVcCredentialConfigValidator;
@@ -61,6 +60,9 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Value("#{${mosip.certify.credential-config.issuer.display}}")
     private List<Map<String, String>> issuerDisplay;
 
+    @Value("#{${mosip.certify.data-provider-plugin.credential-status.supported-purposes:{}}}")
+    private List<String> credentialStatusSupportedPurposes;
+
     private static final String CREDENTIAL_CONFIG_CACHE_NAME = "credentialConfig";
 
     @Override
@@ -90,6 +92,8 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                             " is not supported for the signature algorithm: " + credentialConfig.getSignatureAlgo());
                 }
             }
+
+            credentialConfig.setCredentialStatusPurpose(credentialStatusSupportedPurposes);
         }
 
         validateCredentialConfiguration(credentialConfig);
