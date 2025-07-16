@@ -10,11 +10,9 @@ import io.mosip.certify.core.exception.CredentialConfigException;
 import io.mosip.certify.entity.CredentialConfig;
 import io.mosip.certify.mapper.CredentialConfigMapper;
 import io.mosip.certify.repository.CredentialConfigRepository;
-import io.mosip.certify.utils.CredentialCacheKeyGenerator;
 import io.mosip.certify.validators.credentialconfigvalidators.LdpVcCredentialConfigValidator;
 import io.mosip.certify.validators.credentialconfigvalidators.MsoMdocCredentialConfigValidator;
 import io.mosip.certify.validators.credentialconfigvalidators.SdJwtCredentialConfigValidator;
-import org.checkerframework.checker.units.qual.C;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -77,8 +75,8 @@ public class CredentialConfigurationServiceImplTest {
         credentialConfigurationDTO.setDisplay(List.of());
         credentialConfigurationDTO.setVcTemplate("test_template");
         credentialConfigurationDTO.setCredentialFormat("test_vc");
-        credentialConfigurationDTO.setContext(List.of("https://www.w3.org/2018/credentials/v1"));
-        credentialConfigurationDTO.setCredentialType(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"));
+        credentialConfigurationDTO.setContextURLs(List.of("https://www.w3.org/2018/credentials/v1"));
+        credentialConfigurationDTO.setCredentialTypes(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"));
         credentialConfigurationDTO.setCredentialSubject(Map.of("name", "Full Name"));
 
         ReflectionTestUtils.setField(credentialConfigurationService, "credentialIssuer", "http://example.com/");
@@ -128,13 +126,13 @@ public class CredentialConfigurationServiceImplTest {
         CredentialConfigurationDTO credentialConfigurationDTOResponse = credentialConfigurationService.getCredentialConfigurationById("test");
 
         Assert.assertNotNull(credentialConfigurationDTOResponse);
-        Assert.assertNotNull(credentialConfigurationDTOResponse.getCredentialType());
+        Assert.assertNotNull(credentialConfigurationDTOResponse.getCredentialTypes());
         Assert.assertNotNull(credentialConfigurationDTOResponse.getCredentialFormat());
-        Assert.assertNotNull(credentialConfigurationDTOResponse.getContext());
+        Assert.assertNotNull(credentialConfigurationDTOResponse.getContextURLs());
         Assert.assertNotNull(credentialConfigurationDTOResponse.getVcTemplate());
         Assert.assertEquals("test_template", credentialConfigurationDTOResponse.getVcTemplate());
-        Assert.assertEquals(List.of("https://www.w3.org/2018/credentials/v1"), credentialConfigurationDTOResponse.getContext());
-        Assert.assertEquals(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"), credentialConfigurationDTOResponse.getCredentialType());
+        Assert.assertEquals(List.of("https://www.w3.org/2018/credentials/v1"), credentialConfigurationDTOResponse.getContextURLs());
+        Assert.assertEquals(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"), credentialConfigurationDTOResponse.getCredentialTypes());
         Assert.assertEquals("test_vc", credentialConfigurationDTOResponse.getCredentialFormat());
     }
 

@@ -45,12 +45,12 @@ public class CredentialConfigControllerTest {
     public void setup() {
         credentialConfigurationDTO = new CredentialConfigurationDTO();
         credentialConfigurationDTO.setVcTemplate("test_template");
-        credentialConfigurationDTO.setContext(List.of("https://www.w3.org/2018/credentials/v1"));
-        credentialConfigurationDTO.setCredentialType(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"));
+        credentialConfigurationDTO.setContextURLs(List.of("https://www.w3.org/2018/credentials/v1"));
+        credentialConfigurationDTO.setCredentialTypes(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"));
         credentialConfigurationDTO.setCredentialFormat("ldp_vc");
         credentialConfigurationDTO.setDidUrl("did:web:test.github.io:test-env:test-folder");
         credentialConfigurationDTO.setDisplay(List.of());
-        credentialConfigurationDTO.setOrder(Arrays.asList("test1", "test2", "test3", "test4"));
+        credentialConfigurationDTO.setCredentialFieldsDisplayOrder(Arrays.asList("test1", "test2", "test3", "test4"));
         credentialConfigurationDTO.setScope("test_vc_ldp");
         credentialConfigurationDTO.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
         credentialConfigurationDTO.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
@@ -87,8 +87,8 @@ public class CredentialConfigControllerTest {
         mockMvc.perform(get("/credential-configurations/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.vcTemplate").exists())
-                .andExpect(jsonPath("$.context").exists())
-                .andExpect(jsonPath("$.credentialType").exists())
+                .andExpect(jsonPath("$.contextURLs").exists())
+                .andExpect(jsonPath("$.credentialTypes").exists())
                 .andExpect(jsonPath("$.didUrl").exists())
                 .andExpect(jsonPath("$.scope").exists())
                 .andExpect(jsonPath("$.cryptographic_binding_methods_supported").exists())

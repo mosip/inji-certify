@@ -15,14 +15,14 @@ public interface CredentialConfigMapper {
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "createdTimes", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "updatedTimes", ignore = true)
-    @Mapping(target = "context", source = "context", qualifiedByName = "listToCommaSeparatedString")
-    @Mapping(target = "credentialType", source = "credentialType", qualifiedByName = "listToCommaSeparatedString")
+    @Mapping(target = "context", source = "contextURLs", qualifiedByName = "listToCommaSeparatedString")
+    @Mapping(target = "credentialType", source = "credentialTypes", qualifiedByName = "listToCommaSeparatedString")
     @Mapping(target = "credentialStatusPurpose", ignore = true)
     CredentialConfig toEntity(CredentialConfigurationDTO dto);
 
     // Convert Entity to DTO
-    @Mapping(target = "context", source = "context", qualifiedByName = "commaSeparatedStringToList")
-    @Mapping(target = "credentialType", source = "credentialType", qualifiedByName = "commaSeparatedStringToList")
+    @Mapping(target = "contextURLs", source = "context", qualifiedByName = "commaSeparatedStringToList")
+    @Mapping(target = "credentialTypes", source = "credentialType", qualifiedByName = "commaSeparatedStringToList")
     CredentialConfigurationDTO toDto(CredentialConfig entity);
 
     // Update existing entity with DTO data
@@ -30,8 +30,8 @@ public interface CredentialConfigMapper {
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "createdTimes", ignore = true)
     @Mapping(target = "updatedTimes", expression = "java(java.time.LocalDateTime.now())")
-    @Mapping(target = "context", source = "context", qualifiedByName = "listToCommaSeparatedString")
-    @Mapping(target = "credentialType", source = "credentialType", qualifiedByName = "listToCommaSeparatedString")
+    @Mapping(target = "context", source = "contextURLs", qualifiedByName = "listToCommaSeparatedString")
+    @Mapping(target = "credentialType", source = "credentialTypes", qualifiedByName = "listToCommaSeparatedString")
     @Mapping(target = "credentialStatusPurpose", ignore = true)
     void updateEntityFromDto(CredentialConfigurationDTO dto, @MappingTarget CredentialConfig entity);
 

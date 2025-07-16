@@ -9,7 +9,6 @@ import com.danubetech.dataintegrity.suites.DataIntegrityProofDataIntegritySuite;
 import com.danubetech.dataintegrity.suites.DataIntegritySuites;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.mosip.certify.core.constants.Constants;
-import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.*;
@@ -282,12 +281,12 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         credentialConfigurationSupported.setCryptographicBindingMethodsSupported(credentialConfigurationDTO.getCryptographicBindingMethodsSupported());
         credentialConfigurationSupported.setProofTypesSupported(credentialConfigurationDTO.getProofTypesSupported());
         credentialConfigurationSupported.setDisplay(credentialConfigurationDTO.getDisplay());
-        credentialConfigurationSupported.setOrder(credentialConfigurationDTO.getOrder());
+        credentialConfigurationSupported.setOrder(credentialConfigurationDTO.getCredentialFieldsDisplayOrder());
 
         if (VCFormats.LDP_VC.equals(credentialConfig.getCredentialFormat())) {
             CredentialDefinition credentialDefinition = new CredentialDefinition();
-            credentialDefinition.setType(credentialConfigurationDTO.getCredentialType());
-            credentialDefinition.setContext(credentialConfigurationDTO.getContext());
+            credentialDefinition.setType(credentialConfigurationDTO.getCredentialTypes());
+            credentialDefinition.setContext(credentialConfigurationDTO.getContextURLs());
             credentialDefinition.setCredentialSubject(credentialConfig.getCredentialSubject());
             credentialConfigurationSupported.setCredentialDefinition(credentialDefinition);
         } else if (VCFormats.MSO_MDOC.equals(credentialConfig.getCredentialFormat())) {
