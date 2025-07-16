@@ -2,8 +2,6 @@ package io.mosip.certify.core.dto;
 
 import lombok.Data;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -25,6 +23,4 @@ public class CredentialStatusResponse {
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime statusTimestamp;
-
-    private List<Map<String, Object>> credentialStatusDetails;
 }

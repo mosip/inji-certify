@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.mosip.certify.core.dto.CredentialLedgerSearchRequest;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
 import io.mosip.certify.core.dto.UpdateCredentialStatusRequest;
@@ -32,6 +33,8 @@ import io.mosip.certify.core.dto.CredentialStatusResponse;
 import io.mosip.certify.exception.InvalidNonceException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -60,6 +63,16 @@ public class VCIssuanceController {
         @Valid @RequestBody UpdateCredentialStatusRequest updateCredentialStatusRequest) {
         CredentialStatusResponse result = vcIssuanceService.updateCredential(updateCredentialStatusRequest);
         if (result == null) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/ledger-search")
+    public ResponseEntity<List<CredentialStatusResponse>> searchCredentials(
+            @Valid @RequestBody CredentialLedgerSearchRequest request) {
+        List<CredentialStatusResponse> result = vcIssuanceService.searchCredentials(request);
+        if (result.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.ok(result);
