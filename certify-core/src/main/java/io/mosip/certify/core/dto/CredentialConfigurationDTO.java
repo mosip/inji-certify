@@ -39,7 +39,7 @@ public class CredentialConfigurationDTO {
 
     @Valid
     @NotNull(message = ErrorConstants.INVALID_REQUEST)
-    private List<Map<String, Object>> display;
+    private List<CredentialDisplayConfigDTO> credentialDisplayConfigs;
 
     private List<String> credentialFieldsDisplayOrder;
 

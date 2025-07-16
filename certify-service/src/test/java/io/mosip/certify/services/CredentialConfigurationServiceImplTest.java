@@ -72,7 +72,7 @@ public class CredentialConfigurationServiceImplTest {
 
         credentialConfigurationDTO = new CredentialConfigurationDTO();
         credentialConfigurationDTO.setCredentialConfigKeyId("test-credential");
-        credentialConfigurationDTO.setDisplay(List.of());
+        credentialConfigurationDTO.setCredentialDisplayConfigs(List.of());
         credentialConfigurationDTO.setVcTemplate("test_template");
         credentialConfigurationDTO.setCredentialFormat("test_vc");
         credentialConfigurationDTO.setContextURLs(List.of("https://www.w3.org/2018/credentials/v1"));

@@ -1,20 +1,20 @@
 package io.mosip.certify.entity;
 
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
+import io.mosip.certify.entity.attributes.CredentialDisplayConfig;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import org.hibernate.annotations.Comment;
-
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
 import org.hibernate.type.SqlTypes;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 @Data
 @Entity
@@ -64,7 +64,7 @@ public class CredentialConfig {
     @Type(JsonBinaryType.class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "display", columnDefinition = "jsonb")
-    private List<Map<String, Object>> display;
+    private List<CredentialDisplayConfig> display;
 
     @Column(name = "display_order", columnDefinition = "TEXT[]")
     private List<String> order;
