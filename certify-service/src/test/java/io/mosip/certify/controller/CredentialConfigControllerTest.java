@@ -71,7 +71,7 @@ public class CredentialConfigControllerTest {
         credentialConfigResponse.setStatus("active");
         Mockito.when(credentialConfigurationService.addCredentialConfiguration(credentialConfigurationDTO)).thenReturn(credentialConfigResponse);
 
-        mockMvc.perform(post("/credentials/configurations")
+        mockMvc.perform(post("/credential-configurations")
                         .content(objectMapper.writeValueAsBytes(credentialConfigurationDTO))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
@@ -84,7 +84,7 @@ public class CredentialConfigControllerTest {
 
         Mockito.when(credentialConfigurationService.getCredentialConfigurationById(Mockito.anyString())).thenReturn(credentialConfigurationDTO);
 
-        mockMvc.perform(get("/credentials/configurations/1"))
+        mockMvc.perform(get("/credential-configurations/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.vcTemplate").exists())
                 .andExpect(jsonPath("$.context").exists())
@@ -103,7 +103,7 @@ public class CredentialConfigControllerTest {
         credentialConfigResponse.setStatus("active");
         Mockito.when(credentialConfigurationService.updateCredentialConfiguration(Mockito.anyString(), eq(credentialConfigurationDTO))).thenReturn(credentialConfigResponse);
 
-        mockMvc.perform(put("/credentials/configurations/1")
+        mockMvc.perform(put("/credential-configurations/1")
                         .content(objectMapper.writeValueAsBytes(credentialConfigurationDTO))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -115,7 +115,7 @@ public class CredentialConfigControllerTest {
     public void deleteExistingCredentialConfiguration_Success() throws Exception {
         Mockito.when(credentialConfigurationService.deleteCredentialConfigurationById(Mockito.anyString())).thenReturn("1");
 
-        mockMvc.perform(delete("/credentials/configurations/1"))
+        mockMvc.perform(delete("/credential-configurations/1"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Deleted configuration with id: 1"));
     }
@@ -144,7 +144,7 @@ public class CredentialConfigControllerTest {
 
         Mockito.when(credentialConfigurationService.fetchCredentialIssuerMetadata(Mockito.anyString())).thenReturn(credentialIssuerMetadata);
 
-        mockMvc.perform(get("/credentials/.well-known/openid-credential-issuer"))
+        mockMvc.perform(get("/credential-configurations/.well-known/openid-credential-issuer"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.credential_issuer").exists())
                 .andExpect(jsonPath("$.credential_configurations_supported").exists())

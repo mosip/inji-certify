@@ -14,27 +14,27 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/credentials")
+@RequestMapping("/credential-configurations")
 public class CredentialConfigController {
 
     @Autowired
     private CredentialConfigurationService credentialConfigurationService;
 
-    @PostMapping(value = "/configurations", produces = "application/json")
+    @PostMapping(value = "", produces = "application/json")
     public ResponseEntity<CredentialConfigResponse> addCredentialConfiguration(@Valid @RequestBody CredentialConfigurationDTO credentialConfigurationRequest) throws JsonProcessingException {
 
         CredentialConfigResponse credentialConfigResponse = credentialConfigurationService.addCredentialConfiguration(credentialConfigurationRequest);
         return new ResponseEntity<>(credentialConfigResponse, HttpStatus.CREATED);
     }
 
-    @GetMapping(value = "/configurations/{configurationId}", produces = "application/json")
+    @GetMapping(value = "/{configurationId}", produces = "application/json")
     public ResponseEntity<CredentialConfigurationDTO> getCredentialConfigurationById(@PathVariable String configurationId) throws JsonProcessingException {
 
         CredentialConfigurationDTO credentialConfigurationDTO = credentialConfigurationService.getCredentialConfigurationById(configurationId);
         return new ResponseEntity<>(credentialConfigurationDTO, HttpStatus.OK);
     }
 
-    @PutMapping(value = "/configurations/{configurationId}", produces = "application/json")
+    @PutMapping(value = "/{configurationId}", produces = "application/json")
     public ResponseEntity<CredentialConfigResponse> updateCredentialConfiguration(@PathVariable String configurationId,
                                                              @Valid @RequestBody CredentialConfigurationDTO credentialConfigurationRequest) throws JsonProcessingException {
 
@@ -42,7 +42,7 @@ public class CredentialConfigController {
         return new ResponseEntity<>(credentialConfigResponse, HttpStatus.OK);
     }
 
-    @DeleteMapping(value = "/configurations/{configurationId}", produces = "application/json")
+    @DeleteMapping(value = "/{configurationId}", produces = "application/json")
     public ResponseEntity<String> deleteCredentialConfigurationById(@PathVariable String configurationId) {
 
         String response = credentialConfigurationService.deleteCredentialConfigurationById(configurationId);
