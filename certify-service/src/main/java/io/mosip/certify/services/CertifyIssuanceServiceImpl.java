@@ -16,6 +16,7 @@ import com.jayway.jsonpath.Option;
 import com.nimbusds.jwt.SignedJWT;
 import io.mosip.certify.api.util.AuditHelper;
 import io.mosip.certify.config.IndexedAttributesConfig;
+import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
 import io.mosip.certify.entity.CredentialStatusTransaction;
@@ -142,12 +143,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Autowired
     private IndexedAttributesConfig indexedAttributesConfig;
 
-    @Value("${mosip.certify.statuslist.enabled:false}")
-    private boolean statusListEnabled;
-
-    @Value("${mosip.certify.statuslist.default-purpose:revocation}")
-    private String defaultStatusPurpose;
-
     @Value("${mosip.certify.domain.url}")
     private String domainUrl;
 
@@ -264,8 +259,10 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     String templateName = CredentialUtils.getTemplateName(vcRequestDto);
                     templateParams.put(Constants.TEMPLATE_NAME, templateName);
                     templateParams.put(Constants.DID_URL, didUrl);
-                    if (statusListEnabled) {
-                        addCredentialStatus(jsonObject);
+                    jsonObject.put(Constants.TYPE, credentialRequest.getCredential_definition().getType());
+                    List<String> credentialStatusPurposeList = vcFormatter.getCredentialStatusPurpose(templateName);
+                    if (credentialStatusPurposeList != null && !credentialStatusPurposeList.isEmpty()) {
+                        addCredentialStatus(jsonObject, credentialStatusPurposeList.getFirst());
                     }
                     if (!StringUtils.isEmpty(renderTemplateId)) {
                         templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
@@ -274,6 +271,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     Credential cred = credentialFactory.getCredential(credentialRequest.getFormat()).orElseThrow(()-> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
                     templateParams.putAll(jsonObject.toMap());
                     String unsignedCredential=cred.createCredential(templateParams, templateName);
+                    jsonObject.remove(VCDM2Constants.CREDENTIAL_STATUS);
                     return cred.addProof(unsignedCredential,"", vcFormatter.getProofAlgorithm(templateName), vcFormatter.getAppID(templateName), vcFormatter.getRefID(templateName),vcFormatter.getDidUrl(templateName), vcFormatter.getSignatureCryptoSuite(templateName));
                 } catch(DataProviderExchangeException e) {
                     throw new CertifyException(e.getErrorCode());
@@ -296,11 +294,11 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     Credential cred = credentialFactory.getCredential(CredentialFormat.VC_SD_JWT.toString()).orElseThrow(()-> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
                     jsonObject.put("_holderId", holderId);
                     templateParams.putAll(jsonObject.toMap());
-                    templateParams.put("_vct", vcRequestDto.getVct());
+                    templateParams.put(Constants.VCT, vcRequestDto.getVct());
                     // This is with reference to the Representation of a Key ID for a Proof-of-Possession Key
                     // Ref: https://datatracker.ietf.org/doc/html/rfc7800#section-3.4
-                    templateParams.put("_cnf", Map.of("kid", holderId));
-                    templateParams.put("_iss", certifyIssuer);
+                    templateParams.put(Constants.CNF, Map.of("kid", holderId));
+                    templateParams.put(Constants.ISS, certifyIssuer);
                     String unsignedCredential=cred.createCredential(templateParams, templateName);
                     return cred.addProof(unsignedCredential,"", vcFormatter.getProofAlgorithm(templateName), vcFormatter.getAppID(templateName), vcFormatter.getRefID(templateName),vcFormatter.getDidUrl(templateName), vcFormatter.getSignatureCryptoSuite(templateName));
                 } catch(DataProviderExchangeException e) {
@@ -313,12 +311,12 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     }
 
     @Transactional
-    private void addCredentialStatus(JSONObject jsonObject) {
+    private void addCredentialStatus(JSONObject jsonObject, String statusPurpose) {
         try {
             log.info("Adding credential status forstatus list integration");
 
             // Find or create a suitable status list
-            StatusListCredential statusList = statusListCredentialService.findOrCreateStatusList(defaultStatusPurpose);
+            StatusListCredential statusList = statusListCredentialService.findOrCreateStatusList(statusPurpose);
 
             // Assign next available index using database approach
             long assignedIndex = statusListCredentialService.findNextAvailableIndex(statusList.getId());
@@ -326,7 +324,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             // If the current list is full, create a new one
             if(assignedIndex == -1) {
                 log.info("Current status list is full, creating a new one");
-                statusList = statusListCredentialService.generateStatusListCredential(defaultStatusPurpose);
+                statusList = statusListCredentialService.generateStatusListCredential(statusPurpose);
                 assignedIndex = statusListCredentialService.findNextAvailableIndex(statusList.getId());
 
                 if(assignedIndex == -1) {
@@ -341,19 +339,19 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             String statusId = domainUrl + "/v1/certify/status-list/" + statusList.getId();
             credentialStatus.put("id", statusId + "#" + assignedIndex);
             credentialStatus.put("type", "BitstringStatusListEntry");
-            credentialStatus.put("statusPurpose", defaultStatusPurpose);
+            credentialStatus.put("statusPurpose", statusPurpose);
             credentialStatus.put("statusListIndex", String.valueOf(assignedIndex));
             credentialStatus.put("statusListCredential", statusId);
 
             // Add credential status to the VC data
-            jsonObject.put("credentialStatus", credentialStatus);
+            jsonObject.put(VCDM2Constants.CREDENTIAL_STATUS, credentialStatus);
 
             // Extract credential details for ledger storage
             String credentialType = extractCredentialType(jsonObject);
 
             // Prepare status details for ledger
             Map<String, Object> statusDetails = new HashMap<>();
-            statusDetails.put("status_purpose", defaultStatusPurpose);
+            statusDetails.put("status_purpose", statusPurpose);
             statusDetails.put("status_value", false); // Initially not revoked
             statusDetails.put("status_list_credential_id", statusList.getId());
             statusDetails.put("status_list_index", assignedIndex);
@@ -372,8 +370,8 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     private static String extractCredentialType(JSONObject jsonObject) {
         try {
-            if(jsonObject.has("type")) {
-                Object typeObj = jsonObject.get("type");
+            if(jsonObject.has(Constants.TYPE)) {
+                Object typeObj = jsonObject.get(Constants.TYPE);
                 if(typeObj instanceof org.json.JSONArray) {
                     org.json.JSONArray typeArray = (org.json.JSONArray) typeObj;
                     List<String> types = new ArrayList<>();

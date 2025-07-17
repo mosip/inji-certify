@@ -107,11 +107,13 @@ public class CredentialConfig {
     @Column(name = "plugin_configurations", columnDefinition = "jsonb")
     private List<Map<String, String>> pluginConfigurations;
 
+    @Column(name = "credential_status_purpose", columnDefinition = "TEXT[]")
+    private List<String> credentialStatusPurpose;
+
     @NotNull
     @Column(name = "cr_dtimes")
     private LocalDateTime createdTimes;
 
     @Column(name = "upd_dtimes")
     private LocalDateTime updatedTimes;
-
 }
