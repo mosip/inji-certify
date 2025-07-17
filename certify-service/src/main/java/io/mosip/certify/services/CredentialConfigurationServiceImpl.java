@@ -292,8 +292,8 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         credentialConfigurationSupported.setScope(credentialConfigurationDTO.getScope());
         credentialConfigurationSupported.setCryptographicBindingMethodsSupported(credentialConfigurationDTO.getCryptographicBindingMethodsSupported());
         credentialConfigurationSupported.setProofTypesSupported(credentialConfigurationDTO.getProofTypesSupported());
-        credentialConfigurationSupported.setDisplay(credentialConfigurationDTO.getCredentialDisplayConfigs());
-        credentialConfigurationSupported.setOrder(credentialConfigurationDTO.getCredentialFieldsDisplayOrder());
+        credentialConfigurationSupported.setDisplay(credentialConfigurationDTO.getMetaDataDisplay());
+        credentialConfigurationSupported.setOrder(credentialConfigurationDTO.getDisplayOrder());
 
         if (VCFormats.LDP_VC.equals(credentialConfig.getCredentialFormat())) {
             CredentialDefinition credentialDefinition = new CredentialDefinition();

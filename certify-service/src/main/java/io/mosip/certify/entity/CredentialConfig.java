@@ -2,8 +2,8 @@ package io.mosip.certify.entity;
 
 
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
-import io.mosip.certify.entity.attributes.CredentialDisplayConfig;
 import io.mosip.certify.entity.attributes.CredentialSubjectParameters;
+import io.mosip.certify.entity.attributes.MetaDataDisplay;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -65,7 +65,7 @@ public class CredentialConfig {
     @Type(JsonBinaryType.class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "display", columnDefinition = "jsonb")
-    private List<CredentialDisplayConfig> display;
+    private List<MetaDataDisplay> display;
 
     @Column(name = "display_order", columnDefinition = "TEXT[]")
     private List<String> order;

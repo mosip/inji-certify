@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
-public class CredentialDisplayConfigDTO {
+public class MetaDataDisplayDTO {
     private Logo logo;
     private String name;
     private String locale;

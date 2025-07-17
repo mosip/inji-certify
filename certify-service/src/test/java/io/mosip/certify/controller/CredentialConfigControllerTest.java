@@ -49,8 +49,8 @@ public class CredentialConfigControllerTest {
         credentialConfigurationDTO.setCredentialTypes(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"));
         credentialConfigurationDTO.setCredentialFormat("ldp_vc");
         credentialConfigurationDTO.setDidUrl("did:web:test.github.io:test-env:test-folder");
-        credentialConfigurationDTO.setCredentialDisplayConfigs(List.of());
-        credentialConfigurationDTO.setCredentialFieldsDisplayOrder(Arrays.asList("test1", "test2", "test3", "test4"));
+        credentialConfigurationDTO.setMetaDataDisplay(List.of());
+        credentialConfigurationDTO.setDisplayOrder(Arrays.asList("test1", "test2", "test3", "test4"));
         credentialConfigurationDTO.setScope("test_vc_ldp");
         credentialConfigurationDTO.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
         credentialConfigurationDTO.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));

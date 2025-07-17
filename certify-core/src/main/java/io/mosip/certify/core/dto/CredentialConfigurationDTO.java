@@ -39,9 +39,9 @@ public class CredentialConfigurationDTO {
 
     @Valid
     @NotNull(message = ErrorConstants.INVALID_REQUEST)
-    private List<CredentialDisplayConfigDTO> credentialDisplayConfigs;
+    private List<MetaDataDisplayDTO> metaDataDisplay;
 
-    private List<String> credentialFieldsDisplayOrder;
+    private List<String> displayOrder;
 
     @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private String scope;

@@ -4,7 +4,9 @@ import io.mosip.certify.core.dto.CredentialConfigurationDTO;
 import io.mosip.certify.entity.CredentialConfig;
 import org.mapstruct.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
@@ -16,7 +18,7 @@ public interface CredentialConfigMapper {
     @Mapping(target = "context", source = "contextURLs", qualifiedByName = "listToCommaSeparatedString")
     @Mapping(target = "credentialType", source = "credentialTypes", qualifiedByName = "listToCommaSeparatedString")
     @Mapping(target = "credentialStatusPurpose", ignore = true)
-    @Mapping(target = "display", source = "credentialDisplayConfigs")
+    @Mapping(target = "display", source = "metaDataDisplay")
     @Mapping(target = "order", source = "credentialFieldsDisplayOrder")
     @Mapping(target = "cryptographicBindingMethodsSupported", ignore = true)
     @Mapping(target = "credentialSigningAlgValuesSupported", ignore = true)
@@ -26,7 +28,7 @@ public interface CredentialConfigMapper {
     // Convert Entity to DTO
     @Mapping(target = "contextURLs", source = "context", qualifiedByName = "commaSeparatedStringToList")
     @Mapping(target = "credentialTypes", source = "credentialType", qualifiedByName = "commaSeparatedStringToList")
-    @Mapping(target = "credentialDisplayConfigs", source = "display")
+    @Mapping(target = "metaDataDisplay", source = "display")
     @Mapping(target = "credentialFieldsDisplayOrder", source = "order")
     CredentialConfigurationDTO toDto(CredentialConfig entity);
 
@@ -38,7 +40,7 @@ public interface CredentialConfigMapper {
     @Mapping(target = "context", source = "contextURLs", qualifiedByName = "listToCommaSeparatedString")
     @Mapping(target = "credentialType", source = "credentialTypes", qualifiedByName = "listToCommaSeparatedString")
     @Mapping(target = "credentialStatusPurpose", ignore = true)
-    @Mapping(target = "display", source = "credentialDisplayConfigs")
+    @Mapping(target = "display", source = "metaDataDisplay")
     @Mapping(target = "order", source = "credentialFieldsDisplayOrder")
     @Mapping(target = "cryptographicBindingMethodsSupported", ignore = true)
     @Mapping(target = "credentialSigningAlgValuesSupported", ignore = true)
