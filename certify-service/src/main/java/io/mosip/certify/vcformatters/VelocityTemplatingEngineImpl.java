@@ -190,6 +190,11 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         return getCachedCredentialConfig(templateName).getSignatureCryptoSuite(); // NEW
     }
 
+    @Override
+    public List<String> getCredentialStatusPurpose(String templateName) {
+        return getCachedCredentialConfig(templateName).getCredentialStatusPurpose();
+    }
+
     /**
      * performs the templating
      * NOTE: the defaultSettings map should have the "templateName" key set to
@@ -349,20 +354,20 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         }
         VelocityContext context = new VelocityContext(finalTemplate);
         engine.evaluate(context, writer, /*logTag */ templateName, vcTemplateString); // use vcTemplateString
+        JSONObject jsonObject = new JSONObject(writer.toString());
         if (StringUtils.isNotEmpty(idPrefix)) {
-            JSONObject j = new JSONObject(writer.toString());
-            j.put(VCDMConstants.ID, idPrefix + UUID.randomUUID());
-            return j.toString();
+            jsonObject.put(VCDMConstants.ID, idPrefix + UUID.randomUUID());
         }
-        if( templateInput.containsKey("_vct") && templateInput.containsKey("_cnf")
-                && templateInput.containsKey("_iss")) {
-            JSONObject j = new JSONObject(writer.toString());
-            j.put("vct", templateInput.get("_vct"));
-            j.put("cnf", templateInput.get("_cnf"));
-            j.put("iss", templateInput.get("_iss"));
-            return j.toString();
+        if(templateInput.containsKey(VCDM2Constants.CREDENTIAL_STATUS) && templateName.contains(VCDM2Constants.URL)) {
+            jsonObject.put(VCDM2Constants.CREDENTIAL_STATUS, templateInput.get(VCDM2Constants.CREDENTIAL_STATUS));
+        }
+        if( templateInput.containsKey(VCT) && templateInput.containsKey(CNF)
+                && templateInput.containsKey(ISS)) {
+            jsonObject.put(VCT, templateInput.get(VCT));
+            jsonObject.put(CNF, templateInput.get(CNF));
+            jsonObject.put(ISS, templateInput.get(ISS));
         }
 
-        return writer.toString();
+        return jsonObject.toString();
     }
 }

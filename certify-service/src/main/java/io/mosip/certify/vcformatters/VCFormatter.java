@@ -63,4 +63,11 @@ public interface VCFormatter {
      * @return
      */
     String getSignatureCryptoSuite(String templateName);
+
+    /**
+     * returns the credential status purpose used for adding credentialStatus to the VC.
+     * @param templateName
+     * @return
+     */
+    List<String> getCredentialStatusPurpose(String templateName);
 }

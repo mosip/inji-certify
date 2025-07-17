@@ -10,6 +10,7 @@ import com.danubetech.dataintegrity.suites.DataIntegritySuites;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
+import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
@@ -59,6 +60,9 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Value("#{${mosip.certify.credential-config.issuer.display}}")
     private List<Map<String, String>> issuerDisplay;
 
+    @Value("#{${mosip.certify.data-provider-plugin.credential-status.supported-purposes:{}}}")
+    private List<String> credentialStatusSupportedPurposes;
+
     private static final String CREDENTIAL_CONFIG_CACHE_NAME = "credentialConfig";
 
     @Override
@@ -88,6 +92,8 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                             " is not supported for the signature algorithm: " + credentialConfig.getSignatureAlgo());
                 }
             }
+
+            credentialConfig.setCredentialStatusPurpose(credentialStatusSupportedPurposes);
         }
 
         validateCredentialConfiguration(credentialConfig);

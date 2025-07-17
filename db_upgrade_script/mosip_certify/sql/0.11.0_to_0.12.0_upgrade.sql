@@ -39,6 +39,7 @@ ALTER TABLE certify.credential_config
     ADD COLUMN credential_subject JSONB DEFAULT '{}'::jsonb,
     ADD COLUMN claims JSONB,
     ADD COLUMN plugin_configurations JSONB;
+    ADD COLUMN credential_status_purpose TEXT[];
 
 -- Step 3: Rename the template column to match the new schema
 ALTER TABLE certify.credential_config RENAME COLUMN template TO vc_template;
