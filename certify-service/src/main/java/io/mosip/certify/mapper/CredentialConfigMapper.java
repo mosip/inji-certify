@@ -27,6 +27,7 @@ public interface CredentialConfigMapper {
     @Mapping(target = "credentialSigningAlgValuesSupported", ignore = true)
     @Mapping(target = "proofTypesSupported", ignore = true)
     @Mapping(target = "claims", source = "claims", qualifiedByName = "mapClaimsToEntity")
+    @Mapping(target = "credentialSubject", source = "credentialSubjectDefinition")
     CredentialConfig toEntity(CredentialConfigurationDTO dto);
 
     // Convert Entity to DTO
@@ -35,6 +36,7 @@ public interface CredentialConfigMapper {
     @Mapping(target = "metaDataDisplay", source = "display")
     @Mapping(target = "displayOrder", source = "order")
     @Mapping(target = "claims", source = "claims", qualifiedByName = "mapClaimsToDto")
+    @Mapping(target = "credentialSubjectDefinition", source = "credentialSubject")
     CredentialConfigurationDTO toDto(CredentialConfig entity);
 
     // Update existing entity with DTO data
@@ -51,6 +53,7 @@ public interface CredentialConfigMapper {
     @Mapping(target = "credentialSigningAlgValuesSupported", ignore = true)
     @Mapping(target = "proofTypesSupported", ignore = true)
     @Mapping(target = "claims", source = "claims", qualifiedByName = "mapClaimsToEntity")
+    @Mapping(target = "credentialSubject", source = "credentialSubjectDefinition")
     void updateEntityFromDto(CredentialConfigurationDTO dto, @MappingTarget CredentialConfig entity);
 
     ClaimsDisplayFieldsConfigs toEntity(ClaimsDisplayFieldsConfigDTO dto);
