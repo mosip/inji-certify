@@ -5,6 +5,7 @@ import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.CredentialConfigException;
 import io.mosip.certify.entity.CredentialConfig;
+import io.mosip.certify.entity.attributes.ClaimsDisplayFieldsConfigs;
 import io.mosip.certify.entity.attributes.CredentialSubjectParameters;
 import io.mosip.certify.mapper.CredentialConfigMapper;
 import io.mosip.certify.repository.CredentialConfigRepository;
@@ -317,7 +318,7 @@ public class CredentialConfigurationServiceImplTest {
 
         // Verify no mapping calls
         verify(credentialConfigRepository).findAll();
-        verify(credentialConfigMapper, never()).toDto(any());
+        verify(credentialConfigMapper, never()).toDto((CredentialConfig) any());
     }
 
     @Test
@@ -329,7 +330,7 @@ public class CredentialConfigurationServiceImplTest {
 
         mdocConfig.setStatus("active");
         mdocConfig.setCredentialFormat("mso_mdoc");
-        mdocConfig.setClaims(Map.of("firstName", "First Name", "lastName", "Last Name"));
+        mdocConfig.setClaims(Map.of("firstName", Map.of( "First Name", new ClaimsDisplayFieldsConfigs(List.of(new ClaimsDisplayFieldsConfigs.Display("Test","en"))))));
         mdocConfig.setDocType("docType1");
 
         List<CredentialConfig> credentialConfigList = List.of(mdocConfig);
@@ -340,7 +341,7 @@ public class CredentialConfigurationServiceImplTest {
         mdocDTO.setCredentialFormat("mso_mdoc");
         mdocDTO.setCredentialConfigKeyId("mdoc-credential");
         mdocDTO.setScope("mdoc_scope");
-        mdocDTO.setClaims(Map.of("firstName", "First Name", "lastName", "Last Name"));
+        mdocDTO.setClaims(Map.of("firstName", Map.of( "First Name", new ClaimsDisplayFieldsConfigDTO(List.of(new ClaimsDisplayFieldsConfigDTO.Display("Test","en"))))));
         mdocDTO.setDocType("docType1");
 
         when(credentialConfigMapper.toDto(mdocConfig)).thenReturn(mdocDTO);

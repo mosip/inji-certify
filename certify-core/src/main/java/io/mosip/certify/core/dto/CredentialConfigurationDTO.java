@@ -59,7 +59,7 @@ public class CredentialConfigurationDTO {
     private Map<String, CredentialSubjectParametersDTO> credentialSubjectDefinition;
 
     @JsonProperty("claims")
-    private Map<String, Object> claims;
+    private Map<String, Map<String, ClaimsDisplayFieldsConfigDTO>> claims;
 
     @JsonProperty("doctype")
     private String docType;

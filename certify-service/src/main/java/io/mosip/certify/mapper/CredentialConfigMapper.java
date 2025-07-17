@@ -1,12 +1,15 @@
 package io.mosip.certify.mapper;
 
+import io.mosip.certify.core.dto.ClaimsDisplayFieldsConfigDTO;
 import io.mosip.certify.core.dto.CredentialConfigurationDTO;
 import io.mosip.certify.entity.CredentialConfig;
+import io.mosip.certify.entity.attributes.ClaimsDisplayFieldsConfigs;
 import org.mapstruct.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
@@ -19,17 +22,19 @@ public interface CredentialConfigMapper {
     @Mapping(target = "credentialType", source = "credentialTypes", qualifiedByName = "listToCommaSeparatedString")
     @Mapping(target = "credentialStatusPurpose", ignore = true)
     @Mapping(target = "display", source = "metaDataDisplay")
-    @Mapping(target = "order", source = "credentialFieldsDisplayOrder")
+    @Mapping(target = "order", source = "displayOrder")
     @Mapping(target = "cryptographicBindingMethodsSupported", ignore = true)
     @Mapping(target = "credentialSigningAlgValuesSupported", ignore = true)
     @Mapping(target = "proofTypesSupported", ignore = true)
+    @Mapping(target = "claims", source = "claims", qualifiedByName = "mapClaimsToEntity")
     CredentialConfig toEntity(CredentialConfigurationDTO dto);
 
     // Convert Entity to DTO
     @Mapping(target = "contextURLs", source = "context", qualifiedByName = "commaSeparatedStringToList")
     @Mapping(target = "credentialTypes", source = "credentialType", qualifiedByName = "commaSeparatedStringToList")
     @Mapping(target = "metaDataDisplay", source = "display")
-    @Mapping(target = "credentialFieldsDisplayOrder", source = "order")
+    @Mapping(target = "displayOrder", source = "order")
+    @Mapping(target = "claims", source = "claims", qualifiedByName = "mapClaimsToDto")
     CredentialConfigurationDTO toDto(CredentialConfig entity);
 
     // Update existing entity with DTO data
@@ -41,11 +46,15 @@ public interface CredentialConfigMapper {
     @Mapping(target = "credentialType", source = "credentialTypes", qualifiedByName = "listToCommaSeparatedString")
     @Mapping(target = "credentialStatusPurpose", ignore = true)
     @Mapping(target = "display", source = "metaDataDisplay")
-    @Mapping(target = "order", source = "credentialFieldsDisplayOrder")
+    @Mapping(target = "order", source = "displayOrder")
     @Mapping(target = "cryptographicBindingMethodsSupported", ignore = true)
     @Mapping(target = "credentialSigningAlgValuesSupported", ignore = true)
     @Mapping(target = "proofTypesSupported", ignore = true)
+    @Mapping(target = "claims", source = "claims", qualifiedByName = "mapClaimsToEntity")
     void updateEntityFromDto(CredentialConfigurationDTO dto, @MappingTarget CredentialConfig entity);
+
+    ClaimsDisplayFieldsConfigs toEntity(ClaimsDisplayFieldsConfigDTO dto);
+    ClaimsDisplayFieldsConfigDTO toDto(ClaimsDisplayFieldsConfigs dto);
 
     @Named("listToCommaSeparatedString")
     default String listToCommaSeparatedString(List<String> list) {
@@ -66,4 +75,35 @@ public interface CredentialConfigMapper {
                 .map(String::trim)
                 .collect(Collectors.toList());
     }
+
+    @Named("mapClaimsToEntity")
+    default Map<String, Map<String, ClaimsDisplayFieldsConfigs>> mapClaims(
+            Map<String, Map<String, ClaimsDisplayFieldsConfigDTO>> source) {
+        if (source == null) return null;
+        Map<String, Map<String, ClaimsDisplayFieldsConfigs>> result = new java.util.HashMap<>();
+        for (Map.Entry<String, Map<String, ClaimsDisplayFieldsConfigDTO>> entry : source.entrySet()) {
+            Map<String, ClaimsDisplayFieldsConfigs> innerMap = new java.util.HashMap<>();
+            for (Map.Entry<String, ClaimsDisplayFieldsConfigDTO> innerEntry : entry.getValue().entrySet()) {
+                innerMap.put(innerEntry.getKey(), toEntity(innerEntry.getValue()));
+            }
+            result.put(entry.getKey(), innerMap);
+        }
+        return result;
+    }
+
+    @Named("mapClaimsToDto")
+    default Map<String, Map<String, ClaimsDisplayFieldsConfigDTO>> mapClaimsToDto(
+            Map<String, Map<String, ClaimsDisplayFieldsConfigs>> source) {
+        if (source == null) return null;
+        Map<String, Map<String, ClaimsDisplayFieldsConfigDTO>> result = new java.util.HashMap<>();
+        for (Map.Entry<String, Map<String, ClaimsDisplayFieldsConfigs>> entry : source.entrySet()) {
+            Map<String, ClaimsDisplayFieldsConfigDTO> innerMap = new java.util.HashMap<>();
+            for (Map.Entry<String, ClaimsDisplayFieldsConfigs> innerEntry : entry.getValue().entrySet()) {
+                innerMap.put(innerEntry.getKey(), toDto(innerEntry.getValue()));
+            }
+            result.put(entry.getKey(), innerMap);
+        }
+        return result;
+    }
+
 }

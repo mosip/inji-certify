@@ -302,10 +302,10 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
             credentialDefinition.setCredentialSubject(new HashMap<>(credentialConfig.getCredentialSubject()));
             credentialConfigurationSupported.setCredentialDefinition(credentialDefinition);
         } else if (VCFormats.MSO_MDOC.equals(credentialConfig.getCredentialFormat())) {
-            credentialConfigurationSupported.setClaims(credentialConfig.getClaims());
+            credentialConfigurationSupported.setClaims(new HashMap<>(new HashMap<>(credentialConfig.getClaims())));
             credentialConfigurationSupported.setDocType(credentialConfig.getDocType());
         } else if (VCFormats.LDP_SD_JWT.equals(credentialConfig.getCredentialFormat())) {
-            credentialConfigurationSupported.setClaims(credentialConfig.getClaims());
+            credentialConfigurationSupported.setClaims(new HashMap<>(new HashMap<>(credentialConfig.getClaims())));
             credentialConfigurationSupported.setVct(credentialConfig.getSdJwtVct());
         }
 
