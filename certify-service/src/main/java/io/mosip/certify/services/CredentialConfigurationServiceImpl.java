@@ -9,7 +9,6 @@ import com.danubetech.dataintegrity.suites.DataIntegrityProofDataIntegritySuite;
 import com.danubetech.dataintegrity.suites.DataIntegritySuites;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.mosip.certify.core.constants.Constants;
-import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
@@ -300,7 +299,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
             CredentialDefinition credentialDefinition = new CredentialDefinition();
             credentialDefinition.setType(credentialConfigurationDTO.getCredentialTypes());
             credentialDefinition.setContext(credentialConfigurationDTO.getContextURLs());
-            credentialDefinition.setCredentialSubject(credentialConfig.getCredentialSubject());
+            credentialDefinition.setCredentialSubject(new HashMap<>(credentialConfig.getCredentialSubject()));
             credentialConfigurationSupported.setCredentialDefinition(credentialDefinition);
         } else if (VCFormats.MSO_MDOC.equals(credentialConfig.getCredentialFormat())) {
             credentialConfigurationSupported.setClaims(credentialConfig.getClaims());

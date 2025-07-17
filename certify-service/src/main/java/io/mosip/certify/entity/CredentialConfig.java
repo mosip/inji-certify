@@ -3,6 +3,7 @@ package io.mosip.certify.entity;
 
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import io.mosip.certify.entity.attributes.CredentialDisplayConfig;
+import io.mosip.certify.entity.attributes.CredentialSubjectParameters;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -92,7 +93,7 @@ public class CredentialConfig {
     @Type(JsonBinaryType.class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "credential_subject", columnDefinition = "jsonb")
-    private Map<String, Object> credentialSubject;
+    private Map<String, CredentialSubjectParameters> credentialSubject;
 
     @Type(JsonBinaryType.class)
     @JdbcTypeCode(SqlTypes.JSON)

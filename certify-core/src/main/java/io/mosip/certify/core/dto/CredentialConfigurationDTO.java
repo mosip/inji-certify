@@ -56,7 +56,7 @@ public class CredentialConfigurationDTO {
     private Map<String, Object> proofTypesSupported;
 
     @JsonProperty("credentialSubject")
-    private Map<String, Object> credentialSubject;
+    private Map<String, CredentialSubjectParametersDTO> credentialSubjectDefinition;
 
     @JsonProperty("claims")
     private Map<String, Object> claims;
