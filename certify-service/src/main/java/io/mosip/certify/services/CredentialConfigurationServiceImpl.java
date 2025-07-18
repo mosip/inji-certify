@@ -9,8 +9,6 @@ import com.danubetech.dataintegrity.suites.DataIntegrityProofDataIntegritySuite;
 import com.danubetech.dataintegrity.suites.DataIntegritySuites;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.mosip.certify.core.constants.Constants;
-import io.mosip.certify.core.constants.ErrorConstants;
-import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
@@ -63,6 +61,15 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Value("#{${mosip.certify.data-provider-plugin.credential-status.supported-purposes:{}}}")
     private List<String> credentialStatusSupportedPurposes;
 
+    @Value("#{${mosip.certify.credential-config.cryptographic-binding-methods-supported}}")
+    private LinkedHashMap<String, List<String>> cryptographicBindingMethodsSupportedMap;
+
+    @Value("#{${mosip.certify.credential-config.credential-signing-alg-values-supported}}")
+    private LinkedHashMap<String, List<String>> credentialSigningAlgValuesSupportedMap;
+
+    @Value("#{${mosip.certify.credential-config.proof-types-supported}}")
+    private LinkedHashMap<String, Object> proofTypesSupported;
+
     private static final String CREDENTIAL_CONFIG_CACHE_NAME = "credentialConfig";
 
     @Override
@@ -95,6 +102,10 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
             credentialConfig.setCredentialStatusPurpose(credentialStatusSupportedPurposes);
         }
+
+        credentialConfig.setCryptographicBindingMethodsSupported(cryptographicBindingMethodsSupportedMap.get(credentialConfig.getCredentialFormat()));
+        credentialConfig.setCredentialSigningAlgValuesSupported(Collections.singletonList(credentialConfig.getSignatureCryptoSuite()));
+        credentialConfig.setProofTypesSupported(proofTypesSupported);
 
         validateCredentialConfiguration(credentialConfig);
         CredentialConfig savedConfig = credentialConfigRepository.save(credentialConfig);
@@ -221,7 +232,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                     .filter(config -> Constants.ACTIVE.equals(config.getStatus()))
                     .forEach(credentialConfig -> {
                         CredentialConfigurationSupportedDTO credentialConfigurationSupported = mapToSupportedDTO(credentialConfig);
-                        credentialConfigurationSupported.setCredentialSigningAlgValuesSupported(credentialConfig.getCredentialSigningAlgValuesSupported());
+                        credentialConfigurationSupported.setCredentialSigningAlgValuesSupported(credentialSigningAlgValuesSupportedMap.get(credentialConfig.getSignatureCryptoSuite()));
                         credentialConfigurationSupportedMap.put(credentialConfig.getCredentialConfigKeyId(), credentialConfigurationSupported);
                     });
             credentialIssuerMetadata.setCredentialConfigurationSupportedDTO(credentialConfigurationSupportedMap);
@@ -281,20 +292,20 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         credentialConfigurationSupported.setScope(credentialConfigurationDTO.getScope());
         credentialConfigurationSupported.setCryptographicBindingMethodsSupported(credentialConfigurationDTO.getCryptographicBindingMethodsSupported());
         credentialConfigurationSupported.setProofTypesSupported(credentialConfigurationDTO.getProofTypesSupported());
-        credentialConfigurationSupported.setDisplay(credentialConfigurationDTO.getDisplay());
-        credentialConfigurationSupported.setOrder(credentialConfigurationDTO.getOrder());
+        credentialConfigurationSupported.setDisplay(credentialConfigurationDTO.getMetaDataDisplay());
+        credentialConfigurationSupported.setOrder(credentialConfigurationDTO.getDisplayOrder());
 
         if (VCFormats.LDP_VC.equals(credentialConfig.getCredentialFormat())) {
             CredentialDefinition credentialDefinition = new CredentialDefinition();
-            credentialDefinition.setType(credentialConfigurationDTO.getCredentialType());
-            credentialDefinition.setContext(credentialConfigurationDTO.getContext());
-            credentialDefinition.setCredentialSubject(credentialConfig.getCredentialSubject());
+            credentialDefinition.setType(credentialConfigurationDTO.getCredentialTypes());
+            credentialDefinition.setContext(credentialConfigurationDTO.getContextURLs());
+            credentialDefinition.setCredentialSubject(new HashMap<>(credentialConfig.getCredentialSubject()));
             credentialConfigurationSupported.setCredentialDefinition(credentialDefinition);
         } else if (VCFormats.MSO_MDOC.equals(credentialConfig.getCredentialFormat())) {
-            credentialConfigurationSupported.setClaims(credentialConfig.getClaims());
+            credentialConfigurationSupported.setClaims(new HashMap<>(new HashMap<>(credentialConfig.getClaims())));
             credentialConfigurationSupported.setDocType(credentialConfig.getDocType());
         } else if (VCFormats.LDP_SD_JWT.equals(credentialConfig.getCredentialFormat())) {
-            credentialConfigurationSupported.setClaims(credentialConfig.getClaims());
+            credentialConfigurationSupported.setClaims(new HashMap<>(new HashMap<>(credentialConfig.getClaims())));
             credentialConfigurationSupported.setVct(credentialConfig.getSdJwtVct());
         }
 
