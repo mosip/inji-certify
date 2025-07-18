@@ -46,7 +46,6 @@
         <sunbird-rc-certify-integration-plugin.version>0.4.0</sunbird-rc-certify-integration-plugin.version>
         <sunbird-rc-certify-integration-plugin.fileName>sunbird-rc-certify-integration-impl.jar</sunbird-rc-certify-integration-plugin.fileName>
     </properties>
-
     <build>
         <plugins>
             <plugin>
