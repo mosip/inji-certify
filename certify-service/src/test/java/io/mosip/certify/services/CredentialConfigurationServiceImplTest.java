@@ -1,20 +1,17 @@
 package io.mosip.certify.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.mosip.certify.core.dto.CredentialConfigResponse;
-import io.mosip.certify.core.dto.CredentialConfigurationDTO;
-import io.mosip.certify.core.dto.CredentialConfigurationSupportedDTO;
-import io.mosip.certify.core.dto.CredentialIssuerMetadataDTO;
+import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.CredentialConfigException;
 import io.mosip.certify.entity.CredentialConfig;
+import io.mosip.certify.entity.attributes.ClaimsDisplayFieldsConfigs;
+import io.mosip.certify.entity.attributes.CredentialSubjectParameters;
 import io.mosip.certify.mapper.CredentialConfigMapper;
 import io.mosip.certify.repository.CredentialConfigRepository;
-import io.mosip.certify.utils.CredentialCacheKeyGenerator;
 import io.mosip.certify.validators.credentialconfigvalidators.LdpVcCredentialConfigValidator;
 import io.mosip.certify.validators.credentialconfigvalidators.MsoMdocCredentialConfigValidator;
 import io.mosip.certify.validators.credentialconfigvalidators.SdJwtCredentialConfigValidator;
-import org.checkerframework.checker.units.qual.C;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,18 +65,18 @@ public class CredentialConfigurationServiceImplTest {
         credentialConfig.setScope("test_vc_ldp");
         credentialConfig.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
         credentialConfig.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
-        credentialConfig.setCredentialSubject(Map.of("name", "Full Name"));
+        credentialConfig.setCredentialSubject(Map.of("name", new CredentialSubjectParameters(List.of(new CredentialSubjectParameters.Display("Full Name", "en")))));
         credentialConfig.setKeyManagerAppId("TEST2019");
         credentialConfig.setSignatureCryptoSuite("Ed25519Signature2020");
 
         credentialConfigurationDTO = new CredentialConfigurationDTO();
         credentialConfigurationDTO.setCredentialConfigKeyId("test-credential");
-        credentialConfigurationDTO.setDisplay(List.of());
+        credentialConfigurationDTO.setMetaDataDisplay(List.of());
         credentialConfigurationDTO.setVcTemplate("test_template");
         credentialConfigurationDTO.setCredentialFormat("test_vc");
-        credentialConfigurationDTO.setContext(List.of("https://www.w3.org/2018/credentials/v1"));
-        credentialConfigurationDTO.setCredentialType(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"));
-        credentialConfigurationDTO.setCredentialSubject(Map.of("name", "Full Name"));
+        credentialConfigurationDTO.setContextURLs(List.of("https://www.w3.org/2018/credentials/v1"));
+        credentialConfigurationDTO.setCredentialTypes(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"));
+        credentialConfigurationDTO.setCredentialSubjectDefinition(Map.of("name", new CredentialSubjectParametersDTO(List.of(new CredentialSubjectParametersDTO.Display("Full Name", "en")))));
 
         ReflectionTestUtils.setField(credentialConfigurationService, "credentialIssuer", "http://example.com/");
         ReflectionTestUtils.setField(credentialConfigurationService, "credentialIssuerDomainUrl", "http://example.com/");
@@ -88,6 +85,9 @@ public class CredentialConfigurationServiceImplTest {
         ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "DataProvider");
         ReflectionTestUtils.setField(credentialConfigurationService, "issuerDisplay", List.of(Map.of()));
         ReflectionTestUtils.setField(credentialConfigurationService, "credentialStatusSupportedPurposes", List.of("test_purpose"));
+        ReflectionTestUtils.setField(credentialConfigurationService, "cryptographicBindingMethodsSupportedMap", new LinkedHashMap<>());
+        ReflectionTestUtils.setField(credentialConfigurationService, "credentialSigningAlgValuesSupportedMap", new LinkedHashMap<>());
+        ReflectionTestUtils.setField(credentialConfigurationService, "proofTypesSupported", new LinkedHashMap<>());
     }
 
     @Test
@@ -128,13 +128,13 @@ public class CredentialConfigurationServiceImplTest {
         CredentialConfigurationDTO credentialConfigurationDTOResponse = credentialConfigurationService.getCredentialConfigurationById("test");
 
         Assert.assertNotNull(credentialConfigurationDTOResponse);
-        Assert.assertNotNull(credentialConfigurationDTOResponse.getCredentialType());
+        Assert.assertNotNull(credentialConfigurationDTOResponse.getCredentialTypes());
         Assert.assertNotNull(credentialConfigurationDTOResponse.getCredentialFormat());
-        Assert.assertNotNull(credentialConfigurationDTOResponse.getContext());
+        Assert.assertNotNull(credentialConfigurationDTOResponse.getContextURLs());
         Assert.assertNotNull(credentialConfigurationDTOResponse.getVcTemplate());
         Assert.assertEquals("test_template", credentialConfigurationDTOResponse.getVcTemplate());
-        Assert.assertEquals(List.of("https://www.w3.org/2018/credentials/v1"), credentialConfigurationDTOResponse.getContext());
-        Assert.assertEquals(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"), credentialConfigurationDTOResponse.getCredentialType());
+        Assert.assertEquals(List.of("https://www.w3.org/2018/credentials/v1"), credentialConfigurationDTOResponse.getContextURLs());
+        Assert.assertEquals(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"), credentialConfigurationDTOResponse.getCredentialTypes());
         Assert.assertEquals("test_vc", credentialConfigurationDTOResponse.getCredentialFormat());
     }
 
@@ -318,7 +318,7 @@ public class CredentialConfigurationServiceImplTest {
 
         // Verify no mapping calls
         verify(credentialConfigRepository).findAll();
-        verify(credentialConfigMapper, never()).toDto(any());
+        verify(credentialConfigMapper, never()).toDto((CredentialConfig) any());
     }
 
     @Test
@@ -330,7 +330,7 @@ public class CredentialConfigurationServiceImplTest {
 
         mdocConfig.setStatus("active");
         mdocConfig.setCredentialFormat("mso_mdoc");
-        mdocConfig.setClaims(Map.of("firstName", "First Name", "lastName", "Last Name"));
+        mdocConfig.setClaims(Map.of("firstName", Map.of( "First Name", new ClaimsDisplayFieldsConfigs(List.of(new ClaimsDisplayFieldsConfigs.Display("Test","en"))))));
         mdocConfig.setDocType("docType1");
 
         List<CredentialConfig> credentialConfigList = List.of(mdocConfig);
@@ -341,7 +341,7 @@ public class CredentialConfigurationServiceImplTest {
         mdocDTO.setCredentialFormat("mso_mdoc");
         mdocDTO.setCredentialConfigKeyId("mdoc-credential");
         mdocDTO.setScope("mdoc_scope");
-        mdocDTO.setClaims(Map.of("firstName", "First Name", "lastName", "Last Name"));
+        mdocDTO.setClaims(Map.of("firstName", Map.of( "First Name", new ClaimsDisplayFieldsConfigDTO(List.of(new ClaimsDisplayFieldsConfigDTO.Display("Test","en"))))));
         mdocDTO.setDocType("docType1");
 
         when(credentialConfigMapper.toDto(mdocConfig)).thenReturn(mdocDTO);

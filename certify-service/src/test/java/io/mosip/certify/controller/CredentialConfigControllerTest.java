@@ -45,12 +45,12 @@ public class CredentialConfigControllerTest {
     public void setup() {
         credentialConfigurationDTO = new CredentialConfigurationDTO();
         credentialConfigurationDTO.setVcTemplate("test_template");
-        credentialConfigurationDTO.setContext(List.of("https://www.w3.org/2018/credentials/v1"));
-        credentialConfigurationDTO.setCredentialType(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"));
+        credentialConfigurationDTO.setContextURLs(List.of("https://www.w3.org/2018/credentials/v1"));
+        credentialConfigurationDTO.setCredentialTypes(Arrays.asList("VerifiableCredential", "TestVerifiableCredential"));
         credentialConfigurationDTO.setCredentialFormat("ldp_vc");
         credentialConfigurationDTO.setDidUrl("did:web:test.github.io:test-env:test-folder");
-        credentialConfigurationDTO.setDisplay(List.of());
-        credentialConfigurationDTO.setOrder(Arrays.asList("test1", "test2", "test3", "test4"));
+        credentialConfigurationDTO.setMetaDataDisplay(List.of());
+        credentialConfigurationDTO.setDisplayOrder(Arrays.asList("test1", "test2", "test3", "test4"));
         credentialConfigurationDTO.setScope("test_vc_ldp");
         credentialConfigurationDTO.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
         credentialConfigurationDTO.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
@@ -61,7 +61,9 @@ public class CredentialConfigControllerTest {
         pluginConfigMap.put("mosip.certify.mock.data-provider.test-two", "valueTwo");
         pluginConfigMap.put("mosip.certify.mock.data-provider.test-three", "valueThree");
         credentialConfigurationDTO.setPluginConfigurations(List.of(pluginConfigMap));
-        credentialConfigurationDTO.setCredentialSubject(Map.of("name", "Full Name"));
+        credentialConfigurationDTO.setCredentialSubjectDefinition(Map.of(
+                "name", new CredentialSubjectParametersDTO(List.of(new CredentialSubjectParametersDTO.Display("Full Name", "en")))
+        ));
     }
 
     @Test
@@ -71,7 +73,7 @@ public class CredentialConfigControllerTest {
         credentialConfigResponse.setStatus("active");
         Mockito.when(credentialConfigurationService.addCredentialConfiguration(credentialConfigurationDTO)).thenReturn(credentialConfigResponse);
 
-        mockMvc.perform(post("/credentials/configurations")
+        mockMvc.perform(post("/credential-configurations")
                         .content(objectMapper.writeValueAsBytes(credentialConfigurationDTO))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
@@ -84,11 +86,11 @@ public class CredentialConfigControllerTest {
 
         Mockito.when(credentialConfigurationService.getCredentialConfigurationById(Mockito.anyString())).thenReturn(credentialConfigurationDTO);
 
-        mockMvc.perform(get("/credentials/configurations/1"))
+        mockMvc.perform(get("/credential-configurations/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.vcTemplate").exists())
-                .andExpect(jsonPath("$.context").exists())
-                .andExpect(jsonPath("$.credentialType").exists())
+                .andExpect(jsonPath("$.contextURLs").exists())
+                .andExpect(jsonPath("$.credentialTypes").exists())
                 .andExpect(jsonPath("$.didUrl").exists())
                 .andExpect(jsonPath("$.scope").exists())
                 .andExpect(jsonPath("$.cryptographic_binding_methods_supported").exists())
@@ -103,7 +105,7 @@ public class CredentialConfigControllerTest {
         credentialConfigResponse.setStatus("active");
         Mockito.when(credentialConfigurationService.updateCredentialConfiguration(Mockito.anyString(), eq(credentialConfigurationDTO))).thenReturn(credentialConfigResponse);
 
-        mockMvc.perform(put("/credentials/configurations/1")
+        mockMvc.perform(put("/credential-configurations/1")
                         .content(objectMapper.writeValueAsBytes(credentialConfigurationDTO))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -115,7 +117,7 @@ public class CredentialConfigControllerTest {
     public void deleteExistingCredentialConfiguration_Success() throws Exception {
         Mockito.when(credentialConfigurationService.deleteCredentialConfigurationById(Mockito.anyString())).thenReturn("1");
 
-        mockMvc.perform(delete("/credentials/configurations/1"))
+        mockMvc.perform(delete("/credential-configurations/1"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Deleted configuration with id: 1"));
     }
@@ -144,7 +146,7 @@ public class CredentialConfigControllerTest {
 
         Mockito.when(credentialConfigurationService.fetchCredentialIssuerMetadata(Mockito.anyString())).thenReturn(credentialIssuerMetadata);
 
-        mockMvc.perform(get("/credentials/.well-known/openid-credential-issuer"))
+        mockMvc.perform(get("/credential-configurations/.well-known/openid-credential-issuer"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.credential_issuer").exists())
                 .andExpect(jsonPath("$.credential_configurations_supported").exists())
