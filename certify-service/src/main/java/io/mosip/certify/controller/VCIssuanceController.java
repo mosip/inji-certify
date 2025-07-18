@@ -11,6 +11,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,14 +22,19 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.mosip.certify.core.dto.CredentialLedgerSearchRequest;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
+import io.mosip.certify.core.dto.UpdateCredentialStatusRequest;
 import io.mosip.certify.core.dto.VCError;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.VCIssuanceService;
+import io.mosip.certify.core.dto.CredentialStatusResponse;
 import io.mosip.certify.exception.InvalidNonceException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -52,6 +58,25 @@ public class VCIssuanceController {
         return vcIssuanceService.getCredential(credentialRequest);
     }
 
+    @PostMapping("/credential/status")
+    public ResponseEntity<CredentialStatusResponse> updateCredential(
+        @Valid @RequestBody UpdateCredentialStatusRequest updateCredentialStatusRequest) {
+        CredentialStatusResponse result = vcIssuanceService.updateCredential(updateCredentialStatusRequest);
+        if (result == null) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/ledger-search")
+    public ResponseEntity<List<CredentialStatusResponse>> searchCredentials(
+            @Valid @RequestBody CredentialLedgerSearchRequest request) {
+        List<CredentialStatusResponse> result = vcIssuanceService.searchCredentials(request);
+        if (result.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(result);
+    }
 
     /**
      * 1. The credential Endpoint MUST accept Access Tokens

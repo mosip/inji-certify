@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CredentialStatusTransactionRepository extends JpaRepository<CredentialStatusTransaction, Long> {
@@ -35,4 +36,6 @@ public interface CredentialStatusTransactionRepository extends JpaRepository<Cre
      */
     @Query("SELECT t FROM CredentialStatusTransaction t WHERE t.statusListCredentialId = :statusListId ORDER BY t.credentialId, t.createdDtimes DESC")
     List<CredentialStatusTransaction> findLatestStatusByStatusListId(@Param("statusListId") String statusListId);
+
+    Optional<CredentialStatusTransaction> findByCredentialId(String credentialId);
 }
