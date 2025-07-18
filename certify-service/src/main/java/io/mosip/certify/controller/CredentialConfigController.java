@@ -20,7 +20,7 @@ public class CredentialConfigController {
     @Autowired
     private CredentialConfigurationService credentialConfigurationService;
 
-    @PostMapping(value = "", produces = "application/json")
+    @PostMapping(produces = "application/json")
     public ResponseEntity<CredentialConfigResponse> addCredentialConfiguration(@Valid @RequestBody CredentialConfigurationDTO credentialConfigurationRequest) throws JsonProcessingException {
 
         CredentialConfigResponse credentialConfigResponse = credentialConfigurationService.addCredentialConfiguration(credentialConfigurationRequest);
