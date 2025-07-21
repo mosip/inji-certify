@@ -21,6 +21,9 @@ public class MetaDataDisplay implements Serializable {
     @JsonProperty("background_color")
     private String backgroundColor;
 
+    @JsonProperty("background_image")
+    private BackgroundImage backgroundImage;
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
@@ -29,5 +32,12 @@ public class MetaDataDisplay implements Serializable {
 
         @JsonProperty("alt_text")
         private String altText;
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class BackgroundImage {
+        private String uri;
     }
 }

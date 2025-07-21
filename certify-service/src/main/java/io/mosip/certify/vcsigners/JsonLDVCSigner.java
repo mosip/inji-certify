@@ -17,6 +17,7 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
 
+import io.mosip.certify.core.dto.CertificateResponseDTO;
 import io.mosip.certify.proofgenerators.ProofGeneratorFactory;
 import io.mosip.certify.utils.DIDDocumentUtil;
 import io.mosip.kernel.keymanagerservice.dto.CertificateDataResponseDto;
@@ -92,7 +93,7 @@ public class JsonLDVCSigner implements VCSigner {
 
         String appID = keyReferenceDetails.get(Constants.APPLICATION_ID);
         String refID = keyReferenceDetails.get(Constants.REFERENCE_ID);
-        CertificateDataResponseDto certificateDataResponseDto = didDocumentUtil.getCertificateDataResponseDto(appID, refID);
+        CertificateResponseDTO certificateDataResponseDto = didDocumentUtil.getCertificateDataResponseDto(appID, refID);
         String kid = certificateDataResponseDto.getKeyId();
         LdProof vcLdProof = LdProof.builder().defaultContexts(false).defaultTypes(false).type(proofGenerator.getName())
                 .created(createDate).proofPurpose(VCDMConstants.ASSERTION_METHOD)

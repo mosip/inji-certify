@@ -18,6 +18,7 @@ import com.danubetech.dataintegrity.DataIntegrityProof;
 import com.danubetech.dataintegrity.signer.LdSigner;
 import com.danubetech.dataintegrity.signer.LdSignerRegistry;
 import io.mosip.certify.core.constants.*;
+import io.mosip.certify.core.dto.CertificateResponseDTO;
 import io.mosip.certify.proofgenerators.ProofGeneratorFactory;
 import io.mosip.certify.proofgenerators.dip.KeymanagerByteSigner;
 import io.mosip.certify.proofgenerators.dip.KeymanagerByteSignerFactory;
@@ -104,8 +105,8 @@ public class W3cJsonLd extends Credential{
                                 DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN))
                         .atZone(ZoneId.systemDefault()).toInstant());
 
-        CertificateDataResponseDto certificateDataResponseDto = didDocumentUtil.getCertificateDataResponseDto(appID, refID);
-        String kid = certificateDataResponseDto.getKeyId();
+        CertificateResponseDTO certificateResponseDTO = didDocumentUtil.getCertificateDataResponseDto(appID, refID);
+        String kid = certificateResponseDTO.getKeyId();
         if (CertifyIssuanceServiceImpl.keyChooser.containsKey(signatureCryptoSuite)) {
             // legacy signature algos such as Ed25519Signature{2018,2020}
             ProofGenerator proofGenerator = proofGeneratorFactory.getProofGenerator(signatureCryptoSuite)

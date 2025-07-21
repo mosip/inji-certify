@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
+import io.mosip.certify.core.dto.CertificateResponseDTO;
 import io.mosip.certify.services.CertifyIssuanceServiceImpl;
 import io.mosip.kernel.keymanagerservice.dto.AllCertificatesDataResponseDto;
 import io.mosip.kernel.keymanagerservice.dto.CertificateDataResponseDto;
@@ -54,9 +55,9 @@ public class DIDDocumentUtil {
         List<Map<String, Object>> verificationMethods = CertifyIssuanceServiceImpl.keyChooser.entrySet().stream()
                 .map(entry -> {
                     List<String> keyParams = entry.getValue();
-                    CertificateDataResponseDto certificateDataResponseDto = getCertificateDataResponseDto(keyParams.getFirst(), keyParams.getLast());
-                    String certificateString = certificateDataResponseDto.getCertificateData();
-                    String kid = certificateDataResponseDto.getKeyId();
+                    CertificateResponseDTO certificateResponseDTO = getCertificateDataResponseDto(keyParams.getFirst(), keyParams.getLast());
+                    String certificateString = certificateResponseDTO.getCertificateData();
+                    String kid = certificateResponseDTO.getKeyId();
 
                     // Generate verification method for each key
                     return generateVerificationMethod(entry.getKey(), certificateString, didUrl, kid);
@@ -196,14 +197,14 @@ public class DIDDocumentUtil {
     }
 
     @Cacheable(value = "certificatedatacache", key = "#appId + '-' + #refId")
-    public CertificateDataResponseDto getCertificateDataResponseDto(String appId, String refId) {
+    public CertificateResponseDTO getCertificateDataResponseDto(String appId, String refId) {
         AllCertificatesDataResponseDto kidResponse = keymanagerService.getAllCertificates(appId, Optional.of(refId));
         if (kidResponse == null || kidResponse.getAllCertificates() == null || kidResponse.getAllCertificates().length == 0) {
             log.error("No certificates found for appId: {} and refId: {}", appId, refId);
             throw new CertifyException("No certificates found");
         }
 
-        return Arrays.stream(kidResponse.getAllCertificates())
+        CertificateDataResponseDto certificateData = Arrays.stream(kidResponse.getAllCertificates())
                 .filter(certificateDataResponseDto -> certificateDataResponseDto.getExpiryAt() != null
                         && certificateDataResponseDto.getExpiryAt().isAfter(LocalDateTime.now()))
                 .findFirst()
@@ -211,5 +212,11 @@ public class DIDDocumentUtil {
                     log.error("No valid certificates found for appId: {} and refId: {}", appId, refId);
                     return new CertifyException("No valid certificates found");
                 });
+
+        CertificateResponseDTO certificateResponseDTO = new CertificateResponseDTO();
+        certificateResponseDTO.setCertificateData(certificateData.getCertificateData());
+        certificateResponseDTO.setKeyId(certificateData.getKeyId());
+
+        return certificateResponseDTO;
     }
 }
