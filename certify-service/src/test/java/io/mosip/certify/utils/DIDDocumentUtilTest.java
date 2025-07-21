@@ -2,6 +2,7 @@ package io.mosip.certify.utils;
 
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.SignatureAlg;
+import io.mosip.certify.core.dto.CertificateResponseDTO;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.kernel.keymanagerservice.dto.AllCertificatesDataResponseDto;
 import io.mosip.kernel.keymanagerservice.dto.CertificateDataResponseDto;
@@ -280,7 +281,7 @@ class DIDDocumentUtilTest {
         when(keymanagerService.getAllCertificates(appId, Optional.of(refId)))
                 .thenReturn(mockResponse);
 
-        CertificateDataResponseDto result = didDocumentUtil.getCertificateDataResponseDto(appId, refId);
+        CertificateResponseDTO result = didDocumentUtil.getCertificateDataResponseDto(appId, refId);
 
         assertNotNull(result);
         assertEquals(expectedDto.getCertificateData(), result.getCertificateData());
