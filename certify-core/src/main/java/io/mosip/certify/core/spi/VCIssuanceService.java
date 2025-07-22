@@ -26,8 +26,4 @@ public interface VCIssuanceService {
     Map<String, Object> getCredentialIssuerMetadata(String version);
 
     Map<String, Object> getDIDDocument();
-
-    CredentialStatusResponse updateCredential(UpdateCredentialStatusRequest updateCredentialStatusRequest);
-
-    List<CredentialStatusResponse> searchCredentials(CredentialLedgerSearchRequest request);
 }

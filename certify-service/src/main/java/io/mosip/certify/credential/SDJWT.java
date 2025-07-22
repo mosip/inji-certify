@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.certify.core.exception.CertifyException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -41,6 +42,9 @@ public class SDJWT extends Credential{
         super(vcFormatter, signatureService);
     }
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     /**
      * This method returns true when a format can be handled.
      */
@@ -66,7 +70,6 @@ public class SDJWT extends Credential{
     public String createCredential(Map<String, Object> templateParams, String templateName) {
         SDObjectBuilder sdObjectBuilder = new SDObjectBuilder();
         List<Disclosure> disclosures = new ArrayList<>();
-        ObjectMapper objectMapper = new ObjectMapper();
         PlainHeader header = new PlainHeader();
         JsonNode node;
         String currentPath = "$";
@@ -84,16 +87,12 @@ public class SDJWT extends Credential{
             return sdJwt.toString();
         } catch (JsonProcessingException ex) {
             log.error("JSON processing error", ex);
+            throw new CertifyException("JSON_PROCESSING_ERROR", "Error processing JSON for SDJWT creation");
         }
         catch (ParseException ex) {
             log.error("Final SDClaims un parseable. Mostly a bug in the code and has to be reported ", ex);
+            throw new CertifyException("SD_CLAIMS_PARSE_ERROR", "Error parsing final SDClaims for SDJWT creation");
         }
-         // Create an empty JWT Claims Set (Payload)
-         JWTClaimsSet emptyClaimsSet = new JWTClaimsSet.Builder()
-         .claim("none", "")  
-         .build();
-        PlainJWT jwt = new PlainJWT(emptyClaimsSet);
-        return jwt.serialize();
     }
 
     /**

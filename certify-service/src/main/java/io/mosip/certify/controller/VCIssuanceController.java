@@ -58,26 +58,6 @@ public class VCIssuanceController {
         return vcIssuanceService.getCredential(credentialRequest);
     }
 
-    @PostMapping("/credential/status")
-    public ResponseEntity<CredentialStatusResponse> updateCredential(
-        @Valid @RequestBody UpdateCredentialStatusRequest updateCredentialStatusRequest) {
-        CredentialStatusResponse result = vcIssuanceService.updateCredential(updateCredentialStatusRequest);
-        if (result == null) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(result);
-    }
-
-    @PostMapping("/ledger-search")
-    public ResponseEntity<List<CredentialStatusResponse>> searchCredentials(
-            @Valid @RequestBody CredentialLedgerSearchRequest request) {
-        List<CredentialStatusResponse> result = vcIssuanceService.searchCredentials(request);
-        if (result.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(result);
-    }
-
     /**
      * 1. The credential Endpoint MUST accept Access Tokens
      * @param credentialRequest VC credential request

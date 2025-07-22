@@ -197,14 +197,4 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         throw new CertifyException(ErrorConstants.VC_ISSUANCE_FAILED);
     }
 
-    @Override
-    public CredentialStatusResponse updateCredential(UpdateCredentialStatusRequest request) {
-        throw new CertifyException("This method is not supported in VCIssuanceServiceImpl");
-    }
-
-    @Override
-    public List<CredentialStatusResponse> searchCredentials(CredentialLedgerSearchRequest request) {
-        throw new CertifyException("This method is not supported in VCIssuanceServiceImpl");
-    }
-
 }

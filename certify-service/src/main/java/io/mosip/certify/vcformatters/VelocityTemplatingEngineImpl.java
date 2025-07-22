@@ -361,11 +361,11 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         if(templateInput.containsKey(VCDM2Constants.CREDENTIAL_STATUS) && templateName.contains(VCDM2Constants.URL)) {
             jsonObject.put(VCDM2Constants.CREDENTIAL_STATUS, templateInput.get(VCDM2Constants.CREDENTIAL_STATUS));
         }
-        if( templateInput.containsKey(VCT) && templateInput.containsKey(CNF)
-                && templateInput.containsKey(ISS)) {
-            jsonObject.put(VCT, templateInput.get(VCT));
-            jsonObject.put(CNF, templateInput.get(CNF));
-            jsonObject.put(ISS, templateInput.get(ISS));
+        if( templateInput.containsKey(VCTYPE) && templateInput.containsKey(CONFIRMATION)
+                && templateInput.containsKey(ISSUER)) {
+            jsonObject.put(VCTYPE, templateInput.get(VCTYPE));
+            jsonObject.put(CONFIRMATION, templateInput.get(CONFIRMATION));
+            jsonObject.put(ISSUER, templateInput.get(ISSUER));
         }
 
         return jsonObject.toString();

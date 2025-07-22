@@ -136,7 +136,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                     throw new CertifyException("Configuration already exists for the given doctype");
                 }
                 break;
-            case VCFormats.LDP_SD_JWT:
+            case VCFormats.VC_SD_JWT:
                 if (!SdJwtCredentialConfigValidator.isValidCheck(credentialConfig)) {
                     throw new CertifyException("Vct field is mandatory for vc+sd-jwt");
                 }
@@ -304,7 +304,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         } else if (VCFormats.MSO_MDOC.equals(credentialConfig.getCredentialFormat())) {
             credentialConfigurationSupported.setClaims(new HashMap<>(new HashMap<>(credentialConfig.getClaims())));
             credentialConfigurationSupported.setDocType(credentialConfig.getDocType());
-        } else if (VCFormats.LDP_SD_JWT.equals(credentialConfig.getCredentialFormat())) {
+        } else if (VCFormats.VC_SD_JWT.equals(credentialConfig.getCredentialFormat())) {
             credentialConfigurationSupported.setClaims(new HashMap<>(new HashMap<>(credentialConfig.getClaims())));
             credentialConfigurationSupported.setVct(credentialConfig.getSdJwtVct());
         }
