@@ -1,7 +1,7 @@
 AuthenticateUserSunBirdCNeg:
    InjiCertify_ESignet_AuthenticateUserSunBirdC_Valid_For_Neg_flow:
       endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUserNeg      
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUserSunBirdCNeg_01      
       description: Authenticate User      
       role: resident
       restMethod: post
@@ -23,7 +23,7 @@ AuthenticateUserSunBirdCNeg:
 
    InjiCertify_ESignet_AuthenticateUserSunBirdC_Diff_Scope_Valid_For_Neg_flow:
       endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUserNeg      
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUserSunBirdCNeg_02      
       description: Authenticate User      
       role: resident
       restMethod: post

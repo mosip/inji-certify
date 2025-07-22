@@ -1,7 +1,7 @@
 createPublishPolicy:
    InjiCertify_PublishPolicy_MOSIPID_All_Valid_Smoke:
       endPoint: /v1/policymanager/policies/{policyId}/group/{policygroupId}/publish
-      uniqueIdentifier: TC_pms_dependency_06     
+      uniqueIdentifier: TC_pms_dependency_createPublishPolicy_01     
       description: Publish Policy      
       role: partner
       restMethod: post

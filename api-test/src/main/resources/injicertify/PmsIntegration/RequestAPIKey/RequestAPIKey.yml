@@ -1,7 +1,7 @@
 RequestAPIKeyForAuthPartner:
    InjiCertify_SubmitPartnerApiKeyRequest_Rejection_MOSIPID_All_Valid_Smoke_sid:
       endPoint: /v1/partnermanager/partners/$ID:PartnerSelfRegistration_MOSIPID_All_Valid_Smoke_sid_partnerId$/policy/map
-      uniqueIdentifier: TC_pms_dependency_07     
+      uniqueIdentifier: TC_pms_dependency_RequestAPIKeyForAuthPartner_01     
       description: Request APIkey for partner      
       role: partner
       restMethod: post 

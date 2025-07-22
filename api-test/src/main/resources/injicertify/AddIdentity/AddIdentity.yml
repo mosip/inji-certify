@@ -30,7 +30,7 @@ AddIdentity:
 
    InjiCertify_AddIdentity_Valid_Params_VCI_MOSIPID_uin_For_Vid_smoke_Pos:
       endPoint: /idrepository/v1/identity/
-      uniqueIdentifier: TC_idrepo_dependency_01      
+      uniqueIdentifier: TC_idrepo_dependency_02      
       description: Add identity      
       role: idrepo
       restMethod: post

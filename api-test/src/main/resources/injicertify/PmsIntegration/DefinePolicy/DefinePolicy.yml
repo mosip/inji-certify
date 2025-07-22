@@ -1,7 +1,7 @@
 definePolicy:
    InjiCertify_DefinePolicy_MOSIPID_All_Valid_Smoke_sid:
       endPoint: /v1/policymanager/policies
-      uniqueIdentifier: TC_pms_dependency_04     
+      uniqueIdentifier: TC_pms_dependency_definePolicy_01     
       description: Create policy      
       role: partner
       restMethod: post

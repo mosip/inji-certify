@@ -1,7 +1,7 @@
 AuthorizationCodeSunBirdCNeg:
    InjiCertify_ESignet_AuthorizationCode_SunBirdC_All_Valid_sid_For_Neg_flow:
       endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/authorization/auth-code
-      uniqueIdentifier: TC_esignetDependent_AuthorizationCodeNeg      
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCodeSunBirdCNeg_01      
       description: Authorization Code      
       role: resident
       restMethod: post
@@ -20,7 +20,7 @@ AuthorizationCodeSunBirdCNeg:
 
    InjiCertify_ESignet_AuthorizationCode_SunBirdC_Diff_Scope_All_Valid_sid_For_Neg_flow:
       endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/authorization/auth-code
-      uniqueIdentifier: TC_esignetDependent_AuthorizationCodeNeg      
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCodeSunBirdCNeg_02      
       description: Authorization Code      
       role: resident
       restMethod: post
