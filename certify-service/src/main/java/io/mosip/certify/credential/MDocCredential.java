@@ -59,9 +59,9 @@ public class MDocCredential extends Credential {
         }
     }
 
-//    @Override
-//    public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm,
-//                                String appID, String refID, String publicKeyURL) {
+    @Override
+    public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm,
+                                String appID, String refID, String publicKeyURL) {
 //        TODO: To Implement Later
         VCResult<String> result = new VCResult<>();
 //
@@ -129,8 +129,8 @@ public class MDocCredential extends Credential {
 //            result.setCredential(vcToSign);
 //        }
 //
-//        return result;
-//    }
+        return result;
+    }
 
     private Object convertJsonNode(JsonNode node) {
         if (node.isTextual()) return node.asText();

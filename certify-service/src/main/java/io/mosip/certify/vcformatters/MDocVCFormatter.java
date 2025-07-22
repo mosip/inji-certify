@@ -11,9 +11,14 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
-import io.ipfs.multibase.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -82,7 +87,7 @@ public class MDocVCFormatter implements VCFormatter{
 
     /**
      * Internal method to fetch CredentialConfig, leveraging Spring Cache.
-     * The key is expected to be "credentialFormat::doctype".
+     * The key is expected to be "credentialType:context:credentialFormat".
      */
     @Cacheable(cacheNames = "credentialConfig", key = "#templateKey")
     protected CredentialConfig getCachedCredentialConfig(String templateKey) {
@@ -92,15 +97,27 @@ public class MDocVCFormatter implements VCFormatter{
             throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "Invalid template key format: " + templateKey);
         }
 
-        String[] parts = templateKey.split(DELIMITER, 2);
-        if (parts.length != 2) {
+        String[] parts = templateKey.split(DELIMITER, 3);
+        if (parts.length < 2) {
             log.error("Invalid templateKey format for getCachedCredentialConfig: {}. Expected at least 2 parts.", templateKey);
             throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "Template key format requires at least 2 parts: " + templateKey);
-        }
-        String credentialFormat = parts[0];
-        String doctype = parts[1];
+        } else if (parts.length == 2) {
+            String credentialFormat = parts[0];
+            String vct = parts[1];
 
-        return credentialConfigRepository.findByCredentialFormatAndDocType(credentialFormat, doctype)
+            return credentialConfigRepository.findByCredentialFormatAndSdJwtVct(credentialFormat, vct)
+                    .orElseThrow(() -> {
+                        log.error("CredentialConfig not found in DB for key: {}", templateKey);
+                        return new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "CredentialConfig not found for key: " + templateKey);
+                    });
+        }
+
+        String credentialType = parts[0];
+        String context = parts[1];
+        String credentialFormat = parts[2];
+
+        return credentialConfigRepository
+                .findByCredentialFormatAndCredentialTypeAndContext(credentialFormat, credentialType, context)
                 .orElseThrow(() -> {
                     log.error("CredentialConfig not found in DB for key: {}", templateKey);
                     return new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "CredentialConfig not found for key: " + templateKey);
@@ -134,40 +151,26 @@ public class MDocVCFormatter implements VCFormatter{
                 .map(sd -> Arrays.asList(sd.split(",")))
                 .orElseGet(ArrayList::new);
     }
-    /**
-     * Gets the crypto suite used for VC signature or proof generation
-     * @param templateName is the name of the template
-     * @return the crypto suite used for VC signature or proof generation
-     */
-    @Override
-    public String getSignatureCryptoSuite(String templateName) {
-        return getCachedCredentialConfig(templateName).getSignatureCryptoSuite(); // NEW
-    }
-
-    @Override
-    public List<String> getCredentialStatusPurpose(String templateName) {
-        return getCachedCredentialConfig(templateName).getCredentialStatusPurposes();
-    }
 
     @SneakyThrows
     @Override
     public String format(JSONObject valueMap, Map<String, Object> templateSettings) {
         String templateName = templateSettings.get(TEMPLATE_NAME).toString();
-        String issuer = templateSettings.get(DID_URL).toString();
+        String issuer = templateSettings.get(ISSUER_URI).toString();
 
-        String vcTemplateString = getCachedCredentialConfig(templateName).getVcTemplate();
-        if (vcTemplateString == null) {
-            log.error("Template {} not found (vcTemplate is null)", templateName);
-            throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND);
-        }
-
-        vcTemplateString = new String(Base64.decodeBase64(vcTemplateString));
-//        String vcTemplateString = "{\"nameSpaces\": {\"org.iso.18013.5.1\": [{\"digestID\": 0,\"elementIdentifier\": \"family_name\",\"elementValue\": \"${family_name}\"},{\"digestID\": 1,\"elementIdentifier\": \"given_name\", \"elementValue\": \"${given_name}\"},{\"digestID\": 2,\"elementIdentifier\": \"birth_date\",\"elementValue\": \"${birth_date}\"},{\"digestID\": 7,\"elementIdentifier\": \"driving_privileges\",\"elementValue\": ${driving_privileges}}]},\"docType\": \"${_docType}\",\"validityInfo\": {\"validFrom\": \"${_validFrom}\",\"validUntil\": \"${_validUntil}\"}}";
+//        String vcTemplateString = getCachedCredentialConfig(templateName).getVcTemplate();
+//        if (vcTemplateString == null) {
+//            log.error("Template {} not found (vcTemplate is null)", templateName);
+//            throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND);
+//        }
+//
+//        vcTemplateString = new String(Base64.decodeBase64(vcTemplateString));
+        String vcTemplateString = "{\"nameSpaces\": {\"org.iso.18013.5.1\": [{\"digestID\": 0,\"elementIdentifier\": \"family_name\",\"elementValue\": \"${family_name}\"},{\"digestID\": 1,\"elementIdentifier\": \"given_name\", \"elementValue\": \"${given_name}\"},{\"digestID\": 2,\"elementIdentifier\": \"birth_date\",\"elementValue\": \"${birth_date}\"},{\"digestID\": 7,\"elementIdentifier\": \"driving_privileges\",\"elementValue\": ${driving_privileges}}]},\"docType\": \"${_docType}\",\"validityInfo\": {\"validFrom\": \"${_validFrom}\",\"validUntil\": \"${_validUntil}\"}}";
 
         StringWriter writer = new StringWriter();
 
         // Prepare template data for mDOC structure
-        Map<String, Object> finalTemplate = jsonify(templateSettings);
+        Map<String, Object> finalTemplate = jsonifyForMDoc(templateSettings);
 
         // Add Velocity tools
         finalTemplate.put("_dateTool", new DateTool());
@@ -211,23 +214,21 @@ public class MDocVCFormatter implements VCFormatter{
     @Override
     public String format(Map<String, Object> templateInput) {
         String templateName = templateInput.get(TEMPLATE_NAME).toString();
-        String issuer = templateInput.get(DID_URL).toString();
+        String issuer = templateInput.get(ISSUER_URI).toString();
 
-        String vcTemplateString = getCachedCredentialConfig(templateName).getVcTemplate();
-        if (vcTemplateString == null) {
-            log.error("Template {} not found (vcTemplate is null)", templateName);
-            throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND);
-        }
-
-        log.info("Base64 vcTemplateString: {}", vcTemplateString);
-        vcTemplateString = new String(Base64.decodeBase64(vcTemplateString));
-        log.info("vcTemplateString: {}", vcTemplateString);
-//        String vcTemplateString = "{\"nameSpaces\": {\"org.iso.18013.5.1\": [{\"digestID\": 0,\"elementIdentifier\": \"family_name\",\"elementValue\": \"${family_name}\"},{\"digestID\": 1,\"elementIdentifier\": \"given_name\", \"elementValue\": \"${given_name}\"},{\"digestID\": 2,\"elementIdentifier\": \"birth_date\",\"elementValue\": \"${birth_date}\"},{\"digestID\": 7,\"elementIdentifier\": \"driving_privileges\",\"elementValue\": ${driving_privileges}}]},\"docType\": \"${_docType}\",\"validityInfo\": {\"validFrom\": \"${_validFrom}\",\"validUntil\": \"${_validUntil}\"}}";
+//        String vcTemplateString = getCachedCredentialConfig(templateName).getVcTemplate();
+//        if (vcTemplateString == null) {
+//            log.error("Template {} not found (vcTemplate is null)", templateName);
+//            throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND);
+//        }
+//
+//        vcTemplateString = new String(Base64.decodeBase64(vcTemplateString));
+        String vcTemplateString = "{\"nameSpaces\": {\"org.iso.18013.5.1\": [{\"digestID\": 0,\"elementIdentifier\": \"family_name\",\"elementValue\": \"${family_name}\"},{\"digestID\": 1,\"elementIdentifier\": \"given_name\", \"elementValue\": \"${given_name}\"},{\"digestID\": 2,\"elementIdentifier\": \"birth_date\",\"elementValue\": \"${birth_date}\"},{\"digestID\": 7,\"elementIdentifier\": \"driving_privileges\",\"elementValue\": ${driving_privileges}}]},\"docType\": \"${_docType}\",\"validityInfo\": {\"validFrom\": \"${_validFrom}\",\"validUntil\": \"${_validUntil}\"}}";
 
         StringWriter writer = new StringWriter();
 
         // Prepare template data for mDOC structure
-        Map<String, Object> finalTemplate = jsonify(templateInput);
+        Map<String, Object> finalTemplate = jsonifyForMDoc(templateInput);
 
         // Add Velocity tools
         finalTemplate.put("_dateTool", new DateTool());
@@ -326,30 +327,39 @@ public class MDocVCFormatter implements VCFormatter{
      * Prepares data for mDOC CBOR encoding by ensuring proper data types.
      * This is similar to jsonify but with mDOC-specific considerations.
      */
-    protected static Map<String, Object> jsonify(Map<String, Object> valueMap) {
+    protected static Map<String, Object> jsonifyForMDoc(Map<String, Object> valueMap) {
         Map<String, Object> finalTemplate = new HashMap<>();
-        Iterator<String> keys = valueMap.keySet().iterator();
-        while(keys.hasNext()) {
-            String key = keys.next();
-            Object value = valueMap.get(key);
+
+        for (Map.Entry<String, Object> entry : valueMap.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+
             if (value instanceof List) {
                 finalTemplate.put(key, new JSONArray((List<Object>) value));
-            } else if (value.getClass().isArray()) {
-                finalTemplate.put(key, new JSONArray(List.of(value)));
-            } else if (value instanceof Integer | value instanceof Float | value instanceof Long | value instanceof Double) {
-                // entities which don't need to be quoted
+            } else if (value != null && value.getClass().isArray()) {
+                finalTemplate.put(key, new JSONArray(Arrays.asList((Object[]) value)));
+            } else if (value instanceof Integer || value instanceof Float ||
+                    value instanceof Long || value instanceof Double) {
+                // Numeric values don't need quoting
                 finalTemplate.put(key, value);
-            } else if (value instanceof String){
-                // entities which need to be quoted
-                finalTemplate.put(key, JSONObject.wrap(value));
-            } else if( value instanceof Map<?,?>) {
-                finalTemplate.put(key,JSONObject.wrap(value));
-            }
-            else {
-                // no conversion needed
+            } else if (value instanceof Boolean) {
+                // Boolean values for mDOC
                 finalTemplate.put(key, value);
+            } else if (value instanceof String) {
+                // String values - DON'T use JSONObject.quote here as it adds extra quotes
+                finalTemplate.put(key, value.toString());
+            } else if (value instanceof Map) {
+                // For nested maps, convert to JSONObject but don't quote
+                finalTemplate.put(key, new JSONObject((Map<String, Object>) value));
+            } else if (value != null) {
+                // Other non-null types as string
+                finalTemplate.put(key, value.toString());
+            } else {
+                // Handle null values
+                finalTemplate.put(key, null);
             }
         }
+
         return finalTemplate;
     }
 }

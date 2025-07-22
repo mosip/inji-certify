@@ -64,15 +64,4 @@ public class VCFormatterFactory implements VCFormatter {
     public List<String> getSelectiveDisclosureInfo(String templateName) {
         return delegate.getSelectiveDisclosureInfo(templateName);
     }
-
-    @Override
-    public String getSignatureCryptoSuite(String templateName) {
-        return delegate.getSignatureCryptoSuite(templateName);
-    }
-
-    @Override
-    public List<String> getCredentialStatusPurpose(String templateName) {
-        return delegate.getCredentialStatusPurpose(templateName);
-    }
-
 }
