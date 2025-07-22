@@ -1,7 +1,10 @@
 package io.mosip.certify.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.mosip.certify.core.dto.*;
+import io.mosip.certify.core.dto.CredentialConfigResponse;
+import io.mosip.certify.core.dto.CredentialConfigurationDTO;
+import io.mosip.certify.core.dto.CredentialSubjectParametersDTO;
+import io.mosip.certify.core.dto.ParsedAccessToken;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
 import org.junit.Before;
 import org.junit.Test;
@@ -120,38 +123,5 @@ public class CredentialConfigControllerTest {
         mockMvc.perform(delete("/credential-configurations/1"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Deleted configuration with id: 1"));
-    }
-
-        @Test
-    public void getIssuerMetadata_noQueryParams_thenPass() throws Exception {
-        CredentialIssuerMetadataVD13DTO credentialIssuerMetadata = new CredentialIssuerMetadataVD13DTO();
-        credentialIssuerMetadata.setCredentialIssuer("https://localhost:9090");
-        credentialIssuerMetadata.setAuthorizationServers(List.of("https://example.com/auth"));
-        credentialIssuerMetadata.setCredentialEndpoint("https://localhost:9090/v1/certify/issuance/credential");
-        Map<String, String> display = new HashMap<>();
-        display.put("name", "Test Credential Issuer");
-        display.put("locale", "en");
-        credentialIssuerMetadata.setDisplay(List.of(display));
-
-        CredentialConfigurationSupportedDTO credentialConfigurationSupported = new CredentialConfigurationSupportedDTO();
-        credentialConfigurationSupported.setFormat("ldp_vc");
-        credentialConfigurationSupported.setScope("test_vc_ldp");
-        credentialConfigurationSupported.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
-        credentialConfigurationSupported.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
-        Map<String, Object> jwtValues = Map.of("proof_signing_alg_values_supported", Arrays.asList("RS256", "ES256"));
-        credentialConfigurationSupported.setProofTypesSupported(jwtValues);
-        credentialConfigurationSupported.setDisplay(List.of());
-        credentialConfigurationSupported.setOrder(Arrays.asList("test1", "test2", "test3", "test4"));
-        credentialIssuerMetadata.setCredentialConfigurationSupportedDTO(Map.of("TestCredential_ldp", credentialConfigurationSupported));
-
-        Mockito.when(credentialConfigurationService.fetchCredentialIssuerMetadata(Mockito.anyString())).thenReturn(credentialIssuerMetadata);
-
-        mockMvc.perform(get("/credential-configurations/.well-known/openid-credential-issuer"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.credential_issuer").exists())
-                .andExpect(jsonPath("$.credential_configurations_supported").exists())
-                .andExpect(header().string("Content-Type", "application/json"));
-
-        Mockito.verify(credentialConfigurationService).fetchCredentialIssuerMetadata("latest");
     }
 }

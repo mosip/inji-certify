@@ -3,7 +3,6 @@ package io.mosip.certify.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.mosip.certify.core.dto.CredentialConfigResponse;
 import io.mosip.certify.core.dto.CredentialConfigurationDTO;
-import io.mosip.certify.core.dto.CredentialIssuerMetadataDTO;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -47,11 +46,5 @@ public class CredentialConfigController {
 
         String response = credentialConfigurationService.deleteCredentialConfigurationById(configurationId);
         return new ResponseEntity<>("Deleted configuration with id: " + response, HttpStatus.OK);
-    }
-
-    @GetMapping(value = "/.well-known/openid-credential-issuer", produces = "application/json")
-    public CredentialIssuerMetadataDTO getCredentialIssuerMetadata(
-            @RequestParam(name = "version", required = false, defaultValue = "latest") String version) {
-        return credentialConfigurationService.fetchCredentialIssuerMetadata(version);
     }
 }
