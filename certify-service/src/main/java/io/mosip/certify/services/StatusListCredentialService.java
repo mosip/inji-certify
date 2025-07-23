@@ -4,13 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
+import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.exception.CertifyException;
+import io.mosip.certify.credential.Credential;
+import io.mosip.certify.credential.CredentialFactory;
 import io.mosip.certify.entity.StatusListCredential;
 import io.mosip.certify.repository.StatusListAvailableIndicesRepository;
 import io.mosip.certify.repository.StatusListCredentialRepository;
 import io.mosip.certify.utils.BitStringStatusListUtils;
 import io.mosip.certify.vcformatters.VCFormatter;
-import io.mosip.certify.vcsigners.VCSigner;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceContext;
@@ -43,7 +45,7 @@ public class StatusListCredentialService {
     private VCFormatter vcFormatter;
 
     @Autowired
-    private VCSigner vcSigner;
+    private CredentialFactory credentialFactory;
 
     @Autowired
     private DatabaseStatusListIndexProvider indexProvider;
@@ -53,6 +55,9 @@ public class StatusListCredentialService {
 
     @Value("${mosip.certify.status-list.signature-crypto-suite:Ed25519Signature2020}")
     private String signatureCryptoSuite;
+
+    @Value("${mosip.certify.status-list.signature-algo:EdDSA}")
+    private String signatureAlgo;
 
     @Value("${mosip.certify.data-provider-plugin.did-url}")
     private String didUrl;
@@ -168,14 +173,12 @@ public class StatusListCredentialService {
 
             log.debug("Created status list VC structure: {}", statusListData.toString(2));
 
-            // Sign the status list credential
-            Map<String, String> signerSettings = new HashMap<>();
-            signerSettings.put(Constants.APPLICATION_ID, CertifyIssuanceServiceImpl.keyChooser.get(signatureCryptoSuite).getFirst());
-            signerSettings.put(Constants.REFERENCE_ID, CertifyIssuanceServiceImpl.keyChooser.get(signatureCryptoSuite).getLast());
-            signerSettings.put(Constants.SIGNATURE_CRYPTO_SUITE, signatureCryptoSuite);
+            String appId = CertifyIssuanceServiceImpl.keyChooser.get(signatureCryptoSuite).getFirst();
+            String refId = CertifyIssuanceServiceImpl.keyChooser.get(signatureCryptoSuite).getLast();
+            Credential cred = credentialFactory.getCredential(VCFormats.LDP_VC).orElseThrow(()-> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
 
             // Attach signature to the VC
-            VCResult<?> vcResult = vcSigner.attachSignature(statusListData.toString(), signerSettings);
+            VCResult<?> vcResult = cred.addProof(statusListData.toString(), "", signatureAlgo, appId, refId, didUrl, signatureCryptoSuite);
 
             if (vcResult.getCredential() == null) {
                 log.error("Failed to generate status list VC - vcResult.getCredential() returned null");
@@ -316,12 +319,6 @@ public class StatusListCredentialService {
         log.info("Re-signing status list credential");
 
         try {
-            // Prepare signer settings
-            Map<String, String> signerSettings = new HashMap<>();
-            signerSettings.put(Constants.APPLICATION_ID, CertifyIssuanceServiceImpl.keyChooser.get(signatureCryptoSuite).getFirst());
-            signerSettings.put(Constants.REFERENCE_ID, CertifyIssuanceServiceImpl.keyChooser.get(signatureCryptoSuite).getLast());
-            signerSettings.put(Constants.SIGNATURE_CRYPTO_SUITE, signatureCryptoSuite);
-
             // Remove existing proof if present before re-signing
             JSONObject vcDocument = new JSONObject(vcDocumentJson);
             if (vcDocument.has("proof")) {
@@ -331,8 +328,12 @@ public class StatusListCredentialService {
             // Update validFrom timestamp to current time
             vcDocument.put("validFrom", new Date().toInstant().toString());
 
+            String appId = CertifyIssuanceServiceImpl.keyChooser.get(signatureCryptoSuite).getFirst();
+            String refId = CertifyIssuanceServiceImpl.keyChooser.get(signatureCryptoSuite).getLast();
+            Credential cred = credentialFactory.getCredential(VCFormats.LDP_VC).orElseThrow(()-> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
+
             // Sign the updated VC
-            VCResult<?> vcResult = vcSigner.attachSignature(vcDocument.toString(), signerSettings);
+            VCResult<?> vcResult = cred.addProof(vcDocument.toString(), "", signatureAlgo, appId, refId, didUrl, signatureCryptoSuite);
 
             if (vcResult.getCredential() == null) {
                 log.error("Failed to re-sign status list VC - vcResult.getCredential() returned null");
