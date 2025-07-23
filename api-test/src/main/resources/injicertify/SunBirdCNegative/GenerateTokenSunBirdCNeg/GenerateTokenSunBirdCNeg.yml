@@ -1,8 +1,8 @@
 GenerateTokenSunBirdCNeg:
    InjiCertify_ESignet_GenerateTokenSunBirdC_Valid_sid_For_Neg_flow:
       endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/oauth/v2/token
-      uniqueIdentifier: TC_esignetDependent_GenerateTokenSunBirdCNeg_01     
-      description: Generate Token      
+      uniqueIdentifier: TC_esignetDependent_GenerateTokenSunBirdCNeg_01
+      description: Generate Token
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -23,8 +23,8 @@ GenerateTokenSunBirdCNeg:
 
    InjiCertify_ESignet_GenerateTokenSunBirdC_Diff_Scope_Valid_sid_For_Neg_flow:
       endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/oauth/v2/token
-      uniqueIdentifier: TC_esignetDependent_GenerateTokenSunBirdCNeg_02      
-      description: Generate Token      
+      uniqueIdentifier: TC_esignetDependent_GenerateTokenSunBirdCNeg_02
+      description: Generate Token
       role: resident
       restMethod: post
       validityCheckRequired: true

@@ -1,8 +1,8 @@
 CreateOIDCClientV2VCIFormDocMDL:
    InjiCertify_ESignet_CreateOIDCClientV2_FormDoc_all_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/client-mgmt/oauth-client
-      uniqueIdentifier: TC_esignetDependent_CreateOIDCClientV2VCIFormDocMDL_01      
-      description: Create OIDC client      
+      uniqueIdentifier: TC_esignetDependent_CreateOIDCClientV2VCIFormDocMDL_01
+      description: Create OIDC client
       role: partner
       restMethod: post
       inputTemplate: injicertify/mDocMDL/CreateOIDCClientV2FormDoc/CreateOIDCClientV2FormDoc

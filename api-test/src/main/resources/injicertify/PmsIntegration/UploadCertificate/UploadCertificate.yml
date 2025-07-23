@@ -1,8 +1,8 @@
 uploadCACert:
    Injicertify_UploadCACertificate_MOSIPID_All_Valid_Smoke:
       endPoint: /v1/partnermanager/partners/certificate/ca/upload
-      uniqueIdentifier: TC_pms_dependency_uploadCACert_01     
-      description: upload certificate      
+      uniqueIdentifier: TC_pms_dependency_uploadCACert_01
+      description: upload certificate
       role: partner
       restMethod: post
       inputTemplate: injicertify/PmsIntegration/UploadCertificate/uploadCertificate
@@ -17,8 +17,8 @@ uploadCACert:
 }'
    Injicertify_UploadCInterCertificate_MOSIPID_All_Valid_Smoke:
       endPoint: /v1/partnermanager/partners/certificate/ca/upload
-      uniqueIdentifier: TC_pms_dependency_uploadCACert_02     
-      description: upload certificate      
+      uniqueIdentifier: TC_pms_dependency_uploadCACert_02
+      description: upload certificate
       role: partner
       restMethod: post
       inputTemplate: injicertify/PmsIntegration/UploadCertificate/uploadCertificate

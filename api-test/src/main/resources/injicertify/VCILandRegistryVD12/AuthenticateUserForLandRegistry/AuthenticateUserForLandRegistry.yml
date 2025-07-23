@@ -37,7 +37,7 @@ AuthenticateUserForLandRegistry:
 
    InjiCertify_ESignet_AuthenticateUserVCI_ForLandRegistry_Vd12_Cred_2_uin_Otp_Valid_Smoke:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUserForLandRegistry_02
+	  uniqueIdentifier: TC_esignetDependent_AuthenticateUserForLandRegistry_02
       role: resident
       restMethod: post
       checkErrorsOnlyInResponse: true
