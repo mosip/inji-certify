@@ -139,7 +139,7 @@ SendOtp:
 
    ESignet_SendOtp_uin_Invalid_RequestTime_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_07
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_07
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -163,7 +163,7 @@ SendOtp:
 
    ESignet_SendOtp_uin_Diff_RequestTime_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_08
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_08
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -187,7 +187,7 @@ SendOtp:
 
    ESignet_SendOtp_uin_Future_RequestTime_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_09
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_09
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -211,7 +211,7 @@ SendOtp:
 
    ESignet_SendOtp_uin_Invalid_transactionId_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_10
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_10
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -235,7 +235,7 @@ SendOtp:
 
    ESignet_SendOtp_uin_Expired_transactionId_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_11
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_11
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -259,7 +259,7 @@ SendOtp:
 
    ESignet_SendOtp_uin_Missing_transactionId_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_12
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_12
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -283,7 +283,7 @@ SendOtp:
 
    ESignet_SendOtp_uin_Empty_transactionId_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_13
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_13
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -307,7 +307,7 @@ SendOtp:
 
    ESignet_SendOtp_uin_Null_transactionId_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_14
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_14
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -331,7 +331,7 @@ SendOtp:
 
    ESignet_SendOtp_uin_Invalid_individualId_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_15
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_15
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -355,7 +355,7 @@ SendOtp:
 
    ESignet_SendOtp_uin_Missing_individualId_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_16
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_16
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -379,7 +379,7 @@ SendOtp:
 
    ESignet_SendOtp_uin_Empty_individualId_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_17
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_17
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -403,7 +403,7 @@ SendOtp:
 
    ESignet_SendOtp_uin_Null_individualId_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_18
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_18
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -427,7 +427,7 @@ SendOtp:
 
    ESignet_SendOtp_uin_Invalid_OtpChannels_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_19
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_19
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -451,7 +451,7 @@ SendOtp:
 
    ESignet_SendOtp_uin_Missing_OtpChannels_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_20
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_20
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -475,7 +475,7 @@ SendOtp:
 
    ESignet_SendOtp_uin_Empty_OtpChannels_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_21
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_21
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -499,7 +499,7 @@ SendOtp:
 
    ESignet_SendOtp_uin_Null_OtpChannels_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_22
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_22
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -523,7 +523,7 @@ SendOtp:
 
    ESignet_SendOtp_uin_Missing_OtpChannel_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_23
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_23
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -547,7 +547,7 @@ SendOtp:
 
    ESignet_SendOtp_uin_Empty_OtpChannel_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_24
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_24
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -571,7 +571,7 @@ SendOtp:
 
    ESignet_SendOtp_uin_Null_OtpChannel_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_25
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_25
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -595,7 +595,7 @@ SendOtp:
 
    ESignet_SendOtp_Vid_Invalid_RequestTime_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_26
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_26
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -619,7 +619,7 @@ SendOtp:
 
    ESignet_SendOtp_Vid_Diff_RequestTime_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_27
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_27
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -643,7 +643,7 @@ SendOtp:
 
    ESignet_SendOtp_Vid_Future_RequestTime_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_28
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_28
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -667,7 +667,7 @@ SendOtp:
 
    ESignet_SendOtp_Vid_Invalid_transactionId_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_29
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_29
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -691,7 +691,7 @@ SendOtp:
 
    ESignet_SendOtp_Vid_Expired_transactionId_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_30
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_30
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -715,7 +715,7 @@ SendOtp:
 
    ESignet_SendOtp_Vid_Missing_transactionId_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_31
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_31
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -739,7 +739,7 @@ SendOtp:
 
    ESignet_SendOtp_Vid_Empty_transactionId_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_32
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_32
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -763,7 +763,7 @@ SendOtp:
 
    ESignet_SendOtp_Vid_Null_transactionId_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_33
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_33
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -787,7 +787,7 @@ SendOtp:
 
    ESignet_SendOtp_Vid_Invalid_individualId_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_34
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_34
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -811,7 +811,7 @@ SendOtp:
 
    ESignet_SendOtp_Vid_Missing_individualId_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_35
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_35
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -835,7 +835,7 @@ SendOtp:
 
    ESignet_SendOtp_Vid_Empty_individualId_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_36
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_36
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -859,7 +859,7 @@ SendOtp:
 
    ESignet_SendOtp_Vid_Null_individualId_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_37
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_37
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -883,7 +883,7 @@ SendOtp:
 
    ESignet_SendOtp_Vid_Invalid_OtpChannels_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_38
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_38
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -907,7 +907,7 @@ SendOtp:
 
    ESignet_SendOtp_Vid_Missing_OtpChannels_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_39
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_39
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -931,7 +931,7 @@ SendOtp:
 
    ESignet_SendOtp_Vid_Empty_OtpChannels_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_40
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_40
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -955,7 +955,7 @@ SendOtp:
 
    ESignet_SendOtp_Vid_Null_OtpChannels_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_41
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_41
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -979,7 +979,7 @@ SendOtp:
 
    ESignet_SendOtp_Vid_Missing_OtpChannel_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_42
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_42
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -1003,7 +1003,7 @@ SendOtp:
 
    ESignet_SendOtp_Vid_Empty_OtpChannel_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_43
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_43
       role: resident
       restMethod: post
       validityCheckRequired: true
@@ -1027,7 +1027,7 @@ SendOtp:
 
    ESignet_SendOtp_Vid_Null_OtpChannel_Neg:
       endPoint: /v1/esignet/authorization/send-otp
-	  uniqueIdentifier: TC_esignet_dependency_SendOtp_44
+      uniqueIdentifier: TC_esignet_dependency_SendOtp_44
       role: resident
       restMethod: post
       validityCheckRequired: true
