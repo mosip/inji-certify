@@ -110,7 +110,7 @@ public class SDJWT extends Credential{
      */
     @Override
     public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm, String appID, String refID, String didUrl, String signatureCryptoSuite) {
-        VCResult<String> VC = new VCResult<>();
+        VCResult<String> vcResult = new VCResult<>();
         String[] jwt = vcToSign.split("~");
         String[] jwtPayload = jwt[0].split("\\.");
         //TODO: Request DTO should add options for header.
@@ -129,8 +129,8 @@ public class SDJWT extends Credential{
         //payload.setSignAlgorithm(signAlgorithm); // RSSignature2018 --> RS256, PS256, ES256
         
         JWTSignatureResponseDto jwsSignedData = signatureService.jwsSign(payload);
-        VC.setCredential(vcToSign.replaceAll("^[^~]*", jwsSignedData.getJwtSignedData()));
-        return VC;
+        vcResult.setCredential(vcToSign.replaceAll("^[^~]*", jwsSignedData.getJwtSignedData()));
+        return vcResult;
     }
 
 }

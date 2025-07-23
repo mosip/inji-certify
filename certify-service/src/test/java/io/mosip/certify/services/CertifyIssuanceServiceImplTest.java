@@ -15,7 +15,6 @@ import io.mosip.certify.api.spi.DataProviderPlugin;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
 import io.mosip.certify.core.constants.Constants;
-import io.mosip.certify.core.constants.SignatureAlg;
 
 import io.mosip.certify.core.dto.*;
 
@@ -24,9 +23,7 @@ import io.mosip.certify.core.exception.CertifyException;
 
 import io.mosip.certify.credential.CredentialFactory;
 import io.mosip.certify.credential.SDJWT; // Implementation
-import io.mosip.certify.credential.W3cJsonLd; // Implementation
-import io.mosip.certify.entity.CredentialStatusTransaction;
-import io.mosip.certify.entity.Ledger;
+import io.mosip.certify.credential.W3CJsonLD; // Implementation
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 
@@ -38,8 +35,6 @@ import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
 import io.mosip.certify.core.util.SecurityHelperService;
 import io.mosip.certify.proof.ProofValidatorFactory;
-import io.mosip.certify.repository.CredentialStatusTransactionRepository;
-import io.mosip.certify.repository.LedgerRepository;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 
 import org.json.JSONObject;
@@ -53,7 +48,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.text.ParseException;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 
@@ -240,9 +234,9 @@ public class CertifyIssuanceServiceImplTest {
         when(proofValidator.validateV2(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
         when(dataProviderPlugin.fetchData(claimsFromAccessToken)).thenReturn(new JSONObject().put("subjectKey", "subjectValue"));
 
-        W3cJsonLd mockW3cJsonLd = mock(W3cJsonLd.class);
-        when(credentialFactory.getCredential(DEFAULT_FORMAT_LDP)).thenReturn(Optional.of(mockW3cJsonLd));
-        when(mockW3cJsonLd.createCredential(anyMap(), anyString())).thenReturn("{\"unsigned\":\"credential\"}");
+        W3CJsonLD mockW3CJsonLD = mock(W3CJsonLD.class);
+        when(credentialFactory.getCredential(DEFAULT_FORMAT_LDP)).thenReturn(Optional.of(mockW3CJsonLD));
+        when(mockW3CJsonLD.createCredential(anyMap(), anyString())).thenReturn("{\"unsigned\":\"credential\"}");
 
         // Stub vcFormatter methods called by service's getVerifiableCredential method for addProof
         when(vcFormatter.getProofAlgorithm(anyString())).thenReturn("EdDSA"); // Example value
@@ -257,7 +251,7 @@ public class CertifyIssuanceServiceImplTest {
         mockVcResultLdp.setCredential(signedCredObj);
 
         // The holderId argument to addProof in the service is "" for LDP
-        when(mockW3cJsonLd.addProof(
+        when(mockW3CJsonLD.addProof(
                 eq("{\"unsigned\":\"credential\"}"),
                 eq(""),  // Service code passes "" for LDP's addProof holderId
                 anyString(),

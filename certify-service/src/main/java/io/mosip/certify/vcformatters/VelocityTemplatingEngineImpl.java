@@ -40,7 +40,6 @@ import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.RenderingTemplateException;
 import io.mosip.certify.entity.CredentialConfig;
-import io.mosip.certify.entity.TemplateId; // Ensure this import is present
 import io.mosip.certify.repository.CredentialConfigRepository;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCDM2Constants;
@@ -287,26 +286,6 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
             }
         }
         return finalTemplate;
-    }
-
-    /**
-     * getTemplate fetches the VelocityTemplate from the DB or Spring Cache
-     * @param key key is a combination of sorted credentialType & sorted
-     *            context separated by a ':'.
-     * @return
-     */
-    @Cacheable(cacheNames = "template", key = "#key")
-    public String getTemplate(String key) {
-        if (!key.contains(DELIMITER)) {
-            return null;
-        }
-        String credentialType = key.split(DELIMITER)[0];
-        String context = key.split(DELIMITER, 2)[1];
-        CredentialConfig template = credentialConfigRepository.findByCredentialTypeAndContext(credentialType, context).orElse(null);
-        if (template != null) {
-            return template.getVcTemplate();
-        } else
-            return null;
     }
 
     /**

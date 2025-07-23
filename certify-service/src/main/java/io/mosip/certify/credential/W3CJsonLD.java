@@ -26,7 +26,6 @@ import io.mosip.certify.services.CertifyIssuanceServiceImpl;
 import io.mosip.certify.utils.CredentialUtils;
 import io.mosip.certify.utils.DIDDocumentUtil;
 import io.mosip.certify.vcformatters.VCFormatter;
-import io.mosip.kernel.keymanagerservice.dto.CertificateDataResponseDto;
 import io.mosip.kernel.signature.service.SignatureService;
 import io.mosip.kernel.signature.service.SignatureServicev2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,8 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-public class W3cJsonLd extends Credential{
-    //TODO: This has to move to a factory
+public class W3CJsonLD extends Credential{
     @Autowired
     ProofGeneratorFactory proofGeneratorFactory;
     @Autowired
@@ -58,7 +56,7 @@ public class W3cJsonLd extends Credential{
      * @param vcFormatter
      * @param signatureService
      */
-    public W3cJsonLd(VCFormatter vcFormatter, SignatureService signatureService) {
+    public W3CJsonLD(VCFormatter vcFormatter, SignatureService signatureService) {
         super(vcFormatter, signatureService);
     }
 
@@ -82,17 +80,16 @@ public class W3cJsonLd extends Credential{
      */
     @Override
     public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm, String appID, String refID, String didUrl, String signatureCryptoSuite){
-        VCResult<JsonLDObject> VC = new VCResult<>();
-//        signAlgorithm = "ecdsa-rdfc-2019"; // TODO: this should be configurable
+        VCResult<JsonLDObject> vcResult = new VCResult<>();
         Map<String,String> keyReferenceDetails = Map.of(Constants.APPLICATION_ID, appID, Constants.REFERENCE_ID, refID);
-        JsonLDObject j = JsonLDObject.fromJson(vcToSign);
-        j.setDocumentLoader(null);
+        JsonLDObject jsonLDObject = JsonLDObject.fromJson(vcToSign);
+        jsonLDObject.setDocumentLoader(null);
         // NOTE: other aspects can be configured via keyMgrInput map
         String validFrom;
-        if (j.getJsonObject().containsKey(VCDM1Constants.ISSUANCE_DATE)) {
-            validFrom = j.getJsonObject().get(VCDM1Constants.ISSUANCE_DATE).toString();
-        } else if (j.getJsonObject().containsKey(VCDM2Constants.VALID_FROM)){
-            validFrom = j.getJsonObject().get(VCDM2Constants.VALID_FROM).toString();
+        if (jsonLDObject.getJsonObject().containsKey(VCDM1Constants.ISSUANCE_DATE)) {
+            validFrom = jsonLDObject.getJsonObject().get(VCDM1Constants.ISSUANCE_DATE).toString();
+        } else if (jsonLDObject.getJsonObject().containsKey(VCDM2Constants.VALID_FROM)){
+            validFrom = jsonLDObject.getJsonObject().get(VCDM2Constants.VALID_FROM).toString();
         } else {
             validFrom = ZonedDateTime.now(ZoneOffset.UTC)
                     .format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
@@ -116,9 +113,9 @@ public class W3cJsonLd extends Credential{
                     .created(createDate).proofPurpose(VCDMConstants.ASSERTION_METHOD)
                     .verificationMethod(URI.create(didUrl + "#" + kid))
                     .build();
-            LdProof ldProofWithJWS = CredentialUtils.generateLdProof(vcLdProof, j,
+            LdProof ldProofWithJWS = CredentialUtils.generateLdProof(vcLdProof, jsonLDObject,
                     keyReferenceDetails, proofGenerator);
-            ldProofWithJWS.addToJsonLDObject(j);
+            ldProofWithJWS.addToJsonLDObject(jsonLDObject);
         } else {
             LdSigner signer = LdSignerRegistry.getLdSignerByDataIntegritySuiteTerm(SignatureAlg.DATA_INTEGRITY);
             KeymanagerByteSigner keymanagerByteSigner = KeymanagerByteSignerFactory.getInstance(appID, refID, signatureService, signAlgorithm);
@@ -132,12 +129,12 @@ public class W3cJsonLd extends Credential{
                     .verificationMethod(URI.create(didUrl + "#" + kid))
                     .type(SignatureAlg.DATA_INTEGRITY).build();
 
-            dataIntegrityProof = CredentialUtils.generateDataIntegrityProof(dataIntegrityProof, j, signer);
-            dataIntegrityProof.addToJsonLDObject(j);
+            dataIntegrityProof = CredentialUtils.generateDataIntegrityProof(dataIntegrityProof, jsonLDObject, signer);
+            dataIntegrityProof.addToJsonLDObject(jsonLDObject);
         }
-        VC.setCredential(j);
-        VC.setFormat("ldp_vc");
-        return VC;
+        vcResult.setCredential(jsonLDObject);
+        vcResult.setFormat("ldp_vc");
+        return vcResult;
     }
 
 }
