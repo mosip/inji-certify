@@ -401,6 +401,7 @@ public class CredentialConfigurationServiceImplTest {
         sdJwtConfig.setCredentialFormat("vc+sd-jwt");
         sdJwtConfig.setSdJwtVct("test-vct");
         sdJwtConfig.setSignatureCryptoSuite("Ed25519Signature2020");
+        sdJwtConfig.setSignatureAlgo("ES256");
 
         CredentialConfigurationDTO sdJwtDTO = new CredentialConfigurationDTO();
         sdJwtDTO.setCredentialFormat("vc+sd-jwt");
@@ -428,7 +429,7 @@ public class CredentialConfigurationServiceImplTest {
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", config)
             );
-            assertEquals("Context and credentialType are mandatory for ldp_vc format", ex.getMessage());
+            assertEquals("Context, credentialType and signatureCryptoSuite are mandatory for ldp_vc format", ex.getMessage());
         }
     }
 
@@ -455,7 +456,7 @@ public class CredentialConfigurationServiceImplTest {
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", config)
             );
-            assertEquals("Doctype field is mandatory for mso_mdoc", ex.getMessage());
+            assertEquals("Doctype and signatureCryptoSuite fields are mandatory for mso_mdoc format", ex.getMessage());
         }
     }
 
@@ -482,7 +483,7 @@ public class CredentialConfigurationServiceImplTest {
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", config)
             );
-            assertEquals("Vct field is mandatory for vc+sd-jwt", ex.getMessage());
+            assertEquals("Vct and signatureAlgo fields are mandatory for vc+sd-jwt format", ex.getMessage());
         }
     }
 

@@ -79,8 +79,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         credentialConfig.setConfigId(UUID.randomUUID().toString());
         credentialConfig.setStatus(Constants.ACTIVE);
 
-        if(pluginMode.equals("DataProvider") && (credentialConfig.getVcTemplate() == null || credentialConfig.getVcTemplate().isEmpty() ||
-                credentialConfig.getSignatureCryptoSuite() == null || credentialConfig.getSignatureCryptoSuite().isEmpty())) {
+        if(pluginMode.equals("DataProvider") && (credentialConfig.getVcTemplate() == null || credentialConfig.getVcTemplate().isEmpty() || credentialConfig.getSignatureCryptoSuite().isEmpty())) {
             throw new CertifyException("Credential Template and VC Sign Crypto Suite is mandatory for the DataProvider plugin issuer.");
         }
 
@@ -122,7 +121,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         switch (credentialConfig.getCredentialFormat()) {
             case VCFormats.LDP_VC:
                 if (!LdpVcCredentialConfigValidator.isValidCheck(credentialConfig)) {
-                    throw new CertifyException("Context and credentialType are mandatory for ldp_vc format");
+                    throw new CertifyException("Context, credentialType and signatureCryptoSuite are mandatory for ldp_vc format");
                 }
                 if(LdpVcCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException("Configuration already exists for the given context and credentialType");
@@ -130,7 +129,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 break;
             case VCFormats.MSO_MDOC:
                 if (!MsoMdocCredentialConfigValidator.isValidCheck(credentialConfig)) {
-                    throw new CertifyException("Doctype field is mandatory for mso_mdoc");
+                    throw new CertifyException("Doctype and signatureCryptoSuite fields are mandatory for mso_mdoc format");
                 }
                 if(MsoMdocCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException("Configuration already exists for the given doctype");
@@ -138,7 +137,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 break;
             case VCFormats.VC_SD_JWT:
                 if (!SdJwtCredentialConfigValidator.isValidCheck(credentialConfig)) {
-                    throw new CertifyException("Vct field is mandatory for vc+sd-jwt");
+                    throw new CertifyException("Vct and signatureAlgo fields are mandatory for vc+sd-jwt format");
                 }
                 if(SdJwtCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException("Configuration already exists for the given vct");

@@ -1,6 +1,5 @@
 package io.mosip.certify.validators.credentialconfigvalidators;
 
-import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.entity.CredentialConfig;
 import io.mosip.certify.repository.CredentialConfigRepository;
 
@@ -10,6 +9,7 @@ public class LdpVcCredentialConfigValidator {
     public static boolean isValidCheck(CredentialConfig credentialConfig) {
         return credentialConfig.getContext() != null && !credentialConfig.getContext().isEmpty()
                 && credentialConfig.getCredentialType() != null && !credentialConfig.getCredentialType().isEmpty()
+                && credentialConfig.getSignatureCryptoSuite() != null && !credentialConfig.getSignatureCryptoSuite().isEmpty()
                 && credentialConfig.getDocType() == null && credentialConfig.getSdJwtVct() == null
                 && credentialConfig.getClaims() == null;
     }
