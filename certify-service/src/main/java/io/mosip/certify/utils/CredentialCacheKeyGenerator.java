@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
+
 import java.util.Optional;
 
 import static io.mosip.certify.core.constants.Constants.DELIMITER;
@@ -26,13 +27,13 @@ public class CredentialCacheKeyGenerator {
     @Autowired
     private CacheManager cacheManager;
 
-    public String generateKeyFromConfigId(String configId) {
+    public String generateKeyFromCredentialConfigKeyId(String credentialConfigKeyId) {
         String key = "default-key";
-        if (configId == null) {
+        if (credentialConfigKeyId == null) {
             log.warn("generateKeyFromConfigId called with null configId for cache key generation.");
             return null;
         }
-        Optional<CredentialConfig> configOpt = credentialConfigRepository.findById(configId);
+        Optional<CredentialConfig> configOpt = credentialConfigRepository.findByCredentialConfigKeyId(credentialConfigKeyId);
 
         if (configOpt.isPresent()) {
            CredentialConfig config = configOpt.get();

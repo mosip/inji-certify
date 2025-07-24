@@ -7,7 +7,6 @@ package io.mosip.certify.services;
 
 import com.danubetech.dataintegrity.suites.DataIntegrityProofDataIntegritySuite;
 import com.danubetech.dataintegrity.suites.DataIntegritySuites;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.*;
@@ -73,65 +72,63 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     private static final String CREDENTIAL_CONFIG_CACHE_NAME = "credentialConfig";
 
     @Override
-    public CredentialConfigResponse addCredentialConfiguration(CredentialConfigurationDTO credentialConfigurationDTO) throws JsonProcessingException {
+    public CredentialConfigResponse addCredentialConfiguration(CredentialConfigurationDTO credentialConfigurationDTO) {
         CredentialConfig credentialConfig = credentialConfigMapper.toEntity(credentialConfigurationDTO);
 
         credentialConfig.setConfigId(UUID.randomUUID().toString());
         credentialConfig.setStatus(Constants.ACTIVE);
 
-        if(pluginMode.equals("DataProvider") && (credentialConfig.getVcTemplate() == null || credentialConfig.getVcTemplate().isEmpty())) {
-            throw new CertifyException("Credential Template and VC Sign Crypto Suite is mandatory for the DataProvider plugin issuer.");
-        }
+        validateCredentialConfiguration(credentialConfig, true);
 
-        if(credentialConfig.getCredentialFormat().equals(VCFormats.LDP_VC)) {
-            String signatureCryptoSuite = credentialConfig.getSignatureCryptoSuite();
-            if (!CertifyIssuanceServiceImpl.keyChooser.containsKey(signatureCryptoSuite)) {
-                DataIntegrityProofDataIntegritySuite dataIntegrityProofDataIntegritySuite = DataIntegritySuites.DATA_INTEGRITY_SUITE_DATAINTEGRITYPROOF;
-                List<String> signatureCryptoSuitesByJwsAlgo = dataIntegrityProofDataIntegritySuite.findCryptosuitesForJwsAlgorithm(credentialConfig.getSignatureAlgo());
-
-                if (signatureCryptoSuitesByJwsAlgo.isEmpty()) {
-                    throw new CertifyException("Unsupported signature algorithm: " + credentialConfig.getSignatureAlgo());
-                }
-
-                if (!signatureCryptoSuitesByJwsAlgo.contains(credentialConfig.getSignatureCryptoSuite())) {
-                    throw new CertifyException("Signature crypto suite " + credentialConfig.getSignatureCryptoSuite() +
-                            " is not supported for the signature algorithm: " + credentialConfig.getSignatureAlgo());
-                }
-            }
-
-            credentialConfig.setCredentialStatusPurposes(credentialStatusSupportedPurposes);
-        }
-
+        credentialConfig.setCredentialStatusPurposes(credentialStatusSupportedPurposes);
         credentialConfig.setCryptographicBindingMethodsSupported(cryptographicBindingMethodsSupportedMap.get(credentialConfig.getCredentialFormat()));
         credentialConfig.setCredentialSigningAlgValuesSupported(Collections.singletonList(credentialConfig.getSignatureCryptoSuite()));
         credentialConfig.setProofTypesSupported(proofTypesSupported);
 
-        validateCredentialConfiguration(credentialConfig);
         CredentialConfig savedConfig = credentialConfigRepository.save(credentialConfig);
         log.info("Added credential configuration: {}", savedConfig.getConfigId());
 
         CredentialConfigResponse credentialConfigResponse = new CredentialConfigResponse();
-        credentialConfigResponse.setId(savedConfig.getConfigId());
+        credentialConfigResponse.setId(savedConfig.getCredentialConfigKeyId());
         credentialConfigResponse.setStatus(savedConfig.getStatus());
 
         return credentialConfigResponse;
     }
 
-    private void validateCredentialConfiguration(CredentialConfig credentialConfig) {
+    private void validateCredentialConfiguration(CredentialConfig credentialConfig, boolean isAdd) {
+
+        if(pluginMode.equals("DataProvider") && (credentialConfig.getVcTemplate() == null || credentialConfig.getVcTemplate().isEmpty())) {
+            throw new CertifyException("Credential Template is mandatory for the DataProvider plugin issuer.");
+        }
+
         switch (credentialConfig.getCredentialFormat()) {
             case VCFormats.LDP_VC:
                 if (!LdpVcCredentialConfigValidator.isValidCheck(credentialConfig)) {
                     throw new CertifyException("Context, credentialType and signatureCryptoSuite are mandatory for ldp_vc format");
                 }
-                if(LdpVcCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
+                if(isAdd && LdpVcCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException("Configuration already exists for the given context and credentialType");
+                }
+
+                if (!CertifyIssuanceServiceImpl.keyChooser.containsKey(credentialConfig.getSignatureCryptoSuite())) {
+                    DataIntegrityProofDataIntegritySuite dataIntegrityProofDataIntegritySuite = DataIntegritySuites.DATA_INTEGRITY_SUITE_DATAINTEGRITYPROOF;
+                    List<String> signatureCryptoSuitesByJwsAlgo = dataIntegrityProofDataIntegritySuite.findCryptosuitesForJwsAlgorithm(credentialConfig.getSignatureAlgo());
+
+                    if (signatureCryptoSuitesByJwsAlgo.isEmpty()) {
+                        throw new CertifyException("Unsupported signature algorithm: " + credentialConfig.getSignatureAlgo());
+                    }
+
+                    if (!signatureCryptoSuitesByJwsAlgo.contains(credentialConfig.getSignatureCryptoSuite())) {
+                        throw new CertifyException("Signature crypto suite " + credentialConfig.getSignatureCryptoSuite() +
+                                " is not supported for the signature algorithm: " + credentialConfig.getSignatureAlgo());
+                    }
                 }
                 break;
             case VCFormats.MSO_MDOC:
                 if (!MsoMdocCredentialConfigValidator.isValidCheck(credentialConfig)) {
                     throw new CertifyException("Doctype and signatureCryptoSuite fields are mandatory for mso_mdoc format");
                 }
-                if(MsoMdocCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
+                if(isAdd && MsoMdocCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException("Configuration already exists for the given doctype");
                 }
                 break;
@@ -139,7 +136,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 if (!SdJwtCredentialConfigValidator.isValidCheck(credentialConfig)) {
                     throw new CertifyException("Vct and signatureAlgo fields are mandatory for vc+sd-jwt format");
                 }
-                if(SdJwtCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
+                if(isAdd && SdJwtCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException("Configuration already exists for the given vct");
                 }
                 break;
@@ -149,11 +146,11 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     }
 
     @Override
-    public CredentialConfigurationDTO getCredentialConfigurationById(String id) throws JsonProcessingException {
-        Optional<CredentialConfig> optional = credentialConfigRepository.findById(id);
+    public CredentialConfigurationDTO getCredentialConfigurationById(String credentialConfigKeyId) {
+        Optional<CredentialConfig> optional = credentialConfigRepository.findByCredentialConfigKeyId(credentialConfigKeyId);
 
         if(optional.isEmpty()) {
-            throw new CredentialConfigException("Configuration not found with the provided id: " + id);
+            throw new CredentialConfigException("Configuration not found with the provided id: " + credentialConfigKeyId);
         }
 
         CredentialConfig credentialConfig = optional.get();
@@ -165,56 +162,59 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     }
 
     /**
-     * NOTE: Using @credentialCacheKeyGenerator.generateKeyFromConfigId(#id) will cause
+     * NOTE: Using @credentialCacheKeyGenerator.generateKeyFromCredentialConfigKeyId(#id) will cause
      * an additional database lookup for CredentialConfig by id within the key generator.
      * This is a trade-off for using declarative @CacheEvict on this method signature.
      * The alternative is manual CacheManager.evict() after fetching the object once in this method.
      */
     @Override
-    @CacheEvict(cacheNames = CREDENTIAL_CONFIG_CACHE_NAME, key = "@credentialCacheKeyGenerator.generateKeyFromConfigId(#id)", condition = "#id != null")
-    public CredentialConfigResponse updateCredentialConfiguration(String id, CredentialConfigurationDTO credentialConfigurationDTO) throws JsonProcessingException {
-        Optional<CredentialConfig> optional = credentialConfigRepository.findById(id);
+    @CacheEvict(cacheNames = CREDENTIAL_CONFIG_CACHE_NAME, key = "@credentialCacheKeyGenerator.generateKeyFromCredentialConfigKeyId(#credentialConfigKeyId)", condition = "#credentialConfigKeyId != null")
+    public CredentialConfigResponse updateCredentialConfiguration(String credentialConfigKeyId, CredentialConfigurationDTO credentialConfigurationDTO){
+        Optional<CredentialConfig> optional = credentialConfigRepository.findByCredentialConfigKeyId(credentialConfigKeyId);
 
         if(optional.isEmpty()) {
-            log.warn("Configuration not found for update with id: {}", id);
-            throw new CredentialConfigException("Configuration not found with the provided id: " + id);
+            log.warn("Configuration not found for update with id: {}", credentialConfigKeyId);
+            throw new CredentialConfigException("Configuration not found with the provided id: " + credentialConfigKeyId);
         }
 
         CredentialConfig credentialConfig = optional.get();
         credentialConfigMapper.updateEntityFromDto(credentialConfigurationDTO, credentialConfig);
+
+        validateCredentialConfiguration(credentialConfig, false);
+
         CredentialConfig savedConfig = credentialConfigRepository.save(credentialConfig);
         log.info("Updated credential configuration: {}", savedConfig.getConfigId());
 
         CredentialConfigResponse credentialConfigResponse = new CredentialConfigResponse();
-        credentialConfigResponse.setId(savedConfig.getConfigId());
+        credentialConfigResponse.setId(savedConfig.getCredentialConfigKeyId());
         credentialConfigResponse.setStatus(savedConfig.getStatus());
 
         return credentialConfigResponse;
     }
 
     /**
-     * NOTE: Using @credentialCacheKeyGenerator.generateKeyFromConfigId(#id) will cause
+     * NOTE: Using @credentialCacheKeyGenerator.generateKeyFromCredentialConfigKeyId(#id) will cause
      * an additional database lookup for CredentialConfig by id within the key generator.
      * This is a trade-off for using declarative @CacheEvict on this method signature.
      */
     @Override
     @Transactional
     @CacheEvict(cacheNames = CREDENTIAL_CONFIG_CACHE_NAME,
-            key = "@credentialCacheKeyGenerator.generateKeyFromConfigId(#id)",
+            key = "@credentialCacheKeyGenerator.generateKeyFromCredentialConfigKeyId(#credentialConfigKeyId)",
             beforeInvocation = true)
-    public String deleteCredentialConfigurationById(String id) {
-        Optional<CredentialConfig> optional = credentialConfigRepository.findById(id);
+    public String deleteCredentialConfigurationById(String credentialConfigKeyId) {
+        Optional<CredentialConfig> optional = credentialConfigRepository.findByCredentialConfigKeyId(credentialConfigKeyId) ;
 
         if(optional.isEmpty()) {
-            log.warn("Configuration not found for delete with id: {}", id);
-            throw new CredentialConfigException("Configuration not found with the provided id: " + id);
+            log.warn("Configuration not found for delete with id: {}", credentialConfigKeyId);
+            throw new CredentialConfigException("Configuration not found with the provided id: " + credentialConfigKeyId);
         }
 
         // The object is fetched once here.
         // The @CacheEvict's key SpEL will cause CredentialCacheKeyGenerator to fetch it again.
         credentialConfigRepository.delete(optional.get());
-        log.info("Deleted credential configuration: {}", id);
-        return id;
+        log.info("Deleted credential configuration: {}", credentialConfigKeyId);
+        return credentialConfigKeyId;
     }
 
     @Override
@@ -301,10 +301,10 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
             credentialDefinition.setCredentialSubject(new HashMap<>(credentialConfig.getCredentialSubject()));
             credentialConfigurationSupported.setCredentialDefinition(credentialDefinition);
         } else if (VCFormats.MSO_MDOC.equals(credentialConfig.getCredentialFormat())) {
-            credentialConfigurationSupported.setClaims(new HashMap<>(new HashMap<>(credentialConfig.getClaims())));
+            credentialConfigurationSupported.setClaims(new HashMap<>(new HashMap<>(credentialConfig.getMsoMdocClaims())));
             credentialConfigurationSupported.setDocType(credentialConfig.getDocType());
         } else if (VCFormats.VC_SD_JWT.equals(credentialConfig.getCredentialFormat())) {
-            credentialConfigurationSupported.setClaims(new HashMap<>(new HashMap<>(credentialConfig.getClaims())));
+            credentialConfigurationSupported.setClaims(new HashMap<>(credentialConfig.getSdJwtClaims()));
             credentialConfigurationSupported.setVct(credentialConfig.getSdJwtVct());
         }
 
