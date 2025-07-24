@@ -80,9 +80,7 @@ public class AppConfig implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-//        if (env.matchesProfiles("local")) {
             initKeys();
-//        }
     }
 
     private void initKeys(){

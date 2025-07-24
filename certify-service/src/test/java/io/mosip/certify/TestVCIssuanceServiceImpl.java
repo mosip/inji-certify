@@ -36,14 +36,4 @@ public class TestVCIssuanceServiceImpl implements VCIssuanceService {
     public Map<String, Object> getDIDDocument() {
         throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE);
     }
-
-    @Override
-    public CredentialStatusResponse updateCredential(UpdateCredentialStatusRequest request) {
-        throw new UnsupportedOperationException("updateCredential is not implemented yet");
-    }
-
-    @Override
-    public List<CredentialStatusResponse> searchCredentials(CredentialLedgerSearchRequest request) {
-        return Collections.emptyList();
-    }
 }

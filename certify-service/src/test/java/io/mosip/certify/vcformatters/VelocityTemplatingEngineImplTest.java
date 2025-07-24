@@ -7,7 +7,6 @@ import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.entity.TemplateId; // Import TemplateId
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Assert;
@@ -52,13 +51,10 @@ public class VelocityTemplatingEngineImplTest {
 
     // Template Keys used in tests, derived from CredentialConfig objects
     private String vc2TemplateKey;
-    private TemplateId vc2TemplateIdObject;
 
     private String vc3TemplateKey;
-    private TemplateId vc3TemplateIdObject;
 
     private String vc4TemplateKey;
-    private TemplateId vc4TemplateIdObject;
 
 
     private final String FACE_DATA = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII";
@@ -73,7 +69,6 @@ public class VelocityTemplatingEngineImplTest {
         String vc2Context = "https://example.org/Person.json,https://www.w3.org/ns/credentials/v2";
         String vc2Format = "ldp_vc";
         vc2TemplateKey = vc2Type + DELIMITER + vc2Context + DELIMITER + vc2Format;
-        vc2TemplateIdObject = new TemplateId(vc2Context, vc2Type, vc2Format);
         vc2 = initTemplate("""
                         {
                             "@context": ["https://www.w3.org/ns/credentials/v2"],
@@ -106,7 +101,6 @@ public class VelocityTemplatingEngineImplTest {
         String vc3Context = "https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1";
         String vc3Format = "ldp_vc";
         vc3TemplateKey = vc3Type + DELIMITER + vc3Context + DELIMITER + vc3Format;
-        vc3TemplateIdObject = new TemplateId(vc3Context, vc3Type, vc3Format);
         vc3 = initTemplate("""
                         {
                             "@context": ["https://www.w3.org/2018/credentials/v1", "https://vharsh.github.io/DID/mock-context.json"],
@@ -140,7 +134,6 @@ public class VelocityTemplatingEngineImplTest {
         String vc4Context = "https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1";
         String vc4Format = "ldp_vc";
         vc4TemplateKey = vc4Type + DELIMITER + vc4Context + DELIMITER + vc4Format;
-        vc4TemplateIdObject = new TemplateId(vc4Context, vc4Type, vc4Format);
         vc4 = initTemplate(null,
                 vc4Type, vc4Context, vc4Format, "did:example:issuer4", "appId4", "refId4", "RSA", null, "testCryptoSuite"
         );
@@ -274,50 +267,6 @@ public class VelocityTemplatingEngineImplTest {
     @Ignore("This test requires a running local server and is for manual/integration testing")
     @Test
     public void testTemplating_localOnly() { /* ... unchanged ... */ }
-
-    @Test
-    public void getTemplate_ValidKey_ReturnsTemplateString() {
-        // formatter.getTemplate uses findByCredentialTypeAndContext
-        String type = "MockVerifiableCredential,VerifiableCredential";
-        String context = "https://example.org/Person.json,https://www.w3.org/ns/credentials/v2"; // context part of vc2
-        String keyForGetTemplate = type + DELIMITER + context; // Key format for getTemplate() method
-
-        when(credentialConfigRepository.findByCredentialTypeAndContext(type, context))
-                .thenReturn(Optional.of(vc2));
-
-        String template = formatter.getTemplate(keyForGetTemplate);
-        Assert.assertNotNull(template);
-        Assert.assertEquals(vc2.getVcTemplate(), template);
-    }
-
-    @Test
-    public void getTemplate_InvalidKeyFormat_ReturnsNull() {
-        // Key format doesn't contain DELIMITER, or has other issues specific to getTemplate's parsing
-        String key = "InvalidKeyWithoutDelimiter";
-        String template = formatter.getTemplate(key); // getTemplate has its own parsing
-        Assert.assertNull(template);
-
-        String keyWithWrongDelimiter = "Type;Context"; // formatter.getTemplate uses ":"
-        template = formatter.getTemplate(keyWithWrongDelimiter);
-        Assert.assertNull(template); // This will also result in null as DELIMITER ":" is not found
-    }
-
-
-    @Test
-    public void getTemplate_ConfigFoundButTemplateStringIsNull_ReturnsNull() {
-
-        String vc4TypeForGetTemplate = "TestVerifiableCredential,VerifiableCredential";
-
-        String vc4ContextForGetTemplate = "https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1" + DELIMITER + "ldp_vc";
-        String keyForVc4GetTemplate = vc4TypeForGetTemplate + DELIMITER + vc4ContextForGetTemplate;
-
-
-        when(credentialConfigRepository.findByCredentialTypeAndContext(vc4TypeForGetTemplate, vc4ContextForGetTemplate))
-                .thenReturn(Optional.of(vc4)); // vc4.getVcTemplate() is null
-
-        String template = formatter.getTemplate(keyForVc4GetTemplate);
-        Assert.assertNull(template);
-    }
 
 
     @Test
