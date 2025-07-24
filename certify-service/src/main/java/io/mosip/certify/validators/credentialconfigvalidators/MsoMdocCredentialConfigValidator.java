@@ -10,7 +10,8 @@ public class MsoMdocCredentialConfigValidator {
         return credentialConfig.getDocType() != null && !credentialConfig.getDocType().isEmpty()
                 && credentialConfig.getSignatureCryptoSuite() != null && !credentialConfig.getSignatureCryptoSuite().isEmpty()
                 && credentialConfig.getCredentialType() == null && credentialConfig.getContext() == null
-                && credentialConfig.getSdJwtVct() == null && credentialConfig.getCredentialSubject() == null;
+                && credentialConfig.getSdJwtVct() == null && credentialConfig.getCredentialSubject() == null
+                && credentialConfig.getSdJwtClaims() == null;
     }
 
     public static boolean isConfigAlreadyPresent(CredentialConfig credentialConfig,

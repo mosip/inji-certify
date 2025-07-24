@@ -26,6 +26,19 @@ class SdJwtCredentialConfigValidatorTest {
     }
 
     @Test
+    void testIsValidCheck_msoMdocClaimsPreset_returnsFalse() {
+        CredentialConfig config = new CredentialConfig();
+        config.setSdJwtVct("vctValue");
+        config.setSignatureAlgo("algoValue");
+        config.setCredentialType(null);
+        config.setContext(null);
+        config.setDocType(null);
+        config.setCredentialSubject(null);
+        config.setMsoMdocClaims(new HashMap<>());
+        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config));
+    }
+
+    @Test
     void testIsValidCheck_missingSdJwtVct_returnsFalse() {
         CredentialConfig config = new CredentialConfig();
         config.setSdJwtVct(null);

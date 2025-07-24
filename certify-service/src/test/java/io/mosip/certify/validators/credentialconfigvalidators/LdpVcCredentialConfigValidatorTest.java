@@ -38,7 +38,8 @@ class LdpVcCredentialConfigValidatorTest {
         config.setSignatureCryptoSuite("Ed25519Signature2020");
         config.setDocType(null);
         config.setSdJwtVct(null);
-        config.setClaims(null);
+        config.setMsoMdocClaims(null);
+        config.setSdJwtClaims(null);
         assertTrue(LdpVcCredentialConfigValidator.isValidCheck(config));
     }
 
@@ -80,7 +81,8 @@ class LdpVcCredentialConfigValidatorTest {
         CredentialConfig config = new CredentialConfig();
         config.setContext("https://example.org/context");
         config.setCredentialType("TestType");
-        config.setClaims(new HashMap<>());
+        config.setMsoMdocClaims(new HashMap<>());
+        config.setSdJwtClaims(new HashMap<>());
         assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config));
     }
 

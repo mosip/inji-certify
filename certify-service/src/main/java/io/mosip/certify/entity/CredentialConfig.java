@@ -98,8 +98,13 @@ public class CredentialConfig {
 
     @Type(JsonBinaryType.class)
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "claims", columnDefinition = "jsonb")
-    private Map<String, Map<String, ClaimsDisplayFieldsConfigs>> claims;
+    @Column(name = "mso_mdoc_claims", columnDefinition = "jsonb")
+    private Map<String, Map<String, ClaimsDisplayFieldsConfigs>> msoMdocClaims;
+
+    @Type(JsonBinaryType.class)
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "sd_jwt_claims", columnDefinition = "jsonb")
+    private Map<String, ClaimsDisplayFieldsConfigs> sdJwtClaims;
 
     @Column(name = "sd_jwt_vct")
     private String sdJwtVct;

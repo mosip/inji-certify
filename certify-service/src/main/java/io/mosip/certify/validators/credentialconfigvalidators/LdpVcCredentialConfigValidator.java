@@ -11,7 +11,7 @@ public class LdpVcCredentialConfigValidator {
                 && credentialConfig.getCredentialType() != null && !credentialConfig.getCredentialType().isEmpty()
                 && credentialConfig.getSignatureCryptoSuite() != null && !credentialConfig.getSignatureCryptoSuite().isEmpty()
                 && credentialConfig.getDocType() == null && credentialConfig.getSdJwtVct() == null
-                && credentialConfig.getClaims() == null;
+                && credentialConfig.getMsoMdocClaims() == null && credentialConfig.getSdJwtClaims() == null;
     }
 
     public static boolean isConfigAlreadyPresent(CredentialConfig credentialConfig,

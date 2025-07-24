@@ -104,7 +104,7 @@ public class CredentialConfigurationServiceImplTest {
     }
 
     @Test
-    public void addCredentialConfiguration_DataProviderMode_VcTemplateNull_ThrowsException() throws Exception {
+    public void addCredentialConfiguration_DataProviderMode_VcTemplateNull_ThrowsException() {
         // Arrange
         ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "DataProvider");
         CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
@@ -210,7 +210,7 @@ public class CredentialConfigurationServiceImplTest {
     }
 
     @Test
-    public void deleteCredentialConfig_Success() throws JsonProcessingException {
+    public void deleteCredentialConfig_Success() {
         Optional<CredentialConfig> optional = Optional.of(credentialConfig);
         when(credentialConfigRepository.findById(anyString())).thenReturn(optional);
         doNothing().when(credentialConfigRepository).delete(any(CredentialConfig.class));
@@ -330,7 +330,7 @@ public class CredentialConfigurationServiceImplTest {
 
         mdocConfig.setStatus("active");
         mdocConfig.setCredentialFormat("mso_mdoc");
-        mdocConfig.setClaims(Map.of("firstName", Map.of( "First Name", new ClaimsDisplayFieldsConfigs(List.of(new ClaimsDisplayFieldsConfigs.Display("Test","en"))))));
+        mdocConfig.setMsoMdocClaims(Map.of("firstName", Map.of( "First Name", new ClaimsDisplayFieldsConfigs(List.of(new ClaimsDisplayFieldsConfigs.Display("Test","en"))))));
         mdocConfig.setDocType("docType1");
 
         List<CredentialConfig> credentialConfigList = List.of(mdocConfig);
@@ -341,7 +341,7 @@ public class CredentialConfigurationServiceImplTest {
         mdocDTO.setCredentialFormat("mso_mdoc");
         mdocDTO.setCredentialConfigKeyId("mdoc-credential");
         mdocDTO.setScope("mdoc_scope");
-        mdocDTO.setClaims(Map.of("firstName", Map.of( "First Name", new ClaimsDisplayFieldsConfigDTO(List.of(new ClaimsDisplayFieldsConfigDTO.Display("Test","en"))))));
+        mdocDTO.setMsoMdocClaims(Map.of("firstName", Map.of( "First Name", new ClaimsDisplayFieldsConfigDTO(List.of(new ClaimsDisplayFieldsConfigDTO.Display("Test","en"))))));
         mdocDTO.setDocType("docType1");
 
         when(credentialConfigMapper.toDto(mdocConfig)).thenReturn(mdocDTO);
@@ -352,6 +352,7 @@ public class CredentialConfigurationServiceImplTest {
         // Verify MSO_MDOC configuration
         Assert.assertNotNull(result.getCredentialConfigurationSupportedDTO());
         Assert.assertEquals(1, result.getCredentialConfigurationSupportedDTO().size());
+        Assert.assertEquals(Map.of("firstName", Map.of( "First Name", new ClaimsDisplayFieldsConfigs(List.of(new ClaimsDisplayFieldsConfigs.Display("Test","en"))))), result.getCredentialConfigurationSupportedDTO().get("mdoc-credential").getClaims());
 
         CredentialConfigurationSupportedDTO supportedDTO = result.getCredentialConfigurationSupportedDTO().get("mdoc-credential");
         Assert.assertNotNull(supportedDTO);

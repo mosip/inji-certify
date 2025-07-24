@@ -26,6 +26,19 @@ class MsoMdocCredentialConfigValidatorTest {
     }
 
     @Test
+    void testIsValidCheck_sdJwtClaimsPresent_returnsFalse() {
+        CredentialConfig config = new CredentialConfig();
+        config.setDocType("docType");
+        config.setSignatureCryptoSuite("suite");
+        config.setCredentialType(null);
+        config.setContext(null);
+        config.setSdJwtVct(null);
+        config.setCredentialSubject(null);
+        config.setSdJwtClaims(new HashMap<>());
+        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
+    }
+
+    @Test
     void testIsValidCheck_missingDocType_returnsFalse() {
         CredentialConfig config = new CredentialConfig();
         config.setDocType(null);

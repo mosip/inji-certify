@@ -37,7 +37,8 @@ ALTER TABLE certify.credential_config
     ADD COLUMN credential_signing_alg_values_supported TEXT[] NOT NULL DEFAULT ARRAY['Ed25519Signature2020']::TEXT[], -- Adding a default value for NOT NULL constraint
     ADD COLUMN proof_types_supported JSONB NOT NULL DEFAULT '{"jwt": {"proof_signing_alg_values_supported": ["RS256", "ES256", "PS256", "Ed25519"]}}'::jsonb, -- Adding a default value for NOT NULL constraint
     ADD COLUMN credential_subject JSONB DEFAULT '{}'::jsonb,
-    ADD COLUMN claims JSONB,
+    ADD COLUMN mso_mdoc_claims JSONB,
+    ADD COLUMN sd_jwt_claims JSONB,
     ADD COLUMN plugin_configurations JSONB;
     ADD COLUMN credential_status_purpose TEXT[];
 
@@ -98,7 +99,8 @@ COMMENT ON COLUMN credential_config.cryptographic_binding_methods_supported IS '
 COMMENT ON COLUMN credential_config.credential_signing_alg_values_supported IS 'Credential Signing Algorithms: Array of supported signing algorithms.';
 COMMENT ON COLUMN credential_config.proof_types_supported IS 'Proof Types: JSON object containing supported proof types and their configurations.';
 COMMENT ON COLUMN credential_config.credential_subject IS 'Credential Subject: JSON object containing subject attributes schema.';
-COMMENT ON COLUMN credential_config.claims IS 'Claims: JSON object containing subject attributes schema specifically for Mdoc VC.';
+COMMENT ON COLUMN credential_config.mso_mdoc_claims IS 'Mso_mdoc Claims: JSON object containing subject attributes schema specifically for MSO-MDOC VC.';
+COMMENT ON COLUMN credential_config.sd_jwt_claims IS 'SdJwt Claims: JSON object containing subject attributes schema specifically for SdJwt VC.';
 COMMENT ON COLUMN credential_config.plugin_configurations IS 'Plugin Configurations: Array of JSON objects for plugin configurations.';
 COMMENT ON COLUMN credential_config.cr_dtimes IS 'Created DateTime: Date and time when the config was inserted in table.';
 COMMENT ON COLUMN credential_config.upd_dtimes IS 'Updated DateTime: Date and time when the config was last updated in table.';

@@ -10,7 +10,8 @@ public class SdJwtCredentialConfigValidator {
         return credentialConfig.getSdJwtVct() != null && !credentialConfig.getSdJwtVct().isEmpty()
                 && credentialConfig.getSignatureAlgo() != null && !credentialConfig.getSignatureAlgo().isEmpty()
                 && credentialConfig.getCredentialType() == null && credentialConfig.getContext() == null
-                && credentialConfig.getDocType() == null && credentialConfig.getCredentialSubject() == null;
+                && credentialConfig.getDocType() == null && credentialConfig.getCredentialSubject() == null &&
+                credentialConfig.getMsoMdocClaims() == null;
     }
 
     public static boolean isConfigAlreadyPresent(CredentialConfig credentialConfig,
