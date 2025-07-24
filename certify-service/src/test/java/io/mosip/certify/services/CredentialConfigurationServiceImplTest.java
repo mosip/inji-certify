@@ -436,7 +436,7 @@ public class CredentialConfigurationServiceImplTest {
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", config, true)
             );
-            assertEquals("Context, credentialType and signatureCryptoSuite are mandatory for ldp_vc format", ex.getMessage());
+            assertEquals("Context and credentialType are mandatory for ldp_vc format", ex.getMessage());
         }
     }
 
@@ -465,7 +465,7 @@ public class CredentialConfigurationServiceImplTest {
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", config, true)
             );
-            assertEquals("Doctype and signatureCryptoSuite fields are mandatory for mso_mdoc format", ex.getMessage());
+            assertEquals("Doctype field is mandatory for mso_mdoc format", ex.getMessage());
         }
     }
 

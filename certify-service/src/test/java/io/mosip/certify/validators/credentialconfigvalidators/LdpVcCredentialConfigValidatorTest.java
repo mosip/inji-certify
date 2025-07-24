@@ -22,15 +22,6 @@ class LdpVcCredentialConfigValidatorTest {
     }
 
     @Test
-    void testIsValidCheck_missingSignatureCryptoSuite_returnsFalse() {
-        CredentialConfig config = new CredentialConfig();
-        config.setContext("https://example.org/context");
-        config.setCredentialType("VerifiableCredential,TestVerifiableCredential");
-        config.setSignatureCryptoSuite(null);
-        assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config));
-    }
-
-    @Test
     void testIsValidCheck_allValidFields_returnsTrue() {
         CredentialConfig config = new CredentialConfig();
         config.setContext("https://example.org/context");

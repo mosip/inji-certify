@@ -55,22 +55,6 @@ class MsoMdocCredentialConfigValidatorTest {
     }
 
     @Test
-    void testIsValidCheck_missingSignatureCryptoSuite_returnsFalse() {
-        CredentialConfig config = new CredentialConfig();
-        config.setDocType("docType");
-        config.setSignatureCryptoSuite(null);
-        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
-    }
-
-    @Test
-    void testIsValidCheck_emptySignatureCryptoSuite_returnsFalse() {
-        CredentialConfig config = new CredentialConfig();
-        config.setDocType("docType");
-        config.setSignatureCryptoSuite("");
-        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
-    }
-
-    @Test
     void testIsValidCheck_credentialTypeNotNull_returnsFalse() {
         CredentialConfig config = new CredentialConfig();
         config.setDocType("docType");

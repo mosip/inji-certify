@@ -57,6 +57,7 @@ public class CredentialConfigControllerTest {
         credentialConfigurationDTO.setScope("test_vc_ldp");
         credentialConfigurationDTO.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
         credentialConfigurationDTO.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
+        credentialConfigurationDTO.setSignatureCryptoSuite("Ed25519Signature2020");
         Map<String, Object> jwtValues = Map.of("proof_signing_alg_values_supported", Arrays.asList("RS256", "ES256"));
         credentialConfigurationDTO.setProofTypesSupported(Map.of("jwt", jwtValues));
         Map<String, String> pluginConfigMap = new HashMap<>();

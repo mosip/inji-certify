@@ -104,7 +104,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         switch (credentialConfig.getCredentialFormat()) {
             case VCFormats.LDP_VC:
                 if (!LdpVcCredentialConfigValidator.isValidCheck(credentialConfig)) {
-                    throw new CertifyException("Context, credentialType and signatureCryptoSuite are mandatory for ldp_vc format");
+                    throw new CertifyException("Context and credentialType are mandatory for ldp_vc format");
                 }
                 if(isAdd && LdpVcCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException("Configuration already exists for the given context and credentialType");
@@ -126,7 +126,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 break;
             case VCFormats.MSO_MDOC:
                 if (!MsoMdocCredentialConfigValidator.isValidCheck(credentialConfig)) {
-                    throw new CertifyException("Doctype and signatureCryptoSuite fields are mandatory for mso_mdoc format");
+                    throw new CertifyException("Doctype field is mandatory for mso_mdoc format");
                 }
                 if(isAdd && MsoMdocCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException("Configuration already exists for the given doctype");
