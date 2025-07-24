@@ -13,7 +13,6 @@ import io.mosip.certify.proofgenerators.ProofGeneratorFactory;
 import io.mosip.certify.proofgenerators.dip.KeymanagerByteSigner;
 import io.mosip.certify.utils.DIDDocumentUtil;
 import io.mosip.certify.vcformatters.VCFormatter;
-import io.mosip.kernel.keymanagerservice.dto.CertificateDataResponseDto;
 import io.mosip.kernel.signature.service.SignatureService;
 import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
 import info.weboftrust.ldsignatures.LdProof;
@@ -38,10 +37,10 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class W3cJsonLdTest {
+public class W3CJsonLDTest {
 
     @InjectMocks
-    private W3cJsonLd w3cJsonLd;
+    private W3CJsonLD w3cJsonLd;
 
     @Mock
     private VCFormatter vcFormatter;

@@ -207,7 +207,7 @@ public class DIDDocumentUtil {
         CertificateDataResponseDto certificateData = Arrays.stream(kidResponse.getAllCertificates())
                 .filter(certificateDataResponseDto -> certificateDataResponseDto.getExpiryAt() != null
                         && certificateDataResponseDto.getExpiryAt().isAfter(LocalDateTime.now()))
-                .findFirst()
+                .max(Comparator.comparing(CertificateDataResponseDto::getExpiryAt))
                 .orElseThrow(() -> {
                     log.error("No valid certificates found for appId: {} and refId: {}", appId, refId);
                     return new CertifyException("No valid certificates found");

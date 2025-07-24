@@ -47,7 +47,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     private String credentialIssuerDomainUrl;
 
     @Value("#{'${mosip.certify.authorization.url}'.split(',')}")
-    private List<String> authServers;
+    private List<String> authServer;
 
     @Value("${server.servlet.path}")
     private String servletPath;
@@ -100,7 +100,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 }
             }
 
-            credentialConfig.setCredentialStatusPurpose(credentialStatusSupportedPurposes);
+            credentialConfig.setCredentialStatusPurposes(credentialStatusSupportedPurposes);
         }
 
         credentialConfig.setCryptographicBindingMethodsSupported(cryptographicBindingMethodsSupportedMap.get(credentialConfig.getCredentialFormat()));
@@ -136,7 +136,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                     throw new CertifyException("Configuration already exists for the given doctype");
                 }
                 break;
-            case VCFormats.LDP_SD_JWT:
+            case VCFormats.VC_SD_JWT:
                 if (!SdJwtCredentialConfigValidator.isValidCheck(credentialConfig)) {
                     throw new CertifyException("Vct field is mandatory for vc+sd-jwt");
                 }
@@ -237,7 +237,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                     });
             credentialIssuerMetadata.setCredentialConfigurationSupportedDTO(credentialConfigurationSupportedMap);
             credentialIssuerMetadata.setCredentialIssuer(credentialIssuer);
-            credentialIssuerMetadata.setAuthorizationServers(authServers);
+            credentialIssuerMetadata.setAuthorizationServers(authServer);
             String credentialEndpoint = credentialIssuer + servletPath + "/issuance" + (!version.equals("latest") ? "/" + version : "") + "/credential";
             credentialIssuerMetadata.setCredentialEndpoint(credentialEndpoint);
             credentialIssuerMetadata.setDisplay(issuerDisplay);
@@ -255,7 +255,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                     });
             credentialIssuerMetadata.setCredentialConfigurationSupportedDTO(credentialConfigurationSupportedMap); // Use a different setter for vd12
             credentialIssuerMetadata.setCredentialIssuer(credentialIssuer);
-            credentialIssuerMetadata.setAuthorizationServers(authServers);
+            credentialIssuerMetadata.setAuthorizationServers(authServer);
             String credentialEndpoint = credentialIssuer + servletPath + "/issuance/" + version + "/credential";
             credentialIssuerMetadata.setCredentialEndpoint(credentialEndpoint);
             credentialIssuerMetadata.setDisplay(issuerDisplay);
@@ -274,7 +274,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                     });
             credentialIssuerMetadata.setCredentialConfigurationSupportedDTO(credentialConfigurationSupportedList); // Use a different setter for vd11
             credentialIssuerMetadata.setCredentialIssuer(credentialIssuer);
-            credentialIssuerMetadata.setAuthorizationServers(authServers);
+            credentialIssuerMetadata.setAuthorizationServers(authServer);
             String credentialEndpoint = credentialIssuer + servletPath + "/issuance/" + version + "/credential";
             credentialIssuerMetadata.setCredentialEndpoint(credentialEndpoint);
             credentialIssuerMetadata.setDisplay(issuerDisplay);
@@ -304,7 +304,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         } else if (VCFormats.MSO_MDOC.equals(credentialConfig.getCredentialFormat())) {
             credentialConfigurationSupported.setClaims(new HashMap<>(new HashMap<>(credentialConfig.getClaims())));
             credentialConfigurationSupported.setDocType(credentialConfig.getDocType());
-        } else if (VCFormats.LDP_SD_JWT.equals(credentialConfig.getCredentialFormat())) {
+        } else if (VCFormats.VC_SD_JWT.equals(credentialConfig.getCredentialFormat())) {
             credentialConfigurationSupported.setClaims(new HashMap<>(new HashMap<>(credentialConfig.getClaims())));
             credentialConfigurationSupported.setVct(credentialConfig.getSdJwtVct());
         }

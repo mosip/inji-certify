@@ -240,10 +240,6 @@ public class StatusListUpdateBatchJob {
         for (CredentialStatusTransaction transaction : transactions) {
             if (transaction.getStatusListIndex() != null) {
                 updatedStatuses.put(transaction.getStatusListIndex(), transaction.getStatusValue());
-                log.info("Applied transaction: index={}, value={}, timestamp={}",
-                        transaction.getStatusListIndex(),
-                        transaction.getStatusValue(),
-                        transaction.getCreatedDtimes());
             }
         }
 
@@ -289,6 +285,3 @@ public class StatusListUpdateBatchJob {
         }
     }
 }
-
-//H4sIAAAAAAAA_-3OMQ0AAAgDsEnAv1o87CEhrYImAHTmOgAAAAAAAAAAAAAAAAAAwCML9WKdBQBAAAA
-//H4sIAAAAAAAA_-3OMQkAAAgAMCMY2ehiBRF8tgSLAGAnvwMAAAAAAAAAAAAAwI36DgAAAMBoH-LL9QBAAAA
