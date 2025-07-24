@@ -1,4 +1,4 @@
-package io.mosip.certify.mapper;
+package io.mosip.certify.utils;
 
 import io.mosip.certify.core.dto.ClaimsDisplayFieldsConfigDTO;
 import io.mosip.certify.core.dto.CredentialConfigurationDTO;
