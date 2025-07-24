@@ -191,7 +191,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
 
     @Override
     public List<String> getCredentialStatusPurpose(String templateName) {
-        return getCachedCredentialConfig(templateName).getCredentialStatusPurpose();
+        return getCachedCredentialConfig(templateName).getCredentialStatusPurposes();
     }
 
     /**

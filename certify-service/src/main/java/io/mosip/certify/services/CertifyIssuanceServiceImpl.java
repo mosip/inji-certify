@@ -176,29 +176,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         }
 
         // 3. Proof Validation
-        String cNonce = VCIssuanceUtil.getValidClientNonce(vciCacheService, parsedAccessToken, cNonceExpireSeconds, securityHelperService, log);
-        // c_nonce present in accessToken but not in proofjwt
-        if (parsedAccessToken.getClaims().containsKey(Constants.C_NONCE)
-                && credentialRequest.getProof().getJwt() != null) {
-            // issue a c_nonce and return the error
-            try {
-                SignedJWT proofJwt = SignedJWT.parse(credentialRequest.getProof().getJwt());
-                String proofJwtNonce = Optional.ofNullable(proofJwt.getJWTClaimsSet().getStringClaim("nonce")).orElse("");
-                String authZServerNonce = Optional.ofNullable(parsedAccessToken.getClaims().get(Constants.C_NONCE)).map(Object::toString).orElse("");
-                if (authZServerNonce.equals(StringUtils.EMPTY) || !cNonce.equals(proofJwtNonce)) {
-                    // AuthZ server didn't give in a protected c_nonce
-                    //  and c_nonce given in proofJwt doesn't match Certify generated c_nonce
-                    throw new InvalidNonceException(cNonce, cNonceExpireSeconds);
-                }
-            } catch (ParseException e) {
-                // check iff specific error exists for invalid holderKey
-                throw new CertifyException(ErrorConstants.INVALID_PROOF, "error parsing proof jwt");
-            }
-        } else {
-            throw new InvalidNonceException(cNonce, cNonceExpireSeconds);
-        }
         ProofValidator proofValidator = proofValidatorFactory.getProofValidator(credentialRequest.getProof().getProof_type());
         String validCNonce = VCIssuanceUtil.getValidClientNonce(vciCacheService, parsedAccessToken, cNonceExpireSeconds, securityHelperService, log);
+        proofValidator.validateCNonce(validCNonce, cNonceExpireSeconds, parsedAccessToken, credentialRequest);
         if(!proofValidator.validateV2((String)parsedAccessToken.getClaims().get(Constants.CLIENT_ID), validCNonce,
                 credentialRequest.getProof(), credentialMetadata.getProofTypesSupported())) {
             throw new CertifyException(ErrorConstants.INVALID_PROOF);
@@ -259,13 +239,13 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     String templateName = CredentialUtils.getTemplateName(vcRequestDto);
                     templateParams.put(Constants.TEMPLATE_NAME, templateName);
                     templateParams.put(Constants.DID_URL, didUrl);
+                    if (!StringUtils.isEmpty(renderTemplateId)) {
+                        templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
+                    }
                     jsonObject.put(Constants.TYPE, credentialRequest.getCredential_definition().getType());
                     List<String> credentialStatusPurposeList = vcFormatter.getCredentialStatusPurpose(templateName);
                     if (credentialStatusPurposeList != null && !credentialStatusPurposeList.isEmpty()) {
                         addCredentialStatus(jsonObject, credentialStatusPurposeList.getFirst());
-                    }
-                    if (!StringUtils.isEmpty(renderTemplateId)) {
-                        templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
                     }
                     jsonObject.put("_holderId", holderId);
                     Credential cred = credentialFactory.getCredential(credentialRequest.getFormat()).orElseThrow(()-> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
@@ -505,7 +485,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             ledger.setCredentialStatusDetails(statusDetailsList);
 
             ledgerRepository.save(ledger);
-            log.info("Ledger entry stored forcredential: {}", credentialId);
         } catch (Exception e) {
             log.error("Error storing ledger entry", e);
             throw new RuntimeException("Failed to store ledger entry", e);
