@@ -23,9 +23,9 @@ ALTER TABLE certify.credential_config
     ADD COLUMN status VARCHAR(255) DEFAULT 'active',
     ADD COLUMN doctype VARCHAR,
     ADD COLUMN sd_jwt_vct VARCHAR,
-    ADD COLUMN credential_format VARCHAR(255) NOT NULL DEFAULT 'ldp_vc', -- Adding a default value for NOT NULL constraint
+    ADD COLUMN credential_format VARCHAR(255) NOT NULL DEFAULT '', -- Adding a default value for NOT NULL constraint
     ADD COLUMN did_url VARCHAR DEFAULT 'did:web:mosip.github.io:inji-config:default', -- Adding a default value for NOT NULL constraint
-    ADD COLUMN key_manager_app_id VARCHAR(36) DEFAULT 'CERTIFY_VC_SIGN_ED25519', -- Adding a default value for NOT NULL constraint
+    ADD COLUMN key_manager_app_id VARCHAR(36) DEFAULT '', -- Adding a default value for NOT NULL constraint
     ADD COLUMN key_manager_ref_id VARCHAR(128) DEFAULT 'ED25519_SIGN', -- Adding a default value for NOT NULL constraint
     ADD COLUMN signature_algo VARCHAR(36),
     ADD COLUMN signature_crypto_suite VARCHAR(128) DEFAULT 'Ed25519Signature2020', -- Adding a default value for NOT NULL constraint
@@ -33,9 +33,9 @@ ALTER TABLE certify.credential_config
     ADD COLUMN display JSONB NOT NULL DEFAULT '[]'::jsonb, -- Adding a default value for NOT NULL constraint
     ADD COLUMN display_order TEXT[] DEFAULT ARRAY[]::TEXT[], -- Adding a default value for NOT NULL constraint
     ADD COLUMN scope VARCHAR(255) NOT NULL DEFAULT '', -- Adding a default value for NOT NULL constraint
-    ADD COLUMN cryptographic_binding_methods_supported TEXT[] NOT NULL DEFAULT ARRAY['did:jwk','did:key']::TEXT[], -- Adding a default value for NOT NULL constraint
-    ADD COLUMN credential_signing_alg_values_supported TEXT[] NOT NULL DEFAULT ARRAY['Ed25519Signature2020']::TEXT[], -- Adding a default value for NOT NULL constraint
-    ADD COLUMN proof_types_supported JSONB NOT NULL DEFAULT '{"jwt": {"proof_signing_alg_values_supported": ["RS256", "ES256", "PS256", "Ed25519"]}}'::jsonb, -- Adding a default value for NOT NULL constraint
+    ADD COLUMN cryptographic_binding_methods_supported TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[], -- Adding a default value for NOT NULL constraint
+    ADD COLUMN credential_signing_alg_values_supported TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[], -- Adding a default value for NOT NULL constraint
+    ADD COLUMN proof_types_supported JSONB NOT NULL DEFAULT '{}'::jsonb, -- Adding a default value for NOT NULL constraint
     ADD COLUMN credential_subject JSONB DEFAULT '{}'::jsonb,
     ADD COLUMN claims JSONB,
     ADD COLUMN plugin_configurations JSONB;
@@ -45,6 +45,22 @@ ALTER TABLE certify.credential_config
 UPDATE certify.credential_config
 SET credential_config_key_id = credential_type || '_ldp_vc'
 WHERE credential_config_key_id IS NULL;
+
+UPDATE certify.credential_config
+SET credential_format = 'ldp_vc'
+WHERE credential_format = '';
+
+UPDATE certify.credential_config
+SET cryptographic_binding_methods_supported = ARRAY['did:jwk', 'did:key']
+WHERE cryptographic_binding_methods_supported = ARRAY[]::TEXT[];
+
+UPDATE certify.credential_config
+SET credential_signing_alg_values_supported = ARRAY['Ed25519Signature2020']
+WHERE credential_signing_alg_values_supported = ARRAY[]::TEXT[];
+
+UPDATE certify.credential_config
+SET proof_types_supported = '{"jwt": {"proof_signing_alg_values_supported": ["RS256", "ES256", "PS256", "Ed25519"]}}'::jsonb
+WHERE proof_types_supported = '{}'::jsonb;
 
 -- Step 3: Rename the template column to match the new schema
 ALTER TABLE certify.credential_config RENAME COLUMN template TO vc_template;

@@ -32,9 +32,6 @@ public class CredentialStatusController {
     @Autowired
     private CredentialStatusService credentialStatusService;
 
-    @Autowired
-    MessageSource messageSource;
-
     /**
      * Get Status List Credential by ID with optional fragment support
      * Handles URLs like: /{id} or /{id}#{fragment}
@@ -56,16 +53,6 @@ public class CredentialStatusController {
             @Valid @RequestBody UpdateCredentialStatusRequest updateCredentialStatusRequest) {
         CredentialStatusResponse result = credentialStatusService.updateCredentialStatus(updateCredentialStatusRequest);
         if (result == null) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(result);
-    }
-
-    @PostMapping("/ledger-search")
-    public ResponseEntity<List<CredentialStatusResponse>> searchCredentials(
-            @Valid @RequestBody CredentialLedgerSearchRequest request) {
-        List<CredentialStatusResponse> result = credentialStatusService.searchCredentialLedger(request);
-        if (result.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.ok(result);
