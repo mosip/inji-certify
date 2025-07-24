@@ -100,7 +100,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 }
             }
 
-            credentialConfig.setCredentialStatusPurpose(credentialStatusSupportedPurposes);
+            credentialConfig.setCredentialStatusPurposes(credentialStatusSupportedPurposes);
         }
 
         credentialConfig.setCryptographicBindingMethodsSupported(cryptographicBindingMethodsSupportedMap.get(credentialConfig.getCredentialFormat()));

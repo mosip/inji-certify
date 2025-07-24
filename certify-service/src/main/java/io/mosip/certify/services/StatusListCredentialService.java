@@ -65,8 +65,8 @@ public class StatusListCredentialService {
     @Value("${mosip.certify.domain.url}")
     private String domainUrl;
 
-    @Value("#{${mosip.certify.statuslist.default-capacity:16}}") // value in kb
-    private long defaultCapacity;
+    @Value("#{${mosip.certify.statuslist.size-in-kb:16}}") // value in kb
+    private long statusListSizeInKB;
 
     public String getStatusListCredential(String id) throws CertifyException {
         log.info("Processing status list credential request for ID: {}", id);
@@ -166,7 +166,7 @@ public class StatusListCredentialService {
             credentialSubject.put("statusPurpose", statusPurpose);
 
             // Create empty encoded list (all 0s)
-            String encodedList = BitStringStatusListUtils.createEmptyEncodedList(defaultCapacity);
+            String encodedList = BitStringStatusListUtils.createEmptyEncodedList(statusListSizeInKB);
             credentialSubject.put("encodedList", encodedList);
 
             statusListData.put("credentialSubject", credentialSubject);
@@ -195,7 +195,6 @@ public class StatusListCredentialService {
             }
 
             String vcDocS = vcResult.getCredential().toString();
-            log.info("Signed VC document: {}", vcDocS);
 
             // Create and save the status list credential entity
             StatusListCredential statusListCredential = new StatusListCredential();
@@ -203,7 +202,7 @@ public class StatusListCredentialService {
             statusListCredential.setVcDocument(vcDocS);
             statusListCredential.setCredentialType("BitstringStatusListCredential");
             statusListCredential.setStatusPurpose(statusPurpose);
-            statusListCredential.setCapacity(defaultCapacity);
+            statusListCredential.setCapacity(statusListSizeInKB);
             statusListCredential.setCredentialStatus(StatusListCredential.CredentialStatus.AVAILABLE);
             statusListCredential.setCreatedDtimes(LocalDateTime.now());
 
@@ -218,7 +217,6 @@ public class StatusListCredentialService {
             log.error("JSON error while generating status list credential", e);
             throw new CertifyException("STATUS_LIST_JSON_ERROR");
         } catch (Exception e) {
-            e.printStackTrace();
             log.error("Error generating status list credential", e);
             throw new CertifyException("STATUS_LIST_GENERATION_FAILED");
         }

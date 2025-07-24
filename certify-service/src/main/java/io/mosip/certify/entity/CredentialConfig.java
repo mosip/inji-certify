@@ -110,7 +110,7 @@ public class CredentialConfig {
     private List<Map<String, String>> pluginConfigurations;
 
     @Column(name = "credential_status_purpose", columnDefinition = "TEXT[]")
-    private List<String> credentialStatusPurpose;
+    private List<String> credentialStatusPurposes;
 
     @NotNull
     @Column(name = "cr_dtimes")
