@@ -5,6 +5,7 @@
  */
 package io.mosip.certify.utils;
 
+import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.entity.CredentialConfig;
 import io.mosip.certify.repository.CredentialConfigRepository;
 import org.slf4j.Logger;
@@ -28,25 +29,28 @@ public class CredentialCacheKeyGenerator {
     private CacheManager cacheManager;
 
     public String generateKeyFromCredentialConfigKeyId(String credentialConfigKeyId) {
-        String key = "default-key";
         if (credentialConfigKeyId == null) {
             log.warn("generateKeyFromConfigId called with null configId for cache key generation.");
             return null;
         }
+
         Optional<CredentialConfig> configOpt = credentialConfigRepository.findByCredentialConfigKeyId(credentialConfigKeyId);
 
         if (configOpt.isPresent()) {
            CredentialConfig config = configOpt.get();
-            if (config.getCredentialType() == null || config.getContext() == null || config.getCredentialFormat() == null) {
 
-                return "default-key";
-            }
-            key = String.join(DELIMITER,
-                    config.getCredentialType(),
-                    config.getContext(),
-                    config.getCredentialFormat());
+           if(config.getCredentialFormat().equals(VCFormats.VC_SD_JWT)){
+                return String.join(DELIMITER,
+                          config.getCredentialFormat(),
+                          config.getSdJwtVct());
+           }
+
+           return String.join(DELIMITER,
+                       config.getCredentialType(),
+                       config.getContext(),
+                       config.getCredentialFormat());
         }
 
-        return  key;
+        return  "default-key";
     }
 }
