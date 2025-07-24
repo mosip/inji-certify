@@ -55,11 +55,8 @@ public class CredentialConfigControllerTest {
         credentialConfigurationDTO.setMetaDataDisplay(List.of());
         credentialConfigurationDTO.setDisplayOrder(Arrays.asList("test1", "test2", "test3", "test4"));
         credentialConfigurationDTO.setScope("test_vc_ldp");
-        credentialConfigurationDTO.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
-        credentialConfigurationDTO.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
         credentialConfigurationDTO.setSignatureCryptoSuite("Ed25519Signature2020");
         Map<String, Object> jwtValues = Map.of("proof_signing_alg_values_supported", Arrays.asList("RS256", "ES256"));
-        credentialConfigurationDTO.setProofTypesSupported(Map.of("jwt", jwtValues));
         Map<String, String> pluginConfigMap = new HashMap<>();
         pluginConfigMap.put("mosip.certify.mock.data-provider.test-one", "valueOne");
         pluginConfigMap.put("mosip.certify.mock.data-provider.test-two", "valueTwo");
@@ -96,10 +93,7 @@ public class CredentialConfigControllerTest {
                 .andExpect(jsonPath("$.contextURLs").exists())
                 .andExpect(jsonPath("$.credentialTypes").exists())
                 .andExpect(jsonPath("$.didUrl").exists())
-                .andExpect(jsonPath("$.scope").exists())
-                .andExpect(jsonPath("$.cryptographic_binding_methods_supported").exists())
-                .andExpect(jsonPath("$.credential_signing_alg_values_supported").exists())
-                .andExpect(jsonPath("$.proof_types_supported").exists());
+                .andExpect(jsonPath("$.scope").exists());
     }
 
     @Test

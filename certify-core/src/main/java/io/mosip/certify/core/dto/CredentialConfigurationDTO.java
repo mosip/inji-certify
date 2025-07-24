@@ -47,15 +47,6 @@ public class CredentialConfigurationDTO {
     @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private String scope;
 
-    @JsonProperty("cryptographic_binding_methods_supported")
-    private List<String> cryptographicBindingMethodsSupported;
-
-    @JsonProperty("credential_signing_alg_values_supported")
-    private List<String> credentialSigningAlgValuesSupported;
-
-    @JsonProperty("proof_types_supported")
-    private Map<String, Object> proofTypesSupported;
-
     @JsonProperty("credentialSubjectDefinition")
     private Map<String, CredentialSubjectParametersDTO> credentialSubjectDefinition;
 

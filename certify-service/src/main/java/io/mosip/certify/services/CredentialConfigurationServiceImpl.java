@@ -289,8 +289,8 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         CredentialConfigurationDTO credentialConfigurationDTO = credentialConfigMapper.toDto(credentialConfig);
         credentialConfigurationSupported.setFormat(credentialConfigurationDTO.getCredentialFormat());
         credentialConfigurationSupported.setScope(credentialConfigurationDTO.getScope());
-        credentialConfigurationSupported.setCryptographicBindingMethodsSupported(credentialConfigurationDTO.getCryptographicBindingMethodsSupported());
-        credentialConfigurationSupported.setProofTypesSupported(credentialConfigurationDTO.getProofTypesSupported());
+        credentialConfigurationSupported.setCryptographicBindingMethodsSupported(credentialConfig.getCryptographicBindingMethodsSupported());
+        credentialConfigurationSupported.setProofTypesSupported(credentialConfig.getProofTypesSupported());
         credentialConfigurationSupported.setDisplay(credentialConfigurationDTO.getMetaDataDisplay());
         credentialConfigurationSupported.setOrder(credentialConfigurationDTO.getDisplayOrder());
 
