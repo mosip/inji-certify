@@ -95,7 +95,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         return credentialConfigResponse;
     }
 
-    private void validateCredentialConfiguration(CredentialConfig credentialConfig, boolean isAdd) {
+    private void validateCredentialConfiguration(CredentialConfig credentialConfig, boolean shouldCheckDuplicate) {
 
         if(pluginMode.equals("DataProvider") && (credentialConfig.getVcTemplate() == null || credentialConfig.getVcTemplate().isEmpty())) {
             throw new CertifyException("Credential Template is mandatory for the DataProvider plugin issuer.");
@@ -106,7 +106,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 if (!LdpVcCredentialConfigValidator.isValidCheck(credentialConfig)) {
                     throw new CertifyException("Context and credentialType are mandatory for ldp_vc format");
                 }
-                if(isAdd && LdpVcCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
+                if(shouldCheckDuplicate && LdpVcCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException("Configuration already exists for the given context and credentialType");
                 }
 
@@ -128,7 +128,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 if (!MsoMdocCredentialConfigValidator.isValidCheck(credentialConfig)) {
                     throw new CertifyException("Doctype field is mandatory for mso_mdoc format");
                 }
-                if(isAdd && MsoMdocCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
+                if(shouldCheckDuplicate && MsoMdocCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException("Configuration already exists for the given doctype");
                 }
                 break;
@@ -136,7 +136,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 if (!SdJwtCredentialConfigValidator.isValidCheck(credentialConfig)) {
                     throw new CertifyException("Vct and signatureAlgo fields are mandatory for vc+sd-jwt format");
                 }
-                if(isAdd && SdJwtCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
+                if(shouldCheckDuplicate && SdJwtCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException("Configuration already exists for the given vct");
                 }
                 break;
