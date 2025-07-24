@@ -29,20 +29,13 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
     @Autowired
     private CredentialStatusTransactionRepository credentialStatusTransactionRepository;
 
-    @Transactional
     @Override
     public CredentialStatusResponse updateCredentialStatus(UpdateCredentialStatusRequest request) {
         Ledger ledger = ledgerRepository.findByCredentialId(request.getCredentialId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Credential not found: " + request.getCredentialId()));
 
-        Optional<CredentialStatusTransaction> existingTransaction = credentialStatusTransactionRepository.findByCredentialId(request.getCredentialId());
-
-        CredentialStatusTransaction transaction = existingTransaction.orElse(new CredentialStatusTransaction());
-
-        if (transaction.getTransactionLogId() == null) {
-            transaction.setCredentialId(request.getCredentialId());
-        }
-
+        CredentialStatusTransaction transaction = new CredentialStatusTransaction();
+        transaction.setCredentialId(request.getCredentialId());
         transaction.setStatusPurpose(request.getCredentialStatus().getStatusPurpose());
         transaction.setStatusValue(request.getStatus());
         transaction.setStatusListCredentialId(request.getCredentialStatus().getStatusListCredential());

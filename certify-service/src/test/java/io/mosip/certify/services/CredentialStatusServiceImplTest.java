@@ -81,7 +81,6 @@ public class CredentialStatusServiceImplTest {
 
         // Mocking
         when(ledgerRepository.findByCredentialId(credentialId)).thenReturn(Optional.of(ledger));
-        when(credentialStatusTransactionRepository.findByCredentialId(credentialId)).thenReturn(Optional.of(existingTransaction));
 
         // Simulate repository save just returns the same transaction (with updated fields)
         when(credentialStatusTransactionRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -113,7 +112,6 @@ public class CredentialStatusServiceImplTest {
         CredentialStatusTransaction savedTransaction = createSavedTransaction(credentialId, statusListCredential);
 
         when(ledgerRepository.findByCredentialId(credentialId)).thenReturn(Optional.of(ledger));
-        when(credentialStatusTransactionRepository.findByCredentialId(credentialId)).thenReturn(Optional.empty());
         when(credentialStatusTransactionRepository.save(any(CredentialStatusTransaction.class)))
             .thenReturn(savedTransaction);
 
