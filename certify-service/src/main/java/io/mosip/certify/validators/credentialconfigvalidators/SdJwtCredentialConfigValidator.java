@@ -11,7 +11,7 @@ public class SdJwtCredentialConfigValidator {
                 && credentialConfig.getSignatureAlgo() != null && !credentialConfig.getSignatureAlgo().isEmpty()
                 && credentialConfig.getCredentialType() == null && credentialConfig.getContext() == null
                 && credentialConfig.getDocType() == null && credentialConfig.getCredentialSubject() == null &&
-                credentialConfig.getMsoMdocClaims() == null;
+                credentialConfig.getMsoMdocClaims() == null && credentialConfig.getSignatureCryptoSuite() == null;
     }
 
     public static boolean isConfigAlreadyPresent(CredentialConfig credentialConfig,

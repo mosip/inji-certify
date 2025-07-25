@@ -33,7 +33,6 @@ public class CredentialConfigurationDTO {
 
     private String signatureAlgo; //Can be called as Proof algorithm
 
-    @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private String signatureCryptoSuite;
 
     private String sdClaim;
