@@ -1,6 +1,5 @@
 package io.mosip.certify.validators.credentialconfigvalidators;
 
-import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.entity.CredentialConfig;
 import io.mosip.certify.repository.CredentialConfigRepository;
 
@@ -11,7 +10,7 @@ public class LdpVcCredentialConfigValidator {
         return credentialConfig.getContext() != null && !credentialConfig.getContext().isEmpty()
                 && credentialConfig.getCredentialType() != null && !credentialConfig.getCredentialType().isEmpty()
                 && credentialConfig.getDocType() == null && credentialConfig.getSdJwtVct() == null
-                && credentialConfig.getClaims() == null;
+                && credentialConfig.getMsoMdocClaims() == null && credentialConfig.getSdJwtClaims() == null;
     }
 
     public static boolean isConfigAlreadyPresent(CredentialConfig credentialConfig,

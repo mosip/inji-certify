@@ -5,14 +5,10 @@
  */
 package io.mosip.certify.core.spi;
 
-import io.mosip.certify.core.dto.CredentialLedgerSearchRequest;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
-import io.mosip.certify.core.dto.CredentialStatusResponse;
-import io.mosip.certify.core.dto.UpdateCredentialStatusRequest;
 
 import java.util.Map;
-import java.util.List;
 
 public interface VCIssuanceService {
 
@@ -22,8 +18,6 @@ public interface VCIssuanceService {
      * @return
      */
     <T> CredentialResponse<T> getCredential(CredentialRequest credentialRequest);
-
-    Map<String, Object> getCredentialIssuerMetadata(String version);
 
     Map<String, Object> getDIDDocument();
 }

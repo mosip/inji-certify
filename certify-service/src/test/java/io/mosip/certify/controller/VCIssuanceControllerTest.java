@@ -6,6 +6,7 @@ import io.mosip.certify.api.spi.AuditPlugin;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.InvalidRequestException;
+import io.mosip.certify.core.spi.CredentialConfigurationService;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.services.VCICacheService;
@@ -18,9 +19,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -47,14 +51,32 @@ public class VCIssuanceControllerTest {
     @MockBean
     VCICacheService vciCacheService;
 
+    @MockBean
+    CredentialConfigurationService credentialConfigurationService;
+
     @Test
     public void getIssuerMetadata_noQueryParams_thenPass() throws Exception {
-        Map<String, Object> issuerMetadata = new HashMap<>();
-        issuerMetadata.put("credential_issuer", "https://localhost:9090");
-        issuerMetadata.put("credential_endpoint", "https://localhost:9090/v1/certify/issuance/credential");
-        issuerMetadata.put("credential_configurations_supported", Arrays.asList());
+        CredentialIssuerMetadataVD13DTO credentialIssuerMetadata = new CredentialIssuerMetadataVD13DTO();
+        credentialIssuerMetadata.setCredentialIssuer("https://localhost:9090");
+        credentialIssuerMetadata.setAuthorizationServers(List.of("https://example.com/auth"));
+        credentialIssuerMetadata.setCredentialEndpoint("https://localhost:9090/v1/certify/issuance/credential");
+        Map<String, String> display = new HashMap<>();
+        display.put("name", "Test Credential Issuer");
+        display.put("locale", "en");
+        credentialIssuerMetadata.setDisplay(List.of(display));
 
-        Mockito.when(vcIssuanceService.getCredentialIssuerMetadata(Mockito.anyString())).thenReturn(issuerMetadata);
+        CredentialConfigurationSupportedDTO credentialConfigurationSupported = new CredentialConfigurationSupportedDTO();
+        credentialConfigurationSupported.setFormat("ldp_vc");
+        credentialConfigurationSupported.setScope("test_vc_ldp");
+        credentialConfigurationSupported.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
+        credentialConfigurationSupported.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
+        Map<String, Object> jwtValues = Map.of("proof_signing_alg_values_supported", Arrays.asList("RS256", "ES256"));
+        credentialConfigurationSupported.setProofTypesSupported(jwtValues);
+        credentialConfigurationSupported.setDisplay(List.of());
+        credentialConfigurationSupported.setOrder(Arrays.asList("test1", "test2", "test3", "test4"));
+        credentialIssuerMetadata.setCredentialConfigurationSupportedDTO(Map.of("TestCredential_ldp", credentialConfigurationSupported));
+
+        Mockito.when(credentialConfigurationService.fetchCredentialIssuerMetadata(Mockito.anyString())).thenReturn(credentialIssuerMetadata);
 
         mockMvc.perform(get("/issuance/.well-known/openid-credential-issuer"))
                 .andExpect(status().isOk())
@@ -63,32 +85,48 @@ public class VCIssuanceControllerTest {
                 .andExpect(jsonPath("$.credential_configurations_supported").exists())
                 .andExpect(header().string("Content-Type", "application/json"));
 
-        Mockito.verify(vcIssuanceService).getCredentialIssuerMetadata("latest");
+        Mockito.verify(credentialConfigurationService).fetchCredentialIssuerMetadata("latest");
     }
 
     @Test
     public void getIssuerMetadata_withValidQueryParam_thenPass() throws Exception {
-        Map<String, Object> issuerMetadata = new HashMap<>();
-        issuerMetadata.put("credential_issuer", "https://localhost:9090");
-        issuerMetadata.put("credential_endpoint", "https://localhost:9090/v1/certify/issuance/credential");
-        issuerMetadata.put("credentials_supported", Arrays.asList());
+        CredentialIssuerMetadataVD13DTO credentialIssuerMetadata = new CredentialIssuerMetadataVD13DTO();
+        credentialIssuerMetadata.setCredentialIssuer("https://localhost:9090");
+        credentialIssuerMetadata.setAuthorizationServers(List.of("https://example.com/auth"));
+        credentialIssuerMetadata.setCredentialEndpoint("https://localhost:9090/v1/certify/issuance/credential");
+        Map<String, String> display = new HashMap<>();
+        display.put("name", "Test Credential Issuer");
+        display.put("locale", "en");
+        credentialIssuerMetadata.setDisplay(List.of(display));
 
-        Mockito.when(vcIssuanceService.getCredentialIssuerMetadata("vd11")).thenReturn(issuerMetadata);
+        CredentialConfigurationSupportedDTO credentialConfigurationSupported = new CredentialConfigurationSupportedDTO();
+        credentialConfigurationSupported.setFormat("ldp_vc");
+        credentialConfigurationSupported.setScope("test_vc_ldp");
+        credentialConfigurationSupported.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
+        credentialConfigurationSupported.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
+        Map<String, Object> jwtValues = Map.of("proof_signing_alg_values_supported", Arrays.asList("RS256", "ES256"));
+        credentialConfigurationSupported.setProofTypesSupported(jwtValues);
+        credentialConfigurationSupported.setDisplay(List.of());
+        credentialConfigurationSupported.setOrder(Arrays.asList("test1", "test2", "test3", "test4"));
+        credentialIssuerMetadata.setCredentialConfigurationSupportedDTO(Map.of("TestCredential_ldp", credentialConfigurationSupported));
 
-        mockMvc.perform(get("/issuance/.well-known/openid-credential-issuer?version=vd11"))
+
+        Mockito.when(credentialConfigurationService.fetchCredentialIssuerMetadata("vd13")).thenReturn(credentialIssuerMetadata);
+
+        mockMvc.perform(get("/issuance/.well-known/openid-credential-issuer?version=vd13"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.credential_issuer").exists())
                 .andExpect(jsonPath("$.credential_endpoint").exists())
-                .andExpect(jsonPath("$.credentials_supported").exists())
+                .andExpect(jsonPath("$.credential_configurations_supported").exists())
                 .andExpect(header().string("Content-Type", "application/json"));
 
-        Mockito.verify(vcIssuanceService).getCredentialIssuerMetadata("vd11");
+        Mockito.verify(credentialConfigurationService).fetchCredentialIssuerMetadata("vd13");
     }
 
     @Test
     public void getIssuerMetadata_withInvalidQueryParam_thenFail() throws Exception {
         Exception e = new InvalidRequestException(ErrorConstants.UNSUPPORTED_OPENID_VERSION);
-        Mockito.when(vcIssuanceService.getCredentialIssuerMetadata("v123")).thenThrow(e);
+        Mockito.when(credentialConfigurationService.fetchCredentialIssuerMetadata("v123")).thenThrow(e);
         mockMvc.perform(get("/issuance/.well-known/openid-credential-issuer?version=v123"))
                 .andExpect(status().is4xxClientError());
     }

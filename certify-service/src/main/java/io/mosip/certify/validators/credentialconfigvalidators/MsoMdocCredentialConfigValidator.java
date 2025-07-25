@@ -9,7 +9,8 @@ public class MsoMdocCredentialConfigValidator {
     public static boolean isValidCheck(CredentialConfig credentialConfig) {
         return credentialConfig.getDocType() != null && !credentialConfig.getDocType().isEmpty()
                 && credentialConfig.getCredentialType() == null && credentialConfig.getContext() == null
-                && credentialConfig.getSdJwtVct() == null && credentialConfig.getCredentialSubject() == null;
+                && credentialConfig.getSdJwtVct() == null && credentialConfig.getCredentialSubject() == null
+                && credentialConfig.getSdJwtClaims() == null;
     }
 
     public static boolean isConfigAlreadyPresent(CredentialConfig credentialConfig,

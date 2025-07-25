@@ -33,6 +33,7 @@ public class CredentialConfigurationDTO {
 
     private String signatureAlgo; //Can be called as Proof algorithm
 
+    @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private String signatureCryptoSuite;
 
     private String sdClaim;
@@ -46,20 +47,14 @@ public class CredentialConfigurationDTO {
     @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private String scope;
 
-    @JsonProperty("cryptographic_binding_methods_supported")
-    private List<String> cryptographicBindingMethodsSupported;
-
-    @JsonProperty("credential_signing_alg_values_supported")
-    private List<String> credentialSigningAlgValuesSupported;
-
-    @JsonProperty("proof_types_supported")
-    private Map<String, Object> proofTypesSupported;
-
     @JsonProperty("credentialSubjectDefinition")
     private Map<String, CredentialSubjectParametersDTO> credentialSubjectDefinition;
 
-    @JsonProperty("claims")
-    private Map<String, Map<String, ClaimsDisplayFieldsConfigDTO>> claims;
+    @JsonProperty("msoMdocClaims")
+    private Map<String, Map<String, ClaimsDisplayFieldsConfigDTO>> msoMdocClaims;
+
+    @JsonProperty("sdJwtClaims")
+    private Map<String, ClaimsDisplayFieldsConfigDTO> sdJwtClaims;
 
     @JsonProperty("doctype")
     private String docType;
