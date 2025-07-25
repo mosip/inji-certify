@@ -9,6 +9,7 @@ public class LdpVcCredentialConfigValidator {
     public static boolean isValidCheck(CredentialConfig credentialConfig) {
         return credentialConfig.getContext() != null && !credentialConfig.getContext().isEmpty()
                 && credentialConfig.getCredentialType() != null && !credentialConfig.getCredentialType().isEmpty()
+                && credentialConfig.getSignatureCryptoSuite() != null && !credentialConfig.getSignatureCryptoSuite().isEmpty()
                 && credentialConfig.getDocType() == null && credentialConfig.getSdJwtVct() == null
                 && credentialConfig.getMsoMdocClaims() == null && credentialConfig.getSdJwtClaims() == null;
     }

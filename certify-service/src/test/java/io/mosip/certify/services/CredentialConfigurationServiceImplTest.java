@@ -262,6 +262,55 @@ public class CredentialConfigurationServiceImplTest {
     }
 
     @Test
+    public void fetchCredentialIssuerMetadata_SigningAlgValuesSupported_UsesSignatureAlgo_WhenCryptoSuiteIsNull() {
+        CredentialConfig config = new CredentialConfig();
+        config.setConfigId(UUID.randomUUID().toString());
+        config.setCredentialConfigKeyId("test-credential");
+        config.setStatus("active");
+        config.setCredentialFormat("ldp_vc");
+        config.setSignatureCryptoSuite(null); // triggers else branch
+        config.setSignatureAlgo("ES256");
+        config.setCredentialSubject(null);
+
+        when(credentialConfigRepository.findAll()).thenReturn(List.of(config));
+        CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
+        dto.setCredentialFormat("ldp_vc");
+        when(credentialConfigMapper.toDto(config)).thenReturn(dto);
+
+
+        CredentialIssuerMetadataDTO result = credentialConfigurationService.fetchCredentialIssuerMetadata("latest");
+
+        Assert.assertNotNull(result);
+        Assert.assertTrue(result.getCredentialConfigurationSupportedDTO().containsKey("test-credential"));
+        CredentialConfigurationSupportedDTO supportedDTO = result.getCredentialConfigurationSupportedDTO().get("test-credential");
+        Assert.assertEquals(List.of("ES256"), supportedDTO.getCredentialSigningAlgValuesSupported());
+    }
+
+    @Test
+    public void fetchCredentialIssuerMetadata_SigningAlgValuesSupported_UsesSignatureAlgo_WhenCryptoSuiteIsNull_SdJwtFormat() {
+        CredentialConfig config = new CredentialConfig();
+        config.setConfigId(UUID.randomUUID().toString());
+        config.setCredentialConfigKeyId("sdjwt-credential");
+        config.setStatus("active");
+        config.setCredentialFormat("vc+sd-jwt");
+        config.setSignatureCryptoSuite(null); // triggers else branch
+        config.setSignatureAlgo("ES256");
+        config.setSdJwtVct("test-vct");
+
+        when(credentialConfigRepository.findAll()).thenReturn(List.of(config));
+        CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
+        dto.setCredentialFormat("vc+sd-jwt");
+        when(credentialConfigMapper.toDto(config)).thenReturn(dto);
+
+        CredentialIssuerMetadataDTO result = credentialConfigurationService.fetchCredentialIssuerMetadata("latest");
+
+        Assert.assertNotNull(result);
+        Assert.assertTrue(result.getCredentialConfigurationSupportedDTO().containsKey("sdjwt-credential"));
+        CredentialConfigurationSupportedDTO supportedDTO = result.getCredentialConfigurationSupportedDTO().get("sdjwt-credential");
+        Assert.assertEquals(List.of("ES256"), supportedDTO.getCredentialSigningAlgValuesSupported());
+    }
+
+    @Test
     public void fetchCredentialIssuerMetadata_vd11Version() {
         // Setup minimal test data
         List<CredentialConfig> credentialConfigList = List.of(credentialConfig);
@@ -405,7 +454,6 @@ public class CredentialConfigurationServiceImplTest {
         sdJwtConfig.setStatus("active");
         sdJwtConfig.setCredentialFormat("vc+sd-jwt");
         sdJwtConfig.setSdJwtVct("test-vct");
-        sdJwtConfig.setSignatureCryptoSuite("Ed25519Signature2020");
         sdJwtConfig.setSignatureAlgo("ES256");
 
         CredentialConfigurationDTO sdJwtDTO = new CredentialConfigurationDTO();
@@ -435,7 +483,7 @@ public class CredentialConfigurationServiceImplTest {
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", config, true)
             );
-            assertEquals("Context and credentialType are mandatory for ldp_vc format", ex.getMessage());
+            assertEquals("Context, credentialType and signatureCryptoSuite are mandatory for ldp_vc format", ex.getMessage());
         }
     }
 
@@ -464,7 +512,7 @@ public class CredentialConfigurationServiceImplTest {
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", config, true)
             );
-            assertEquals("Doctype field is mandatory for mso_mdoc format", ex.getMessage());
+            assertEquals("Doctype and signatureCryptoSuite fields are mandatory for mso_mdoc format", ex.getMessage());
         }
     }
 
@@ -521,5 +569,24 @@ public class CredentialConfigurationServiceImplTest {
                 ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", config, false)
         );
         assertEquals("Unsupported format: unsupported_format", ex.getMessage());
+    }
+
+    @Test
+    public void validateCredentialConfiguration_LdpVc_MissingSignatureAlgo_ThrowsException() {
+        CredentialConfig config = new CredentialConfig();
+        config.setCredentialFormat("ldp_vc");
+        config.setVcTemplate("test_template");
+        config.setSignatureCryptoSuite("ecdsa-rdfc-2019");
+        config.setSignatureAlgo("");
+
+        try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(config)).thenReturn(true);
+            mocked.when(() -> LdpVcCredentialConfigValidator.isConfigAlreadyPresent(eq(config), any())).thenReturn(false);
+
+            CertifyException ex = assertThrows(CertifyException.class, () ->
+                    ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", config, true)
+            );
+            assertEquals("Signature algorithm is mandatory for the provided crypto suite: ecdsa-rdfc-2019", ex.getMessage());
+        }
     }
 }
