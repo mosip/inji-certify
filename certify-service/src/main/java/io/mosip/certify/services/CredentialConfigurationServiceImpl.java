@@ -101,7 +101,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         switch (credentialConfig.getCredentialFormat()) {
             case VCFormats.LDP_VC:
                 if (!LdpVcCredentialConfigValidator.isValidCheck(credentialConfig)) {
-                    throw new CertifyException("Context and credentialType are mandatory for ldp_vc format");
+                    throw new CertifyException("Context, credentialType and signatureCryptoSuite are mandatory for ldp_vc format");
                 }
                 if(shouldCheckDuplicate && LdpVcCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException("Configuration already exists for the given context and credentialType");
@@ -123,7 +123,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 break;
             case VCFormats.MSO_MDOC:
                 if (!MsoMdocCredentialConfigValidator.isValidCheck(credentialConfig)) {
-                    throw new CertifyException("Doctype field is mandatory for mso_mdoc format");
+                    throw new CertifyException("Doctype and signatureCryptoSuite fields are mandatory for mso_mdoc format");
                 }
                 if(shouldCheckDuplicate && MsoMdocCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException("Configuration already exists for the given doctype");
@@ -225,7 +225,11 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                     .filter(config -> Constants.ACTIVE.equals(config.getStatus()))
                     .forEach(credentialConfig -> {
                         CredentialConfigurationSupportedDTO credentialConfigurationSupported = mapToSupportedDTO(credentialConfig);
-                        credentialConfigurationSupported.setCredentialSigningAlgValuesSupported(credentialSigningAlgValuesSupportedMap.get(credentialConfig.getSignatureCryptoSuite()));
+                        if (credentialConfig.getSignatureCryptoSuite() != null) {
+                            credentialConfigurationSupported.setCredentialSigningAlgValuesSupported(credentialSigningAlgValuesSupportedMap.get(credentialConfig.getSignatureCryptoSuite()));
+                        } else {
+                            credentialConfigurationSupported.setCredentialSigningAlgValuesSupported(Collections.singletonList(credentialConfig.getSignatureAlgo()));
+                        }
                         credentialConfigurationSupportedMap.put(credentialConfig.getCredentialConfigKeyId(), credentialConfigurationSupported);
                     });
             credentialIssuerMetadata.setCredentialConfigurationSupportedDTO(credentialConfigurationSupportedMap);
@@ -292,13 +296,19 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
             CredentialDefinition credentialDefinition = new CredentialDefinition();
             credentialDefinition.setType(credentialConfigurationDTO.getCredentialTypes());
             credentialDefinition.setContext(credentialConfigurationDTO.getContextURLs());
-            credentialDefinition.setCredentialSubject(new HashMap<>(credentialConfig.getCredentialSubject()));
+            if (credentialConfig.getCredentialSubject() != null) {
+                credentialDefinition.setCredentialSubject(new HashMap<>(credentialConfig.getCredentialSubject()));
+            }
             credentialConfigurationSupported.setCredentialDefinition(credentialDefinition);
         } else if (VCFormats.MSO_MDOC.equals(credentialConfig.getCredentialFormat())) {
-            credentialConfigurationSupported.setClaims(new HashMap<>(new HashMap<>(credentialConfig.getMsoMdocClaims())));
+            if (credentialConfig.getMsoMdocClaims() != null) {
+                credentialConfigurationSupported.setClaims(new HashMap<>(new HashMap<>(credentialConfig.getMsoMdocClaims())));
+            }
             credentialConfigurationSupported.setDocType(credentialConfig.getDocType());
         } else if (VCFormats.VC_SD_JWT.equals(credentialConfig.getCredentialFormat())) {
-            credentialConfigurationSupported.setClaims(new HashMap<>(credentialConfig.getSdJwtClaims()));
+            if (credentialConfig.getSdJwtClaims() != null) {
+                credentialConfigurationSupported.setClaims(new HashMap<>(credentialConfig.getSdJwtClaims()));
+            }
             credentialConfigurationSupported.setVct(credentialConfig.getSdJwtVct());
         }
 

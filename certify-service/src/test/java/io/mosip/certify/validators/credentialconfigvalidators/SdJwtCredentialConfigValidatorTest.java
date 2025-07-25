@@ -127,5 +127,23 @@ class SdJwtCredentialConfigValidatorTest {
                 .thenReturn(Optional.empty());
         assertFalse(SdJwtCredentialConfigValidator.isConfigAlreadyPresent(config, repo));
     }
+
+    @Test
+    void testIsValidCheck_msoMdocClaimsNotNull_returnsFalse() {
+        CredentialConfig config = new CredentialConfig();
+        config.setSdJwtVct("vctValue");
+        config.setSignatureAlgo("algoValue");
+        config.setMsoMdocClaims(new HashMap<>());
+        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config));
+    }
+
+    @Test
+    void testIsValidCheck_signatureCryptoSuiteNotNull_returnsFalse() {
+        CredentialConfig config = new CredentialConfig();
+        config.setSdJwtVct("vctValue");
+        config.setSignatureAlgo("algoValue");
+        config.setSignatureCryptoSuite("suiteValue");
+        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config));
+    }
 }
 
