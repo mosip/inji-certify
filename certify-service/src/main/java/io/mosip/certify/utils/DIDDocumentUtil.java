@@ -16,6 +16,8 @@ import java.util.stream.Collectors;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import io.mosip.certify.core.dto.CertificateResponseDTO;
+import io.mosip.certify.entity.CredentialConfig;
+import io.mosip.certify.repository.CredentialConfigRepository;
 import io.mosip.certify.services.CertifyIssuanceServiceImpl;
 import io.mosip.kernel.keymanagerservice.dto.AllCertificatesDataResponseDto;
 import io.mosip.kernel.keymanagerservice.dto.CertificateDataResponseDto;
@@ -41,10 +43,13 @@ public class DIDDocumentUtil {
     @Autowired
     KeymanagerService keymanagerService;
 
+    @Autowired
+    private CredentialConfigRepository credentialConfigRepository;
+
     private static final String MULTICODEC_PREFIX = "ed01";
 
     public Map<String, Object> generateDIDDocument(String didUrl) {
-        HashMap<String,Object> didDocument = new HashMap<String,Object>();
+        HashMap<String, Object> didDocument = new HashMap<>();
         didDocument.put("@context", Collections.singletonList("https://www.w3.org/ns/did/v1"));
         didDocument.put("alsoKnownAs", new ArrayList<>());
         didDocument.put("service", new ArrayList<>());
@@ -52,21 +57,26 @@ public class DIDDocumentUtil {
         didDocument.put("authentication", Collections.singletonList(didUrl));
         didDocument.put("assertionMethod", Collections.singletonList(didUrl));
 
-        List<Map<String, Object>> verificationMethods = CertifyIssuanceServiceImpl.keyChooser.entrySet().stream()
+        // Fetch the credentialConfig map
+        Map<String, List<String>> credentialConfigMap = getSignatureCryptoSuiteMap();
+
+        // Generate verification methods list
+        List<Map<String, Object>> verificationMethods = credentialConfigMap.entrySet().stream()
                 .map(entry -> {
-                    List<String> keyParams = entry.getValue();
-                    CertificateResponseDTO certificateResponseDTO = getCertificateDataResponseDto(keyParams.getFirst(), keyParams.getLast());
+                    String signatureCryptoSuite = entry.getKey();
+                    List<String> appIdAndRefId = entry.getValue();
+                    String appId = appIdAndRefId.getFirst();
+                    String refId = appIdAndRefId.getLast();
+
+                    CertificateResponseDTO certificateResponseDTO = getCertificateDataResponseDto(appId, refId);
                     String certificateString = certificateResponseDTO.getCertificateData();
                     String kid = certificateResponseDTO.getKeyId();
 
-                    // Generate verification method for each key
-                    return generateVerificationMethod(entry.getKey(), certificateString, didUrl, kid);
+                    // Generate verification method for each entry
+                    return generateVerificationMethod(signatureCryptoSuite, certificateString, didUrl, kid);
                 })
-                .collect(Collectors.toCollection(() ->
-                        new TreeSet<>(Comparator.comparing(vm -> vm.get("id").toString()))
-                ))
-                .stream()
-                .toList();
+                .collect(Collectors.toList());
+
         didDocument.put("verificationMethod", verificationMethods);
 
         return didDocument;
@@ -218,5 +228,22 @@ public class DIDDocumentUtil {
         certificateResponseDTO.setKeyId(certificateData.getKeyId());
 
         return certificateResponseDTO;
+    }
+
+    private Map<String, List<String>> getSignatureCryptoSuiteMap() {
+        // Fetch all credential configurations
+        List<CredentialConfig> allConfigs = credentialConfigRepository.findAll();
+
+        // Create a map with signatureCryptoSuite as the key and appId, refId as values
+        Map<String, List<String>> signatureCryptoSuiteMap = new HashMap<>();
+        for (CredentialConfig config : allConfigs) {
+            String signatureCryptoSuite = config.getSignatureCryptoSuite();
+            if(signatureCryptoSuite != null) {
+                List<String> appIdAndRefId = Arrays.asList(config.getKeyManagerAppId(), config.getKeyManagerRefId());
+                signatureCryptoSuiteMap.put(signatureCryptoSuite, appIdAndRefId);
+            }
+        }
+
+        return signatureCryptoSuiteMap;
     }
 }
