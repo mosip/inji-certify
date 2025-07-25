@@ -454,7 +454,6 @@ public class CredentialConfigurationServiceImplTest {
         sdJwtConfig.setStatus("active");
         sdJwtConfig.setCredentialFormat("vc+sd-jwt");
         sdJwtConfig.setSdJwtVct("test-vct");
-        sdJwtConfig.setSignatureCryptoSuite("Ed25519Signature2020");
         sdJwtConfig.setSignatureAlgo("ES256");
 
         CredentialConfigurationDTO sdJwtDTO = new CredentialConfigurationDTO();
@@ -570,5 +569,24 @@ public class CredentialConfigurationServiceImplTest {
                 ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", config, false)
         );
         assertEquals("Unsupported format: unsupported_format", ex.getMessage());
+    }
+
+    @Test
+    public void validateCredentialConfiguration_LdpVc_MissingSignatureAlgo_ThrowsException() {
+        CredentialConfig config = new CredentialConfig();
+        config.setCredentialFormat("ldp_vc");
+        config.setVcTemplate("test_template");
+        config.setSignatureCryptoSuite("ecdsa-rdfc-2019");
+        config.setSignatureAlgo("");
+
+        try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(config)).thenReturn(true);
+            mocked.when(() -> LdpVcCredentialConfigValidator.isConfigAlreadyPresent(eq(config), any())).thenReturn(false);
+
+            CertifyException ex = assertThrows(CertifyException.class, () ->
+                    ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", config, true)
+            );
+            assertEquals("Signature algorithm is mandatory for the provided crypto suite: ecdsa-rdfc-2019", ex.getMessage());
+        }
     }
 }

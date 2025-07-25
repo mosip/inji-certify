@@ -109,6 +109,11 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
                 if (!CertifyIssuanceServiceImpl.keyChooser.containsKey(credentialConfig.getSignatureCryptoSuite())) {
                     DataIntegrityProofDataIntegritySuite dataIntegrityProofDataIntegritySuite = DataIntegritySuites.DATA_INTEGRITY_SUITE_DATAINTEGRITYPROOF;
+
+                    if(credentialConfig.getSignatureAlgo() == null || credentialConfig.getSignatureAlgo().isEmpty()) {
+                        throw new CertifyException("Signature algorithm is mandatory for the provided crypto suite: " + credentialConfig.getSignatureCryptoSuite());
+                    }
+
                     List<String> signatureCryptoSuitesByJwsAlgo = dataIntegrityProofDataIntegritySuite.findCryptosuitesForJwsAlgorithm(credentialConfig.getSignatureAlgo());
 
                     if (signatureCryptoSuitesByJwsAlgo.isEmpty()) {
