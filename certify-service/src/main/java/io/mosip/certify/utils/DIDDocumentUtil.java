@@ -60,20 +60,32 @@ public class DIDDocumentUtil {
         // Fetch the credentialConfig map
         Map<String, List<String>> credentialConfigMap = getSignatureCryptoSuiteMap();
 
-        // Generate verification methods list
+        // Use a Set to track unique verification methods by their "id"
+        Set<String> uniqueIds = new HashSet<>();
         List<Map<String, Object>> verificationMethods = credentialConfigMap.entrySet().stream()
-                .map(entry -> {
-                    String signatureCryptoSuite = entry.getKey();
-                    List<String> appIdAndRefId = entry.getValue();
-                    String appId = appIdAndRefId.getFirst();
-                    String refId = appIdAndRefId.getLast();
+                .flatMap(entry -> {
+                    List<String> keyParams = entry.getValue();
+                    AllCertificatesDataResponseDto kidResponse = keymanagerService.getAllCertificates(keyParams.get(0), Optional.of(keyParams.get(1)));
 
-                    CertificateResponseDTO certificateResponseDTO = getCertificateDataResponseDto(appId, refId);
-                    String certificateString = certificateResponseDTO.getCertificateData();
-                    String kid = certificateResponseDTO.getKeyId();
+                    if (kidResponse == null || kidResponse.getAllCertificates() == null) {
+                        log.error("No certificates found for appId: {} and refId: {}", keyParams.get(0), keyParams.get(1));
+                        throw new CertifyException("No certificates found");
+                    }
 
-                    // Generate verification method for each entry
-                    return generateVerificationMethod(signatureCryptoSuite, certificateString, didUrl, kid);
+                    return Arrays.stream(kidResponse.getAllCertificates())
+                            .map(certificateData -> {
+                                String certificateString = certificateData.getCertificateData();
+                                String kid = certificateData.getKeyId();
+                                Map<String, Object> verificationMethod = generateVerificationMethod(entry.getKey(), certificateString, didUrl, kid);
+
+                                // Add only if the "id" is unique
+                                String verificationId = (String) verificationMethod.get("id");
+                                if (uniqueIds.add(verificationId)) {
+                                    return verificationMethod;
+                                }
+                                return null; // Skip duplicates
+                            })
+                            .filter(Objects::nonNull); // Remove null entries
                 })
                 .collect(Collectors.toList());
 
