@@ -1,4 +1,4 @@
-package io.mosip.certify.mapper;
+package io.mosip.certify.utils;
 
 import io.mosip.certify.core.dto.ClaimsDisplayFieldsConfigDTO;
 import io.mosip.certify.core.dto.CredentialConfigurationDTO;
@@ -26,7 +26,7 @@ public interface CredentialConfigMapper {
     @Mapping(target = "cryptographicBindingMethodsSupported", ignore = true)
     @Mapping(target = "credentialSigningAlgValuesSupported", ignore = true)
     @Mapping(target = "proofTypesSupported", ignore = true)
-    @Mapping(target = "claims", source = "claims", qualifiedByName = "mapClaimsToEntity")
+    @Mapping(target = "msoMdocClaims", source = "msoMdocClaims", qualifiedByName = "mapClaimsToEntity")
     @Mapping(target = "credentialSubject", source = "credentialSubjectDefinition")
     CredentialConfig toEntity(CredentialConfigurationDTO dto);
 
@@ -35,7 +35,7 @@ public interface CredentialConfigMapper {
     @Mapping(target = "credentialTypes", source = "credentialType", qualifiedByName = "commaSeparatedStringToList")
     @Mapping(target = "metaDataDisplay", source = "display")
     @Mapping(target = "displayOrder", source = "order")
-    @Mapping(target = "claims", source = "claims", qualifiedByName = "mapClaimsToDto")
+    @Mapping(target = "msoMdocClaims", source = "msoMdocClaims", qualifiedByName = "mapClaimsToDto")
     @Mapping(target = "credentialSubjectDefinition", source = "credentialSubject")
     CredentialConfigurationDTO toDto(CredentialConfig entity);
 
@@ -52,7 +52,7 @@ public interface CredentialConfigMapper {
     @Mapping(target = "cryptographicBindingMethodsSupported", ignore = true)
     @Mapping(target = "credentialSigningAlgValuesSupported", ignore = true)
     @Mapping(target = "proofTypesSupported", ignore = true)
-    @Mapping(target = "claims", source = "claims", qualifiedByName = "mapClaimsToEntity")
+    @Mapping(target = "msoMdocClaims", source = "msoMdocClaims", qualifiedByName = "mapClaimsToEntity")
     @Mapping(target = "credentialSubject", source = "credentialSubjectDefinition")
     void updateEntityFromDto(CredentialConfigurationDTO dto, @MappingTarget CredentialConfig entity);
 

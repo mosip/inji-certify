@@ -7,7 +7,6 @@ import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import foundation.identity.jsonld.JsonLDObject;
-
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.api.exception.DataProviderExchangeException;
 import io.mosip.certify.api.spi.AuditPlugin;
@@ -15,28 +14,22 @@ import io.mosip.certify.api.spi.DataProviderPlugin;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
 import io.mosip.certify.core.constants.Constants;
-
-import io.mosip.certify.core.dto.*;
-
-
-import io.mosip.certify.core.exception.CertifyException;
-
-import io.mosip.certify.credential.CredentialFactory;
-import io.mosip.certify.credential.SDJWT; // Implementation
-import io.mosip.certify.credential.W3CJsonLD; // Implementation
-import io.mosip.certify.exception.InvalidNonceException;
-import io.mosip.certify.proof.ProofValidator;
-
-import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
+import io.mosip.certify.core.dto.*;
+import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
 import io.mosip.certify.core.util.SecurityHelperService;
+import io.mosip.certify.credential.CredentialFactory;
+import io.mosip.certify.credential.SDJWT;
+import io.mosip.certify.credential.W3CJsonLD;
+import io.mosip.certify.exception.InvalidNonceException;
+import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
+import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
-
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -118,7 +111,6 @@ public class CertifyIssuanceServiceImplTest {
         testIssuerMetadataMap.put("latest", latestMetadataConfig);
 
 
-        ReflectionTestUtils.setField(issuanceService, "issuerMetadata", testIssuerMetadataMap);
         ReflectionTestUtils.setField(issuanceService, "cNonceExpireSeconds", 300);
         ReflectionTestUtils.setField(issuanceService, "didUrl", "https://test.issuer.com");
 
@@ -370,41 +362,6 @@ public class CertifyIssuanceServiceImplTest {
 
         CertifyException ex = assertThrows(CertifyException.class, () -> issuanceService.getCredential(request));
         assertEquals(ErrorConstants.INVALID_PROOF, ex.getErrorCode());
-    }
-
-    @Test
-    public void getCredentialIssuerMetadata_validLatest() {
-        Map<String, Object> actual = issuanceService.getCredentialIssuerMetadata("latest");
-        assertNotNull(actual);
-        assertSame(testIssuerMetadataMap.get("latest"), actual);
-    }
-
-    @Test
-    public void getCredentialIssuerMetadata_validVD11() {
-        Map<String, Object> actual = issuanceService.getCredentialIssuerMetadata("vd11");
-        assertNotNull(actual);
-        assertTrue(actual.containsKey("credentials_supported"));
-        assertEquals("https://localhost:9090/v1/certify/issuance/vd11/credential", actual.get("credential_endpoint"));
-    }
-
-    @Test
-    public void getCredentialIssuerMetadata_validVD12() {
-        Map<String, Object> actual = issuanceService.getCredentialIssuerMetadata("vd12");
-        assertNotNull(actual);
-        assertTrue(actual.containsKey("credentials_supported"));
-        assertEquals("https://localhost:9090/v1/certify/issuance/vd12/credential", actual.get("credential_endpoint"));
-    }
-
-    @Test
-    public void getCredentialIssuerMetadata_UnsupportedVersion_ThrowsInvalidRequestException() {
-        InvalidRequestException ex = assertThrows(InvalidRequestException.class, () -> issuanceService.getCredentialIssuerMetadata("unsupportedVersion"));
-        assertEquals(ErrorConstants.UNSUPPORTED_OPENID_VERSION, ex.getErrorCode());
-    }
-
-    @Test
-    public void getCredentialIssuerMetadata_NullVersion_ThrowsInvalidRequestException() {
-        InvalidRequestException ex = assertThrows(InvalidRequestException.class, () -> issuanceService.getCredentialIssuerMetadata(null));
-        assertEquals(ErrorConstants.UNSUPPORTED_OPENID_VERSION, ex.getErrorCode());
     }
 
     @Test

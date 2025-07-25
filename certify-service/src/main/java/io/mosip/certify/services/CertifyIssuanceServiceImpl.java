@@ -5,68 +5,63 @@
  */
 package io.mosip.certify.services;
 
-import java.text.ParseException;
-import java.time.OffsetDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
-
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
-import com.nimbusds.jwt.SignedJWT;
-import io.mosip.certify.api.util.AuditHelper;
-import io.mosip.certify.config.IndexedAttributesConfig;
-import io.mosip.certify.core.constants.VCDM2Constants;
-import io.mosip.certify.core.dto.*;
-import io.mosip.certify.core.spi.CredentialConfigurationService;
-import io.mosip.certify.entity.CredentialStatusTransaction;
-import io.mosip.certify.entity.Ledger;
-import io.mosip.certify.entity.StatusListCredential;
-import io.mosip.certify.repository.CredentialStatusTransactionRepository;
-import io.mosip.certify.repository.LedgerRepository;
-import io.mosip.certify.repository.StatusListCredentialRepository;
-import io.mosip.certify.utils.VCIssuanceUtil;
-import jakarta.transaction.Transactional;
-import org.apache.commons.lang3.StringUtils;
-import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
 import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.dto.VCRequestDto;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.api.exception.DataProviderExchangeException;
 import io.mosip.certify.api.spi.AuditPlugin;
 import io.mosip.certify.api.spi.DataProviderPlugin;
-import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
-import io.mosip.certify.core.constants.SignatureAlg;
+import io.mosip.certify.api.util.AuditHelper;
+import io.mosip.certify.config.IndexedAttributesConfig;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
+import io.mosip.certify.core.constants.SignatureAlg;
+import io.mosip.certify.core.constants.VCDM2Constants;
+import io.mosip.certify.core.dto.CredentialMetadata;
+import io.mosip.certify.core.dto.CredentialRequest;
+import io.mosip.certify.core.dto.CredentialResponse;
+import io.mosip.certify.core.dto.ParsedAccessToken;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import io.mosip.certify.core.exception.NotAuthenticatedException;
+import io.mosip.certify.core.spi.CredentialConfigurationService;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.core.util.SecurityHelperService;
-import io.mosip.certify.validators.CredentialRequestValidator;
 import io.mosip.certify.credential.Credential;
 import io.mosip.certify.credential.CredentialFactory;
+import io.mosip.certify.entity.Ledger;
+import io.mosip.certify.entity.StatusListCredential;
 import io.mosip.certify.enums.CredentialFormat;
-import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
+import io.mosip.certify.repository.CredentialStatusTransactionRepository;
+import io.mosip.certify.repository.LedgerRepository;
+import io.mosip.certify.repository.StatusListCredentialRepository;
 import io.mosip.certify.utils.CredentialUtils;
 import io.mosip.certify.utils.DIDDocumentUtil;
-import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
+import io.mosip.certify.utils.VCIssuanceUtil;
+import io.mosip.certify.validators.CredentialRequestValidator;
+import io.mosip.certify.vcformatters.VCFormatter;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
-import org.springframework.http.HttpStatus;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
 
-import static io.mosip.certify.utils.VCIssuanceUtil.*;
+import java.time.OffsetDateTime;
+import java.util.*;
+
+import static io.mosip.certify.utils.VCIssuanceUtil.getScopeCredentialMapping;
+import static io.mosip.certify.utils.VCIssuanceUtil.validateLdpVcFormatRequest;
 
 @Slf4j
 @Service
@@ -80,9 +75,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             SignatureAlg.EC_K1_2016, List.of(Constants.CERTIFY_VC_SIGN_EC_K1, Constants.EC_SECP256K1_SIGN),
             SignatureAlg.EC_SECP256K1_2019, List.of(Constants.CERTIFY_VC_SIGN_EC_K1, Constants.EC_SECP256K1_SIGN),
             SignatureAlg.EC_SECP256R1_2019, List.of(Constants.CERTIFY_VC_SIGN_EC_R1, Constants.EC_SECP256R1_SIGN));
-
-    @Value("#{${mosip.certify.key-values}}")
-    private LinkedHashMap<String, LinkedHashMap<String, Object>> issuerMetadata;
 
     @Value("${mosip.certify.cnonce-expire-seconds:300}")
     private int cNonceExpireSeconds;
@@ -116,9 +108,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     @Autowired
     private AuditPlugin auditWrapper;
-
-    @Autowired
-    private KeymanagerService keymanagerService;
 
     private Map<String, Object> didDocument;
 
@@ -191,24 +180,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         auditWrapper.logAudit(Action.VC_ISSUANCE, ActionStatus.SUCCESS,
                 AuditHelper.buildAuditDto(parsedAccessToken.getAccessTokenHash(), "accessTokenHash"), null);
         return VCIssuanceUtil.getCredentialResponse(credentialRequest.getFormat(), vcResult);
-    }
-
-    @Override
-    public Map<String, Object> getCredentialIssuerMetadata(String version) {
-       if(issuerMetadata.containsKey(version)) {
-           return issuerMetadata.get(version);
-       } else if(version != null && version.equals("vd12")) {
-           LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
-           Map<String, Object> vd12IssuerMetadata = convertLatestToVd12(originalIssuerMetadata);
-           issuerMetadata.put("vd12", (LinkedHashMap<String, Object>) vd12IssuerMetadata);
-           return vd12IssuerMetadata;
-       } else if(version != null && version.equals("vd11")) {
-           LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
-           Map<String, Object> vd11IssuerMetadata = convertLatestToVd11(originalIssuerMetadata);
-           issuerMetadata.put("vd11", (LinkedHashMap<String, Object>) vd11IssuerMetadata);
-           return vd11IssuerMetadata;
-       }
-       throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_OPENID_VERSION);
     }
 
     @Override

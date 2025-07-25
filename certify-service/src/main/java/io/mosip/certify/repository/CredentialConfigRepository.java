@@ -8,9 +8,9 @@ import java.util.Optional;
 
 @Repository
 public interface CredentialConfigRepository extends JpaRepository<CredentialConfig, String> {
-    // NOTE: best practice? .save()
     Optional<CredentialConfig> findByCredentialFormatAndSdJwtVct(String credentialFormat, String sdJwtVct);
     Optional<CredentialConfig> findByCredentialFormatAndDocType(String credentialFormat, String docType);
     Optional<CredentialConfig> findByCredentialFormatAndCredentialTypeAndContext(String credentialFormat, String credentialType, String context);
+    Optional<CredentialConfig> findByCredentialConfigKeyId(String credentialConfigKeyID);
 }
 
