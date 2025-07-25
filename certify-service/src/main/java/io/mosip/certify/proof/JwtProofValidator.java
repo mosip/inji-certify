@@ -96,7 +96,7 @@ public class JwtProofValidator implements ProofValidator {
     }
 
     @Override
-    public boolean validateV2(String clientId, String cNonce, CredentialProof credentialProof, Map<String, Object> proofConfiguration) {
+    public boolean validate(String clientId, String cNonce, CredentialProof credentialProof, Map<String, Object> proofConfiguration) {
         if(credentialProof.getJwt() == null || credentialProof.getJwt().isBlank()) {
             log.error("Found invalid jwt in the credential proof");
             return false;

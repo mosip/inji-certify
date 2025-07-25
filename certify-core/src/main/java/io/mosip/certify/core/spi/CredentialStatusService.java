@@ -9,6 +9,4 @@ import java.util.List;
 public interface CredentialStatusService {
 
     CredentialStatusResponse updateCredentialStatus(UpdateCredentialStatusRequest updateCredentialStatusRequest);
-
-    List<CredentialStatusResponse> searchCredentialLedger(CredentialLedgerSearchRequest request);
 }

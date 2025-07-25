@@ -27,7 +27,7 @@ public interface ProofValidator {
      * @param credentialProof proof from the credential request.
      * @return true if proof passes all the validation else false
      */
-    boolean validateV2(String clientId, String cNonce, CredentialProof credentialProof, Map<String, Object> proofConfiguration);
+    boolean validate(String clientId, String cNonce, CredentialProof credentialProof, Map<String, Object> proofConfiguration);
 
     /**
      * Extracts the holders public key for VC cryptographic binding from the proof header

@@ -79,8 +79,7 @@ public class CredentialConfigurationServiceImplTest {
         credentialConfigurationDTO.setCredentialSubjectDefinition(Map.of("name", new CredentialSubjectParametersDTO(List.of(new CredentialSubjectParametersDTO.Display("Full Name", "en")))));
 
         ReflectionTestUtils.setField(credentialConfigurationService, "credentialIssuer", "http://example.com/");
-        ReflectionTestUtils.setField(credentialConfigurationService, "credentialIssuerDomainUrl", "http://example.com/");
-        ReflectionTestUtils.setField(credentialConfigurationService, "authServer", List.of("http://auth.com"));
+        ReflectionTestUtils.setField(credentialConfigurationService, "authUrlList", List.of("http://auth.com"));
         ReflectionTestUtils.setField(credentialConfigurationService, "servletPath", "v1/test");
         ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "DataProvider");
         ReflectionTestUtils.setField(credentialConfigurationService, "issuerDisplay", List.of(Map.of()));
