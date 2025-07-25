@@ -10,7 +10,7 @@ import io.mosip.certify.core.dto.CertificateResponseDTO;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.proofgenerators.ProofGenerator;
 import io.mosip.certify.proofgenerators.ProofGeneratorFactory;
-import io.mosip.certify.proofgenerators.dip.KeymanagerByteSigner;
+import io.mosip.certify.proofgenerators.dataintegrity.KeymanagerByteSigner;
 import io.mosip.certify.utils.DIDDocumentUtil;
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.kernel.signature.service.SignatureService;

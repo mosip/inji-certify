@@ -19,7 +19,7 @@ import java.util.concurrent.Executors;
  */
 @Configuration
 @EnableScheduling
-@EnableSchedulerLock(defaultLockAtMostFor = "${mosip.certify.batch.status-list-update.lock-at-most-for:10m}")
+@EnableSchedulerLock(defaultLockAtMostFor = "10m")
 public class BatchJobConfig implements SchedulingConfigurer {
 
     @Value("${mosip.certify.batch-job.core-pool-size:2}")
