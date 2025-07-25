@@ -16,6 +16,8 @@ import java.util.stream.Collectors;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import io.mosip.certify.core.dto.CertificateResponseDTO;
+import io.mosip.certify.entity.CredentialConfig;
+import io.mosip.certify.repository.CredentialConfigRepository;
 import io.mosip.certify.services.CertifyIssuanceServiceImpl;
 import io.mosip.kernel.keymanagerservice.dto.AllCertificatesDataResponseDto;
 import io.mosip.kernel.keymanagerservice.dto.CertificateDataResponseDto;
@@ -41,10 +43,13 @@ public class DIDDocumentUtil {
     @Autowired
     KeymanagerService keymanagerService;
 
+    @Autowired
+    private CredentialConfigRepository credentialConfigRepository;
+
     private static final String MULTICODEC_PREFIX = "ed01";
 
     public Map<String, Object> generateDIDDocument(String didUrl) {
-        HashMap<String,Object> didDocument = new HashMap<String,Object>();
+        HashMap<String, Object> didDocument = new HashMap<>();
         didDocument.put("@context", Collections.singletonList("https://www.w3.org/ns/did/v1"));
         didDocument.put("alsoKnownAs", new ArrayList<>());
         didDocument.put("service", new ArrayList<>());
@@ -52,21 +57,38 @@ public class DIDDocumentUtil {
         didDocument.put("authentication", Collections.singletonList(didUrl));
         didDocument.put("assertionMethod", Collections.singletonList(didUrl));
 
-        List<Map<String, Object>> verificationMethods = CertifyIssuanceServiceImpl.keyChooser.entrySet().stream()
-                .map(entry -> {
-                    List<String> keyParams = entry.getValue();
-                    CertificateResponseDTO certificateResponseDTO = getCertificateDataResponseDto(keyParams.getFirst(), keyParams.getLast());
-                    String certificateString = certificateResponseDTO.getCertificateData();
-                    String kid = certificateResponseDTO.getKeyId();
+        // Fetch the credentialConfig map
+        Map<String, List<String>> credentialConfigMap = getSignatureCryptoSuiteMap();
 
-                    // Generate verification method for each key
-                    return generateVerificationMethod(entry.getKey(), certificateString, didUrl, kid);
+        // Use a Set to track unique verification methods by their "id"
+        Set<String> uniqueIds = new HashSet<>();
+        List<Map<String, Object>> verificationMethods = credentialConfigMap.entrySet().stream()
+                .flatMap(entry -> {
+                    List<String> keyParams = entry.getValue();
+                    AllCertificatesDataResponseDto kidResponse = keymanagerService.getAllCertificates(keyParams.get(0), Optional.of(keyParams.get(1)));
+
+                    if (kidResponse == null || kidResponse.getAllCertificates() == null) {
+                        log.error("No certificates found for appId: {} and refId: {}", keyParams.get(0), keyParams.get(1));
+                        throw new CertifyException("No certificates found");
+                    }
+
+                    return Arrays.stream(kidResponse.getAllCertificates())
+                            .map(certificateData -> {
+                                String certificateString = certificateData.getCertificateData();
+                                String kid = certificateData.getKeyId();
+                                Map<String, Object> verificationMethod = generateVerificationMethod(entry.getKey(), certificateString, didUrl, kid);
+
+                                // Add only if the "id" is unique
+                                String verificationId = (String) verificationMethod.get("id");
+                                if (uniqueIds.add(verificationId)) {
+                                    return verificationMethod;
+                                }
+                                return null; // Skip duplicates
+                            })
+                            .filter(Objects::nonNull); // Remove null entries
                 })
-                .collect(Collectors.toCollection(() ->
-                        new TreeSet<>(Comparator.comparing(vm -> vm.get("id").toString()))
-                ))
-                .stream()
-                .toList();
+                .collect(Collectors.toList());
+
         didDocument.put("verificationMethod", verificationMethods);
 
         return didDocument;
@@ -218,5 +240,22 @@ public class DIDDocumentUtil {
         certificateResponseDTO.setKeyId(certificateData.getKeyId());
 
         return certificateResponseDTO;
+    }
+
+    private Map<String, List<String>> getSignatureCryptoSuiteMap() {
+        // Fetch all credential configurations
+        List<CredentialConfig> allConfigs = credentialConfigRepository.findAll();
+
+        // Create a map with signatureCryptoSuite as the key and appId, refId as values
+        Map<String, List<String>> signatureCryptoSuiteMap = new HashMap<>();
+        for (CredentialConfig config : allConfigs) {
+            String signatureCryptoSuite = config.getSignatureCryptoSuite();
+            if(signatureCryptoSuite != null) {
+                List<String> appIdAndRefId = Arrays.asList(config.getKeyManagerAppId(), config.getKeyManagerRefId());
+                signatureCryptoSuiteMap.put(signatureCryptoSuite, appIdAndRefId);
+            }
+        }
+
+        return signatureCryptoSuiteMap;
     }
 }
