@@ -108,7 +108,7 @@ public class DIDDocumentUtil {
         try {
             switch (signatureAlgo) {
                 case JWSAlgorithm.ES256K:
-                    verificationMethod = generateECK12019VerificationMethod(publicKey, didUrl);
+                    verificationMethod = generateECK1VerificationMethod(publicKey, didUrl);
                     break;
                 case JWSAlgorithm.EdDSA:
                     verificationMethod = generateEd25519VerificationMethod(publicKey, didUrl);
@@ -201,7 +201,7 @@ public class DIDDocumentUtil {
         return verificationMethod;
     }
 
-    private static Map<String, Object> generateECK12019VerificationMethod(PublicKey publicKey, String didUrl) {
+    private static Map<String, Object> generateECK1VerificationMethod(PublicKey publicKey, String didUrl) {
         // TODO: can validate the key or directly assume the curve here and
         //  go ahead or use P_256 only if `nimbusCurve` is having same value.
         ECKey nimbusKey = new ECKey.Builder(Curve.SECP256K1, (ECPublicKey) publicKey)
