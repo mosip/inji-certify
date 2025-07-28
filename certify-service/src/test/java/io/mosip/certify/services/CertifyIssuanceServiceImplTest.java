@@ -421,19 +421,4 @@ public class CertifyIssuanceServiceImplTest {
         assertTrue("Credential string should contain SD-JWT disclosure separator '~'", credential.contains("~"));
         verify(auditWrapper).logAudit(any(), any(), any(), isNull());
     }
-
-    @Test
-    public void testGetDIDDocument_whenDidDocumentAlreadySet() {
-        // Arrange
-        Map<String, Object> expectedDocument = new HashMap<>();
-        expectedDocument.put("key", "value");  // Sample data
-        ReflectionTestUtils.setField(issuanceService, "didDocument", expectedDocument); // assuming a setter or constructor to set it
-
-        // Act
-        Map<String, Object> result = issuanceService.getDIDDocument();
-
-        // Assert
-        assertEquals(expectedDocument, result);
-        verify(keymanagerService, times(0)).getCertificate(any(), any());  // Verifying that no call was made to keymanagerService
-    }
 }

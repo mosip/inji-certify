@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.danubetech.keyformats.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import io.mosip.certify.core.dto.CertificateResponseDTO;
@@ -34,6 +35,7 @@ import io.mosip.certify.core.exception.CertifyException;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.BigIntegers;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
@@ -45,6 +47,9 @@ public class DIDDocumentUtil {
 
     @Autowired
     private CredentialConfigRepository credentialConfigRepository;
+
+    @Value("#{${mosip.certify.credential-config.credential-signing-alg-values-supported}}")
+    private LinkedHashMap<String, List<String>> credentialSigningAlgValuesSupportedMap;
 
     private static final String MULTICODEC_PREFIX = "ed01";
 
@@ -65,7 +70,9 @@ public class DIDDocumentUtil {
         List<Map<String, Object>> verificationMethods = credentialConfigMap.entrySet().stream()
                 .flatMap(entry -> {
                     List<String> keyParams = entry.getValue();
-                    AllCertificatesDataResponseDto kidResponse = keymanagerService.getAllCertificates(keyParams.get(0), Optional.of(keyParams.get(1)));
+                    String appId = keyParams.get(0);
+                    String refId = keyParams.get(1);
+                    AllCertificatesDataResponseDto kidResponse = keymanagerService.getAllCertificates(appId, refId != null ? Optional.of(refId) : Optional.empty());
 
                     if (kidResponse == null || kidResponse.getAllCertificates() == null) {
                         log.error("No certificates found for appId: {} and refId: {}", keyParams.get(0), keyParams.get(1));
@@ -76,7 +83,7 @@ public class DIDDocumentUtil {
                             .map(certificateData -> {
                                 String certificateString = certificateData.getCertificateData();
                                 String kid = certificateData.getKeyId();
-                                Map<String, Object> verificationMethod = generateVerificationMethod(entry.getKey(), certificateString, didUrl, kid);
+                                Map<String, Object> verificationMethod = generateVerificationMethod(keyParams.get(2), certificateString, didUrl, kid);
 
                                 // Add only if the "id" is unique
                                 String verificationId = (String) verificationMethod.get("id");
@@ -94,28 +101,26 @@ public class DIDDocumentUtil {
         return didDocument;
     }
 
-    private static Map<String, Object> generateVerificationMethod(String signatureCryptoSuite, String certificateString, String didUrl, String kid) {
+    private static Map<String, Object> generateVerificationMethod(String signatureAlgo, String certificateString, String didUrl, String kid) {
         PublicKey publicKey = loadPublicKeyFromCertificate(certificateString);
         Map<String, Object> verificationMethod = null;
 
         try {
-            switch (signatureCryptoSuite) {
-                case SignatureAlg.EC_K1_2016:
-                case SignatureAlg.EC_SECP256K1_2019:
+            switch (signatureAlgo) {
+                case JWSAlgorithm.ES256K:
                     verificationMethod = generateECK12019VerificationMethod(publicKey, didUrl);
                     break;
-                case SignatureAlg.ED25519_SIGNATURE_SUITE_2018:
-                case SignatureAlg.ED25519_SIGNATURE_SUITE_2020:
+                case JWSAlgorithm.EdDSA:
                     verificationMethod = generateEd25519VerificationMethod(publicKey, didUrl);
                     break;
-                case SignatureAlg.RSA_SIGNATURE_SUITE_2018:
+                case JWSAlgorithm.RS256:
                     verificationMethod = generateRSAVerificationMethod(publicKey, didUrl);
                     break;
-                case SignatureAlg.EC_SECP256R1_2019:
+                case JWSAlgorithm.ES256:
                     verificationMethod = generateECR1VerificationMethod(publicKey, didUrl);
                     break;
                 default:
-                    log.error("Unsupported signature algorithm provided :" + signatureCryptoSuite);
+                    log.error("Unsupported signature algorithm provided :" + signatureAlgo);
                     throw new CertifyException(ErrorConstants.UNSUPPORTED_ALGORITHM);
             }
         } catch(CertifyException e) {
@@ -249,10 +254,22 @@ public class DIDDocumentUtil {
         // Create a map with signatureCryptoSuite as the key and appId, refId as values
         Map<String, List<String>> signatureCryptoSuiteMap = new HashMap<>();
         for (CredentialConfig config : allConfigs) {
-            String signatureCryptoSuite = config.getSignatureCryptoSuite();
-            if(signatureCryptoSuite != null) {
-                List<String> appIdAndRefId = Arrays.asList(config.getKeyManagerAppId(), config.getKeyManagerRefId());
-                signatureCryptoSuiteMap.put(signatureCryptoSuite, appIdAndRefId);
+            String appId = config.getKeyManagerAppId();
+            String refId = config.getKeyManagerRefId();
+
+            if(appId != null) {
+                String uniqueKey = appId + "-" + (refId != null ? refId : "");
+                List<String> configDetails = new ArrayList<>();
+                configDetails.add(appId);
+                configDetails.add(refId);
+                if (config.getSignatureAlgo() == null) {
+                    String signatureCryptoSuite = config.getSignatureCryptoSuite();
+                    configDetails.add(credentialSigningAlgValuesSupportedMap.get(signatureCryptoSuite).getFirst());
+                } else {
+                    configDetails.add(config.getSignatureAlgo());
+                }
+
+                signatureCryptoSuiteMap.put(uniqueKey, configDetails);
             }
         }
 
