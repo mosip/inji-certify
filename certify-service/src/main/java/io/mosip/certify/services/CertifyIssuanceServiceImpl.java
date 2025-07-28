@@ -172,9 +172,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     @Override
     public Map<String, Object> getDIDDocument() {
-        if(didDocument != null)
-            return didDocument;
-
         didDocument = didDocumentUtil.generateDIDDocument(didUrl);
         return didDocument;
     }
