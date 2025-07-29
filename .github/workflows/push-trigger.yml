@@ -103,7 +103,7 @@ jobs:
     secrets:
       OSSRH_USER: ${{ secrets.OSSRH_USER }}
       OSSRH_SECRET: ${{ secrets.OSSRH_SECRET }}
-      OSSRH_URL: ${{ secrets.OSSRH_SNAPSHOT_URL }}
+      OSSRH_URL: ${{ secrets.OSSRH_CENTRAL_URL }}
       OSSRH_TOKEN: ${{ secrets.OSSRH_TOKEN }}
       GPG_SECRET: ${{ secrets.GPG_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
@@ -144,6 +144,7 @@ jobs:
       GPG_SECRET: ${{ secrets.GPG_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
+# Removing publish_to_nexus for now from the list until migration to central nexus is done.
   build-docker-inji-certify-with-plugins:
     needs: [ maven-build-inji-certify-with-plugins, check_snapshot_version, publish_to_nexus ]
     if: ${{ needs.check_snapshot_version.outputs.is_condition == 'true' }}
@@ -193,19 +194,19 @@ jobs:
       GPG_SECRET: ${{ secrets.GPG_SECRET }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
-  publish_to_nexus_apitest_inji_certify:
-    if: "${{ !contains(github.ref, 'master') && github.event_name != 'pull_request' && github.event_name != 'release' && github.event_name != 'prerelease' && github.event_name != 'publish' }}"
-    needs: build-maven-apitest-inji-certify
-    uses: mosip/kattu/.github/workflows/maven-publish-to-nexus.yml@master-java21
-    with:
-      SERVICE_LOCATION: ./api-test
-    secrets:
-      OSSRH_USER: ${{ secrets.OSSRH_USER }}
-      OSSRH_SECRET: ${{ secrets.OSSRH_SECRET }}
-      OSSRH_URL: ${{ secrets.OSSRH_SNAPSHOT_URL }}
-      OSSRH_TOKEN: ${{ secrets.OSSRH_TOKEN }}
-      GPG_SECRET: ${{ secrets.GPG_SECRET }}
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+#  publish_to_nexus_apitest_inji_certify:
+#    if: "${{ !contains(github.ref, 'master') && github.event_name != 'pull_request' && github.event_name != 'release' && github.event_name != 'prerelease' && github.event_name != 'publish' }}"
+#    needs: build-maven-apitest-inji-certify
+#    uses: mosip/kattu/.github/workflows/maven-publish-to-nexus.yml@master-java21
+#    with:
+#      SERVICE_LOCATION: ./api-test
+#    secrets:
+#      OSSRH_USER: ${{ secrets.OSSRH_USER }}
+#      OSSRH_SECRET: ${{ secrets.OSSRH_SECRET }}
+#      OSSRH_URL: ${{ secrets.OSSRH_SNAPSHOT_URL }}
+#      OSSRH_TOKEN: ${{ secrets.OSSRH_TOKEN }}
+#      GPG_SECRET: ${{ secrets.GPG_SECRET }}
+#      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
   build-apitest-inji-certify-local:
     needs: build-maven-apitest-inji-certify

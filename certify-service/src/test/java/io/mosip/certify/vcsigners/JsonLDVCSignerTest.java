@@ -1,8 +1,10 @@
 package io.mosip.certify.vcsigners;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.mosip.certify.core.exception.CertifyException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,6 +24,7 @@ import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.proofgenerators.ProofGenerator;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import io.mosip.kernel.signature.service.SignatureService;
+import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
 
 @RunWith(MockitoJUnitRunner.class)
 public class JsonLDVCSignerTest {
@@ -109,6 +112,28 @@ public class JsonLDVCSignerTest {
             Map<String, Object> proof = (Map<String, Object>) credential.getJsonObject().get("proof");
             Assert.assertEquals("fake-jws-proof", proof.get("jws"));
         }
+    }
+
+    @Test(expected = CertifyException.class)
+    public void testAttachSignature_CanonicalizationThrowsException() throws Exception {
+        // Arrange
+        String vc = """
+        {
+            "@context": ["https://www.w3.org/ns/credentials/v2"],
+            "issuanceDate": "2024-09-22T23:06:22.123Z",
+            "type": ["VerifiableCredential"]
+        }
+    """;
+        Map<String, String> keyDetails = new HashMap<>();
+        Canonicalizer mockCanonicalizer = org.mockito.Mockito.mock(Canonicalizer.class);
+        when(signProps.getCanonicalizer()).thenReturn(mockCanonicalizer);
+        when(signProps.getName()).thenReturn("FakeSignature2018");
+        // Simulate exception
+        when(mockCanonicalizer.canonicalize(any(), any()))
+                .thenThrow(new IOException("Simulated IO error"));
+
+        // Act & Assert
+        jsonLDVCSigner.attachSignature(vc, keyDetails);
     }
 
 }

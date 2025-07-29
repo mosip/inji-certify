@@ -13,6 +13,7 @@ import com.nimbusds.jwt.SignedJWT;
 
 import io.mosip.certify.core.dto.CredentialProof;
 import io.mosip.certify.core.exception.InvalidRequestException;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -510,5 +511,90 @@ class JwtProofValidatorTest {
         boolean result = jwtProofValidator.validate("test-client", "test-nonce", credentialProof);
 
         assertFalse(result, "Invalid base64 encoded ID");
+    }
+
+    @Test
+    void testValidateV2_NullJwt() {
+        when(credentialProof.getJwt()).thenReturn(null);
+        boolean result = jwtProofValidator.validateV2("client-id", "nonce", credentialProof, Map.of("jwt", Map.of("proof_signing_alg_values_supported", List.of("RS256"))));
+        assertFalse(result, "Expected validation to fail for null JWT in validateV2");
+    }
+
+    @Test
+    void testValidateV2_BlankJwt() {
+        when(credentialProof.getJwt()).thenReturn("");
+        boolean result = jwtProofValidator.validateV2("client-id", "nonce", credentialProof, Map.of("jwt", Map.of("proof_signing_alg_values_supported", List.of("RS256"))));
+        assertFalse(result, "Expected validation to fail for blank JWT in validateV2");
+    }
+
+    @Test
+    void testValidateV2_UnsupportedAlgorithm() throws Exception {
+        String jwt = createValidJWT();
+        CredentialProof credentialProof = new CredentialProof();
+        credentialProof.setJwt(jwt);
+        // proofConfiguration with unsupported algorithm
+        Map<String, Object> proofConfig = Map.of("jwt", Map.of("proof_signing_alg_values_supported", List.of("ES384")));
+        boolean result = jwtProofValidator.validateV2("test-client", "test-nonce", credentialProof, proofConfig);
+        assertFalse(result, "Expected validation to fail for unsupported algorithm in validateV2");
+    }
+
+    @Test
+    void testGetInstance_DidJwkKid() {
+        JwtProofKeyManager manager = jwtProofValidator.getInstance("did:jwk:abc");
+        assertNotNull(manager);
+        assertTrue(manager instanceof DIDjwkProofManager);
+    }
+
+    @Test
+    void testGetInstance_DidKeyKid() {
+        JwtProofKeyManager manager = jwtProofValidator.getInstance("did:key:abc");
+        assertNotNull(manager);
+        assertTrue(manager instanceof DIDkeysProofManager);
+    }
+
+    @Test
+    void testGetInstance_OtherKid() {
+        JwtProofKeyManager manager = jwtProofValidator.getInstance("random:abc");
+        assertNotNull(manager);
+        assertTrue(manager instanceof DIDjwkProofManager);
+    }
+
+    @Test
+    void testValidateV2_ValidJWT_RS256() throws Exception {
+        String jwt = createValidJWT();
+        CredentialProof credentialProof = new CredentialProof();
+        credentialProof.setJwt(jwt);
+        Map<String, Object> proofConfig = Map.of("jwt", Map.of("proof_signing_alg_values_supported", List.of("RS256")));
+        boolean result = jwtProofValidator.validateV2("test-client", "test-nonce", credentialProof, proofConfig);
+        assertTrue(result, "Expected validation to succeed for valid RS256 JWT");
+    }
+
+    @Test
+    void testValidateV2_ValidJWT_Ed25519() throws Exception {
+        String keyId = "did:jwk:";
+        String jwt = createValidEd25519JWT(keyId);
+        CredentialProof credentialProof = new CredentialProof();
+        credentialProof.setJwt(jwt);
+        Map<String, Object> proofConfig = Map.of("jwt", Map.of("proof_signing_alg_values_supported", List.of("Ed25519")));
+        boolean result = jwtProofValidator.validateV2("test-client", "test-nonce", credentialProof, proofConfig);
+        assertTrue(result, "Expected validation to succeed for valid Ed25519 JWT");
+    }
+
+    @Test
+    void testValidateV2_InvalidJWT() {
+        CredentialProof credentialProof = new CredentialProof();
+        credentialProof.setJwt("invalid.jwt.token");
+        Map<String, Object> proofConfig = Map.of("jwt", Map.of("proof_signing_alg_values_supported", List.of("RS256")));
+        boolean result = jwtProofValidator.validateV2("test-client", "test-nonce", credentialProof, proofConfig);
+        assertFalse(result, "Expected validation to fail for invalid JWT in validateV2");
+    }
+
+    @Test
+    void testValidateV2_MissingJwtConfig() throws Exception {
+        String jwt = createValidJWT();
+        CredentialProof credentialProof = new CredentialProof();
+        credentialProof.setJwt(jwt);
+        boolean result = jwtProofValidator.validateV2("test-client", "test-nonce", credentialProof, Map.of());
+        assertFalse(result, "Expected validation to fail for missing jwt config in validateV2");
     }
 }

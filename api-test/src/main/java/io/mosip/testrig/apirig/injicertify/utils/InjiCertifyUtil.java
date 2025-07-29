@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.PublicKey;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECGenParameterSpec;
@@ -23,7 +24,9 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.bitcoinj.core.Base58;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 
@@ -54,6 +57,7 @@ import io.mosip.testrig.apirig.injicertify.testrunner.MosipTestRunner;
 import io.mosip.testrig.apirig.testrunner.OTPListener;
 import io.mosip.testrig.apirig.utils.AdminTestUtil;
 import io.mosip.testrig.apirig.utils.GlobalConstants;
+import io.mosip.testrig.apirig.utils.GlobalMethods;
 import io.mosip.testrig.apirig.utils.JWKKeyUtil;
 import io.mosip.testrig.apirig.utils.RestClient;
 import io.mosip.testrig.apirig.utils.SkipTestCaseHandler;
@@ -91,6 +95,11 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		// else do nothing
 	}
 	
+	public static String extractAndEncodeVcTemplate(String requestJsonStr) {
+		JSONObject vcTemplate = new JSONObject(requestJsonStr).getJSONObject("vcTemplate");
+		return new JSONObject(requestJsonStr).put("vcTemplate", AdminTestUtil.encodeBase64(vcTemplate.toString()))
+				.toString();
+	}
 	public static void dBCleanup() {
 		DBManager.executeDBQueries(InjiCertifyConfigManager.getKMDbUrl(), InjiCertifyConfigManager.getKMDbUser(),
 				InjiCertifyConfigManager.getKMDbPass(), InjiCertifyConfigManager.getKMDbSchema(),
@@ -504,44 +513,6 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		}
 	}
 	
-	public static JSONArray esignetActuatorResponseArray = null;
-
-	public static String getValueFromEsignetActuator(String section, String key) {
-		String url = InjiCertifyConfigManager.getEsignetBaseUrl() + InjiCertifyConfigManager.getproperty("actuatorEsignetEndpoint");
-		String actuatorCacheKey = url + section + key;
-		String value = actuatorValueCache.get(actuatorCacheKey);
-		if (value != null && !value.isEmpty())
-			return value;
-
-		try {
-			if (esignetActuatorResponseArray == null) {
-				Response response = null;
-				JSONObject responseJson = null;
-				response = RestClient.getRequest(url, MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON);
-				responseJson = new JSONObject(response.getBody().asString());
-				esignetActuatorResponseArray = responseJson.getJSONArray("propertySources");
-			}
-
-			for (int i = 0, size = esignetActuatorResponseArray.length(); i < size; i++) {
-				JSONObject eachJson = esignetActuatorResponseArray.getJSONObject(i);
-				if (eachJson.get("name").toString().contains(section)) {
-					value = eachJson.getJSONObject(GlobalConstants.PROPERTIES).getJSONObject(key)
-							.get(GlobalConstants.VALUE).toString();
-					if (InjiCertifyConfigManager.IsDebugEnabled())
-						logger.info("Actuator: " + url + " key: " + key + " value: " + value);
-					break;
-				}
-			}
-			actuatorValueCache.put(actuatorCacheKey, value);
-
-			return value;
-		} catch (Exception e) {
-			logger.error(GlobalConstants.EXCEPTION_STRING_2 + e);
-			return value;
-		}
-
-	}
-	
 	public static Map<String, List<String>> proofSigningAlgorithmsMap = new HashMap<>();
 	
 	public static String getJsonFromInjiCertifyWellKnownEndPoint() {
@@ -783,12 +754,12 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		} else if (testCaseName.contains("_GenerateToken_ForMockIDA")) {
 			tempURL = getValueFromEsignetWellKnownEndPoint("token_endpoint",
 					InjiCertifyConfigManager.getEsignetBaseUrl());
-		} else if (testCaseName.contains("_GenerateToken_ForLandRegistry")) {
+		} else if (testCaseName.contains("_GenerateToken_ForLandRegistry")|| testCaseName.contains("_GenerateToken_FormDoc")) {
 			tempURL = getValueFromEsignetWellKnownEndPoint("token_endpoint",
 					InjiCertifyConfigManager.getEsignetBaseUrl());
 		} else if (testCaseName.contains("_GetCredentialForMockIDA")) {
 			tempURL = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer", baseURL);
-		} else if (testCaseName.contains("_GetCredentialForLandRegistry")) {
+		} else if (testCaseName.contains("_GetCredentialForLandRegistry")|| testCaseName.contains("_GetCredentialFormDoc")) {
 			tempURL = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer", baseURL);
 		}
 
@@ -861,6 +832,12 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	
 	public static TestCaseDTO isTestCaseValidForExecution(TestCaseDTO testCaseDTO) {
 		String testCaseName = testCaseDTO.getTestCaseName();
+		
+		//When the captcha is enabled we cannot execute the test case as we can not generate the captcha token
+		if (isCaptchaEnabled() == true) {
+			GlobalMethods.reportCaptchaStatus(GlobalConstants.CAPTCHA_ENABLED, true);
+			throw new SkipException(GlobalConstants.CAPTCHA_ENABLED_MESSAGE);
+		}
 
 		if (MosipTestRunner.skipAll == true) {
 			throw new SkipException(GlobalConstants.PRE_REQUISITE_FAILED_MESSAGE);
@@ -1075,22 +1052,46 @@ public class InjiCertifyUtil extends AdminTestUtil {
 
 	    return proofJWT;
 	}
-
 	
+	public static String generateEd25519DidKey(byte[] rawEd25519PublicKey) {
+	    // Ed25519 public keys are 32 bytes
+	    if (rawEd25519PublicKey == null || rawEd25519PublicKey.length != 32) {
+	        throw new IllegalArgumentException("Invalid Ed25519 public key: must be 32 bytes");
+	    }
+
+	    // Multicodec prefix for Ed25519 (0xED01)
+	    byte[] prefix = new byte[]{(byte) 0xED, 0x01};
+
+	    byte[] combined = new byte[prefix.length + rawEd25519PublicKey.length];
+	    System.arraycopy(prefix, 0, combined, 0, prefix.length);
+	    System.arraycopy(rawEd25519PublicKey, 0, combined, prefix.length, rawEd25519PublicKey.length);
+
+	    return "did:key:z" + Base58.encode(combined);
+	}
 	public static String signED25519JWT(String clientId, String accessToken, String testCaseName, String tempUrl) {
 		int idTokenExpirySecs = Integer
 				.parseInt(getValueFromEsignetActuator(InjiCertifyConfigManager.getEsignetActuatorPropertySection(),
 						GlobalConstants.MOSIP_ESIGNET_ID_TOKEN_EXPIRE_SECONDS));
 		JWSSigner signer;
 		String proofJWT = "";
-//		String typ = "openid4vci-proof+jwt";
 		SignedJWT signedJWT = null;
+		JWSHeader header = null;
 
 		try {
 			OctetKeyPair edJWK = new OctetKeyPairGenerator(Curve.Ed25519).generate();
+			
+			if(testCaseName.contains("_Did_Key_Sign_")) {
+				
+				byte[] rawPublicKey = edJWK.getX().decode();
 
-			JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.Ed25519)
-					.type(new JOSEObjectType("openid4vci-proof+jwt")).jwk(edJWK.toPublicJWK()).build();
+				String didKey = generateEd25519DidKey(rawPublicKey);
+				
+				header = new JWSHeader.Builder(JWSAlgorithm.Ed25519)
+						.type(new JOSEObjectType("openid4vci-proof+jwt")).keyID(didKey).build();
+			}else {
+				header = new JWSHeader.Builder(JWSAlgorithm.Ed25519)
+						.type(new JOSEObjectType("openid4vci-proof+jwt")).jwk(edJWK.toPublicJWK()).build();
+			}
 
 			Date currentTime = new Date();
 

@@ -15,10 +15,13 @@ import io.mosip.certify.api.spi.VCIssuancePlugin;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
 import io.mosip.certify.core.constants.VCFormats;
+import io.mosip.certify.core.dto.CredentialLedgerSearchRequest;
 import io.mosip.certify.core.dto.CredentialMetadata;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
+import io.mosip.certify.core.dto.CredentialStatusResponse;
 import io.mosip.certify.core.dto.ParsedAccessToken;
+import io.mosip.certify.core.dto.UpdateCredentialStatusRequest;
 import io.mosip.certify.core.dto.VCIssuanceTransaction;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
@@ -82,7 +85,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
-        boolean isValidCredentialRequest = new CredentialRequestValidator().isValid(credentialRequest);
+        boolean isValidCredentialRequest = CredentialRequestValidator.isValid(credentialRequest);
         if(!isValidCredentialRequest) {
             throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
         }
@@ -93,7 +96,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         String scopeClaim = (String) parsedAccessToken.getClaims().getOrDefault("scope", "");
         CredentialMetadata credentialMetadata = null;
         for(String scope : scopeClaim.split(Constants.SPACE)) {
-            Optional<CredentialMetadata> result = VCIssuanceUtil.getScopeCredentialMapping(scope, credentialRequest.getFormat(), credentialConfigurationService.fetchCredentialIssuerMetadata("latest"));
+            Optional<CredentialMetadata> result = VCIssuanceUtil.getScopeCredentialMapping(scope, credentialRequest.getFormat(), credentialConfigurationService.fetchCredentialIssuerMetadata("latest"), credentialRequest);
             if(result.isPresent()) {
                 credentialMetadata = result.get(); //considering only first credential scope
                 break;
@@ -192,6 +195,16 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         auditWrapper.logAudit(Action.VC_ISSUANCE, ActionStatus.ERROR,
                 AuditHelper.buildAuditDto(parsedAccessToken.getAccessTokenHash(), "accessTokenHash"), null);
         throw new CertifyException(ErrorConstants.VC_ISSUANCE_FAILED);
+    }
+
+    @Override
+    public CredentialStatusResponse updateCredential(UpdateCredentialStatusRequest request) {
+        throw new CertifyException("This method is not supported in VCIssuanceServiceImpl");
+    }
+
+    @Override
+    public List<CredentialStatusResponse> searchCredentials(CredentialLedgerSearchRequest request) {
+        throw new CertifyException("This method is not supported in VCIssuanceServiceImpl");
     }
 
 }

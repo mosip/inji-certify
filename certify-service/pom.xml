@@ -22,6 +22,10 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+        <repository>
+            <id>danubetech-maven-public</id>
+            <url>https://repo.danubetech.com/repository/maven-public/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -103,6 +107,21 @@
             <groupId>info.weboftrust</groupId>
             <artifactId>ld-signatures-java</artifactId>
             <version>1.0.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.danubetech</groupId>
+                    <artifactId>key-formats-java</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>decentralized-identity</groupId>
+                    <artifactId>jsonld-common-java</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.danubetech</groupId>
+            <artifactId>data-integrity-java</artifactId>
+            <version>1.17.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.crypto.tink</groupId>
@@ -134,6 +153,25 @@
             <artifactId>hypersistence-utils-hibernate-63</artifactId>
             <version>3.9.9</version>
         </dependency>
+        <dependency>
+            <groupId>com.jayway.jsonpath</groupId>
+            <artifactId>json-path</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-spring</artifactId>
+            <version>6.8.0</version>
+        </dependency>
+        <dependency>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-provider-jdbc-template</artifactId>
+            <version>6.8.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/io.mosip.certify/mock-certify-plugin -->
     </dependencies>
 
     <build>
@@ -152,6 +190,9 @@
                             <goal>build-info</goal>
                             <goal>repackage</goal>
                         </goals>
+                        <configuration>
+                            <attach>false</attach>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
