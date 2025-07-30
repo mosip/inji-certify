@@ -120,8 +120,10 @@ CREATE TABLE IF NOT EXISTS certify.credential_config (
     credential_signing_alg_values_supported TEXT[] NOT NULL,
     proof_types_supported JSONB NOT NULL,
     credential_subject JSONB,
-    claims JSONB,
+    sd_jwt_claims JSONB,
+    mso_mdoc_claims JSONB,
     plugin_configurations JSONB,
+    credential_status_purpose TEXT[],
     cr_dtimes TIMESTAMP NOT NULL,
     upd_dtimes TIMESTAMP,
     CONSTRAINT pk_config_id PRIMARY KEY (config_id)
@@ -163,8 +165,9 @@ INSERT INTO certify.credential_config (
     credential_signing_alg_values_supported,
     proof_types_supported,
     credential_subject,
-    claims,
+    mso_mdoc_claims,
     plugin_configurations,
+    credential_status_purpose,
     cr_dtimes,
     upd_dtimes
 )
@@ -178,7 +181,7 @@ VALUES (
     'https://www.w3.org/2018/credentials/v1',  -- context as comma-separated string
     'FarmerCredential,VerifiableCredential',  -- credential_type as comma-separated string
     'ldp_vc',  -- credential_format
-    'did:web:mosip.github.io:inji-config:vc-local-ed25519#key-0',  -- did_url
+    'did:web:mosip.github.io:inji-config:vc-local-ed25519',  -- did_url
     'CERTIFY_VC_SIGN_ED25519',  -- key_manager_app_id
     'ED25519_SIGN',  -- key_manager_ref_id (optional)
     'EdDSA',  -- signature_algo (optional)
@@ -193,6 +196,7 @@ VALUES (
     '{"fullName": {"display": [{"name": "Full Name", "locale": "en"}]}, "phone": {"display": [{"name": "Phone Number", "locale": "en"}]}, "dateOfBirth": {"display": [{"name": "Date of Birth", "locale": "en"}]}, "gender": {"display": [{"name": "Gender", "locale": "en"}]}}'::JSONB,  -- credential_subject
     NULL,  -- claims (optional)
     '[{"mosip.certify.mock.data-provider.csv.identifier-column": "id", "mosip.certify.mock.data-provider.csv.data-columns": "id,fullName,mobileNumber,dateOfBirth,gender,state,district,villageOrTown,postalCode,landArea,landOwnershipType,primaryCropType,secondaryCropType,face,farmerID", "mosip.certify.mock.data-provider.csv-registry-uri": "/home/mosip/config/farmer_identity_data.csv"}]'::JSONB,  -- plugin_configurations
+    ARRAY['revocation'],  -- credential_status_purpose
     NOW(),  -- cr_dtimes
     NULL  -- upd_dtimes (optional)
 );
