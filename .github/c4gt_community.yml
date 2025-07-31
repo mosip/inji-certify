@@ -199,7 +199,7 @@ body:
 
   - type: dropdown
     id: ticket-complexity
-    attributes:
+    attributes: 
       label: Complexity
       description: Choose a complexity describing the complexity of your ticket
       multiple: false
@@ -212,7 +212,7 @@ body:
 
   - type: dropdown
     id: ticket-category
-    attributes:
+    attributes: 
       label: Category
       description: Choose the categories that best describe your ticket
       multiple: true
@@ -248,7 +248,7 @@ body:
     validations:
       required: true
 
+  
+  
 
-
-
-
+  
