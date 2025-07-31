@@ -9,6 +9,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.LocalDateTime;
@@ -17,6 +20,14 @@ import java.util.Optional;
 @RunWith(SpringRunner.class)
 @DataJpaTest
 public class RenderingCredentialTemplateRepositoryTest {
+    @TestConfiguration
+    public static class TestConfig {
+        @Bean
+        public ObjectMapper objectMapper() {
+            return new ObjectMapper();
+        }
+    }
+
     @Autowired
     private RenderingTemplateRepository svgRenderTemplateRepository;
 

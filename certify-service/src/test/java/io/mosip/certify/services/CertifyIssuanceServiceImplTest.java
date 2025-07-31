@@ -593,6 +593,72 @@ public class CertifyIssuanceServiceImplTest {
         return request;
     }
 
+    @Test
+    public void searchCredentials_ValidRequestWithAllFields_ReturnsResult() {
+        CredentialLedgerSearchRequest request = new CredentialLedgerSearchRequest();
+        request.setIssuerId("did:web:test");
+        request.setCredentialType("VerifiableCredential");
+        request.setCredentialId("67823e96-fda0-4eba-9828-a32a8d22cc42");
+        request.setIndexedAttributesEquals(Map.of("recipientEmail", "abc@example.com"));
+
+        Ledger ledger = createLedger("67823e96-fda0-4eba-9828-a32a8d22cc42");
+        when(ledgerRepository.findBySearchRequest(request)).thenReturn(List.of(ledger));
+
+        List<CredentialStatusResponse> results = issuanceService.searchCredentials(request);
+
+        assertEquals(1, results.size());
+        assertEquals("67823e96-fda0-4eba-9828-a32a8d22cc42", results.get(0).getCredentialId());
+    }
+
+    @Test
+    public void searchCredentials_ValidRequestNoResults_ReturnsEmptyList() {
+        CredentialLedgerSearchRequest request = new CredentialLedgerSearchRequest();
+        request.setIssuerId("did:web:test");
+        request.setCredentialType("VerifiableCredential");
+        request.setIndexedAttributesEquals(Map.of("recipientName", "Unknown"));
+
+        when(ledgerRepository.findBySearchRequest(request)).thenReturn(Collections.emptyList());
+
+        List<CredentialStatusResponse> results = issuanceService.searchCredentials(request);
+
+        assertTrue(results.isEmpty());
+    }
+
+    @Test
+    public void searchCredentials_NullIndexedAttrs_ThrowsCertifyException() {
+        CredentialLedgerSearchRequest request = new CredentialLedgerSearchRequest();
+        request.setIssuerId("did:web:test");
+        request.setCredentialType("VerifiableCredential");
+        request.setIndexedAttributesEquals(null);
+
+        CertifyException ex = assertThrows(CertifyException.class, () -> issuanceService.searchCredentials(request));
+        assertEquals("INVALID_SEARCH_CRITERIA", ex.getErrorCode());
+    }
+
+    @Test
+    public void searchCredentials_EmptyIndexedAttrs_ThrowsCertifyException() {
+        CredentialLedgerSearchRequest request = new CredentialLedgerSearchRequest();
+        request.setIssuerId("did:web:test");
+        request.setCredentialType("VerifiableCredential");
+        request.setIndexedAttributesEquals(Collections.emptyMap());
+
+        CertifyException ex = assertThrows(CertifyException.class, () -> issuanceService.searchCredentials(request));
+        assertEquals("INVALID_SEARCH_CRITERIA", ex.getErrorCode());
+    }
+
+    @Test
+    public void searchCredentials_RepositoryThrowsException_ThrowsCertifyException() {
+        CredentialLedgerSearchRequest request = new CredentialLedgerSearchRequest();
+        request.setIssuerId("did:web:test");
+        request.setCredentialType("VerifiableCredential");
+        request.setIndexedAttributesEquals(Map.of("recipientEmail", "abc@example.com"));
+
+        when(ledgerRepository.findBySearchRequest(request)).thenThrow(new RuntimeException("DB error"));
+
+        CertifyException ex = assertThrows(CertifyException.class, () -> issuanceService.searchCredentials(request));
+        assertEquals("SEARCH_CREDENTIALS_FAILED", ex.getErrorCode());
+    }
+
     private Ledger createLedger(String credentialId) {
         Ledger ledger = new Ledger();
         ledger.setId(1L);
