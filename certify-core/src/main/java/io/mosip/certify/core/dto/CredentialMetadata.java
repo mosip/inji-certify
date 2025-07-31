@@ -17,6 +17,7 @@ public class CredentialMetadata {
     private String id;
     private String format;
     private String scope;
+    private String doctype;
     private List<String> types;
     private Map<String, Object> proofTypesSupported;
 

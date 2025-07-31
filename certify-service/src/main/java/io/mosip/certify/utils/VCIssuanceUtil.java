@@ -256,6 +256,9 @@ public class VCIssuanceUtil {
             if(format.equals(VCFormats.LDP_VC)){
                 credentialMetadata.setTypes(metadata.getCredentialDefinition().getType());
             }
+            if(format.equals(VCFormats.MSO_MDOC)){
+                credentialMetadata.setDoctype(metadata.getDocType());
+            }
             return Optional.of(credentialMetadata);
         }
         return Optional.empty();
@@ -267,5 +270,12 @@ public class VCIssuanceUtil {
             throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_VC_TYPE);
 
         //TODO need to validate Credential_definition as JsonLD document, if invalid throw exception
+    }
+
+    public static void validateMsoMdocFormatRequest(CredentialRequest credentialRequest,
+                                                  CredentialMetadata credentialMetadata) {
+        if(!credentialRequest.getDoctype().equals(credentialMetadata.getDoctype()))
+            throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_VC_TYPE);
+
     }
 }
