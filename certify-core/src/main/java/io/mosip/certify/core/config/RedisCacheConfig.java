@@ -5,6 +5,7 @@
  */
 package io.mosip.certify.core.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCustomizer;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -19,20 +20,28 @@ import java.util.Map;
 
 @ConditionalOnProperty(value = "spring.cache.type", havingValue = "redis")
 @Configuration
+@Slf4j
 public class RedisCacheConfig {
 
     @Value("#{${mosip.certify.cache.expire-in-seconds}}")
     private Map<String, Integer> cacheNamesWithTTLMap;
+
+    @Value("${mosip.certify.cache.redis.prefix:}")
+    private String cachePrefix;
 
     @Bean
     public RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer() {
         return (builder) -> {
             Map<String, RedisCacheConfiguration> configurationMap = new HashMap<>();
             cacheNamesWithTTLMap.forEach((cacheName, ttl) -> {
-                configurationMap.put(cacheName, RedisCacheConfiguration
-                                .defaultCacheConfig()
-                                    .disableCachingNullValues()
-                                    .entryTtl(Duration.ofSeconds(ttl)));
+                RedisCacheConfiguration defaultConfiguration =  RedisCacheConfiguration.defaultCacheConfig();
+                if (cachePrefix != null && !cachePrefix.isEmpty()) {
+                    log.info("Using cache prefix: {} for cacheName: {}", cachePrefix, cacheName);
+                    defaultConfiguration = defaultConfiguration.prefixCacheNameWith(cachePrefix);
+                }
+                configurationMap.put(cacheName, defaultConfiguration
+                        .disableCachingNullValues()
+                        .entryTtl(Duration.ofSeconds(ttl)));
             });
             builder.withInitialCacheConfigurations(configurationMap);
         };
