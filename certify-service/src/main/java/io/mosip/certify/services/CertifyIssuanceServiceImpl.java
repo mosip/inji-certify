@@ -317,7 +317,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             case "mso_mdoc":
                 vcRequestDto.setDoctype(credentialRequest.getDoctype());
                 vcRequestDto.setClaims(credentialRequest.getClaims());
-                validateMsoMdocFormatRequest(credentialRequest, credentialMetadata);
                 try {
                     // Prepare raw data for the data provider
                     Map<String, Object> rawData = new HashMap<>();
