@@ -41,8 +41,7 @@ public class CredentialUtils {
             return String.join(Constants.DELIMITER, vcRequestDto.getFormat(), vcRequestDto.getDoctype());
         }
         if(vcRequestDto.getFormat().equals(VCFormats.MSO_MDOC)) {
-            // TODO: Add proper logic for getting the template name for mDOC
-            return String.join(Constants.DELIMITER, vcRequestDto.getFormat());
+            return String.join(Constants.DELIMITER, vcRequestDto.getFormat(), vcRequestDto.getDoctype());
         }
         List<String> c = new ArrayList<>(vcRequestDto.getContext());
         List<String> t = new ArrayList<>(vcRequestDto.getType());

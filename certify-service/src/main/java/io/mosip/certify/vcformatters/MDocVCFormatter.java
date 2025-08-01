@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import io.ipfs.multibase.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -87,7 +88,7 @@ public class MDocVCFormatter implements VCFormatter{
 
     /**
      * Internal method to fetch CredentialConfig, leveraging Spring Cache.
-     * The key is expected to be "credentialType:context:credentialFormat".
+     * The key is expected to be "credentialFormat::doctype".
      */
     @Cacheable(cacheNames = "credentialConfig", key = "#templateKey")
     protected CredentialConfig getCachedCredentialConfig(String templateKey) {
@@ -97,27 +98,15 @@ public class MDocVCFormatter implements VCFormatter{
             throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "Invalid template key format: " + templateKey);
         }
 
-        String[] parts = templateKey.split(DELIMITER, 3);
-        if (parts.length < 2) {
+        String[] parts = templateKey.split(DELIMITER, 2);
+        if (parts.length != 2) {
             log.error("Invalid templateKey format for getCachedCredentialConfig: {}. Expected at least 2 parts.", templateKey);
             throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "Template key format requires at least 2 parts: " + templateKey);
-        } else if (parts.length == 2) {
-            String credentialFormat = parts[0];
-            String vct = parts[1];
-
-            return credentialConfigRepository.findByCredentialFormatAndSdJwtVct(credentialFormat, vct)
-                    .orElseThrow(() -> {
-                        log.error("CredentialConfig not found in DB for key: {}", templateKey);
-                        return new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "CredentialConfig not found for key: " + templateKey);
-                    });
         }
+        String credentialFormat = parts[0];
+        String doctype = parts[1];
 
-        String credentialType = parts[0];
-        String context = parts[1];
-        String credentialFormat = parts[2];
-
-        return credentialConfigRepository
-                .findByCredentialFormatAndCredentialTypeAndContext(credentialFormat, credentialType, context)
+        return credentialConfigRepository.findByCredentialFormatAndDocType(credentialFormat, doctype)
                 .orElseThrow(() -> {
                     log.error("CredentialConfig not found in DB for key: {}", templateKey);
                     return new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "CredentialConfig not found for key: " + templateKey);
@@ -158,14 +147,14 @@ public class MDocVCFormatter implements VCFormatter{
         String templateName = templateSettings.get(TEMPLATE_NAME).toString();
         String issuer = templateSettings.get(ISSUER_URI).toString();
 
-//        String vcTemplateString = getCachedCredentialConfig(templateName).getVcTemplate();
-//        if (vcTemplateString == null) {
-//            log.error("Template {} not found (vcTemplate is null)", templateName);
-//            throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND);
-//        }
-//
-//        vcTemplateString = new String(Base64.decodeBase64(vcTemplateString));
-        String vcTemplateString = "{\"nameSpaces\": {\"org.iso.18013.5.1\": [{\"digestID\": 0,\"elementIdentifier\": \"family_name\",\"elementValue\": \"${family_name}\"},{\"digestID\": 1,\"elementIdentifier\": \"given_name\", \"elementValue\": \"${given_name}\"},{\"digestID\": 2,\"elementIdentifier\": \"birth_date\",\"elementValue\": \"${birth_date}\"},{\"digestID\": 7,\"elementIdentifier\": \"driving_privileges\",\"elementValue\": ${driving_privileges}}]},\"docType\": \"${_docType}\",\"validityInfo\": {\"validFrom\": \"${_validFrom}\",\"validUntil\": \"${_validUntil}\"}}";
+        String vcTemplateString = getCachedCredentialConfig(templateName).getVcTemplate();
+        if (vcTemplateString == null) {
+            log.error("Template {} not found (vcTemplate is null)", templateName);
+            throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND);
+        }
+
+        vcTemplateString = new String(Base64.decodeBase64(vcTemplateString));
+//        String vcTemplateString = "{\"nameSpaces\": {\"org.iso.18013.5.1\": [{\"digestID\": 0,\"elementIdentifier\": \"family_name\",\"elementValue\": \"${family_name}\"},{\"digestID\": 1,\"elementIdentifier\": \"given_name\", \"elementValue\": \"${given_name}\"},{\"digestID\": 2,\"elementIdentifier\": \"birth_date\",\"elementValue\": \"${birth_date}\"},{\"digestID\": 7,\"elementIdentifier\": \"driving_privileges\",\"elementValue\": ${driving_privileges}}]},\"docType\": \"${_docType}\",\"validityInfo\": {\"validFrom\": \"${_validFrom}\",\"validUntil\": \"${_validUntil}\"}}";
 
         StringWriter writer = new StringWriter();
 
@@ -216,14 +205,14 @@ public class MDocVCFormatter implements VCFormatter{
         String templateName = templateInput.get(TEMPLATE_NAME).toString();
         String issuer = templateInput.get(ISSUER_URI).toString();
 
-//        String vcTemplateString = getCachedCredentialConfig(templateName).getVcTemplate();
-//        if (vcTemplateString == null) {
-//            log.error("Template {} not found (vcTemplate is null)", templateName);
-//            throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND);
-//        }
-//
-//        vcTemplateString = new String(Base64.decodeBase64(vcTemplateString));
-        String vcTemplateString = "{\"nameSpaces\": {\"org.iso.18013.5.1\": [{\"digestID\": 0,\"elementIdentifier\": \"family_name\",\"elementValue\": \"${family_name}\"},{\"digestID\": 1,\"elementIdentifier\": \"given_name\", \"elementValue\": \"${given_name}\"},{\"digestID\": 2,\"elementIdentifier\": \"birth_date\",\"elementValue\": \"${birth_date}\"},{\"digestID\": 7,\"elementIdentifier\": \"driving_privileges\",\"elementValue\": ${driving_privileges}}]},\"docType\": \"${_docType}\",\"validityInfo\": {\"validFrom\": \"${_validFrom}\",\"validUntil\": \"${_validUntil}\"}}";
+        String vcTemplateString = getCachedCredentialConfig(templateName).getVcTemplate();
+        if (vcTemplateString == null) {
+            log.error("Template {} not found (vcTemplate is null)", templateName);
+            throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND);
+        }
+
+        vcTemplateString = new String(Base64.decodeBase64(vcTemplateString));
+//        String vcTemplateString = "{\"nameSpaces\": {\"org.iso.18013.5.1\": [{\"digestID\": 0,\"elementIdentifier\": \"family_name\",\"elementValue\": \"${family_name}\"},{\"digestID\": 1,\"elementIdentifier\": \"given_name\", \"elementValue\": \"${given_name}\"},{\"digestID\": 2,\"elementIdentifier\": \"birth_date\",\"elementValue\": \"${birth_date}\"},{\"digestID\": 7,\"elementIdentifier\": \"driving_privileges\",\"elementValue\": ${driving_privileges}}]},\"docType\": \"${_docType}\",\"validityInfo\": {\"validFrom\": \"${_validFrom}\",\"validUntil\": \"${_validUntil}\"}}";
 
         StringWriter writer = new StringWriter();
 
