@@ -418,7 +418,17 @@
 			<class
 				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
 		</classes>
-	</test>	
+	</test>
+	<test name="AddCredentialConfigForMock">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMockIDA/AddCredentialConfigForDataIntegrityMock/AddCredentialConfiguration.yml" />
+		<parameter name="idKeyName" value="id" />
+		<parameter name="prerequisite" value="Yes" />			
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>		
 	<test name="OAuthDetailsRequestVCIForMockIDA">
 		<parameter name="ymlFile"
 			value="injicertify/VCIMockIDA/OAuthDetailsRequestForMockIDA/OAuthDetailsRequestForMockIDA.yml" />
@@ -465,7 +475,7 @@
 			<class
 				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
 		</classes>
-	</test>
+	</test>	
 	<test name="OAuthDetailsRequestVCIForMockIDAForVd11">
 		<parameter name="ymlFile"
 			value="injicertify/VCIMockIDAForVd11/OAuthDetailsRequestForMockIDA/OAuthDetailsRequestForMockIDA.yml" />
@@ -560,6 +570,13 @@
 				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
 		</classes>
 	</test>
+	<test name="DeleteCredentialConfigForMock">
+		<parameter name="ymlFile"
+			value="injicertify/VCIMockIDA/DeleteCredentialConfigurationForDataIntegrityMock/DeleteCredentialConfiguration.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.injicertify.testscripts.DeleteWithParam" />
+		</classes>
+	</test>	
 	<test name="OAuthDetailsRequestVCIForMockIDANegTC">
 		<parameter name="ymlFile"
 			value="injicertify/VCIMockIDANegTC/OAuthDetailsRequestForMockIDANegTC/OAuthDetailsRequestForMockIDANegTC.yml" />
