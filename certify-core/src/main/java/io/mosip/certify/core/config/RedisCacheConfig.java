@@ -26,7 +26,7 @@ public class RedisCacheConfig {
     @Value("#{${mosip.certify.cache.expire-in-seconds}}")
     private Map<String, Integer> cacheNamesWithTTLMap;
 
-    @Value("${mosip.certify.cache.redis.prefix:}")
+    @Value("${mosip.certify.cache.redis.key-prefix:}")
     private String cachePrefix;
 
     @Bean
@@ -34,14 +34,15 @@ public class RedisCacheConfig {
         return (builder) -> {
             Map<String, RedisCacheConfiguration> configurationMap = new HashMap<>();
             cacheNamesWithTTLMap.forEach((cacheName, ttl) -> {
-                RedisCacheConfiguration defaultConfiguration =  RedisCacheConfiguration.defaultCacheConfig();
+                RedisCacheConfiguration defaultConfiguration = RedisCacheConfiguration
+                                .defaultCacheConfig()
+                                .disableCachingNullValues()
+                                .entryTtl(Duration.ofSeconds(ttl));
                 if (cachePrefix != null && !cachePrefix.isEmpty()) {
-                    log.info("Using cache prefix: {} for cacheName: {}", cachePrefix, cacheName);
+                    log.info("Using cache prefix: {}", cachePrefix);
                     defaultConfiguration = defaultConfiguration.prefixCacheNameWith(cachePrefix);
                 }
-                configurationMap.put(cacheName, defaultConfiguration
-                        .disableCachingNullValues()
-                        .entryTtl(Duration.ofSeconds(ttl)));
+                configurationMap.put(cacheName, defaultConfiguration);
             });
             builder.withInitialCacheConfigurations(configurationMap);
         };
