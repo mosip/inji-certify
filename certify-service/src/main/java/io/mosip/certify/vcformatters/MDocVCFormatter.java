@@ -11,13 +11,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import io.ipfs.multibase.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
@@ -159,7 +153,7 @@ public class MDocVCFormatter implements VCFormatter{
         StringWriter writer = new StringWriter();
 
         // Prepare template data for mDOC structure
-        Map<String, Object> finalTemplate = jsonifyForMDoc(templateSettings);
+        Map<String, Object> finalTemplate = jsonify(templateSettings);
 
         // Add Velocity tools
         finalTemplate.put("_dateTool", new DateTool());
@@ -211,13 +205,15 @@ public class MDocVCFormatter implements VCFormatter{
             throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND);
         }
 
+        log.info("Base64 vcTemplateString: {}", vcTemplateString);
         vcTemplateString = new String(Base64.decodeBase64(vcTemplateString));
+        log.info("vcTemplateString: {}", vcTemplateString);
 //        String vcTemplateString = "{\"nameSpaces\": {\"org.iso.18013.5.1\": [{\"digestID\": 0,\"elementIdentifier\": \"family_name\",\"elementValue\": \"${family_name}\"},{\"digestID\": 1,\"elementIdentifier\": \"given_name\", \"elementValue\": \"${given_name}\"},{\"digestID\": 2,\"elementIdentifier\": \"birth_date\",\"elementValue\": \"${birth_date}\"},{\"digestID\": 7,\"elementIdentifier\": \"driving_privileges\",\"elementValue\": ${driving_privileges}}]},\"docType\": \"${_docType}\",\"validityInfo\": {\"validFrom\": \"${_validFrom}\",\"validUntil\": \"${_validUntil}\"}}";
 
         StringWriter writer = new StringWriter();
 
         // Prepare template data for mDOC structure
-        Map<String, Object> finalTemplate = jsonifyForMDoc(templateInput);
+        Map<String, Object> finalTemplate = jsonify(templateInput);
 
         // Add Velocity tools
         finalTemplate.put("_dateTool", new DateTool());
@@ -316,39 +312,30 @@ public class MDocVCFormatter implements VCFormatter{
      * Prepares data for mDOC CBOR encoding by ensuring proper data types.
      * This is similar to jsonify but with mDOC-specific considerations.
      */
-    protected static Map<String, Object> jsonifyForMDoc(Map<String, Object> valueMap) {
+    protected static Map<String, Object> jsonify(Map<String, Object> valueMap) {
         Map<String, Object> finalTemplate = new HashMap<>();
-
-        for (Map.Entry<String, Object> entry : valueMap.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-
+        Iterator<String> keys = valueMap.keySet().iterator();
+        while(keys.hasNext()) {
+            String key = keys.next();
+            Object value = valueMap.get(key);
             if (value instanceof List) {
                 finalTemplate.put(key, new JSONArray((List<Object>) value));
-            } else if (value != null && value.getClass().isArray()) {
-                finalTemplate.put(key, new JSONArray(Arrays.asList((Object[]) value)));
-            } else if (value instanceof Integer || value instanceof Float ||
-                    value instanceof Long || value instanceof Double) {
-                // Numeric values don't need quoting
+            } else if (value.getClass().isArray()) {
+                finalTemplate.put(key, new JSONArray(List.of(value)));
+            } else if (value instanceof Integer | value instanceof Float | value instanceof Long | value instanceof Double) {
+                // entities which don't need to be quoted
                 finalTemplate.put(key, value);
-            } else if (value instanceof Boolean) {
-                // Boolean values for mDOC
+            } else if (value instanceof String){
+                // entities which need to be quoted
+                finalTemplate.put(key, JSONObject.wrap(value));
+            } else if( value instanceof Map<?,?>) {
+                finalTemplate.put(key,JSONObject.wrap(value));
+            }
+            else {
+                // no conversion needed
                 finalTemplate.put(key, value);
-            } else if (value instanceof String) {
-                // String values - DON'T use JSONObject.quote here as it adds extra quotes
-                finalTemplate.put(key, value.toString());
-            } else if (value instanceof Map) {
-                // For nested maps, convert to JSONObject but don't quote
-                finalTemplate.put(key, new JSONObject((Map<String, Object>) value));
-            } else if (value != null) {
-                // Other non-null types as string
-                finalTemplate.put(key, value.toString());
-            } else {
-                // Handle null values
-                finalTemplate.put(key, null);
             }
         }
-
         return finalTemplate;
     }
 }
