@@ -1,25 +1,15 @@
-package io.mosip.certify.proofgenerators.dip;
+package io.mosip.certify.proofgenerators.dataintegrity;
 
 import com.danubetech.keyformats.crypto.ByteSigner;
-import com.danubetech.keyformats.jose.JWSAlgorithm;
-import com.google.common.collect.ImmutableMap;
 import io.ipfs.multibase.Multibase;
-import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
-import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
-import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import io.mosip.kernel.signature.dto.SignRequestDtoV2;
-import io.mosip.kernel.signature.service.SignatureService;
 import io.mosip.kernel.signature.service.SignatureServicev2;
 import org.apache.logging.log4j.util.Strings;
 
-import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.Base64;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * KeymanagerByteSigner is a concrete implementation of ByteSigner that

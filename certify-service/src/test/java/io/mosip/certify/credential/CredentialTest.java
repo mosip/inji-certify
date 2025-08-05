@@ -46,7 +46,8 @@ public class CredentialTest {
                 "RS256",
                 "testAppId",
                 "testRefId",
-                "https://example.com/pubkey"
+                "https://example.com/pubkey",
+                "Ed25519Signature2020"
         );
 
         assertNotNull(result);

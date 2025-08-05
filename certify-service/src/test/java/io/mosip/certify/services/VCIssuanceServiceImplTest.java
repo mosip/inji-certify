@@ -6,19 +6,19 @@ import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.api.exception.VCIExchangeException;
 import io.mosip.certify.api.spi.AuditPlugin;
 import io.mosip.certify.api.spi.VCIssuancePlugin;
+import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import io.mosip.certify.core.exception.NotAuthenticatedException;
-import io.mosip.certify.core.spi.CredentialConfigurationService; // Added import
+import io.mosip.certify.core.spi.CredentialConfigurationService;
 import io.mosip.certify.core.util.SecurityHelperService;
 import io.mosip.certify.enums.CredentialFormat;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
-
 import io.mosip.certify.utils.VCIssuanceUtil;
 import io.mosip.certify.validators.CredentialRequestValidator;
 import org.junit.Before;
@@ -26,13 +26,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
-
 import org.springframework.test.util.ReflectionTestUtils;
-import io.mosip.certify.core.constants.Constants;
-
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -40,14 +36,12 @@ import java.util.*;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.isNull;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class VCIssuanceServiceImplTest {
-    // For testing getCredentialIssuerMetadata
-    private LinkedHashMap<String, LinkedHashMap<String, Object>> testIssuerMetadataMap;
+
 
     @Mock
     private ParsedAccessToken parsedAccessToken;
@@ -85,7 +79,7 @@ public class VCIssuanceServiceImplTest {
     public void setUp() {
         // MockitoAnnotations.initMocks(this); // Not needed with MockitoJUnitRunner
 
-        testIssuerMetadataMap = new LinkedHashMap<>();
+        LinkedHashMap<String, LinkedHashMap<String, Object>> testIssuerMetadataMap = new LinkedHashMap<>();
         LinkedHashMap<String, Object> latestMetadataConfig = new LinkedHashMap<>();
         LinkedHashMap<String, Object> credentialConfigurationsSupportedForTestMeta = new LinkedHashMap<>();
         LinkedHashMap<String, Object> vcConfigForTestMeta = new LinkedHashMap<>();
@@ -100,7 +94,6 @@ public class VCIssuanceServiceImplTest {
         latestMetadataConfig.put("credential_endpoint", "https://localhost:9090/v1/certify/issuance/credential");
         testIssuerMetadataMap.put("latest", latestMetadataConfig);
 
-        ReflectionTestUtils.setField(issuanceService, "issuerMetadata", testIssuerMetadataMap);
         ReflectionTestUtils.setField(issuanceService, "cNonceExpireSeconds", 300);
 
         when(parsedAccessToken.getAccessTokenHash()).thenReturn(TEST_ACCESS_TOKEN_HASH);
@@ -193,7 +186,7 @@ public class VCIssuanceServiceImplTest {
         when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
         when(vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH)).thenReturn(transaction);
         when(proofValidatorFactory.getProofValidator(anyString())).thenReturn(proofValidator);
-        when(proofValidator.validateV2(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
+        when(proofValidator.validate(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
         when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn(HOLDER_ID);
 
         VCResult<JsonLDObject> vcResultLdp = new VCResult<>();
@@ -250,7 +243,7 @@ public class VCIssuanceServiceImplTest {
         when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
         when(vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH)).thenReturn(transaction);
         when(proofValidatorFactory.getProofValidator(anyString())).thenReturn(proofValidator);
-        when(proofValidator.validateV2(anyString(), anyString(), any(CredentialProof.class),any())).thenReturn(true);
+        when(proofValidator.validate(anyString(), anyString(), any(CredentialProof.class),any())).thenReturn(true);
         when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn(HOLDER_ID);
         when(vcIssuancePlugin.getVerifiableCredentialWithLinkedDataProof(any(VCRequestDto.class), eq(HOLDER_ID), eq(claimsFromAccessToken)))
                 .thenReturn(null); // Plugin returns null
@@ -266,7 +259,7 @@ public class VCIssuanceServiceImplTest {
         when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
         when(vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH)).thenReturn(transaction);
         when(proofValidatorFactory.getProofValidator(anyString())).thenReturn(proofValidator);
-        when(proofValidator.validateV2(anyString(), anyString(), any(CredentialProof.class),any())).thenReturn(true);
+        when(proofValidator.validate(anyString(), anyString(), any(CredentialProof.class),any())).thenReturn(true);
         when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn(HOLDER_ID);
 
         VCResult<JsonLDObject> emptyVcResult = new VCResult<>();
@@ -288,7 +281,7 @@ public class VCIssuanceServiceImplTest {
         when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
         when(vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH)).thenReturn(transaction);
         when(proofValidatorFactory.getProofValidator(anyString())).thenReturn(proofValidator);
-        when(proofValidator.validateV2(anyString(), anyString(), any(CredentialProof.class),any())).thenReturn(true);
+        when(proofValidator.validate(anyString(), anyString(), any(CredentialProof.class),any())).thenReturn(true);
         when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn(HOLDER_ID);
 
         VCResult<String> msoMDocVCResult = new VCResult<>();
@@ -333,45 +326,11 @@ public class VCIssuanceServiceImplTest {
         when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
         when(vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH)).thenReturn(transaction);
         when(proofValidatorFactory.getProofValidator(anyString())).thenReturn(proofValidator);
-        when(proofValidator.validateV2(anyString(), anyString(), any(CredentialProof.class), any())).thenReturn(false); // Proof fails
+        when(proofValidator.validate(anyString(), anyString(), any(CredentialProof.class), any())).thenReturn(false); // Proof fails
 
         CertifyException ex = assertThrows(CertifyException.class, () -> issuanceService.getCredential(request));
         assertEquals(ErrorConstants.INVALID_PROOF, ex.getErrorCode());
     }
-
-
-    @Test
-    public void getCredentialIssuerMetadata_validLatest() {
-        Map<String, Object> actual = issuanceService.getCredentialIssuerMetadata("latest");
-        assertNotNull(actual);
-        assertSame(testIssuerMetadataMap.get("latest"), actual); // Verifies it's from the injected map
-    }
-
-    @Test
-    public void getCredentialIssuerMetadata_validVD11() {
-        Map<String, Object> actual = issuanceService.getCredentialIssuerMetadata("vd11");
-        assertNotNull(actual);
-        assertTrue(actual.containsKey("credentials_supported"));
-        assertEquals("https://localhost:9090/v1/certify/issuance/vd11/credential", actual.get("credential_endpoint"));
-    }
-
-    @Test
-    public void getCredentialIssuerMetadata_validVD12() {
-        Map<String, Object> actual = issuanceService.getCredentialIssuerMetadata("vd12");
-        assertNotNull(actual);
-        assertTrue(actual.containsKey("credentials_supported"));
-        assertEquals("https://localhost:9090/v1/certify/issuance/vd12/credential", actual.get("credential_endpoint"));
-    }
-
-    @Test
-    public void getCredentialIssuerMetadata_UnsupportedVersion_ThrowsException() {
-        InvalidRequestException ex1 = assertThrows(InvalidRequestException.class, () -> issuanceService.getCredentialIssuerMetadata("latestData"));
-        assertEquals(ErrorConstants.UNSUPPORTED_OPENID_VERSION, ex1.getErrorCode());
-
-        InvalidRequestException ex2 = assertThrows(InvalidRequestException.class, () -> issuanceService.getCredentialIssuerMetadata(null));
-        assertEquals(ErrorConstants.UNSUPPORTED_OPENID_VERSION, ex2.getErrorCode());
-    }
-
 
     @Test
     public void getCredential_NotAuthenticated_ThrowsException() {
@@ -402,7 +361,7 @@ public class VCIssuanceServiceImplTest {
         when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
         when(vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH)).thenReturn(transaction);
         when(proofValidatorFactory.getProofValidator(anyString())).thenReturn(proofValidator);
-        when(proofValidator.validateV2(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
+        when(proofValidator.validate(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
         when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn(HOLDER_ID);
 
         VCIExchangeException pluginException = new VCIExchangeException("PLUGIN_ERROR_CODE");
@@ -426,7 +385,7 @@ public class VCIssuanceServiceImplTest {
             when(parsedAccessToken.isActive()).thenReturn(true);
             when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
             when(proofValidatorFactory.getProofValidator(anyString())).thenReturn(proofValidator);
-            when(proofValidator.validateV2(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
+            when(proofValidator.validate(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
             when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn(HOLDER_ID);
 
             // Mock CredentialMetadata and its getProofTypesSupported()
@@ -479,7 +438,7 @@ public class VCIssuanceServiceImplTest {
             when(parsedAccessToken.isActive()).thenReturn(true);
             when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
             when(proofValidatorFactory.getProofValidator(anyString())).thenReturn(proofValidator);
-            when(proofValidator.validateV2(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
+            when(proofValidator.validate(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
             when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn(HOLDER_ID);
 
             // Mock CredentialMetadata and its getProofTypesSupported()
