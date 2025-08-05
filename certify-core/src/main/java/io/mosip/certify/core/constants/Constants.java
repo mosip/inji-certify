@@ -25,7 +25,7 @@ public class Constants {
     public static final String EMPTY_REF_ID = "";
     public static final String ED25519_REF_ID = "ED25519_SIGN";
     public static final String TEMPLATE_NAME = "templateName";
-    public static final String ISSUER_URI = "issuerURI";
+    public static final String DID_URL = "didUrl";
     public static final String RENDERING_TEMPLATE_ID = "renderingTemplateId";
     public static final String CERTIFY_VC_SIGN_EC_K1 = "CERTIFY_VC_SIGN_EC_K1";
     public static final String CERTIFY_VC_SIGN_EC_R1 = "CERTIFY_VC_SIGN_EC_R1";
@@ -34,4 +34,9 @@ public class Constants {
     public static final String ACTIVE = "active";
     public static final String INACTIVE = "inactive";
     public static final String DELIMITER = "::";  // delimiter is ::  its not used by url or within any context of VC name and is distinct
+    public  static final String SIGNATURE_CRYPTO_SUITE = "SIGNATURE_CRYPTO_SUITE";
+    public  static final String VCTYPE = "vct";
+    public  static final String CONFIRMATION = "cnf";
+    public  static final String ISSUER = "iss";
+    public static final String TYPE = "type";
 }
