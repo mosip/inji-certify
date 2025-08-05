@@ -2,7 +2,7 @@
 
 ## Pre-requisites
 * Base infrastructure setup
-  * Tool and utilities to be installed locally [steps](https://docs.inji.io/readme/setup/deploy#tools-and-utilities)
+  * Tools and utilities to be installed locally [steps](https://docs.inji.io/readme/setup/deploy#tools-and-utilities)
   * System Requirements: Hardware, network and certificate requirements [steps](https://docs.inji.io/readme/setup/deploy#system-requirements)
   * Set up Wireguard Bastion Host [steps](https://docs.inji.io/readme/setup/deploy#wireguard)
   * K8s Cluster setup [steps](https://docs.inji.io/readme/setup/deploy#k8-cluster-setup)
