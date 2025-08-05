@@ -1,6 +1,7 @@
 # Deployment
 
 ## Pre-requisites
+* Cluster creation and configuration [steps](https://docs.inji.io/readme/setup/deploy)
 * inji-stack-config configmap [steps](https://docs.inji.io/readme/setup/deploy#pre-requisites)
 * Postgres installation [steps](https://github.com/mosip/mosip-infra/tree/v1.2.0.2/deployment/v3/external/postgres)
 * Config server secerts [steps](https://github.com/mosip/mosip-infra/tree/v1.2.0.2/deployment/v3/mosip/conf-secrets)
