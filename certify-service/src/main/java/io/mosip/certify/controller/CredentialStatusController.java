@@ -5,29 +5,32 @@
  */
 package io.mosip.certify.controller;
 
-import io.mosip.certify.core.dto.VCError;
+import io.mosip.certify.core.dto.CredentialLedgerSearchRequest;
+import io.mosip.certify.core.dto.CredentialStatusResponse;
+import io.mosip.certify.core.dto.UpdateCredentialStatusRequest;
 import io.mosip.certify.core.exception.CertifyException;
+import io.mosip.certify.core.spi.CredentialStatusService;
 import io.mosip.certify.services.StatusListCredentialService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Locale;
-import java.util.Map;
+import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/status-list")
-public class StatusListCredentialController {
+@RequestMapping("/credentials")
+public class CredentialStatusController {
 
     @Autowired
     private StatusListCredentialService statusListCredentialService;
 
     @Autowired
-    MessageSource messageSource;
+    private CredentialStatusService credentialStatusService;
 
     /**
      * Get Status List Credential by ID with optional fragment support
@@ -38,20 +41,20 @@ public class StatusListCredentialController {
      * @return Status List VC JSON document
      * @throws CertifyException
      */
-    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/status-list/{id}", produces = "application/json")
     public String getStatusListById(@PathVariable("id") String id) throws CertifyException {
 
-        log.info("Retrieving status list credential with ID: {}", id);
+        log.debug("Retrieving status list credential with ID: {}", id);
         return statusListCredentialService.getStatusListCredential(id);
     }
 
-    @ResponseBody
-    @ExceptionHandler(CertifyException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public VCError statusListNotFoundExceptionHandler(CertifyException ex) {
-        VCError vcError = new VCError();
-        vcError.setError(ex.getErrorCode());
-        vcError.setError_description(messageSource.getMessage(ex.getErrorCode(), null, ex.getErrorCode(), Locale.getDefault()));
-        return vcError;
+    @PostMapping("/status")
+    public ResponseEntity<CredentialStatusResponse> updateCredential(
+            @Valid @RequestBody UpdateCredentialStatusRequest updateCredentialStatusRequest) {
+        CredentialStatusResponse result = credentialStatusService.updateCredentialStatus(updateCredentialStatusRequest);
+        if (result == null) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(result);
     }
 }
