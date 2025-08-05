@@ -66,9 +66,9 @@ public abstract class Credential{
      * @param signAlgorithm Signature algorithm RS256, PS256, ES256, etc
      * @param appID application id as per the keymanager table
      * @param refID reference id as per the keyamanger table
-     * @param publicKeyURL URL/URI of the public key
+     * @param didUrl URL/URI of the public key
      */
-    public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm, String appID, String refID, String publicKeyURL){
+    public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm, String appID, String refID, String didUrl, String signatureCryptoSuite) {
 
         JWSSignatureRequestDto payload = new JWSSignatureRequestDto();
         payload.setDataToSign(vcToSign);
@@ -79,7 +79,7 @@ public abstract class Credential{
         payload.setIncludeCertHash(true);
         payload.setValidateJson(false);
         payload.setB64JWSHeaderParam(false);
-        payload.setCertificateUrl(publicKeyURL);
+        payload.setCertificateUrl(didUrl);
         payload.setSignAlgorithm(signAlgorithm); // RSSignature2018 --> RS256, PS256, ES256
         JWTSignatureResponseDto jwsSignedData = signatureService.jwsSign(payload);
         VCResult<String> vc = new VCResult<>();
