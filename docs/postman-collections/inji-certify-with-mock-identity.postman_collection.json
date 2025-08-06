@@ -2492,12 +2492,13 @@
 							}
 						},
 						"url": {
-							"raw": "{{certifyurl}}/credential-configurations",
+							"raw": "{{certifyurl}}/credentials/configurations",
 							"host": [
 								"{{certifyurl}}"
 							],
 							"path": [
-								"credential-configurations"
+								"credentials",
+								"configurations"
 							]
 						}
 					},
@@ -2536,7 +2537,7 @@
 							}
 						},
 						"url": {
-							"raw": "{{certifyurl}}/credential-configurations/{{configId}}",
+							"raw": "{{certifyurl}}/credentials/configurations/{{configId}}",
 							"host": [
 								"{{certifyurl}}"
 							],

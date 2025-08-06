@@ -220,11 +220,14 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
             // Common logic for all formats
             templateParams.put(Constants.TEMPLATE_NAME, templateName);
-            templateParams.put(Constants.DID_URL, didUrl);
+                    templateParams.put(Constants.ISSUER_URI, issuerURI);
+                    if (statusListEnabled) {
+                        addCredentialStatus(jsonObject);
+                    }
             if (!StringUtils.isEmpty(renderTemplateId)) {
                 templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
             }
-            jsonObject.put("_holderId", holderId);
+                    jsonObject.put("_holderId", holderId);
             templateParams.putAll(jsonObject.toMap());
             if(!StringUtils.isEmpty(idPrefix)) {
                 templateParams.put(VCDMConstants.CREDENTIAL_ID, idPrefix + UUID.randomUUID());

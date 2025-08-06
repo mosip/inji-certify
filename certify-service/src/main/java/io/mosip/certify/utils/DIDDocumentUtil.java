@@ -40,7 +40,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component
 public class DIDDocumentUtil {
     @Autowired
     KeymanagerService keymanagerService;
@@ -130,11 +129,11 @@ public class DIDDocumentUtil {
             throw new CertifyException(ErrorConstants.VERIFICATION_METHOD_GENERATION_FAILED, "Exception occurred while generating verification method for given signature algorithm: " + signatureAlgo);
         }
 
-        verificationMethod.put("id", didUrl + "#" + kid);
-        return verificationMethod;
+        didDocument.put("verificationMethod", Collections.singletonList(verificationMethod));
+        return didDocument;
     }
 
-    private static Map<String, Object> generateECR1VerificationMethod(PublicKey publicKey, String didUrl) {
+    private static Map<String, Object> generateECR1VerificationMethod(PublicKey publicKey, String issuerURI, String issuerPublicKeyURI) {
         ECPublicKey ecPublicKey = (ECPublicKey) publicKey;
         BigInteger yBI = ecPublicKey.getW().getAffineY();
         byte prefixByte = yBI.testBit(0) ? (byte) 0x03 : (byte) 0x02;

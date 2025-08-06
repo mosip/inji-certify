@@ -985,7 +985,7 @@
 							}
 						},
 						"url": {
-							"raw": "{{certifyurl}}/credential-configurations",
+							"raw": "{{certifyurl}}/credentials/configurations",
 							"host": [
 								"{{certifyurl}}"
 							],
@@ -1029,12 +1029,13 @@
 							}
 						},
 						"url": {
-							"raw": "{{certifyurl}}/credential-configurations/{{configId}}",
+							"raw": "{{certifyurl}}/credentials/configurations/{{configId}}",
 							"host": [
 								"{{certifyurl}}"
 							],
 							"path": [
-								"credential-configurations",
+								"credentials",
+								"configurations",
 								"{{configId}}"
 							]
 						}

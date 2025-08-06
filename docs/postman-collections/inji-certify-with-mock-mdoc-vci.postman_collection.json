@@ -586,12 +586,13 @@
 							}
 						},
 						"url": {
-							"raw": "{{certifyurl}}/credential-configurations/{{configId}}",
+							"raw": "{{certifyurl}}/credentials/configurations/{{configId}}",
 							"host": [
 								"{{certifyurl}}"
 							],
 							"path": [
-								"credential-configurations",
+								"credentials",
+								"configurations",
 								"{{configId}}"
 							]
 						}
