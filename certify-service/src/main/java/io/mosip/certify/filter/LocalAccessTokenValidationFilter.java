@@ -102,7 +102,5 @@ public class LocalAccessTokenValidationFilter extends OncePerRequestFilter {
         parsedAccessToken.setActive(true);
         log.debug("No Bearer / Opaque token provided, continue with the fake token" , parsedAccessToken.toString() );
         filterChain.doFilter(request, response);
-        //parsedAccessToken.setActive(false);
-        //filterChain.doFilter(request, response);
     }
 }

@@ -212,7 +212,7 @@ public class VCIssuanceUtil {
                 ldpVcResponse.setCredential((JsonLDObject) vcResult.getCredential());
                 return ldpVcResponse;
 
-            case VCFormats.LDP_SD_JWT:
+            case VCFormats.VC_SD_JWT:
             case VCFormats.JWT_VC_JSON:
             case VCFormats.JWT_VC_JSON_LD:
             case VCFormats.MSO_MDOC:
@@ -237,8 +237,8 @@ public class VCIssuanceUtil {
                                     new HashSet<>(dto.getCredentialDefinition().getType()).containsAll(credentialRequest.getCredential_definition().getType());
                         case VCFormats.MSO_MDOC:
                             return Objects.equals(dto.getDocType(), credentialRequest.getDoctype());
-                        case VCFormats.LDP_SD_JWT:
-                            return Objects.equals(dto.getVct(), credentialRequest.getSdJwtVct());
+                        case VCFormats.VC_SD_JWT:
+                            return Objects.equals(dto.getVct(), credentialRequest.getVct());
                         default:
                             return false;
                     }

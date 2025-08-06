@@ -18,16 +18,17 @@ ALTER TABLE certify.credential_template RENAME TO credential_config;
 
 -- Step 2: Add new columns
 ALTER TABLE certify.credential_config
-    ADD COLUMN credential_config_key_id VARCHAR(255) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    ADD COLUMN credential_config_key_id VARCHAR(255) NOT NULL UNIQUE,
     ADD COLUMN config_id VARCHAR(255) DEFAULT gen_random_uuid(),
     ADD COLUMN status VARCHAR(255) DEFAULT 'active',
     ADD COLUMN doctype VARCHAR,
     ADD COLUMN sd_jwt_vct VARCHAR,
-    ADD COLUMN credential_format VARCHAR(255) NOT NULL DEFAULT 'default_format', -- Adding a default value for NOT NULL constraint
+    ADD COLUMN credential_format VARCHAR(255) NOT NULL DEFAULT '', -- Adding a default value for NOT NULL constraint
     ADD COLUMN did_url VARCHAR DEFAULT 'did:web:mosip.github.io:inji-config:default', -- Adding a default value for NOT NULL constraint
     ADD COLUMN key_manager_app_id VARCHAR(36) DEFAULT '', -- Adding a default value for NOT NULL constraint
-    ADD COLUMN key_manager_ref_id VARCHAR(128),
+    ADD COLUMN key_manager_ref_id VARCHAR(128) DEFAULT 'ED25519_SIGN', -- Adding a default value for NOT NULL constraint
     ADD COLUMN signature_algo VARCHAR(36),
+    ADD COLUMN signature_crypto_suite VARCHAR(128) DEFAULT 'Ed25519Signature2020', -- Adding a default value for NOT NULL constraint
     ADD COLUMN sd_claim VARCHAR,
     ADD COLUMN display JSONB NOT NULL DEFAULT '[]'::jsonb, -- Adding a default value for NOT NULL constraint
     ADD COLUMN display_order TEXT[] DEFAULT ARRAY[]::TEXT[], -- Adding a default value for NOT NULL constraint
@@ -36,8 +37,31 @@ ALTER TABLE certify.credential_config
     ADD COLUMN credential_signing_alg_values_supported TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[], -- Adding a default value for NOT NULL constraint
     ADD COLUMN proof_types_supported JSONB NOT NULL DEFAULT '{}'::jsonb, -- Adding a default value for NOT NULL constraint
     ADD COLUMN credential_subject JSONB DEFAULT '{}'::jsonb,
-    ADD COLUMN claims JSONB,
+    ADD COLUMN mso_mdoc_claims JSONB,
+    ADD COLUMN sd_jwt_claims JSONB,
     ADD COLUMN plugin_configurations JSONB;
+    ADD COLUMN credential_status_purpose TEXT[];
+
+-- Adding a default value for NOT NULL constraint
+UPDATE certify.credential_config
+SET credential_config_key_id = credential_type || '_ldp_vc'
+WHERE credential_config_key_id IS NULL;
+
+UPDATE certify.credential_config
+SET credential_format = 'ldp_vc'
+WHERE credential_format = '';
+
+UPDATE certify.credential_config
+SET cryptographic_binding_methods_supported = ARRAY['did:jwk', 'did:key']
+WHERE cryptographic_binding_methods_supported = ARRAY[]::TEXT[];
+
+UPDATE certify.credential_config
+SET credential_signing_alg_values_supported = ARRAY['Ed25519Signature2020']
+WHERE credential_signing_alg_values_supported = ARRAY[]::TEXT[];
+
+UPDATE certify.credential_config
+SET proof_types_supported = '{"jwt": {"proof_signing_alg_values_supported": ["RS256", "ES256", "PS256", "Ed25519"]}}'::jsonb
+WHERE proof_types_supported = '{}'::jsonb;
 
 -- Step 3: Rename the template column to match the new schema
 ALTER TABLE certify.credential_config RENAME COLUMN template TO vc_template;
@@ -91,18 +115,19 @@ COMMENT ON COLUMN credential_config.cryptographic_binding_methods_supported IS '
 COMMENT ON COLUMN credential_config.credential_signing_alg_values_supported IS 'Credential Signing Algorithms: Array of supported signing algorithms.';
 COMMENT ON COLUMN credential_config.proof_types_supported IS 'Proof Types: JSON object containing supported proof types and their configurations.';
 COMMENT ON COLUMN credential_config.credential_subject IS 'Credential Subject: JSON object containing subject attributes schema.';
-COMMENT ON COLUMN credential_config.claims IS 'Claims: JSON object containing subject attributes schema specifically for Mdoc VC.';
+COMMENT ON COLUMN credential_config.mso_mdoc_claims IS 'Mso_mdoc Claims: JSON object containing subject attributes schema specifically for MSO-MDOC VC.';
+COMMENT ON COLUMN credential_config.sd_jwt_claims IS 'SdJwt Claims: JSON object containing subject attributes schema specifically for SdJwt VC.';
 COMMENT ON COLUMN credential_config.plugin_configurations IS 'Plugin Configurations: Array of JSON objects for plugin configurations.';
 COMMENT ON COLUMN credential_config.cr_dtimes IS 'Created DateTime: Date and time when the config was inserted in table.';
 COMMENT ON COLUMN credential_config.upd_dtimes IS 'Updated DateTime: Date and time when the config was last updated in table.';
 
 -- Create ENUM type for credential status
-CREATE TYPE credential_status_enum AS ENUM ('available', 'full');
+CREATE TYPE credential_status_enum AS ENUM ('AVAILABLE', 'FULL');
 
 -- Create status_list_credential table
 CREATE TABLE status_list_credential (
     id VARCHAR(255) PRIMARY KEY,          -- The unique ID (URL/DID/URN) extracted from the VC's 'id' field.
-    vc_document bytea NOT NULL,           -- Stores the entire Verifiable Credential JSON document.
+    vc_document VARCHAR NOT NULL,           -- Stores the entire Verifiable Credential JSON document.
     credential_type VARCHAR(100) NOT NULL, -- Type of the status list (e.g., 'StatusList2021Credential')
     status_purpose VARCHAR(100),             -- Intended purpose of this list within the system (e.g., 'revocation', 'suspension', 'general'). NULLABLE.
     capacity BIGINT,                        --- length of status list
@@ -125,6 +150,45 @@ CREATE INDEX IF NOT EXISTS idx_slc_status_purpose ON status_list_credential(stat
 CREATE INDEX IF NOT EXISTS idx_slc_credential_type ON status_list_credential(credential_type);
 CREATE INDEX IF NOT EXISTS idx_slc_credential_status ON status_list_credential(credential_status);
 CREATE INDEX IF NOT EXISTS idx_slc_cr_dtimes ON status_list_credential(cr_dtimes);
+
+-- Create the ledger table
+CREATE TABLE ledger (
+    id SERIAL PRIMARY KEY,                          -- Auto-incrementing serial primary key
+    credential_id VARCHAR(255) NOT NULL,            -- Unique ID of the Verifiable Credential WHOSE STATUS IS BEING TRACKED
+    issuer_id VARCHAR(255) NOT NULL,                -- Issuer of the TRACKED credential
+    issue_date TIMESTAMPTZ NOT NULL,                -- Issuance date of the TRACKED credential
+    expiration_date TIMESTAMPTZ,                    -- Expiration date of the TRACKED credential, if any
+    credential_type VARCHAR(100) NOT NULL,          -- Type of the TRACKED credential (e.g., 'VerifiableId')
+    indexed_attributes JSONB,                       -- Optional searchable attributes from the TRACKED credential
+    credential_status_details JSONB NOT NULL DEFAULT '[]'::jsonb,    -- Stores a list of status objects for this credential, defaults to an empty array.
+    cr_dtimes TIMESTAMP NOT NULL DEFAULT NOW(),     -- Creation timestamp of this ledger entry for the tracked credential
+
+    -- Constraints
+    CONSTRAINT uq_ledger_tracked_credential_id UNIQUE (credential_id), -- Ensure tracked credential_id is unique
+    CONSTRAINT ensure_credential_status_details_is_array CHECK (jsonb_typeof(credential_status_details) = 'array') -- Ensure it's always a JSON array
+);
+
+-- Add comments for documentation
+COMMENT ON TABLE ledger IS 'Stores intrinsic information about tracked Verifiable Credentials and their status history.';
+COMMENT ON COLUMN ledger.id IS 'Serial primary key for the ledger table.';
+COMMENT ON COLUMN ledger.credential_id IS 'Unique identifier of the Verifiable Credential whose status is being tracked. Must be unique across the table.';
+COMMENT ON COLUMN ledger.issuer_id IS 'Identifier of the issuer of the tracked credential.';
+COMMENT ON COLUMN ledger.issue_date IS 'Issuance date of the tracked credential.';
+COMMENT ON COLUMN ledger.expiration_date IS 'Expiration date of the tracked credential, if applicable.';
+COMMENT ON COLUMN ledger.credential_type IS 'The type(s) of the tracked credential (e.g., VerifiableId, ProofOfEnrollment).';
+COMMENT ON COLUMN ledger.indexed_attributes IS 'Stores specific attributes extracted from the tracked credential for optimized searching.';
+COMMENT ON COLUMN ledger.credential_status_details IS 'An array of status objects, guaranteed to be a JSON array (list). Defaults to an empty list []. Each object can contain: status_purpose, status_value (boolean), status_list_credential_id, status_list_index, cr_dtimes, upd_dtimes.';
+COMMENT ON COLUMN ledger.cr_dtimes IS 'Timestamp of when this ledger record for the tracked credential was created.';
+
+-- Create indexes for ledger
+CREATE INDEX IF NOT EXISTS idx_ledger_credential_id ON ledger(credential_id);
+CREATE INDEX IF NOT EXISTS idx_ledger_issuer_id ON ledger(issuer_id);
+CREATE INDEX IF NOT EXISTS idx_ledger_credential_type ON ledger(credential_type);
+CREATE INDEX IF NOT EXISTS idx_ledger_issue_date ON ledger(issue_date);
+CREATE INDEX IF NOT EXISTS idx_ledger_expiration_date ON ledger(expiration_date);
+CREATE INDEX IF NOT EXISTS idx_ledger_cr_dtimes ON ledger(cr_dtimes);
+CREATE INDEX IF NOT EXISTS idx_gin_ledger_indexed_attrs ON ledger USING GIN (indexed_attributes);
+CREATE INDEX IF NOT EXISTS idx_gin_ledger_status_details ON ledger USING GIN (credential_status_details);
 
 CREATE TABLE IF NOT EXISTS credential_status_transaction (
     transaction_log_id SERIAL PRIMARY KEY,        -- Unique ID for this transaction log entry
@@ -210,43 +274,3 @@ CREATE INDEX IF NOT EXISTS idx_sla_status_list_credential_id ON status_list_avai
 CREATE INDEX IF NOT EXISTS idx_sla_is_assigned ON status_list_available_indices(is_assigned);
 CREATE INDEX IF NOT EXISTS idx_sla_list_index ON status_list_available_indices(list_index);
 CREATE INDEX IF NOT EXISTS idx_sla_cr_dtimes ON status_list_available_indices(cr_dtimes);
-
-
-CREATE TABLE ledger (
-    id SERIAL PRIMARY KEY,                          -- Auto-incrementing serial primary key
-    credential_id VARCHAR(255) NOT NULL,            -- Unique ID of the Verifiable Credential WHOSE STATUS IS BEING TRACKED
-    issuer_id VARCHAR(255) NOT NULL,                -- Issuer of the TRACKED credential
-    issue_date TIMESTAMPTZ NOT NULL,                -- Issuance date of the TRACKED credential
-    expiration_date TIMESTAMPTZ,                    -- Expiration date of the TRACKED credential, if any
-    credential_type VARCHAR(100) NOT NULL,          -- Type of the TRACKED credential (e.g., 'VerifiableId')
-    indexed_attributes JSONB,                       -- Optional searchable attributes from the TRACKED credential
-    credential_status_details JSONB NOT NULL DEFAULT '[]'::jsonb,    -- Stores a list of status objects for this credential, defaults to an empty array.
-    cr_dtimes TIMESTAMP NOT NULL DEFAULT NOW(),     -- Creation timestamp of this ledger entry for the tracked credential
-
-    -- Constraints
-    CONSTRAINT uq_ledger_tracked_credential_id UNIQUE (credential_id), -- Ensure tracked credential_id is unique
-    CONSTRAINT ensure_credential_status_details_is_array CHECK (jsonb_typeof(credential_status_details) = 'array') -- Ensure it's always a JSON array
-);
-
--- Add comments for documentation
-COMMENT ON TABLE ledger IS 'Stores intrinsic information about tracked Verifiable Credentials and their status history.';
-COMMENT ON COLUMN ledger.id IS 'Serial primary key for the ledger table.';
-COMMENT ON COLUMN ledger.credential_id IS 'Unique identifier of the Verifiable Credential whose status is being tracked. Must be unique across the table.';
-COMMENT ON COLUMN ledger.issuer_id IS 'Identifier of the issuer of the tracked credential.';
-COMMENT ON COLUMN ledger.issue_date IS 'Issuance date of the tracked credential.';
-COMMENT ON COLUMN ledger.expiration_date IS 'Expiration date of the tracked credential, if applicable.';
-COMMENT ON COLUMN ledger.credential_type IS 'The type(s) of the tracked credential (e.g., VerifiableId, ProofOfEnrollment).';
-COMMENT ON COLUMN ledger.indexed_attributes IS 'Stores specific attributes extracted from the tracked credential for optimized searching.';
-COMMENT ON COLUMN ledger.credential_status_details IS 'An array of status objects, guaranteed to be a JSON array (list). Defaults to an empty list []. Each object can contain: status_purpose, status_value (boolean), status_list_credential_id, status_list_index, cr_dtimes, upd_dtimes.';
-COMMENT ON COLUMN ledger.cr_dtimes IS 'Timestamp of when this ledger record for the tracked credential was created.';
-
--- Create indexes for ledger
-CREATE INDEX IF NOT EXISTS idx_ledger_credential_id ON ledger(credential_id);
-CREATE INDEX IF NOT EXISTS idx_ledger_issuer_id ON ledger(issuer_id);
-CREATE INDEX IF NOT EXISTS idx_ledger_credential_type ON ledger(credential_type);
-CREATE INDEX IF NOT EXISTS idx_ledger_issue_date ON ledger(issue_date);
-CREATE INDEX IF NOT EXISTS idx_ledger_expiration_date ON ledger(expiration_date);
-CREATE INDEX IF NOT EXISTS idx_ledger_cr_dtimes ON ledger(cr_dtimes);
-CREATE INDEX IF NOT EXISTS idx_gin_ledger_indexed_attrs ON ledger USING GIN (indexed_attributes);
-CREATE INDEX IF NOT EXISTS idx_gin_ledger_status_details ON ledger USING GIN (credential_status_details);
-

@@ -20,7 +20,6 @@ import java.util.Map;
  * secp256r1/P-256
  */
 @Component
-@ConditionalOnProperty(name = "mosip.certify.data-provider-plugin.issuer.vc-sign-algo", havingValue = SignatureAlg.EC_SECP256R1_2019)
 public class EcdsaSecp256r1Signature2019ProofGenerator implements ProofGenerator {
 
     @Autowired

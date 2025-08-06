@@ -1,4 +1,4 @@
-package io.mosip.certify.proofgenerators.dip;
+package io.mosip.certify.proofgenerators.dataintegrity;
 
 import io.mosip.kernel.signature.service.SignatureServicev2;
 

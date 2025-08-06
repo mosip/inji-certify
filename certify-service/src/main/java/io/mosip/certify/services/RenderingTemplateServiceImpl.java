@@ -25,8 +25,6 @@ public class RenderingTemplateServiceImpl implements RenderingTemplateService {
     @Autowired
     RenderingTemplateRepository renderTemplateRepository;
 
-    //TODO: Cache it...
-
     @Override
     @Cacheable(cacheNames="renderTemplate", key="#id")
     public RenderingTemplateDTO getTemplate(String id) {

@@ -22,7 +22,6 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ConditionalOnProperty(name = "mosip.certify.data-provider-plugin.issuer.vc-sign-algo", havingValue = SignatureAlg.RSA_SIGNATURE_SUITE_2018)
 class RSASignature2018ProofGeneratorTest {
 
     @InjectMocks

@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 @Component
-@ConditionalOnProperty(name = "mosip.certify.data-provider-plugin.issuer.vc-sign-algo", havingValue = SignatureAlg.RSA_SIGNATURE_SUITE_2018)
 public class RSASignature2018ProofGenerator implements ProofGenerator {
     @Autowired
     SignatureService signatureService;

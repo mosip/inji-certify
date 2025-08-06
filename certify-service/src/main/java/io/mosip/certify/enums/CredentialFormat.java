@@ -8,7 +8,7 @@ public enum CredentialFormat {
     VC_DC_SD_JWT("dc+sd-jwt"), //direct sd_jwt as defined by sd jwt spec
     VC_LDP("ldp_vc"),
     VC_JWT("jwt_vc_json"),
-    VC_LDP_JWT("jwt_vc_json-ld"),
+    VC_LD_JWT("jwt_vc_json-ld"),
     VC_MDOC("mso_mdoc");
 
     private final String format;

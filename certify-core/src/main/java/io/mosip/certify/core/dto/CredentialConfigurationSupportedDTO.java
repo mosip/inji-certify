@@ -37,7 +37,7 @@ public class CredentialConfigurationSupportedDTO {
 
     private Map<String, Object> claims;
 
-    private List<Map<String, Object>> display;
+    private List<MetaDataDisplayDTO> display;
 
     private List<String> order;
 

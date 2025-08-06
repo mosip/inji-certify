@@ -4,10 +4,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.mosip.certify.core.constants.ErrorConstants;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import org.hibernate.annotations.Comment;
 
 import java.util.List;
 import java.util.Map;
@@ -20,9 +18,9 @@ public class CredentialConfigurationDTO {
 
     private String credentialConfigKeyId;
 
-    private List<String> context;
+    private List<String> contextURLs;
 
-    private List<String> credentialType;
+    private List<String> credentialTypes;
 
     @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private String credentialFormat;
@@ -35,34 +33,27 @@ public class CredentialConfigurationDTO {
 
     private String signatureAlgo; //Can be called as Proof algorithm
 
+    private String signatureCryptoSuite;
+
     private String sdClaim;
 
     @Valid
     @NotNull(message = ErrorConstants.INVALID_REQUEST)
-    private List<Map<String, Object>> display;
+    private List<MetaDataDisplayDTO> metaDataDisplay;
 
-    private List<String> order;
+    private List<String> displayOrder;
 
     @NotNull(message = ErrorConstants.INVALID_REQUEST)
     private String scope;
 
-    @NotNull(message = ErrorConstants.INVALID_REQUEST)
-    @JsonProperty("cryptographic_binding_methods_supported")
-    private List<String> cryptographicBindingMethodsSupported;
+    @JsonProperty("credentialSubjectDefinition")
+    private Map<String, CredentialSubjectParametersDTO> credentialSubjectDefinition;
 
-    @NotNull
-    @JsonProperty("credential_signing_alg_values_supported")
-    private List<String> credentialSigningAlgValuesSupported;
+    @JsonProperty("msoMdocClaims")
+    private Map<String, Map<String, ClaimsDisplayFieldsConfigDTO>> msoMdocClaims;
 
-    @NotNull(message = ErrorConstants.INVALID_REQUEST)
-    @JsonProperty("proof_types_supported")
-    private Map<String, Object> proofTypesSupported;
-
-    @JsonProperty("credentialSubject")
-    private Map<String, Object> credentialSubject;
-
-    @JsonProperty("claims")
-    private Map<String, Object> claims;
+    @JsonProperty("sdJwtClaims")
+    private Map<String, ClaimsDisplayFieldsConfigDTO> sdJwtClaims;
 
     @JsonProperty("doctype")
     private String docType;
@@ -71,4 +62,6 @@ public class CredentialConfigurationDTO {
     private String sdJwtVct;
 
     private List<Map<String, String>> pluginConfigurations;
+
+    private List<String> credentialStatusPurposes;
 }

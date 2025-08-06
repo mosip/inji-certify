@@ -6,15 +6,14 @@
 package io.mosip.certify.core.dto;
 
 
-import java.util.List;
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.mosip.certify.core.constants.ErrorConstants;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
+
+import java.util.List;
+import java.util.Map;
 
 @Data
 public class CredentialDefinition {

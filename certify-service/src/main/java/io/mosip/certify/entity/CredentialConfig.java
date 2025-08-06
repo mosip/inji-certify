@@ -1,20 +1,22 @@
 package io.mosip.certify.entity;
 
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
+import io.mosip.certify.entity.attributes.ClaimsDisplayFieldsConfigs;
+import io.mosip.certify.entity.attributes.CredentialSubjectParameters;
+import io.mosip.certify.entity.attributes.MetaDataDisplay;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import org.hibernate.annotations.Comment;
-
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
 import org.hibernate.type.SqlTypes;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 @Data
 @Entity
@@ -54,6 +56,9 @@ public class CredentialConfig {
     @Comment("This for VC signature or proof algorithm")
     private String signatureAlgo; //Can be called as Proof algorithm
 
+    @Comment("This is the crypto suite used for VC signature or proof generation")
+    private String signatureCryptoSuite;
+
     @Comment("This is a comma seperated list for selective disclosure.")
     private String sdClaim;
 
@@ -61,7 +66,7 @@ public class CredentialConfig {
     @Type(JsonBinaryType.class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "display", columnDefinition = "jsonb")
-    private List<Map<String, Object>> display;
+    private List<MetaDataDisplay> display;
 
     @Column(name = "display_order", columnDefinition = "TEXT[]")
     private List<String> order;
@@ -89,12 +94,17 @@ public class CredentialConfig {
     @Type(JsonBinaryType.class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "credential_subject", columnDefinition = "jsonb")
-    private Map<String, Object> credentialSubject;
+    private Map<String, CredentialSubjectParameters> credentialSubject;
 
     @Type(JsonBinaryType.class)
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "claims", columnDefinition = "jsonb")
-    private Map<String, Object> claims;
+    @Column(name = "mso_mdoc_claims", columnDefinition = "jsonb")
+    private Map<String, Map<String, ClaimsDisplayFieldsConfigs>> msoMdocClaims;
+
+    @Type(JsonBinaryType.class)
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "sd_jwt_claims", columnDefinition = "jsonb")
+    private Map<String, ClaimsDisplayFieldsConfigs> sdJwtClaims;
 
     @Column(name = "sd_jwt_vct")
     private String sdJwtVct;
@@ -104,11 +114,13 @@ public class CredentialConfig {
     @Column(name = "plugin_configurations", columnDefinition = "jsonb")
     private List<Map<String, String>> pluginConfigurations;
 
+    @Column(name = "credential_status_purpose", columnDefinition = "TEXT[]")
+    private List<String> credentialStatusPurposes;
+
     @NotNull
     @Column(name = "cr_dtimes")
     private LocalDateTime createdTimes;
 
     @Column(name = "upd_dtimes")
     private LocalDateTime updatedTimes;
-
 }

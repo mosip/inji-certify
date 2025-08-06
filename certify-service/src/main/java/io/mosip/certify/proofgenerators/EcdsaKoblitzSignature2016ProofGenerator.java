@@ -24,7 +24,6 @@ import java.util.Map;
  * // NOTE: Avoid using this signature and use the 2019 EC K1 instead.
  */
 @Component
-@ConditionalOnProperty(name = "mosip.certify.data-provider-plugin.issuer.vc-sign-algo", havingValue = SignatureAlg.EC_K1_2016)
 public class EcdsaKoblitzSignature2016ProofGenerator implements ProofGenerator {
 
     @Autowired

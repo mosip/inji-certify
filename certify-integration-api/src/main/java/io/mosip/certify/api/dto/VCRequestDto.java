@@ -18,5 +18,5 @@ public class VCRequestDto {
     private Map<String, Object> credentialSubject;
     private String doctype;
     private Map<String, Object> claims;
-    private String sdJwtVct;
+    private String vct; // SD-JWT VC Type
 }

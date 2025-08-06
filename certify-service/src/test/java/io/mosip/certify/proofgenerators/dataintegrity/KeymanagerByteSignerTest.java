@@ -1,4 +1,4 @@
-package io.mosip.certify.proofgenerators.dip;
+package io.mosip.certify.proofgenerators.dataintegrity;
 
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;

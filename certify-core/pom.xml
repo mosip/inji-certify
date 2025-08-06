@@ -16,7 +16,7 @@
     <groupId>io.mosip.certify</groupId>
     <artifactId>certify-core</artifactId>
     <name>certify-core</name>
-    <version>0.12.0-SNAPSHOT</version>
+    <version>${project.parent.version}</version>
     <description>Certify Core Library</description>
 
     <dependencies>
@@ -38,7 +38,7 @@
         <dependency>
             <groupId>io.mosip.certify</groupId>
             <artifactId>certify-integration-api</artifactId>
-            <version>0.12.0-SNAPSHOT</version>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>

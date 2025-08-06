@@ -1,14 +1,12 @@
 package io.mosip.certify.utils;
 
 import java.io.IOException;
-import java.net.URI;
 import java.security.GeneralSecurityException;
 import java.util.*;
 
 import com.apicatalog.jsonld.lang.Keywords;
 import com.danubetech.dataintegrity.DataIntegrityProof;
 import com.danubetech.dataintegrity.signer.LdSigner;
-import com.danubetech.dataintegrity.signer.LdSignerRegistry;
 import foundation.identity.jsonld.JsonLDException;
 import foundation.identity.jsonld.JsonLDObject;
 import foundation.identity.jsonld.JsonLDUtils;
@@ -16,13 +14,9 @@ import info.weboftrust.ldsignatures.LdProof;
 import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
 import io.mosip.certify.api.dto.VCRequestDto;
 import io.mosip.certify.core.constants.Constants;
-import io.mosip.certify.core.constants.SignatureAlg;
-import io.mosip.certify.core.constants.VCDMConstants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.proofgenerators.ProofGenerator;
-import io.mosip.certify.proofgenerators.dip.KeymanagerByteSigner;
-import io.mosip.certify.proofgenerators.dip.KeymanagerByteSignerFactory;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -40,8 +34,8 @@ public class CredentialUtils {
     public static String getTemplateName(VCRequestDto vcRequestDto) {
         //TODO: Cache this entire data so we do not construct all the time.
 
-        if(vcRequestDto.getFormat().equals(VCFormats.LDP_SD_JWT)) {
-            return String.join(Constants.DELIMITER, vcRequestDto.getFormat(), vcRequestDto.getSdJwtVct());
+        if(vcRequestDto.getFormat().equals(VCFormats.VC_SD_JWT)) {
+            return String.join(Constants.DELIMITER, vcRequestDto.getFormat(), vcRequestDto.getVct());
         }
         List<String> c = new ArrayList<>(vcRequestDto.getContext());
         List<String> t = new ArrayList<>(vcRequestDto.getType());

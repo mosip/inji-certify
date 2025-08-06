@@ -6,10 +6,7 @@
 
 package io.mosip.certify.credential;
 
-import java.io.IOException;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -17,26 +14,25 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-import com.apicatalog.jsonld.lang.Keywords;
 import com.danubetech.dataintegrity.DataIntegrityProof;
 import com.danubetech.dataintegrity.signer.LdSigner;
 import com.danubetech.dataintegrity.signer.LdSignerRegistry;
-import foundation.identity.jsonld.JsonLDUtils;
 import io.mosip.certify.core.constants.*;
-import io.mosip.certify.proofgenerators.dip.KeymanagerByteSigner;
-import io.mosip.certify.proofgenerators.dip.KeymanagerByteSignerFactory;
+import io.mosip.certify.core.dto.CertificateResponseDTO;
+import io.mosip.certify.proofgenerators.ProofGeneratorFactory;
+import io.mosip.certify.proofgenerators.dataintegrity.KeymanagerByteSigner;
+import io.mosip.certify.proofgenerators.dataintegrity.KeymanagerByteSignerFactory;
+import io.mosip.certify.services.CertifyIssuanceServiceImpl;
 import io.mosip.certify.utils.CredentialUtils;
+import io.mosip.certify.utils.DIDDocumentUtil;
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.kernel.signature.service.SignatureService;
 import io.mosip.kernel.signature.service.SignatureServicev2;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import foundation.identity.jsonld.JsonLDException;
 import foundation.identity.jsonld.JsonLDObject;
 import info.weboftrust.ldsignatures.LdProof;
-import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.proofgenerators.ProofGenerator;
@@ -45,14 +41,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-public class W3cJsonLd extends Credential{
-    //TODO: This has to move to a factory
+public class W3CJsonLD extends Credential{
     @Autowired
-    ProofGenerator proofGenerator;
+    ProofGeneratorFactory proofGeneratorFactory;
     @Autowired
     SignatureServicev2 signatureService;
-    @Value("${mosip.certify.data-provider-plugin.data-integrity.crypto-suite:}")
-    private String dataIntegrityCryptoSuite;
+    @Autowired
+    DIDDocumentUtil didDocumentUtil;
+
 
     /**
      * Constructor for credentials
@@ -60,7 +56,7 @@ public class W3cJsonLd extends Credential{
      * @param vcFormatter
      * @param signatureService
      */
-    public W3cJsonLd(VCFormatter vcFormatter, SignatureService signatureService) {
+    public W3CJsonLD(VCFormatter vcFormatter, SignatureService signatureService) {
         super(vcFormatter, signatureService);
     }
 
@@ -83,18 +79,17 @@ public class W3cJsonLd extends Credential{
      * @param headers headers to be added. Can be null.
      */
     @Override
-    public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm, String appID, String refID, String publicKeyURL){
-        VCResult<JsonLDObject> VC = new VCResult<>();
-//        signAlgorithm = "ecdsa-rdfc-2019"; // TODO: this should be configurable
+    public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm, String appID, String refID, String didUrl, String signatureCryptoSuite){
+        VCResult<JsonLDObject> vcResult = new VCResult<>();
         Map<String,String> keyReferenceDetails = Map.of(Constants.APPLICATION_ID, appID, Constants.REFERENCE_ID, refID);
-        JsonLDObject j = JsonLDObject.fromJson(vcToSign);
-        j.setDocumentLoader(null);
+        JsonLDObject jsonLDObject = JsonLDObject.fromJson(vcToSign);
+        jsonLDObject.setDocumentLoader(null);
         // NOTE: other aspects can be configured via keyMgrInput map
         String validFrom;
-        if (j.getJsonObject().containsKey(VCDM1Constants.ISSUANCE_DATE)) {
-            validFrom = j.getJsonObject().get(VCDM1Constants.ISSUANCE_DATE).toString();
-        } else if (j.getJsonObject().containsKey(VCDM2Constants.VALID_FROM)){
-            validFrom = j.getJsonObject().get(VCDM2Constants.VALID_FROM).toString();
+        if (jsonLDObject.getJsonObject().containsKey(VCDM1Constants.ISSUANCE_DATE)) {
+            validFrom = jsonLDObject.getJsonObject().get(VCDM1Constants.ISSUANCE_DATE).toString();
+        } else if (jsonLDObject.getJsonObject().containsKey(VCDM2Constants.VALID_FROM)){
+            validFrom = jsonLDObject.getJsonObject().get(VCDM2Constants.VALID_FROM).toString();
         } else {
             validFrom = ZonedDateTime.now(ZoneOffset.UTC)
                     .format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
@@ -106,34 +101,40 @@ public class W3cJsonLd extends Credential{
                         .parse(validFrom,
                                 DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN))
                         .atZone(ZoneId.systemDefault()).toInstant());
-        if (dataIntegrityCryptoSuite.isEmpty()) {
+
+        CertificateResponseDTO certificateResponseDTO = didDocumentUtil.getCertificateDataResponseDto(appID, refID);
+        String kid = certificateResponseDTO.getKeyId();
+        if (CertifyIssuanceServiceImpl.keyChooser.containsKey(signatureCryptoSuite)) {
             // legacy signature algos such as Ed25519Signature{2018,2020}
+            ProofGenerator proofGenerator = proofGeneratorFactory.getProofGenerator(signatureCryptoSuite)
+                    .orElseThrow(() ->
+                            new CertifyException("Proof generator not found for algorithm: " + signatureCryptoSuite));
             LdProof vcLdProof = LdProof.builder().defaultContexts(false).defaultTypes(false).type(proofGenerator.getName())
                     .created(createDate).proofPurpose(VCDMConstants.ASSERTION_METHOD)
-                    .verificationMethod(URI.create(publicKeyURL))
+                    .verificationMethod(URI.create(didUrl + "#" + kid))
                     .build();
-            LdProof ldProofWithJWS = CredentialUtils.generateLdProof(vcLdProof, j,
+            LdProof ldProofWithJWS = CredentialUtils.generateLdProof(vcLdProof, jsonLDObject,
                     keyReferenceDetails, proofGenerator);
-            ldProofWithJWS.addToJsonLDObject(j);
+            ldProofWithJWS.addToJsonLDObject(jsonLDObject);
         } else {
             LdSigner signer = LdSignerRegistry.getLdSignerByDataIntegritySuiteTerm(SignatureAlg.DATA_INTEGRITY);
             KeymanagerByteSigner keymanagerByteSigner = KeymanagerByteSignerFactory.getInstance(appID, refID, signatureService, signAlgorithm);
             signer.setSigner(keymanagerByteSigner);
-            signer.setCryptosuite(dataIntegrityCryptoSuite);
+            signer.setCryptosuite(signatureCryptoSuite);
 
             DataIntegrityProof dataIntegrityProof = DataIntegrityProof.builder()
                     .created(createDate)
                     .proofPurpose(VCDMConstants.ASSERTION_METHOD)
-                    .cryptosuite(dataIntegrityCryptoSuite)
-                    .verificationMethod(URI.create(publicKeyURL))
+                    .cryptosuite(signatureCryptoSuite)
+                    .verificationMethod(URI.create(didUrl + "#" + kid))
                     .type(SignatureAlg.DATA_INTEGRITY).build();
 
-            dataIntegrityProof = CredentialUtils.generateDataIntegrityProof(dataIntegrityProof, j, signer);
-            dataIntegrityProof.addToJsonLDObject(j);
+            dataIntegrityProof = CredentialUtils.generateDataIntegrityProof(dataIntegrityProof, jsonLDObject, signer);
+            dataIntegrityProof.addToJsonLDObject(jsonLDObject);
         }
-        VC.setCredential(j);
-        VC.setFormat("ldp_vc");
-        return VC;
+        vcResult.setCredential(jsonLDObject);
+        vcResult.setFormat("ldp_vc");
+        return vcResult;
     }
 
 }

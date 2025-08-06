@@ -22,7 +22,6 @@ import java.util.Map;
  * - ref: https://w3c-ccg.github.io/ld-cryptosuite-registry/#ecdsasecp256k1signature2019
  */
 @Component
-@ConditionalOnProperty(name = "mosip.certify.data-provider-plugin.issuer.vc-sign-algo", havingValue = SignatureAlg.EC_SECP256K1_2019)
 public class EcdsaSecp256k1Signature2019ProofGenerator implements ProofGenerator {
 
     @Autowired

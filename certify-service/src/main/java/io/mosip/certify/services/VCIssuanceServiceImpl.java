@@ -5,8 +5,6 @@
  */
 package io.mosip.certify.services;
 
-import foundation.identity.jsonld.JsonLDObject;
-
 import io.mosip.certify.api.dto.VCRequestDto;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.api.exception.VCIExchangeException;
@@ -14,50 +12,39 @@ import io.mosip.certify.api.spi.AuditPlugin;
 import io.mosip.certify.api.spi.VCIssuancePlugin;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
+import io.mosip.certify.api.util.AuditHelper;
+import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
-import io.mosip.certify.core.dto.CredentialLedgerSearchRequest;
 import io.mosip.certify.core.dto.CredentialMetadata;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
-import io.mosip.certify.core.dto.CredentialStatusResponse;
 import io.mosip.certify.core.dto.ParsedAccessToken;
-import io.mosip.certify.core.dto.UpdateCredentialStatusRequest;
-import io.mosip.certify.core.dto.VCIssuanceTransaction;
-import io.mosip.certify.core.constants.Constants;
-import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
 import io.mosip.certify.core.spi.VCIssuanceService;
-import io.mosip.certify.api.util.AuditHelper;
 import io.mosip.certify.core.util.SecurityHelperService;
-import io.mosip.certify.utils.VCIssuanceUtil;
-import io.mosip.certify.validators.CredentialRequestValidator;
-import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
+import io.mosip.certify.utils.VCIssuanceUtil;
+import io.mosip.certify.validators.CredentialRequestValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.*;
+import java.util.Map;
+import java.util.Optional;
 
-import static io.mosip.certify.utils.VCIssuanceUtil.*;
+import static io.mosip.certify.utils.VCIssuanceUtil.validateLdpVcFormatRequest;
 
 @Slf4j
 @Service
 @ConditionalOnProperty(value = "mosip.certify.plugin-mode", havingValue = "VCIssuance")
 public class VCIssuanceServiceImpl implements VCIssuanceService {
-
-    @Value("#{${mosip.certify.key-values}}")
-    private LinkedHashMap<String, LinkedHashMap<String, Object>> issuerMetadata;
 
     @Value("${mosip.certify.cnonce-expire-seconds:300}")
     private int cNonceExpireSeconds;
@@ -110,7 +97,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
         ProofValidator proofValidator = proofValidatorFactory.getProofValidator(credentialRequest.getProof().getProof_type());
         String validCNonce = VCIssuanceUtil.getValidClientNonce(vciCacheService, parsedAccessToken, cNonceExpireSeconds, securityHelperService, log);
-        if(!proofValidator.validateV2((String)parsedAccessToken.getClaims().get(Constants.CLIENT_ID), validCNonce,
+        if(!proofValidator.validate((String)parsedAccessToken.getClaims().get(Constants.CLIENT_ID), validCNonce,
                 credentialRequest.getProof(), credentialMetadata.getProofTypesSupported())) {
             throw new CertifyException(ErrorConstants.INVALID_PROOF);
         }
@@ -122,24 +109,6 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         auditWrapper.logAudit(Action.VC_ISSUANCE, ActionStatus.SUCCESS,
                 AuditHelper.buildAuditDto(parsedAccessToken.getAccessTokenHash(), "accessTokenHash"), null);
         return VCIssuanceUtil.getCredentialResponse(credentialRequest.getFormat(), vcResult);
-    }
-
-    @Override
-    public Map<String, Object> getCredentialIssuerMetadata(String version) {
-        if(issuerMetadata.containsKey(version)) {
-            return issuerMetadata.get(version);
-        } else if(version != null && version.equals("vd12")) {
-            LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
-            Map<String, Object> vd12IssuerMetadata = convertLatestToVd12(originalIssuerMetadata);
-            issuerMetadata.put("vd12", (LinkedHashMap<String, Object>) vd12IssuerMetadata);
-            return vd12IssuerMetadata;
-        } else if(version != null && version.equals("vd11")) {
-            LinkedHashMap<String, Object> originalIssuerMetadata = new LinkedHashMap<>(issuerMetadata.get("latest"));
-            Map<String, Object> vd11IssuerMetadata = convertLatestToVd11(originalIssuerMetadata);
-            issuerMetadata.put("vd11", (LinkedHashMap<String, Object>) vd11IssuerMetadata);
-            return vd11IssuerMetadata;
-        }
-        throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_OPENID_VERSION);
     }
 
     @Override
@@ -195,16 +164,6 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         auditWrapper.logAudit(Action.VC_ISSUANCE, ActionStatus.ERROR,
                 AuditHelper.buildAuditDto(parsedAccessToken.getAccessTokenHash(), "accessTokenHash"), null);
         throw new CertifyException(ErrorConstants.VC_ISSUANCE_FAILED);
-    }
-
-    @Override
-    public CredentialStatusResponse updateCredential(UpdateCredentialStatusRequest request) {
-        throw new CertifyException("This method is not supported in VCIssuanceServiceImpl");
-    }
-
-    @Override
-    public List<CredentialStatusResponse> searchCredentials(CredentialLedgerSearchRequest request) {
-        throw new CertifyException("This method is not supported in VCIssuanceServiceImpl");
     }
 
 }

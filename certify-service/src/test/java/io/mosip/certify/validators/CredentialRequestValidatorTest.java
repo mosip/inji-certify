@@ -37,8 +37,8 @@ public class CredentialRequestValidatorTest {
     @Test
     public void isValid_Sd_Jwt() {
         CredentialRequest cr = new CredentialRequest();
-        cr.setFormat(VCFormats.LDP_SD_JWT);
-        cr.setSdJwtVct("vct-fake");
+        cr.setFormat(VCFormats.VC_SD_JWT);
+        cr.setVct("vct-fake");
         assertTrue(CredentialRequestValidator.isValid(cr));
     }
 
