@@ -19,7 +19,6 @@ import java.util.Map;
  * Ed25519SignatureAlgorithm2018 as per https://w3c-ccg.github.io/lds-ed25519-2018/
  */
 @Component
-@ConditionalOnProperty(name = "mosip.certify.data-provider-plugin.issuer.vc-sign-algo", havingValue = SignatureAlg.ED25519_SIGNATURE_SUITE_2018)
 public class Ed25519Signature2018ProofGenerator implements ProofGenerator {
     @Autowired
     SignatureService signatureService;

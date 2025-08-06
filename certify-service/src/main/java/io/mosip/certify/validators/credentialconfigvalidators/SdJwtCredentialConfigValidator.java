@@ -8,8 +8,10 @@ import java.util.Optional;
 public class SdJwtCredentialConfigValidator {
     public static boolean isValidCheck(CredentialConfig credentialConfig) {
         return credentialConfig.getSdJwtVct() != null && !credentialConfig.getSdJwtVct().isEmpty()
+                && credentialConfig.getSignatureAlgo() != null && !credentialConfig.getSignatureAlgo().isEmpty()
                 && credentialConfig.getCredentialType() == null && credentialConfig.getContext() == null
-                && credentialConfig.getDocType() == null && credentialConfig.getCredentialSubject() == null;
+                && credentialConfig.getDocType() == null && credentialConfig.getCredentialSubject() == null &&
+                credentialConfig.getMsoMdocClaims() == null && credentialConfig.getSignatureCryptoSuite() == null;
     }
 
     public static boolean isConfigAlreadyPresent(CredentialConfig credentialConfig,
