@@ -33,6 +33,7 @@ ALTER TABLE certify.credential_config
     DROP COLUMN key_manager_app_id,
     DROP COLUMN key_manager_ref_id,
     DROP COLUMN signature_algo,
+    DROP COLUMN signature_crypto_suite,
     DROP COLUMN sd_claim,
     DROP COLUMN display,
     DROP COLUMN display_order,
@@ -41,8 +42,10 @@ ALTER TABLE certify.credential_config
     DROP COLUMN credential_signing_alg_values_supported,
     DROP COLUMN proof_types_supported,
     DROP COLUMN credential_subject,
-    DROP COLUMN claims,
+    DROP COLUMN mso_mdoc_claims,
+    DROP COLUMN sd_jwt_claims,
     DROP COLUMN plugin_configurations;
+    DROP COLUMN credential_status_purpose;
 
 -- Step 4: Rename vc_template back to template
 ALTER TABLE certify.credential_config RENAME COLUMN vc_template TO template;

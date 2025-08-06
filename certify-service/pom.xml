@@ -179,7 +179,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                 <version>${spring.boot.version}</version>
+                <version>${spring.boot.version}</version>
                 <configuration>
                     <executable>true</executable>
                     <layout>ZIP</layout>
@@ -190,6 +190,9 @@
                             <goal>build-info</goal>
                             <goal>repackage</goal>
                         </goals>
+                        <configuration>
+                            <attach>false</attach>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
