@@ -27,7 +27,8 @@ import org.springframework.scheduling.annotation.EnableAsync;
         "io.mosip.kernel.keymanagerservice.util," +
         "io.mosip.kernel.keygenerator.bouncycastle," +
         "io.mosip.kernel.signature.service," +
-        "io.mosip.kernel.pdfgenerator.itext.impl,"+
+        "io.mosip.kernel.signature.util," +
+        "io.mosip.kernel.pdfgenerator,"+
         "io.mosip.kernel.partnercertservice.service," +
         "io.mosip.kernel.keymanagerservice.repository,"+
         "io.mosip.kernel.keymanagerservice.entity,"+

@@ -11,7 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.exception.CertifyException;
+import io.mosip.kernel.signature.dto.JWSSignatureRequestDtoV2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -114,21 +116,22 @@ public class SDJWT extends Credential{
         String[] jwt = vcToSign.split("~");
         String[] jwtPayload = jwt[0].split("\\.");
         //TODO: Request DTO should add options for header.
-        JWSSignatureRequestDto payload = new JWSSignatureRequestDto();
+        JWSSignatureRequestDtoV2 payload = new JWSSignatureRequestDtoV2();
         payload.setDataToSign(jwtPayload.length > 1?jwtPayload[1]:jwtPayload[0]);
         payload.setApplicationId(appID);
-        payload.setReferenceId(refID); 
+        payload.setReferenceId(refID);
+        payload.setAdditionalHeaders(Map.of("typ", VCFormats.VC_SD_JWT));
         //TODO: Wait for keymanager fix here.
         payload.setSignAlgorithm(signAlgorithm);
         payload.setIncludePayload(true);
-        payload.setIncludeCertificate(true);
+        payload.setIncludeCertificateChain(true);
         payload.setIncludeCertHash(true);
         payload.setValidateJson(false);
         payload.setB64JWSHeaderParam(true);
         payload.setCertificateUrl("");
         //payload.setSignAlgorithm(signAlgorithm); // RSSignature2018 --> RS256, PS256, ES256
-        
-        JWTSignatureResponseDto jwsSignedData = signatureService.jwsSign(payload);
+
+        JWTSignatureResponseDto jwsSignedData = signatureService.jwsSignV2(payload);
         vcResult.setCredential(vcToSign.replaceAll("^[^~]*", jwsSignedData.getJwtSignedData()));
         return vcResult;
     }
