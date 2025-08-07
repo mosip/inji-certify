@@ -25,6 +25,7 @@ CREATE TABLE credential_config (
     key_manager_app_id VARCHAR(36),
     key_manager_ref_id VARCHAR(128),
     signature_algo VARCHAR(36),
+    signature_crypto_suite VARCHAR(128),
     sd_claim VARCHAR,
     display JSONB NOT NULL,
     display_order TEXT[] NOT NULL,
@@ -33,8 +34,10 @@ CREATE TABLE credential_config (
     credential_signing_alg_values_supported TEXT[] NOT NULL,
     proof_types_supported JSONB NOT NULL,
     credential_subject JSONB,
-    claims JSONB,
+    mso_mdoc_claims JSONB,
+    sd_jwt_claims JSONB,
     plugin_configurations JSONB,
+    credential_status_purpose TEXT[],
     cr_dtimes TIMESTAMP NOT NULL,
     upd_dtimes TIMESTAMP,
     CONSTRAINT pk_config_id PRIMARY KEY (config_id)
@@ -75,7 +78,8 @@ COMMENT ON COLUMN credential_config.cryptographic_binding_methods_supported IS '
 COMMENT ON COLUMN credential_config.credential_signing_alg_values_supported IS 'Credential Signing Algorithms: Array of supported signing algorithms.';
 COMMENT ON COLUMN credential_config.proof_types_supported IS 'Proof Types: JSON object containing supported proof types and their configurations.';
 COMMENT ON COLUMN credential_config.credential_subject IS 'Credential Subject: JSON object containing subject attributes schema.';
-COMMENT ON COLUMN credential_config.claims IS 'Claims: JSON object containing subject attributes schema specifically for Mdoc VC.';
+COMMENT ON COLUMN credential_config.mso_mdoc_claims IS 'Mso_mdoc Claims: JSON object containing subject attributes schema specifically for MSO-MDOC VC.';
+COMMENT ON COLUMN credential_config.sd_jwt_claims IS 'SdJwt Claims: JSON object containing subject attributes schema specifically for SdJwt VC.';
 COMMENT ON COLUMN credential_config.plugin_configurations IS 'Plugin Configurations: Array of JSON objects for plugin configurations.';
 COMMENT ON COLUMN credential_config.cr_dtimes IS 'Created DateTime: Date and time when the config was inserted in table.';
 COMMENT ON COLUMN credential_config.upd_dtimes IS 'Updated DateTime: Date and time when the config was last updated in table.';

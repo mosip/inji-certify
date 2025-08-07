@@ -11,12 +11,12 @@
 -- ------------------------------------------------------------------------------------------
 -- ------------------------------------------------------------------------------------------
 -- Create ENUM type for credential status
-CREATE TYPE credential_status_enum AS ENUM ('available', 'full');
+CREATE TYPE credential_status_enum AS ENUM ('AVAILABLE', 'FULL');
 
 -- Create status_list_credential table
 CREATE TABLE status_list_credential (
     id VARCHAR(255) PRIMARY KEY,          -- The unique ID (URL/DID/URN) extracted from the VC's 'id' field.
-    vc_document bytea NOT NULL,           -- Stores the entire Verifiable Credential JSON document.
+    vc_document VARCHAR NOT NULL,           -- Stores the entire Verifiable Credential JSON document.
     credential_type VARCHAR(100) NOT NULL, -- Type of the status list (e.g., 'StatusList2021Credential')
     status_purpose VARCHAR(100),             -- Intended purpose of this list within the system (e.g., 'revocation', 'suspension', 'general'). NULLABLE.
     capacity BIGINT,                        --- length of status list
