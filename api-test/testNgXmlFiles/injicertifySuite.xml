@@ -16,6 +16,16 @@
 		</classes>
 	</test>
 
+	<test name="AddCredentialConfigForSunbird">
+		<parameter name="ymlFile"
+			value="injicertify/SunBirdC/AddVCTypeVCIssuancePlugin/AddCredentialConfiguration.yml" />
+		<parameter name="idKeyName" value="id" />
+		<parameter name="prerequisite" value="Yes" />			
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
 	<test name="OAuthDetailsRequestSunBirdC">
 		<parameter name="ymlFile"
 			value="injicertify/SunBirdC/OAuthDetailsRequestSunBirdC/OAuthDetailsRequestSunBirdC.yml" />
@@ -61,6 +71,13 @@
 		<classes>
 			<class
 				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
+		</classes>
+	</test>
+	<test name="DeleteCredentialConfigForSunbird">
+		<parameter name="ymlFile"
+			value="injicertify/SunBirdC/DeleteCredentialConfiguration/DeleteCredentialConfiguration.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.injicertify.testscripts.DeleteWithParam" />
 		</classes>
 	</test>
 	<test name="OAuthDetailsRequestSunBirdCNeg">
@@ -448,7 +465,7 @@
 			<class
 				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
 		</classes>
-	</test>
+	</test>	
 	<test name="OAuthDetailsRequestVCIForMockIDAForVd11">
 		<parameter name="ymlFile"
 			value="injicertify/VCIMockIDAForVd11/OAuthDetailsRequestForMockIDA/OAuthDetailsRequestForMockIDA.yml" />
@@ -542,7 +559,7 @@
 			<class
 				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
 		</classes>
-	</test>
+	</test>	
 	<test name="OAuthDetailsRequestVCIForMockIDANegTC">
 		<parameter name="ymlFile"
 			value="injicertify/VCIMockIDANegTC/OAuthDetailsRequestForMockIDANegTC/OAuthDetailsRequestForMockIDANegTC.yml" />
@@ -877,7 +894,7 @@
 				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
 		</classes>
 	</test>
-		<test name="OAuthDetailsRequestVCIForLandRegistryEccR1">
+	<test name="OAuthDetailsRequestVCIForLandRegistryEccR1">
 		<parameter name="ymlFile"
 			value="injicertify/EccR1/OAuthDetailsRequestForLandRegistryEccR1/OAuthDetailsRequestForLandRegistry.yml" />
 		<parameter name="idKeyName" value="transactionId,encodedResp" />
@@ -943,6 +960,166 @@
 	<test name="DeleteCredentialConfigForEccR1">
 		<parameter name="ymlFile"
 			value="injicertify/EccR1/DeleteCredentialConfiguration/DeleteCredentialConfiguration.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.injicertify.testscripts.DeleteWithParam" />
+		</classes>
+	</test>
+	<test name="AddCredentialConfigForSd_jwt">
+		<parameter name="ymlFile"
+			value="injicertify/Sd_Jwt/AddCredentialConfigSd_Jwt/AddCredentialConfigurationSd_Jwt.yml" />
+		<parameter name="idKeyName" value="id" />
+		<parameter name="prerequisite" value="Yes" />			
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="OAuthDetailsRequestForSd_jwt">
+		<parameter name="ymlFile"
+			value="injicertify/Sd_Jwt/OAuthDetailsRequestForSd_Jwt/OAuthDetailsRequestForSd_Jwt.yml" />
+		<parameter name="idKeyName" value="transactionId,encodedResp" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="AuthenticateUserForSd_jwt">
+		<parameter name="ymlFile"
+			value="injicertify/Sd_Jwt/AuthenticateUserForSd_Jwt/AuthenticateUserForSd_Jwt.yml" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.PostWithAutogenIdWithOtpGenerate" />
+		</classes>
+	</test>
+	<test name="AuthorizationCodeForSd_jwt">
+		<parameter name="ymlFile"
+			value="injicertify/Sd_Jwt/AuthorizationCodeForSd_Jwt/AuthorizationCodeForSd_Jwt.yml" />
+		<parameter name="idKeyName" value="code" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="GenerateTokenForSd_jwt">
+		<parameter name="ymlFile"
+			value="injicertify/Sd_Jwt/GenerateTokenForSd_Jwt/GenerateTokenForSd_Jwt.yml" />
+		<parameter name="idKeyName" value="access_token" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenIdForUrlEncoded" />
+		</classes>
+	</test>
+	<test name="GetCredentialForSd_jwt">
+		<parameter name="ymlFile"
+			value="injicertify/Sd_Jwt/GetCredentialForSd_Jwt/GetCredentialForSd_Jwt.yml" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
+		</classes>
+	</test>
+	<test name="GetCredentialForSd_jwtVd11">
+		<parameter name="ymlFile"
+			value="injicertify/Sd_Jwt/GetCredentialForSd_Jwt/GetCredentialForSd_JwtVd11.yml" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
+		</classes>
+	</test>
+	<test name="GetCredentialForSd_jwtVd12">
+		<parameter name="ymlFile"
+			value="injicertify/Sd_Jwt/GetCredentialForSd_Jwt/GetCredentialForSd_JwtVd12.yml" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
+		</classes>
+	</test>	
+	<test name="DeleteCredentialConfigForSd_jwt">
+		<parameter name="ymlFile"
+			value="injicertify/Sd_Jwt/DeleteCredentialConfigurationSd_Jwt/DeleteCredentialConfigurationForSd_Jwt.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.injicertify.testscripts.DeleteWithParam" />
+		</classes>
+	</test>
+	<test name="AddCredentialConfigForDataIntegrityProof">
+		<parameter name="ymlFile"
+			value="injicertify/DataIntegrityProof/AddCredentialConfigForDataIntegrity/AddCredentialConfiguration.yml" />
+		<parameter name="idKeyName" value="id" />
+		<parameter name="prerequisite" value="Yes" />			
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="OAuthDetailsRequestForDataIntegrityProof">
+		<parameter name="ymlFile"
+			value="injicertify/DataIntegrityProof/OAuthDetailsRequestForDataIntegrity/OAuthDetailsRequestForDataIntegrity.yml" />
+		<parameter name="idKeyName" value="transactionId,encodedResp" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="AuthenticateUserForDataIntegrityProof">
+		<parameter name="ymlFile"
+			value="injicertify/DataIntegrityProof/AuthenticateUserForDataIntegrity/AuthenticateUserForDataIntegrity.yml" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.PostWithAutogenIdWithOtpGenerate" />
+		</classes>
+	</test>
+	<test name="AuthorizationCodeForDataIntegrityProof">
+		<parameter name="ymlFile"
+			value="injicertify/DataIntegrityProof/AuthorizationCodeForDataIntegrity/AuthorizationCodeForDataIntegrity.yml" />
+		<parameter name="idKeyName" value="code" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="GenerateTokenForDataIntegrityProof">
+		<parameter name="ymlFile"
+			value="injicertify/DataIntegrityProof/GenerateTokenForDataIntegrity/GenerateTokenForDataIntegrity.yml" />
+		<parameter name="idKeyName" value="access_token" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenIdForUrlEncoded" />
+		</classes>
+	</test>
+	<test name="GetCredentialForDataIntegrityProof">
+		<parameter name="ymlFile"
+			value="injicertify/DataIntegrityProof/GetCredentialForDataIntegrity/GetCredentialForDataIntegrity.yml" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
+		</classes>
+	</test>
+	<test name="GetCredentialForDataIntegrityProofVd11">
+		<parameter name="ymlFile"
+			value="injicertify/DataIntegrityProof/GetCredentialForDataIntegrity/GetCredentialForDataIntegrityvd11.yml" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
+		</classes>
+	</test>
+	<test name="GetCredentialForDataIntegrityProofVd12">
+		<parameter name="ymlFile"
+			value="injicertify/DataIntegrityProof/GetCredentialForDataIntegrity/GetCredentialForDataIntegrityvd12.yml" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
+		</classes>
+	</test>	
+	<test name="DeleteCredentialConfigForDataIntegrityproof">
+		<parameter name="ymlFile"
+			value="injicertify/DataIntegrityProof/DeleteCredentialConfigurationForDataIntegrity/DeleteCredentialConfiguration.yml" />
 		<classes>
 			<class name="io.mosip.testrig.apirig.injicertify.testscripts.DeleteWithParam" />
 		</classes>
