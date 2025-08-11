@@ -879,7 +879,7 @@
 	</test>
 	<test name="GetSVGTemplate">
 		<parameter name="ymlFile"
-			value="injicertify/SVGTemplate/GetSVGTemplate/getSVGTemplate.yml" />
+			value="injicertify/SVGTemplate/GetSVGTemplate/GetSVGTemplate.yml" />
 		<classes>
 			<class name="io.mosip.testrig.apirig.injicertify.testscripts.GetWithParam" />
 		</classes>
