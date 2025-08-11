@@ -1,13 +1,16 @@
 package io.mosip.testrig.apirig.injicertify.utils;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.PublicKey;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECGenParameterSpec;
+import java.security.spec.ECPoint;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Calendar;
@@ -17,8 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 
 import javax.ws.rs.core.MediaType;
 
@@ -33,13 +35,12 @@ import org.testng.SkipException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
-import com.nimbusds.jose.*;
-import com.nimbusds.jose.crypto.ECDSASigner;
-import com.nimbusds.jose.crypto.Ed25519Signer;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.crypto.ECDSASigner;
+import com.nimbusds.jose.crypto.Ed25519Signer;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
@@ -790,6 +791,9 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		} else if (testCaseDTO.getEndPoint().startsWith("$INJICERTIFYINSURANCEBASEURL$")
 				&& testCaseName.contains("GetCredentialSunBirdC")) {
 			return InjiCertifyConfigManager. getInjiCertifyBaseUrl();
+		} else if (testCaseDTO.getEndPoint().startsWith("$INJICERTIFYINSURANCEBASEURL$")
+					&& testCaseName.contains("CredentialConfig")) {
+				return InjiCertifyConfigManager. getInjiCertifyBaseUrl();
 		} else if (testCaseDTO.getEndPoint().startsWith("$INJICERTIFYMOSIPIDBASEURL$")
 				&& testCaseName.contains("_GetCredentialMosipID")) {
 			return InjiCertifyConfigManager. getInjiCertifyBaseUrl();
@@ -997,62 +1001,102 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		return proofJWT;
 	}
 	
+	public static String generateP256DidKey(byte[] rawP256PublicKey) {
+	    // P-256 public keys in uncompressed format are 65 bytes (0x04 + 32 bytes x + 32 bytes y)
+	    // P-256 public keys in compressed format are 33 bytes (0x02/0x03 + 32 bytes x)
+	    if (rawP256PublicKey == null || (rawP256PublicKey.length != 65 && rawP256PublicKey.length != 33)) {
+	        throw new IllegalArgumentException("Invalid P-256 public key: must be 33 bytes (compressed) or 65 bytes (uncompressed)");
+	    }
+
+	    // Multicodec prefix for P-256 (0x1200)
+	    byte[] prefix = new byte[]{0x12, 0x00};
+
+	    byte[] combined = new byte[prefix.length + rawP256PublicKey.length];
+	    System.arraycopy(prefix, 0, combined, 0, prefix.length);
+	    System.arraycopy(rawP256PublicKey, 0, combined, prefix.length, rawP256PublicKey.length);
+
+	    return "did:key:z" + Base58.encode(combined);
+	}
+	
+	private static byte[] extractRawP256PublicKey(ECKey ecJWK) throws Exception {
+	    // Get the X and Y coordinates
+	    byte[] x = ecJWK.getX().decode();
+	    byte[] y = ecJWK.getY().decode();
+	    
+	    // Create uncompressed format: 0x04 + X + Y
+	    byte[] rawPublicKey = new byte[65];
+	    rawPublicKey[0] = 0x04; // Uncompressed point indicator
+	    System.arraycopy(x, 0, rawPublicKey, 1, 32);
+	    System.arraycopy(y, 0, rawPublicKey, 33, 32);
+	    
+	    return rawPublicKey;
+	}
 	public static String signES256JWT(String clientId, String accessToken, String testCaseName, String tempUrl) {
-	    int idTokenExpirySecs = Integer.parseInt(getValueFromEsignetActuator(
-	            InjiCertifyConfigManager.getEsignetActuatorPropertySection(),
-	            GlobalConstants.MOSIP_ESIGNET_ID_TOKEN_EXPIRE_SECONDS));
+		int idTokenExpirySecs = Integer
+				.parseInt(getValueFromEsignetActuator(InjiCertifyConfigManager.getEsignetActuatorPropertySection(),
+						GlobalConstants.MOSIP_ESIGNET_ID_TOKEN_EXPIRE_SECONDS));
 
-	    String proofJWT = "";
-	    String typ = "openid4vci-proof+jwt";
-	    SignedJWT signedJWT;
+		String proofJWT = "";
+		SignedJWT signedJWT;
+		JWSHeader header = null;
+		
 
-	    try {
-	        // Generate EC key pair using Java KeyPairGenerator
-	        KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("EC");
-	        keyPairGen.initialize(new ECGenParameterSpec("secp256r1")); // P-256
-	        KeyPair keyPair = keyPairGen.generateKeyPair();
+		try {
+			// Generate EC key pair using Java KeyPairGenerator
+			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC");
+			keyGen.initialize(new ECGenParameterSpec("secp256r1"));
+			KeyPair keyPair = keyGen.generateKeyPair();
 
-	        ECKey ecJWK = new ECKey.Builder(Curve.P_256, (ECPublicKey) keyPair.getPublic())
+	        // Convert to ECKey (Nimbus)
+			ECKey ecJWK = new ECKey.Builder(Curve.P_256, (ECPublicKey) keyPair.getPublic())
 	                .privateKey((ECPrivateKey) keyPair.getPrivate())
 	                .keyID(UUID.randomUUID().toString())
 	                .build();
 
-	        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.ES256)
-	                .type(new JOSEObjectType(typ))
-	                .jwk(ecJWK.toPublicJWK())
-	                .build();
+			if (testCaseName.contains("_Did_Key_Sign_")) {
+				byte[] rawPublicKey = extractRawP256PublicKey(ecJWK);
+	            
+	            String didKey = generateP256DidKey(rawPublicKey);
 
-	        Date currentTime = new Date();
+	             header = new JWSHeader.Builder(JWSAlgorithm.ES256)
+	                    .keyID(didKey) // No fragment
+	                    .type(new JOSEObjectType("openid4vci-proof+jwt"))
+	                    .build(); 
+			} else
+	             {
+	            header = new JWSHeader.Builder(JWSAlgorithm.ES256)
+	                    .jwk(ecJWK.toPublicJWK())
+	                    .type(new JOSEObjectType("openid4vci-proof+jwt"))
+	                    .build();
+	        }
+          
 
-	        Calendar calendar = Calendar.getInstance();
-	        calendar.setTime(currentTime);
-	        calendar.add(Calendar.SECOND, idTokenExpirySecs);
-	        Date expirationTime = calendar.getTime();
+			Date currentTime = new Date();
 
-	        signedJWT = SignedJWT.parse(accessToken);
-	        String nonce = signedJWT.getJWTClaimsSet().getClaim("c_nonce").toString();
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(currentTime);
+			calendar.add(Calendar.SECOND, idTokenExpirySecs);
+			Date expirationTime = calendar.getTime();
 
-	        JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-	                .audience(tempUrl)
-	                .claim("nonce", nonce)
-	                .issuer(clientId)
-	                .issueTime(currentTime)
-	                .expirationTime(expirationTime)
-	                .build();
+			signedJWT = SignedJWT.parse(accessToken);
+			String nonce = signedJWT.getJWTClaimsSet().getClaim("c_nonce").toString();
 
-	        signedJWT = new SignedJWT(header, claimsSet);
-	        JWSSigner signer = new ECDSASigner(ecJWK);
+			JWTClaimsSet claimsSet = new JWTClaimsSet.Builder().audience(tempUrl).claim("nonce", nonce).issuer(clientId)
+					.issueTime(currentTime).expirationTime(expirationTime).build();
 
-	        signedJWT.sign(signer);
-	        proofJWT = signedJWT.serialize();
+			signedJWT = new SignedJWT(header, claimsSet);
+			JWSSigner signer = new ECDSASigner(ecJWK);
 
-	    } catch (Exception e) {
-	        logger.error("Exception while signing proof_jwt with ES256: " + e.getMessage());
-	    }
+			signedJWT.sign(signer);
+			proofJWT = signedJWT.serialize();
 
-	    return proofJWT;
+		} catch (Exception e) {
+			logger.error("Exception while signing proof_jwt with ES256: " + e.getMessage());
+		}
+
+		return proofJWT;
 	}
-	
+
 	public static String generateEd25519DidKey(byte[] rawEd25519PublicKey) {
 	    // Ed25519 public keys are 32 bytes
 	    if (rawEd25519PublicKey == null || rawEd25519PublicKey.length != 32) {
@@ -1133,6 +1177,65 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		LocalDate dob = faker.date().birthday().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		return dob.format(formatter);
+	}
+	
+	public static JSONArray certifyActuatorResponseArray = null;
+	
+	public static String getValueFromCertifyActuator(String section, String key, String url) {
+		// Combine the cache key to uniquely identify each request
+		String actuatorCacheKey = url + section + key;
+
+		// Check if the value is already cached
+		String value = actuatorValueCache.get(actuatorCacheKey);
+		if (value != null) {
+			return value; // Return cached value if available
+		}
+
+		try {
+			// Fetch the actuator response array if it's not already populated
+			if (certifyActuatorResponseArray == null) {
+				Response response = RestClient.getRequest(url, MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON);
+				JSONObject responseJson = new JSONObject(response.getBody().asString());
+				certifyActuatorResponseArray = responseJson.getJSONArray("propertySources");
+			}
+
+			// Loop through the "propertySources" to find the matching section and key
+			for (int i = 0, size = certifyActuatorResponseArray.length(); i < size; i++) {
+				JSONObject eachJson = certifyActuatorResponseArray.getJSONObject(i);
+				// Check if the section matches
+				if (eachJson.get("name").toString().contains(section)) {
+					// Get the value from the properties object
+					JSONObject properties = eachJson.getJSONObject(GlobalConstants.PROPERTIES);
+					if (properties.has(key)) {
+						value = properties.getJSONObject(key).get(GlobalConstants.VALUE).toString();
+						// Log the value if debug is enabled
+						if (InjiCertifyConfigManager.IsDebugEnabled()) {
+							logger.info("Actuator: " + url + " key: " + key + " value: " + value);
+						}
+						break; // Exit the loop once the value is found
+					} else {
+						logger.warn("Key '" + key + "' not found in section '" + section + "'.");
+					}
+				}
+			}
+
+			// Cache the retrieved value for future lookups
+			if (value != null) {
+				actuatorValueCache.put(actuatorCacheKey, value);
+			} else {
+				logger.warn("No value found for section: " + section + ", key: " + key);
+			}
+
+			return value;
+		} catch (JSONException e) {
+			// Handle JSON parsing exceptions separately
+			logger.error("JSON parsing error for section: " + section + ", key: " + key + " - " + e.getMessage());
+			return null; // Return null if JSON parsing fails
+		} catch (Exception e) {
+			// Catch any other exceptions (e.g., network issues)
+			logger.error("Error fetching value for section: " + section + ", key: " + key + " - " + e.getMessage());
+			return null; // Return null if any other exception occurs
+		}
 	}
 	
 }

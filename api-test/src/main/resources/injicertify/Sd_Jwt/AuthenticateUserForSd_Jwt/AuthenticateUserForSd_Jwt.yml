@@ -1,0 +1,71 @@
+AuthenticateUserForSd_Jwt:
+   InjiCertify_ESignet_AuthenticateUserVCI_For_LandRegistry_Sd_Jwt_uin_Otp_Valid_Smoke:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser
+      description: Authenticate User for Sd_Jwt for cred2
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/Sd_Jwt/AuthenticateUserForSd_Jwt/AuthenticateUserForSd_Jwt
+      outputTemplate: injicertify/Sd_Jwt/AuthenticateUserForSd_Jwt/AuthenticateUserForSd_JwtResult
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_LandRegistry_Cred1_Sd_Jwt_uin_all_Valid_Smoke_sid_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_For_LandRegistry_Cred1_Sd_Jwt_uin_all_Valid_Smoke_sid_transactionId$",
+      	"individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
+      	"authFactorType" : "OTP",
+      	"challenge" : "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_EMAIL$",
+        "format": "alpha-numeric",
+        "sendOtp":{
+    "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_LandRegistry_Cred1_Sd_Jwt_uin_all_Valid_Smoke_sid_encodedResp$",
+    "requestTime": "$TIMESTAMP$",
+    "transactionId": "$ID:ESignet_OAuthDetailsRequest_For_LandRegistry_Cred1_Sd_Jwt_uin_all_Valid_Smoke_sid_transactionId$",
+	"individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
+    "otpChannels": [{channel: "email"},{channel: "phone"}],
+    "sendOtpReqTemplate": "injicertify/SendOtp/SendOtp",
+    "sendOtpEndPoint": "$ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/send-otp"
+    }
+    }'
+      output: '{
+  "sendOtpResp":{
+        "maskedMobile": "$IGNORE$",
+        "sendOtpResTemplate":"injicertify/SendOtp/SendOtpResult",
+        "maskedEmail": "$IGNORE$"
+    }
+}'
+   InjiCertify_ESignet_AuthenticateUserVCI_For_LandRegistry_Cred2_Sd_Jwt_uin_Otp_Valid_Smoke:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser
+      description: Authenticate User for Sd_Jwt for cred2
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/Sd_Jwt/AuthenticateUserForSd_Jwt/AuthenticateUserForSd_Jwt
+      outputTemplate: injicertify/Sd_Jwt/AuthenticateUserForSd_Jwt/AuthenticateUserForSd_JwtResult
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_LandRegistry_Cred2_Sd_Jwt_uin_all_Valid_Smoke_sid_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_For_LandRegistry_Cred2_Sd_Jwt_uin_all_Valid_Smoke_sid_transactionId$",
+      	"individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
+      	"authFactorType" : "OTP",
+      	"challenge" : "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_EMAIL$",
+        "format": "alpha-numeric",
+        "sendOtp":{
+    "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_LandRegistry_Cred2_Sd_Jwt_uin_all_Valid_Smoke_sid_encodedResp$",
+    "requestTime": "$TIMESTAMP$",
+    "transactionId": "$ID:ESignet_OAuthDetailsRequest_For_LandRegistry_Cred2_Sd_Jwt_uin_all_Valid_Smoke_sid_transactionId$",
+	"individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
+    "otpChannels": [{channel: "email"},{channel: "phone"}],
+    "sendOtpReqTemplate": "injicertify/SendOtp/SendOtp",
+    "sendOtpEndPoint": "$ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/send-otp"
+    }
+    }'
+      output: '{
+  "sendOtpResp":{
+        "maskedMobile": "$IGNORE$",
+        "sendOtpResTemplate":"injicertify/SendOtp/SendOtpResult",
+        "maskedEmail": "$IGNORE$"
+    }
+}'
