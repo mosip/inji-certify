@@ -1,6 +1,8 @@
 package io.mosip.testrig.apirig.injicertify.utils;
 
-public class InjiCertifyConstants {
+import io.mosip.testrig.apirig.utils.GlobalConstants;
+
+public class InjiCertifyConstants extends GlobalConstants {
 	
 	public static final String SUNBIRD_INSURANCE_AUTH_FACTOR_TYPE = "KBI";
 	
@@ -13,5 +15,5 @@ public class InjiCertifyConstants {
 	public static final String TRUE_STRING = "true";
 	
 	public static final String ALL_ONE_OTP_STRING = "111111";
-
+	
 }
