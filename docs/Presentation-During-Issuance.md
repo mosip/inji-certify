@@ -47,31 +47,29 @@ sequenceDiagram
     Note over W,IC: 1. Authorization to download credential
     W->>IC: 5. POST Content-Type: application/x-www-form-urlencoded /iar<br/>{response_type="code", client_id, code_challenge, code_challenge_method:"S256", redirect_uri, interaction_types_supported=openid4vp_presentation,redirect_to_web}
     IC->>IVP: 6. Create presentation request
-    IVP-->>IC: 7. {request_id,transaction_id, {standard ovp request by reference with response_mode as "direct-post" or "direct-post.jwt"}} (non-normative)
+    IVP-->>IC: 7. {request_id,transaction_id, {standard ovp request by value with response_mode as "direct-post" or "direct-post.jwt"}} (non-normative)
     IC->>IC: 8. store transaction id for the presentation request mapped to Auth Session
     Note over IC: Map direct-post to iar-post and direct-post.jwt to iar-post.jwt and construct the response
-    IC-->>W: 9. 200 Interactive Authorization Response<br/>{status:"require_interaction", type:"openid4vp_presentation", auth_session:"..random string", openid4vp_request: {standard ovp request by reference with response_mode as "iar-post" or "iar-post.jwt"}}
+    IC-->>W: 9. 200 Interactive Authorization Response<br/>{status:"require_interaction", type:"openid4vp_presentation", auth_session:"..random string", openid4vp_request: {standard ovp request by value with response_mode as "iar-post" or "iar-post.jwt"}}
     
     Note over W,IC: 2. Presentation Flow with Issuer and VP Verifier
-    W->>IVP: 10. GET /oid4vp/request/{request_id}
-    IVP-->>W: 11. Presentation Request
-    W->>W: 12. Display and select credential(s) which satisfies presentation request criteria
-    W->>U: 13. User consent
-    U-->>W: 14. Approve
-    W->>IC: 15. POST Content-Type: application/x-www-form-urlencoded /iar<br/>{auth_session=...&openid4vp_presentation=...}
-    IC->>IC: 16. Validate auth_session
-    IC->>IVP: 17. POST /oid4vp/response<br/>forward openid4vp_presentation response to verify VP
-    IVP->>IVP: 18. verify the VP response
-    IVP->>IC: 19. VP verification result (e.g., valid/invalid)
+    W->>W: 10. Display and select credential(s) which satisfies presentation request criteria
+    W->>U: 11. User consent
+    U-->>W: 12. Approve
+    W->>IC: 13. POST Content-Type: application/x-www-form-urlencoded /iar<br/>{auth_session=...&openid4vp_presentation=...}
+    IC->>IC: 14. Validate auth_session
+    IC->>IVP: 15. POST /oid4vp/response<br/>forward openid4vp_presentation response to verify VP
+    IVP->>IVP: 16. verify the VP response
+    IVP->>IC: 17. VP verification result (e.g., valid/invalid)
     
     alt If VP is valid 
-            IC-->>W: 20. 200 OK {status:"ok", authorization_code:"..."}
-            W->>IC: 21. POST /oauth/token<br/>{grant_type=authorization_code, code}
-            IC-->>W: 22. {access_token, c_nonce}
-            W->>IC: 23. POST /credential<br/>{format, proof}
-            IC-->>W: 24. {credential}
+            IC-->>W: 18. 200 OK {status:"ok", authorization_code:"..."}
+            W->>IC: 19. POST /oauth/token<br/>{grant_type=authorization_code, code}
+            IC-->>W: 20. {access_token, c_nonce}
+            W->>IC: 21. POST /credential<br/>{format, proof}
+            IC-->>W: 22. {credential}
     else
-            IC-->>W: 20. 400 Bad Request {status:"error", error:"invalid_request", error_description:"VP verification failed"}
+            IC-->>W: 18. 400 Bad Request {status:"error", error:"invalid_request", error_description:"VP verification failed"}
     end
     
 ```
@@ -89,7 +87,7 @@ The Wallet discovers the Credential Issuer's(Inji Certify) and Authorization Ser
 3. **Wallet to Inji Certify**: `GET /.well-known/oauth-authorization-server` (The Wallet requests Inji Certify's OAuth Authorization Server metadata).
 4. **Inji Certify to Wallet**: Returns OAuth AS metadata.
 
-### Phase 1: Initial Credential Request & Presentation Trigger
+### Phase 1: Authorization to download credential
 
 The Wallet initiates the request, and the Issuer determines if a presentation is needed.
 1. **Wallet to Inji Certify**: `POST /iar` (Includes `response_type="code"`, `client_id`, `code_challenge`, `code_challenge_method:"S256"`, `redirect_uri`, `interaction_types_supported=openid4vp_presentation,redirect_to_web` for the desired credential).
@@ -97,32 +95,30 @@ The Wallet initiates the request, and the Issuer determines if a presentation is
    - If a VP is required, it proceeds to create a presentation request with the VP Verifier.
    - If no VP is required, it continues with authorization code flow. (That is as per standard OpenId4VCI spec, not included here)
 3. **Inji Certify to VP Verifier**: Instructs the VP Verifier to create a presentation request.
-4. **VP Verifier to Inji Certify**: Returns `request_id`, `transaction_id`, and `request_uri` (e.g., `/oid4vp/request/{id}`). Inji Certify stores `transaction_id` mapped to the Auth Session.
+4. **VP Verifier to Inji Certify**: Returns `request_id`, `transaction_id`, and `request` (e.g. `{response_type": "vp_token","response_mode": "direct-post"....}`). Inji Certify stores `transaction_id` mapped to the Auth Session.
 5. **Inji Certify to Wallet**: Responds with `200 Interactive Authorization Response`. Includes `status:"require_interaction"`, `type:"openid4vp_presentation"`, `auth_session`, `openid4vp_request:{}`
-   - The `openid4vp_request` contains the standard OpenID4VP request by reference, with `response_mode` set to either `iar-post` for unencrypted response or `iar-post.jwt` for encrypted response. [Refer](https://openid.github.io/OpenID4VCI/openid-4-verifiable-credential-issuance-wg-draft.html#name-require-presentation)
+   - The `openid4vp_request` contains the standard OpenID4VP request by value, with `response_mode` set to either `iar-post` for unencrypted response or `iar-post.jwt` for encrypted response. [Refer](https://openid.github.io/OpenID4VCI/openid-4-verifiable-credential-issuance-wg-draft.html#name-require-presentation)
 
 ### Phase 2: Presentation Flow with Issuer and VP Verifier
 
 The Wallet interacts with the VP Verifier
-1. **Wallet to VP Verifier**: `GET /oid4vp/request/{request_id}` (using the `request_uri`).
-2. **VP Verifier to Wallet**: Responds with the Presentation Request details.
-3. **Wallet**: Display and select credential(s) which satisfies presentation request criteria
-4. **Wallet to User**: Prompts User for consent.
-5. **User to Wallet**: User approves.
-6. **Wallet to Inji Certify**: Send VP response
+1. **Wallet**: Display and select credential(s) which satisfies presentation request criteria
+2. **Wallet to User**: Prompts User for consent.
+3. **User to Wallet**: User approves.
+4. **Wallet to Inji Certify**: Send VP response
    - POST Content-Type: application/x-www-form-urlencoded /iar<br/>{auth_session=...&openid4vp_presentation=...}
    - if response_node is `iar-post` then openid4vp_presentation is unencrypted, {"vp_token": "...", "presentation_submission": {...}}
    - if response_node is `iar-post.jwt` then openid4vp_presentation is encrypted, {response='...'}
-7. **Inji Certify**: Validates `auth_session`
-8. **Inji Certify to VP Verifier**: Forward vp response to the VP Verifier for verification on response_uri shared in `openid4vp_request`
-9. **VP Verifier**: Verifies the VP response
-10. **VP Verifier to Inji Certify**: Sends VP verification result (e.g., valid/invalid).
-11. **Inji Certify**: Confirms VC is Valid (positive flow).
-12. **Inji Certify to Wallet**: Responds with `200 OK` and `status:"ok"` along with an `authorization_code`.
-13. **Wallet to Inji Certify**: `POST /oauth/token` (includes `grant_type="authorization_code"`, `code`).
-14. **Inji Certify to Wallet**: Responds with `access_token`, `c_nonce`.
-15. **Wallet to Inji Certify**: `POST /credential` (includes `format`, `proof` with `c_nonce`, authenticated with `access_token`).
-16. **Inji Certify to Wallet**: Validates and returns the `credential`.
+5. **Inji Certify**: Validates `auth_session`
+6. **Inji Certify to VP Verifier**: Forward vp response to the VP Verifier for verification on response_uri shared in `openid4vp_request`
+7. **VP Verifier**: Verifies the VP response
+8. **VP Verifier to Inji Certify**: Sends VP verification result (e.g., valid/invalid).
+9. **Inji Certify**: Confirms VC is Valid (positive flow).
+10. **Inji Certify to Wallet**: Responds with `200 OK` and `status:"ok"` along with an `authorization_code`.
+11. **Wallet to Inji Certify**: `POST /oauth/token` (includes `grant_type="authorization_code"`, `code`).
+12. **Inji Certify to Wallet**: Responds with `access_token`, `c_nonce`.
+13. **Wallet to Inji Certify**: `POST /credential` (includes `format`, `proof` with `c_nonce`, authenticated with `access_token`).
+14. **Inji Certify to Wallet**: Validates and returns the `credential`.
 
 ## Specifications Used
 
