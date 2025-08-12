@@ -5,9 +5,6 @@
  */
 package io.mosip.certify.utils;
 
-import io.mosip.certify.core.constants.MDocConstants;
-import io.mosip.certify.core.dto.IssuerSignedItem;
-import io.mosip.certify.core.exception.CertifyException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
