@@ -171,6 +171,11 @@
             <artifactId>shedlock-provider-jdbc-template</artifactId>
             <version>6.8.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- https://mvnrepository.com/artifact/io.mosip.certify/mock-certify-plugin -->
     </dependencies>
 
