@@ -44,10 +44,11 @@ public class SDJsonUtils {
                     buildSimpleClaim(node.get(fieldName), sdObjectBuilder, disclosures, currentPath + "." + fieldName,anyMatch(currentPath + "." + fieldName, sdPaths));
                     continue;
                 }
-               /* if(node.isObject() && anyMatch(currentPath + "." + fieldName, sdPaths)){
-                    constructSDPayload(node.get(fieldName), sdObjectBuilder, sdPaths, currentPath + "." + fieldName);
+                if(node.isObject() && anyMatch(currentPath + "." + fieldName, sdPaths)){
+                    constructSDPayload(node.get(fieldName), sdObjectBuilder, disclosures, sdPaths, currentPath + "." + fieldName);
                     continue;
-                } */
+                }
+
                 if(node.get(fieldName).isArray()){
                     constructSDPayload(node.get(fieldName), internalSD, disclosures, sdPaths, currentPath + "." + fieldName);
                     if (internalSD.build().get(fieldName) == null ) {
@@ -115,8 +116,8 @@ public class SDJsonUtils {
 
             // Handle array index match
             if (part1.endsWith("]") && part2.endsWith("]")) {
-                String pattern = part1.replace("[*]", "\\[\\d+\\]");
-                if (part2.matches(pattern)) {
+                String pattern = part2.replace("[*]", "\\[\\d+\\]");
+                if (part1.matches(pattern)) {
                     continue;
                 }
             }
