@@ -84,7 +84,7 @@ public interface VCIssuancePlugin {
 
 ## Certificate Setup
 
-**Note**: This step is required only if you are using the Inji Web application or Mimoto as a BFF for your usecase.
+**Note**: This step is required only if you are using the Inji Web application for your usecase.
 
 - Create a `certs/` directory inside the docker-compose-injistack directory.
 - Place your PKCS12 keystore file in the `certs` directory as `oidckeystore.p12`. This is required for the Inji Web application and other applications which rely on Mimoto as a BFF and it can be configured as per these [docs](https://docs.inji.io/inji-wallet/inji-mobile/technical-overview/customization-overview/credential_providers#onboarding-mimoto-as-oidc-client-for-a-new-issuer) after the file is downloaded in the `certs` directory as shown in the directory tree.
@@ -126,7 +126,7 @@ Ensure all configuration files are properly updated in the config directory if y
 - certify-default.properties
 - certify-csvdp-farmer.properties
 
-Following files are optional and can be used to configure the Mimoto service for your usecase, if you are not using Mimoto, you can skip these files:
+Following files are optional and can be used to configure the Inji Web application for your usecase, if you are not using web application, you can skip these files:
 
 - mimoto-default.properties
 - mimoto-issuers-config.json
