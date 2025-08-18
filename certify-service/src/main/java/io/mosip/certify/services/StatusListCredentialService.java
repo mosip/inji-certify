@@ -82,6 +82,9 @@ public class StatusListCredentialService {
     @Value("#{${mosip.certify.statuslist.size-in-kb:16}}") // value in kb
     private long statusListSizeInKB;
 
+    @Value("#{${mosip.certify.key-chooser}}")
+    private Map<String, List<List<String>>> keyChooser;
+
     public String getStatusListCredential(String id) throws CertifyException {
         log.info("Processing status list credential request for ID: {}", id);
 
@@ -187,8 +190,8 @@ public class StatusListCredentialService {
 
             log.debug("Created status list VC structure: {}", statusListData.toString(2));
 
-            String appId = CertifyIssuanceServiceImpl.keyChooser.get(signatureCryptoSuite).getFirst();
-            String refId = CertifyIssuanceServiceImpl.keyChooser.get(signatureCryptoSuite).getLast();
+            String appId = keyChooser.get(signatureCryptoSuite).getFirst().getFirst();
+            String refId = keyChooser.get(signatureCryptoSuite).getFirst().getLast();
             Credential cred = credentialFactory.getCredential(VCFormats.LDP_VC).orElseThrow(()-> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
 
             // Attach signature to the VC
@@ -340,8 +343,8 @@ public class StatusListCredentialService {
             // Update validFrom timestamp to current time
             vcDocument.put("validFrom", new Date().toInstant().toString());
 
-            String appId = CertifyIssuanceServiceImpl.keyChooser.get(signatureCryptoSuite).getFirst();
-            String refId = CertifyIssuanceServiceImpl.keyChooser.get(signatureCryptoSuite).getLast();
+            String appId = keyChooser.get(signatureCryptoSuite).getFirst().getFirst();
+            String refId = keyChooser.get(signatureCryptoSuite).getFirst().getLast();
             Credential cred = credentialFactory.getCredential(VCFormats.LDP_VC).orElseThrow(()-> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
 
             // Sign the updated VC

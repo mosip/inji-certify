@@ -68,14 +68,6 @@ import static io.mosip.certify.utils.VCIssuanceUtil.validateLdpVcFormatRequest;
 @ConditionalOnProperty(value = "mosip.certify.plugin-mode", havingValue = "DataProvider")
 public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
-    public static final Map<String, List<String>> keyChooser = Map.of(
-            SignatureAlg.RSA_SIGNATURE_SUITE_2018, List.of(Constants.CERTIFY_VC_SIGN_RSA, Constants.EMPTY_REF_ID),
-            SignatureAlg.ED25519_SIGNATURE_SUITE_2018, List.of(Constants.CERTIFY_VC_SIGN_ED25519, Constants.ED25519_REF_ID),
-            SignatureAlg.ED25519_SIGNATURE_SUITE_2020, List.of(Constants.CERTIFY_VC_SIGN_ED25519, Constants.ED25519_REF_ID),
-            SignatureAlg.EC_K1_2016, List.of(Constants.CERTIFY_VC_SIGN_EC_K1, Constants.EC_SECP256K1_SIGN),
-            SignatureAlg.EC_SECP256K1_2019, List.of(Constants.CERTIFY_VC_SIGN_EC_K1, Constants.EC_SECP256K1_SIGN),
-            SignatureAlg.EC_SECP256R1_2019, List.of(Constants.CERTIFY_VC_SIGN_EC_R1, Constants.EC_SECP256R1_SIGN));
-
     @Value("${mosip.certify.cnonce-expire-seconds:300}")
     private int cNonceExpireSeconds;
 
