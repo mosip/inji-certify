@@ -5,7 +5,7 @@
  */
 package io.mosip.certify.services;
 
-import io.mosip.certify.core.dto.OAuthASMetadataDTO;
+import io.mosip.certify.core.dto.OAuthAuthorizationServerMetadataDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,7 @@ import java.util.List;
  */
 @Slf4j
 @Service
-public class OAuthASMetadataService {
+public class OAuthAuthorizationServerMetadataService {
 
     @Value("${mosip.certify.oauth.issuer}")
     private String issuer;
@@ -43,12 +43,12 @@ public class OAuthASMetadataService {
 
     /**
      * Builds and returns OAuth 2.0 Authorization Server Metadata
-     * @return OAuthASMetadataDTO containing the OAuth AS metadata
+     * @return OAuthAuthorizationServerMetadataDTO containing the OAuth Authorization Server metadata
      */
-    public OAuthASMetadataDTO getOAuthASMetadata() {
-        log.debug("Building OAuth AS metadata");
+    public OAuthAuthorizationServerMetadataDTO getOAuthAuthorizationServerMetadata() {
+        log.debug("Building OAuth Authorization Server metadata");
 
-        OAuthASMetadataDTO metadata = new OAuthASMetadataDTO();
+        OAuthAuthorizationServerMetadataDTO metadata = new OAuthAuthorizationServerMetadataDTO();
         
         metadata.setIssuer(issuer);
         metadata.setTokenEndpoint(tokenEndpoint);
@@ -58,7 +58,7 @@ public class OAuthASMetadataService {
         metadata.setTokenEndpointAuthMethodsSupported(parseCommaSeparatedValues(tokenEndpointAuthMethodsSupported));
         metadata.setInteractiveAuthorizationEndpoint(interactiveAuthorizationEndpoint);
 
-        log.debug("OAuth AS metadata built successfully for issuer: {}", issuer);
+        log.debug("OAuth Authorization Server metadata built successfully for issuer: {}", issuer);
         return metadata;
     }
 

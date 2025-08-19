@@ -1,6 +1,6 @@
 package io.mosip.certify.services;
 
-import io.mosip.certify.core.dto.OAuthASMetadataDTO;
+import io.mosip.certify.core.dto.OAuthAuthorizationServerMetadataDTO;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,10 +14,10 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class OAuthASMetadataServiceTest {
+public class OAuthAuthorizationServerMetadataServiceTest {
 
     @InjectMocks
-    private OAuthASMetadataService oAuthASMetadataService;
+    private OAuthAuthorizationServerMetadataService oAuthAuthorizationServerMetadataService;
 
     private static final String TEST_ISSUER = "http://localhost:8090/v1/certify";
     private static final String TEST_TOKEN_ENDPOINT = "http://localhost:8090/v1/certify/oauth/token";
@@ -30,22 +30,22 @@ public class OAuthASMetadataServiceTest {
     @Before
     public void setup() {
         // Set up the properties using ReflectionTestUtils
-        ReflectionTestUtils.setField(oAuthASMetadataService, "issuer", TEST_ISSUER);
-        ReflectionTestUtils.setField(oAuthASMetadataService, "tokenEndpoint", TEST_TOKEN_ENDPOINT);
-        ReflectionTestUtils.setField(oAuthASMetadataService, "jwksUri", TEST_JWK_SET_URI);
-        ReflectionTestUtils.setField(oAuthASMetadataService, "responseTypesSupported", TEST_RESPONSE_TYPES);
-        ReflectionTestUtils.setField(oAuthASMetadataService, "grantTypesSupported", TEST_GRANT_TYPES);
-        ReflectionTestUtils.setField(oAuthASMetadataService, "tokenEndpointAuthMethodsSupported", TEST_TOKEN_ENDPOINT_AUTH_METHODS);
-        ReflectionTestUtils.setField(oAuthASMetadataService, "interactiveAuthorizationEndpoint", TEST_INTERACTIVE_AUTHORIZATION_ENDPOINT);
+        ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "issuer", TEST_ISSUER);
+        ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "tokenEndpoint", TEST_TOKEN_ENDPOINT);
+        ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "jwksUri", TEST_JWK_SET_URI);
+        ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "responseTypesSupported", TEST_RESPONSE_TYPES);
+        ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "grantTypesSupported", TEST_GRANT_TYPES);
+        ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "tokenEndpointAuthMethodsSupported", TEST_TOKEN_ENDPOINT_AUTH_METHODS);
+        ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "interactiveAuthorizationEndpoint", TEST_INTERACTIVE_AUTHORIZATION_ENDPOINT);
     }
 
     @Test
-    public void getOAuthASMetadata_ShouldReturnCompleteMetadata() {
+    public void getOAuthAuthorizationServerMetadata_ShouldReturnCompleteMetadata() {
         // Act
-        OAuthASMetadataDTO result = oAuthASMetadataService.getOAuthASMetadata();
+        OAuthAuthorizationServerMetadataDTO result = oAuthAuthorizationServerMetadataService.getOAuthAuthorizationServerMetadata();
 
         // Assert
-        assertNotNull("OAuth AS metadata should not be null", result);
+        assertNotNull("OAuth Authorization Server metadata should not be null", result);
         assertEquals("Issuer should match", TEST_ISSUER, result.getIssuer());
         assertEquals("Token endpoint should match", TEST_TOKEN_ENDPOINT, result.getTokenEndpoint());
         assertEquals("JWK set URI should match", TEST_JWK_SET_URI, result.getJwksUri());
@@ -53,9 +53,9 @@ public class OAuthASMetadataServiceTest {
     }
 
     @Test
-    public void getOAuthASMetadata_ShouldReturnCorrectArrayFields() {
+    public void getOAuthAuthorizationServerMetadata_ShouldReturnCorrectArrayFields() {
         // Act
-        OAuthASMetadataDTO result = oAuthASMetadataService.getOAuthASMetadata();
+        OAuthAuthorizationServerMetadataDTO result = oAuthAuthorizationServerMetadataService.getOAuthAuthorizationServerMetadata();
 
         // Assert
         assertNotNull("Result should not be null", result);
@@ -71,14 +71,14 @@ public class OAuthASMetadataServiceTest {
     }
 
     @Test
-    public void getOAuthASMetadata_WithEmptyProperties_ShouldReturnEmptyLists() {
+    public void getOAuthAuthorizationServerMetadata_WithEmptyProperties_ShouldReturnEmptyLists() {
         // Arrange - set empty properties
-        ReflectionTestUtils.setField(oAuthASMetadataService, "responseTypesSupported", "");
-        ReflectionTestUtils.setField(oAuthASMetadataService, "grantTypesSupported", "");
-        ReflectionTestUtils.setField(oAuthASMetadataService, "tokenEndpointAuthMethodsSupported", "");
+        ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "responseTypesSupported", "");
+        ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "grantTypesSupported", "");
+        ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "tokenEndpointAuthMethodsSupported", "");
 
         // Act
-        OAuthASMetadataDTO result = oAuthASMetadataService.getOAuthASMetadata();
+        OAuthAuthorizationServerMetadataDTO result = oAuthAuthorizationServerMetadataService.getOAuthAuthorizationServerMetadata();
 
         // Assert
         assertNotNull("Result should not be null", result);
@@ -88,14 +88,14 @@ public class OAuthASMetadataServiceTest {
     }
 
     @Test
-    public void getOAuthASMetadata_WithNullProperties_ShouldReturnEmptyLists() {
+    public void getOAuthAuthorizationServerMetadata_WithNullProperties_ShouldReturnEmptyLists() {
         // Arrange - set null properties
-        ReflectionTestUtils.setField(oAuthASMetadataService, "responseTypesSupported", null);
-        ReflectionTestUtils.setField(oAuthASMetadataService, "grantTypesSupported", null);
-        ReflectionTestUtils.setField(oAuthASMetadataService, "tokenEndpointAuthMethodsSupported", null);
+        ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "responseTypesSupported", null);
+        ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "grantTypesSupported", null);
+        ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "tokenEndpointAuthMethodsSupported", null);
 
         // Act
-        OAuthASMetadataDTO result = oAuthASMetadataService.getOAuthASMetadata();
+        OAuthAuthorizationServerMetadataDTO result = oAuthAuthorizationServerMetadataService.getOAuthAuthorizationServerMetadata();
 
         // Assert
         assertNotNull("Result should not be null", result);
@@ -105,14 +105,14 @@ public class OAuthASMetadataServiceTest {
     }
 
     @Test
-    public void getOAuthASMetadata_WithSingleValues_ShouldReturnSingleItemLists() {
+    public void getOAuthAuthorizationServerMetadata_WithSingleValues_ShouldReturnSingleItemLists() {
         // Arrange - set single values
-        ReflectionTestUtils.setField(oAuthASMetadataService, "responseTypesSupported", "code");
-        ReflectionTestUtils.setField(oAuthASMetadataService, "grantTypesSupported", "authorization_code");
-        ReflectionTestUtils.setField(oAuthASMetadataService, "tokenEndpointAuthMethodsSupported", "client_secret_basic");
+        ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "responseTypesSupported", "code");
+        ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "grantTypesSupported", "authorization_code");
+        ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "tokenEndpointAuthMethodsSupported", "client_secret_basic");
 
         // Act
-        OAuthASMetadataDTO result = oAuthASMetadataService.getOAuthASMetadata();
+        OAuthAuthorizationServerMetadataDTO result = oAuthAuthorizationServerMetadataService.getOAuthAuthorizationServerMetadata();
 
         // Assert
         assertNotNull("Result should not be null", result);
@@ -125,13 +125,13 @@ public class OAuthASMetadataServiceTest {
     }
 
     @Test
-    public void getOAuthASMetadata_WithWhitespaceInCommaSeparatedValues_ShouldTrimValues() {
+    public void getOAuthAuthorizationServerMetadata_WithWhitespaceInCommaSeparatedValues_ShouldTrimValues() {
         // Arrange - set values with whitespace
-        ReflectionTestUtils.setField(oAuthASMetadataService, "grantTypesSupported", " authorization_code , pre-authorized_code ");
-        ReflectionTestUtils.setField(oAuthASMetadataService, "tokenEndpointAuthMethodsSupported", " client_secret_basic , client_secret_post ");
+        ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "grantTypesSupported", " authorization_code , pre-authorized_code ");
+        ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "tokenEndpointAuthMethodsSupported", " client_secret_basic , client_secret_post ");
 
         // Act
-        OAuthASMetadataDTO result = oAuthASMetadataService.getOAuthASMetadata();
+        OAuthAuthorizationServerMetadataDTO result = oAuthAuthorizationServerMetadataService.getOAuthAuthorizationServerMetadata();
 
         // Assert
         assertNotNull("Result should not be null", result);
@@ -145,13 +145,13 @@ public class OAuthASMetadataServiceTest {
     }
 
     @Test
-    public void getOAuthASMetadata_WithMultipleValues_ShouldParseCorrectly() {
+    public void getOAuthAuthorizationServerMetadata_WithMultipleValues_ShouldParseCorrectly() {
         // Arrange - set multiple values
-        ReflectionTestUtils.setField(oAuthASMetadataService, "grantTypesSupported", "authorization_code,refresh_token,client_credentials");
-        ReflectionTestUtils.setField(oAuthASMetadataService, "responseTypesSupported", "code,token");
+        ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "grantTypesSupported", "authorization_code,refresh_token,client_credentials");
+        ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "responseTypesSupported", "code,token");
 
         // Act
-        OAuthASMetadataDTO result = oAuthASMetadataService.getOAuthASMetadata();
+        OAuthAuthorizationServerMetadataDTO result = oAuthAuthorizationServerMetadataService.getOAuthAuthorizationServerMetadata();
 
         // Assert
         assertNotNull("Result should not be null", result);
