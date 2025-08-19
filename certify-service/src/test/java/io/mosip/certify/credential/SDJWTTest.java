@@ -1,7 +1,12 @@
 package io.mosip.certify.credential;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.api.dto.VCResult;
+import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.vcformatters.VCFormatter;
+import io.mosip.kernel.signature.dto.JWSSignatureRequestDtoV2;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
 import io.mosip.kernel.signature.service.SignatureService;
@@ -12,7 +17,9 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.*;
 
@@ -29,12 +36,17 @@ public class SDJWTTest {
     @Mock
     private SignatureService mockSignatureService;
 
+    @Mock
+    private ObjectMapper objectMapper;
+
     @InjectMocks
     private SDJWT sdjwt;
 
     @Before
     public void setup() {
         // MockitoJUnitRunner takes care of injecting mocks
+        MockitoAnnotations.openMocks(this);
+        ReflectionTestUtils.setField(sdjwt, "objectMapper", objectMapper);
     }
 
     @Test
@@ -48,14 +60,16 @@ public class SDJWTTest {
     }
 
     @Test
-    public void testCreateCredential_WithValidInput_ReturnsSdJwt() {
+    public void testCreateCredential_WithValidInput_ReturnsSdJwt() throws JsonProcessingException {
         String mockTemplateName = "mockTemplate";
         Map<String, Object> templateParams = new HashMap<>();
 
         String templateJson = "{\"name\": \"John\", \"age\": 30}";
+        JsonNode mockJsonNode =  mock(JsonNode.class);
         when(mockFormatter.format(any(Map.class))).thenReturn(templateJson);
         when(mockFormatter.getSelectiveDisclosureInfo(mockTemplateName))
                 .thenReturn(Arrays.asList("$.name"));
+        when(objectMapper.readTree(templateJson)).thenReturn(mockJsonNode);
 
         String result = sdjwt.createCredential(templateParams, mockTemplateName);
 
@@ -64,20 +78,20 @@ public class SDJWTTest {
     }
 
     @Test
-    public void testCreateCredential_WithInvalidJson_ReturnsFallbackJwt() {
+    public void testCreateCredential_WithInvalidJson_ReturnsFallbackJwt() throws JsonProcessingException {
         String mockTemplateName = "badTemplate";
         Map<String, Object> templateParams = new HashMap<>();
 
         when(mockFormatter.format(any(Map.class))).thenReturn("{invalid json}");
         when(mockFormatter.getSelectiveDisclosureInfo(mockTemplateName)).thenReturn(Arrays.asList("$.invalid"));
+        when(objectMapper.readTree("{invalid json}")).thenThrow(new JsonProcessingException("Invalid JSON") {});
 
-        String result = sdjwt.createCredential(templateParams, mockTemplateName);
+        CertifyException exception = assertThrows(CertifyException.class, () -> {
+            sdjwt.createCredential(templateParams, mockTemplateName);
+        });
 
-        assertNotNull(result);
-        String[] parts = result.split("\\.");
-        String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
-
-        assertTrue(payloadJson.contains("\"none\":\"\""));
+        assertEquals("JSON_PROCESSING_ERROR", exception.getErrorCode());
+        assertTrue(exception.getMessage().contains("Error processing JSON for SDJWT creation"));
     }
 
     @Test
@@ -88,9 +102,9 @@ public class SDJWTTest {
         JWTSignatureResponseDto signedResponse = new JWTSignatureResponseDto();
         signedResponse.setJwtSignedData(signedJwt);
 
-        when(mockSignatureService.jwsSign(any(JWSSignatureRequestDto.class))).thenReturn(signedResponse);
+        when(mockSignatureService.jwsSignV2(any(JWSSignatureRequestDtoV2.class))).thenReturn(signedResponse);
 
-        VCResult<?> result = sdjwt.addProof(unsignedVC, null, "RS256", "appID", "refID", "url");
+        VCResult<?> result = sdjwt.addProof(unsignedVC, null, "RS256", "appID", "refID", "url", "Ed25519Signature2020");
 
         assertNotNull(result);
         assertTrue(((String) result.getCredential()).startsWith("signed.header.payload"));
@@ -102,16 +116,16 @@ public class SDJWTTest {
 
         JWTSignatureResponseDto response = new JWTSignatureResponseDto();
         response.setJwtSignedData("signed.jwt");
-        when(mockSignatureService.jwsSign(any(JWSSignatureRequestDto.class))).thenReturn(response);
+        when(mockSignatureService.jwsSignV2(any(JWSSignatureRequestDtoV2.class))).thenReturn(response);
 
-        sdjwt.addProof(unsignedVC, null, "PS256", "myApp", "myRef", "https://example.com");
+        sdjwt.addProof(unsignedVC, null, "PS256", "myApp", "myRef", "https://example.com", "Ed25519Signature2020");
 
-        verify(mockSignatureService).jwsSign(argThat(dto ->
+        verify(mockSignatureService).jwsSignV2(argThat(dto ->
                 "myApp".equals(dto.getApplicationId()) &&
                         "myRef".equals(dto.getReferenceId()) &&
                         "PS256".equals(dto.getSignAlgorithm()) &&
                         dto.getIncludePayload() &&
-                        dto.getIncludeCertificate() &&
+                        dto.getIncludeCertificateChain() &&
                         "".equals(dto.getCertificateUrl())
         ));
     }

@@ -1,0 +1,35 @@
+AuthorizationCodeForDataIntegrity:
+   InjiCertify_ESignet_AuthorizationCode_For_landregistry_Cred1_dataIntegrity_All_Valid_Smoke_sid:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCode
+      description: Authorization Code for data integrity proof for cred1
+      role: noauth
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/DataIntegrityProof/AuthorizationCodeForDataIntegrity/AuthorizationCodeForDataIntegrity
+      outputTemplate: injicertify/DataIntegrityProof/AuthorizationCodeForDataIntegrity/AuthorizationCodeForDataIntegrityResult
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred1_dataIntegrity_uin_all_Valid_Smoke_sid_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred1_dataIntegrity_uin_all_Valid_Smoke_sid_transactionId$"
+}'
+      output: '{
+}'
+   InjiCertify_ESignet_AuthorizationCode_For_landregistry_Cred2_dataIntegrity_All_Valid_Smoke_sid:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCode
+      description: Authorization Code for data integrity proof for cred2
+      role: noauth
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/DataIntegrityProof/AuthorizationCodeForDataIntegrity/AuthorizationCodeForDataIntegrity
+      outputTemplate: injicertify/DataIntegrityProof/AuthorizationCodeForDataIntegrity/AuthorizationCodeForDataIntegrityResult
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred2_dataIntegrity_uin_all_Valid_Smoke_sid_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred2_dataIntegrity_uin_all_Valid_Smoke_sid_transactionId$"
+}'
+      output: '{
+}'

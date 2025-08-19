@@ -7,7 +7,6 @@ import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.entity.TemplateId; // Import TemplateId
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Assert;
@@ -52,13 +51,10 @@ public class VelocityTemplatingEngineImplTest {
 
     // Template Keys used in tests, derived from CredentialConfig objects
     private String vc2TemplateKey;
-    private TemplateId vc2TemplateIdObject;
 
     private String vc3TemplateKey;
-    private TemplateId vc3TemplateIdObject;
 
     private String vc4TemplateKey;
-    private TemplateId vc4TemplateIdObject;
 
 
     private final String FACE_DATA = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII";
@@ -73,7 +69,6 @@ public class VelocityTemplatingEngineImplTest {
         String vc2Context = "https://example.org/Person.json,https://www.w3.org/ns/credentials/v2";
         String vc2Format = "ldp_vc";
         vc2TemplateKey = vc2Type + DELIMITER + vc2Context + DELIMITER + vc2Format;
-        vc2TemplateIdObject = new TemplateId(vc2Context, vc2Type, vc2Format);
         vc2 = initTemplate("""
                         {
                             "@context": ["https://www.w3.org/ns/credentials/v2"],
@@ -98,7 +93,7 @@ public class VelocityTemplatingEngineImplTest {
                             }
                         }
                 """,
-                vc2Type, vc2Context, vc2Format, "did:example:issuer2", "appId2", "refId2", "EdDSA", "$.phone"
+                vc2Type, vc2Context, vc2Format, "did:example:issuer2", "appId2", "refId2", "EdDSA", "$.phone", "testCryptoSuite"
         );
 
         // vc3 definition - with quotes fixed for string template variables
@@ -106,7 +101,6 @@ public class VelocityTemplatingEngineImplTest {
         String vc3Context = "https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1";
         String vc3Format = "ldp_vc";
         vc3TemplateKey = vc3Type + DELIMITER + vc3Context + DELIMITER + vc3Format;
-        vc3TemplateIdObject = new TemplateId(vc3Context, vc3Type, vc3Format);
         vc3 = initTemplate("""
                         {
                             "@context": ["https://www.w3.org/2018/credentials/v1", "https://vharsh.github.io/DID/mock-context.json"],
@@ -131,7 +125,7 @@ public class VelocityTemplatingEngineImplTest {
                             }
                         }
                 """,
-                vc3Type, vc3Context, vc3Format, "did:example:issuer3", "appId3", "refId3", "EdDSA", null
+                vc3Type, vc3Context, vc3Format, "did:example:issuer3", "appId3", "refId3", "EdDSA", null, "testCryptoSuite"
         );
 
 
@@ -140,9 +134,8 @@ public class VelocityTemplatingEngineImplTest {
         String vc4Context = "https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1";
         String vc4Format = "ldp_vc";
         vc4TemplateKey = vc4Type + DELIMITER + vc4Context + DELIMITER + vc4Format;
-        vc4TemplateIdObject = new TemplateId(vc4Context, vc4Type, vc4Format);
         vc4 = initTemplate(null,
-                vc4Type, vc4Context, vc4Format, "did:example:issuer4", "appId4", "refId4", "RSA", null
+                vc4Type, vc4Context, vc4Format, "did:example:issuer4", "appId4", "refId4", "RSA", null, "testCryptoSuite"
         );
 
 
@@ -163,7 +156,7 @@ public class VelocityTemplatingEngineImplTest {
         formatter.initialize(); // Initializes VelocityEngine
     }
 
-    private CredentialConfig initTemplate(String template, String type, String context, String format, String didUrl, String keyManagerAppId, String keyManagerRefId, String signatureAlgo, String sdClaim) {
+    private CredentialConfig initTemplate(String template, String type, String context, String format, String didUrl, String keyManagerAppId, String keyManagerRefId, String signatureAlgo, String sdClaim, String signatureCryptoSuite) {
         CredentialConfig t = new CredentialConfig();
         if(template != null) {
             template = Base64.getEncoder().encodeToString(template.getBytes());
@@ -178,6 +171,7 @@ public class VelocityTemplatingEngineImplTest {
         t.setKeyManagerRefId(keyManagerRefId);
         t.setSignatureAlgo(signatureAlgo);
         t.setSdClaim(sdClaim);
+        t.setSignatureCryptoSuite(signatureCryptoSuite);
         return t;
     }
 
@@ -205,7 +199,7 @@ public class VelocityTemplatingEngineImplTest {
 
         Map<String, Object> templateMap = Map.of(
                 Constants.TEMPLATE_NAME, vc2TemplateKey,
-                Constants.ISSUER_URI, "https://example.com/fake-issuer"
+                Constants.DID_URL, "https://example.com/fake-issuer"
         );
 
         String actualJSONString = formatter.format(ret, templateMap);
@@ -263,7 +257,7 @@ public class VelocityTemplatingEngineImplTest {
 
         Map<String, Object> templateMap = Map.of(
                 Constants.TEMPLATE_NAME, vc4TemplateKey,
-                Constants.ISSUER_URI, "https://example.com/fake-issuer"
+                Constants.DID_URL, "https://example.com/fake-issuer"
         );
         // formatter.format calls getCachedCredentialConfig().getVcTemplate(). If null, it throws.
         CertifyException exception = assertThrows(CertifyException.class, () -> formatter.format(ret, templateMap));
@@ -273,50 +267,6 @@ public class VelocityTemplatingEngineImplTest {
     @Ignore("This test requires a running local server and is for manual/integration testing")
     @Test
     public void testTemplating_localOnly() { /* ... unchanged ... */ }
-
-    @Test
-    public void getTemplate_ValidKey_ReturnsTemplateString() {
-        // formatter.getTemplate uses findByCredentialTypeAndContext
-        String type = "MockVerifiableCredential,VerifiableCredential";
-        String context = "https://example.org/Person.json,https://www.w3.org/ns/credentials/v2"; // context part of vc2
-        String keyForGetTemplate = type + DELIMITER + context; // Key format for getTemplate() method
-
-        when(credentialConfigRepository.findByCredentialTypeAndContext(type, context))
-                .thenReturn(Optional.of(vc2));
-
-        String template = formatter.getTemplate(keyForGetTemplate);
-        Assert.assertNotNull(template);
-        Assert.assertEquals(vc2.getVcTemplate(), template);
-    }
-
-    @Test
-    public void getTemplate_InvalidKeyFormat_ReturnsNull() {
-        // Key format doesn't contain DELIMITER, or has other issues specific to getTemplate's parsing
-        String key = "InvalidKeyWithoutDelimiter";
-        String template = formatter.getTemplate(key); // getTemplate has its own parsing
-        Assert.assertNull(template);
-
-        String keyWithWrongDelimiter = "Type;Context"; // formatter.getTemplate uses ":"
-        template = formatter.getTemplate(keyWithWrongDelimiter);
-        Assert.assertNull(template); // This will also result in null as DELIMITER ":" is not found
-    }
-
-
-    @Test
-    public void getTemplate_ConfigFoundButTemplateStringIsNull_ReturnsNull() {
-
-        String vc4TypeForGetTemplate = "TestVerifiableCredential,VerifiableCredential";
-
-        String vc4ContextForGetTemplate = "https://vharsh.github.io/DID/mock-context.json,https://www.w3.org/2018/credentials/v1" + DELIMITER + "ldp_vc";
-        String keyForVc4GetTemplate = vc4TypeForGetTemplate + DELIMITER + vc4ContextForGetTemplate;
-
-
-        when(credentialConfigRepository.findByCredentialTypeAndContext(vc4TypeForGetTemplate, vc4ContextForGetTemplate))
-                .thenReturn(Optional.of(vc4)); // vc4.getVcTemplate() is null
-
-        String template = formatter.getTemplate(keyForVc4GetTemplate);
-        Assert.assertNull(template);
-    }
 
 
     @Test
@@ -355,6 +305,13 @@ public class VelocityTemplatingEngineImplTest {
     }
 
     @Test
+    public void testGetSignatureCryptoSuite() {
+        // Uses vc2 by default
+        String expected = vc2.getSignatureCryptoSuite();
+        Assert.assertEquals(expected, formatter.getSignatureCryptoSuite(vc2TemplateKey));
+    }
+
+    @Test
     public void testFormat_AddsDefaultExpiryWhenMissing() {
         // Uses vc2 by default from setUp's findById mock
         JSONObject valueMap = new JSONObject();
@@ -375,7 +332,7 @@ public class VelocityTemplatingEngineImplTest {
 
         Map<String, Object> templateSettings = Map.of(
                 Constants.TEMPLATE_NAME, vc2TemplateKey,
-                Constants.ISSUER_URI, "https://example.com/fake-issuer"
+                Constants.DID_URL, "https://example.com/fake-issuer"
         );
 
         String result = formatter.format(valueMap, templateSettings);
@@ -410,7 +367,7 @@ public class VelocityTemplatingEngineImplTest {
 
         Map<String, Object> templateSettings = Map.of(
                 Constants.TEMPLATE_NAME, vc2TemplateKey,
-                Constants.ISSUER_URI, "https://example.com/fake-issuer"
+                Constants.DID_URL, "https://example.com/fake-issuer"
         );
 
         String result = formatter.format(valueMap, templateSettings);
@@ -431,7 +388,7 @@ public class VelocityTemplatingEngineImplTest {
 
         Map<String, Object> templateInput = new HashMap<>();
         templateInput.put(Constants.TEMPLATE_NAME, vc3TemplateKey);
-        templateInput.put(Constants.ISSUER_URI, "https://example.com/fake-issuer");
+        templateInput.put(Constants.DID_URL, "https://example.com/fake-issuer");
         templateInput.put("vcVer", "VC-V3");
         templateInput.put("fullName", "Test User Three"); // String, template vc3 now quotes it.
         templateInput.put("UIN", 789012L);
