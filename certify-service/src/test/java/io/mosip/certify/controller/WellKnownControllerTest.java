@@ -111,8 +111,7 @@ class WellKnownControllerTest {
         mockMetadata.setGrantTypesSupported(Arrays.asList("authorization_code", "pre-authorized_code"));
         mockMetadata.setResponseTypesSupported(Arrays.asList("code"));
         mockMetadata.setTokenEndpointAuthMethodsSupported(Arrays.asList("client_secret_basic", "client_secret_post"));
-        mockMetadata.setIntrospectionEndpoint("http://localhost:8090/v1/certify/oauth/introspect");
-        mockMetadata.setAuthorizationChallengeEndpoint("http://localhost:8090/v1/certify/oauth/challenge");
+        mockMetadata.setInteractiveAuthorizationEndpoint("http://localhost:8090/v1/certify/oauth/iar");
 
         when(oAuthASMetadataService.getOAuthASMetadata()).thenReturn(mockMetadata);
 
@@ -128,8 +127,7 @@ class WellKnownControllerTest {
                 .andExpect(jsonPath("$.response_types_supported[0]").value("code"))
                 .andExpect(jsonPath("$.token_endpoint_auth_methods_supported[0]").value("client_secret_basic"))
                 .andExpect(jsonPath("$.token_endpoint_auth_methods_supported[1]").value("client_secret_post"))
-                .andExpect(jsonPath("$.introspection_endpoint").value("http://localhost:8090/v1/certify/oauth/introspect"))
-                .andExpect(jsonPath("$.authorization_challenge_endpoint").value("http://localhost:8090/v1/certify/oauth/challenge"));
+                .andExpect(jsonPath("$.interactive_authorization_endpoint").value("http://localhost:8090/v1/certify/oauth/iar"));
 
         verify(oAuthASMetadataService, times(1)).getOAuthASMetadata();
     }
