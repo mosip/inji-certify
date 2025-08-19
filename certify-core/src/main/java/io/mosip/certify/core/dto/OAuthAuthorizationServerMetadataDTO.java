@@ -18,7 +18,7 @@ import java.util.List;
  */
 @Data
 @NoArgsConstructor
-public class OAuthASMetadataDTO {
+public class OAuthAuthorizationServerMetadataDTO {
 
     /**
      * The authorization server's issuer identifier
