@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * OAuth 2.0 Authorization Server Metadata DTO as per RFC 8414
  * Note: authorization_endpoint is not included as this implementation
- * uses browser-less flows via authorization_challenge_endpoint.
+ * uses browser-less flows via interactive_authorization_endpoint.
  */
 @Data
 @NoArgsConstructor
@@ -57,14 +57,8 @@ public class OAuthASMetadataDTO {
     private List<String> tokenEndpointAuthMethodsSupported;
 
     /**
-     * URL of the authorization server's introspection endpoint
+     * Interactive authorization endpoint for OAuth 2.0 flows
      */
-    @JsonProperty("introspection_endpoint")
-    private String introspectionEndpoint;
-
-    /**
-     * OAuth 2.0 for First-Party Apps endpoint - used for browser-less flows
-     */
-    @JsonProperty("authorization_challenge_endpoint")
-    private String authorizationChallengeEndpoint;
+    @JsonProperty("interactive_authorization_endpoint")
+    private String interactiveAuthorizationEndpoint;
 }
