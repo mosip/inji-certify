@@ -85,49 +85,37 @@ public class StatusListCredentialService {
     @Value("#{${mosip.certify.key-chooser}}")
     private Map<String, List<List<String>>> keyChooser;
 
+    /**
+     * Retrieves a status list credential by its ID.
+     *
+     * @param id The ID of the status list credential.
+     * @return The VC document as a JSON string.
+     * @throws CertifyException if the credential is not found or an error occurs.
+     */
     public String getStatusListCredential(String id) throws CertifyException {
         log.info("Processing status list credential request for ID: {}", id);
 
+        StatusListCredential statusList = findStatusListById(id)
+                .orElseThrow(() -> new CertifyException(ErrorConstants.STATUS_LIST_NOT_FOUND));
+
         try {
-            // Find the status list credential by ID
-            Optional<StatusListCredential> statusListOpt = findStatusListById(id);
-
-            if (statusListOpt.isEmpty()) {
-                log.warn("Status list credential not found for ID: {}", id);
-                throw new CertifyException(ErrorConstants.STATUS_LIST_NOT_FOUND);
-            }
-
-            StatusListCredential statusList = statusListOpt.get();
-
-            // Parse the VC document
-            JSONObject vcDocument;
-            try {
-                vcDocument = new JSONObject(statusList.getVcDocument());
-            } catch (Exception e) {
-                log.error("Error parsing VC document for status list ID: {}", id, e);
-                throw new CertifyException(ErrorConstants.STATUS_RETRIEVAL_ERROR);
-            }
-
+            JSONObject vcDocument = new JSONObject(statusList.getVcDocument());
             log.info("Successfully retrieved status list credential for ID: {}", id);
-
-            // Convert JSONObject to Map for consistent return type
             return vcDocument.toString();
-
         } catch (Exception e) {
-            log.error("Unexpected error retrieving status list credential with ID: {}", id, e);
+            log.error("Error parsing VC document for status list ID: {}", id, e);
             throw new CertifyException(ErrorConstants.STATUS_RETRIEVAL_ERROR);
         }
     }
 
     /**
-     * Find status list credential by ID
+     * Finds a status list credential by its ID.
      *
-     * @param id the ID of the status list credential
-     * @return Optional containing StatusListCredential if found
+     * @param id the ID of the status list credential.
+     * @return Optional containing StatusListCredential if found.
      */
     public Optional<StatusListCredential> findStatusListById(String id) {
         log.info("Finding status list credential by ID: {}", id);
-
         try {
             return statusListCredentialRepository.findById(id);
         } catch (Exception e) {
@@ -137,42 +125,36 @@ public class StatusListCredentialService {
     }
 
     /**
-     * Find a suitable status list for the given purpose
+     * Finds a suitable status list for the given purpose and status.
      *
-     * @param statusPurpose the purpose of the status list (e.g., "revocation", "suspension")
-     * @return Optional containing StatusListCredential if found
+     * @param statusPurpose The purpose of the status list (e.g., "revocation").
+     * @param status The status of the credential (e.g., AVAILABLE).
+     * @return Optional containing StatusListCredential if found.
      */
     public Optional<StatusListCredential> findSuitableStatusList(String statusPurpose, StatusListCredential.CredentialStatus status) {
         return statusListCredentialRepository.findSuitableStatusList(statusPurpose, status);
     }
 
     /**
-     * Generate a new status list credential for the specified purpose
+     * Generates a new status list credential for the specified purpose.
      *
-     * @param statusPurpose the purpose of the status list (e.g., "revocation", "suspension")
-     * @return the generated StatusListCredential
+     * @param statusPurpose The purpose of the status list (e.g., "revocation").
+     * @return The generated StatusListCredential.
+     * @throws CertifyException on failure to generate.
      */
     @Transactional
-    public StatusListCredential generateStatusListCredential(String statusPurpose) {
+    public StatusListCredential generateStatusListCredential(String statusPurpose) throws CertifyException {
         log.info("Generating new status list credential with purpose: {}", statusPurpose);
 
         try {
-            // Generate unique ID for status list
             String id = UUID.randomUUID().toString();
             String statusListId = domainUrl + "/v1/certify/credentials/status-list/" + id;
 
-            // Create the template data for the status list VC
             JSONObject statusListData = new JSONObject();
-
-            JSONArray contextList = new JSONArray();
-            contextList.put("https://www.w3.org/ns/credentials/v2");
+            JSONArray contextList = new JSONArray(List.of("https://www.w3.org/ns/credentials/v2"));
             statusListData.put("@context", contextList);
-
-            JSONArray typeList = new JSONArray();
-            typeList.put("VerifiableCredential");
-            typeList.put("BitstringStatusListCredential");
+            JSONArray typeList = new JSONArray(List.of("VerifiableCredential", "BitstringStatusListCredential"));
             statusListData.put("type", typeList);
-
             statusListData.put("id", statusListId);
             statusListData.put("issuer", didUrl);
             statusListData.put("validFrom", new Date().toInstant().toString());
@@ -181,39 +163,14 @@ public class StatusListCredentialService {
             credentialSubject.put("id", statusListId);
             credentialSubject.put("type", "BitstringStatusList");
             credentialSubject.put("statusPurpose", statusPurpose);
-
-            // Create empty encoded list (all 0s)
             String encodedList = BitStringStatusListUtils.createEmptyEncodedList(statusListSizeInKB);
             credentialSubject.put("encodedList", encodedList);
-
             statusListData.put("credentialSubject", credentialSubject);
 
             log.debug("Created status list VC structure: {}", statusListData.toString(2));
 
-            String appId = keyChooser.get(signatureCryptoSuite).getFirst().getFirst();
-            String refId = keyChooser.get(signatureCryptoSuite).getFirst().getLast();
-            Credential cred = credentialFactory.getCredential(VCFormats.LDP_VC).orElseThrow(()-> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
+            String vcDocS = addProofAndHandleResult(statusListData, ErrorConstants.VC_ISSUANCE_FAILED);
 
-            // Attach signature to the VC
-            VCResult<?> vcResult = cred.addProof(statusListData.toString(), "", signatureAlgo, appId, refId, didUrl, signatureCryptoSuite);
-
-            if (vcResult.getCredential() == null) {
-                log.error("Failed to generate status list VC - vcResult.getCredential() returned null");
-                throw new CertifyException("VC_ISSUANCE_FAILED");
-            }
-
-            // Convert to byte array for storage
-            byte[] vcDocument;
-            try {
-                vcDocument = vcResult.getCredential().toString().getBytes(StandardCharsets.UTF_8);
-            } catch (Exception e) {
-                log.error("Error converting VC to byte array", e);
-                throw new CertifyException("VC_SERIALIZATION_FAILED");
-            }
-
-            String vcDocS = vcResult.getCredential().toString();
-
-            // Create and save the status list credential entity
             StatusListCredential statusListCredential = new StatusListCredential();
             statusListCredential.setId(id);
             statusListCredential.setVcDocument(vcDocS);
@@ -223,16 +180,16 @@ public class StatusListCredentialService {
             statusListCredential.setCredentialStatus(StatusListCredential.CredentialStatus.AVAILABLE);
             statusListCredential.setCreatedDtimes(LocalDateTime.now());
 
-            // Save to database
             StatusListCredential savedCredential = statusListCredentialRepository.saveAndFlush(statusListCredential);
             log.info("Saved StatusListCredential: ID={}, CreatedDtimes={}", savedCredential.getId(), savedCredential.getCreatedDtimes());
             initializeAvailableIndices(savedCredential);
 
             return savedCredential;
-
         } catch (JSONException e) {
             log.error("JSON error while generating status list credential", e);
             throw new CertifyException("STATUS_LIST_JSON_ERROR");
+        } catch (CertifyException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error generating status list credential", e);
             throw new CertifyException("STATUS_LIST_GENERATION_FAILED");
@@ -240,45 +197,32 @@ public class StatusListCredentialService {
     }
 
     /**
-     * Initialize available indices for a newly created status list using Database Query Approach
+     * Initializes available indices for a newly created status list using a native query.
      *
-     * @param statusListCredential the status list credential
+     * @param statusListCredential The status list credential.
+     * @throws CertifyException on failure to initialize.
      */
     @Transactional
-    public void initializeAvailableIndices(StatusListCredential statusListCredential) {
+    public void initializeAvailableIndices(StatusListCredential statusListCredential) throws CertifyException {
         log.info("Initializing available indices for status list: {}", statusListCredential.getId());
-
         try {
-
             Query checkQuery = entityManager.createNativeQuery("SELECT COUNT(*) FROM status_list_credential WHERE id = ?");
             checkQuery.setParameter(1, statusListCredential.getId());
             Object count = checkQuery.getSingleResult();
             log.info("StatusListCredential with ID {} exists in DB: {}", statusListCredential.getId(), count);
 
             String insertSql = """
-                    INSERT INTO status_list_available_indices
-                    (status_list_credential_id, list_index, is_assigned, cr_dtimes)
-                    SELECT ?, generate_series(0, ? - 1), false, NOW()
-                    """;
+                INSERT INTO status_list_available_indices
+                (status_list_credential_id, list_index, is_assigned, cr_dtimes)
+                SELECT ?, generate_series(0, ? - 1), false, NOW()
+                """;
 
-            try {
-                Query nativeQuery = entityManager.createNativeQuery(insertSql);
-                nativeQuery.setParameter(1, statusListCredential.getId());
-                nativeQuery.setParameter(2, statusListCredential.getCapacity());
+            Query nativeQuery = entityManager.createNativeQuery(insertSql);
+            nativeQuery.setParameter(1, statusListCredential.getId());
+            nativeQuery.setParameter(2, statusListCredential.getCapacity());
 
-                int rowsInserted = nativeQuery.executeUpdate();
-
-                log.info("Successfully initialized {} available indices for status list: {}", rowsInserted, statusListCredential.getId());
-
-            } catch (Exception e) {
-                if (entityManager.getTransaction().isActive()) {
-                    entityManager.getTransaction().rollback();
-                }
-                throw e;
-            } finally {
-                entityManager.close();
-            }
-
+            int rowsInserted = nativeQuery.executeUpdate();
+            log.info("Successfully initialized {} available indices for status list: {}", rowsInserted, statusListCredential.getId());
         } catch (Exception e) {
             log.error("Error initializing available indices for status list: {}", statusListCredential.getId(), e);
             throw new CertifyException("STATUS_LIST_INDEX_INITIALIZATION_FAILED");
@@ -286,169 +230,147 @@ public class StatusListCredentialService {
     }
 
     /**
-     * Find or create a suitable status list for the given purpose
-     * If no suitable status list exists, a new one will be created
+     * Finds or creates a suitable status list for the given purpose.
      *
-     * @param statusPurpose the purpose of the status list
-     * @return StatusListCredential that can be used for the given purpose
+     * @param statusPurpose The purpose of the status list.
+     * @return A suitable StatusListCredential.
      */
     @Transactional
     public StatusListCredential findOrCreateStatusList(String statusPurpose) {
         log.info("Finding or creating status list for purpose: {}", statusPurpose);
-
-        // Try to find an existing suitable status list
-        Optional<StatusListCredential> existingStatusList = findSuitableStatusList(statusPurpose, StatusListCredential.CredentialStatus.AVAILABLE);
-
-        if (existingStatusList.isPresent()) {
-            log.info("suitable status list found, returning the existing one");
-            return existingStatusList.get();
-        }
-
-        // No suitable status list found, generate a new one
-        log.info("No suitable status list found, generating a new one");
-        StatusListCredential statusListCredential = generateStatusListCredential(statusPurpose);
-        return statusListCredential;
+        return findSuitableStatusList(statusPurpose, StatusListCredential.CredentialStatus.AVAILABLE)
+                .orElseGet(() -> {
+                    log.info("No suitable status list found, generating a new one");
+                    return generateStatusListCredential(statusPurpose);
+                });
     }
 
     /**
-     * Find next available index in the status list using the configured index provider
+     * Finds the next available index in the status list.
      *
-     * @param statusListId the ID of the status list
-     * @return the next available index, or -1 if the list is full
+     * @param statusListId The ID of the status list.
+     * @return The next available index, or -1 if the list is full.
      */
     public long findNextAvailableIndex(String statusListId) {
-        Optional<Long> availableIndex = indexProvider.acquireIndex(statusListId, Map.of());
-        return availableIndex.orElse(-1L);
+        return indexProvider.acquireIndex(statusListId, Map.of()).orElse(-1L);
     }
 
-    // Add this method to StatusListCredentialService.java
-
     /**
-     * Re-sign a status list credential with updated content
+     * Re-signs a status list credential with updated content.
      *
-     * @param vcDocumentJson The updated VC document as JSON string
-     * @return The re-signed VC document as JSON string
+     * @param vcDocumentJson The updated VC document as a JSON string.
+     * @return The re-signed VC document as a JSON string.
+     * @throws CertifyException on failure to re-sign.
      */
     @Transactional
-    public String resignStatusListCredential(String vcDocumentJson) {
+    public String resignStatusListCredential(String vcDocumentJson) throws CertifyException {
         log.info("Re-signing status list credential");
-
         try {
-            // Remove existing proof if present before re-signing
             JSONObject vcDocument = new JSONObject(vcDocumentJson);
             if (vcDocument.has("proof")) {
                 vcDocument.remove("proof");
             }
-
-            // Update validFrom timestamp to current time
             vcDocument.put("validFrom", new Date().toInstant().toString());
-
-            String appId = keyChooser.get(signatureCryptoSuite).getFirst().getFirst();
-            String refId = keyChooser.get(signatureCryptoSuite).getFirst().getLast();
-            Credential cred = credentialFactory.getCredential(VCFormats.LDP_VC).orElseThrow(()-> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
-
-            // Sign the updated VC
-            VCResult<?> vcResult = cred.addProof(vcDocument.toString(), "", signatureAlgo, appId, refId, didUrl, signatureCryptoSuite);
-
-            if (vcResult.getCredential() == null) {
-                log.error("Failed to re-sign status list VC - vcResult.getCredential() returned null");
-                throw new CertifyException("VC_RESIGNATION_FAILED");
-            }
-
-            String resignedVcDocument = vcResult.getCredential().toString();
-            log.debug("Successfully re-signed status list credential");
-
-            return resignedVcDocument;
-
+            return addProofAndHandleResult(vcDocument, ErrorConstants.VC_RESIGNATION_FAILED);
         } catch (Exception e) {
             log.error("Error re-signing status list credential", e);
-            throw new CertifyException("VC_RESIGNATION_FAILED");
+            throw new CertifyException(ErrorConstants.VC_RESIGNATION_FAILED);
         }
+    }
+
+    /**
+     * Helper method to add a proof to a VC and handle the result.
+     *
+     * @param vcDocument The VC document as a JSON string.
+     * @param errorConstant The error to throw if signing fails.
+     * @return The signed VC document as a JSON string.
+     * @throws CertifyException if signing fails.
+     */
+    private String addProofAndHandleResult(JSONObject vcDocument, String errorConstant) throws CertifyException {
+        String appId = keyChooser.get(signatureCryptoSuite).getFirst().getFirst();
+        String refId = keyChooser.get(signatureCryptoSuite).getFirst().getLast();
+        Credential cred = credentialFactory.getCredential(VCFormats.LDP_VC)
+                .orElseThrow(() -> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
+
+        VCResult<?> vcResult = cred.addProof(
+                vcDocument.toString(),
+                "",
+                signatureAlgo,
+                appId,
+                refId,
+                didUrl,
+                signatureCryptoSuite
+        );
+
+        if (vcResult.getCredential() == null) {
+            log.error("Failed to add proof to VC - vcResult.getCredential() returned null");
+            throw new CertifyException(errorConstant);
+        }
+        return vcResult.getCredential().toString();
     }
 
     @Transactional
-    public void addCredentialStatus(JSONObject jsonObject, String statusPurpose) {
-        try {
-            log.info("Adding credential status forstatus list integration");
+    public void addCredentialStatus(JSONObject jsonObject, String statusPurpose) throws CertifyException {
+        log.info("Adding credential status for status list integration");
 
-            // Find or create a suitable status list
-            StatusListCredential statusList = findOrCreateStatusList(statusPurpose);
+        StatusListCredential statusList = findOrCreateStatusList(statusPurpose);
+        long assignedIndex = findNextAvailableIndex(statusList.getId());
 
-            // Assign next available index using database approach
-            long assignedIndex = findNextAvailableIndex(statusList.getId());
+        if (assignedIndex == -1) {
+            log.info("Current status list is full, creating a new one");
+            statusList = generateStatusListCredential(statusPurpose);
+            assignedIndex = findNextAvailableIndex(statusList.getId());
 
-            // If the current list is full, create a new one
-            if(assignedIndex == -1) {
-                log.info("Current status list is full, creating a new one");
-                statusList = generateStatusListCredential(statusPurpose);
-                assignedIndex = findNextAvailableIndex(statusList.getId());
-
-                if(assignedIndex == -1) {
-                    log.error("Failed to get available index even from new status list");
-                    throw new CertifyException("STATUS_LIST_INDEX_UNAVAILABLE");
-                }
+            if (assignedIndex == -1) {
+                log.error("Failed to get available index even from new status list");
+                throw new CertifyException("STATUS_LIST_INDEX_UNAVAILABLE");
             }
-            Map<String, Object> indexedAttributes = extractIndexedAttributes(jsonObject);
-
-            // Create credential status object for VC
-            JSONObject credentialStatus = new JSONObject();
-            String statusId = domainUrl + "/v1/certify/credentials/status-list/" + statusList.getId();
-            credentialStatus.put("id", statusId + "#" + assignedIndex);
-            credentialStatus.put("type", "BitstringStatusListEntry");
-            credentialStatus.put("statusPurpose", statusPurpose);
-            credentialStatus.put("statusListIndex", String.valueOf(assignedIndex));
-            credentialStatus.put("statusListCredential", statusId);
-
-            // Add credential status to the VC data
-            jsonObject.put(VCDM2Constants.CREDENTIAL_STATUS, credentialStatus);
-
-            // Extract credential details for ledger storage
-            String credentialType = extractCredentialType(jsonObject);
-
-            // Prepare status details for ledger
-            Map<String, Object> statusDetails = new HashMap<>();
-            statusDetails.put("status_purpose", statusPurpose);
-            statusDetails.put("status_value", false); // Initially not revoked
-            statusDetails.put("status_list_credential_id", statusList.getId());
-            statusDetails.put("status_list_index", assignedIndex);
-            statusDetails.put("cr_dtimes", System.currentTimeMillis());
-
-            // Store in ledger
-            storeLedgerEntry(didUrl, credentialType, statusDetails, indexedAttributes);
-
-            log.info("Successfully added credential status with index {} in status list {} and stored in ledger", assignedIndex, statusList.getId());
-
-        } catch (Exception e) {
-            log.error("Error adding credential status", e);
-            throw new CertifyException("CREDENTIAL_STATUS_ASSIGNMENT_FAILED");
         }
+
+        Map<String, Object> indexedAttributes = extractIndexedAttributes(jsonObject);
+
+        JSONObject credentialStatus = new JSONObject();
+            String statusId = domainUrl + "/v1/certify/credentials/status-list/" + statusList.getId();
+        credentialStatus.put("id", statusId + "#" + assignedIndex);
+        credentialStatus.put("type", "BitstringStatusListEntry");
+        credentialStatus.put("statusPurpose", statusPurpose);
+        credentialStatus.put("statusListIndex", String.valueOf(assignedIndex));
+        credentialStatus.put("statusListCredential", statusId);
+        jsonObject.put(VCDM2Constants.CREDENTIAL_STATUS, credentialStatus);
+
+        String credentialType = extractCredentialType(jsonObject);
+
+        Map<String, Object> statusDetails = new HashMap<>();
+        statusDetails.put("status_purpose", statusPurpose);
+        statusDetails.put("status_value", false); // Initially not revoked
+        statusDetails.put("status_list_credential_id", statusList.getId());
+        statusDetails.put("status_list_index", assignedIndex);
+        statusDetails.put("cr_dtimes", System.currentTimeMillis());
+
+        storeLedgerEntry(didUrl, credentialType, statusDetails, indexedAttributes);
+
+        log.info("Successfully added credential status with index {} in status list {} and stored in ledger", assignedIndex, statusList.getId());
     }
 
-    private static String extractCredentialType(JSONObject jsonObject) {
+    private String extractCredentialType(JSONObject jsonObject) {
         try {
-            if(jsonObject.has(Constants.TYPE)) {
+            if (jsonObject.has(Constants.TYPE)) {
                 Object typeObj = jsonObject.get(Constants.TYPE);
-                if(typeObj instanceof org.json.JSONArray) {
-                    org.json.JSONArray typeArray = (org.json.JSONArray) typeObj;
+                if (typeObj instanceof org.json.JSONArray typeArray) {
                     List<String> types = new ArrayList<>();
-
-                    // Extract all types from the array
-                    for(int i = 0; i < typeArray.length(); i++) {
+                    for (int i = 0; i < typeArray.length(); i++) {
                         String type = typeArray.getString(i);
-                        if(type != null && !type.trim().isEmpty()) {
+                        if (type != null && !type.trim().isEmpty()) {
                             types.add(type.trim());
                         }
                     }
-
-                    if(!types.isEmpty()) {
-                        // Sort the types and join with comma
+                    if (!types.isEmpty()) {
                         Collections.sort(types);
                         return String.join(",", types);
                     }
                 } else {
-                    // Single type as string
                     String singleType = typeObj.toString().trim();
-                    if(!singleType.isEmpty()) {
+                    if (!singleType.isEmpty()) {
                         return singleType;
                     }
                 }
@@ -460,87 +382,78 @@ public class StatusListCredentialService {
         }
     }
 
-    // Enhanced version with better complex field support
+    /**
+     * Extracts attributes from a JSON object based on configured mappings.
+     *
+     * @param jsonObject The source JSON object.
+     * @return A map of extracted attributes.
+     */
     public Map<String, Object> extractIndexedAttributes(JSONObject jsonObject) {
         Configuration jsonPathConfig = Configuration.defaultConfiguration().addOptions(Option.SUPPRESS_EXCEPTIONS);
         Map<String, Object> indexedAttributes = new HashMap<>();
 
-        if(jsonObject == null) {
+        if (jsonObject == null) {
             return indexedAttributes;
         }
 
         Map<String, String> indexedMappings = indexedAttributesConfig.getIndexedMappings();
-        if(indexedMappings.isEmpty()) {
+        if (indexedMappings.isEmpty()) {
             log.info("No indexed mappings configured, returning empty attributes");
             return indexedAttributes;
         }
+
         log.info("Indexed Mapping Found: {}", indexedMappings);
 
-        try {
-            // Convert credential subject to JSON string forJsonPath processing
-            String sourceJsonString = jsonObject.toString();
-            for(Map.Entry<String, String> entry : indexedMappings.entrySet()) {
-                String targetKey = entry.getKey();
-                String pathsConfig = entry.getValue();
+        String sourceJsonString = jsonObject.toString();
+        for (Map.Entry<String, String> entry : indexedMappings.entrySet()) {
+            String targetKey = entry.getKey();
+            String pathsConfig = entry.getValue();
+            String[] paths = pathsConfig.split("\\|");
+            Object extractedValue = null;
 
-                // Support multiple paths separated by pipe (|) forfallback
-                String[] paths = pathsConfig.split("\\|");
-                Object extractedValue = null;
-
-                for(String jsonPath : paths) {
-                    jsonPath = jsonPath.trim();
-                    try {
-                        // Use JsonPath to read the value from the source JSON
-                        extractedValue = JsonPath.using(jsonPathConfig)
-                                .parse(sourceJsonString)
-                                .read(jsonPath);
-                    } catch (Exception e) {
-                        log.warn("Error extracting value forpath '{}' and key '{}': {}",
-                                jsonPath, targetKey, e.getMessage());
+            for (String jsonPath : paths) {
+                jsonPath = jsonPath.trim();
+                try {
+                    extractedValue = JsonPath.using(jsonPathConfig).parse(sourceJsonString).read(jsonPath);
+                    if (extractedValue != null) {
+                        break; // Found a value, no need to check other fallback paths
                     }
-                }
-                // Handle different types of extracted values
-                if(extractedValue != null) {
-                    Object processedValue = processExtractedIndexedAttributes(extractedValue);
-                    indexedAttributes.put(targetKey, processedValue);
-                    log.info("Added processed value '{}' to indexed attributes under key '{}'",
-                            processedValue, targetKey);
-                } else {
-                    log.info("No value extracted forkey '{}'; skipping indexing.", targetKey);
+                } catch (Exception e) {
+                    log.warn("Error extracting value for path '{}' and key '{}': {}", jsonPath, targetKey, e.getMessage());
                 }
             }
-        } catch (Exception e) {
-            log.error("Error processing credential subject forindexed attributes: {}", e.getMessage(), e);
+
+            if (extractedValue != null) {
+                Object processedValue = processExtractedIndexedAttributes(extractedValue);
+                if (processedValue != null) {
+                    indexedAttributes.put(targetKey, processedValue);
+                    log.info("Added processed value '{}' to indexed attributes under key '{}'", processedValue, targetKey);
+                }
+            } else {
+                log.info("No value extracted for key '{}'; skipping indexing.", targetKey);
+            }
         }
         return indexedAttributes;
     }
 
     /**
-     * Process extracted values to handle complex types appropriately
+     * Processes extracted values to handle complex types appropriately.
+     *
+     * @param extractedValue The value extracted from the JSON.
+     * @return The processed value.
      */
     private Object processExtractedIndexedAttributes(Object extractedValue) {
-        if(extractedValue == null) {
+        if (extractedValue == null) {
             return null;
         }
-
-        if(extractedValue instanceof List) {
-            List<?> list = (List<?>) extractedValue;
-            if(list.isEmpty()) {
+        if (extractedValue instanceof List<?> list) {
+            if (list.isEmpty()) {
                 return null;
             }
-            if(list.size() == 1) {
-                return list.get(0);
-            }
-            return extractedValue; // Keep as array
-        }
-        else if(extractedValue instanceof Map) {
-            return extractedValue;
-        }
-        else if(extractedValue instanceof String) {
-            String stringValue = (String) extractedValue;
+            return list.size() == 1 ? list.get(0) : extractedValue;
+        } else if (extractedValue instanceof String stringValue) {
             return stringValue.trim().isEmpty() ? null : stringValue;
         }
-
         return extractedValue;
     }
 
@@ -548,14 +461,12 @@ public class StatusListCredentialService {
     public void storeLedgerEntry(String issuerId, String credentialType, Map<String, Object> statusDetails, Map<String, Object> indexedAttributes) {
         try {
             Ledger ledger = new Ledger();
-            String credentialId = UUID.randomUUID().toString();
-            ledger.setCredentialId(credentialId);
+            ledger.setCredentialId(UUID.randomUUID().toString());
             ledger.setIssuerId(issuerId);
             ledger.setIssueDate(OffsetDateTime.now());
             ledger.setCredentialType(credentialType);
             ledger.setIndexedAttributes(indexedAttributes);
 
-            // Store status details as array
             List<Map<String, Object>> statusDetailsList = new ArrayList<>();
             statusDetailsList.add(statusDetails);
             ledger.setCredentialStatusDetails(statusDetailsList);
