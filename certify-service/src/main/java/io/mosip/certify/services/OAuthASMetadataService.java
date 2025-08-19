@@ -38,11 +38,8 @@ public class OAuthASMetadataService {
     @Value("${mosip.certify.oauth.token-endpoint-auth-methods-supported}")
     private String tokenEndpointAuthMethodsSupported;
 
-    @Value("${mosip.certify.oauth.introspection-endpoint}")
-    private String introspectionEndpoint;
-
-    @Value("${mosip.certify.oauth.authorization-challenge-endpoint}")
-    private String authorizationChallengeEndpoint;
+    @Value("${mosip.certify.oauth.interactive-authorization-endpoint}")
+    private String interactiveAuthorizationEndpoint;
 
     /**
      * Builds and returns OAuth 2.0 Authorization Server Metadata
@@ -59,8 +56,7 @@ public class OAuthASMetadataService {
         metadata.setGrantTypesSupported(parseCommaSeparatedValues(grantTypesSupported));
         metadata.setResponseTypesSupported(parseCommaSeparatedValues(responseTypesSupported));
         metadata.setTokenEndpointAuthMethodsSupported(parseCommaSeparatedValues(tokenEndpointAuthMethodsSupported));
-        metadata.setIntrospectionEndpoint(introspectionEndpoint);
-        metadata.setAuthorizationChallengeEndpoint(authorizationChallengeEndpoint);
+        metadata.setInteractiveAuthorizationEndpoint(interactiveAuthorizationEndpoint);
 
         log.debug("OAuth AS metadata built successfully for issuer: {}", issuer);
         return metadata;

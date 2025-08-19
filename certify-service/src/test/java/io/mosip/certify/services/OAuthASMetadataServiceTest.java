@@ -25,8 +25,7 @@ public class OAuthASMetadataServiceTest {
     private static final String TEST_RESPONSE_TYPES = "code";
     private static final String TEST_GRANT_TYPES = "authorization_code,pre-authorized_code";
     private static final String TEST_TOKEN_ENDPOINT_AUTH_METHODS = "client_secret_basic,client_secret_post,private_key_jwt";
-    private static final String TEST_INTROSPECTION_ENDPOINT = "http://localhost:8090/v1/certify/oauth/introspect";
-    private static final String TEST_AUTHORIZATION_CHALLENGE_ENDPOINT = "http://localhost:8090/v1/certify/oauth/challenge";
+    private static final String TEST_INTERACTIVE_AUTHORIZATION_ENDPOINT = "http://localhost:8090/v1/certify/oauth/iar";
 
     @Before
     public void setup() {
@@ -37,8 +36,7 @@ public class OAuthASMetadataServiceTest {
         ReflectionTestUtils.setField(oAuthASMetadataService, "responseTypesSupported", TEST_RESPONSE_TYPES);
         ReflectionTestUtils.setField(oAuthASMetadataService, "grantTypesSupported", TEST_GRANT_TYPES);
         ReflectionTestUtils.setField(oAuthASMetadataService, "tokenEndpointAuthMethodsSupported", TEST_TOKEN_ENDPOINT_AUTH_METHODS);
-        ReflectionTestUtils.setField(oAuthASMetadataService, "introspectionEndpoint", TEST_INTROSPECTION_ENDPOINT);
-        ReflectionTestUtils.setField(oAuthASMetadataService, "authorizationChallengeEndpoint", TEST_AUTHORIZATION_CHALLENGE_ENDPOINT);
+        ReflectionTestUtils.setField(oAuthASMetadataService, "interactiveAuthorizationEndpoint", TEST_INTERACTIVE_AUTHORIZATION_ENDPOINT);
     }
 
     @Test
@@ -51,8 +49,7 @@ public class OAuthASMetadataServiceTest {
         assertEquals("Issuer should match", TEST_ISSUER, result.getIssuer());
         assertEquals("Token endpoint should match", TEST_TOKEN_ENDPOINT, result.getTokenEndpoint());
         assertEquals("JWK set URI should match", TEST_JWK_SET_URI, result.getJwksUri());
-        assertEquals("Introspection endpoint should match", TEST_INTROSPECTION_ENDPOINT, result.getIntrospectionEndpoint());
-        assertEquals("Authorization challenge endpoint should match", TEST_AUTHORIZATION_CHALLENGE_ENDPOINT, result.getAuthorizationChallengeEndpoint());
+        assertEquals("Interactive authorization endpoint should match", TEST_INTERACTIVE_AUTHORIZATION_ENDPOINT, result.getInteractiveAuthorizationEndpoint());
     }
 
     @Test
