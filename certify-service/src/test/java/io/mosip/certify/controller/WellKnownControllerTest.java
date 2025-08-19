@@ -1,13 +1,13 @@
 package io.mosip.certify.controller;
 
 import io.mosip.certify.core.dto.CredentialIssuerMetadataDTO;
-import io.mosip.certify.core.dto.OAuthASMetadataDTO;
+import io.mosip.certify.core.dto.OAuthAuthorizationServerMetadataDTO;
 import io.mosip.certify.core.dto.ParsedAccessToken;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
 import io.mosip.certify.core.spi.VCIssuanceService;
-import io.mosip.certify.services.OAuthASMetadataService;
+import io.mosip.certify.services.OAuthAuthorizationServerMetadataService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -37,7 +37,7 @@ class WellKnownControllerTest {
     private VCIssuanceService vcIssuanceService;
 
     @MockBean
-    private OAuthASMetadataService oAuthASMetadataService;
+    private OAuthAuthorizationServerMetadataService oAuthAuthorizationServerMetadataService;
 
     @MockBean
     private ParsedAccessToken parsedAccessToken;
@@ -102,9 +102,9 @@ class WellKnownControllerTest {
     }
 
     @Test
-    void getOAuthASMetadata_success() throws Exception {
+    void getOAuthAuthorizationServerMetadata_success() throws Exception {
         // Arrange
-        OAuthASMetadataDTO mockMetadata = new OAuthASMetadataDTO();
+        OAuthAuthorizationServerMetadataDTO mockMetadata = new OAuthAuthorizationServerMetadataDTO();
         mockMetadata.setIssuer("http://localhost:8090/v1/certify");
         mockMetadata.setTokenEndpoint("http://localhost:8090/v1/certify/oauth/token");
         mockMetadata.setJwksUri("http://localhost:8090/v1/certify/.well-known/jwks.json");
@@ -113,7 +113,7 @@ class WellKnownControllerTest {
         mockMetadata.setTokenEndpointAuthMethodsSupported(Arrays.asList("client_secret_basic", "client_secret_post"));
         mockMetadata.setInteractiveAuthorizationEndpoint("http://localhost:8090/v1/certify/oauth/iar");
 
-        when(oAuthASMetadataService.getOAuthASMetadata()).thenReturn(mockMetadata);
+        when(oAuthAuthorizationServerMetadataService.getOAuthAuthorizationServerMetadata()).thenReturn(mockMetadata);
 
         // Act & Assert
         mockMvc.perform(get("/.well-known/oauth-authorization-server"))
@@ -129,6 +129,6 @@ class WellKnownControllerTest {
                 .andExpect(jsonPath("$.token_endpoint_auth_methods_supported[1]").value("client_secret_post"))
                 .andExpect(jsonPath("$.interactive_authorization_endpoint").value("http://localhost:8090/v1/certify/oauth/iar"));
 
-        verify(oAuthASMetadataService, times(1)).getOAuthASMetadata();
+        verify(oAuthAuthorizationServerMetadataService, times(1)).getOAuthAuthorizationServerMetadata();
     }
 }
