@@ -16,4 +16,6 @@ public class InjiCertifyConstants extends GlobalConstants {
 	
 	public static final String ALL_ONE_OTP_STRING = "111111";
 	
+	public static final String INDEXED_ATTRIBUTES_EQUALS_STRING = "indexedAttributesEquals";
+	
 }

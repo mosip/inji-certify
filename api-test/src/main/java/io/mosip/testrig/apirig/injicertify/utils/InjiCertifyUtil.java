@@ -1276,10 +1276,10 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			Map<String, Object> requestMap = mapper.readValue(json, Map.class);
 
 			// Process only if key exists
-			if (requestMap.containsKey("indexedAttributesEquals")) {
-				Object raw = requestMap.get("indexedAttributesEquals");
+			if (requestMap.containsKey(InjiCertifyConstants.INDEXED_ATTRIBUTES_EQUALS_STRING)) {
+				Object raw = requestMap.get(InjiCertifyConstants.INDEXED_ATTRIBUTES_EQUALS_STRING);
 
-				requestMap.put("indexedAttributesEquals", convertToMapIfJsonObject(raw));
+				requestMap.put(InjiCertifyConstants.INDEXED_ATTRIBUTES_EQUALS_STRING, convertToMapIfJsonObject(raw));
 			}
 
 			// Convert back to JSON string
