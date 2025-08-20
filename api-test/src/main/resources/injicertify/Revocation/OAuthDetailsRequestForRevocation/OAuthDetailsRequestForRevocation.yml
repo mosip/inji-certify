@@ -1,16 +1,16 @@
-OAuthDetailsRequestForDataIntegrity:
-   InjiCertify_ESignet_OAuthDetailsRequest_For_landregistry_Cred1_uin_all_Valid_Smoke_sid:
+OAuthDetailsRequestForRevocation:
+   InjiCertify_ESignet_OAuthDetailsRequest_For_landregistry_Cred1_uin_all_Valid_Smoke_For_Revocation_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
       uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest
       description: OAuth details request for data integrity for Cred1
       role: resident
       restMethod: post
       checkErrorsOnlyInResponse: true
-      inputTemplate: injicertify/DataIntegrityProof/OAuthDetailsRequestForDataIntegrity/OAuthDetailsRequestForDataIntegrity
-      outputTemplate: injicertify/DataIntegrityProof/OAuthDetailsRequestForDataIntegrity/OAuthDetailsRequestForDataIntegrityResult
+      inputTemplate: injicertify/Revocation/OAuthDetailsRequestForRevocation/OAuthDetailsRequestForRevocation
+      outputTemplate: injicertify/Revocation/OAuthDetailsRequestForRevocation/OAuthDetailsRequestForRevocationResult
       input: '{
       	"requestTime": "$TIMESTAMP$",
-      	"clientId": "$ID:ESignet_CreateOIDCClientV2_For_LandRegistry_EccR1_all_Valid_Smoke_sid_clientId$",
+      	"clientId": "$ID:ESignet_CreateOIDCClientV2_For_LandRegistry2_all_Valid_Smoke_sid_clientId$",
       	"scope": "land_statement_vc_ldp",
       	"responseType": "code",
       	"redirectUri": "$IDPREDIRECTURI$",
