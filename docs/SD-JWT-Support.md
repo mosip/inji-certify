@@ -29,6 +29,43 @@ Add the following properties to your `application.yml` or `application.propertie
 |`mosip.kernel.keymanager.signature.kid.prepend`| The prefix to prepend to the `kid` field in SD-JWT credentials. This is useful for ensuring unique key identifiers across different systems. Default value will be blank. | `#`, `<DOMAIN_NAME>#` or `PAYLOAD_ISSUER`                          |
 ---
 
+## 3. Sequence Diagram for SD-JWT Credential Issuance
+
+```mermaid
+sequenceDiagram
+    participant Client as 🌐 Client
+    box Inji Certify #E6F3FF
+    participant CredentialAPI as 🔗 Credential API
+    participant CredentialConfiguration as ⚙️ Credential Configuration
+    participant DataProviderPlugin as 🔌 Data Provider Plugin
+    participant VelocityTemplatingEngine as ⚙️ Velocity Templating Engine
+    participant SDJWTCredential as 🔐 SDJWTCredential
+    end
+
+    Client->>CredentialAPI: Request VC Issuance (format: vc+sd-jwt)
+
+    CredentialAPI->>CredentialConfiguration: Validate VC request & get template
+    CredentialConfiguration-->>CredentialAPI: Return validation success & template
+
+    CredentialAPI->>DataProviderPlugin: Request data
+    DataProviderPlugin-->>CredentialAPI: Return raw data
+
+    CredentialAPI->>VelocityTemplatingEngine: Format raw data with template
+    VelocityTemplatingEngine-->>CredentialAPI: Return formatted credential data
+
+    CredentialAPI->>SDJWTCredential: Instantiate with formatted data
+
+    CredentialAPI->>SDJWTCredential: createCredential()
+    note right of SDJWTCredential: Generates the SD-JWT structure with disclosures.
+    SDJWTCredential-->>CredentialAPI: Return unsigned SD-JWT credential
+
+    CredentialAPI->>SDJWTCredential: addProof(unsigned credential)
+    note right of SDJWTCredential: Signs the JWT and adds the final proof alongwith disclosures.
+    SDJWTCredential-->>CredentialAPI: Return signed vc+sd-jwt
+
+    CredentialAPI-->>Client: Return final vc+sd-jwt
+```
+
 ## 3. Configuring `kid` and DID Binding
 
 ### `kid` (Key ID)

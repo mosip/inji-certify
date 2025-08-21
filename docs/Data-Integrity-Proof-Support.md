@@ -21,6 +21,60 @@ Supported signature algorithms for these crypto suites include:
 
 > **Note:** The list of supported algorithms may be extended in future releases. Always refer to the latest [API documentation](https://mosip.stoplight.io/docs/inji-certify) for updates.
 
+## Sequence Diagram for credential issuance with Data Integrity Proof
+
+```mermaid
+sequenceDiagram
+    participant Client as 🌐 Client
+    box Inji Certify #E6F3FF
+    participant CredentialAPI as 🔗 Credential API
+    participant CredentialConfiguration as ⚙️ Credential Configuration
+    participant DataProviderPlugin as 🔌 Data Provider Plugin
+    participant VelocityTemplatingEngine as ⚙️ Velocity Templating Engine
+    participant W3CJsonLdCredential as 🔐 W3CJsonLdCredential
+    participant CertifyKeyChooser as 🔑 CertifyKeyChooser
+    participant DanubetechDataIntegrity as 🛡️ Danubetech Lib
+    participant CertifyProofGenerators as 📝 Proof Generators
+    participant KeyManager as ✍️ KeyManager
+    end
+
+    Client->>CredentialAPI: Request VC Issuance (format: ldp_vc)
+
+    CredentialAPI->>CredentialConfiguration: Validate request & get config
+    CredentialConfiguration-->>CredentialAPI: Return success & config (with signatureCryptosuite)
+
+    CredentialAPI->>DataProviderPlugin: Request data
+    DataProviderPlugin-->>CredentialAPI: Return raw data
+
+    CredentialAPI->>VelocityTemplatingEngine: Format raw data with template
+    VelocityTemplatingEngine-->>CredentialAPI: Return unsigned credential data
+
+    CredentialAPI->>W3CJsonLdCredential: Instantiate with unsigned data
+
+    CredentialAPI->>W3CJsonLdCredential: addProof()
+
+    W3CJsonLdCredential->>CertifyKeyChooser: Get proof object
+    CertifyKeyChooser->>CredentialConfiguration: Read signatureCryptosuite
+    CredentialConfiguration-->>CertifyKeyChooser: Return signatureCryptosuite value
+
+    alt signatureCryptosuite indicates Data Integrity
+        CertifyKeyChooser->>DanubetechDataIntegrity: Generate DataIntegrityProof
+        DanubetechDataIntegrity->>KeyManager: Sign credential data
+        KeyManager-->>DanubetechDataIntegrity: Return signature
+        DanubetechDataIntegrity-->>CertifyKeyChooser: Return DataIntegrityProof object
+    else Normal Proof
+        CertifyKeyChooser->>CertifyProofGenerators: Generate JsonLdProof
+        CertifyProofGenerators->>KeyManager: Sign credential data
+        KeyManager-->>CertifyProofGenerators: Return signature
+        CertifyProofGenerators-->>CertifyKeyChooser: Return JsonLdProof object
+    end
+
+    CertifyKeyChooser-->>W3CJsonLdCredential: Return final proof object
+    W3CJsonLdCredential-->>CredentialAPI: Return signed VC with proof
+
+    CredentialAPI-->>Client: Return final ldp_vc
+```
+
 ## Usage Notes
 
 - The `signatureCryptoSuite` property must be set to one of supported Data Integrity proof algorithms in the credential configuration to use this suite.

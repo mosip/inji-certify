@@ -76,11 +76,86 @@ A status list credential is a special Verifiable Credential with this structure:
       }
       ```
     - Saves the credential and its status details in the ledger.
-
+- Sequence diagram for credential issuance with status:
+    ```mermaid
+    sequenceDiagram
+        participant Client as 🌐 Client
+        box Inji Certify #E6F3FF
+        participant CredentialAPI as 🔗 Credential API
+        participant CredentialConfiguration as ⚙️ Credential Configuration
+        participant DataProviderPlugin as 🔌 Data Provider Plugin
+        participant VelocityTemplatingEngine as ⚙️ Velocity Templating Engine
+        participant W3CJsonLdCredential as 🔐 W3CJsonLdCredential
+        participant StatusListCredentialService as 📜 StatusListCredentialService
+        participant Database as 🗄️ Database
+        end
+    
+        Client->>CredentialAPI: Request VC Issuance (format: ldp_vc)
+    
+        CredentialAPI->>CredentialConfiguration: Validate request & get config
+        CredentialConfiguration-->>CredentialAPI: Return success & config
+    
+        CredentialAPI->>DataProviderPlugin: Request data
+        DataProviderPlugin-->>CredentialAPI: Return raw data
+    
+        CredentialAPI->>VelocityTemplatingEngine: Format raw data with template
+        VelocityTemplatingEngine-->>CredentialAPI: Return unsigned VC data
+    
+        CredentialAPI->>W3CJsonLdCredential: Instantiate with unsigned data
+        W3CJsonLdCredential-->>CredentialAPI: Return unsigned VC object
+    
+        opt W3C Data Model 2.0 Context is present
+            CredentialAPI->>StatusListCredentialService: addCredentialStatus(unsigned VC)
+            
+            note right of StatusListCredentialService: Generate and sign the StatusList VC
+            StatusListCredentialService->>StatusListCredentialService: Generate BitStringStatusList VC
+            StatusListCredentialService->>W3CJsonLdCredential: Sign StatusList VC
+            W3CJsonLdCredential-->>StatusListCredentialService: Return signed StatusList VC
+            
+            StatusListCredentialService->>Database: Save signed StatusList VC in Status List Credential
+            Database-->>StatusListCredentialService: Confirm save
+            
+            note right of StatusListCredentialService: Update original VC with status
+            StatusListCredentialService->>StatusListCredentialService: Add credentialStatus property to original VC
+            StatusListCredentialService->>Database: Save status details to Ledger
+            Database-->>StatusListCredentialService: Confirm save
+            
+            StatusListCredentialService-->>CredentialAPI: Return updated unsigned VC
+        end
+    
+        CredentialAPI->>W3CJsonLdCredential: addProof(final unsigned VC)
+        W3CJsonLdCredential-->>CredentialAPI: Return signed VC
+    
+        CredentialAPI-->>Client: Return final signed ldp_vc
+    ```
 ### 2. Retrieving a Status List
 
 - You can fetch a status list credential as JSON using the API endpoint:  
   `/credentials/status-list/{id}`
+- Sequence diagram for status list retrieval:
+  ```mermaid
+  sequenceDiagram
+      participant Client as 🌐 Client
+      box Inji Certify #E6F3FF
+      participant Controller as 🔗 CredentialStatusController
+      participant Service as ⚙️ StatusListCredentialService
+      participant Repository as 🗄️ Repository/Database
+      end
+    
+      Client->>Controller: GET /credentials/status-list/{id}
+      Controller->>Service: getStatusListCredential(id)
+      Service->>Repository: findById(id)
+      Repository-->>Service: Optional<StatusListCredential>
+        
+      alt Status List Found
+          Service->>Service: Parse VC Document
+          Service-->>Controller: VC Document (JSON)
+          Controller-->>Client: 200 OK
+      else Status List Not Found
+          Service-->>Controller: CertifyException
+          Controller-->>Client: 404 Not Found
+      end
+  ```   
 - You can fetch the ledger entry for the credential using `/ledger-search` endpoint to get the status information and other details. Indexed attributes can be used to filter the search results.
   - Sample request of ledger search : 
     ```json
@@ -111,6 +186,40 @@ A status list credential is a special Verifiable Credential with this structure:
         }
       ]
       ```
+- Sequence diagram for Ledger Search :  
+```mermaid
+sequenceDiagram
+    participant Client as 🌐 Client
+    box Inji Certify #E6F3FF
+    participant Controller as 🔗 CredentialLedgerController
+    participant Service as ⚙️ CredentialLedgerServiceImpl
+    participant Repository as 🗄️ LedgerRepository
+    end
+    participant Database as 💾 Database
+
+    Client->>Controller: POST /ledger-search
+    Note over Client,Controller: CredentialLedgerSearchRequest with indexed attributes
+    
+    Controller->>Service: searchCredentialLedger(request)
+    
+    Service->>Service: validateSearchRequest(request)
+    Note over Service: Check if indexed attributes are valid and not empty
+    
+    Service->>Repository: findBySearchRequest(request)
+    Repository->>Database: Query ledger table with search criteria
+    Database-->>Repository: List<Ledger> records
+    Repository-->>Service: List<Ledger> records
+    
+    alt No Records Found
+        Service-->>Controller: Collections.emptyList()
+        Controller-->>Client: 204 No Content
+    else Records Found
+        Service->>Service: mapToSearchResponse(records)
+        Note over Service: Map Ledger entities to CredentialStatusResponse DTOs
+        Service-->>Controller: List<CredentialStatusResponse>
+        Controller-->>Client: 200 OK with credential status list
+    end
+```
 
 ### 3. Updating Credential Status
 
@@ -121,6 +230,45 @@ A status list credential is a special Verifiable Credential with this structure:
     - The credential status details (purpose, status list, index)
     - The new status (true for revoked/suspended, false for active)
 - The system records this change for audit and updates the ledger.
+
+- Sequence diagram for updating credential status:
+
+```mermaid
+sequenceDiagram
+    participant Client as 🌐 Client
+    box Inji Certify #E6F3FF
+    participant Controller as 🔗 CredentialStatusController
+    participant Service as ⚙️ CredentialStatusServiceImpl
+    participant LedgerRepo as 🗄️ LedgerRepository
+    participant StatusRepo as 🗄️ CredentialStatusTransactionRepository
+    end
+
+    Client->>Controller: POST /credentials/status
+    Note over Client,Controller: UpdateCredentialStatusRequest with credential ID and status details
+    
+    Controller->>Service: updateCredentialStatus(request)
+    
+    Service->>LedgerRepo: findByCredentialId(credentialId)
+    LedgerRepo-->>Service: Optional<Ledger>
+    
+    alt Credential Found
+        Service->>Service: Create CredentialStatusTransaction
+        Note over Service: Set status purpose, value, list credential ID, and index
+        
+        Service->>StatusRepo: save(transaction)
+        StatusRepo-->>Service: CredentialStatusTransaction with timestamp
+        
+        Service->>Service: Map to CredentialStatusResponse
+        Note over Service: Include ledger info and status details
+        
+        Service-->>Controller: CredentialStatusResponse
+        Controller-->>Client: 200 OK with status response
+        
+    else Credential Not Found
+        Service-->>Controller: ResponseStatusException (404)
+        Controller-->>Client: 404 Not Found
+    end
+```
 
 ---
 
