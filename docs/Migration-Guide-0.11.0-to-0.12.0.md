@@ -32,10 +32,10 @@ This guide details the steps required to manually migrate your Inji Certify depl
    ```
    - This script will:
      - Apply database schema and data changes required for 0.12.0
-   - Follow on-screen prompts and warnings.
-5. On successful completion, the script will log the upgrade status and any errors encountered.
+   - Follow on-screen prompts and warnings. 
+   - On successful completion, the script will log the upgrade status and any errors encountered.
 
-6. To rollback the upgrade, update the `ACTION` property in your `upgrade.properties` file to `rollback` and re-run the script with the properties file as an argument:
+5. To rollback the upgrade, update the `ACTION` property in your `upgrade.properties` file to `rollback` and re-run the script with the properties file as an argument:
    ```properties
    ACTION=rollback
    MOSIP_DB_NAME=inji_certify
@@ -51,9 +51,8 @@ This guide details the steps required to manually migrate your Inji Certify depl
    ```sh
    ./upgrade.sh upgrade.properties
    ```
-   - This will attempt to revert the database changes applied during the upgrade.
-
-7. On successful completion, the script will log the rollback status and any errors encountered.
+   - This will attempt to revert the database changes applied during the upgrade. 
+   - On successful completion, the script will log the rollback status and any errors encountered.
 
 ---
 
@@ -87,6 +86,22 @@ The following properties have been modified in 0.12.0. Please update their value
 |--------------------------------------|-------------|
 | mosip.certify.cache.names            | List of cache names used in Inji Certify. |
 | mosip.certify.cache.expire-in-seconds| Expiry time (in seconds) for cache entries. |
+
+### Deprecated Configuration Properties
+
+The following properties have been deprecated and moved to the database:
+
+| Property Name                                         | Migration Required | Description |
+|------------------------------------------------------|-------------------|-------------|
+| mosip.certify.data-provider-plugin.issuer.vc-sign-algo | Yes - Database Migration | This property has been moved to the `credential_config` table as the `signature_crypto_suite` column. Use the PUT API of `/credential-configurations/{id}` endpoint to update this value for existing credential configurations. |
+
+The following properties have been completely deprecated and can be removed from your configuration:
+
+| Property Name                                         | Action Required | Description |
+|------------------------------------------------------|----------------|-------------|
+| mosip.certify.data-provider-plugin.issuer-public-key-uri | Remove from config | Property is no longer supported and should be removed. |
+| mosip.certify.data-provider-plugin.issuer-uri       | Remove from config | Property is no longer supported and should be removed. |
+| mosip.certify.supported.jwt-proof-alg               | Remove from config | Property is no longer supported and should be removed. |
 
 > **Note:** For all new and modified properties, refer to the [certify-default.properties](https://github.com/mosip/inji-config/blob/master/certify-default.properties) file for sample values. If a property is missing, check other use-case specific certify properties files in the [inji-config repository](https://github.com/mosip/inji-config/tree/master).
 
