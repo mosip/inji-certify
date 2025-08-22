@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import io.mosip.certify.utils.MDocUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -29,7 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class MDocCredential extends Credential {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private ObjectMapper objectMapper;
 
     public MDocCredential(VCFormatter vcFormatter, SignatureService signatureService) {
         super(vcFormatter, signatureService);
