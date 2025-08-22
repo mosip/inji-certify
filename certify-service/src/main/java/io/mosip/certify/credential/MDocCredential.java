@@ -9,6 +9,7 @@ package io.mosip.certify.credential;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.utils.MDocUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -57,7 +58,7 @@ public class MDocCredential extends Credential {
 
         } catch (Exception e) {
             log.error("Error creating mDoc credential: {}", e.getMessage(), e);
-            return "";
+            throw new CertifyException("MDOC_CREATION_FAILED", "Failed to create mDoc credential", e);
         }
     }
 
