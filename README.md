@@ -27,20 +27,20 @@ Inji Certify enables issuers to generate, sign and issue a verifiable credential
 
 In particular, certify focuses on the issuer’s role in and provides the following features from OpenID4VC (draft 13):
 
-| Feature                                                   | Coverage |
-| :-------------------------------------------------------- |:---------|
-| Issuer Metadata                                           | ✅        |
-| Support token endpoint                                    | ✅        |
-| Credential Issuance                                       | ✅        |
-| Credential Binding with did:.. keys                       | ✅        |
-| Credential Binding with jwt proof                         | ✅        |
-| Support for JSON\_LD VC Format                            | ✅        |
-| Support for SD\_JWT VC Format with support only for vc+sd\_jwt | ✅        |
-| Support for mDoc/mDL VC Format                            | ❌        |
-| Presentation During Issuance                              | ❌        |
-| Credential Offer with Pre Authorisation Code Flow         | ❌        |
-| Credential Offer with Authorisation Code Flow             | ❌        |
-| Credential Binding with cwt proof                         | ❌        |
+| Feature                                                                 | Coverage |
+|:------------------------------------------------------------------------|:---------|
+| Issuer Metadata                                                         | ✅        |
+| Support for access token validation                                     | ✅        |
+| Credential Issuance                                                     | ✅        |
+| Credential Binding with did:.. keys                                     | ✅        |
+| Credential Binding with jwt proof                                       | ✅        |
+| Support for JSON\_LD VC Format                                          | ✅        |
+| Support for IETF SD\_JWT VC Format with support only for vc+sd\_jwt     | ✅        |
+| Revocation support for JSON\_LD                                         | ✅        |
+| Support for mDoc/mDL VC Format                                          | ❌        |
+| Credential Offer with Pre Authorisation Code Flow                       | ❌        |
+| Credential Offer with Authorisation Code Flow                           | ❌        |
+| Credential Binding with cwt proof                                       | ❌        |
 
 To know more about features available in certify please refer to [this documentation](https://docs.inji.io/inji-certify/overview/features).
 
@@ -121,9 +121,12 @@ mosip.certify.identifier=${mosip.certify.domain.url}
 mosip.certify.domain.url=https://injicertify-mock.collab.mosip.net
 ```
 
-* OIDC scopes relevant to VC issuance
+**Note** : OIDC scopes relevant to VC issuance.
 
-### Support for VC Issuance with mDoc/mDL format
+To know more about this configuration please refer to [this link](https://docs.inji.io/inji-certify/build-and-deploy/local-setup#configuring-certify-with-keycloak-authorization-server).
+
+
+### Enable VC Issuance with mock mDoc/mDL format
 
 To enable certify to issue VC with mDoc/mDL (mock is supported currently) few properties needed to be updated. Refer [here](https://github.com/mosip/digital-credential-plugins/tree/master/mock-certify-plugin#mdocmockvcissuanceplugin) to know about the properties.
 
@@ -143,6 +146,8 @@ Please refer to step-by-step [migration guide](./docs/Migration-Guide-0.11.0-to-
 * Credential Revocation APIs & discovery mechanisms (SD-JWT, mDoc/mDL)
 * Presentation during Issuance
 * Pre authorised code & credential offer
+
+**Note** : Currently, mDoc/mDL support is available only in mock mode. A full implementation will be provided in a future release.
 
 ## Documentation
 
