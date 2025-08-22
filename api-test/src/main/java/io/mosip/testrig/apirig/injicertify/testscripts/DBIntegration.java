@@ -1,6 +1,8 @@
 package io.mosip.testrig.apirig.injicertify.testscripts;
 
 import java.lang.reflect.Field;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -23,12 +25,14 @@ import io.mosip.testrig.apirig.injicertify.utils.InjiCertifyUtil;
 import io.mosip.testrig.apirig.testrunner.HealthChecker;
 import io.mosip.testrig.apirig.utils.AdminTestException;
 import io.mosip.testrig.apirig.utils.GlobalConstants;
+import io.mosip.testrig.apirig.utils.GlobalMethods;
 import io.mosip.testrig.apirig.utils.SecurityXSSException;
 import io.restassured.response.Response;
 
 public class DBIntegration extends InjiCertifyUtil implements ITest {
 	private static final Logger logger = Logger.getLogger(DBIntegration.class);
 	protected String testCaseName = "";
+	public String idKeyName = null;
 	public Response response = null;
 
 	/**
@@ -56,6 +60,7 @@ public class DBIntegration extends InjiCertifyUtil implements ITest {
 	@DataProvider(name = "testcaselist")
 	public Object[] getTestCaseList(ITestContext context) {
 		String ymlFile = context.getCurrentXmlTest().getLocalParameters().get("ymlFile");
+		idKeyName = context.getCurrentXmlTest().getLocalParameters().get("idKeyName");
 		logger.info("Started executing yml: " + ymlFile);
 		return getYmlTestData(ymlFile);
 	}
@@ -66,10 +71,10 @@ public class DBIntegration extends InjiCertifyUtil implements ITest {
 	 * @param objTestParameters
 	 * @param testScenario
 	 * @param testcaseName
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	@Test(dataProvider = "testcaselist")
-	public void test(TestCaseDTO testCaseDTO) throws Exception, SecurityXSSException{
+	public void test(TestCaseDTO testCaseDTO) throws Exception, SecurityXSSException {
 		testCaseName = testCaseDTO.getTestCaseName();
 		testCaseDTO = InjiCertifyUtil.isTestCaseValidForExecution(testCaseDTO);
 		if (HealthChecker.signalTerminateExecution) {
@@ -86,11 +91,33 @@ public class DBIntegration extends InjiCertifyUtil implements ITest {
 
 		logger.info("DB queries = " + sqlQuery);
 
+		GlobalMethods.reportRequest(null, sqlQuery, "SQL_Insert_Query");
+
 		try {
-			ExtendedDBManager.executeDBWithQueries(InjiCertifyConfigManager.getInjiCertifyDBURL(),
-					InjiCertifyConfigManager.getproperty("db-su-user"),
-					InjiCertifyConfigManager.getproperty("postgres-password"),
-					InjiCertifyConfigManager.getproperty("inji_certify_schema"), sqlQuery);
+			if (sqlQuery.trim().toUpperCase().startsWith("SELECT")) {
+				List<Map<String, Object>> result = ExtendedDBManager.executeSelectQuery(
+						InjiCertifyConfigManager.getInjiCertifyDBURL(),
+						InjiCertifyConfigManager.getproperty("db-su-user"),
+						InjiCertifyConfigManager.getproperty("postgres-password"),
+						InjiCertifyConfigManager.getproperty("inji_certify_schema"), sqlQuery);
+				GlobalMethods.reportResponse("No Header", sqlQuery, result.toString(), true);
+
+				logger.info("DB SELECT Result: " + result);
+
+				// 👇 if you only expect one row
+				if (!result.isEmpty()) {
+					Map<String, Object> row = result.get(0);
+
+					updateCacheFromRow(row, idKeyName, testCaseName);
+				}
+
+			} else {
+				ExtendedDBManager.executeDBWithQueries(InjiCertifyConfigManager.getInjiCertifyDBURL(),
+						InjiCertifyConfigManager.getproperty("db-su-user"),
+						InjiCertifyConfigManager.getproperty("postgres-password"),
+						InjiCertifyConfigManager.getproperty("inji_certify_schema"), sqlQuery);
+				GlobalMethods.reportResponse("No Header", sqlQuery, "Success", true);
+			}
 		} catch (Exception e) {
 			throw new AdminTestException(e.getMessage());
 		}

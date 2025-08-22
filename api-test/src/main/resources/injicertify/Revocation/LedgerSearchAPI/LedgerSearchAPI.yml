@@ -1,0 +1,18 @@
+LedgerSearchAPI:
+   InjiCertify_LedgerSearchAPI_ForLandRegistry_Revocation_Flow_all_Valid_Smoke_Sid:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/ledger-search
+      uniqueIdentifier: TC_InjiCertify_Ledger_Search_01
+      description: Get credentials for land statement data integrity proof
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPI
+      outputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPIResult
+      input: '{
+      	"credentialId": "$ID:GetDataFromLedgerTable_For_LandRegistry_Valid_smoke_Pos_sid_credential_id$",
+        "issuerId": "$ID:GetDataFromLedgerTable_For_LandRegistry_Valid_smoke_Pos_sid_issuer_id$",
+        "credentialType": "VerifiableCredential,landregistry_revocation",
+      	"indexedAttributesEquals": "$ID:GetDataFromLedgerTable_For_LandRegistry_Valid_smoke_Pos_sid_indexed_attributes$"
+}'
+      output: '{
+}'

@@ -1124,6 +1124,101 @@
 			<class name="io.mosip.testrig.apirig.injicertify.testscripts.DeleteWithParam" />
 		</classes>
 	</test>
-		
 	
+	<test name="AddCredentialConfigForRevocation">
+		<parameter name="ymlFile"
+			value="injicertify/Revocation/AddCredentialConfigForRevocation/AddCredentialConfigForRevocation.yml" />
+		<parameter name="idKeyName" value="id" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="OAuthDetailsRequestForRevocation">
+		<parameter name="ymlFile"
+			value="injicertify/Revocation/OAuthDetailsRequestForRevocation/OAuthDetailsRequestForRevocation.yml" />
+		<parameter name="idKeyName" value="transactionId,encodedResp" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="AuthenticateUserForRevocation">
+		<parameter name="ymlFile"
+			value="injicertify/Revocation/AuthenticateUserForRevocation/AuthenticateUserForRevocation.yml" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.PostWithAutogenIdWithOtpGenerate" />
+		</classes>
+	</test>
+	<test name="AuthorizationCodeForRevocation">
+		<parameter name="ymlFile"
+			value="injicertify/Revocation/AuthorizationCodeForRevocation/AuthorizationCodeForRevocation.yml" />
+		<parameter name="idKeyName" value="code" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="GenerateTokenForRevocation">
+		<parameter name="ymlFile"
+			value="injicertify/Revocation/GenerateTokenForRevocation/GenerateTokenForRevocation.yml" />
+		<parameter name="idKeyName" value="access_token" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenIdForUrlEncoded" />
+		</classes>
+	</test>
+	<test name="GetCredentialForRevocation">
+		<parameter name="ymlFile"
+			value="injicertify/Revocation/GetCredentialForRevocation/GetCredentialForRevocation.yml" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
+		</classes>
+	</test>
+	<test name="GetDataFromLedgerTable">
+		<parameter name="ymlFile"
+			value="injicertify/Revocation/GetDataFromLedgerTable/GetDataFromLedgerTable.yml" />
+		<parameter name="idKeyName" value="credential_id,issuer_id,indexed_attributes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.DBIntegration" />
+		</classes>
+	</test>
+	<test name="LedgerSearchAPI">
+		<parameter name="ymlFile"
+			value="injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPI.yml" />
+		<parameter name="idKeyName"
+			value="statusListCredentialUrl,statusListIndex,statusPurpose" />
+		<parameter name="isJsonArrayResponse"
+			value="yes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="UpdateCredentialStatus">
+		<parameter name="ymlFile"
+			value="injicertify/Revocation/UpdateCredentialStatus/UpdateCredentialStatus.yml" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="GetStatusListbyID">
+		<parameter name="ymlFile"
+			value="injicertify/Revocation/GetStatusListbyID/GetStatusListbyID.yml" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.GetWithParam" />
+		</classes>
+	</test>
+	<test name="DeleteCredentialConfigurationForRevocation">
+		<parameter name="ymlFile"
+			value="injicertify/Revocation/DeleteCredentialConfigurationForRevocation/DeleteCredentialConfigurationForRevocation.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.injicertify.testscripts.DeleteWithParam" />
+		</classes>
+	</test>
 </suite>
