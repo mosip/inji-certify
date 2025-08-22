@@ -1074,12 +1074,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{certifyurl}}/credential-configurations/.well-known/openid-credential-issuer",
+							"raw": "{{certifyurl}}/.well-known/openid-credential-issuer",
 							"host": [
 								"{{certifyurl}}"
 							],
 							"path": [
-								"credential-configurations",
 								".well-known",
 								"openid-credential-issuer"
 							]
