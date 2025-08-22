@@ -1,0 +1,15 @@
+GetStatusListbyID:
+   InjiCertify_GetStatusListbyID_ForLandRegistry_Revocation_Flow_all_Valid_Smoke:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/credentials/status-list/{id}
+      uniqueIdentifier: TC_InjiCertify_Get_Status_List_by_ID_01
+      description: Getting status list by credential ID for revocation flow
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: get
+      inputTemplate: injicertify/Revocation/GetStatusListbyID/GetStatusListbyID
+      outputTemplate: injicertify/Revocation/GetStatusListbyID/GetStatusListbyIDResult
+      input: '{
+        "id": "$ID:LedgerSearchAPI_ForLandRegistry_Revocation_Flow_all_Valid_Smoke_Sid_statusListCredentialUrl$"
+}'
+      output: '{
+}'
