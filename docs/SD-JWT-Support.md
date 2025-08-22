@@ -66,7 +66,7 @@ sequenceDiagram
     CredentialAPI-->>Client: Return final vc+sd-jwt
 ```
 
-## 3. Configuring `kid` and DID Binding
+## 4. Configuring `kid` and DID Binding
 
 ### `kid` (Key ID)
 - The `kid` field identifies the keyID of the certificate that is used for signing the VC.

@@ -32,16 +32,14 @@ sequenceDiagram
     participant DataProviderPlugin as 🔌 Data Provider Plugin
     participant VelocityTemplatingEngine as ⚙️ Velocity Templating Engine
     participant W3CJsonLdCredential as 🔐 W3CJsonLdCredential
-    participant CertifyKeyChooser as 🔑 CertifyKeyChooser
-    participant DanubetechDataIntegrity as 🛡️ Danubetech Lib
-    participant CertifyProofGenerators as 📝 Proof Generators
+    participant DataIntegrityLib as 🛡️ DataIntegrity Lib
     participant KeyManager as ✍️ KeyManager
     end
 
     Client->>CredentialAPI: Request VC Issuance (format: ldp_vc)
 
     CredentialAPI->>CredentialConfiguration: Validate request & get config
-    CredentialConfiguration-->>CredentialAPI: Return success & config (with signatureCryptosuite)
+    CredentialConfiguration-->>CredentialAPI: Return success & config (with signatureCryptoSuite)
 
     CredentialAPI->>DataProviderPlugin: Request data
     DataProviderPlugin-->>CredentialAPI: Return raw data
@@ -53,23 +51,11 @@ sequenceDiagram
 
     CredentialAPI->>W3CJsonLdCredential: addProof()
 
-    W3CJsonLdCredential->>CertifyKeyChooser: Get proof object
-    CertifyKeyChooser->>CredentialConfiguration: Read signatureCryptosuite
-    CredentialConfiguration-->>CertifyKeyChooser: Return signatureCryptosuite value
+    W3CJsonLdCredential->>DataIntegrityLib: Generate DataIntegrityProof (with signatureCryptoSuite)
+    DataIntegrityLib->>KeyManager: Sign credential data
+    KeyManager-->>DataIntegrityLib: Return signature
+    DataIntegrityLib-->>W3CJsonLdCredential: Return DataIntegrityProof object
 
-    alt signatureCryptosuite indicates Data Integrity
-        CertifyKeyChooser->>DanubetechDataIntegrity: Generate DataIntegrityProof
-        DanubetechDataIntegrity->>KeyManager: Sign credential data
-        KeyManager-->>DanubetechDataIntegrity: Return signature
-        DanubetechDataIntegrity-->>CertifyKeyChooser: Return DataIntegrityProof object
-    else Normal Proof
-        CertifyKeyChooser->>CertifyProofGenerators: Generate JsonLdProof
-        CertifyProofGenerators->>KeyManager: Sign credential data
-        KeyManager-->>CertifyProofGenerators: Return signature
-        CertifyProofGenerators-->>CertifyKeyChooser: Return JsonLdProof object
-    end
-
-    CertifyKeyChooser-->>W3CJsonLdCredential: Return final proof object
     W3CJsonLdCredential-->>CredentialAPI: Return signed VC with proof
 
     CredentialAPI-->>Client: Return final ldp_vc

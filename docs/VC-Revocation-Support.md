@@ -187,39 +187,39 @@ A status list credential is a special Verifiable Credential with this structure:
       ]
       ```
 - Sequence diagram for Ledger Search :  
-```mermaid
-sequenceDiagram
-    participant Client as 🌐 Client
-    box Inji Certify #E6F3FF
-    participant Controller as 🔗 CredentialLedgerController
-    participant Service as ⚙️ CredentialLedgerServiceImpl
-    participant Repository as 🗄️ LedgerRepository
-    end
-    participant Database as 💾 Database
-
-    Client->>Controller: POST /ledger-search
-    Note over Client,Controller: CredentialLedgerSearchRequest with indexed attributes
+    ```mermaid
+    sequenceDiagram
+        participant Client as 🌐 Client
+        box Inji Certify #E6F3FF
+        participant Controller as 🔗 CredentialLedgerController
+        participant Service as ⚙️ CredentialLedgerServiceImpl
+        participant Repository as 🗄️ LedgerRepository
+        end
+        participant Database as 💾 Database
     
-    Controller->>Service: searchCredentialLedger(request)
-    
-    Service->>Service: validateSearchRequest(request)
-    Note over Service: Check if indexed attributes are valid and not empty
-    
-    Service->>Repository: findBySearchRequest(request)
-    Repository->>Database: Query ledger table with search criteria
-    Database-->>Repository: List<Ledger> records
-    Repository-->>Service: List<Ledger> records
-    
-    alt No Records Found
-        Service-->>Controller: Collections.emptyList()
-        Controller-->>Client: 204 No Content
-    else Records Found
-        Service->>Service: mapToSearchResponse(records)
-        Note over Service: Map Ledger entities to CredentialStatusResponse DTOs
-        Service-->>Controller: List<CredentialStatusResponse>
-        Controller-->>Client: 200 OK with credential status list
-    end
-```
+        Client->>Controller: POST /ledger-search
+        Note over Client,Controller: CredentialLedgerSearchRequest with indexed attributes
+        
+        Controller->>Service: searchCredentialLedger(request)
+        
+        Service->>Service: validateSearchRequest(request)
+        Note over Service: Check if indexed attributes are valid and not empty
+        
+        Service->>Repository: findBySearchRequest(request)
+        Repository->>Database: Query ledger table with search criteria
+        Database-->>Repository: List<Ledger> records
+        Repository-->>Service: List<Ledger> records
+        
+        alt No Records Found
+            Service-->>Controller: Collections.emptyList()
+            Controller-->>Client: 204 No Content
+        else Records Found
+            Service->>Service: mapToSearchResponse(records)
+            Note over Service: Map Ledger entities to CredentialStatusResponse DTOs
+            Service-->>Controller: List<CredentialStatusResponse>
+            Controller-->>Client: 200 OK with credential status list
+        end
+    ```
 
 ### 3. Updating Credential Status
 
@@ -233,42 +233,96 @@ sequenceDiagram
 
 - Sequence diagram for updating credential status:
 
-```mermaid
-sequenceDiagram
-    participant Client as 🌐 Client
-    box Inji Certify #E6F3FF
-    participant Controller as 🔗 CredentialStatusController
-    participant Service as ⚙️ CredentialStatusServiceImpl
-    participant LedgerRepo as 🗄️ LedgerRepository
-    participant StatusRepo as 🗄️ CredentialStatusTransactionRepository
-    end
+    ```mermaid
+    sequenceDiagram
+        participant Client as 🌐 Client
+        box Inji Certify #E6F3FF
+        participant Controller as 🔗 CredentialStatusController
+        participant Service as ⚙️ CredentialStatusServiceImpl
+        participant LedgerRepo as 🗄️ LedgerRepository
+        participant StatusRepo as 🗄️ CredentialStatusTransactionRepository
+        end
+    
+        Client->>Controller: POST /credentials/status
+        Note over Client,Controller: UpdateCredentialStatusRequest with credential ID and status details
+        
+        Controller->>Service: updateCredentialStatus(request)
+        
+        Service->>LedgerRepo: findByCredentialId(credentialId)
+        LedgerRepo-->>Service: Optional<Ledger>
+        
+        alt Credential Found
+            Service->>Service: Create CredentialStatusTransaction
+            Note over Service: Set status purpose, value, list credential ID, and index
+            
+            Service->>StatusRepo: save(transaction)
+            StatusRepo-->>Service: CredentialStatusTransaction with timestamp
+            
+            Service->>Service: Map to CredentialStatusResponse
+            Note over Service: Include ledger info and status details
+            
+            Service-->>Controller: CredentialStatusResponse
+            Controller-->>Client: 200 OK with status response
+            
+        else Credential Not Found
+            Service-->>Controller: ResponseStatusException (404)
+            Controller-->>Client: 404 Not Found
+        end
+    ```
 
-    Client->>Controller: POST /credentials/status
-    Note over Client,Controller: UpdateCredentialStatusRequest with credential ID and status details
+### 4. Status List Update Batch Job
+
+- A scheduled job runs periodically (for example, hourly) to process any new status changes.
+- It updates the relevant status lists and re-signs them to ensure they reflect the latest statuses.
+- Sequence diagram for the batch job:
+
+    ```mermaid
+    sequenceDiagram
+        participant Scheduler as 🕐 Scheduler
+        participant BatchJob as 🔄 StatusListUpdateBatchJob
+        participant TransactionRepo as 🗄️ Transaction Repository
+        participant StatusListRepo as 📋 StatusList Repository
+        participant StatusListService as 🔧 StatusListCredentialService
     
-    Controller->>Service: updateCredentialStatus(request)
-    
-    Service->>LedgerRepo: findByCredentialId(credentialId)
-    LedgerRepo-->>Service: Optional<Ledger>
-    
-    alt Credential Found
-        Service->>Service: Create CredentialStatusTransaction
-        Note over Service: Set status purpose, value, list credential ID, and index
+        Note over Scheduler: Runs hourly (cron)
         
-        Service->>StatusRepo: save(transaction)
-        StatusRepo-->>Service: CredentialStatusTransaction with timestamp
+        Scheduler->>BatchJob: @Scheduled trigger
+        BatchJob->>BatchJob: Acquire distributed lock
+        BatchJob->>BatchJob: Check if job enabled
         
-        Service->>Service: Map to CredentialStatusResponse
-        Note over Service: Include ledger info and status details
+        BatchJob->>BatchJob: determineStartTime()
+        BatchJob->>StatusListRepo: findMaxUpdatedTime()
+        StatusListRepo-->>BatchJob: Return last update time
         
-        Service-->>Controller: CredentialStatusResponse
-        Controller-->>Client: 200 OK with status response
+        BatchJob->>TransactionRepo: findTransactionsSince(startTime, batchSize)
+        TransactionRepo-->>BatchJob: Return new transactions
         
-    else Credential Not Found
-        Service-->>Controller: ResponseStatusException (404)
-        Controller-->>Client: 404 Not Found
-    end
-```
+        alt Has new transactions
+            BatchJob->>BatchJob: groupTransactionsByStatusList()
+            
+            loop For each affected status list
+                BatchJob->>StatusListRepo: findById(statusListId)
+                StatusListRepo-->>BatchJob: Return StatusListCredential
+                
+                BatchJob->>TransactionRepo: findLatestStatusByStatusListId()
+                TransactionRepo-->>BatchJob: Return current status data
+                
+                BatchJob->>BatchJob: applyTransactionUpdates()
+                BatchJob->>BatchJob: generateEncodedList()
+                
+                BatchJob->>StatusListService: resignStatusListCredential()
+                StatusListService-->>BatchJob: Return signed VC document
+                
+                BatchJob->>StatusListRepo: save(updated credential)
+            end
+            
+            BatchJob->>BatchJob: Update lastProcessedTime
+        else No new transactions
+            BatchJob->>BatchJob: Skip processing
+        end
+        
+        BatchJob->>BatchJob: Release lock
+    ```
 
 ---
 
