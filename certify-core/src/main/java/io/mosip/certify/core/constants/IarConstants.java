@@ -13,7 +13,9 @@ public class IarConstants {
     // IAR Status values
     public static final String STATUS_REQUIRE_INTERACTION = "require_interaction";
     public static final String STATUS_COMPLETE = "complete";
-
+    public static final String STATUS_OK = "ok";
+    public static final String STATUS_ERROR = "error";
+    
     // IAR Type values
     public static final String TYPE_OPENID4VP_PRESENTATION = "openid4vp_presentation";
 
@@ -26,8 +28,10 @@ public class IarConstants {
     public static final String CODE_CHALLENGE_METHOD_PLAIN = "plain";
 
     // OpenID4VP Response Modes
+    public static final String RESPONSE_MODE_IAR_POST = "iar-post";
     public static final String RESPONSE_MODE_IAR_POST_JWT = "iar-post.jwt";
     public static final String RESPONSE_MODE_DIRECT_POST = "direct_post";
+    public static final String RESPONSE_MODE_DIRECT_POST_JWT = "direct_post.jwt";
 
     // Interaction Types
     public static final String INTERACTION_TYPE_OPENID4VP = "openid4vp_presentation";
@@ -43,8 +47,10 @@ public class IarConstants {
     public static final String JSON_PATH_FAMILY_NAME = "$.credentialSubject.family_name";
     public static final String JSON_PATH_CONTRACT_ID = "$.credentialSubject.contract_id";
 
-    // Session ID prefix
+    // Session and ID prefixes
     public static final String AUTH_SESSION_PREFIX = "session-";
+    public static final String AUTH_CODE_PREFIX = "authcode-";
+    public static final String TRANSACTION_ID_PREFIX = "tx-";
     public static final String NONCE_PREFIX = "nonce-";
     public static final String STATE_PREFIX = "state-";
 
@@ -57,4 +63,6 @@ public class IarConstants {
     public static final String UNSUPPORTED_RESPONSE_TYPE = "unsupported_response_type";
     public static final String INVALID_CLIENT = "invalid_client";
     public static final String INTERACTION_REQUIRED = "interaction_required";
+    public static final String INVALID_AUTH_SESSION = "invalid_auth_session";
+    public static final String RESPONSE_URI = null;
 }
