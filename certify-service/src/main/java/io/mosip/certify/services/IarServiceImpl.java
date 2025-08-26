@@ -176,8 +176,6 @@ public class IarServiceImpl implements IarService {
         openId4VpRequest.setResponseType(openid4vpResponseType);
         openId4VpRequest.setResponseMode(openid4vpResponseMode);
         openId4VpRequest.setClientId(iarRequest.getClientId());
-        openId4VpRequest.setNonce(generateNonce());
-        openId4VpRequest.setState(generateState());
 
         // Create configurable presentation definition
         PresentationDefinition presentationDefinition = createConfigurablePresentationDefinition();
@@ -272,17 +270,4 @@ public class IarServiceImpl implements IarService {
         return response;
     }
 
-    /**
-     * Generates a nonce for the OpenID4VP request
-     */
-    private String generateNonce() {
-        return IarConstants.NONCE_PREFIX + UUID.randomUUID().toString().substring(0, 6);
-    }
-
-    /**
-     * Generates a state parameter for the OpenID4VP request
-     */
-    private String generateState() {
-        return IarConstants.STATE_PREFIX + UUID.randomUUID().toString().substring(0, 6);
-    }
 }
