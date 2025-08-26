@@ -36,6 +36,13 @@ public class OpenId4VpRequest {
     private String clientId;
 
     /**
+     * Response URI where the wallet should post the VP response.
+     * For mocked/hardcoded flow this will point back to issuer's /oauth/iar.
+     */
+    @JsonProperty("response_uri")
+    private String responseUri;
+
+    /**
      * Presentation definition describing required credentials
      */
     @JsonProperty("presentation_definition")
