@@ -5,6 +5,8 @@
  */
 package io.mosip.certify.core.spi;
 
+import io.mosip.certify.core.dto.IarPresentationRequest;
+import io.mosip.certify.core.dto.IarPresentationResponse;
 import io.mosip.certify.core.dto.IarRequest;
 import io.mosip.certify.core.dto.IarResponse;
 import io.mosip.certify.core.exception.CertifyException;
@@ -53,4 +55,6 @@ public interface IarService {
      * @throws CertifyException if generation fails
      */
     IarResponse generateOpenId4VpRequest(IarRequest iarRequest, String authSession) throws CertifyException;
+
+    IarPresentationResponse processVpPresentationResponse(IarPresentationRequest presentationRequest) throws CertifyException;
 }

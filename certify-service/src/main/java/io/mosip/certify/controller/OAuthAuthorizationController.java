@@ -8,6 +8,8 @@ package io.mosip.certify.controller;
 import io.mosip.certify.core.constants.IarConstants;
 import io.mosip.certify.core.dto.IarRequest;
 import io.mosip.certify.core.dto.IarResponse;
+import io.mosip.certify.core.dto.IarPresentationRequest;
+import io.mosip.certify.core.dto.IarPresentationResponse;
 import io.mosip.certify.core.dto.VCError;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.IarService;
@@ -16,7 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 import java.util.Locale;
 
@@ -46,33 +50,48 @@ public class OAuthAuthorizationController {
      * @return IarResponse containing status, auth_session, and openid4vp_request if interaction required
      * @throws CertifyException if request processing fails
      */
-    @PostMapping(value = "/iar", 
+    
+    @PostMapping(value = "/iar",
                  consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
                  produces = MediaType.APPLICATION_JSON_VALUE)
-    public IarResponse processInteractiveAuthorizationRequest(
-            @RequestParam("response_type") String responseType,
-            @RequestParam("client_id") String clientId,
-            @RequestParam("code_challenge") String codeChallenge,
-            @RequestParam("code_challenge_method") String codeChallengeMethod,
-            @RequestParam("redirect_uri") String redirectUri,
-            @RequestParam(value = "interaction_types_supported", required = false) String interactionTypesSupported,
-            @RequestParam(value = "redirect_to_web", required = false) String redirectToWeb) 
+    public ResponseEntity<?> processIarRequest(@RequestParam Map<String, String> params)
             throws CertifyException {
-        
-        log.info("Processing Interactive Authorization Request for client_id: {}", clientId);
-        log.debug("IAR Request details - response_type: {}, code_challenge_method: {}, interaction_types: {}", 
-                  responseType, codeChallengeMethod, interactionTypesSupported);
+        log.info("Processing IAR request with parameters: {}", params.keySet());
 
-        // Create IarRequest object from form parameters
+        // Determine which type of request this is based on parameters
+        if (params.containsKey("auth_session") && params.containsKey("openid4vp_presentation")) {
+            // Step 13-18: Handle VP presentation response
+            return processVpPresentationResponse(params);
+        } else {
+            // Step 5-9: Handle initial IAR request
+            return processInitialIarRequest(params);
+        }
+    }
+
+    /**
+     * Process initial IAR request (Steps 5-9)
+     *
+     * @param params Form parameters containing response_type, client_id, etc.
+     * @return ResponseEntity with IarResponse containing status, auth_session, and openid4vp_request
+     * @throws CertifyException if request processing fails
+     */
+    private ResponseEntity<?> processInitialIarRequest(Map<String, String> params)
+            throws CertifyException {
+        log.info("Processing initial IAR request for client_id: {}", params.get("client_id"));
+        log.debug("IAR Request details - response_type: {}, code_challenge_method: {}, interaction_types: {}",
+                  params.get("response_type"), params.get("code_challenge_method"),
+                  params.get("interaction_types_supported"));
+
+        // Create IarRequest from params
         IarRequest iarRequest = new IarRequest();
-        iarRequest.setResponseType(responseType);
-        iarRequest.setClientId(clientId);
-        iarRequest.setCodeChallenge(codeChallenge);
-        iarRequest.setCodeChallengeMethod(codeChallengeMethod);
-        iarRequest.setRedirectUri(redirectUri);
-        iarRequest.setInteractionTypesSupported(interactionTypesSupported);
-        iarRequest.setRedirectToWeb(redirectToWeb);
-    
+        iarRequest.setResponseType(params.get("response_type"));
+        iarRequest.setClientId(params.get("client_id"));
+        iarRequest.setCodeChallenge(params.get("code_challenge"));
+        iarRequest.setCodeChallengeMethod(params.get("code_challenge_method"));
+        iarRequest.setRedirectUri(params.get("redirect_uri"));
+        iarRequest.setInteractionTypesSupported(params.get("interaction_types_supported"));
+        iarRequest.setRedirectToWeb(params.get("redirect_to_web"));
+
         try {
             // Validate the IAR request
             iarService.validateIarRequest(iarRequest);
@@ -80,19 +99,63 @@ public class OAuthAuthorizationController {
             // Process the authorization request
             IarResponse response = iarService.processAuthorizationRequest(iarRequest);
 
-            log.info("IAR processed successfully - status: {}, auth_session: {}", 
+            log.info("IAR processed successfully - status: {}, auth_session: {}",
                      response.getStatus(), response.getAuthSession());
 
-            return response;
+            return ResponseEntity.ok(response);
 
         } catch (CertifyException e) {
-            log.error("Failed to process IAR for client_id: {}, error: {}", 
-                      clientId, e.getMessage(), e);
+            log.error("Failed to process IAR for client_id: {}, error: {}",
+                      params.get("client_id"), e.getMessage(), e);
             throw e;
         } catch (Exception e) {
-            log.error("Unexpected error processing IAR for client_id: {}", 
-                      clientId, e);
+            log.error("Unexpected error processing IAR for client_id: {}",
+                      params.get("client_id"), e);
             throw new CertifyException(IarConstants.INVALID_REQUEST, "IAR processing failed", e);
+        }
+    }
+
+    /**
+     * Process VP presentation response (Steps 13-18)
+     *
+     * @param params Form parameters containing auth_session and openid4vp_presentation
+     * @return ResponseEntity with IarPresentationResponse containing status and authorization_code
+     * @throws CertifyException if VP processing fails
+     */
+    private ResponseEntity<?> processVpPresentationResponse(Map<String, String> params)
+            throws CertifyException {
+        String authSession = params.get("auth_session");
+        String presentation = params.get("openid4vp_presentation");
+
+        log.info("Processing VP presentation response for auth_session: {}", authSession);
+        log.debug("VP presentation: {}", presentation);
+
+        // Create IarPresentationRequest DTO
+        IarPresentationRequest presentationRequest = new IarPresentationRequest();
+        presentationRequest.setAuthSession(authSession);
+        presentationRequest.setOpenid4vpPresentation(presentation);
+
+        try {
+            // Process the presentation through service layer
+            IarPresentationResponse response = iarService.processVpPresentationResponse(presentationRequest);
+
+            log.info("VP presentation processed - status: {}", response.getStatus());
+
+            // Return appropriate response based on VP verification result
+            if ("ok".equals(response.getStatus())) {
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.badRequest().body(response);
+            }
+
+        } catch (CertifyException e) {
+            log.error("Failed to process VP presentation for auth_session: {}, error: {}",
+                      authSession, e.getMessage(), e);
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected error processing VP presentation for auth_session: {}",
+                      authSession, e);
+            throw new CertifyException(IarConstants.INVALID_REQUEST, "VP presentation processing failed", e);
         }
     }
 
