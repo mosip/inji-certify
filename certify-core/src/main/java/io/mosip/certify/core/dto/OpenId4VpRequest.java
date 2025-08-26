@@ -41,15 +41,4 @@ public class OpenId4VpRequest {
     @JsonProperty("presentation_definition")
     private PresentationDefinition presentationDefinition;
 
-    /**
-     * Cryptographic nonce for security
-     */
-    @JsonProperty("nonce")
-    private String nonce;
-
-    /**
-     * State parameter for maintaining request/response correlation
-     */
-    @JsonProperty("state")
-    private String state;
 }

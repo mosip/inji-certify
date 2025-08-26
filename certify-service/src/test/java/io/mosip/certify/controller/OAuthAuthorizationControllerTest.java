@@ -5,7 +5,6 @@ import io.mosip.certify.core.dto.IarRequest;
 import io.mosip.certify.core.dto.IarResponse;
 import io.mosip.certify.core.dto.OpenId4VpRequest;
 import io.mosip.certify.core.dto.PresentationDefinition;
-import io.mosip.certify.core.dto.VCError;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.IarService;
 import io.mosip.certify.filter.AccessTokenValidationFilter;
@@ -72,9 +71,7 @@ class OAuthAuthorizationControllerTest {
                 .param("code_challenge", "test-challenge")
                 .param("code_challenge_method", "S256")
                 .param("redirect_uri", "https://test.com/callback")
-                .param("interaction_types_supported", "openid4vp_presentation")
-                .param("scope", "openid")
-                .param("state", "test-state"))
+                .param("interaction_types_supported", "openid4vp_presentation"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value(IarConstants.STATUS_REQUIRE_INTERACTION))
@@ -145,9 +142,7 @@ class OAuthAuthorizationControllerTest {
                 .param("code_challenge_method", "S256")
                 .param("redirect_uri", "https://test.com/callback")
                 .param("interaction_types_supported", "openid4vp_presentation")
-                .param("redirect_to_web", "true")
-                .param("scope", "openid profile")
-                .param("state", "custom-state"))
+                .param("redirect_to_web", "true"))
                 .andExpect(status().isOk());
 
         verify(iarService, times(1)).validateIarRequest(any(IarRequest.class));
@@ -321,8 +316,6 @@ class OAuthAuthorizationControllerTest {
             openId4VpRequest.setResponseType("vp_token");
             openId4VpRequest.setResponseMode("iar-post.jwt");
             openId4VpRequest.setClientId("test-client");
-            openId4VpRequest.setNonce("test-nonce");
-            openId4VpRequest.setState("test-state");
             
             PresentationDefinition presentationDefinition = new PresentationDefinition();
             presentationDefinition.setId("test-presentation");

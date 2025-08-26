@@ -65,15 +65,4 @@ public class IarRequest {
     @JsonProperty("redirect_to_web")
     private String redirectToWeb;
 
-    /**
-     * Optional OAuth 2.0 scope parameter
-     */
-    @JsonProperty("scope")
-    private String scope;
-
-    /**
-     * Optional OAuth 2.0 state parameter
-     */
-    @JsonProperty("state")
-    private String state;
 }
