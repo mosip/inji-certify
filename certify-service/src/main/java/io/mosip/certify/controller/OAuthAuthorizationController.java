@@ -56,9 +56,7 @@ public class OAuthAuthorizationController {
             @RequestParam("code_challenge_method") String codeChallengeMethod,
             @RequestParam("redirect_uri") String redirectUri,
             @RequestParam(value = "interaction_types_supported", required = false) String interactionTypesSupported,
-            @RequestParam(value = "redirect_to_web", required = false) String redirectToWeb,
-            @RequestParam(value = "scope", required = false) String scope,
-            @RequestParam(value = "state", required = false) String state) 
+            @RequestParam(value = "redirect_to_web", required = false) String redirectToWeb) 
             throws CertifyException {
         
         log.info("Processing Interactive Authorization Request for client_id: {}", clientId);
@@ -74,9 +72,7 @@ public class OAuthAuthorizationController {
         iarRequest.setRedirectUri(redirectUri);
         iarRequest.setInteractionTypesSupported(interactionTypesSupported);
         iarRequest.setRedirectToWeb(redirectToWeb);
-        iarRequest.setScope(scope);
-        iarRequest.setState(state);
-
+    
         try {
             // Validate the IAR request
             iarService.validateIarRequest(iarRequest);
