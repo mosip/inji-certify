@@ -44,11 +44,13 @@ import static io.mosip.certify.core.constants.Constants.*;
 
 
 @Slf4j
+@Service
 public class VelocityTemplatingEngineImpl implements VCFormatter {
     VelocityEngine engine;
 
     @Autowired
     CredentialConfigRepository credentialConfigRepository;
+
     @Autowired
     RenderingTemplateService renderingTemplateService;
 
