@@ -88,7 +88,7 @@ public interface VCIssuancePlugin {
 
 - Create a `certs/` directory inside the docker-compose-injistack directory.
 - Place your PKCS12 keystore file in the `certs` directory as `oidckeystore.p12`. This is required for the Inji Web application and other applications which rely on Mimoto as a BFF and it can be configured as per these [docs](https://docs.inji.io/inji-wallet/inji-mobile/technical-overview/customization-overview/credential_providers#onboarding-mimoto-as-oidc-client-for-a-new-issuer) after the file is downloaded in the `certs` directory as shown in the directory tree.
-- Update `mosip.oidc.p12.password` to the password of the `oidckeystore.p12` file in the Mimoto [Config file](./config/mimoto-default.properties).
+- Update `oidc_p12_password` env variable under `mimoto-service` in the [docker-compose.yaml](./docker-compose.yaml) to the password of the `oidckeystore.p12` file.
 
 
 ## Configuration Setup
@@ -202,6 +202,15 @@ The digest multibase can be hardcoded or if the template has been stored with Ce
 2. Deploying Inji Certify over a public URL, _using ngrok to demonstrate this_
 
 - change the value of the `mosipbox_public_url` to point to the public URL in ./docker-compose.yaml where Certify service will be accessible, when using locally with ngrok create an HTTP tunnel for the port `8090`, which is the port for Certify and access the Inji Web at http://localhost:3001, to access Inji Web you may have to create another client with the Authorization service and more configuration should be required at Mimoto side
+
+3. To configure your own Google Auth Credentials:
+- Refer to the steps documented in the `mimoto` for the same. [GOOGLE_AUTH_SETUP](https://github.com/mosip/mimoto/blob/master/docker-compose/README.md#how-to-create-google-client-credentials)
+- Replace the placeholders under the `mimoto-service` in the `docker-compose.yml` file with the generated credentials:
+
+   ```yaml
+       environment:
+         - GOOGLE_OAUTH_CLIENT_ID=<your-client-id>
+         - GOOGLE_OAUTH_CLIENT_SECRET=<your-client-secret>
 
 ## Troubleshooting
 
