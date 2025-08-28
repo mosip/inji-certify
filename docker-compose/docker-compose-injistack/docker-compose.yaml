@@ -8,13 +8,21 @@ services:
       - POSTGRES_PASSWORD=postgres
     volumes:
       - ./certify_init.sql:/docker-entrypoint-initdb.d/certify_init.sql
+      - ./mimoto_init.sql:/docker-entrypoint-initdb.d/mimoto_init.sql
     networks:
       - network
     ports:
       - "5433:5432"
 
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
   certify:
-    image: mosipqa/inji-certify-with-plugins:develop
+    image: mosipid/inji-certify-with-plugins:0.12.0
     user: root
     ports:
       - 8090:8090
@@ -54,7 +62,7 @@ services:
 
   mimoto-service:
     container_name: 'Mimoto-Service'
-    image: mosipid/mimoto:0.15.0
+    image: mosipid/mimoto:0.18.1
     user: root
     ports:
       - '8099:8099'
@@ -63,6 +71,12 @@ services:
       - active_profile_env=default
       - SPRING_CONFIG_NAME=mimoto
       - SPRING_CONFIG_LOCATION=/home/mosip/
+      - oidc_p12_password=dummypassword
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/inji_mimoto
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - GOOGLE_OAUTH_CLIENT_ID=clientId
+      - GOOGLE_OAUTH_CLIENT_SECRET=clientSecret
     networks:
       - network
     volumes:
@@ -70,15 +84,18 @@ services:
       - ./config/mimoto-issuers-config.json:/home/mosip/mimoto-issuers-config.json
       - ./config/mimoto-trusted-verifiers.json:/home/mosip/mimoto-trusted-verifiers.json
       - ./certs/oidckeystore.p12:/home/mosip/certs/oidckeystore.p12
+    depends_on:
+      - database
+      - redis
 
   inji-web:
     container_name: 'inji-web'
-    image: mosipid/inji-web:0.11.0
+    image: mosipid/inji-web:0.13.1
     ports:
       - '3001:3004'
     environment:
       - DEFAULT_LANG=en
-      - MIMOTO_HOST=http://localhost:3001/v1/mimoto
+      - MIMOTO_URL=http://localhost:3001/v1/mimoto
     volumes:
       - ./config/mimoto-default.properties:/home/mosip/mimoto-default.properties
       - ./config/mimoto-issuers-config.json:/home/mosip/mimoto-issuers-config.json
@@ -98,3 +115,5 @@ networks:
 volumes:
   cache:
     driver: local
+  postgres-data:
+  redis-data:
