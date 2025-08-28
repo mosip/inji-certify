@@ -23,6 +23,7 @@
       "proxy_token_endpoint": "https://esignet-mock.collab.mosip.net/v1/esignet/oauth/v2/token",
       "client_alias": "wallet-demo-client",
       "qr_code_type": "EmbeddedVC",
+      "credential_issuer_host": "http://certify-nginx:80",
       "enabled": "true",
       "wellknown_endpoint": "http://certify-nginx:80/.well-known/openid-credential-issuer"
     },
@@ -49,6 +50,7 @@
       "proxy_token_endpoint": "https://esignet-mock.collab.mosip.net/v1/esignet/oauth/v2/token",
       "client_alias": "wallet-demo-client",
       "qr_code_type": "EmbeddedVC",
+      "credential_issuer_host": "http://certify-nginx:80",
       "enabled": "true",
       "wellknown_endpoint": "http://certify-nginx:80/.well-known/openid-credential-issuer"
     }    
