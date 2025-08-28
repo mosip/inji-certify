@@ -10,6 +10,9 @@ import io.mosip.certify.core.dto.IarRequest;
 import io.mosip.certify.core.dto.IarResponse;
 import io.mosip.certify.core.dto.IarPresentationRequest;
 import io.mosip.certify.core.dto.IarPresentationResponse;
+import io.mosip.certify.core.dto.OAuthTokenRequest;
+import io.mosip.certify.core.dto.OAuthTokenResponse;
+import io.mosip.certify.core.dto.OAuthTokenError;
 import io.mosip.certify.core.dto.VCError;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.IarService;
@@ -156,6 +159,63 @@ public class OAuthAuthorizationController {
             log.error("Unexpected error processing VP presentation for auth_session: {}",
                       authSession, e);
             throw new CertifyException(IarConstants.INVALID_REQUEST, "VP presentation processing failed", e);
+        }
+    }
+
+    /**
+     * OAuth Token endpoint (Step 19-20)
+     * POST /oauth/token
+     * 
+     * Exchanges authorization code for access token and c_nonce.
+     * Supports authorization_code grant type for IAR flow.
+     * 
+     * @param params Form parameters containing grant_type, code, redirect_uri, client_id, code_verifier
+     * @return ResponseEntity with OAuthTokenResponse containing access_token and c_nonce
+     * @throws CertifyException if token request processing fails
+     */
+    @PostMapping(value = "/token",
+                 consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+                 produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> processTokenRequest(@RequestParam Map<String, String> params)
+            throws CertifyException {
+        log.info("Processing OAuth token request for grant_type: {}", params.get("grant_type"));
+
+        // Create OAuthTokenRequest from params
+        OAuthTokenRequest tokenRequest = new OAuthTokenRequest();
+        tokenRequest.setGrantType(params.get("grant_type"));
+        tokenRequest.setCode(params.get("code"));
+        tokenRequest.setRedirectUri(params.get("redirect_uri"));
+        tokenRequest.setClientId(params.get("client_id"));
+        tokenRequest.setCodeVerifier(params.get("code_verifier"));
+        tokenRequest.setClientSecret(params.get("client_secret"));
+
+        try {
+            // Process the token request
+            OAuthTokenResponse response = iarService.processTokenRequest(tokenRequest);
+
+            log.info("Token issued successfully for client_id: {}", tokenRequest.getClientId());
+
+            return ResponseEntity.ok(response);
+
+        } catch (CertifyException e) {
+            log.error("Failed to process token request for client_id: {}, error: {}",
+                      tokenRequest.getClientId(), e.getMessage(), e);
+            
+            // Return OAuth error response
+            OAuthTokenError errorResponse = new OAuthTokenError();
+            errorResponse.setError(e.getErrorCode());
+            errorResponse.setErrorDescription(e.getMessage());
+            
+            return ResponseEntity.badRequest().body(errorResponse);
+        } catch (Exception e) {
+            log.error("Unexpected error processing token request for client_id: {}",
+                      tokenRequest.getClientId(), e);
+            
+            OAuthTokenError errorResponse = new OAuthTokenError();
+            errorResponse.setError("server_error");
+            errorResponse.setErrorDescription("Internal server error");
+            
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 
