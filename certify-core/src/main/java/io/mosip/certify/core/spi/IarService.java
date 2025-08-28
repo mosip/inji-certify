@@ -9,6 +9,8 @@ import io.mosip.certify.core.dto.IarPresentationRequest;
 import io.mosip.certify.core.dto.IarPresentationResponse;
 import io.mosip.certify.core.dto.IarRequest;
 import io.mosip.certify.core.dto.IarResponse;
+import io.mosip.certify.core.dto.OAuthTokenRequest;
+import io.mosip.certify.core.dto.OAuthTokenResponse;
 import io.mosip.certify.core.exception.CertifyException;
 
 /**
@@ -57,4 +59,14 @@ public interface IarService {
     IarResponse generateOpenId4VpRequest(IarRequest iarRequest, String authSession) throws CertifyException;
 
     IarPresentationResponse processVpPresentationResponse(IarPresentationRequest presentationRequest) throws CertifyException;
+
+    /**
+     * Process OAuth Token Request (Step 19-20)
+     * Exchanges authorization code for access token and c_nonce
+     * 
+     * @param tokenRequest The token request containing authorization code
+     * @return OAuthTokenResponse with access_token and c_nonce
+     * @throws CertifyException if token request processing fails
+     */
+    OAuthTokenResponse processTokenRequest(OAuthTokenRequest tokenRequest) throws CertifyException;
 }

@@ -9,6 +9,7 @@ import java.util.Optional;
 @Repository
 public interface IarSessionRepository extends JpaRepository<IarSession, Long> {
     Optional<IarSession> findByAuthSession(String authSession);
+    Optional<IarSession> findByAuthorizationCode(String authorizationCode);
 }
 
 
