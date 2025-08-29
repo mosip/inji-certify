@@ -156,7 +156,7 @@ public class StatusListCredentialService {
         try {
             // Generate unique ID for status list
             String id = UUID.randomUUID().toString();
-            String statusListId = domainUrl + "/status-list/" + id;
+            String statusListId = domainUrl + "/v1/certify/credentials/status-list/" + id;
 
             // Create the template data for the status list VC
             JSONObject statusListData = new JSONObject();
@@ -389,7 +389,7 @@ public class StatusListCredentialService {
 
             // Create credential status object for VC
             JSONObject credentialStatus = new JSONObject();
-            String statusId = domainUrl + "/v1/certify/status-list/" + statusList.getId();
+            String statusId = domainUrl + "/v1/certify/credentials/status-list/" + statusList.getId();
             credentialStatus.put("id", statusId + "#" + assignedIndex);
             credentialStatus.put("type", "BitstringStatusListEntry");
             credentialStatus.put("statusPurpose", statusPurpose);
