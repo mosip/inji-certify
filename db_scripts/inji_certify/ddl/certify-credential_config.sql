@@ -12,7 +12,7 @@
 -- ------------------------------------------------------------------------------------------
 
 CREATE TABLE credential_config (
-    credential_config_key_id VARCHAR(255) NOT NULL UNIQUE,
+    credential_config_key_id VARCHAR(2048) NOT NULL UNIQUE,
     config_id VARCHAR(255) NOT NULL,
     status VARCHAR(255),
     vc_template VARCHAR,
