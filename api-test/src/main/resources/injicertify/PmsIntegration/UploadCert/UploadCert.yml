@@ -1,8 +1,8 @@
 uploadPartnerCert:
    Injicertify_UploadPartnerCert_MOSIPID_All_Valid_Smoke:
       endPoint: /v1/partnermanager/partners/certificate/upload
-      role: partner
-      uniqueIdentifier: TC_pms_dependency_08     
+      uniqueIdentifier: TC_pms_dependency_uploadPartnerCert_01
+      role: partner 
       description: upload certificate      
       checkErrorsOnlyInResponse: true
       restMethod: post

@@ -61,7 +61,7 @@ AddIdentity:
 
    InjiCertify_AddIdentity_For_mDoc_Valid_smoke_Pos:
       endPoint: /v1/mock-identity-system/identity
-      uniqueIdentifier: TC_mDoc_identity_dependency_01
+      uniqueIdentifier: TC_mDoc_identity_dependency_04
       description: Add identity for mDoc MDL scenario
       role: idrepo
       restMethod: post
