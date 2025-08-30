@@ -1,5 +1,6 @@
 package io.mosip.certify.filter;
 
+import com.nimbusds.jwt.JWTClaimsSet;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.dto.ParsedAccessToken;
 import io.mosip.certify.core.util.CommonUtil;
@@ -19,7 +20,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import java.io.IOException;
-import java.time.Clock;
 import java.time.Instant;
 import java.util.*;
 
@@ -74,6 +74,29 @@ class AccessTokenValidationFilterTest {
         when(jwtDecoder.decode(anyString())).thenReturn(jwt);
 
         assertDoesNotThrow(() -> filter.doFilterInternal(request, response, filterChain));
+    }
+
+    @Test
+    public void shouldRejectNoneAlgoJwt() throws ServletException, IOException {
+        ReflectionTestUtils.setField(filter, "issuerUri", "https://fake-authorization-host.com");
+        ReflectionTestUtils.setField(filter, "jwkSetUri", "https://fake-authorization-host.com/.well-known/jwks.json");
+        ReflectionTestUtils.setField(filter, "allowedAudiences", Arrays.asList("https://real-certify-instance.com"));
+        String noneHeader = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0"; // {"alg":"none","typ":"JWT"}
+        String payload = new JWTClaimsSet.Builder()
+                .issuer("https://fake-authorization-host.com")
+                .audience("https://real-certify-instance.com")
+                .subject("123456")
+                .claim("client_id", "allowed-client")
+                .expirationTime(Date.from(Instant.now().plusSeconds(120)))
+                .issueTime(new Date())
+                .build().toString();
+        String signature = "fake-signature";
+        request.addHeader("Authorization", String.format("Bearer %s.%s.%s", noneHeader, Base64.getUrlEncoder()
+                .encodeToString(payload.getBytes()), signature));
+        filter.doFilterInternal(request, response, filterChain);
+        verify(parsedAccessToken).setClaims(new HashMap<>());
+        assertFalse(parsedAccessToken.isActive());
+        assertNull(parsedAccessToken.getAccessTokenHash());
     }
 
     @ParameterizedTest
