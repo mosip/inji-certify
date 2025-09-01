@@ -334,7 +334,11 @@ public class StatusListCredentialService {
         statusDetails.put("status_list_index", assignedIndex);
         statusDetails.put("cr_dtimes", System.currentTimeMillis());
 
-        storeLedgerEntry(didUrl, credentialType, statusDetails, indexedAttributes);
+        String credentialId = null;
+        if(jsonObject.has("credentialId")) {
+            credentialId = jsonObject.getString("credentialId");
+        }
+        storeLedgerEntry(credentialId, didUrl, credentialType, statusDetails, indexedAttributes);
 
         log.info("Successfully added credential status with index {} in status list {} and stored in ledger", assignedIndex, statusList.getId());
     }
@@ -442,11 +446,12 @@ public class StatusListCredentialService {
     }
 
     @jakarta.transaction.Transactional
-    public void storeLedgerEntry(String issuerId, String credentialType, Map<String, Object> statusDetails, Map<String, Object> indexedAttributes) {
+    public void storeLedgerEntry(String credentialId, String issuerId, String credentialType, Map<String, Object> statusDetails, Map<String, Object> indexedAttributes) {
         try {
             Ledger ledger = new Ledger();
-            String credentialId = UUID.randomUUID().toString();
-            ledger.setCredentialId(credentialId);
+            if(credentialId != null) {
+                ledger.setCredentialId(credentialId);
+            }
             ledger.setIssuerId(issuerId);
             ledger.setIssueDate(OffsetDateTime.now());
             ledger.setCredentialType(credentialType);
