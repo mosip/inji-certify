@@ -1,4 +1,3 @@
-
 # VC Revocation Feature
 
 **Note**: This feature is currently in experimental mode and may change in future releases.
@@ -334,7 +333,7 @@ Add these properties to your application configuration:
 mosip.certify.status-list.signature-crypto-suite=Ed25519Signature2020
 mosip.certify.status-list.signature-algo=EdDSA
 mosip.certify.statuslist.size-in-kb=16
-mosip.certify.data-provider-plugin.credential-status.supported-purposes={'revocation'}
+mosip.certify.data-provider-plugin.credential-status.allowed-status-purposes={'revocation'}
 ```
 
 ---
@@ -349,7 +348,21 @@ mosip.certify.data-provider-plugin.credential-status.supported-purposes={'revoca
 
 2. **Configuration**: Set the required properties as shown above.
 
-3. **API Usage**:
+3. **Credential Configuration**: For each credential type that should support revocation, set the `credentialStatusPurposes` field (e.g., to `revocation`) in the credential-configuration API using the `/credential-configurations` endpoint. The value of `credentialStatusPurposes` must be one of the values configured in `mosip.certify.data-provider-plugin.credential-status.allowed-status-purposes`. This enables VC Revocation functionality at the credential-type level.
+
+   **Sample request to enable revocation for a credential type:**
+   ```json
+   {
+     "credentialFormat": "ldp_vc",
+     "credentialTypes": ["FarmerCredential", "VerifiableCredential"],
+     "contextURLs": ["https://www.w3.org/ns/credentials/v2"],
+     "signatureCryptoSuite": "Ed25519Signature2020",
+     "credentialStatusPurposes": ["revocation"],
+     ...
+   }
+   ```
+
+4. **API Usage**:
     - Use `/credentials/status-list/{id}` to fetch status list credentials.
     - Use `/credentials/status` to update the status of a credential.
     - Use `/ledger-search` to retrieve credentials and their status information.

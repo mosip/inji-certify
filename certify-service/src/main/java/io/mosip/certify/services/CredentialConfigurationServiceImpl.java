@@ -54,8 +54,8 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Value("#{${mosip.certify.credential-config.issuer.display}}")
     private List<Map<String, String>> issuerDisplay;
 
-    @Value("#{${mosip.certify.data-provider-plugin.credential-status.supported-purposes:{}}}")
-    private List<String> credentialStatusSupportedPurposes;
+    @Value("#{${mosip.certify.data-provider-plugin.credential-status.allowed-status-purposes:{}}}")
+    private List<String> allowedCredentialStatusPurposes;
 
     @Value("#{${mosip.certify.credential-config.cryptographic-binding-methods-supported}}")
     private LinkedHashMap<String, List<String>> cryptographicBindingMethodsSupportedMap;
@@ -77,7 +77,6 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
         validateCredentialConfiguration(credentialConfig, true);
 
-        credentialConfig.setCredentialStatusPurposes(credentialStatusSupportedPurposes);
         credentialConfig.setCryptographicBindingMethodsSupported(cryptographicBindingMethodsSupportedMap.get(credentialConfig.getCredentialFormat()));
         credentialConfig.setCredentialSigningAlgValuesSupported(Collections.singletonList(credentialConfig.getSignatureCryptoSuite()));
         credentialConfig.setProofTypesSupported(proofTypesSupported);
@@ -93,6 +92,14 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     }
 
     private void validateCredentialConfiguration(CredentialConfig credentialConfig, boolean shouldCheckDuplicate) {
+
+        if (credentialConfig.getCredentialStatusPurposes() != null && credentialConfig.getCredentialStatusPurposes().size() > 1){
+            throw new CertifyException("Multiple credential status purposes are not currently supported.");
+        }
+
+        if (credentialConfig.getCredentialStatusPurposes() != null && !credentialConfig.getCredentialStatusPurposes().isEmpty() && !allowedCredentialStatusPurposes.contains(credentialConfig.getCredentialStatusPurposes().getFirst())) {
+            throw new CertifyException("Invalid credential status purposes. Allowed values are: " + allowedCredentialStatusPurposes);
+        }
 
         if(pluginMode.equals("DataProvider") && (credentialConfig.getVcTemplate() == null || credentialConfig.getVcTemplate().isEmpty())) {
             throw new CertifyException("Credential Template is mandatory for the DataProvider plugin issuer.");
