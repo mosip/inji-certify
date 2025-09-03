@@ -1,15 +1,12 @@
 package io.mosip.certify.services;
 
-import io.mosip.certify.core.dto.CredentialLedgerSearchRequest;
 import io.mosip.certify.core.dto.CredentialStatusResponse;
 import io.mosip.certify.core.dto.UpdateCredentialStatusRequest;
 import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.credential.CredentialFactory;
 import io.mosip.certify.entity.CredentialStatusTransaction;
 import io.mosip.certify.entity.Ledger;
 import io.mosip.certify.repository.CredentialStatusTransactionRepository;
 import io.mosip.certify.repository.LedgerRepository;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,10 +14,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,6 +41,7 @@ public class CredentialStatusServiceImplTest {
     @Before
     public void setUp() {
         MockitoAnnotations.openMocks(this);
+        ReflectionTestUtils.setField(credentialStatusService, "allowedCredentialStatusPurposes", List.of("revocation", "purpose2"));
     }
 
     @Test
@@ -126,6 +127,42 @@ public class CredentialStatusServiceImplTest {
 
         verify(ledgerRepository).findByCredentialId(credentialId);
         verify(credentialStatusTransactionRepository).save(any(CredentialStatusTransaction.class));
+    }
+
+    @Test
+    public void updateCredentialStatus_InvalidStatusPurpose_ThrowsCertifyException() {
+        String credentialId = "cid-001";
+        String statusListCredential = "https://example.com/status-list/abc";
+        UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(credentialId, statusListCredential);
+        // Set an invalid status purpose
+        request.getCredentialStatus().setStatusPurpose("invalid-purpose");
+
+        // Set allowedCredentialStatusPurposes to only allow "revocation"
+        List<String> allowedPurposes = List.of("revocation");
+        org.springframework.test.util.ReflectionTestUtils.setField(credentialStatusService, "allowedCredentialStatusPurposes", allowedPurposes);
+
+        CertifyException exception = assertThrows(CertifyException.class, () -> {
+            credentialStatusService.updateCredentialStatus(request);
+        });
+        assertEquals("Invalid credential status purposes. Allowed values are: " + allowedPurposes, exception.getMessage());
+    }
+
+    @Test
+    public void updateCredentialStatus_NullStatusPurpose_AllowsUpdate() {
+        String credentialId = "cid-002";
+        String statusListCredential = "https://example.com/status-list/def";
+        UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(credentialId, statusListCredential);
+        // Set status purpose to null
+        request.getCredentialStatus().setStatusPurpose(null);
+
+        Ledger ledger = createLedger(credentialId);
+        when(ledgerRepository.findByCredentialId(credentialId)).thenReturn(Optional.of(ledger));
+        when(credentialStatusTransactionRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        CredentialStatusResponse response = credentialStatusService.updateCredentialStatus(request);
+        assertNotNull(response);
+        assertEquals(credentialId, response.getCredentialId());
+        assertNull(response.getStatusPurpose());
     }
 
     private UpdateCredentialStatusRequest createValidUpdateCredentialRequest(String credentialId, String statusListCredential) {

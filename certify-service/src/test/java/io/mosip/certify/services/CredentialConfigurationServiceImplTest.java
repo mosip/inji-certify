@@ -1,6 +1,5 @@
 package io.mosip.certify.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.CredentialConfigException;
@@ -83,14 +82,13 @@ public class CredentialConfigurationServiceImplTest {
         ReflectionTestUtils.setField(credentialConfigurationService, "servletPath", "v1/test");
         ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "DataProvider");
         ReflectionTestUtils.setField(credentialConfigurationService, "issuerDisplay", List.of(Map.of()));
-        ReflectionTestUtils.setField(credentialConfigurationService, "credentialStatusSupportedPurposes", List.of("test_purpose"));
         ReflectionTestUtils.setField(credentialConfigurationService, "cryptographicBindingMethodsSupportedMap", new LinkedHashMap<>());
         ReflectionTestUtils.setField(credentialConfigurationService, "credentialSigningAlgValuesSupportedMap", new LinkedHashMap<>());
         ReflectionTestUtils.setField(credentialConfigurationService, "proofTypesSupported", new LinkedHashMap<>());
     }
 
     @Test
-    public void addNewCredentialConfig_Success() throws JsonProcessingException {
+    public void addNewCredentialConfig_Success() {
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(credentialConfig);
         when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(credentialConfig);
 
@@ -160,7 +158,7 @@ public class CredentialConfigurationServiceImplTest {
     }
 
     @Test
-    public void updateExistingCredentialConfig_Success() throws JsonProcessingException {
+    public void updateExistingCredentialConfig_Success() {
 
         CredentialConfig mockCredentialConfig = new CredentialConfig();
         String expectedId = "test-credential";
@@ -418,7 +416,7 @@ public class CredentialConfigurationServiceImplTest {
     // Add these methods to CredentialConfigurationServiceImplTest
 
     @Test
-    public void addNewCredentialConfig_MsoMdoc_Success() throws JsonProcessingException {
+    public void addNewCredentialConfig_MsoMdoc_Success(){
         CredentialConfig mdocConfig = new CredentialConfig();
         mdocConfig.setConfigId(UUID.randomUUID().toString());
         mdocConfig.setCredentialConfigKeyId("mdoc-credential");
@@ -446,7 +444,7 @@ public class CredentialConfigurationServiceImplTest {
     }
 
     @Test
-    public void addNewCredentialConfig_SdJwt_Success() throws JsonProcessingException {
+    public void addNewCredentialConfig_SdJwt_Success() {
         CredentialConfig sdJwtConfig = new CredentialConfig();
         sdJwtConfig.setConfigId(UUID.randomUUID().toString());
         sdJwtConfig.setCredentialConfigKeyId("sdjwt-credential");
@@ -587,6 +585,90 @@ public class CredentialConfigurationServiceImplTest {
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", config, true)
             );
             assertEquals("Signature algorithm is mandatory for the provided crypto suite: ecdsa-rdfc-2019", ex.getMessage());
+        }
+    }
+
+    @Test
+    public void validateCredentialConfiguration_MultipleCredentialStatusPurposes_ThrowsException() {
+        CredentialConfig config = new CredentialConfig();
+        config.setCredentialFormat("ldp_vc");
+        config.setVcTemplate("test_template");
+        config.setCredentialStatusPurposes(List.of("purpose1", "purpose2"));
+
+        ReflectionTestUtils.setField(credentialConfigurationService, "allowedCredentialStatusPurposes", List.of("purpose1"));
+
+        CertifyException ex = assertThrows(CertifyException.class, () ->
+                ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", config, true)
+        );
+        assertEquals("Multiple credential status purposes are not currently supported.", ex.getMessage());
+    }
+
+    @Test
+    public void validateCredentialConfiguration_InvalidCredentialStatusPurpose_ThrowsException() {
+        CredentialConfig config = new CredentialConfig();
+        config.setCredentialFormat("ldp_vc");
+        config.setVcTemplate("test_template");
+        config.setCredentialStatusPurposes(List.of("invalid_purpose"));
+
+        ReflectionTestUtils.setField(credentialConfigurationService, "allowedCredentialStatusPurposes", List.of("purpose1", "purpose2"));
+
+        CertifyException ex = assertThrows(CertifyException.class, () ->
+                ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", config, true)
+        );
+        assertEquals("Invalid credential status purposes. Allowed values are: [purpose1, purpose2]", ex.getMessage());
+    }
+
+    @Test
+    public void validateCredentialConfiguration_NullCredentialStatusPurposes_AllowsConfig() {
+        CredentialConfig config = new CredentialConfig();
+        config.setCredentialFormat("ldp_vc");
+        config.setVcTemplate("test_template");
+        config.setCredentialStatusPurposes(null);
+        config.setContext("https://www.w3.org/2018/credentials/v1");
+        config.setCredentialType("VerifiableCredential");
+        config.setSignatureCryptoSuite("Ed25519Signature2020");
+
+        ReflectionTestUtils.setField(credentialConfigurationService, "allowedCredentialStatusPurposes", List.of("purpose1", "purpose2"));
+
+        try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(config)).thenReturn(true);
+            ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", config, true);
+        }
+    }
+
+    @Test
+    public void validateCredentialConfiguration_EmptyCredentialStatusPurposes_AllowsConfig() {
+        CredentialConfig config = new CredentialConfig();
+        config.setCredentialFormat("ldp_vc");
+        config.setVcTemplate("test_template");
+        config.setCredentialStatusPurposes(Collections.emptyList());
+        config.setContext("https://www.w3.org/2018/credentials/v1");
+        config.setCredentialType("VerifiableCredential");
+        config.setSignatureCryptoSuite("Ed25519Signature2020");
+
+        ReflectionTestUtils.setField(credentialConfigurationService, "allowedCredentialStatusPurposes", List.of("purpose1", "purpose2"));
+
+        try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(config)).thenReturn(true);
+            ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", config, true);
+        }
+    }
+
+    @Test
+    public void validateCredentialConfiguration_ValidSingleCredentialStatusPurpose_Succeeds() {
+        CredentialConfig config = new CredentialConfig();
+        config.setCredentialFormat("ldp_vc");
+        config.setVcTemplate("test_template");
+        config.setCredentialStatusPurposes(List.of("purpose1"));
+        config.setContext("https://www.w3.org/2018/credentials/v1");
+        config.setCredentialType("VerifiableCredential");
+        config.setSignatureCryptoSuite("Ed25519Signature2020");
+
+        ReflectionTestUtils.setField(credentialConfigurationService, "allowedCredentialStatusPurposes", List.of("purpose1", "purpose2"));
+
+        try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(config)).thenReturn(true);
+            ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", config, true);
         }
     }
 }
