@@ -1,8 +1,10 @@
 package io.mosip.certify.controller;
 
 import io.mosip.certify.core.dto.CredentialIssuerMetadataDTO;
+import io.mosip.certify.core.dto.OAuthAuthorizationServerMetadataDTO;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
 import io.mosip.certify.core.spi.VCIssuanceService;
+import io.mosip.certify.services.OAuthAuthorizationServerMetadataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +23,9 @@ public class WellKnownController {
     @Autowired
     private VCIssuanceService vcIssuanceService;
 
+    @Autowired
+    private OAuthAuthorizationServerMetadataService oAuthAuthorizationServerMetadataService;
+
     @GetMapping(value = "/openid-credential-issuer", produces = "application/json")
     public CredentialIssuerMetadataDTO getCredentialIssuerMetadata(
             @RequestParam(name = "version", required = false, defaultValue = "latest") String version) {
@@ -30,6 +35,11 @@ public class WellKnownController {
     @GetMapping(value = "/did.json")
     public Map<String, Object> getDIDDocument() {
         return vcIssuanceService.getDIDDocument();
+    }
+
+    @GetMapping(value = "/oauth-authorization-server", produces = "application/json")
+    public OAuthAuthorizationServerMetadataDTO getOAuthAuthorizationServerMetadata() {
+        return oAuthAuthorizationServerMetadataService.getOAuthAuthorizationServerMetadata();
     }
 }
 
