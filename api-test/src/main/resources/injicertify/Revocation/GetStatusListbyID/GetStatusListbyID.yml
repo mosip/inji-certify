@@ -33,7 +33,7 @@ GetStatusListbyID:
        ]
     }'
    InjiCertify_GetStatusListbyID_ForLandRegistry_Revocation_without_Id_Neg:
-      endPoint: $INJICERTIFYBASEURL$/v1/certify/credentials/status-list/{id}
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/credentials/status-list
       uniqueIdentifier: TC_InjiCertify_Get_Status_List_by_ID_03
       description: Getting status list by without statusListCredential ID
       role: noauth
