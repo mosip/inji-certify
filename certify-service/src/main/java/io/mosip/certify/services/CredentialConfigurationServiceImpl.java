@@ -66,8 +66,8 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Value("#{${mosip.certify.credential-config.proof-types-supported}}")
     private LinkedHashMap<String, Object> proofTypesSupported;
 
-    @Value("#{${mosip.certify.key-chooser}}")
-    private Map<String, List<List<String>>> keyChooser;
+    @Value("#{${mosip.certify.signature-cryptosuite.key-alias-mapper}}")
+    private Map<String, List<List<String>>> keyAliasMapper;
 
     private static final String CREDENTIAL_CONFIG_CACHE_NAME = "credentialConfig";
 
@@ -116,7 +116,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 if(shouldCheckDuplicate && LdpVcCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException("Configuration already exists for the given context and credentialType");
                 }
-                validateKeyChooserConfiguration(credentialConfig);
+                validateKeyAliasMapperConfiguration(credentialConfig);
                 break;
             case VCFormats.MSO_MDOC:
                 if (!MsoMdocCredentialConfigValidator.isValidCheck(credentialConfig)) {
@@ -139,11 +139,11 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         }
     }
 
-    private void validateKeyChooserConfiguration(CredentialConfig credentialConfig) {
+    private void validateKeyAliasMapperConfiguration(CredentialConfig credentialConfig) {
         if(pluginMode.equals("VCIssuance")) {
             return;
         }
-        if (!keyChooser.containsKey(credentialConfig.getSignatureCryptoSuite())) {
+        if (!keyAliasMapper.containsKey(credentialConfig.getSignatureCryptoSuite())) {
             DataIntegrityProofDataIntegritySuite dataIntegrityProofDataIntegritySuite = DataIntegritySuites.DATA_INTEGRITY_SUITE_DATAINTEGRITYPROOF;
 
             if (credentialConfig.getSignatureAlgo() == null || credentialConfig.getSignatureAlgo().isEmpty()) {
@@ -161,12 +161,12 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                         " is not supported for the signature algorithm: " + credentialConfig.getSignatureAlgo());
             }
         } else {
-            List<List<String>> keyChooserList = keyChooser.get(credentialConfig.getSignatureCryptoSuite());
-            if (keyChooserList == null || keyChooserList.isEmpty()) {
+            List<List<String>> keyAliasList = keyAliasMapper.get(credentialConfig.getSignatureCryptoSuite());
+            if (keyAliasList == null || keyAliasList.isEmpty()) {
                 throw new CertifyException("No key chooser configuration found for the signature crypto suite: " + credentialConfig.getSignatureCryptoSuite());
             }
 
-            boolean isMatch = keyChooserList.stream()
+            boolean isMatch = keyAliasList.stream()
                     .anyMatch(pair ->
                             credentialConfig.getKeyManagerAppId() != null &&
                             pair.getFirst().equals(credentialConfig.getKeyManagerAppId()) &&

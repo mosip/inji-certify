@@ -50,8 +50,8 @@ public class W3CJsonLD extends Credential{
     @Autowired
     DIDDocumentUtil didDocumentUtil;
 
-    @Value("#{${mosip.certify.key-chooser}}")
-    private Map<String, List<List<String>>> keyChooser;
+    @Value("#{${mosip.certify.signature-cryptosuite.key-alias-mapper}}")
+    private Map<String, List<List<String>>> keyAliasMapper;
 
 
     /**
@@ -108,7 +108,7 @@ public class W3CJsonLD extends Credential{
 
         CertificateResponseDTO certificateResponseDTO = didDocumentUtil.getCertificateDataResponseDto(appID, refID);
         String kid = certificateResponseDTO.getKeyId();
-        if (keyChooser.containsKey(signatureCryptoSuite)) {
+        if (keyAliasMapper.containsKey(signatureCryptoSuite)) {
             // legacy signature algos such as Ed25519Signature{2018,2020}
             ProofGenerator proofGenerator = proofGeneratorFactory.getProofGenerator(signatureCryptoSuite)
                     .orElseThrow(() ->

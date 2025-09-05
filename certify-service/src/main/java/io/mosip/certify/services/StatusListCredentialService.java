@@ -82,8 +82,11 @@ public class StatusListCredentialService {
     @Value("#{${mosip.certify.statuslist.size-in-kb:16}}") // value in kb
     private long statusListSizeInKB;
 
-    @Value("#{${mosip.certify.key-chooser}}")
-    private Map<String, List<List<String>>> keyChooser;
+    @Value("#{${mosip.certify.signature-cryptosuite.key-alias-mapper}}")
+    private Map<String, List<List<String>>> keyAliasMapper;
+
+    @Value("${mosip.certify.status-list.key-manager-ref-id:ED25519_SIGN}")
+    private String statusListKeyManagerRefId;
 
     public String getStatusListCredential(String id) throws CertifyException {
         log.info("Processing status list credential request for ID: {}", id);
@@ -473,8 +476,7 @@ public class StatusListCredentialService {
      * Helper method to add a proof to a VC and handle the result.
      */
     private String addProofAndHandleResult(JSONObject vcDocument, String errorConstant) throws CertifyException {
-        String appId = keyChooser.get(signatureCryptoSuite).getFirst().getFirst();
-        String refId = keyChooser.get(signatureCryptoSuite).getFirst().getLast();
+        String appId = keyAliasMapper.get(signatureCryptoSuite).getFirst().getFirst();
         Credential cred = credentialFactory.getCredential(VCFormats.LDP_VC)
                 .orElseThrow(() -> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
 
@@ -483,7 +485,7 @@ public class StatusListCredentialService {
                 "",
                 signatureAlgo,
                 appId,
-                refId,
+                statusListKeyManagerRefId,
                 didUrl,
                 signatureCryptoSuite
         );

@@ -61,13 +61,13 @@ public class W3CJsonLDTest {
 
     @Before
     public void setUp() {
-        Map<String, List<List<String>>> keyChooser = new HashMap<>();
-        keyChooser.put("Ed25519Signature2020", Arrays.asList(
+        Map<String, List<List<String>>> keyAliasMapper = new HashMap<>();
+        keyAliasMapper.put("Ed25519Signature2020", Arrays.asList(
                 Arrays.asList("appID", "refID")));
 
         ReflectionTestUtils.setField(w3cJsonLd, "proofGeneratorFactory", proofGeneratorFactory);
         ReflectionTestUtils.setField(w3cJsonLd, "didDocumentUtil", didDocumentUtil);
-        ReflectionTestUtils.setField(w3cJsonLd, "keyChooser", keyChooser);
+        ReflectionTestUtils.setField(w3cJsonLd, "keyAliasMapper", keyAliasMapper);
         when(proofGeneratorFactory.getProofGenerator(any())).thenReturn(Optional.of(proofGenerator));
     }
 

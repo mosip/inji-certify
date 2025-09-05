@@ -49,10 +49,10 @@ public class CredentialConfigurationServiceImplTest {
 
     @Before
     public void setup() {
-        Map<String, List<List<String>>> keyChooser = new HashMap<>();
-        keyChooser.put("Ed25519Signature2020", Arrays.asList(
+        Map<String, List<List<String>>> keyAliasMapper = new HashMap<>();
+        keyAliasMapper.put("Ed25519Signature2020", Arrays.asList(
                 Arrays.asList("TEST2019", "TEST2019-REF")));
-        keyChooser.put("RsaSignature2018", List.of());
+        keyAliasMapper.put("RsaSignature2018", List.of());
 
         MockitoAnnotations.openMocks(this);
         credentialConfig = new CredentialConfig();
@@ -91,7 +91,7 @@ public class CredentialConfigurationServiceImplTest {
         ReflectionTestUtils.setField(credentialConfigurationService, "cryptographicBindingMethodsSupportedMap", new LinkedHashMap<>());
         ReflectionTestUtils.setField(credentialConfigurationService, "credentialSigningAlgValuesSupportedMap", new LinkedHashMap<>());
         ReflectionTestUtils.setField(credentialConfigurationService, "proofTypesSupported", new LinkedHashMap<>());
-        ReflectionTestUtils.setField(credentialConfigurationService, "keyChooser", keyChooser);
+        ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper", keyAliasMapper);
     }
 
     @Test
@@ -680,7 +680,7 @@ public class CredentialConfigurationServiceImplTest {
     }
 
     @Test
-    public void validateKeyChooserConfiguration_KeyChooserListIsNull_ThrowsException() {
+    public void validateKeyAliasMapperConfiguration_KeyAliasListIsNull_ThrowsException() {
         credentialConfig.setSignatureCryptoSuite("RsaSignature2018");
         // Arrange
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(credentialConfig);
@@ -693,7 +693,7 @@ public class CredentialConfigurationServiceImplTest {
     }
 
     @Test
-    public void validateKeyChooserConfiguration_NoMatchingAppIdAndRefId_ThrowsException() {
+    public void validateKeyAliasMpperConfiguration_NoMatchingAppIdAndRefId_ThrowsException() {
         // Arrange
         credentialConfig.setKeyManagerAppId("appId");
         credentialConfig.setKeyManagerRefId("refId");
