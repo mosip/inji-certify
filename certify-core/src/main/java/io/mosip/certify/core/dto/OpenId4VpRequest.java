@@ -37,10 +37,17 @@ public class OpenId4VpRequest {
 
     /**
      * Response URI where the wallet should post the VP response.
-     * For mocked/hardcoded flow this will point back to issuer's /oauth/iar.
+     * For real flow this points to the actual VP Verifier service endpoint.
+     * For testing, this can point back to issuer's /oauth/iar.
      */
     @JsonProperty("response_uri")
     private String responseUri;
+
+    /**
+     * Nonce value for the VP request to prevent replay attacks
+     */
+    @JsonProperty("nonce")
+    private String nonce;
 
     /**
      * Presentation definition describing required credentials
