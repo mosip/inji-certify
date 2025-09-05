@@ -22,7 +22,7 @@ public class Ledger {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "credential_id", length = 255, nullable = false, unique = true)
+    @Column(name = "credential_id", length = 255, unique = true)
     private String credentialId;
 
     @Column(name = "issuer_id", length = 255, nullable = false)
