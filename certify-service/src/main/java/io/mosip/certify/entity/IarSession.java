@@ -24,17 +24,17 @@ public class IarSession {
     @Column(name = "transaction_id", length = 64, nullable = false)
     private String transactionId;
 
+    @Column(name = "request_id", length = 64)
+    private String requestId;
+
+    @Column(name = "verify_nonce", length = 64)
+    private String verifyNonce;
+
+    @Column(name = "expires_at")
+    private LocalDateTime expiresAt;
+
     @Column(name = "client_id", length = 128)
     private String clientId;
-
-    @Column(name = "redirect_uri", length = 512)
-    private String redirectUri;
-
-    @Column(name = "code_challenge", length = 128)
-    private String codeChallenge;
-
-    @Column(name = "code_challenge_method", length = 10)
-    private String codeChallengeMethod;
 
     @Column(name = "authorization_code", length = 128)
     private String authorizationCode;

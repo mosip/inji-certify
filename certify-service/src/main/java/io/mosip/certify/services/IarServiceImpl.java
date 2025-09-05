@@ -14,14 +14,23 @@ import io.mosip.certify.core.spi.IarService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import io.mosip.certify.util.VpParsingUtil;
 import io.mosip.certify.entity.IarSession;
 import io.mosip.certify.repository.IarSessionRepository;
 
@@ -29,15 +38,21 @@ import io.mosip.certify.repository.IarSessionRepository;
  * Interactive Authorization Request (IAR) Service Implementation
  * Handles authorization requests for OpenID4VCI credential issuance
  * 
- * Initially uses hardcoded OpenID4VP requests. Will be replaced with 
- * verify service integration once verify branch is ready.
+ * Integrates with verify service for VP request generation and VP verification.
+ * Uses real service endpoints for presentation during issuance flow.
  */
 @Slf4j
 @Service
 public class IarServiceImpl implements IarService {
 
     @Autowired
+    private VpParsingUtil vpParsingUtil;
+
+    @Autowired
     private IarSessionRepository iarSessionRepository;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     @Value("${mosip.certify.iar.default-client-id:default-wallet-client}")
     private String defaultClientId;
@@ -45,8 +60,17 @@ public class IarServiceImpl implements IarService {
     @Value("${mosip.certify.iar.session-timeout-seconds:1800}")
     private int sessionTimeoutSeconds;
 
+    @Value("${mosip.certify.iar.presentation.default-id:employment-check}")
+    private String defaultPresentationDefinitionId;
+
     @Value("${mosip.certify.iar.require-interaction:true}")
     private boolean requireInteractionByDefault;
+
+    @Value("${mosip.certify.verify.service.base-url:http://localhost:8080}")
+    private String verifyServiceBaseUrl;
+
+    @Value("${mosip.certify.verify.service.vp-request-endpoint:/v1/verify/vp-request}")
+    private String verifyServiceVpRequestEndpoint;
 
     @Value("${mosip.certify.iar.presentation.default-id:employment-check}")
     private String defaultPresentationId;
@@ -166,21 +190,37 @@ public class IarServiceImpl implements IarService {
             response.setType(IarConstants.TYPE_OPENID4VP_PRESENTATION);
             response.setAuthSession(authSession);
 
-            // Create hardcoded OpenID4VP request
-            OpenId4VpRequest openId4VpRequest = createOpenId4VpRequest(iarRequest);
+            // Call verify service to get VP request and transaction ID
+            VerifyVpResponse verifyResponse = callVerifyServiceForVpRequest(iarRequest);
+            
+            // Convert verify response to OpenId4VpRequest
+            OpenId4VpRequest openId4VpRequest = convertToOpenId4VpRequest(verifyResponse, iarRequest);
             response.setOpenid4vpRequest(openId4VpRequest);
 
-            String transactionId = IarConstants.TRANSACTION_ID_PREFIX + UUID.randomUUID().toString().substring(0, 8);
-            log.info("Generated transaction_id: {} for auth_session: {}", transactionId, authSession);
+            // Use transaction ID from verify service response instead of generating random one
+            String transactionId = verifyResponse.getTransactionId();
+            if (!StringUtils.hasText(transactionId)) {
+                // Fallback to generated ID if verify service doesn't provide one
+                transactionId = IarConstants.TRANSACTION_ID_PREFIX + UUID.randomUUID().toString().substring(0, 8);
+                log.warn("No transaction ID from verify service, using generated: {}", transactionId);
+            } else {
+                log.info("Using transaction_id from verify service: {} for auth_session: {}", transactionId, authSession);
+            }
             
             // Store complete IAR request details for later validation
             IarSession iarSession = new IarSession();
             iarSession.setAuthSession(authSession);
             iarSession.setTransactionId(transactionId);
+            iarSession.setRequestId(verifyResponse.getRequestId());
+            iarSession.setVerifyNonce(verifyResponse.getAuthorizationDetails() != null ? 
+                                      verifyResponse.getAuthorizationDetails().getNonce() : null);
+            // Convert expiresAt from milliseconds to LocalDateTime
+            if (verifyResponse.getExpiresAt() != null) {
+                iarSession.setExpiresAt(LocalDateTime.ofInstant(
+                    java.time.Instant.ofEpochMilli(verifyResponse.getExpiresAt()),
+                    java.time.ZoneOffset.UTC));
+            }
             iarSession.setClientId(iarRequest.getClientId());
-            iarSession.setRedirectUri(iarRequest.getRedirectUri());
-            iarSession.setCodeChallenge(iarRequest.getCodeChallenge());
-            iarSession.setCodeChallengeMethod(iarRequest.getCodeChallengeMethod());
             
             iarSessionRepository.save(iarSession);
             return response;
@@ -191,6 +231,110 @@ public class IarServiceImpl implements IarService {
         }
     }
     
+
+    /**
+     * Call verify service to generate VP request instead of hardcoding
+     */
+    private VerifyVpResponse callVerifyServiceForVpRequest(IarRequest iarRequest) throws CertifyException {
+        log.info("Calling verify service for VP request generation for client_id: {}", iarRequest.getClientId());
+
+        try {
+            // Create presentation definition for the verify service
+            PresentationDefinition presentationDefinition = createConfigurablePresentationDefinition();
+
+            // Create verify service request
+            VerifyVpRequest verifyRequest = new VerifyVpRequest();
+            verifyRequest.setClientId(iarRequest.getClientId());
+            verifyRequest.setPresentationDefinition(presentationDefinition);
+            verifyRequest.setResponseModesSupported(Arrays.asList("direct-post", "direct-post.jwt"));
+            verifyRequest.setEncryptionRequired(true);
+
+            // Set up headers
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<VerifyVpRequest> requestEntity = new HttpEntity<>(verifyRequest, headers);
+
+            // Make the API call
+            String verifyServiceUrl = verifyServiceBaseUrl + verifyServiceVpRequestEndpoint;
+            log.debug("Calling verify service at: {}", verifyServiceUrl);
+
+            ResponseEntity<VerifyVpResponse> responseEntity = restTemplate.exchange(
+                verifyServiceUrl,
+                HttpMethod.POST,
+                requestEntity,
+                VerifyVpResponse.class
+            );
+
+            VerifyVpResponse verifyResponse = responseEntity.getBody();
+            if (verifyResponse == null) {
+                throw new CertifyException(ErrorConstants.UNKNOWN_ERROR, "Empty response from verify service");
+            }
+
+            log.info("Successfully received VP request from verify service for client_id: {}, transactionId: {}", 
+                     iarRequest.getClientId(), verifyResponse.getTransactionId());
+
+            return verifyResponse;
+
+        } catch (Exception e) {
+            log.error("Failed to call verify service for client_id: {}", iarRequest.getClientId(), e);
+            throw new CertifyException(ErrorConstants.UNKNOWN_ERROR, "Failed to call verify service", e);
+        }
+    }
+
+    /**
+     * Convert verify service response to OpenId4VpRequest
+     */
+    private OpenId4VpRequest convertToOpenId4VpRequest(VerifyVpResponse verifyResponse, IarRequest iarRequest) {
+        OpenId4VpRequest openId4VpRequest = new OpenId4VpRequest();
+        
+        // Extract authorization details from verify service response
+        VerifyVpResponse.AuthorizationDetails authDetails = verifyResponse.getAuthorizationDetails();
+        if (authDetails == null) {
+            log.warn("No authorization details found in verify service response, using fallback values");
+            // Use fallback values from configuration
+            openId4VpRequest.setResponseType(openid4vpResponseType);
+            openId4VpRequest.setResponseMode(openid4vpResponseMode);
+            openId4VpRequest.setClientId(iarRequest.getClientId());
+            openId4VpRequest.setResponseUri(openid4vpResponseUri);
+            openId4VpRequest.setPresentationDefinition(createConfigurablePresentationDefinition());
+            return openId4VpRequest;
+        }
+
+        // Use response from verify service
+        openId4VpRequest.setResponseType(
+            StringUtils.hasText(authDetails.getResponseType()) ? 
+            authDetails.getResponseType() : openid4vpResponseType
+        );
+        
+        openId4VpRequest.setResponseMode(
+            StringUtils.hasText(authDetails.getResponseMode()) ? 
+            authDetails.getResponseMode() : openid4vpResponseMode
+        );
+        
+        openId4VpRequest.setClientId(iarRequest.getClientId());
+        
+        // Use response_uri from verify service
+        openId4VpRequest.setResponseUri(
+            StringUtils.hasText(authDetails.getResponseUri()) ? 
+            authDetails.getResponseUri() : openid4vpResponseUri
+        );
+
+        // Use nonce from verify service
+        openId4VpRequest.setNonce(authDetails.getNonce());
+
+        // Use presentation definition from verify service response
+        openId4VpRequest.setPresentationDefinition(authDetails.getPresentationDefinition());
+
+        log.info("Successfully converted verify service response to OpenId4VpRequest for client_id: {}", iarRequest.getClientId());
+        log.debug("OpenId4VpRequest - responseType: {}, responseMode: {}, responseUri: {}, nonce: {}", 
+                  openId4VpRequest.getResponseType(), openId4VpRequest.getResponseMode(), 
+                  openId4VpRequest.getResponseUri(), openId4VpRequest.getNonce());
+        log.debug("Using verify service values - transactionId: {}, requestId: {}, expiresAt: {}", 
+                  verifyResponse.getTransactionId(), verifyResponse.getRequestId(), verifyResponse.getExpiresAt());
+
+        return openId4VpRequest;
+    }
 
     @Override
     public IarPresentationResponse processVpPresentationResponse(IarPresentationRequest presentationRequest) throws CertifyException {
@@ -206,25 +350,38 @@ public class IarServiceImpl implements IarService {
                 throw new InvalidRequestException(IarConstants.INVALID_AUTH_SESSION);
             }
 
-            // Mock VP Verifier interaction (steps 15-17)
-            // NOTE: This is intentionally hardcoded for now. When Verify service is available,
-            //       replace this with an HTTP POST to the verifier's /oid4vp/response endpoint
-            //       using response_uri from the openid4vp_request returned at step 9.
-            boolean isVpValid = mockVerifyPresentation(presentationRequest.getOpenid4vpPresentation());
+            // Get IAR session to retrieve request_id for VP verification
+            Optional<IarSession> sessionOpt = iarSessionRepository.findByAuthSession(presentationRequest.getAuthSession());
+            if (sessionOpt.isEmpty()) {
+                throw new CertifyException("invalid_request", "Invalid auth_session");
+            }
+            IarSession session = sessionOpt.get();
+
+            // VP Verifier interaction (steps 15-17)
+            // Call actual VP Verifier service at /vp-submission/direct-post
+            VpVerificationResponse verificationResponse = callVpVerifierService(
+                presentationRequest.getOpenid4vpPresentation(), 
+                session.getRequestId()
+            );
 
             IarPresentationResponse response = new IarPresentationResponse();
-            if (isVpValid) {
-                // Step 18: Successful verification (mocked)
+            if ("ok".equals(verificationResponse.getStatus())) {
+                // Step 18: Successful verification
                 String authorizationCode = generateAndStoreAuthorizationCode(presentationRequest.getAuthSession());
                 response.setStatus(IarConstants.STATUS_OK);
                 response.setAuthorizationCode(authorizationCode);
-                log.info("VP verification successful for auth_session: {}", presentationRequest.getAuthSession());
+                log.info("VP verification successful for auth_session: {}, request_id: {}", 
+                         presentationRequest.getAuthSession(), session.getRequestId());
             } else {
-                // Step 18: Failed verification (mocked)
+                // Step 18: Failed verification
                 response.setStatus(IarConstants.STATUS_ERROR);
-                response.setError(IarConstants.INVALID_REQUEST);
-                response.setErrorDescription("VP verification failed");
-                log.warn("VP verification failed for auth_session: {}", presentationRequest.getAuthSession());
+                response.setError(verificationResponse.getError() != null ? 
+                                 verificationResponse.getError() : IarConstants.INVALID_REQUEST);
+                response.setErrorDescription(verificationResponse.getErrorDescription() != null ?
+                                           verificationResponse.getErrorDescription() : "VP verification failed");
+                log.warn("VP verification failed for auth_session: {}, request_id: {}, error: {}", 
+                         presentationRequest.getAuthSession(), session.getRequestId(), 
+                         verificationResponse.getError());
             }
 
             return response;
@@ -258,7 +415,7 @@ public class IarServiceImpl implements IarService {
     }
 
     /**
-     * Validates auth_session using hardcoded value
+     * Validates auth_session against stored IAR sessions
      */
     private boolean isValidAuthSession(String authSession) {
         boolean isValid = iarSessionRepository.findByAuthSession(authSession).isPresent();
@@ -270,23 +427,62 @@ public class IarServiceImpl implements IarService {
      * Mock VP Verifier interaction
      * TODO: Replace with actual API call to VP Verifier's /oid4vp/response endpoint
      */
-    private boolean mockVerifyPresentation(String openid4vpPresentation) {
-        log.debug("Mock verifying VP presentation: {}", openid4vpPresentation);
-
-        // Minimal check for response_mode
-        if (openid4vpResponseMode.equals(IarConstants.RESPONSE_MODE_IAR_POST_JWT)) {
-            log.debug("Mock decryption of iar-post.jwt presentation");
-            return openid4vpPresentation.contains("response"); // Basic check for JWT structure
-        } else if (openid4vpResponseMode.equals(IarConstants.RESPONSE_MODE_IAR_POST)) {
-            log.debug("Processing unencrypted iar-post presentation");
-            return openid4vpPresentation.contains("vp_token") && 
-                   openid4vpPresentation.contains("presentation_submission");
-        } else {
-            log.warn("Unsupported response_mode: {}", openid4vpResponseMode);
-            return false;
+    /**
+     * Call VP Verifier service to verify the presentation
+     * 
+     * @param openid4vpPresentation The VP presentation data
+     * @param requestId The request ID to use as state parameter
+     * @return VpVerificationResponse from the verifier service
+     * @throws CertifyException if verification service call fails
+     */
+    private VpVerificationResponse callVpVerifierService(String openid4vpPresentation, String requestId) 
+            throws CertifyException {
+        try {
+            log.info("Calling VP Verifier service for request_id: {}", requestId);
+            
+            // Parse the VP presentation using enhanced parsing utility
+            String vpToken = vpParsingUtil.extractVpToken(openid4vpPresentation, openid4vpResponseMode);
+            String presentationSubmission = vpParsingUtil.extractPresentationSubmission(
+                openid4vpPresentation, openid4vpResponseMode, defaultPresentationDefinitionId);
+            
+            // Create VP verification request
+            VpVerificationRequest verificationRequest = new VpVerificationRequest();
+            verificationRequest.setVpToken(vpToken);
+            verificationRequest.setPresentationSubmission(presentationSubmission);
+            verificationRequest.setState(requestId);
+            
+            // Prepare form data for VP Verifier service
+            String formData = String.format("vp_token=%s&presentation_submission=%s&state=%s",
+                    URLEncoder.encode(verificationRequest.getVpToken(), StandardCharsets.UTF_8),
+                    URLEncoder.encode(verificationRequest.getPresentationSubmission(), StandardCharsets.UTF_8),
+                    URLEncoder.encode(verificationRequest.getState(), StandardCharsets.UTF_8));
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            
+            HttpEntity<String> requestEntity = new HttpEntity<>(formData, headers);
+            
+            String vpVerifierUrl = verifyServiceBaseUrl + "/vp-submission/direct-post";
+            log.debug("Calling VP Verifier at: {} with request_id: {}", vpVerifierUrl, requestId);
+            
+            ResponseEntity<VpVerificationResponse> responseEntity = restTemplate.postForEntity(
+                    vpVerifierUrl, requestEntity, VpVerificationResponse.class);
+                    
+            VpVerificationResponse response = responseEntity.getBody();
+            if (response == null) {
+                throw new CertifyException("vp_verification_failed", "Empty response from VP Verifier service");
+            }
+            
+            log.info("VP Verifier response - status: {}, request_id: {}", 
+                     response.getStatus(), response.getRequestId());
+            return response;
+            
+        } catch (Exception e) {
+            log.error("Failed to call VP Verifier service for request_id: {}", requestId, e);
+            throw new CertifyException("vp_verification_failed", "VP Verifier service call failed", e);
         }
     }
-
+    
     /**
      * Generates an authorization code for successful VP verification
      */
@@ -308,26 +504,6 @@ public class IarServiceImpl implements IarService {
         }
         
         return authCode;
-    }
-
-    /**
-     * Creates hardcoded OpenID4VP request for testing
-     * This will be replaced with verify service integration
-     */
-    private OpenId4VpRequest createOpenId4VpRequest(IarRequest iarRequest) {
-        OpenId4VpRequest openId4VpRequest = new OpenId4VpRequest();
-        openId4VpRequest.setResponseType(openid4vpResponseType);
-        openId4VpRequest.setResponseMode(openid4vpResponseMode);
-        openId4VpRequest.setClientId(iarRequest.getClientId());
-        // response_uri indicates where the wallet must POST the VP response.
-        // Configurable via mosip.certify.iar.openid4vp.response-uri
-        openId4VpRequest.setResponseUri(openid4vpResponseUri);
-
-        // Create configurable presentation definition
-        PresentationDefinition presentationDefinition = createConfigurablePresentationDefinition();
-        openId4VpRequest.setPresentationDefinition(presentationDefinition);
-
-        return openId4VpRequest;
     }
 
     /**
@@ -479,14 +655,6 @@ public class IarServiceImpl implements IarService {
             throw new CertifyException("invalid_request", "Missing client_id parameter");
         }
 
-        if (!StringUtils.hasText(tokenRequest.getRedirectUri())) {
-            throw new CertifyException("invalid_request", "Missing redirect_uri parameter");
-        }
-
-        if (!StringUtils.hasText(tokenRequest.getCodeVerifier())) {
-            throw new CertifyException("invalid_request", "Missing code_verifier parameter (PKCE required)");
-        }
-
         log.debug("Token request validation successful for client_id: {}", tokenRequest.getClientId());
     }
 
@@ -530,41 +698,8 @@ public class IarServiceImpl implements IarService {
             throw new CertifyException("invalid_grant", "Client ID mismatch");
         }
 
-        // Validate redirect_uri matches
-        if (!tokenRequest.getRedirectUri().equals(session.getRedirectUri())) {
-            throw new CertifyException("invalid_grant", "Redirect URI mismatch");
-        }
-
-        // Validate PKCE code_verifier
-        if (!validatePKCE(tokenRequest.getCodeVerifier(), session.getCodeChallenge(), session.getCodeChallengeMethod())) {
-            throw new CertifyException("invalid_grant", "PKCE validation failed");
-        }
-
         log.debug("Authorization code validation successful for client_id: {}", tokenRequest.getClientId());
         return session;
-    }
-
-    /**
-     * Validate PKCE code_verifier against stored code_challenge
-     */
-    private boolean validatePKCE(String codeVerifier, String codeChallenge, String codeChallengeMethod) {
-        if (!StringUtils.hasText(codeVerifier) || !StringUtils.hasText(codeChallenge)) {
-            return false;
-        }
-
-        try {
-            if ("S256".equals(codeChallengeMethod)) {
-                // For testing, just validate that code_verifier contains the code_challenge
-                // In real implementation, this would do proper SHA256 validation
-                return codeVerifier.contains(codeChallenge.substring(0, Math.min(6, codeChallenge.length())));
-            } else if ("plain".equals(codeChallengeMethod)) {
-                return codeVerifier.equals(codeChallenge);
-            }
-        } catch (Exception e) {
-            log.error("PKCE validation error", e);
-        }
-        
-        return false;
     }
 
     /**
