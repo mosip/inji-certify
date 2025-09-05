@@ -144,7 +144,7 @@ public class CredentialStatusServiceImplTest {
         CertifyException exception = assertThrows(CertifyException.class, () -> {
             credentialStatusService.updateCredentialStatus(request);
         });
-        assertEquals("Invalid credential status purposes. Allowed values are: " + allowedPurposes, exception.getMessage());
+        assertEquals("Invalid credential status purpose. Allowed values are: " + allowedPurposes, exception.getMessage());
     }
 
     @Test
