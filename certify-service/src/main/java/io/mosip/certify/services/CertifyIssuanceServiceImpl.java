@@ -68,14 +68,6 @@ import static io.mosip.certify.utils.VCIssuanceUtil.validateLdpVcFormatRequest;
 @ConditionalOnProperty(value = "mosip.certify.plugin-mode", havingValue = "DataProvider")
 public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
-    public static final Map<String, List<String>> keyChooser = Map.of(
-            SignatureAlg.RSA_SIGNATURE_SUITE_2018, List.of(Constants.CERTIFY_VC_SIGN_RSA, Constants.EMPTY_REF_ID),
-            SignatureAlg.ED25519_SIGNATURE_SUITE_2018, List.of(Constants.CERTIFY_VC_SIGN_ED25519, Constants.ED25519_REF_ID),
-            SignatureAlg.ED25519_SIGNATURE_SUITE_2020, List.of(Constants.CERTIFY_VC_SIGN_ED25519, Constants.ED25519_REF_ID),
-            SignatureAlg.EC_K1_2016, List.of(Constants.CERTIFY_VC_SIGN_EC_K1, Constants.EC_SECP256K1_SIGN),
-            SignatureAlg.EC_SECP256K1_2019, List.of(Constants.CERTIFY_VC_SIGN_EC_K1, Constants.EC_SECP256K1_SIGN),
-            SignatureAlg.EC_SECP256R1_2019, List.of(Constants.CERTIFY_VC_SIGN_EC_R1, Constants.EC_SECP256R1_SIGN));
-
     @Value("${mosip.certify.cnonce-expire-seconds:300}")
     private int cNonceExpireSeconds;
 
@@ -176,73 +168,69 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         return didDocument;
     }
 
-    private VCResult<?> getVerifiableCredential(CredentialRequest credentialRequest, CredentialMetadata credentialMetadata,String holderId) {
+    private VCResult<?> getVerifiableCredential(CredentialRequest credentialRequest, CredentialMetadata credentialMetadata, String holderId) {
         parsedAccessToken.getClaims().put("accessTokenHash", parsedAccessToken.getAccessTokenHash());
         VCRequestDto vcRequestDto = new VCRequestDto();
         vcRequestDto.setFormat(credentialRequest.getFormat());
 
-        switch (credentialRequest.getFormat()) {
-            case "ldp_vc" :
-                VCResult<JsonLDObject> VC = new VCResult<>();
-                vcRequestDto.setContext(credentialRequest.getCredential_definition().getContext());
-                vcRequestDto.setType(credentialRequest.getCredential_definition().getType());
-                vcRequestDto.setCredentialSubject(credentialRequest.getCredential_definition().getCredentialSubject());
-                validateLdpVcFormatRequest(credentialRequest, credentialMetadata);
-                try {
-                    // TODO(multitenancy): later decide which plugin out of n plugins is the correct one
-                    JSONObject jsonObject = dataProviderPlugin.fetchData(parsedAccessToken.getClaims());
-                    Map<String, Object> templateParams = new HashMap<>();
-                    String templateName = CredentialUtils.getTemplateName(vcRequestDto);
-                    templateParams.put(Constants.TEMPLATE_NAME, templateName);
-                    templateParams.put(Constants.DID_URL, didUrl);
-                    if (!StringUtils.isEmpty(renderTemplateId)) {
-                        templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
-                    }
+        try {
+            // Fetch data once, as it's common to all formats
+            JSONObject jsonObject = dataProviderPlugin.fetchData(parsedAccessToken.getClaims());
+
+            String templateName;
+            Map<String, Object> templateParams = new HashMap<>();
+            String format = credentialRequest.getFormat();
+
+            // Handle format-specific setup
+            switch (format) {
+                case "ldp_vc":
+                    vcRequestDto.setContext(credentialRequest.getCredential_definition().getContext());
+                    vcRequestDto.setType(credentialRequest.getCredential_definition().getType());
+                    vcRequestDto.setCredentialSubject(credentialRequest.getCredential_definition().getCredentialSubject());
+                    validateLdpVcFormatRequest(credentialRequest, credentialMetadata);
+                    templateName = CredentialUtils.getTemplateName(vcRequestDto);
                     jsonObject.put(Constants.TYPE, credentialRequest.getCredential_definition().getType());
+
                     List<String> credentialStatusPurposeList = vcFormatter.getCredentialStatusPurpose(templateName);
                     if (credentialStatusPurposeList != null && !credentialStatusPurposeList.isEmpty()) {
                         statusListCredentialService.addCredentialStatus(jsonObject, credentialStatusPurposeList.getFirst());
                     }
-                    jsonObject.put("_holderId", holderId);
-                    Credential cred = credentialFactory.getCredential(credentialRequest.getFormat()).orElseThrow(()-> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
-                    templateParams.putAll(jsonObject.toMap());
-                    String unsignedCredential=cred.createCredential(templateParams, templateName);
-                    jsonObject.remove(VCDM2Constants.CREDENTIAL_STATUS);
-                    return cred.addProof(unsignedCredential,"", vcFormatter.getProofAlgorithm(templateName), vcFormatter.getAppID(templateName), vcFormatter.getRefID(templateName),vcFormatter.getDidUrl(templateName), vcFormatter.getSignatureCryptoSuite(templateName));
-                } catch(DataProviderExchangeException e) {
-                    throw new CertifyException(e.getErrorCode());
-                } catch (JSONException e) {
-                    log.error(e.getMessage(), e);
-                    throw new CertifyException(ErrorConstants.UNKNOWN_ERROR);
-                }
+                    break;
+
                 case "vc+sd-jwt":
-                vcRequestDto.setVct(credentialRequest.getVct());
-                try {
-                    // TODO(multitenancy): later decide which plugin out of n plugins is the correct one
-                    JSONObject jsonObject = dataProviderPlugin.fetchData(parsedAccessToken.getClaims());
-                    Map<String, Object> templateParams = new HashMap<>();
-                    String templateName = CredentialUtils.getTemplateName(vcRequestDto);
-                    templateParams.put(Constants.TEMPLATE_NAME, templateName);
-                    templateParams.put(Constants.DID_URL, didUrl);
-                    if (!StringUtils.isEmpty(renderTemplateId)) {
-                        templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
-                    }
-                    Credential cred = credentialFactory.getCredential(CredentialFormat.VC_SD_JWT.toString()).orElseThrow(()-> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
-                    jsonObject.put("_holderId", holderId);
-                    templateParams.putAll(jsonObject.toMap());
+                    vcRequestDto.setVct(credentialRequest.getVct());
+                    templateName = CredentialUtils.getTemplateName(vcRequestDto);
                     templateParams.put(Constants.VCTYPE, vcRequestDto.getVct());
-                    // This is with reference to the Representation of a Key ID for a Proof-of-Possession Key
-                    // Ref: https://datatracker.ietf.org/doc/html/rfc7800#section-3.4
                     templateParams.put(Constants.CONFIRMATION, Map.of("kid", holderId));
                     templateParams.put(Constants.ISSUER, certifyIssuer);
-                    String unsignedCredential=cred.createCredential(templateParams, templateName);
-                    return cred.addProof(unsignedCredential,"", vcFormatter.getProofAlgorithm(templateName), vcFormatter.getAppID(templateName), vcFormatter.getRefID(templateName),vcFormatter.getDidUrl(templateName), vcFormatter.getSignatureCryptoSuite(templateName));
-                } catch(DataProviderExchangeException e) {
-                    log.error("Error processing the SD-JWT :", e);
-                    throw new CertifyException(ErrorConstants.VC_ISSUANCE_FAILED);
-                }
+                    break;
+
                 default:
                     throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
             }
+
+            // Common logic for all formats
+            templateParams.put(Constants.TEMPLATE_NAME, templateName);
+            templateParams.put(Constants.DID_URL, didUrl);
+            if (!StringUtils.isEmpty(renderTemplateId)) {
+                templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
+            }
+            jsonObject.put("_holderId", holderId);
+            templateParams.putAll(jsonObject.toMap());
+
+            Credential cred = credentialFactory.getCredential(format).orElseThrow(() -> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
+            String unsignedCredential = cred.createCredential(templateParams, templateName);
+
+            VCResult<?> result = cred.addProof(unsignedCredential, "", vcFormatter.getProofAlgorithm(templateName), vcFormatter.getAppID(templateName), vcFormatter.getRefID(templateName), vcFormatter.getDidUrl(templateName), vcFormatter.getSignatureCryptoSuite(templateName));
+
+            jsonObject.remove(VCDM2Constants.CREDENTIAL_STATUS);
+            return result;
+
+        } catch (DataProviderExchangeException e) {
+            throw new CertifyException(e.getErrorCode());
+        } catch (JSONException e) {
+            log.error(e.getMessage(), e);
+            throw new CertifyException(ErrorConstants.UNKNOWN_ERROR);
+        }
     }
 }

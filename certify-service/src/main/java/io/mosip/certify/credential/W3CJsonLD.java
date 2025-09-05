@@ -29,6 +29,7 @@ import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.kernel.signature.service.SignatureService;
 import io.mosip.kernel.signature.service.SignatureServicev2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import foundation.identity.jsonld.JsonLDObject;
@@ -48,6 +49,9 @@ public class W3CJsonLD extends Credential{
     SignatureServicev2 signatureService;
     @Autowired
     DIDDocumentUtil didDocumentUtil;
+
+    @Value("#{${mosip.certify.signature-cryptosuite.key-alias-mapper}}")
+    private Map<String, List<List<String>>> keyAliasMapper;
 
 
     /**
@@ -104,7 +108,7 @@ public class W3CJsonLD extends Credential{
 
         CertificateResponseDTO certificateResponseDTO = didDocumentUtil.getCertificateDataResponseDto(appID, refID);
         String kid = certificateResponseDTO.getKeyId();
-        if (CertifyIssuanceServiceImpl.keyChooser.containsKey(signatureCryptoSuite)) {
+        if (keyAliasMapper.containsKey(signatureCryptoSuite)) {
             // legacy signature algos such as Ed25519Signature{2018,2020}
             ProofGenerator proofGenerator = proofGeneratorFactory.getProofGenerator(signatureCryptoSuite)
                     .orElseThrow(() ->
