@@ -634,6 +634,9 @@ public class CredentialConfigurationServiceImplTest {
         config.setContext("https://www.w3.org/2018/credentials/v1");
         config.setCredentialType("VerifiableCredential");
         config.setSignatureCryptoSuite("Ed25519Signature2020");
+        config.setKeyManagerAppId("TEST2019");
+        config.setKeyManagerRefId("TEST2019-REF");
+
 
         ReflectionTestUtils.setField(credentialConfigurationService, "allowedCredentialStatusPurposes", List.of("purpose1", "purpose2"));
 
@@ -652,6 +655,8 @@ public class CredentialConfigurationServiceImplTest {
         config.setContext("https://www.w3.org/2018/credentials/v1");
         config.setCredentialType("VerifiableCredential");
         config.setSignatureCryptoSuite("Ed25519Signature2020");
+        config.setKeyManagerAppId("TEST2019");
+        config.setKeyManagerRefId("TEST2019-REF");
 
         ReflectionTestUtils.setField(credentialConfigurationService, "allowedCredentialStatusPurposes", List.of("purpose1", "purpose2"));
 
@@ -670,6 +675,8 @@ public class CredentialConfigurationServiceImplTest {
         config.setContext("https://www.w3.org/2018/credentials/v1");
         config.setCredentialType("VerifiableCredential");
         config.setSignatureCryptoSuite("Ed25519Signature2020");
+        config.setKeyManagerAppId("TEST2019");
+        config.setKeyManagerRefId("TEST2019-REF");
 
         ReflectionTestUtils.setField(credentialConfigurationService, "allowedCredentialStatusPurposes", List.of("purpose1", "purpose2"));
 
