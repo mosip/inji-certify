@@ -49,6 +49,11 @@ public class CredentialConfigurationServiceImplTest {
 
     @Before
     public void setup() {
+        Map<String, List<List<String>>> keyAliasMapper = new HashMap<>();
+        keyAliasMapper.put("Ed25519Signature2020", Arrays.asList(
+                Arrays.asList("TEST2019", "TEST2019-REF")));
+        keyAliasMapper.put("RsaSignature2018", List.of());
+
         MockitoAnnotations.openMocks(this);
         credentialConfig = new CredentialConfig();
         String id = UUID.randomUUID().toString();
@@ -66,6 +71,7 @@ public class CredentialConfigurationServiceImplTest {
         credentialConfig.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
         credentialConfig.setCredentialSubject(Map.of("name", new CredentialSubjectParameters(List.of(new CredentialSubjectParameters.Display("Full Name", "en")))));
         credentialConfig.setKeyManagerAppId("TEST2019");
+        credentialConfig.setKeyManagerRefId("TEST2019-REF");
         credentialConfig.setSignatureCryptoSuite("Ed25519Signature2020");
 
         credentialConfigurationDTO = new CredentialConfigurationDTO();
@@ -85,6 +91,7 @@ public class CredentialConfigurationServiceImplTest {
         ReflectionTestUtils.setField(credentialConfigurationService, "cryptographicBindingMethodsSupportedMap", new LinkedHashMap<>());
         ReflectionTestUtils.setField(credentialConfigurationService, "credentialSigningAlgValuesSupportedMap", new LinkedHashMap<>());
         ReflectionTestUtils.setField(credentialConfigurationService, "proofTypesSupported", new LinkedHashMap<>());
+        ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper", keyAliasMapper);
     }
 
     @Test
@@ -627,6 +634,9 @@ public class CredentialConfigurationServiceImplTest {
         config.setContext("https://www.w3.org/2018/credentials/v1");
         config.setCredentialType("VerifiableCredential");
         config.setSignatureCryptoSuite("Ed25519Signature2020");
+        config.setKeyManagerAppId("TEST2019");
+        config.setKeyManagerRefId("TEST2019-REF");
+
 
         ReflectionTestUtils.setField(credentialConfigurationService, "allowedCredentialStatusPurposes", List.of("purpose1", "purpose2"));
 
@@ -645,6 +655,8 @@ public class CredentialConfigurationServiceImplTest {
         config.setContext("https://www.w3.org/2018/credentials/v1");
         config.setCredentialType("VerifiableCredential");
         config.setSignatureCryptoSuite("Ed25519Signature2020");
+        config.setKeyManagerAppId("TEST2019");
+        config.setKeyManagerRefId("TEST2019-REF");
 
         ReflectionTestUtils.setField(credentialConfigurationService, "allowedCredentialStatusPurposes", List.of("purpose1", "purpose2"));
 
@@ -663,6 +675,8 @@ public class CredentialConfigurationServiceImplTest {
         config.setContext("https://www.w3.org/2018/credentials/v1");
         config.setCredentialType("VerifiableCredential");
         config.setSignatureCryptoSuite("Ed25519Signature2020");
+        config.setKeyManagerAppId("TEST2019");
+        config.setKeyManagerRefId("TEST2019-REF");
 
         ReflectionTestUtils.setField(credentialConfigurationService, "allowedCredentialStatusPurposes", List.of("purpose1", "purpose2"));
 
@@ -670,5 +684,32 @@ public class CredentialConfigurationServiceImplTest {
             mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(config)).thenReturn(true);
             ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", config, true);
         }
+    }
+
+    @Test
+    public void validateKeyAliasMapperConfiguration_KeyAliasListIsNull_ThrowsException() {
+        credentialConfig.setSignatureCryptoSuite("RsaSignature2018");
+        // Arrange
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(credentialConfig);
+
+        // Act & Assert
+        CertifyException exception = assertThrows(CertifyException.class, () ->
+                credentialConfigurationService.addCredentialConfiguration(credentialConfigurationDTO)
+        );
+        assertEquals("No key chooser configuration found for the signature crypto suite: RsaSignature2018", exception.getMessage());
+    }
+
+    @Test
+    public void validateKeyAliasMpperConfiguration_NoMatchingAppIdAndRefId_ThrowsException() {
+        // Arrange
+        credentialConfig.setKeyManagerAppId("appId");
+        credentialConfig.setKeyManagerRefId("refId");
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(credentialConfig);
+
+        // Act & Assert
+        CertifyException exception = assertThrows(CertifyException.class, () ->
+                credentialConfigurationService.addCredentialConfiguration(credentialConfigurationDTO)
+        );
+        assertEquals("No matching appId and refId found in the key chooser list.", exception.getMessage());
     }
 }
