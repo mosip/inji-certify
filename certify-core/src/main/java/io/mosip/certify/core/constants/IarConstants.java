@@ -30,8 +30,6 @@ public class IarConstants {
     // OpenID4VP Response Modes
     public static final String RESPONSE_MODE_IAR_POST = "iar-post";
     public static final String RESPONSE_MODE_IAR_POST_JWT = "iar-post.jwt";
-    public static final String RESPONSE_MODE_DIRECT_POST = "direct_post";
-    public static final String RESPONSE_MODE_DIRECT_POST_JWT = "direct_post.jwt";
 
     // Interaction Types
     public static final String INTERACTION_TYPE_OPENID4VP = "openid4vp_presentation";
