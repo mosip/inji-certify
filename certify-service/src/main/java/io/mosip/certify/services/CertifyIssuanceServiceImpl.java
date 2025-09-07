@@ -244,8 +244,8 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 try {
                     // Prepare raw data for the data provider
                     Map<String, Object> rawData = new HashMap<>();
-                    rawData.put(MDocConstants.DOCTYPE, vcRequestDto.getDoctype());
-                    rawData.put(MDocConstants.CLAIMS, vcRequestDto.getClaims());
+                    rawData.put(Constants.DOCTYPE, vcRequestDto.getDoctype());
+                    rawData.put(Constants.CLAIMS, vcRequestDto.getClaims());
 
                     // Fetch data from the configured plugin
                     JSONObject jsonObject = dataProviderPlugin.fetchData(rawData);
@@ -274,16 +274,16 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     String unsignedCredential = cred.createCredential(templateParams, templateName);
                     log.info("Generated unsigned mDOC credential: {}", unsignedCredential);
 
-                    //  // Add proof/signature to the credential
-                    //  VCResult<String> vcResult = cred.addProof(
-                    //          unsignedCredential,
-                    //          "",
-                    //          vcFormatter.getProofAlgorithm(templateName),
-                    //          vcFormatter.getAppID(templateName),
-                    //          vcFormatter.getRefID(templateName),
-                    //          vcFormatter.getDidUrl(templateName)
-                    //  );
-                    //  return vcResult;
+                    return cred.addProof(
+                            unsignedCredential,
+                            "",
+                            vcFormatter.getProofAlgorithm(templateName),
+                            vcFormatter.getAppID(templateName),
+                            vcFormatter.getRefID(templateName),
+                            vcFormatter.getDidUrl(templateName),
+                            vcFormatter.getSignatureCryptoSuite(templateName)
+                    );
+
 
                 } catch (DataProviderExchangeException e) {
                     log.error("Error fetching data from provider for mDOC: ", e);
