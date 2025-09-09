@@ -69,6 +69,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     @Value("${mosip.certify.data-provider-plugin.id-field-prefix-uri:}")
     String idPrefix;
 
+    String credentialId;
+
     @PostConstruct
     public void initialize() {
         engine = new VelocityEngine();
@@ -336,6 +338,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         JSONObject jsonObject = new JSONObject(writer.toString());
         if (StringUtils.isNotEmpty(idPrefix)) {
             jsonObject.put(VCDMConstants.ID, idPrefix + UUID.randomUUID());
+            credentialId = jsonObject.get(VCDMConstants.ID).toString();
         }
         if(templateInput.containsKey(VCDM2Constants.CREDENTIAL_STATUS) && templateName.contains(VCDM2Constants.URL)) {
             jsonObject.put(VCDM2Constants.CREDENTIAL_STATUS, templateInput.get(VCDM2Constants.CREDENTIAL_STATUS));
@@ -348,5 +351,9 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         }
 
         return jsonObject.toString();
+    }
+
+    public String getCredentialId() {
+        return credentialId;
     }
 }
