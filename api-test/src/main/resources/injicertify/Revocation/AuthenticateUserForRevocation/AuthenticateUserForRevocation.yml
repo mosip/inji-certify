@@ -6,7 +6,6 @@ AuthenticateUserForRevocation:
       role: noauth
       restMethod: post
       checkErrorsOnlyInResponse: true
-      validityCheckRequired: true
       inputTemplate: injicertify/Revocation/AuthenticateUserForRevocation/AuthenticateUserForRevocation
       outputTemplate: injicertify/Revocation/AuthenticateUserForRevocation/AuthenticateUserForRevocationResult
       input: '{
@@ -41,7 +40,6 @@ AuthenticateUserForRevocation:
       role: noauth
       restMethod: post
       checkErrorsOnlyInResponse: true
-      validityCheckRequired: true
       inputTemplate: injicertify/Revocation/AuthenticateUserForRevocation/AuthenticateUserForRevocation
       outputTemplate: injicertify/Revocation/AuthenticateUserForRevocation/AuthenticateUserForRevocationResult
       input: '{

@@ -55,7 +55,6 @@ LedgerSearchAPI:
       uniqueIdentifier: TC_InjiCertify_Ledger_Search_04
       description: Get Ledger details without IssuerId
       role: noauth
-      checkErrorsOnlyInResponse: true
       restMethod: post
       inputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPI
       outputTemplate: injicertify/error
@@ -77,7 +76,7 @@ LedgerSearchAPI:
       uniqueIdentifier: TC_InjiCertify_Ledger_Search_05
       description: Get Ledger details with random IssuerId value
       role: noauth
-      checkOnlyStatusCodeInResponse: true
+      checkOnlyStatusCodeInResponse: true      
       restMethod: post
       inputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPI
       outputTemplate: injicertify/responseCode
@@ -95,7 +94,6 @@ LedgerSearchAPI:
       uniqueIdentifier: TC_InjiCertify_Ledger_Search_06
       description: Get Ledger details without credential type details
       role: noauth
-      checkErrorsOnlyInResponse: true
       restMethod: post
       inputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPI
       outputTemplate: injicertify/error
@@ -117,7 +115,6 @@ LedgerSearchAPI:
       uniqueIdentifier: TC_InjiCertify_Ledger_Search_07
       description: Get Ledger details without indexed Attributes
       role: noauth
-      checkErrorsOnlyInResponse: true
       restMethod: post
       inputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPI
       outputTemplate: injicertify/error
@@ -139,8 +136,8 @@ LedgerSearchAPI:
       uniqueIdentifier: TC_InjiCertify_Ledger_Search_08
       description: Get Ledger details without CredentialId value
       role: noauth
-      checkOnlyStatusCodeInResponse: true
       restMethod: post
+      checkOnlyStatusCodeInResponse: true      
       inputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPI
       outputTemplate: injicertify/responseCode
       input: '{

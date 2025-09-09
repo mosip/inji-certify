@@ -6,7 +6,6 @@ AuthorizationCodeForRevocation:
       role: noauth
       restMethod: post
       checkErrorsOnlyInResponse: true
-      validityCheckRequired: true
       inputTemplate: injicertify/Revocation/AuthorizationCodeForRevocation/AuthorizationCodeForRevocation
       outputTemplate: injicertify/Revocation/AuthorizationCodeForRevocation/AuthorizationCodeForRevocationResult
       input: '{
@@ -23,7 +22,6 @@ AuthorizationCodeForRevocation:
       role: noauth
       restMethod: post
       checkErrorsOnlyInResponse: true
-      validityCheckRequired: true
       inputTemplate: injicertify/Revocation/AuthorizationCodeForRevocation/AuthorizationCodeForRevocation
       outputTemplate: injicertify/Revocation/AuthorizationCodeForRevocation/AuthorizationCodeForRevocationResult
       input: '{
