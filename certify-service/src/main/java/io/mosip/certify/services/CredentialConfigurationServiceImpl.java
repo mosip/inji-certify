@@ -54,8 +54,8 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Value("#{${mosip.certify.credential-config.issuer.display}}")
     private List<Map<String, String>> issuerDisplay;
 
-    @Value("#{${mosip.certify.data-provider-plugin.credential-status.supported-purposes:{}}}")
-    private List<String> credentialStatusSupportedPurposes;
+    @Value("#{${mosip.certify.data-provider-plugin.credential-status.allowed-status-purposes:{}}}")
+    private List<String> allowedCredentialStatusPurposes;
 
     @Value("#{${mosip.certify.credential-config.cryptographic-binding-methods-supported}}")
     private LinkedHashMap<String, List<String>> cryptographicBindingMethodsSupportedMap;
@@ -65,6 +65,9 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
     @Value("#{${mosip.certify.credential-config.proof-types-supported}}")
     private LinkedHashMap<String, Object> proofTypesSupported;
+
+    @Value("#{${mosip.certify.signature-cryptosuite.key-alias-mapper}}")
+    private Map<String, List<List<String>>> keyAliasMapper;
 
     private static final String CREDENTIAL_CONFIG_CACHE_NAME = "credentialConfig";
 
@@ -77,7 +80,6 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
         validateCredentialConfiguration(credentialConfig, true);
 
-        credentialConfig.setCredentialStatusPurposes(credentialStatusSupportedPurposes);
         credentialConfig.setCryptographicBindingMethodsSupported(cryptographicBindingMethodsSupportedMap.get(credentialConfig.getCredentialFormat()));
         credentialConfig.setCredentialSigningAlgValuesSupported(Collections.singletonList(credentialConfig.getSignatureCryptoSuite()));
         credentialConfig.setProofTypesSupported(proofTypesSupported);
@@ -94,6 +96,14 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
     private void validateCredentialConfiguration(CredentialConfig credentialConfig, boolean shouldCheckDuplicate) {
 
+        if (credentialConfig.getCredentialStatusPurposes() != null && credentialConfig.getCredentialStatusPurposes().size() > 1){
+            throw new CertifyException("Multiple credential status purposes are not currently supported.");
+        }
+
+        if (credentialConfig.getCredentialStatusPurposes() != null && !credentialConfig.getCredentialStatusPurposes().isEmpty() && !allowedCredentialStatusPurposes.contains(credentialConfig.getCredentialStatusPurposes().getFirst())) {
+            throw new CertifyException("Invalid credential status purposes. Allowed values are: " + allowedCredentialStatusPurposes);
+        }
+
         if(pluginMode.equals("DataProvider") && (credentialConfig.getVcTemplate() == null || credentialConfig.getVcTemplate().isEmpty())) {
             throw new CertifyException("Credential Template is mandatory for the DataProvider plugin issuer.");
         }
@@ -106,25 +116,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 if(shouldCheckDuplicate && LdpVcCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException("Configuration already exists for the given context and credentialType");
                 }
-
-                if (!CertifyIssuanceServiceImpl.keyChooser.containsKey(credentialConfig.getSignatureCryptoSuite())) {
-                    DataIntegrityProofDataIntegritySuite dataIntegrityProofDataIntegritySuite = DataIntegritySuites.DATA_INTEGRITY_SUITE_DATAINTEGRITYPROOF;
-
-                    if(credentialConfig.getSignatureAlgo() == null || credentialConfig.getSignatureAlgo().isEmpty()) {
-                        throw new CertifyException("Signature algorithm is mandatory for the provided crypto suite: " + credentialConfig.getSignatureCryptoSuite());
-                    }
-
-                    List<String> signatureCryptoSuitesByJwsAlgo = dataIntegrityProofDataIntegritySuite.findCryptosuitesForJwsAlgorithm(credentialConfig.getSignatureAlgo());
-
-                    if (signatureCryptoSuitesByJwsAlgo.isEmpty()) {
-                        throw new CertifyException("Unsupported signature algorithm: " + credentialConfig.getSignatureAlgo());
-                    }
-
-                    if (!signatureCryptoSuitesByJwsAlgo.contains(credentialConfig.getSignatureCryptoSuite())) {
-                        throw new CertifyException("Signature crypto suite " + credentialConfig.getSignatureCryptoSuite() +
-                                " is not supported for the signature algorithm: " + credentialConfig.getSignatureAlgo());
-                    }
-                }
+                validateKeyAliasMapperConfiguration(credentialConfig);
                 break;
             case VCFormats.MSO_MDOC:
                 if (!MsoMdocCredentialConfigValidator.isValidCheck(credentialConfig)) {
@@ -144,6 +136,46 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 break;
             default:
                 throw new CertifyException("Unsupported format: " + credentialConfig.getCredentialFormat());
+        }
+    }
+
+    private void validateKeyAliasMapperConfiguration(CredentialConfig credentialConfig) {
+        if(pluginMode.equals("VCIssuance")) {
+            return;
+        }
+        if (!keyAliasMapper.containsKey(credentialConfig.getSignatureCryptoSuite())) {
+            DataIntegrityProofDataIntegritySuite dataIntegrityProofDataIntegritySuite = DataIntegritySuites.DATA_INTEGRITY_SUITE_DATAINTEGRITYPROOF;
+
+            if (credentialConfig.getSignatureAlgo() == null || credentialConfig.getSignatureAlgo().isEmpty()) {
+                throw new CertifyException("Signature algorithm is mandatory for the provided crypto suite: " + credentialConfig.getSignatureCryptoSuite());
+            }
+
+            List<String> signatureCryptoSuitesByJwsAlgo = dataIntegrityProofDataIntegritySuite.findCryptosuitesForJwsAlgorithm(credentialConfig.getSignatureAlgo());
+
+            if (signatureCryptoSuitesByJwsAlgo.isEmpty()) {
+                throw new CertifyException("Unsupported signature algorithm: " + credentialConfig.getSignatureAlgo());
+            }
+
+            if (!signatureCryptoSuitesByJwsAlgo.contains(credentialConfig.getSignatureCryptoSuite())) {
+                throw new CertifyException("Signature crypto suite " + credentialConfig.getSignatureCryptoSuite() +
+                        " is not supported for the signature algorithm: " + credentialConfig.getSignatureAlgo());
+            }
+        } else {
+            List<List<String>> keyAliasList = keyAliasMapper.get(credentialConfig.getSignatureCryptoSuite());
+            if (keyAliasList == null || keyAliasList.isEmpty()) {
+                throw new CertifyException("No key chooser configuration found for the signature crypto suite: " + credentialConfig.getSignatureCryptoSuite());
+            }
+
+            boolean isMatch = keyAliasList.stream()
+                    .anyMatch(pair ->
+                            credentialConfig.getKeyManagerAppId() != null &&
+                            pair.getFirst().equals(credentialConfig.getKeyManagerAppId()) &&
+                            credentialConfig.getKeyManagerRefId() != null &&
+                            pair.getLast().equals(credentialConfig.getKeyManagerRefId()));
+
+            if (!isMatch) {
+                throw new CertifyException("No matching appId and refId found in the key chooser list.");
+            }
         }
     }
 
