@@ -202,6 +202,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
                     List<String> credentialStatusPurposeList = vcFormatter.getCredentialStatusPurpose(templateName);
                     if (credentialStatusPurposeList != null && !credentialStatusPurposeList.isEmpty() && credentialRequest.getCredential_definition().getContext().contains(VCDM2Constants.URL)) {
+                        if(!isLedgerEnabled) {
+                            log.warn("Ledger feature is currently disabled. Since revocation is enabled, please note that searching for VCs to revoke within Certify is not available.");
+                        }
                         credentialStatusDetail = new CredentialStatusDetail();
                         statusListCredentialService.addCredentialStatus(jsonObject, credentialStatusPurposeList.getFirst(), credentialStatusDetail);
                     }
