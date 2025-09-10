@@ -183,8 +183,8 @@ public class CredentialConfigurationServiceImplTest {
         when(credentialConfigRepository.findByCredentialConfigKeyId(eq(expectedId))).thenReturn(optionalConfig);
 
 
-        CredentialConfigurationDTO mockDto = new CredentialConfigurationDTO(); // Dummy DTO for the mapper call
-        doNothing().when(credentialConfigMapper).updateEntityFromDto(any(CredentialConfigurationDTO.class), any(CredentialConfig.class));
+        CredentialConfigurationUpdateDTO mockDto = new CredentialConfigurationUpdateDTO(); // Dummy DTO for the mapper call
+        doNothing().when(credentialConfigMapper).updateEntityFromDto(any(CredentialConfigurationUpdateDTO.class), any(CredentialConfig.class));
 
 
         when(credentialConfigRepository.save(any(CredentialConfig.class)))
@@ -213,7 +213,7 @@ public class CredentialConfigurationServiceImplTest {
                 .thenReturn(Optional.empty());
 
         CredentialConfigException exception = assertThrows(CredentialConfigException.class, () ->
-                credentialConfigurationService.updateCredentialConfiguration("12345678", new CredentialConfigurationDTO()));
+                credentialConfigurationService.updateCredentialConfiguration("12345678", new CredentialConfigurationUpdateDTO()));
 
         assertEquals("Configuration not found with the provided id: " + "12345678", exception.getMessage());
     }
