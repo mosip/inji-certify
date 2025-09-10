@@ -28,9 +28,7 @@ AuthenticateUserForRevocation:
     }'
       output: '{
   "sendOtpResp":{
-        "maskedMobile": "$IGNORE$",
         "sendOtpResTemplate":"injicertify/SendOtp/SendOtpResult",
-        "maskedEmail": "$IGNORE$"
     }
 }'
    InjiCertify_ESignet_AuthenticateUserVCI_For_landregistry_Cred2_uin_Otp_Valid_Smoke_For_Revocation:
@@ -62,8 +60,6 @@ AuthenticateUserForRevocation:
     }'
       output: '{
   "sendOtpResp":{
-        "maskedMobile": "$IGNORE$",
         "sendOtpResTemplate":"injicertify/SendOtp/SendOtpResult",
-        "maskedEmail": "$IGNORE$"
     }
 }'
