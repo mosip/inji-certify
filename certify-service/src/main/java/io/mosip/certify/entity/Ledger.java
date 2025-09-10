@@ -35,7 +35,7 @@ public class Ledger {
     @Column(name = "expiration_date")
     private OffsetDateTime expirationDate;
 
-    @Column(name = "credential_type", length = 100)
+    @Column(name = "credential_type", length = 100, nullable = false)
     private String credentialType;
 
     @Column(name = "indexed_attributes")
