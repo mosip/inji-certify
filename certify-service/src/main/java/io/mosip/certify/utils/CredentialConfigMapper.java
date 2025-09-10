@@ -2,6 +2,7 @@ package io.mosip.certify.utils;
 
 import io.mosip.certify.core.dto.ClaimsDisplayFieldsConfigDTO;
 import io.mosip.certify.core.dto.CredentialConfigurationDTO;
+import io.mosip.certify.core.dto.CredentialConfigurationUpdateDTO;
 import io.mosip.certify.entity.CredentialConfig;
 import io.mosip.certify.entity.attributes.ClaimsDisplayFieldsConfigs;
 import org.mapstruct.*;
@@ -43,8 +44,11 @@ public interface CredentialConfigMapper {
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "createdTimes", ignore = true)
     @Mapping(target = "updatedTimes", expression = "java(java.time.LocalDateTime.now())")
-    @Mapping(target = "context", source = "contextURLs", qualifiedByName = "listToCommaSeparatedString")
-    @Mapping(target = "credentialType", source = "credentialTypes", qualifiedByName = "listToCommaSeparatedString")
+    @Mapping(target = "context", ignore = true)
+    @Mapping(target = "credentialType", ignore = true)
+    @Mapping(target = "credentialFormat", ignore = true)
+    @Mapping(target = "docType", ignore = true)
+    @Mapping(target = "sdJwtVct", ignore = true)
     @Mapping(target = "display", source = "metaDataDisplay")
     @Mapping(target = "order", source = "displayOrder")
     @Mapping(target = "cryptographicBindingMethodsSupported", ignore = true)
@@ -52,7 +56,8 @@ public interface CredentialConfigMapper {
     @Mapping(target = "proofTypesSupported", ignore = true)
     @Mapping(target = "msoMdocClaims", source = "msoMdocClaims", qualifiedByName = "mapClaimsToEntity")
     @Mapping(target = "credentialSubject", source = "credentialSubjectDefinition")
-    void updateEntityFromDto(CredentialConfigurationDTO dto, @MappingTarget CredentialConfig entity);
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateEntityFromDto(CredentialConfigurationUpdateDTO dto, @MappingTarget CredentialConfig entity);
 
     ClaimsDisplayFieldsConfigs toEntity(ClaimsDisplayFieldsConfigDTO dto);
     ClaimsDisplayFieldsConfigDTO toDto(ClaimsDisplayFieldsConfigs dto);
