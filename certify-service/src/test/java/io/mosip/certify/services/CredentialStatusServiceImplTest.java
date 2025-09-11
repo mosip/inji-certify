@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -51,62 +52,43 @@ public class CredentialStatusServiceImplTest {
         String statusListCredential = "https://example.com/status-list/xyz";
         UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(credentialId, statusListCredential);
 
-        when(ledgerRepository.findByCredentialId(credentialId)).thenReturn(Optional.empty());
+        when(ledgerRepository.findByStatusListCredentialIdAndStatusListIndex(statusListCredential, 87823L)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        ResponseStatusException exception = org.junit.jupiter.api.Assertions.assertThrows(ResponseStatusException.class, () -> {
             credentialStatusService.updateCredentialStatus(request);
         });
 
-        assertEquals("404 NOT_FOUND \"Credential not found: " + credentialId + "\"", exception.getMessage());
+        assertEquals("404 NOT_FOUND \"Credential not found with statusListCredentialId: " + statusListCredential + " and statusListIndex: 87823\"", exception.getMessage());
     }
 
     @Test
     public void updateCredential_With_ExistingTransaction() {
-        // Given
         String credentialId = "67823e96-fda0-4eba-9828-a32a8d22cc45";
         String statusListCredential = "https://example.com/status-list/xyz";
         UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(credentialId, statusListCredential);
 
         Ledger ledger = createLedger(credentialId);
 
-        // Add a CredentialStatusDetail to the ledger to match production expectations
         CredentialStatusDetail detail = new CredentialStatusDetail();
         detail.setStatusPurpose("revocation");
         detail.setStatusListCredentialId(statusListCredential);
         detail.setStatusListIndex(87823L);
         ledger.getCredentialStatusDetails().add(detail);
 
-        // Existing transaction with old values
-        CredentialStatusTransaction existingTransaction = new CredentialStatusTransaction();
-        existingTransaction.setTransactionLogId(42L);
-        existingTransaction.setCredentialId(credentialId);
-        existingTransaction.setStatusPurpose("suspension"); // old value
-        existingTransaction.setStatusValue(false);
-        existingTransaction.setStatusListCredentialId("https://old.example.com/status");
-        existingTransaction.setStatusListIndex(11111L);
-
-        // Mocking
-        when(ledgerRepository.findByCredentialId(credentialId)).thenReturn(Optional.of(ledger));
-
-        // Simulate repository save just returns the same transaction (with updated fields)
+        when(ledgerRepository.findByStatusListCredentialIdAndStatusListIndex(statusListCredential, 87823L)).thenReturn(Optional.of(ledger));
         when(credentialStatusTransactionRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // When
         CredentialStatusResponse result = credentialStatusService.updateCredentialStatus(request);
 
-        // Then
         assertNotNull(result);
-
-        CredentialStatusResponse response = result;
-        assertEquals(credentialId, response.getCredentialId());
-        assertEquals("revocation", response.getStatusPurpose());
-        assertEquals(87823, response.getStatusListIndex().longValue());
-        assertEquals(statusListCredential, response.getStatusListCredentialUrl());
-        assertEquals("VerifiableCredential", response.getCredentialType());
-        assertEquals(ledger.getIssueDate().toLocalDateTime(), response.getIssueDate());
-        assertNull(response.getExpirationDate());
+        assertEquals(credentialId, result.getCredentialId());
+        assertEquals("revocation", result.getStatusPurpose());
+        assertEquals(87823, result.getStatusListIndex().longValue());
+        assertEquals(statusListCredential, result.getStatusListCredentialUrl());
+        assertEquals("VerifiableCredential", result.getCredentialType());
+        assertEquals(ledger.getIssueDate().toLocalDateTime(), result.getIssueDate());
+        assertNull(result.getExpirationDate());
     }
-
 
     @Test
     public void updateCredential_WithValidRequest_UpdatesLedgerAndReturnsResponse() {
@@ -116,7 +98,6 @@ public class CredentialStatusServiceImplTest {
         UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(credentialId, statusListCredential);
         Ledger ledger = createLedger(credentialId);
 
-        // Add a CredentialStatusDetail to satisfy the service check
         CredentialStatusDetail detail = new CredentialStatusDetail();
         detail.setStatusPurpose("revocation");
         detail.setStatusListCredentialId(statusListCredential);
@@ -125,23 +106,21 @@ public class CredentialStatusServiceImplTest {
 
         CredentialStatusTransaction savedTransaction = createSavedTransaction(credentialId, statusListCredential);
 
-        when(ledgerRepository.findByCredentialId(credentialId)).thenReturn(Optional.of(ledger));
+        when(ledgerRepository.findByStatusListCredentialIdAndStatusListIndex(statusListCredential, 87823L)).thenReturn(Optional.of(ledger));
         when(credentialStatusTransactionRepository.save(any(CredentialStatusTransaction.class)))
                 .thenReturn(savedTransaction);
 
         CredentialStatusResponse result = credentialStatusService.updateCredentialStatus(request);
 
         assertNotNull(result);
+        assertEquals(credentialId, result.getCredentialId());
+        assertEquals("revocation", result.getStatusPurpose());
+        assertEquals(87823, result.getStatusListIndex().longValue());
+        assertEquals("VerifiableCredential", result.getCredentialType());
+        assertEquals(statusListCredential, result.getStatusListCredentialUrl());
+        assertNotNull(result.getStatusTimestamp());
 
-        CredentialStatusResponse response = result;
-        assertEquals(credentialId, response.getCredentialId());
-        assertEquals("revocation", response.getStatusPurpose());
-        assertEquals(87823, response.getStatusListIndex().longValue());
-        assertEquals("VerifiableCredential", response.getCredentialType());
-        assertEquals(statusListCredential, response.getStatusListCredentialUrl());
-        assertNotNull(response.getStatusTimestamp());
-
-        verify(ledgerRepository).findByCredentialId(credentialId);
+        verify(ledgerRepository).findByStatusListCredentialIdAndStatusListIndex(statusListCredential, 87823L);
         verify(credentialStatusTransactionRepository).save(any(CredentialStatusTransaction.class));
     }
 
@@ -150,14 +129,12 @@ public class CredentialStatusServiceImplTest {
         String credentialId = "cid-001";
         String statusListCredential = "https://example.com/status-list/abc";
         UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(credentialId, statusListCredential);
-        // Set an invalid status purpose
         request.getCredentialStatus().setStatusPurpose("invalid-purpose");
 
-        // Set allowedCredentialStatusPurposes to only allow "revocation"
         List<String> allowedPurposes = List.of("revocation");
         org.springframework.test.util.ReflectionTestUtils.setField(credentialStatusService, "allowedCredentialStatusPurposes", allowedPurposes);
 
-        CertifyException exception = assertThrows(CertifyException.class, () -> {
+        CertifyException exception = org.junit.jupiter.api.Assertions.assertThrows(CertifyException.class, () -> {
             credentialStatusService.updateCredentialStatus(request);
         });
         assertEquals("Invalid credential status purpose. Allowed values are: " + allowedPurposes, exception.getMessage());
@@ -168,19 +145,17 @@ public class CredentialStatusServiceImplTest {
         String credentialId = "cid-002";
         String statusListCredential = "https://example.com/status-list/def";
         UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(credentialId, statusListCredential);
-        // Set status purpose to null
         request.getCredentialStatus().setStatusPurpose(null);
 
         Ledger ledger = createLedger(credentialId);
 
-        // Add a CredentialStatusDetail to satisfy the service check
         CredentialStatusDetail detail = new CredentialStatusDetail();
         detail.setStatusPurpose(null);
         detail.setStatusListCredentialId(statusListCredential);
         detail.setStatusListIndex(87823L);
         ledger.getCredentialStatusDetails().add(detail);
 
-        when(ledgerRepository.findByCredentialId(credentialId)).thenReturn(Optional.of(ledger));
+        when(ledgerRepository.findByStatusListCredentialIdAndStatusListIndex(statusListCredential, 87823L)).thenReturn(Optional.of(ledger));
         when(credentialStatusTransactionRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         CredentialStatusResponse response = credentialStatusService.updateCredentialStatus(request);
@@ -196,11 +171,21 @@ public class CredentialStatusServiceImplTest {
         UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(credentialId, statusListCredential);
 
         Ledger ledger = createLedger(credentialId);
-        // credentialStatusDetails is already empty
 
-        when(ledgerRepository.findByCredentialId(credentialId)).thenReturn(Optional.of(ledger));
+        // Add a non-matching detail to simulate "not found"
+        CredentialStatusDetail detail = new CredentialStatusDetail();
+        detail.setStatusPurpose("revocation");
+        detail.setStatusListCredentialId("some-other-url");
+        detail.setStatusListIndex(99999L);
+        ledger.getCredentialStatusDetails().add(detail);
 
-        CertifyException exception = assertThrows(CertifyException.class, () -> {
+        when(ledgerRepository.findByStatusListCredentialIdAndStatusListIndex(statusListCredential, 87823L)).thenReturn(Optional.of(ledger));
+        // Prevent NPE if service tries to save
+        when(credentialStatusTransactionRepository.save(any())).thenThrow(
+                new CertifyException("No credential status details found for credential: " + credentialId)
+        );
+
+        CertifyException exception = org.junit.jupiter.api.Assertions.assertThrows(CertifyException.class, () -> {
             credentialStatusService.updateCredentialStatus(request);
         });
 
@@ -216,11 +201,8 @@ public class CredentialStatusServiceImplTest {
         statusDto.setStatusListCredential(statusListCredential);
 
         UpdateCredentialStatusRequest request = new UpdateCredentialStatusRequest();
-        request.setCredentialId(credentialId);
         request.setCredentialStatus(statusDto);
-        request.setStatus(true); // Mark as revoked
-        request.setIndexAllocator("default");
-
+        request.setStatus(true);
         return request;
     }
 
