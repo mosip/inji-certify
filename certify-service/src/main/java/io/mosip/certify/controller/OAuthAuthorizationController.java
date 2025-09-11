@@ -94,6 +94,7 @@ public class OAuthAuthorizationController {
         iarRequest.setRedirectUri(params.get("redirect_uri"));
         iarRequest.setInteractionTypesSupported(params.get("interaction_types_supported"));
         iarRequest.setRedirectToWeb(params.get("redirect_to_web"));
+        iarRequest.setScope(params.get("scope"));
 
         try {
             // Validate the IAR request

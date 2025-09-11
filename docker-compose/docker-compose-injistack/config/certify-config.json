@@ -1,0 +1,175 @@
+{
+  "verifiableClaims": [
+    {
+      "logo": "/assets/cert.png",
+      "name": "MOSIP ID",
+      "type": "MOSIPVerifiableCredential",
+      "essential": true,
+      "definition": {
+        "purpose": "Relying party is requesting your digital ID for the purpose of Self-Authentication",
+        "format": {
+          "ldp_vc": {
+            "proof_type": ["RsaSignature2018"]
+          }
+        },
+        "input_descriptors": [
+          {
+            "id": "id card credential",
+            "format": {
+              "ldp_vc": {
+                "proof_type": ["RsaSignature2018"]
+              }
+            },
+            "constraints": {
+              "fields": [
+                {
+                  "path": ["$.type"],
+                  "filter": {
+                    "type": "object",
+                    "pattern": "MOSIPVerifiableCredential"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "logo": "/assets/cert.png",
+      "name": "Life Insurance",
+      "type": "LifeInsuranceCredential",
+      "definition": {
+        "purpose": "Relying party is requesting your digital ID for the purpose of Self-Authentication",
+        "format": {
+          "ldp_vc": {
+            "proof_type": ["Ed25519Signature2018"]
+          }
+        },
+        "input_descriptors": [
+          {
+            "id": "id card credential",
+            "format": {
+              "ldp_vc": {
+                "proof_type": ["Ed25519Signature2020"]
+              }
+            },
+            "constraints": {
+              "fields": [
+                {
+                  "path": ["$.type"],
+                  "filter": {
+                    "type": "object",
+                    "pattern": "LifeInsuranceCredential"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "logo": "/assets/cert.png",
+      "name": "Health Insurance",
+      "type": "InsuranceCredential",
+      "definition": {
+        "purpose": "Relying party is requesting your digital ID for the purpose of Self-Authentication",
+        "format": {
+          "ldp_vc": {
+            "proof_type": ["Ed25519Signature2018"]
+          }
+        },
+        "input_descriptors": [
+          {
+            "id": "id card credential",
+            "format": {
+              "ldp_vc": {
+                "proof_type": ["Ed25519Signature2020"]
+              }
+            },
+            "constraints": {
+              "fields": [
+                {
+                  "path": ["$.type"],
+                  "filter": {
+                    "type": "object",
+                    "pattern": "InsuranceCredential"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "logo": "/assets/cert.png",
+      "name": "Mock Identity (Released)",
+      "type": "MockVerifiableCredential",
+      "definition": {
+        "purpose": "Relying party is requesting your digital ID for the purpose of Self-Authentication",
+        "format": {
+          "ldp_vc": {
+            "proof_type": ["RsaSignature2018"]
+          }
+        },
+        "input_descriptors": [
+          {
+            "id": "id card credential",
+            "format": {
+              "ldp_vc": {
+                "proof_type": ["RsaSignature2018"]
+              }
+            },
+            "constraints": {
+              "fields": [
+                {
+                  "path": ["$.type"],
+                  "filter": {
+                    "type": "object",
+                    "pattern": "MockVerifiableCredential"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "logo": "/assets/cert.png",
+      "name": "Land Registry",
+      "type": "LandStatementCredential",
+      "definition": {
+        "purpose": "Relying party is requesting your digital ID for the purpose of Self-Authentication",
+        "format": {
+          "ldp_vc": {
+            "proof_type": ["Ed25519Signature2020"]
+          }
+        },
+        "input_descriptors": [
+          {
+            "id": "id card credential",
+            "format": {
+              "ldp_vc": {
+                "proof_type": ["Ed25519Signature2020"]
+              }
+            },
+            "constraints": {
+              "fields": [
+                {
+                  "path": ["$.type"],
+                  "filter": {
+                    "type": "object",
+                    "pattern": "LandStatementCredential"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

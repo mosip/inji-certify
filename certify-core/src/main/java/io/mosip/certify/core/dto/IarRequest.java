@@ -65,4 +65,10 @@ public class IarRequest {
     @JsonProperty("redirect_to_web")
     private String redirectToWeb;
 
+    /**
+     * OAuth 2.0 Scope parameter - specifies the credential types being requested
+     */
+    @JsonProperty("scope")
+    private String scope;
+
 }
