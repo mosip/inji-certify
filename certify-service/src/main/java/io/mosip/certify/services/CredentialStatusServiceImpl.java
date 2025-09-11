@@ -35,20 +35,21 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
         if (request.getCredentialStatus().getStatusPurpose() != null && !allowedCredentialStatusPurposes.contains(request.getCredentialStatus().getStatusPurpose())) {
             throw new CertifyException("Invalid credential status purpose. Allowed values are: " + allowedCredentialStatusPurposes);
         }
-
-        Ledger ledger = ledgerRepository.findByCredentialId(request.getCredentialId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Credential not found: " + request.getCredentialId()));
-
-        if(ledger.getCredentialStatusDetails() == null || ledger.getCredentialStatusDetails().isEmpty()) {
-            throw new CertifyException("No credential status details found for credential: " + request.getCredentialId());
-        }
+        String statusListCredentialId = request.getCredentialStatus().getStatusListCredential();
+        Long statusListIndex = request.getCredentialStatus().getStatusListIndex();
+        Ledger ledger = ledgerRepository.findByStatusListCredentialIdAndStatusListIndex(statusListCredentialId, statusListIndex)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Credential not found with statusListCredentialId: " + statusListCredentialId + " and statusListIndex: " + statusListIndex));
 
         CredentialStatusTransaction transaction = new CredentialStatusTransaction();
-        transaction.setCredentialId(request.getCredentialId());
-        transaction.setStatusPurpose(request.getCredentialStatus().getStatusPurpose());
+        transaction.setCredentialId(ledger.getCredentialId());
+        if(request.getCredentialStatus().getStatusPurpose() == null) {
+            transaction.setStatusPurpose(ledger.getCredentialStatusDetails().get(0).getStatusPurpose());
+        } else {
+            transaction.setStatusPurpose(request.getCredentialStatus().getStatusPurpose());
+        }
         transaction.setStatusValue(request.getStatus());
-        transaction.setStatusListCredentialId(request.getCredentialStatus().getStatusListCredential());
-        transaction.setStatusListIndex(request.getCredentialStatus().getStatusListIndex());
+        transaction.setStatusListCredentialId(statusListCredentialId);
+        transaction.setStatusListIndex(statusListIndex);
         CredentialStatusTransaction savedTransaction =credentialStatusTransactionRepository.save(transaction);
 
         CredentialStatusResponse dto = new CredentialStatusResponse();
