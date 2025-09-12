@@ -56,8 +56,8 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
         dto.setCredentialId(ledger.getCredentialId());
         dto.setIssuerId(ledger.getIssuerId());
         dto.setCredentialType(ledger.getCredentialType());
-        dto.setIssueDate(ledger.getIssueDate().toLocalDateTime());
-        dto.setExpirationDate(ledger.getExpirationDate() != null ? ledger.getExpirationDate().toLocalDateTime() : null);
+        dto.setIssuanceDate(ledger.getIssuanceDate());
+        dto.setExpirationDate(ledger.getExpirationDate() != null ? ledger.getExpirationDate() : null);
         dto.setStatusListCredentialUrl(request.getCredentialStatus().getStatusListCredential());
         dto.setStatusListIndex(request.getCredentialStatus().getStatusListIndex());
         dto.setStatusPurpose(request.getCredentialStatus().getStatusPurpose());

@@ -6,6 +6,7 @@
 package io.mosip.certify.vcformatters;
 
 import java.io.StringWriter;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -70,6 +71,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     String idPrefix;
 
     String credentialId;
+    LocalDateTime issuanceDate;
+    LocalDateTime expirationDate;
 
     @PostConstruct
     public void initialize() {
@@ -327,9 +330,11 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         }
         if (!(templateInput.containsKey(VCDM2Constants.VALID_FROM)
                 && templateInput.containsKey(VCDM2Constants.VALID_UNITL))) {
-            String time = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            // hardcoded time
-            String expiryTime = ZonedDateTime.now(ZoneOffset.UTC).plusYears(2).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
+            ZonedDateTime zonedDateTime = ZonedDateTime.now(ZoneOffset.UTC);
+            issuanceDate = zonedDateTime.toLocalDateTime();
+            expirationDate = zonedDateTime.plusYears(2).toLocalDateTime();
+            String time = issuanceDate.format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
+            String expiryTime = expirationDate.format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
             finalTemplate.put(VCDM2Constants.VALID_FROM, time);
             finalTemplate.put(VCDM2Constants.VALID_UNITL, expiryTime);
         }
@@ -353,7 +358,18 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         return jsonObject.toString();
     }
 
+    @Override
     public String getCredentialId() {
         return credentialId;
+    }
+
+    @Override
+    public LocalDateTime getIssuanceDate() {
+        return issuanceDate;
+    }
+
+    @Override
+    public LocalDateTime getExpirationDate() {
+        return expirationDate;
     }
 }

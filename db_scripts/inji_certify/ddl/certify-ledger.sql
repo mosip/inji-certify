@@ -13,10 +13,10 @@
 -- Create ledger table (insert only table, data once added will not be updated)
 CREATE TABLE ledger (
     id SERIAL PRIMARY KEY,                          -- Auto-incrementing serial primary key
-    credential_id VARCHAR(255) NOT NULL,            -- Unique ID of the Verifiable Credential WHOSE STATUS IS BEING TRACKED
+    credential_id VARCHAR(255),            -- Unique ID of the Verifiable Credential WHOSE STATUS IS BEING TRACKED
     issuer_id VARCHAR(255) NOT NULL,                -- Issuer of the TRACKED credential
-    issue_date TIMESTAMPTZ NOT NULL,                -- Issuance date of the TRACKED credential
-    expiration_date TIMESTAMPTZ,                    -- Expiration date of the TRACKED credential, if any
+    issuance_date TIMESTAMP NOT NULL,                -- Issuance date of the TRACKED credential
+    expiration_date TIMESTAMP,                    -- Expiration date of the TRACKED credential, if any
     credential_type VARCHAR(100) NOT NULL,          -- Type of the TRACKED credential (e.g., 'VerifiableId')
     indexed_attributes JSONB,                       -- Optional searchable attributes from the TRACKED credential
     credential_status_details JSONB NOT NULL DEFAULT '[]'::jsonb,    -- Stores a list of status objects for this credential, defaults to an empty array.

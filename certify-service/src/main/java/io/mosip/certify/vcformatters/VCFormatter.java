@@ -1,5 +1,6 @@
 package io.mosip.certify.vcformatters;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -72,4 +73,8 @@ public interface VCFormatter {
     List<String> getCredentialStatusPurpose(String templateName);
 
     String getCredentialId();
+
+    LocalDateTime getIssuanceDate();
+
+    LocalDateTime getExpirationDate();
 }
