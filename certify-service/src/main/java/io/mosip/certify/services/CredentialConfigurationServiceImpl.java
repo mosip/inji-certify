@@ -42,7 +42,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Value("${mosip.certify.domain.url:}")
     private String credentialIssuer;
 
-    @Value("#{'${mosip.certify.authorization.url}'.split(',')}")
+    @Value("#{'${mosip.certify.authorization.urls}'.split(',')}")
     private List<String> authUrlList;
 
     @Value("${server.servlet.path}")
