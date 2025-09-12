@@ -46,8 +46,8 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
         CredentialStatusResponse response = new CredentialStatusResponse();
         response.setCredentialId(record.getCredentialId());
         response.setIssuerId(record.getIssuerId());
-        response.setIssueDate(record.getIssueDate().toLocalDateTime());
-        response.setExpirationDate(record.getExpirationDate() != null ? record.getExpirationDate().toLocalDateTime() : null);
+        response.setIssuanceDate(record.getIssuanceDate());
+        response.setExpirationDate(record.getExpirationDate() != null ? record.getExpirationDate() : null);
         response.setCredentialType(record.getCredentialType());
         List<CredentialStatusDetail> statusDetails = record.getCredentialStatusDetails();
         if (statusDetails != null && !statusDetails.isEmpty()) {

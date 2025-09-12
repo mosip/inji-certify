@@ -6,6 +6,7 @@
 package io.mosip.certify.vcformatters;
 
 import java.io.StringWriter;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
