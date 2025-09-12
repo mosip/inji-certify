@@ -51,8 +51,7 @@ public class VpParsingUtil {
             
         } catch (Exception e) {
             log.error("Failed to extract vp_token from presentation", e);
-            // Fallback: return the raw presentation
-            return vpPresentation;
+            throw new RuntimeException("Failed to extract vp_token from VP presentation: " + e.getMessage(), e);
         }
     }
 
@@ -81,8 +80,7 @@ public class VpParsingUtil {
             
         } catch (Exception e) {
             log.error("Failed to extract presentation_submission from presentation", e);
-            // Fallback: create basic submission
-            return createBasicPresentationSubmission(defaultDefinitionId);
+            throw new RuntimeException("Failed to extract presentation_submission from VP presentation: " + e.getMessage(), e);
         }
     }
 
@@ -106,11 +104,11 @@ public class VpParsingUtil {
                 return jsonNode.get("vp_token").asText();
             }
             
-            // Fallback: return as-is
+            // Return as-is if not in expected format
             return jwtPresentation;
         } catch (Exception e) {
-            log.debug("Not a JSON JWT, returning as-is");
-            return jwtPresentation;
+            log.error("Failed to parse JWT presentation", e);
+            throw new RuntimeException("Invalid JWT presentation format: " + e.getMessage(), e);
         }
     }
 
@@ -132,11 +130,11 @@ public class VpParsingUtil {
                 return jsonNode.get("vp_token").asText();
             }
             
-            // Fallback: return as-is
+            // Return as-is if not in expected format
             return formPresentation;
         } catch (Exception e) {
-            log.debug("Not form data or JSON, returning as-is");
-            return formPresentation;
+            log.error("Failed to parse form presentation", e);
+            throw new RuntimeException("Invalid form presentation format: " + e.getMessage(), e);
         }
     }
 
@@ -154,7 +152,7 @@ public class VpParsingUtil {
             return extractVpTokenFromJwt(vpPresentation);
         }
         
-        // Fallback
+        // Return as-is if no specific format detected
         return vpPresentation;
     }
 
@@ -164,16 +162,16 @@ public class VpParsingUtil {
     private String extractSubmissionFromJwt(String jwtPresentation, String defaultDefinitionId) {
         try {
             // For JWT, we typically need to decode and extract submission
-            // This is a simplified implementation
             JsonNode jsonNode = objectMapper.readTree(jwtPresentation);
             if (jsonNode.has("presentation_submission")) {
                 return jsonNode.get("presentation_submission").toString();
             }
             
-            // Fallback: create basic submission
-            return createBasicPresentationSubmission(defaultDefinitionId);
+            log.error("No presentation_submission found in JWT for definition_id: {}", defaultDefinitionId);
+            throw new RuntimeException("No presentation_submission found in JWT presentation");
         } catch (Exception e) {
-            return createBasicPresentationSubmission(defaultDefinitionId);
+            log.error("Failed to parse JWT for presentation_submission", e);
+            throw new RuntimeException("Invalid JWT format for presentation_submission: " + e.getMessage(), e);
         }
     }
 
@@ -195,10 +193,11 @@ public class VpParsingUtil {
                 return jsonNode.get("presentation_submission").toString();
             }
             
-            // Fallback: create basic submission
-            return createBasicPresentationSubmission(defaultDefinitionId);
+            log.error("No presentation_submission found in form data for definition_id: {}", defaultDefinitionId);
+            throw new RuntimeException("No presentation_submission found in form presentation");
         } catch (Exception e) {
-            return createBasicPresentationSubmission(defaultDefinitionId);
+            log.error("Failed to parse form data for presentation_submission", e);
+            throw new RuntimeException("Invalid form format for presentation_submission: " + e.getMessage(), e);
         }
     }
 
@@ -242,16 +241,6 @@ public class VpParsingUtil {
         return result;
     }
 
-    /**
-     * Create a basic presentation submission structure
-     */
-    private String createBasicPresentationSubmission(String definitionId) {
-        String submissionTemplate = "{\"id\":\"submission_%s\",\"definition_id\":\"definition_%s\",\"descriptor_map\":[{\"id\":\"descriptor_id\",\"format\":\"ldp_vp\",\"path\":\"$\"}]}";
-        String submissionId = System.currentTimeMillis() + "";
-        
-        log.debug("Creating basic presentation_submission with definition_id: {}", definitionId);
-        return String.format(submissionTemplate, submissionId, definitionId);
-    }
 
     /**
      * Validate if a string is a valid JWT

@@ -10,7 +10,6 @@ import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
@@ -37,8 +36,6 @@ public class PresentationDefinitionConfigService {
     @Value("${mosip.certify.presentation-definition.config-file:classpath:certify-config.json}")
     private String configFilePath;
 
-    @Value("${mosip.certify.presentation-definition.default-credential-type:MOSIPVerifiableCredential}")
-    private String defaultCredentialType;
 
     @Value("${mosip.certify.presentation-definition.default-id:default-presentation}")
     private String defaultPresentationId;
@@ -64,9 +61,8 @@ public class PresentationDefinitionConfigService {
             
             Resource resource = resourceLoader.getResource(configFilePath);
             if (!resource.exists()) {
-                log.warn("Configuration file not found at: {}, will use default configuration", configFilePath);
-                createDefaultConfiguration();
-                return;
+                log.error("PRODUCTION ERROR: Configuration file not found at: {}. This is REQUIRED for production!", configFilePath);
+                throw new RuntimeException("Presentation definition configuration file is required: " + configFilePath);
             }
 
             try (InputStream inputStream = resource.getInputStream()) {
@@ -80,61 +76,11 @@ public class PresentationDefinitionConfigService {
                 
             }
         } catch (IOException e) {
-            log.error("Failed to load presentation definition configuration", e);
-            createDefaultConfiguration();
+            log.error("PRODUCTION ERROR: Failed to load presentation definition configuration", e);
+            throw new RuntimeException("Cannot load presentation definition configuration: " + e.getMessage(), e);
         }
     }
 
-    /**
-     * Create default configuration when config file is not available
-     */
-    private void createDefaultConfiguration() {
-        log.info("Creating default presentation definition configuration");
-        
-        VerifiableClaimsConfig defaultConfig = new VerifiableClaimsConfig();
-        VerifiableClaimsConfig.VerifiableClaim defaultClaim = new VerifiableClaimsConfig.VerifiableClaim();
-        
-        defaultClaim.setName("Default Identity");
-        defaultClaim.setType(defaultCredentialType);
-        defaultClaim.setEssential(true);
-        defaultClaim.setLogo("/assets/cert.png");
-        
-        // Create basic definition
-        VerifiableClaimsConfig.ClaimDefinition definition = new VerifiableClaimsConfig.ClaimDefinition();
-        definition.setPurpose("Relying party is requesting your digital ID for authentication");
-        
-        // Create format
-        VerifiableClaimsConfig.Format format = new VerifiableClaimsConfig.Format();
-        VerifiableClaimsConfig.LdpVc ldpVc = new VerifiableClaimsConfig.LdpVc();
-        ldpVc.setProofType(Arrays.asList("RsaSignature2018"));
-        format.setLdpVc(ldpVc);
-        definition.setFormat(format);
-        
-        // Create input descriptor
-        VerifiableClaimsConfig.InputDescriptor inputDescriptor = new VerifiableClaimsConfig.InputDescriptor();
-        inputDescriptor.setId("default credential");
-        inputDescriptor.setFormat(format);
-        
-        // Create constraints
-        VerifiableClaimsConfig.Constraints constraints = new VerifiableClaimsConfig.Constraints();
-        VerifiableClaimsConfig.FieldConstraint fieldConstraint = new VerifiableClaimsConfig.FieldConstraint();
-        fieldConstraint.setPath(Arrays.asList("$.type"));
-        
-        VerifiableClaimsConfig.Filter filter = new VerifiableClaimsConfig.Filter();
-        filter.setType("object");
-        filter.setPattern(defaultCredentialType);
-        fieldConstraint.setFilter(filter);
-        
-        constraints.setFields(Arrays.asList(fieldConstraint));
-        inputDescriptor.setConstraints(constraints);
-        definition.setInputDescriptors(Arrays.asList(inputDescriptor));
-        
-        defaultClaim.setDefinition(definition);
-        defaultConfig.setVerifiableClaims(Arrays.asList(defaultClaim));
-        
-        this.verifiableClaimsConfig = defaultConfig;
-        log.info("Default configuration created with credential type: {}", defaultCredentialType);
-    }
 
     /**
      * Get presentation definition for a specific credential type
@@ -142,13 +88,12 @@ public class PresentationDefinitionConfigService {
      * @param credentialType The credential type to get definition for
      * @return PresentationDefinition for the credential type
      */
-    @Cacheable("presentationDefinitions")
     public PresentationDefinition getPresentationDefinition(String credentialType) {
         log.debug("Getting presentation definition for credential type: {}", credentialType);
         
         if (verifiableClaimsConfig == null || verifiableClaimsConfig.getVerifiableClaims() == null) {
-            log.warn("No configuration loaded, creating fallback presentation definition");
-            return createFallbackPresentationDefinition(credentialType);
+            log.error("No presentation definition configuration loaded - this is required for production");
+            throw new RuntimeException("Presentation definition configuration not loaded - check application configuration");
         }
 
         // Find matching credential type
@@ -163,21 +108,8 @@ public class PresentationDefinitionConfigService {
             return convertToPresentationDefinition(matchingClaim.get());
         }
 
-        // Fallback to essential credential if specific type not found
-        Optional<VerifiableClaimsConfig.VerifiableClaim> essentialClaim = verifiableClaimsConfig
-                .getVerifiableClaims()
-                .stream()
-                .filter(claim -> Boolean.TRUE.equals(claim.getEssential()))
-                .findFirst();
-
-        if (essentialClaim.isPresent()) {
-            log.debug("Using essential credential configuration as fallback for type: {}", credentialType);
-            return convertToPresentationDefinition(essentialClaim.get());
-        }
-
-        // Final fallback
-        log.warn("No matching or essential credential found, using fallback for type: {}", credentialType);
-        return createFallbackPresentationDefinition(credentialType);
+        log.error("No presentation definition configured for credential type: {}", credentialType);
+        throw new RuntimeException("No presentation definition configured for credential type: " + credentialType);
     }
 
     /**
@@ -187,7 +119,7 @@ public class PresentationDefinitionConfigService {
      */
     public List<String> getAvailableCredentialTypes() {
         if (verifiableClaimsConfig == null || verifiableClaimsConfig.getVerifiableClaims() == null) {
-            return Arrays.asList(defaultCredentialType);
+            throw new RuntimeException("No credential types available - configuration not loaded");
         }
         
         return verifiableClaimsConfig.getVerifiableClaims()
@@ -204,7 +136,29 @@ public class PresentationDefinitionConfigService {
      */
     public PresentationDefinition getDefaultPresentationDefinition() {
         log.debug("Getting default presentation definition");
-        return getPresentationDefinition(defaultCredentialType);
+        
+        if (verifiableClaimsConfig == null || verifiableClaimsConfig.getVerifiableClaims() == null || 
+            verifiableClaimsConfig.getVerifiableClaims().isEmpty()) {
+            throw new RuntimeException("No default presentation definition available - configuration not loaded");
+        }
+        
+        // Use the first essential claim as default, or first claim if no essential ones
+        Optional<VerifiableClaimsConfig.VerifiableClaim> defaultClaim = verifiableClaimsConfig
+                .getVerifiableClaims()
+                .stream()
+                .filter(claim -> Boolean.TRUE.equals(claim.getEssential()))
+                .findFirst();
+                
+        if (defaultClaim.isEmpty()) {
+            // No essential claims, use first available
+            defaultClaim = verifiableClaimsConfig.getVerifiableClaims().stream().findFirst();
+        }
+        
+        if (defaultClaim.isEmpty()) {
+            throw new RuntimeException("No presentation definition available in configuration");
+        }
+        
+        return getPresentationDefinition(defaultClaim.get().getType());
     }
 
     /**
@@ -257,29 +211,6 @@ public class PresentationDefinitionConfigService {
         return fieldConstraint;
     }
 
-    /**
-     * Create fallback presentation definition when configuration is not available
-     */
-    private PresentationDefinition createFallbackPresentationDefinition(String credentialType) {
-        log.debug("Creating fallback presentation definition for credential type: {}", credentialType);
-        
-        PresentationDefinition presentationDefinition = new PresentationDefinition();
-        presentationDefinition.setId(defaultPresentationId);
-
-        InputDescriptor inputDescriptor = new InputDescriptor();
-        inputDescriptor.setId("fallback-descriptor");
-
-        InputConstraints constraints = new InputConstraints();
-        io.mosip.certify.core.dto.FieldConstraint fieldConstraint = new io.mosip.certify.core.dto.FieldConstraint();
-        fieldConstraint.setPath(Arrays.asList("$.type"));
-        constraints.setFields(Arrays.asList(fieldConstraint));
-        inputDescriptor.setConstraints(constraints);
-
-        presentationDefinition.setInputDescriptors(Arrays.asList(inputDescriptor));
-
-        log.debug("Created fallback presentation definition for credential type: {}", credentialType);
-        return presentationDefinition;
-    }
 
     /**
      * Reload configuration from file (useful for runtime updates)
