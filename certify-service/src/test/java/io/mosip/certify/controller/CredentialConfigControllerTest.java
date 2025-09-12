@@ -1,10 +1,7 @@
 package io.mosip.certify.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.mosip.certify.core.dto.CredentialConfigResponse;
-import io.mosip.certify.core.dto.CredentialConfigurationDTO;
-import io.mosip.certify.core.dto.CredentialSubjectParametersDTO;
-import io.mosip.certify.core.dto.ParsedAccessToken;
+import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,6 +41,9 @@ public class CredentialConfigControllerTest {
     @Mock
     private CredentialConfigurationDTO credentialConfigurationDTO;
 
+    @Mock
+    private CredentialConfigurationUpdateDTO credentialConfigurationUpdateDTO;
+
     @Before
     public void setup() {
         credentialConfigurationDTO = new CredentialConfigurationDTO();
@@ -65,6 +65,15 @@ public class CredentialConfigControllerTest {
         credentialConfigurationDTO.setCredentialSubjectDefinition(Map.of(
                 "name", new CredentialSubjectParametersDTO(List.of(new CredentialSubjectParametersDTO.Display("Full Name", "en")))
         ));
+        credentialConfigurationUpdateDTO = new CredentialConfigurationUpdateDTO();
+        credentialConfigurationUpdateDTO.setVcTemplate(credentialConfigurationDTO.getVcTemplate());
+        credentialConfigurationUpdateDTO.setDidUrl(credentialConfigurationDTO.getDidUrl());
+        credentialConfigurationUpdateDTO.setMetaDataDisplay(credentialConfigurationDTO.getMetaDataDisplay());
+        credentialConfigurationUpdateDTO.setDisplayOrder(credentialConfigurationDTO.getDisplayOrder());
+        credentialConfigurationUpdateDTO.setScope(credentialConfigurationDTO.getScope());
+        credentialConfigurationUpdateDTO.setSignatureCryptoSuite(credentialConfigurationDTO.getSignatureCryptoSuite());
+        credentialConfigurationUpdateDTO.setPluginConfigurations(credentialConfigurationDTO.getPluginConfigurations());
+        credentialConfigurationUpdateDTO.setCredentialSubjectDefinition(credentialConfigurationDTO.getCredentialSubjectDefinition());
     }
 
     @Test
@@ -101,10 +110,10 @@ public class CredentialConfigControllerTest {
         CredentialConfigResponse credentialConfigResponse = new CredentialConfigResponse();
         credentialConfigResponse.setId("farmer-credential-config-001");
         credentialConfigResponse.setStatus("active");
-        Mockito.when(credentialConfigurationService.updateCredentialConfiguration(Mockito.anyString(), eq(credentialConfigurationDTO))).thenReturn(credentialConfigResponse);
+        Mockito.when(credentialConfigurationService.updateCredentialConfiguration(Mockito.anyString(), eq(credentialConfigurationUpdateDTO))).thenReturn(credentialConfigResponse);
 
         mockMvc.perform(put("/credential-configurations/1")
-                        .content(objectMapper.writeValueAsBytes(credentialConfigurationDTO))
+                        .content(objectMapper.writeValueAsBytes(credentialConfigurationUpdateDTO))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").exists())
