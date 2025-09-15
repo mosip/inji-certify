@@ -33,7 +33,7 @@ public class LedgerIssuanceTableCustomRepositoryImpl implements LedgerIssuanceTa
             params.put("issuerId", request.getIssuerId());
             params.put("credentialType", request.getCredentialType());
 
-            if (request.getCredentialId() != null) {
+            if (request.getCredentialId() != null && !request.getCredentialId().isEmpty()) {
                 sql.append(" AND credential_id = :credentialId ");
                 params.put("credentialId", request.getCredentialId());
             }

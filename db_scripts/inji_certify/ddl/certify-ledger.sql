@@ -32,7 +32,7 @@ COMMENT ON TABLE ledger IS 'Stores intrinsic information about tracked Verifiabl
 COMMENT ON COLUMN ledger.id IS 'Serial primary key for the ledger table.';
 COMMENT ON COLUMN ledger.credential_id IS 'Unique identifier of the Verifiable Credential whose status is being tracked. Must be unique across the table.';
 COMMENT ON COLUMN ledger.issuer_id IS 'Identifier of the issuer of the tracked credential.';
-COMMENT ON COLUMN ledger.issue_date IS 'Issuance date of the tracked credential.';
+COMMENT ON COLUMN ledger.issuance_date IS 'Issuance date of the tracked credential.';
 COMMENT ON COLUMN ledger.expiration_date IS 'Expiration date of the tracked credential, if applicable.';
 COMMENT ON COLUMN ledger.credential_type IS 'The type(s) of the tracked credential (e.g., VerifiableId, ProofOfEnrollment).';
 COMMENT ON COLUMN ledger.indexed_attributes IS 'Stores specific attributes extracted from the tracked credential for optimized searching.';
@@ -43,7 +43,7 @@ COMMENT ON COLUMN ledger.cr_dtimes IS 'Timestamp of when this ledger record for 
 CREATE INDEX IF NOT EXISTS idx_ledger_credential_id ON ledger(credential_id);
 CREATE INDEX IF NOT EXISTS idx_ledger_issuer_id ON ledger(issuer_id);
 CREATE INDEX IF NOT EXISTS idx_ledger_credential_type ON ledger(credential_type);
-CREATE INDEX IF NOT EXISTS idx_ledger_issue_date ON ledger(issue_date);
+CREATE INDEX IF NOT EXISTS idx_ledger_issue_date ON ledger(issuance_date);
 CREATE INDEX IF NOT EXISTS idx_ledger_expiration_date ON ledger(expiration_date);
 CREATE INDEX IF NOT EXISTS idx_ledger_cr_dtimes ON ledger(cr_dtimes);
 CREATE INDEX IF NOT EXISTS idx_gin_ledger_indexed_attrs ON ledger USING GIN (indexed_attributes);
