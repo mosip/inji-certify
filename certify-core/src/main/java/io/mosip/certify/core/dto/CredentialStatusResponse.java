@@ -1,11 +1,13 @@
 package io.mosip.certify.core.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CredentialStatusResponse {
     private String credentialId;
     private String issuerId;

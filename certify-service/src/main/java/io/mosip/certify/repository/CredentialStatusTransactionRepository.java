@@ -34,8 +34,6 @@ public interface CredentialStatusTransactionRepository extends JpaRepository<Cre
      * Find the latest status transaction for each credential in a specific status list
      * This helps to get the current state of all credentials in a status list
      */
-    @Query("SELECT t FROM CredentialStatusTransaction t WHERE t.statusListCredentialId = :statusListId ORDER BY t.credentialId, t.createdDtimes DESC")
+    @Query("SELECT t FROM CredentialStatusTransaction t WHERE t.statusListCredentialId = :statusListId ORDER BY t.createdDtimes DESC")
     List<CredentialStatusTransaction> findLatestStatusByStatusListId(@Param("statusListId") String statusListId);
-
-    Optional<CredentialStatusTransaction> findByCredentialId(String credentialId);
 }

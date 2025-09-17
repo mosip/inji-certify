@@ -31,5 +31,6 @@ ALTER TABLE certify.ledger
     ALTER COLUMN expiration_date TYPE TIMESTAMP;
 
 -- DROP NOT NULL for credential_id in  credential_status_transaction
-ALTER TABLE certify.credential_status_transaction
-    ALTER COLUMN credential_id DROP NOT NULL;
+DROP INDEX IF EXISTS idx_cst_credential_id;
+
+ALTER TABLE credential_status_transaction DROP COLUMN credential_id;
