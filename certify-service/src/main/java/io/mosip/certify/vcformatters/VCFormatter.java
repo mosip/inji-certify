@@ -70,4 +70,6 @@ public interface VCFormatter {
      * @return
      */
     List<String> getCredentialStatusPurpose(String templateName);
+
+    String getCredentialId();
 }

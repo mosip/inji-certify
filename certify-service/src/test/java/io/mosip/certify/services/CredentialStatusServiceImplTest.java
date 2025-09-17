@@ -5,6 +5,7 @@ import io.mosip.certify.core.dto.UpdateCredentialStatusRequest;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.entity.CredentialStatusTransaction;
 import io.mosip.certify.entity.Ledger;
+import io.mosip.certify.entity.attributes.CredentialStatusDetail;
 import io.mosip.certify.repository.CredentialStatusTransactionRepository;
 import io.mosip.certify.repository.LedgerRepository;
 import org.junit.Before;
@@ -68,6 +69,13 @@ public class CredentialStatusServiceImplTest {
 
         Ledger ledger = createLedger(credentialId);
 
+        // Add a CredentialStatusDetail to the ledger to match production expectations
+        CredentialStatusDetail detail = new CredentialStatusDetail();
+        detail.setStatusPurpose("revocation");
+        detail.setStatusListCredentialId(statusListCredential);
+        detail.setStatusListIndex(87823L);
+        ledger.getCredentialStatusDetails().add(detail);
+
         // Existing transaction with old values
         CredentialStatusTransaction existingTransaction = new CredentialStatusTransaction();
         existingTransaction.setTransactionLogId(42L);
@@ -107,11 +115,19 @@ public class CredentialStatusServiceImplTest {
 
         UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(credentialId, statusListCredential);
         Ledger ledger = createLedger(credentialId);
+
+        // Add a CredentialStatusDetail to satisfy the service check
+        CredentialStatusDetail detail = new CredentialStatusDetail();
+        detail.setStatusPurpose("revocation");
+        detail.setStatusListCredentialId(statusListCredential);
+        detail.setStatusListIndex(87823L);
+        ledger.getCredentialStatusDetails().add(detail);
+
         CredentialStatusTransaction savedTransaction = createSavedTransaction(credentialId, statusListCredential);
 
         when(ledgerRepository.findByCredentialId(credentialId)).thenReturn(Optional.of(ledger));
         when(credentialStatusTransactionRepository.save(any(CredentialStatusTransaction.class)))
-            .thenReturn(savedTransaction);
+                .thenReturn(savedTransaction);
 
         CredentialStatusResponse result = credentialStatusService.updateCredentialStatus(request);
 
@@ -156,6 +172,14 @@ public class CredentialStatusServiceImplTest {
         request.getCredentialStatus().setStatusPurpose(null);
 
         Ledger ledger = createLedger(credentialId);
+
+        // Add a CredentialStatusDetail to satisfy the service check
+        CredentialStatusDetail detail = new CredentialStatusDetail();
+        detail.setStatusPurpose(null);
+        detail.setStatusListCredentialId(statusListCredential);
+        detail.setStatusListIndex(87823L);
+        ledger.getCredentialStatusDetails().add(detail);
+
         when(ledgerRepository.findByCredentialId(credentialId)).thenReturn(Optional.of(ledger));
         when(credentialStatusTransactionRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -163,6 +187,24 @@ public class CredentialStatusServiceImplTest {
         assertNotNull(response);
         assertEquals(credentialId, response.getCredentialId());
         assertNull(response.getStatusPurpose());
+    }
+
+    @Test
+    public void updateCredentialStatus_EmptyCredentialStatusDetails_ThrowsCertifyException() {
+        String credentialId = "cid-003";
+        String statusListCredential = "https://example.com/status-list/ghi";
+        UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(credentialId, statusListCredential);
+
+        Ledger ledger = createLedger(credentialId);
+        // credentialStatusDetails is already empty
+
+        when(ledgerRepository.findByCredentialId(credentialId)).thenReturn(Optional.of(ledger));
+
+        CertifyException exception = assertThrows(CertifyException.class, () -> {
+            credentialStatusService.updateCredentialStatus(request);
+        });
+
+        assertEquals("No credential status details found for credential: " + credentialId, exception.getMessage());
     }
 
     private UpdateCredentialStatusRequest createValidUpdateCredentialRequest(String credentialId, String statusListCredential) {
