@@ -1,5 +1,6 @@
 package io.mosip.certify.utils;
 
+import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,23 +26,25 @@ public final class BitStringStatusListUtils {
      * Generate an encoded list from a map of index-status pairs.
      *
      * @param statusMap Map containing index -> status mappings.
-     * @param capacity Total capacity of the status list.
+     * @param capacityInKB Total capacity of the status list.
      * @return Base64URL encoded compressed bitstring.
      */
-    public static String generateEncodedList(Map<Long, Boolean> statusMap, long capacity) {
+    public static String updateEncodedList(String encodedStatusList, Map<Long, Boolean> statusMap, long capacityInKB) {
         log.info("Generating encoded list from status map with {} entries for capacity {}",
-                statusMap.size(), capacity);
+                statusMap.size(), capacityInKB);
 
         try {
-            boolean[] bitstring = new boolean[(int) capacity];
+            // Convert capacity from KB to bits (1 KB = 1024 bytes, 1 byte = 8 bits)
+            long actualCapacity = Math.max(capacityInKB * 1024L * 8L, 131072L);
+            boolean[] bitstring = decodeEncodedList(encodedStatusList, (int) actualCapacity);
             for (Map.Entry<Long, Boolean> entry : statusMap.entrySet()) {
                 long index = entry.getKey();
                 boolean status = entry.getValue();
 
-                if (index >= 0 && index < capacity) {
+                if (index >= 0 && index < actualCapacity) {
                     bitstring[(int) index] = status;
                 } else {
-                    log.warn("Index {} is out of bounds for capacity {}", index, capacity);
+                    log.warn("Index {} is out of bounds for capacity {}", index, actualCapacity);
                 }
             }
             byte[] byteArray = convertBitstringToByteArray(bitstring);
@@ -52,19 +55,20 @@ public final class BitStringStatusListUtils {
             return encodedList;
         } catch (Exception e) {
             log.error("Error generating encoded list from status map", e);
-            throw new CertifyException("ENCODED_LIST_GENERATION_FAILED");
+            throw new CertifyException(ErrorConstants.ENCODED_LIST_UPDATE_FAILED);
         }
     }
 
     /**
      * Creates an empty encoded list (all bits set to 0) according to W3C Bitstring Status List v1.0.
      *
-     * @param capacity The number of bits in the list.
+     * @param capacityInKB The number of bits in the list.
      * @return Multibase-encoded base64url string representing the GZIP-compressed bit array.
      */
-    public static String createEmptyEncodedList(long capacity) {
-        log.debug("Creating empty encoded list with capacity {}", capacity);
-        long actualCapacity = Math.max(capacity, 131072L);
+    public static String createEmptyEncodedList(long capacityInKB) {
+        log.debug("Creating empty encoded list with capacity {}", capacityInKB);
+        // Convert capacity from KB to bits (1 KB = 1024 bytes, 1 byte = 8 bits)
+        long actualCapacity = Math.max(capacityInKB * 1024L * 8L, 131072L);
         int numBytes = (int) Math.ceil(actualCapacity / 8.0);
         byte[] emptyBitstring = new byte[numBytes];
         return "u" + compressAndEncode(emptyBitstring);
@@ -106,6 +110,49 @@ public final class BitStringStatusListUtils {
         } catch (IOException e) {
             log.error("Failed to compress and encode bitstring", e);
             throw new RuntimeException("Failed to compress and encode bitstring", e);
+        }
+    }
+
+    /**
+     * Decodes an encoded list string (Base64URL + GZIP) back to a boolean array bitstring.
+     *
+     * @param encodedList The encoded list string (may have multibase prefix 'u').
+     * @param capacity The number of bits to decode (should match the original capacity).
+     * @return boolean array representing the bitstring status list.
+     */
+    private static boolean[] decodeEncodedList(String encodedList, int capacity) throws IOException {
+        if (encodedList == null || encodedList.isEmpty()) {
+            throw new IllegalArgumentException("Encoded list string is null or empty");
+        }
+        String base64Part = encodedList.startsWith("u") ? encodedList.substring(1) : encodedList;
+        byte[] compressedBytes = Base64.getUrlDecoder().decode(base64Part);
+        byte[] decompressedBytes = decompress(compressedBytes);
+        boolean[] bitstring = new boolean[capacity];
+        for (int i = 0; i < capacity; i++) {
+            int byteIndex = i / 8;
+            int bitIndex = i % 8;
+            if (byteIndex < decompressedBytes.length) {
+                bitstring[i] = ((decompressedBytes[byteIndex] >> (7 - bitIndex)) & 1) == 1;
+            } else {
+                bitstring[i] = false;
+            }
+        }
+        return bitstring;
+    }
+
+    /**
+     * GZIP decompress a byte array.
+     */
+    private static byte[] decompress(byte[] compressedBytes) throws IOException {
+        try (java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(compressedBytes);
+             java.util.zip.GZIPInputStream gzipIn = new java.util.zip.GZIPInputStream(bais);
+             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[1024];
+            int len;
+            while ((len = gzipIn.read(buffer)) > 0) {
+                baos.write(buffer, 0, len);
+            }
+            return baos.toByteArray();
         }
     }
 }
