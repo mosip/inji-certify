@@ -1,5 +1,6 @@
 package io.mosip.certify.services;
 
+import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.entity.CredentialStatusTransaction;
 import io.mosip.certify.entity.StatusListCredential;
@@ -46,9 +47,6 @@ public class StatusListUpdateBatchJob {
 
     @Value("${mosip.certify.batch.status-list-update.since-time:1970-01-01T00:00:00}")
     private String sinceTime;
-
-    // Track last processed timestamp to avoid reprocessing
-    private LocalDateTime lastProcessedTime = null;
 
     /**
      * Scheduled method that runs every hour to update status lists
@@ -104,17 +102,11 @@ public class StatusListUpdateBatchJob {
                 }
             }
 
-            // Update last processed time
-            lastProcessedTime = newTransactions.stream()
-                    .map(CredentialStatusTransaction::getCreatedDtimes)
-                    .max(LocalDateTime::compareTo)
-                    .orElse(LocalDateTime.now());
-
             log.info("Status list update batch job completed successfully. Updated {} status lists", updatedLists);
 
         } catch (Exception e) {
             log.error("Error in status list update batch job", e);
-            throw new CertifyException("BATCH_JOB_EXECUTION_FAILED");
+            throw new CertifyException(ErrorConstants.BATCH_JOB_EXECUTION_FAILED);
         }
     }
 
@@ -122,9 +114,6 @@ public class StatusListUpdateBatchJob {
      * Determine the starting timestamp for processing transactions
      */
     private LocalDateTime determineStartTime() {
-        if (lastProcessedTime != null) {
-            return lastProcessedTime;
-        }
 
         // First run - get the latest update time from existing status lists
         Optional<LocalDateTime> lastKnownUpdate = statusListRepository.findMaxUpdatedTime();
@@ -155,7 +144,7 @@ public class StatusListUpdateBatchJob {
             return transactionRepository.findTransactionsSince(since, batchSize);
         } catch (Exception e) {
             log.error("Error fetching new transactions since {}", since, e);
-            throw new CertifyException("TRANSACTION_FETCH_FAILED");
+            throw new CertifyException(ErrorConstants.TRANSACTION_FETCH_FAILED);
         }
     }
 
@@ -182,19 +171,18 @@ public class StatusListUpdateBatchJob {
 
             if (optionalStatusList.isEmpty()) {
                 log.error("Status list credential not found: {}", statusListId);
-                throw new CertifyException("STATUS_LIST_NOT_FOUND");
+                throw new CertifyException(ErrorConstants.STATUS_LIST_NOT_FOUND);
             }
 
             StatusListCredential statusListCredential = optionalStatusList.get();
 
-            // Get current status data for this status list
-            Map<Long, Boolean> currentStatuses = getCurrentStatusData(statusListId);
-
             // Apply transaction updates to the status data
-            Map<Long, Boolean> updatedStatuses = applyTransactionUpdates(currentStatuses, transactions);
+            Map<Long, Boolean> updatedStatuses = getUpdatedStatus(transactions);
+
+            JSONObject vcDocument = new JSONObject(statusListCredential.getVcDocument());
 
             // Generate new encoded list
-            String newEncodedList = BitStringStatusListUtils.generateEncodedList(updatedStatuses, statusListCredential.getCapacity());
+            String newEncodedList = BitStringStatusListUtils.updateEncodedList(vcDocument.getString("encodedList"),updatedStatuses, statusListCredential.getCapacity());
 
             // Update the status list credential with new encoded list
             updateStatusListCredential(statusListCredential, newEncodedList);
@@ -203,48 +191,25 @@ public class StatusListUpdateBatchJob {
 
         } catch (Exception e) {
             log.error("Error updating status list: {}", statusListId, e);
-            throw new CertifyException("STATUS_LIST_UPDATE_FAILED");
+            throw new CertifyException(ErrorConstants.STATUS_LIST_UPDATE_FAILED);
         }
-    }
-
-    /**
-     * Get current status data for a specific status list from transactions
-     */
-    private Map<Long, Boolean> getCurrentStatusData(String statusListId) {
-        // Get the latest status for each index in this status list
-        List<CredentialStatusTransaction> latestTransactions =
-                transactionRepository.findLatestStatusByStatusListId(statusListId);
-
-        Map<Long, Boolean> statusMap = new HashMap<>();
-        for (CredentialStatusTransaction transaction : latestTransactions) {
-            if (transaction.getStatusListIndex() != null) {
-                statusMap.put(transaction.getStatusListIndex(), transaction.getStatusValue());
-            }
-        }
-
-        return statusMap;
     }
 
     /**
      * Apply transaction updates to the current status data
      */
-    private Map<Long, Boolean> applyTransactionUpdates(
-            Map<Long, Boolean> currentStatuses,
-            List<CredentialStatusTransaction> transactions) {
-
-        Map<Long, Boolean> updatedStatuses = new HashMap<>(currentStatuses);
-
-        // Sort transactions by timestamp to apply them in chronological order
-        transactions.sort(Comparator.comparing(CredentialStatusTransaction::getCreatedDtimes));
-
-        for (CredentialStatusTransaction transaction : transactions) {
-            if (transaction.getStatusListIndex() != null) {
-                updatedStatuses.put(transaction.getStatusListIndex(), transaction.getStatusValue());
-            }
-        }
-
-        return updatedStatuses;
+    private Map<Long, Boolean> getUpdatedStatus(List<CredentialStatusTransaction> transactions) {
+        return transactions.stream()
+                .filter(t -> t.getStatusListIndex() != null)
+                .sorted(Comparator.comparing(CredentialStatusTransaction::getCreatedDtimes))
+                .collect(Collectors.toMap(
+                        CredentialStatusTransaction::getStatusListIndex,
+                        CredentialStatusTransaction::getStatusValue,
+                        (first, second) -> second,
+                        HashMap::new
+                ));
     }
+
 
     /**
      * Update the status list credential with the new encoded list
