@@ -25,23 +25,25 @@ public final class BitStringStatusListUtils {
      * Generate an encoded list from a map of index-status pairs.
      *
      * @param statusMap Map containing index -> status mappings.
-     * @param capacity Total capacity of the status list.
+     * @param capacityInKB Total capacity of the status list.
      * @return Base64URL encoded compressed bitstring.
      */
-    public static String generateEncodedList(Map<Long, Boolean> statusMap, long capacity) {
+    public static String generateEncodedList(Map<Long, Boolean> statusMap, long capacityInKB) {
         log.info("Generating encoded list from status map with {} entries for capacity {}",
-                statusMap.size(), capacity);
+                statusMap.size(), capacityInKB);
 
         try {
-            boolean[] bitstring = new boolean[(int) capacity];
+            // Convert capacity from KB to bits (1 KB = 1024 bytes, 1 byte = 8 bits)
+            long actualCapacity = Math.max(capacityInKB * 1024L * 8L, 131072L);
+            boolean[] bitstring = new boolean[(int) actualCapacity];
             for (Map.Entry<Long, Boolean> entry : statusMap.entrySet()) {
                 long index = entry.getKey();
                 boolean status = entry.getValue();
 
-                if (index >= 0 && index < capacity) {
+                if (index >= 0 && index < actualCapacity) {
                     bitstring[(int) index] = status;
                 } else {
-                    log.warn("Index {} is out of bounds for capacity {}", index, capacity);
+                    log.warn("Index {} is out of bounds for capacity {}", index, actualCapacity);
                 }
             }
             byte[] byteArray = convertBitstringToByteArray(bitstring);
@@ -59,12 +61,13 @@ public final class BitStringStatusListUtils {
     /**
      * Creates an empty encoded list (all bits set to 0) according to W3C Bitstring Status List v1.0.
      *
-     * @param capacity The number of bits in the list.
+     * @param capacityInKB The number of bits in the list.
      * @return Multibase-encoded base64url string representing the GZIP-compressed bit array.
      */
-    public static String createEmptyEncodedList(long capacity) {
-        log.debug("Creating empty encoded list with capacity {}", capacity);
-        long actualCapacity = Math.max(capacity, 131072L);
+    public static String createEmptyEncodedList(long capacityInKB) {
+        log.debug("Creating empty encoded list with capacity {}", capacityInKB);
+        // Convert capacity from KB to bits (1 KB = 1024 bytes, 1 byte = 8 bits)
+        long actualCapacity = Math.max(capacityInKB * 1024L * 8L, 131072L);
         int numBytes = (int) Math.ceil(actualCapacity / 8.0);
         byte[] emptyBitstring = new byte[numBytes];
         return "u" + compressAndEncode(emptyBitstring);

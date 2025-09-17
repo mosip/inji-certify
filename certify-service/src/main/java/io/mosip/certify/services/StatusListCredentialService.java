@@ -230,7 +230,7 @@ public class StatusListCredentialService {
 
             Query nativeQuery = entityManager.createNativeQuery(insertSql);
             nativeQuery.setParameter(1, statusListCredential.getId());
-            nativeQuery.setParameter(2, statusListCredential.getCapacity());
+            nativeQuery.setParameter(2, statusListCredential.getCapacity() * 1024L * 8L); // Convert KB to bits
 
             int rowsInserted = nativeQuery.executeUpdate();
             log.info("Successfully initialized {} available indices for status list: {}", rowsInserted, statusListCredential.getId());
