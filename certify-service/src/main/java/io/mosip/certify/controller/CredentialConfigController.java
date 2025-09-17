@@ -3,6 +3,7 @@ package io.mosip.certify.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.mosip.certify.core.dto.CredentialConfigResponse;
 import io.mosip.certify.core.dto.CredentialConfigurationDTO;
+import io.mosip.certify.core.dto.CredentialConfigurationUpdateDTO;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +36,7 @@ public class CredentialConfigController {
 
     @PutMapping(value = "/{credentialConfigKeyId}", produces = "application/json")
     public ResponseEntity<CredentialConfigResponse> updateCredentialConfiguration(@PathVariable String credentialConfigKeyId,
-                                                             @Valid @RequestBody CredentialConfigurationDTO credentialConfigurationRequest) throws JsonProcessingException {
+                                                             @Valid @RequestBody CredentialConfigurationUpdateDTO credentialConfigurationRequest) throws JsonProcessingException {
 
         CredentialConfigResponse credentialConfigResponse = credentialConfigurationService.updateCredentialConfiguration(credentialConfigKeyId, credentialConfigurationRequest);
         return new ResponseEntity<>(credentialConfigResponse, HttpStatus.OK);
