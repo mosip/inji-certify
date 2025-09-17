@@ -127,7 +127,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CredentialConfigurationDTO'
+              $ref: '#/components/schemas/CredentialConfigurationUpdateDTO'
             examples:
               Example 1:
                 value:
@@ -171,11 +171,7 @@ paths:
                     - LegalReserveAreaToBeRestored
                     - PermanentPreservationAreasToBeRestored
                   didUrl: 'did:web:www.example.com:inji-config:collab:landregistry'
-                  contextURLs:
-                    - 'https://www.w3.org/ns/credentials/v2'
-                    - 'https://www.example.com/inji-config/contexts/landregistry-statement-dataIntegrity-context-automation.json'
                   signatureCryptoSuite: eddsa-rdfc-2022
-                  credentialConfigKeyId: landstatement_dataIntegrity_2.0
                   metaDataDisplay:
                     - background_image:
                         uri: 'https://www.example.com/inji-config/logos/agro-vertias-logo.png'
@@ -186,12 +182,8 @@ paths:
                         url: 'https://www.example.com/inji-config/logos/agro-vertias-logo.png'
                       text_color: '#000000'
                       locale: en
-                  credentialFormat: ldp_vc
                   scope: land_statement_vc_ldp
                   keyManagerAppId: CERTIFY_VC_SIGN_ED25519
-                  credentialTypes:
-                    - VerifiableCredential
-                    - landstatement_dataIntegrity
                   signatureAlgo: EdDSA
       responses:
         '200':
@@ -1508,8 +1500,105 @@ components:
             - eddsa-rdfc-2022
             - eddsa-jcs-2022
         credentialStatusPurposes:
+          type: array
+          description: 'List of purposes for which credential status is maintained. Currently, the allowed values for this field will be driven by following config - `mosip.certify.data-provider-plugin.credential-status.allowed-status-purposes` and only single status purpose is supported currently.'
+          items:
+            x-stoplight:
+              id: 2pdknc31ugrva
+            type: string
+    CredentialConfigurationUpdateDTO:
+      type: object
+      x-stoplight:
+        id: tnw8iqu3crxhy
+      title: CredentialConfigurationUpdateDTO
+      required:
+        - metaDataDisplay
+        - scope
+      properties:
+        vcTemplate:
           type: string
-          description: 'List of purposes for which credential status is maintained, comma-separated values are supported here. Currently, the value for this field will be driven by following config - `mosip.certify.data-provider-plugin.credential-status.supported-purposes`. Value sent in the request will be ignored. '
+          description: Base64 encoded template identifier for the Verifiable Credential. Mandatory if mosip.certify.plugin-mode is set to ‘DataProvider’ during creation.
+        didUrl:
+          type: string
+          description: URL of the Decentralized Identifier (DID) document. Mandatory for DataProvider plugin mode.
+        keyManagerAppId:
+          type: string
+          description: Application ID for the key manager used in signing. Required for DataProvider plugin mode.
+        keyManagerRefId:
+          type: string
+          description: Reference ID for the key manager. Applicable for DataProvider plugin mode.
+        signatureAlgo:
+          description: |-
+            Signature or proof algorithm used for credential signing. This field is required for certain credential formats, such as vc+sd-jwt and optionally for ldp_vc when the signatureCryptoSuite is one of DataIntegrityProof suite (e.g. ecdsa-rdfc-2019, ecdsa-jcs-2019, etc). It ensures compatibility between the cryptographic suite and the signing algorithm. Mapping of signatureCryptoSuite and signatureAlgo values for DataIntegrityProof suite scenario :
+
+            signatureCryptoSuite |  signatureAlgo
+            ---------|----------
+             eddsa-rdfc-2022, eddsa-jcs-2022 | EdDSA 
+             ecdsa-rdfc-2019, ecdsa-jcs-2019 | ES256K,ES256 
+
+          enum:
+            - EdDSA
+            - ES256K
+            - ES256
+          type: string
+        sdClaim:
+          type: string
+          description: Comma-separated list for selective disclosure claim configuration. Applicable for vc+sd-jwt credential type.
+        metaDataDisplay:
+          type: array
+          description: 'To configure the display properties (e.g., logo, name, colors, and localization) for metadata associated with the Verifiable Credential type.'
+          items:
+            $ref: '#/components/schemas/MetaDataDisplayDTO'
+        displayOrder:
+          type: array
+          description: 'List specifying the order of claims or fields in the credential that are defined in credentialSubjectDefinition field, to be used while showing the credential in UI.'
+          items:
+            type: string
+        scope:
+          type: string
+          description: Scope value for the credential configuration. This value is matched with the scope value in Auth Token while processing the credential issuance request.
+        pluginConfigurations:
+          type: array
+          description: 'Holds a list of plugin-specific configuration parameters as key-value pairs. Each entry in the list represents configuration settings required by external plugins or modules integrated with the credential issuance process. This allows dynamic extension and customization of credential behavior based on the needs of different plugins, such as data providers, signature providers, or custom validation logic.'
+          items:
+            type: object
+            additionalProperties:
+              type: string
+        credentialSubjectDefinition:
+          type: object
+          description: 'Represents the subject of the Verifiable Credential, containing the claims and attributes about the entity (such as a person, organization, or device) to whom the credential is issued. Applicable for ldp_vc credential type.'
+          additionalProperties:
+            $ref: '#/components/schemas/CredentialSubjectParametersDTO'
+        msoMdocClaims:
+          description: Claims included in the credential. Applicable for mso_mdoc and vc+sd-jwt credential formats.
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              $ref: '#/components/schemas/ClaimsDisplayFieldsConfigDTO'
+        sdJwtClaims:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ClaimsDisplayFieldsConfigDTO'
+        signatureCryptoSuite:
+          description: 'Holds value for signature crypto suites supported for key algorithms like Ed25519Signature2020,EcdsaSecp256k1Signature2019, etc. It will also be applicable for data integrity proof crypto suites, for e.g. ecds-rdfc-2019, eddsa-rdfc-2022, etc. Mandatory for DataProvider plugin. The values should be only be those supported by certify.'
+          type: string
+          enum:
+            - RsaSignature2018
+            - Ed25519Signature2018
+            - Ed25519Signature2020
+            - EcdsaKoblitzSignature2016
+            - EcdsaSecp256k1Signature2019
+            - EcdsaSecp256r1Signature2019
+            - ecdsa-rdfc-2019
+            - ecdsa-jcs-2019
+            - eddsa-rdfc-2022
+            - eddsa-jcs-2022
+        credentialStatusPurposes:
+          type: array
+          description: 'List of purposes for which credential status is maintained. Currently, the allowed values for this field will be driven by following config - `mosip.certify.data-provider-plugin.credential-status.allowed-status-purposes` and only single status purpose is supported currently.'
+          items:
+            type: string
     CredentialConfigResponse:
       type: object
       properties:

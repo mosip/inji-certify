@@ -114,9 +114,9 @@ In this section, you will refer to the key configurations which required to be e
 For authentication flows (e.g., with eSignet or other OIDC providers who are compliant with oAuth 2.0), below configuration to be modified as part of integration:
 
 ```properties
-mosip.certify.authorization.url= https://keycloak-26.collab.mosip.net/auth/realms/inji
-mosip.certify.authn.issuer-uri=${mosip.certify.authorization.url} 
-mosip.certify.authn.jwk-set-uri=${mosip.certify.authorization.url}/protocol/openid-connect/certs
+mosip.certify.authorization.urls= https://keycloak-26.collab.mosip.net/auth/realms/inji
+mosip.certify.authn.issuer-uri=${mosip.certify.authorization.urls} 
+mosip.certify.authn.jwk-set-uri=${mosip.certify.authorization.urls}/protocol/openid-connect/certs
 mosip.certify.identifier=${mosip.certify.domain.url}
 mosip.certify.domain.url=https://injicertify-mock.collab.mosip.net
 ```

@@ -42,7 +42,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Value("${mosip.certify.domain.url:}")
     private String credentialIssuer;
 
-    @Value("#{'${mosip.certify.authorization.url}'.split(',')}")
+    @Value("#{'${mosip.certify.authorization.urls}'.split(',')}")
     private List<String> authUrlList;
 
     @Value("${server.servlet.path}")
@@ -73,12 +73,12 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
     @Override
     public CredentialConfigResponse addCredentialConfiguration(CredentialConfigurationDTO credentialConfigurationDTO) {
-        CredentialConfig credentialConfig = credentialConfigMapper.toEntity(credentialConfigurationDTO);
+        validateCredentialConfiguration(credentialConfigurationDTO, true);
 
+        CredentialConfig credentialConfig = credentialConfigMapper.toEntity(credentialConfigurationDTO);
         credentialConfig.setConfigId(UUID.randomUUID().toString());
         credentialConfig.setStatus(Constants.ACTIVE);
 
-        validateCredentialConfiguration(credentialConfig, true);
 
         credentialConfig.setCryptographicBindingMethodsSupported(cryptographicBindingMethodsSupportedMap.get(credentialConfig.getCredentialFormat()));
         credentialConfig.setCredentialSigningAlgValuesSupported(Collections.singletonList(credentialConfig.getSignatureCryptoSuite()));
@@ -94,7 +94,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         return credentialConfigResponse;
     }
 
-    private void validateCredentialConfiguration(CredentialConfig credentialConfig, boolean shouldCheckDuplicate) {
+    private void validateCredentialConfiguration(CredentialConfigurationDTO credentialConfig, boolean shouldCheckDuplicate) {
 
         if (credentialConfig.getCredentialStatusPurposes() != null && credentialConfig.getCredentialStatusPurposes().size() > 1){
             throw new CertifyException("Multiple credential status purposes are not currently supported.");
@@ -139,7 +139,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         }
     }
 
-    private void validateKeyAliasMapperConfiguration(CredentialConfig credentialConfig) {
+    private void validateKeyAliasMapperConfiguration(CredentialConfigurationDTO credentialConfig) {
         if(pluginMode.equals("VCIssuance")) {
             return;
         }
@@ -203,7 +203,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
      */
     @Override
     @CacheEvict(cacheNames = CREDENTIAL_CONFIG_CACHE_NAME, key = "@credentialCacheKeyGenerator.generateKeyFromCredentialConfigKeyId(#credentialConfigKeyId)", condition = "#credentialConfigKeyId != null")
-    public CredentialConfigResponse updateCredentialConfiguration(String credentialConfigKeyId, CredentialConfigurationDTO credentialConfigurationDTO){
+    public CredentialConfigResponse updateCredentialConfiguration(String credentialConfigKeyId, CredentialConfigurationUpdateDTO credentialConfigurationDTO){
         Optional<CredentialConfig> optional = credentialConfigRepository.findByCredentialConfigKeyId(credentialConfigKeyId);
 
         if(optional.isEmpty()) {
@@ -214,7 +214,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         CredentialConfig credentialConfig = optional.get();
         credentialConfigMapper.updateEntityFromDto(credentialConfigurationDTO, credentialConfig);
 
-        validateCredentialConfiguration(credentialConfig, false);
+        validateCredentialConfiguration(credentialConfigMapper.toDto(credentialConfig), false);
 
         CredentialConfig savedConfig = credentialConfigRepository.save(credentialConfig);
         log.info("Updated credential configuration: {}", savedConfig.getConfigId());
