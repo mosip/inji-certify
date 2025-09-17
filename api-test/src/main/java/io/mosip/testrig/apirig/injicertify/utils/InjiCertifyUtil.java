@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.Security;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECGenParameterSpec;
@@ -48,9 +49,11 @@ import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.OctetKeyPair;
 import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
 import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import io.mosip.testrig.apirig.dataprovider.BiometricDataProvider;
 import io.mosip.testrig.apirig.dbaccess.DBManager;
@@ -410,6 +413,25 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_ES256$",
 					signES256JWT(clientId, accessToken, testCaseName, tempUrl));
 		}
+		
+		if (jsonString.contains("$PROOF_JWT_ES256K$")) {
+			JSONObject request = new JSONObject(jsonString);
+			String clientId = "";
+			String accessToken = "";
+			String tempUrl = "";
+			if (request.has("client_id")) {
+				clientId = request.getString("client_id");
+				request.remove("client_id");
+			}
+			if (request.has("idpAccessToken")) {
+				accessToken = request.getString("idpAccessToken");
+			}
+			jsonString = request.toString();
+			tempUrl = getBaseURL(testCaseName, InjiCertifyConfigManager.getInjiCertifyBaseUrl());
+
+			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_ES256K$",
+					signES256KJWT(clientId, accessToken, testCaseName, tempUrl));
+		}
 
 		if (jsonString.contains("$CLIENT_ASSERTION_JWT$")) {
 			String oidcJWKKeyString = JWKKeyUtil.getJWKKey(OIDCJWK1);
@@ -634,7 +656,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			Date expirationTime = calendar.getTime();
 
 			JWTClaimsSet claimsSet = new JWTClaimsSet.Builder().subject(clientId).audience(tempUrl).issuer(clientId)
-					.issueTime(currentTime).expirationTime(expirationTime).jwtID(clientId).build();
+					.issueTime(currentTime).expirationTime(expirationTime).jwtID(UUID.randomUUID().toString()).build();
 
 			logger.info("JWT current and expiry time " + currentTime + " & " + expirationTime);
 
@@ -682,7 +704,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			String nonce = new ObjectMapper().readTree(jwtPayload).get("c_nonce").asText();
 
 			claimsSet = new JWTClaimsSet.Builder().audience(tempUrl).claim("nonce", nonce).issuer(clientId)
-					.issueTime(currentTime).expirationTime(expirationTime).jwtID(clientId).build();
+					.issueTime(currentTime).expirationTime(expirationTime).jwtID(UUID.randomUUID().toString()).build();
 			signedJWT = new SignedJWT(
 					new JWSHeader.Builder(JWSAlgorithm.RS256).type(new JOSEObjectType(typ)).jwk(jwkHeader).build(),
 					claimsSet);
@@ -717,7 +739,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			Date expirationTime = calendar.getTime();
 
 			JWTClaimsSet claimsSet = new JWTClaimsSet.Builder().subject(clientId).audience(tempUrl).issuer(clientId)
-					.issueTime(currentTime).expirationTime(expirationTime).jwtID(clientId).build();
+					.issueTime(currentTime).expirationTime(expirationTime).jwtID(UUID.randomUUID().toString()).build();
 
 			logger.info("JWT current and expiry time " + currentTime + " & " + expirationTime);
 
@@ -982,7 +1004,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 				idTokenExpirySecs = 0;
 
 			claimsSet = new JWTClaimsSet.Builder().audience(tempUrl).claim("nonce", nonce).issuer(clientId)
-					.issueTime(currentTime).expirationTime(expirationTime).jwtID(clientId).build();
+					.issueTime(currentTime).expirationTime(expirationTime).jwtID(UUID.randomUUID().toString()).build();
 			
 			if (testCaseName.contains("_Missing_Typ_")) {
 				signedJWT = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.RS256).jwk(jwkHeader).build(), claimsSet);
@@ -1008,35 +1030,43 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	}
 	
 	public static String generateP256DidKey(byte[] rawP256PublicKey) {
-	    // P-256 public keys in uncompressed format are 65 bytes (0x04 + 32 bytes x + 32 bytes y)
-	    // P-256 public keys in compressed format are 33 bytes (0x02/0x03 + 32 bytes x)
-	    if (rawP256PublicKey == null || (rawP256PublicKey.length != 65 && rawP256PublicKey.length != 33)) {
-	        throw new IllegalArgumentException("Invalid P-256 public key: must be 33 bytes (compressed) or 65 bytes (uncompressed)");
-	    }
+        // P-256 public keys in compressed format are 33 bytes
+        if (rawP256PublicKey == null || rawP256PublicKey.length != 33) {
+            throw new IllegalArgumentException(
+                    "Invalid P-256 public key: must be 33 bytes (compressed format)");
+        }
 
-	    // Multicodec prefix for P-256 (0x1200)
-	    byte[] prefix = new byte[]{0x12, 0x00};
+     // Multicodec prefix for P-256 (0x8024) as expected by DIDkeysProofManager
+        byte[] prefix = new byte[] { (byte) 0x80, (byte) 0x24 };
 
-	    byte[] combined = new byte[prefix.length + rawP256PublicKey.length];
-	    System.arraycopy(prefix, 0, combined, 0, prefix.length);
-	    System.arraycopy(rawP256PublicKey, 0, combined, prefix.length, rawP256PublicKey.length);
+        byte[] combined = new byte[prefix.length + rawP256PublicKey.length];
+        System.arraycopy(prefix, 0, combined, 0, prefix.length);
+        System.arraycopy(rawP256PublicKey, 0, combined, prefix.length, rawP256PublicKey.length);
 
-	    return "did:key:z" + Base58.encode(combined);
-	}
+        return "did:key:z" + Base58.encode(combined);
+    }
 	
-	private static byte[] extractRawP256PublicKey(ECKey ecJWK) throws Exception {
-	    // Get the X and Y coordinates
-	    byte[] x = ecJWK.getX().decode();
-	    byte[] y = ecJWK.getY().decode();
-	    
-	    // Create uncompressed format: 0x04 + X + Y
-	    byte[] rawPublicKey = new byte[65];
-	    rawPublicKey[0] = 0x04; // Uncompressed point indicator
-	    System.arraycopy(x, 0, rawPublicKey, 1, 32);
-	    System.arraycopy(y, 0, rawPublicKey, 33, 32);
-	    
-	    return rawPublicKey;
-	}
+	/**
+     * Extract compressed raw P-256 public key from an EC JWK using Bouncy Castle
+     * for correct compression.
+     */
+    private static byte[] extractRawP256PublicKey(ECKey ecJWK) throws Exception {
+        ECPublicKey publicKey = ecJWK.toECPublicKey();
+
+        // Use BouncyCastle EC curve for compression
+        org.bouncycastle.jce.spec.ECParameterSpec ecSpec =
+                org.bouncycastle.jce.ECNamedCurveTable.getParameterSpec("secp256r1");
+        org.bouncycastle.math.ec.ECCurve curve = ecSpec.getCurve();
+
+        java.security.spec.ECPoint javaPoint = publicKey.getW();
+        org.bouncycastle.math.ec.ECPoint bcPoint = curve.createPoint(
+                javaPoint.getAffineX(),
+                javaPoint.getAffineY()
+        );
+
+        // true = compressed format (33 bytes)
+        return bcPoint.getEncoded(true);
+    }
 	public static String signES256JWT(String clientId, String accessToken, String testCaseName, String tempUrl) {
 		int idTokenExpirySecs = Integer
 				.parseInt(getValueFromEsignetActuator(InjiCertifyConfigManager.getEsignetActuatorPropertySection(),
@@ -1045,36 +1075,50 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		String proofJWT = "";
 		SignedJWT signedJWT;
 		JWSHeader header = null;
+		ECKey signingKey;
 		
 
 		try {
-			// Generate EC key pair using Java KeyPairGenerator
-			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC");
-			keyGen.initialize(new ECGenParameterSpec("secp256r1"));
-			KeyPair keyPair = keyGen.generateKeyPair();
+			// Generate EC P-256 keypair
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC");
+            keyGen.initialize(new ECGenParameterSpec("secp256r1"));
+            KeyPair keyPair = keyGen.generateKeyPair();
+            ECPrivateKey privateKey = (ECPrivateKey) keyPair.getPrivate();
+            ECPublicKey publicKey = (ECPublicKey) keyPair.getPublic();
 
-	        // Convert to ECKey (Nimbus)
-			ECKey ecJWK = new ECKey.Builder(Curve.P_256, (ECPublicKey) keyPair.getPublic())
-	                .privateKey((ECPrivateKey) keyPair.getPrivate())
-	                .keyID(UUID.randomUUID().toString())
-	                .build();
+            if (testCaseName.contains("_Did_Key_Sign_")) {
+                // Convert to ECKey
+                ECKey ecJWK = new ECKey.Builder(Curve.P_256, publicKey)
+                        .privateKey(privateKey)
+                        .build();
 
-			if (testCaseName.contains("_Did_Key_Sign_")) {
-				byte[] rawPublicKey = extractRawP256PublicKey(ecJWK);
-	            
-	            String didKey = generateP256DidKey(rawPublicKey);
+                // Extract compressed P-256 public key
+                byte[] compressedKey = extractRawP256PublicKey(ecJWK);
 
-	             header = new JWSHeader.Builder(JWSAlgorithm.ES256)
-	                    .keyID(didKey) // No fragment
-	                    .type(new JOSEObjectType("openid4vci-proof+jwt"))
-	                    .build(); 
-			} else
-	             {
-	            header = new JWSHeader.Builder(JWSAlgorithm.ES256)
-	                    .jwk(ecJWK.toPublicJWK())
-	                    .type(new JOSEObjectType("openid4vci-proof+jwt"))
-	                    .build();
-	        }
+                // Generate DID:key
+                String didKey = generateP256DidKey(compressedKey);
+
+                // Build header with DID key
+                header = new JWSHeader.Builder(JWSAlgorithm.ES256)
+                        .keyID(didKey)
+                        .type(new JOSEObjectType("openid4vci-proof+jwt"))
+                        .build();
+
+                signingKey = new ECKey.Builder(Curve.P_256, publicKey)
+                        .privateKey(privateKey)
+                        .build();
+
+            } else {
+                signingKey = new ECKey.Builder(Curve.P_256, publicKey)
+                        .privateKey(privateKey)
+                        .keyID(UUID.randomUUID().toString())
+                        .build();
+
+                header = new JWSHeader.Builder(JWSAlgorithm.ES256)
+                        .jwk(signingKey.toPublicJWK())
+                        .type(new JOSEObjectType("openid4vci-proof+jwt"))
+                        .build();
+            }
           
 
 			Date currentTime = new Date();
@@ -1088,10 +1132,10 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			String nonce = signedJWT.getJWTClaimsSet().getClaim("c_nonce").toString();
 
 			JWTClaimsSet claimsSet = new JWTClaimsSet.Builder().audience(tempUrl).claim("nonce", nonce).issuer(clientId)
-					.issueTime(currentTime).expirationTime(expirationTime).jwtID(clientId).build();
+					.issueTime(currentTime).expirationTime(expirationTime).jwtID(UUID.randomUUID().toString()).build();
 
 			signedJWT = new SignedJWT(header, claimsSet);
-			JWSSigner signer = new ECDSASigner(ecJWK);
+			JWSSigner signer = new ECDSASigner(signingKey);
 
 			signedJWT.sign(signer);
 			proofJWT = signedJWT.serialize();
@@ -1102,6 +1146,135 @@ public class InjiCertifyUtil extends AdminTestUtil {
 
 		return proofJWT;
 	}
+	
+	public static String generateSecp256k1DidKey(byte[] rawSecp256k1PublicKey) {
+	    // secp256k1 compressed public keys are always 33 bytes (0x02/0x03 + 32-byte x coordinate)
+	    if (rawSecp256k1PublicKey == null || rawSecp256k1PublicKey.length != 33) {
+	        throw new IllegalArgumentException("Invalid secp256k1 public key: must be 33 bytes (compressed format)");
+	    }
+
+	    // Multicodec prefix for secp256k1 (0xE701)
+	    byte[] prefix = new byte[]{(byte) 0xE7, 0x01};
+
+	    byte[] combined = new byte[prefix.length + rawSecp256k1PublicKey.length];
+	    System.arraycopy(prefix, 0, combined, 0, prefix.length);
+	    System.arraycopy(rawSecp256k1PublicKey, 0, combined, prefix.length, rawSecp256k1PublicKey.length);
+
+	    return "did:key:z" + Base58.encode(combined);
+	}
+
+	public static String signES256KJWT(String clientId, String accessToken, String testCaseName, String tempUrl) {
+	    int idTokenExpirySecs = Integer.parseInt(
+	            getValueFromEsignetActuator(
+	                    InjiCertifyConfigManager.getEsignetActuatorPropertySection(),
+	                    GlobalConstants.MOSIP_ESIGNET_ID_TOKEN_EXPIRE_SECONDS
+	            )
+	    );
+
+	    JWSSigner signer;
+	    String proofJWT = "";
+	    SignedJWT signedJWT;
+	    JWSHeader header;
+
+	    try {
+	    	// 🔑 Ensure BC is available
+	        if (Security.getProvider("BC") == null) {
+	            Security.addProvider(new BouncyCastleProvider());
+	        }
+	        // Generate secp256k1 key pair using BouncyCastle provider
+	        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC", "BC");
+	        keyGen.initialize(new ECGenParameterSpec("secp256k1"));
+	        KeyPair keyPair = keyGen.generateKeyPair();
+
+	        ECPublicKey publicKey = (ECPublicKey) keyPair.getPublic();
+	        ECPrivateKey privateKey = (ECPrivateKey) keyPair.getPrivate();
+
+	        // Nimbus ECKey
+	        ECKey ecJWK = new ECKey.Builder(Curve.SECP256K1, publicKey)
+	                .privateKey(privateKey)
+	                .keyID(UUID.randomUUID().toString())
+	                .build();
+
+	        if (testCaseName.contains("_Did_Key_Sign_")) {
+	            // Compress public key (33 bytes: 0x02/0x03 + X)
+	            byte[] compressedKey = compressSecp256k1PublicKey(publicKey);
+
+	            // Generate did:key
+	            String didKey = generateSecp256k1DidKey(compressedKey);
+
+	            header = new JWSHeader.Builder(JWSAlgorithm.ES256K)
+	                    .type(new JOSEObjectType("openid4vci-proof+jwt"))
+	                    .keyID(didKey)
+	                    .build();
+	        } else {
+	            header = new JWSHeader.Builder(JWSAlgorithm.ES256K)
+	                    .type(new JOSEObjectType("openid4vci-proof+jwt"))
+	                    .jwk(ecJWK.toPublicJWK())
+	                    .build();
+	        }
+
+	        Date currentTime = new Date();
+
+	        Calendar calendar = Calendar.getInstance();
+	        calendar.setTime(currentTime);
+	        calendar.add(Calendar.SECOND, idTokenExpirySecs);
+	        Date expirationTime = calendar.getTime();
+
+	        signedJWT = SignedJWT.parse(accessToken);
+	        String nonce = signedJWT.getJWTClaimsSet().getClaim("c_nonce").toString();
+
+	        JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+	                .audience(tempUrl)
+	                .claim("nonce", nonce)
+	                .issuer(clientId)
+	                .issueTime(currentTime)
+	                .expirationTime(expirationTime)
+	                .jwtID(UUID.randomUUID().toString())
+	                .build();
+
+	        signedJWT = new SignedJWT(header, claimsSet);
+	        signer = new ECDSASigner(privateKey);
+
+	        // ✅ Fix: pass actual Provider object
+	        signer.getJCAContext().setProvider(Security.getProvider("BC"));
+
+	        signedJWT.sign(signer);
+	        proofJWT = signedJWT.serialize();
+
+	    } catch (Exception e) {
+	        logger.error("Exception while signing proof_jwt with ES256K: " + e.getMessage(), e);
+	    }
+
+	    return proofJWT;
+	}
+
+	/**
+	 * Compress a secp256k1 public key into 33-byte format.
+	 */
+	private static byte[] compressSecp256k1PublicKey(ECPublicKey publicKey) {
+	    java.security.spec.ECPoint w = publicKey.getW();
+	    BigInteger x = w.getAffineX();
+	    BigInteger y = w.getAffineY();
+
+	    // Prefix 0x02 if y is even, 0x03 if odd
+	    byte prefix = (y.testBit(0)) ? (byte) 0x03 : (byte) 0x02;
+
+	    byte[] xBytes = x.toByteArray();
+	    if (xBytes.length > 32) {
+	        xBytes = Arrays.copyOfRange(xBytes, xBytes.length - 32, xBytes.length);
+	    } else if (xBytes.length < 32) {
+	        byte[] padded = new byte[32];
+	        System.arraycopy(xBytes, 0, padded, 32 - xBytes.length, xBytes.length);
+	        xBytes = padded;
+	    }
+
+	    byte[] compressed = new byte[33];
+	    compressed[0] = prefix;
+	    System.arraycopy(xBytes, 0, compressed, 1, 32);
+
+	    return compressed;
+	}
+
 
 	public static String generateEd25519DidKey(byte[] rawEd25519PublicKey) {
 	    // Ed25519 public keys are 32 bytes
@@ -1161,7 +1334,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			JWTClaimsSet claimsSet = null;
 
 			claimsSet = new JWTClaimsSet.Builder().audience(tempUrl).claim("nonce", nonce).issuer(clientId)
-					.issueTime(currentTime).expirationTime(expirationTime).jwtID(clientId).build();
+					.issueTime(currentTime).expirationTime(expirationTime).jwtID(UUID.randomUUID().toString()).build();
 
 			signedJWT = new SignedJWT(header, claimsSet);
 			signer = new Ed25519Signer(edJWK);
