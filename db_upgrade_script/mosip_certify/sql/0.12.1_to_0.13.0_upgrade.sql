@@ -33,4 +33,21 @@ ALTER TABLE certify.ledger
 -- DROP NOT NULL for credential_id in  credential_status_transaction
 DROP INDEX IF EXISTS idx_cst_credential_id;
 
+-- Drop foreign key to ledger table
+ALTER TABLE certify.credential_status_transaction
+    DROP CONSTRAINT IF EXISTS fk_credential_status_transaction_ledger;
+
+-- Drop foreign key to status_list_credential table
+ALTER TABLE certify.credential_status_transaction
+    DROP CONSTRAINT IF EXISTS fk_credential_status_transaction_status_list;
+
 ALTER TABLE credential_status_transaction DROP COLUMN credential_id;
+
+-- Step 2: Create shedlock table for distributed locking
+CREATE TABLE IF NOT EXISTS shedlock (
+  name VARCHAR(64),
+  lock_until TIMESTAMP(3) NULL,
+  locked_at TIMESTAMP(3) NULL,
+  locked_by VARCHAR(255),
+  PRIMARY KEY (name)
+)

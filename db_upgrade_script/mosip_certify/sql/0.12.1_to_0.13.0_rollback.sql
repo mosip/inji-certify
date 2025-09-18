@@ -31,7 +31,7 @@ ALTER TABLE ledger
 
 -- Add credential_id column as NOT NULL (no default)
 ALTER TABLE credential_status_transaction
-    ADD COLUMN credential_id UUID;
+    ADD COLUMN credential_id VARCHAR(255);
 
 -- Update existing rows with random UUIDs
 UPDATE credential_status_transaction
@@ -44,3 +44,22 @@ ALTER TABLE credential_status_transaction
 
 -- Recreate the index on credential_id
 CREATE INDEX idx_cst_credential_id ON credential_status_transaction (credential_id);
+
+-- Recreate foreign key to ledger table
+ALTER TABLE certify.credential_status_transaction
+    ADD CONSTRAINT fk_credential_status_transaction_ledger
+    FOREIGN KEY (credential_id)
+    REFERENCES certify.ledger(credential_id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE;
+
+-- Recreate foreign key to status_list_credential table
+ALTER TABLE certify.credential_status_transaction
+    ADD CONSTRAINT fk_credential_status_transaction_status_list
+    FOREIGN KEY (status_list_credential_id)
+    REFERENCES certify.status_list_credential(id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE;
+
+-- Step 2: Drop shedlock table
+DROP TABLE IF EXISTS certify.shedlock;

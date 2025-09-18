@@ -33,7 +33,6 @@ COMMENT ON COLUMN credential_status_transaction.cr_dtimes IS 'Timestamp when thi
 COMMENT ON COLUMN credential_status_transaction.upd_dtimes IS 'Timestamp when this transaction was last updated.';
 
 -- Create indexes for credential_status_transaction
-CREATE INDEX IF NOT EXISTS idx_cst_credential_id ON credential_status_transaction(credential_id);
 CREATE INDEX IF NOT EXISTS idx_cst_status_purpose ON credential_status_transaction(status_purpose);
 CREATE INDEX IF NOT EXISTS idx_cst_status_list_credential_id ON credential_status_transaction(status_list_credential_id);
 CREATE INDEX IF NOT EXISTS idx_cst_status_list_index ON credential_status_transaction(status_list_index);
