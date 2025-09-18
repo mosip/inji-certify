@@ -6,33 +6,23 @@
 
 package io.mosip.certify.credential;
 
-import java.security.MessageDigest;
-import java.security.SecureRandom;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import io.mosip.certify.core.constants.Constants;
-import io.mosip.certify.core.dto.CertificateResponseDTO;
 import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.proofgenerators.ProofGeneratorFactory;
 import io.mosip.certify.utils.MDocUtils;
+import io.mosip.kernel.signature.service.CoseSignatureService;
 import io.mosip.kernel.signature.service.SignatureServicev2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import io.mosip.certify.utils.DIDDocumentUtil;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.kernel.signature.service.SignatureService;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.xml.bind.DatatypeConverter;
 
 /**
  * MDocCredential implementation for ISO 18013-5 compliant mobile documents
@@ -44,6 +34,9 @@ public class MDocCredential extends Credential {
 
     @Autowired
     SignatureServicev2 signatureService;
+
+    @Autowired
+    CoseSignatureService coseSignatureService;
 
     @Autowired
     DIDDocumentUtil didDocumentUtil;
@@ -96,29 +89,27 @@ public class MDocCredential extends Credential {
 
             // Step 2: Calculate digests
             Map<String, Map<Integer, byte[]>> namespaceDigests = new HashMap<>();
-            MDocUtils.calculateDigests(saltedNamespaces, namespaceDigests);
+            Map<String, Object> taggedNamespaces = MDocUtils.calculateDigests(saltedNamespaces, namespaceDigests);
 
             // Step 3: Create Mobile Security Object (MSO)
             Map<String, Object> mso = MDocUtils.createMobileSecurityObject(mDocJson, namespaceDigests, appID, refID);
             log.info("Created MSO: {}", mso);
 
-//            byte[] signedMSO = signMSOWithKeyManager(mso, appID, refID, signAlgorithm);
-//
-//            // Step 5: Wrap namespace elements with CBOR Tag 24
-//            Map<String, Object> taggedNamespaces = wrapNamespaceElementsWithTag24(processedNamespaces);
-//
-//            // Step 6: Create final IssuerSigned structure
-//            Map<String, Object> issuerSigned = MDocUtils.createIssuerSignedStructure(taggedNamespaces, signedMSO);
-//
-//            // Step 7: Encode entire structure to CBOR
-//            byte[] cborIssuerSigned = MDocUtils.encodeToCBOR(issuerSigned);
-//
-//            // Step 8: Base64url encode for transport
-//            String base64UrlCredential = Base64.getUrlEncoder().withoutPadding().encodeToString(cborIssuerSigned);
-//
-//            // Step 9: Set result
-//            vcResult.setCredential(base64UrlCredential);
-//            vcResult.setFormat(Constants.MSO_MDOC_FORMAT);
+            // Step 4: Sign MSO
+            byte[] signedMSO = MDocUtils.signMSO(mso, appID, refID, signAlgorithm, didDocumentUtil, coseSignatureService);
+
+            // Step 5: Create final IssuerSigned structure
+            Map<String, Object> issuerSigned = MDocUtils.createIssuerSignedStructure(taggedNamespaces, signedMSO);
+
+            // Step 7: Encode entire structure to CBOR
+            byte[] cborIssuerSigned = MDocUtils.encodeToCBOR(issuerSigned);
+
+            // Step 8: Base64url encode for transport
+            String base64UrlCredential = Base64.getUrlEncoder().withoutPadding().encodeToString(cborIssuerSigned);
+
+            // Step 9: Set result
+            vcResult.setCredential(base64UrlCredential);
+            vcResult.setFormat(Constants.MSO_MDOC_FORMAT);
 
             log.info("mDoc proof generation completed successfully");
             return vcResult;

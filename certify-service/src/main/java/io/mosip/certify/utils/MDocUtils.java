@@ -5,22 +5,18 @@
  */
 package io.mosip.certify.utils;
 
-import co.nstant.in.cbor.CborBuilder;
 import co.nstant.in.cbor.CborEncoder;
 import co.nstant.in.cbor.CborException;
 import co.nstant.in.cbor.model.*;
 import java.io.ByteArrayOutputStream;
-import io.mosip.certify.core.constants.Constants;
-import io.mosip.certify.core.dto.CertificateResponseDTO;
-import io.mosip.kernel.signature.service.SignatureServicev2;
+import io.mosip.kernel.signature.dto.CoseSignRequestDto;
+import io.mosip.kernel.signature.service.CoseSignatureService;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -31,9 +27,6 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.xml.bind.DatatypeConverter;
 
 /**
  * Utility class for mDoc (Mobile Document) specific operations.
@@ -73,6 +66,18 @@ public class MDocUtils {
             if (templateNode.has("validityInfo")) {
                 JsonNode validityInfo = templateNode.get("validityInfo");
                 Map<String, Object> validity = objectMapper.convertValue(validityInfo, Map.class);
+
+                // Handle _validFrom placeholder
+                if (validity.containsKey("validFrom")) {
+                    String validFromValue = (String) validity.get("validFrom");
+                    if ("${_validFrom}".equals(validFromValue)) {
+                        // Replace with current timestamp in UTC
+                        String currentTime = ZonedDateTime.now(ZoneOffset.UTC)
+                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'"));
+                        validity.put("validFrom", currentTime);
+                    }
+                }
+
                 finalMDoc.put("validityInfo", validity);
             }
 
@@ -141,7 +146,7 @@ public class MDocUtils {
      * Add missing fields from templateParams that are not present in the template
      */
     public static List<Map<String, Object>> addMissingFields(List<Map<String, Object>> existingItems, Map<String, Object> templateParams) {
-        Set<String> forbiddenIdentifiers = Set.of("templateName", "issuer", "issuerURI");
+        Set<String> forbiddenIdentifiers = Set.of("templateName", "issuer", "issuerURI", "didUrl");
 
         for (Map.Entry<String, Object> param : templateParams.entrySet()) {
             Set<Integer> digestIDs = existingItems.stream()
@@ -169,6 +174,7 @@ public class MDocUtils {
 
         return existingItems;
     }
+
     /**
      * Adds random salts to each data element
      */
@@ -203,7 +209,6 @@ public class MDocUtils {
         return saltedNamespaces;
     }
 
-    // Helper method to convert byte array to hex string
     private static String bytesToHex(byte[] bytes) {
         StringBuilder result = new StringBuilder();
         for (byte b : bytes) {
@@ -219,49 +224,32 @@ public class MDocUtils {
             Map<String, Object> saltedNamespaces,
             Map<String, Map<Integer, byte[]>> namespaceDigests) throws Exception {
 
-        Map<String, Object> processedNamespaces = new HashMap<>();
+        Map<String, Object> taggedNamespaces = new HashMap<>();
 
         for (Map.Entry<String, Object> namespaceEntry : saltedNamespaces.entrySet()) {
             String namespaceName = namespaceEntry.getKey();
             List<Map<String, Object>> elements = (List<Map<String, Object>>) namespaceEntry.getValue();
 
-            List<byte[]> processedElements = new ArrayList<>();
+            List<byte[]> taggedElements = new ArrayList<>();
             Map<Integer, byte[]> digestMap = new HashMap<>();
 
             for (Map<String, Object> element : elements) {
-                // Encode to CBOR for digest calculation
-                byte[] cborElement = MDocUtils.encodeToCBOR(element);
+                // Encode to CBOR and wrap with Tag 24 in one step
+                byte[] taggedCbor = wrapWithCBORTag24(element);
+                taggedElements.add(taggedCbor);
 
-                // Calculate SHA-256 digest
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                byte[] elementDigest = digest.digest(cborElement);
-
-                // Store digest by digestID
-                Integer digestID = (Integer) element.get("digestID");
-                digestMap.put(digestID, elementDigest);
-
-                processedElements.add(cborElement);
+                // Calculate digest of the Tag 24 wrapped CBOR
+                byte[] digest = MessageDigest.getInstance("SHA-256").digest(taggedCbor);
+                digestMap.put((Integer) element.get("digestID"), digest);
             }
 
-            processedNamespaces.put(namespaceName, processedElements);
+            taggedNamespaces.put(namespaceName, taggedElements);
             namespaceDigests.put(namespaceName, digestMap);
         }
 
-        return processedNamespaces;
+        return taggedNamespaces;
     }
 
-    /**
-     * Encodes an object to CBOR bytes
-     */
-//    public static byte[] encodeToCBOR(Object obj) throws Exception {
-//        try {
-//            Object preprocessedData = preprocessForCBOR(obj);
-//            return cborMapper.writeValueAsBytes(preprocessedData);
-//        } catch (Exception e) {
-//            log.error("Error encoding to CBOR: {}", e.getMessage(), e);
-//            throw new Exception("CBOR encoding failed: " + e.getMessage(), e);
-//        }
-//    }
     public static byte[] encodeToCBOR(Object obj) throws Exception {
         try {
             Object preprocessedData = preprocessForCBOR(obj);
@@ -279,32 +267,29 @@ public class MDocUtils {
      * Preprocesses objects for CBOR encoding (handles dates, byte arrays, etc.)
      */
     public static Object preprocessForCBOR(Object obj) {
-        if (obj == null) {
-            return null;
+        if (obj == null) return null;
+
+        // Handle byte arrays directly - don't convert to hex
+        if (obj instanceof byte[]) {
+            return obj;
         }
 
         if (obj instanceof String) {
             String str = (String) obj;
-
-            // Check if it's a date string and should be encoded with CBOR tag 1004
             if (isDateOnlyString(str)) {
                 return createCBORTaggedDate(str);
             }
-
-            // Check if it's a hex string that should be byte array
-            if (str.matches("^[0-9a-fA-F]+$") && str.length() % 2 == 0 && str.length() > 10) {
-                return hexStringToByteArray(str);
-            }
-
             return str;
         }
 
         if (obj instanceof Map) {
-            Map<String, Object> map = (Map<String, Object>) obj;
-            Map<String, Object> processedMap = new HashMap<>();
+            Map<Object, Object> map = (Map<Object, Object>) obj;
+            Map<Object, Object> processedMap = new HashMap<>();
 
-            for (Map.Entry<String, Object> entry : map.entrySet()) {
-                processedMap.put(entry.getKey(), preprocessForCBOR(entry.getValue()));
+            for (Map.Entry<Object, Object> entry : map.entrySet()) {
+                Object processedKey = preprocessForCBOR(entry.getKey());
+                Object processedValue = preprocessForCBOR(entry.getValue());
+                processedMap.put(processedKey, processedValue);
             }
             return processedMap;
         }
@@ -312,22 +297,15 @@ public class MDocUtils {
         if (obj instanceof List) {
             List<Object> list = (List<Object>) obj;
             List<Object> processedList = new ArrayList<>();
-
             for (Object item : list) {
                 processedList.add(preprocessForCBOR(item));
             }
             return processedList;
         }
 
-        if (obj instanceof byte[]) {
-            return obj; // Already byte array
-        }
-
-        return obj; // Numbers, booleans, etc.
+        return obj; // Return as-is for primitives
     }
 
-
-    // Add this helper method
     private static DataItem convertToDataItem(Object obj) {
         if (obj == null) {
             return SimpleValue.NULL;
@@ -336,13 +314,29 @@ public class MDocUtils {
             return new UnicodeString((String) obj);
         }
         if (obj instanceof Integer) {
-            return new UnsignedInteger((Integer) obj);
+            int value = (Integer) obj;
+            if (value < 0) {
+                return new NegativeInteger(value);
+            } else {
+                return new UnsignedInteger(value);
+            }
         }
         if (obj instanceof Long) {
-            return new UnsignedInteger((Long) obj);
+            long value = (Long) obj;
+            if (value < 0) {
+                return new NegativeInteger(value);
+            } else {
+                return new UnsignedInteger(value);
+            }
         }
         if (obj instanceof Boolean) {
             return (Boolean) obj ? SimpleValue.TRUE : SimpleValue.FALSE;
+        }
+        if (obj instanceof Double) {
+            return new DoublePrecisionFloat((Double) obj);
+        }
+        if (obj instanceof Float) {
+            return new SinglePrecisionFloat((Float) obj);
         }
         if (obj instanceof byte[]) {
             return new ByteString((byte[]) obj);
@@ -351,7 +345,9 @@ public class MDocUtils {
             co.nstant.in.cbor.model.Map map = new co.nstant.in.cbor.model.Map();
             for (Object entry : ((java.util.Map<?, ?>) obj).entrySet()) {
                 java.util.Map.Entry<?, ?> mapEntry = (java.util.Map.Entry<?, ?>) entry;
-                map.put(convertToDataItem(mapEntry.getKey()), convertToDataItem(mapEntry.getValue()));
+                DataItem keyItem = convertToDataItem(mapEntry.getKey());
+                DataItem valueItem = convertToDataItem(mapEntry.getValue());
+                map.put(keyItem, valueItem);
             }
             return map;
         }
@@ -371,6 +367,7 @@ public class MDocUtils {
             dataItem.setTag(tag);
             return dataItem;
         }
+        // For any other type, convert to string
         return new UnicodeString(obj.toString());
     }
 
@@ -483,104 +480,39 @@ public class MDocUtils {
     /**
      * Signs the MSO using COSE_Sign1 structure
      */
-//    public static byte[] signMSOWithCOSE(Map<String, Object> mso, String appID, String refID,
-//                                   String signAlgorithm, DIDDocumentUtil didDocumentUtil, SignatureServicev2 signatureService) throws Exception {
-//        try {
-//            log.info("Starting COSE signing for MSO with algorithm: {}", signAlgorithm);
-//
-//            // Step 1: Encode MSO payload to CBOR
-//            byte[] msoPayload = encodeToCBOR(mso);
-//            log.debug("MSO payload encoded to CBOR, size: {} bytes", msoPayload.length);
-//
-//            // Step 2: Get certificate chain from KeyManager
-//            CertificateResponseDTO certificateResponse = didDocumentUtil.getCertificateDataResponseDto(appID, refID);
-//            String certificateData = certificateResponse.getCertificateData();
-//
-//            // Parse certificate chain - assuming PEM format
-//            List<byte[]> certificateChain = parseCertificateChain(certificateData);
-//
-//            // Step 3: Create COSE_Sign1 protected header
-//            Map<String, Object> protectedHeader = new HashMap<>();
-//            protectedHeader.put(1, getCoseAlgorithmId(signAlgorithm)); // alg parameter
-//
-//            // Step 4: Create unprotected header with certificate chain
-//            Map<String, Object> unprotectedHeader = new HashMap<>();
-//            unprotectedHeader.put(33, certificateChain); // x5c parameter (certificate chain)
-//
-//            // Step 5: Encode protected header to CBOR
-//            byte[] protectedHeaderCbor = encodeToCBOR(protectedHeader);
-//
-//            // Step 6: Create Sig_structure for signing according to RFC 8152
-//            // Sig_structure = [
-//            //   context,           // "Signature1" for COSE_Sign1
-//            //   protected,         // encoded protected header
-//            //   external_aad,      // empty for detached signature
-//            //   payload           // MSO payload
-//            // ]
-//            List<Object> sigStructure = Arrays.asList(
-//                    "Signature1",           // context
-//                    protectedHeaderCbor,    // protected header (encoded)
-//                    new byte[0],           // external_aad (empty)
-//                    msoPayload             // payload
-//            );
-//
-//            byte[] toBeSigned = encodeToCBOR(sigStructure);
-//            log.debug("Sig_structure created, size: {} bytes", toBeSigned.length);
-//
-//            // Step 7: Sign the Sig_structure using KeyManager
-//            String signatureResponse = signatureService.sign(appID, refID, toBeSigned, signAlgorithm);
-//            byte[] signature = Base64.getDecoder().decode(signatureResponse);
-//            log.debug("Signature generated, size: {} bytes", signature.length);
-//
-//            // Step 8: Create final COSE_Sign1 structure
-//            // COSE_Sign1 = [
-//            //   protected,      // encoded protected header
-//            //   unprotected,    // unprotected header map
-//            //   payload,        // null for detached signature
-//            //   signature       // signature bytes
-//            // ]
-//            List<Object> coseSign1 = Arrays.asList(
-//                    protectedHeaderCbor,    // protected header (encoded)
-//                    unprotectedHeader,      // unprotected header (map)
-//                    null,                   // payload (null for detached signature)
-//                    signature               // signature
-//            );
-//
-//            // Step 9: Encode COSE_Sign1 to CBOR and wrap with Tag 18
-//            byte[] coseSign1Cbor = encodeToCBOR(coseSign1);
-//            byte[] taggedCoseSign1 = wrapWithCBORTag18(coseSign1Cbor);
-//
-//            log.info("COSE signing completed successfully, final size: {} bytes", taggedCoseSign1.length);
-//            return taggedCoseSign1;
-
-//        } catch (Exception e) {
-//            log.error("Error during COSE signing: {}", e.getMessage(), e);
-//            throw new Exception("COSE signing failed: " + e.getMessage(), e);
-//        }
-//    }
-
-    private static List<byte[]> parseCertificateChain(String certificateData) throws Exception {
-        List<byte[]> certificateChain = new ArrayList<>();
+    public static byte[] signMSO(Map<String, Object> mso, String appID, String refID,
+                                 String signAlgorithm, DIDDocumentUtil didDocumentUtil, CoseSignatureService coseSignatureService) throws Exception {
 
         try {
-            // Remove PEM headers/footers and decode base64
-            String cleanCert = certificateData
-                    .replaceAll("-----BEGIN CERTIFICATE-----", "")
-                    .replaceAll("-----END CERTIFICATE-----", "")
-                    .replaceAll("\\s+", "");
+            log.info("Starting COSE signing for MSO with algorithm: {}", signAlgorithm);
 
-            byte[] certBytes = Base64.getDecoder().decode(cleanCert);
-            certificateChain.add(certBytes);
+            byte[] msoPayload = encodeToCBOR(mso);
+            String msoJsonPayload = objectMapper.writeValueAsString(mso);
+            // log.debug("MSO payload encoded to CBOR, size: {} bytes", msoJsonPayload);
+            log.debug("MSO payload encoded to CBOR, size: {} bytes", msoPayload.length);
 
-            log.debug("Parsed certificate chain with {} certificates", certificateChain.size());
-            return certificateChain;
+            CoseSignRequestDto signRequest = new CoseSignRequestDto();
+
+            // Set the payload as base64url encoded
+            String base64UrlPayload = Base64.getUrlEncoder().withoutPadding().encodeToString(msoPayload);
+            // String base64UrlPayload = Base64.getUrlEncoder().withoutPadding().encodeToString(msoJsonPayload.getBytes(StandardCharsets.UTF_8));
+            signRequest.setPayload(base64UrlPayload);
+            signRequest.setApplicationId(appID);
+            signRequest.setReferenceId(refID);
+
+            signRequest.setAlgorithm(signAlgorithm);
+            Map<String, Object> protectedHeader = new HashMap<>();
+            protectedHeader.put("x5c", true); // Request certificate chain in protected header
+            signRequest.setProtectedHeader(protectedHeader);
+
+            String hexSignedData = coseSignatureService.coseSign1(signRequest).getSignedData();
+            return hexStringToByteArray(hexSignedData);
 
         } catch (Exception e) {
-            log.error("Error parsing certificate chain: {}", e.getMessage(), e);
-            throw new Exception("Failed to parse certificate chain: " + e.getMessage(), e);
+            log.error("Error during COSE signing: {}", e.getMessage(), e);
+            throw new Exception("COSE signing failed: " + e.getMessage(), e);
         }
     }
-
 
 
     public static byte[] wrapWithCBORTag24(Map<String, Object> element) throws IOException {
@@ -598,34 +530,22 @@ public class MDocUtils {
         }
     }
 
-    public static byte[] wrapWithCBORTag18(byte[] cborData) throws IOException {
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            CborEncoder encoder = new CborEncoder(baos);
-
-            ByteString byteString = new ByteString(cborData);
-            byteString.setTag(18);
-            encoder.encode(byteString);
-
-            return baos.toByteArray();
-        } catch (CborException e) {
-            throw new IOException("Failed to wrap with CBOR tag 18", e);
-        }
-    }
-
-
     /**
-     * Creates the final IssuerSigned structure
+     * Creates the final IssuerSigned structure combining namespaces and issuerAuth
      */
     public static Map<String, Object> createIssuerSignedStructure(
             Map<String, Object> processedNamespaces,
             byte[] signedMSO) {
 
         Map<String, Object> issuerSigned = new HashMap<>();
+
+        // Add the processed namespaces (already wrapped with Tag 24)
         issuerSigned.put("nameSpaces", processedNamespaces);
+
+        // Add the signed MSO as issuerAuth
         issuerSigned.put("issuerAuth", signedMSO);
 
+        log.info("Created IssuerSigned structure with {} namespaces", processedNamespaces.size());
         return issuerSigned;
     }
-
 }
