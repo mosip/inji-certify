@@ -6,8 +6,10 @@ import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.CredentialStatusService;
 import io.mosip.certify.entity.CredentialStatusTransaction;
 import io.mosip.certify.entity.Ledger;
+import io.mosip.certify.entity.StatusListCredential;
 import io.mosip.certify.repository.CredentialStatusTransactionRepository;
 import io.mosip.certify.repository.LedgerRepository;
+import io.mosip.certify.repository.StatusListCredentialRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,14 +22,18 @@ import java.util.List;
 @Slf4j
 @Service
 public class CredentialStatusServiceImpl implements CredentialStatusService {
-    @Autowired
-    private LedgerRepository ledgerRepository;
 
     @Autowired
     private CredentialStatusTransactionRepository credentialStatusTransactionRepository;
 
+    @Autowired
+    private StatusListCredentialRepository statusListCredentialRepository;
+
     @Value("#{${mosip.certify.data-provider-plugin.credential-status.allowed-status-purposes:{}}}")
     private List<String> allowedCredentialStatusPurposes;
+
+    @Value("${mosip.certify.data-provider-plugin.did-url}")
+    private String didUrl;
 
     @Override
     public CredentialStatusResponse updateCredentialStatus(UpdateCredentialStatusRequest request) {
@@ -35,27 +41,27 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
         if (request.getCredentialStatus().getStatusPurpose() != null && !allowedCredentialStatusPurposes.contains(request.getCredentialStatus().getStatusPurpose())) {
             throw new CertifyException("Invalid credential status purpose. Allowed values are: " + allowedCredentialStatusPurposes);
         }
-
-        Ledger ledger = ledgerRepository.findByCredentialId(request.getCredentialId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Credential not found: " + request.getCredentialId()));
+        String statusListCredentialId = request.getCredentialStatus().getStatusListCredential();
+        Long statusListIndex = request.getCredentialStatus().getStatusListIndex();
+        StatusListCredential statusListCredential = statusListCredentialRepository.findById(statusListCredentialId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "StatusListCredential not found with id: " + statusListCredentialId));
 
         CredentialStatusTransaction transaction = new CredentialStatusTransaction();
-        transaction.setCredentialId(request.getCredentialId());
-        transaction.setStatusPurpose(request.getCredentialStatus().getStatusPurpose());
+        if(request.getCredentialStatus().getStatusPurpose() == null) {
+            transaction.setStatusPurpose(statusListCredential.getStatusPurpose());
+        } else {
+            transaction.setStatusPurpose(request.getCredentialStatus().getStatusPurpose());
+        }
         transaction.setStatusValue(request.getStatus());
-        transaction.setStatusListCredentialId(request.getCredentialStatus().getStatusListCredential());
-        transaction.setStatusListIndex(request.getCredentialStatus().getStatusListIndex());
+        transaction.setStatusListCredentialId(statusListCredentialId);
+        transaction.setStatusListIndex(statusListIndex);
         CredentialStatusTransaction savedTransaction =credentialStatusTransactionRepository.save(transaction);
 
         CredentialStatusResponse dto = new CredentialStatusResponse();
-        dto.setCredentialId(ledger.getCredentialId());
-        dto.setIssuerId(ledger.getIssuerId());
-        dto.setCredentialType(ledger.getCredentialType());
-        dto.setIssueDate(ledger.getIssueDate().toLocalDateTime());
-        dto.setExpirationDate(ledger.getExpirationDate() != null ? ledger.getExpirationDate().toLocalDateTime() : null);
-        dto.setStatusListCredentialUrl(request.getCredentialStatus().getStatusListCredential());
-        dto.setStatusListIndex(request.getCredentialStatus().getStatusListIndex());
-        dto.setStatusPurpose(request.getCredentialStatus().getStatusPurpose());
+        dto.setIssuerId(didUrl);
+        dto.setStatusListCredentialUrl(transaction.getStatusListCredentialId());
+        dto.setStatusListIndex(transaction.getStatusListIndex());
+        dto.setStatusPurpose(transaction.getStatusPurpose());
         dto.setStatusTimestamp(savedTransaction.getCreatedDtimes());
         return dto;
     }
