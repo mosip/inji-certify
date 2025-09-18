@@ -1,0 +1,551 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+package io.mosip.certify.utils;
+
+import co.nstant.in.cbor.CborEncoder;
+import co.nstant.in.cbor.CborException;
+import co.nstant.in.cbor.model.*;
+import java.io.ByteArrayOutputStream;
+import io.mosip.kernel.signature.dto.CoseSignRequestDto;
+import io.mosip.kernel.signature.service.CoseSignatureService;
+import lombok.extern.slf4j.Slf4j;
+
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.*;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+/**
+ * Utility class for mDoc (Mobile Document) specific operations.
+ * Provides helper methods for mDoc structure creation and manipulation.
+ */
+@Slf4j
+public class MDocUtils {
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    /**
+     * Calculate the minimum excludant (mex) for a set of integers
+     */
+    public static int calculateMex(Set<Integer> numbers) {
+        int mex = 0;
+        while (numbers.contains(mex)) {
+            mex++;
+        }
+        return mex;
+    }
+
+    /**
+     * Process templated JSON to create final mDoc structure
+     */
+    public static Map<String, Object> processTemplatedJson(String templatedJSON, Map<String, Object> templateParams) {
+        try {
+            JsonNode templateNode = objectMapper.readTree(templatedJSON);
+            Map<String, Object> finalMDoc = new HashMap<>();
+
+            // Extract basic fields
+            if (templateNode.has("docType")) {
+                finalMDoc.put("docType", templateNode.get("docType").asText());
+            }
+            if (templateNode.has("holderId")) {
+                finalMDoc.put("holderId", templateNode.get("holderId").asText());
+            }
+
+            if (templateNode.has("validityInfo")) {
+                JsonNode validityInfo = templateNode.get("validityInfo");
+                Map<String, Object> validity = objectMapper.convertValue(validityInfo, Map.class);
+
+                // Handle _validFrom placeholder
+                if (validity.containsKey("validFrom")) {
+                    String validFromValue = (String) validity.get("validFrom");
+                    if ("${_validFrom}".equals(validFromValue)) {
+                        // Replace with current timestamp in UTC
+                        String currentTime = ZonedDateTime.now(ZoneOffset.UTC)
+                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'"));
+                        validity.put("validFrom", currentTime);
+                    }
+                }
+
+                finalMDoc.put("validityInfo", validity);
+            }
+
+            if (templateParams.containsKey("_issuer")) {
+                finalMDoc.put("issuer", templateParams.get("_issuer"));
+            }
+
+            // Process namespaces
+            Map<String, Object> nameSpaces = new HashMap<>();
+
+            if (templateNode.has("nameSpaces")) {
+                JsonNode nameSpacesNode = templateNode.get("nameSpaces");
+                nameSpacesNode.fieldNames().forEachRemaining(namespaceName -> {
+                    try {
+                        JsonNode namespaceItems = nameSpacesNode.get(namespaceName);
+                        List<Map<String, Object>> processedItems = processNamespaceItems(namespaceItems, templateParams);
+                        nameSpaces.put(namespaceName, processedItems);
+                    } catch (Exception e) {
+                        log.error("Error processing namespace {}: {}", namespaceName, e.getMessage());
+                    }
+                });
+            }
+
+            finalMDoc.put("nameSpaces", nameSpaces);
+
+            return finalMDoc;
+
+        } catch (Exception e) {
+            log.error("Error processing templated JSON: {}", e.getMessage(), e);
+            return new HashMap<>();
+        }
+    }
+
+    /**
+     * Process items within a namespace
+     */
+    public static List<Map<String, Object>> processNamespaceItems(JsonNode namespaceItems, Map<String, Object> templateParams) {
+        List<Map<String, Object>> processedItems = new ArrayList<>();
+
+        // First, add all items from template
+        for (JsonNode item : namespaceItems) {
+            Map<String, Object> itemMap = new HashMap<>();
+            itemMap.put("digestID", item.get("digestID").asInt());
+            itemMap.put("elementIdentifier", item.get("elementIdentifier").asText());
+
+            // Handle elementValue which could be string or complex object
+            JsonNode elementValue = item.get("elementValue");
+            if (elementValue.isTextual()) {
+                itemMap.put("elementValue", elementValue.asText());
+            } else {
+                // Convert complex objects (like driving_privileges)
+                Object value = objectMapper.convertValue(elementValue, Object.class);
+                itemMap.put("elementValue", value);
+            }
+
+            processedItems.add(itemMap);
+        }
+
+        // add missing fields from templateParams
+        processedItems = addMissingFields(processedItems, templateParams);
+
+        return processedItems;
+    }
+
+    /**
+     * Add missing fields from templateParams that are not present in the template
+     */
+    public static List<Map<String, Object>> addMissingFields(List<Map<String, Object>> existingItems, Map<String, Object> templateParams) {
+        Set<String> forbiddenIdentifiers = Set.of("templateName", "issuer", "issuerURI", "didUrl");
+
+        for (Map.Entry<String, Object> param : templateParams.entrySet()) {
+            Set<Integer> digestIDs = existingItems.stream()
+                    .map(item -> (Integer) item.get("digestID"))
+                    .collect(Collectors.toSet());
+            Set<String> existingIdentifiers = existingItems.stream()
+                    .map(item -> (String) item.get("elementIdentifier"))
+                    .collect(Collectors.toSet());
+            String identifier = param.getKey();
+
+            // Skip if field already exists in template or not present in templateParams
+            if (existingIdentifiers.contains(identifier) || identifier.startsWith("_") || forbiddenIdentifiers.contains(identifier)) {
+                continue;
+            }
+
+            Object value = templateParams.get(identifier);
+            if (value != null) {
+                Map<String, Object> newItem = new HashMap<>();
+                newItem.put("digestID", calculateMex(digestIDs));
+                newItem.put("elementIdentifier", identifier);
+                newItem.put("elementValue", value);
+                existingItems.add(newItem);
+            }
+        }
+
+        return existingItems;
+    }
+
+    /**
+     * Adds random salts to each data element
+     */
+    public static Map<String, Object> addRandomSalts(Map<String, Object> mDocJson) {
+        Map<String, Object> nameSpaces = (Map<String, Object>) mDocJson.get("nameSpaces");
+        Map<String, Object> saltedNamespaces = new HashMap<>();
+
+        for (Map.Entry<String, Object> namespaceEntry : nameSpaces.entrySet()) {
+            String namespaceName = namespaceEntry.getKey();
+            List<Map<String, Object>> elements = (List<Map<String, Object>>) namespaceEntry.getValue();
+
+            List<Map<String, Object>> saltedElements = new ArrayList<>();
+
+            for (Map<String, Object> element : elements) {
+                // Generate 24-byte random salt
+                byte[] randomSalt = new byte[24];
+                new SecureRandom().nextBytes(randomSalt);
+
+                // Convert byte array to hex string
+                String randomHex = bytesToHex(randomSalt);
+
+                // Clone element with random salt as hex string
+                Map<String, Object> saltedElement = new HashMap<>(element);
+                saltedElement.put("random", randomSalt);
+
+                saltedElements.add(saltedElement);
+            }
+
+            saltedNamespaces.put(namespaceName, saltedElements);
+        }
+
+        return saltedNamespaces;
+    }
+
+    private static String bytesToHex(byte[] bytes) {
+        StringBuilder result = new StringBuilder();
+        for (byte b : bytes) {
+            result.append(String.format("%02X", b));
+        }
+        return result.toString();
+    }
+
+    /**
+     * Calculates SHA-256 digests for salted elements
+     */
+    public static Map<String, Object> calculateDigests(
+            Map<String, Object> saltedNamespaces,
+            Map<String, Map<Integer, byte[]>> namespaceDigests) throws Exception {
+
+        Map<String, Object> taggedNamespaces = new HashMap<>();
+
+        for (Map.Entry<String, Object> namespaceEntry : saltedNamespaces.entrySet()) {
+            String namespaceName = namespaceEntry.getKey();
+            List<Map<String, Object>> elements = (List<Map<String, Object>>) namespaceEntry.getValue();
+
+            List<byte[]> taggedElements = new ArrayList<>();
+            Map<Integer, byte[]> digestMap = new HashMap<>();
+
+            for (Map<String, Object> element : elements) {
+                // Encode to CBOR and wrap with Tag 24 in one step
+                byte[] taggedCbor = wrapWithCBORTag24(element);
+                taggedElements.add(taggedCbor);
+
+                // Calculate digest of the Tag 24 wrapped CBOR
+                byte[] digest = MessageDigest.getInstance("SHA-256").digest(taggedCbor);
+                digestMap.put((Integer) element.get("digestID"), digest);
+            }
+
+            taggedNamespaces.put(namespaceName, taggedElements);
+            namespaceDigests.put(namespaceName, digestMap);
+        }
+
+        return taggedNamespaces;
+    }
+
+    public static byte[] encodeToCBOR(Object obj) throws Exception {
+        try {
+            Object preprocessedData = preprocessForCBOR(obj);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            CborEncoder encoder = new CborEncoder(baos);
+            encoder.encode(convertToDataItem(preprocessedData));
+            return baos.toByteArray();
+        } catch (Exception e) {
+            log.error("Error encoding to CBOR: {}", e.getMessage(), e);
+            throw new Exception("CBOR encoding failed: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Preprocesses objects for CBOR encoding (handles dates, byte arrays, etc.)
+     */
+    public static Object preprocessForCBOR(Object obj) {
+        if (obj == null) return null;
+
+        // Handle byte arrays directly - don't convert to hex
+        if (obj instanceof byte[]) {
+            return obj;
+        }
+
+        if (obj instanceof String) {
+            String str = (String) obj;
+            if (isDateOnlyString(str)) {
+                return createCBORTaggedDate(str);
+            }
+            return str;
+        }
+
+        if (obj instanceof Map) {
+            Map<Object, Object> map = (Map<Object, Object>) obj;
+            Map<Object, Object> processedMap = new HashMap<>();
+
+            for (Map.Entry<Object, Object> entry : map.entrySet()) {
+                Object processedKey = preprocessForCBOR(entry.getKey());
+                Object processedValue = preprocessForCBOR(entry.getValue());
+                processedMap.put(processedKey, processedValue);
+            }
+            return processedMap;
+        }
+
+        if (obj instanceof List) {
+            List<Object> list = (List<Object>) obj;
+            List<Object> processedList = new ArrayList<>();
+            for (Object item : list) {
+                processedList.add(preprocessForCBOR(item));
+            }
+            return processedList;
+        }
+
+        return obj; // Return as-is for primitives
+    }
+
+    private static DataItem convertToDataItem(Object obj) {
+        if (obj == null) {
+            return SimpleValue.NULL;
+        }
+        if (obj instanceof String) {
+            return new UnicodeString((String) obj);
+        }
+        if (obj instanceof Integer) {
+            int value = (Integer) obj;
+            if (value < 0) {
+                return new NegativeInteger(value);
+            } else {
+                return new UnsignedInteger(value);
+            }
+        }
+        if (obj instanceof Long) {
+            long value = (Long) obj;
+            if (value < 0) {
+                return new NegativeInteger(value);
+            } else {
+                return new UnsignedInteger(value);
+            }
+        }
+        if (obj instanceof Boolean) {
+            return (Boolean) obj ? SimpleValue.TRUE : SimpleValue.FALSE;
+        }
+        if (obj instanceof Double) {
+            return new DoublePrecisionFloat((Double) obj);
+        }
+        if (obj instanceof Float) {
+            return new SinglePrecisionFloat((Float) obj);
+        }
+        if (obj instanceof byte[]) {
+            return new ByteString((byte[]) obj);
+        }
+        if (obj instanceof java.util.Map) {
+            co.nstant.in.cbor.model.Map map = new co.nstant.in.cbor.model.Map();
+            for (Object entry : ((java.util.Map<?, ?>) obj).entrySet()) {
+                java.util.Map.Entry<?, ?> mapEntry = (java.util.Map.Entry<?, ?>) entry;
+                DataItem keyItem = convertToDataItem(mapEntry.getKey());
+                DataItem valueItem = convertToDataItem(mapEntry.getValue());
+                map.put(keyItem, valueItem);
+            }
+            return map;
+        }
+        if (obj instanceof List) {
+            Array array = new Array();
+            for (Object item : (List<?>) obj) {
+                array.add(convertToDataItem(item));
+            }
+            return array;
+        }
+        // Handle tagged objects (for CBOR tags like date)
+        if (obj instanceof java.util.Map && ((java.util.Map<?, ?>) obj).containsKey("__cbor_tag")) {
+            java.util.Map<?, ?> taggedMap = (java.util.Map<?, ?>) obj;
+            int tag = (Integer) taggedMap.get("__cbor_tag");
+            Object value = taggedMap.get("__cbor_value");
+            DataItem dataItem = convertToDataItem(value);
+            dataItem.setTag(tag);
+            return dataItem;
+        }
+        // For any other type, convert to string
+        return new UnicodeString(obj.toString());
+    }
+
+
+    /**
+     * Checks if a string represents a date-only value (YYYY-MM-DD)
+     */
+    public static boolean isDateOnlyString(String str) {
+        try {
+            LocalDate.parse(str, DateTimeFormatter.ISO_LOCAL_DATE);
+            return str.matches("\\d{4}-\\d{2}-\\d{2}");
+        } catch (DateTimeParseException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Creates a CBOR tagged date (tag 1004) for date-only strings
+     */
+    public static Map<String, Object> createCBORTaggedDate(String dateStr) {
+        Map<String, Object> taggedDate = new HashMap<>();
+        taggedDate.put("__cbor_tag", 1004);
+        taggedDate.put("__cbor_value", dateStr);
+        return taggedDate;
+    }
+
+    /**
+     * Converts hex string to byte array
+     */
+    public static byte[] hexStringToByteArray(String hexStr) {
+        int len = hexStr.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(hexStr.charAt(i), 16) << 4)
+                    + Character.digit(hexStr.charAt(i + 1), 16));
+        }
+        return data;
+    }
+
+    /**
+     * Creates the Mobile Security Object (MSO) structure
+     */
+    public static Map<String, Object> createMobileSecurityObject(
+            Map<String, Object> mDocJson,
+            Map<String, Map<Integer, byte[]>> namespaceDigests,
+            String appID, String refID) throws Exception {
+
+        Map<String, Object> mso = new HashMap<>();
+        mso.put("version", "1.0");
+        mso.put("digestAlgorithm", "SHA-256");
+
+        // Create valueDigests structure
+        Map<String, Object> valueDigests = new HashMap<>();
+        for (Map.Entry<String, Map<Integer, byte[]>> namespaceEntry : namespaceDigests.entrySet()) {
+            String namespaceName = namespaceEntry.getKey();
+            Map<Integer, byte[]> digests = namespaceEntry.getValue();
+
+            Map<Integer, byte[]> digestBytes = new HashMap<>();
+            for (Map.Entry<Integer, byte[]> digestEntry : digests.entrySet()) {
+                digestBytes.put(digestEntry.getKey(), digestEntry.getValue());
+            }
+            valueDigests.put(namespaceName, digestBytes);
+        }
+        mso.put("valueDigests", valueDigests);
+
+        // Add document metadata
+        mso.put("docType", mDocJson.get("docType"));
+
+        // Create validity info with current timestamp
+        Map<String, Object> validityInfo = new HashMap<>();
+        String currentTime = ZonedDateTime.now(ZoneOffset.UTC)
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"));
+
+        if (mDocJson.containsKey("validityInfo")) {
+            Map<String, Object> originalValidity = (Map<String, Object>) mDocJson.get("validityInfo");
+            validityInfo.put("validFrom", originalValidity.get("validFrom"));
+            validityInfo.put("validUntil", originalValidity.get("validUntil"));
+        }
+        mso.put("validityInfo", validityInfo);
+
+        // Add device key info (placeholder - should be from wallet's PoP)
+        Map<String, Object> deviceKeyInfo = createDeviceKeyInfo(mDocJson.get("holderId"));
+        mso.put("deviceKeyInfo", deviceKeyInfo);
+
+        return mso;
+    }
+
+    /**
+     * Creates device key info structure (placeholder implementation)
+     */
+    public static Map<String, Object> createDeviceKeyInfo(Object deviceInfo) throws Exception {
+        String deviceKeyEncoded = deviceInfo.toString();
+
+        if (deviceKeyEncoded.startsWith("did:jwk:")) {
+            deviceKeyEncoded = deviceKeyEncoded.substring("did:jwk:".length());
+        }
+
+        byte[] decodedBytes = Base64.getUrlDecoder().decode(deviceKeyEncoded);
+        String decodedJson = new String(decodedBytes);
+
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, Object> deviceKey = mapper.readValue(decodedJson, Map.class);
+
+        Map<String, Object> deviceKeyInfo = new HashMap<>();
+        deviceKeyInfo.put("deviceKey", deviceKey);
+
+        return deviceKeyInfo;
+    }
+
+    /**
+     * Signs the MSO using COSE_Sign1 structure
+     */
+    public static byte[] signMSO(Map<String, Object> mso, String appID, String refID,
+                                 String signAlgorithm, DIDDocumentUtil didDocumentUtil, CoseSignatureService coseSignatureService) throws Exception {
+
+        try {
+            log.info("Starting COSE signing for MSO with algorithm: {}", signAlgorithm);
+
+            byte[] msoPayload = encodeToCBOR(mso);
+            String msoJsonPayload = objectMapper.writeValueAsString(mso);
+            // log.debug("MSO payload encoded to CBOR, size: {} bytes", msoJsonPayload);
+            log.debug("MSO payload encoded to CBOR, size: {} bytes", msoPayload.length);
+
+            CoseSignRequestDto signRequest = new CoseSignRequestDto();
+
+            // Set the payload as base64url encoded
+            String base64UrlPayload = Base64.getUrlEncoder().withoutPadding().encodeToString(msoPayload);
+            // String base64UrlPayload = Base64.getUrlEncoder().withoutPadding().encodeToString(msoJsonPayload.getBytes(StandardCharsets.UTF_8));
+            signRequest.setPayload(base64UrlPayload);
+            signRequest.setApplicationId(appID);
+            signRequest.setReferenceId(refID);
+
+            signRequest.setAlgorithm(signAlgorithm);
+            Map<String, Object> protectedHeader = new HashMap<>();
+            protectedHeader.put("x5c", true); // Request certificate chain in protected header
+            signRequest.setProtectedHeader(protectedHeader);
+
+            String hexSignedData = coseSignatureService.coseSign1(signRequest).getSignedData();
+            return hexStringToByteArray(hexSignedData);
+
+        } catch (Exception e) {
+            log.error("Error during COSE signing: {}", e.getMessage(), e);
+            throw new Exception("COSE signing failed: " + e.getMessage(), e);
+        }
+    }
+
+
+    public static byte[] wrapWithCBORTag24(Map<String, Object> element) throws IOException {
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            CborEncoder encoder = new CborEncoder(baos);
+
+            DataItem elementDataItem = convertToDataItem(element);
+            elementDataItem.setTag(24);  // Tag the actual structure
+            encoder.encode(elementDataItem);
+
+            return baos.toByteArray();
+        } catch (CborException e) {
+            throw new IOException("Failed to wrap with CBOR tag 24", e);
+        }
+    }
+
+    /**
+     * Creates the final IssuerSigned structure combining namespaces and issuerAuth
+     */
+    public static Map<String, Object> createIssuerSignedStructure(
+            Map<String, Object> processedNamespaces,
+            byte[] signedMSO) {
+
+        Map<String, Object> issuerSigned = new HashMap<>();
+
+        // Add the processed namespaces (already wrapped with Tag 24)
+        issuerSigned.put("nameSpaces", processedNamespaces);
+
+        // Add the signed MSO as issuerAuth
+        issuerSigned.put("issuerAuth", signedMSO);
+
+        log.info("Created IssuerSigned structure with {} namespaces", processedNamespaces.size());
+        return issuerSigned;
+    }
+}
