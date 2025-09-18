@@ -1224,7 +1224,7 @@ paths:
       tags:
         - '[Experimental] Ledger Search'
       summary: Search for Credential Status Records (Ledger Search)
-      description: '[EXPERIMENTAL FEATURE] Search based on credentialId, issuerId, and potentially indexedAttributes (via specific criteria) from the ledger. AND logic applied.'
+      description: '[EXPERIMENTAL FEATURE] Search based on credentialId, issuerId, credentialType and potentially indexedAttributes (via specific criteria) from the ledger. AND logic applied.'
       operationId: searchLedgerRecords
       requestBody:
         required: true
@@ -1287,7 +1287,6 @@ paths:
             examples:
               Example 1:
                 value:
-                  credentialId: 52b55d02-613f-432f-b29e-ae842bc404a8
                   credentialStatus:
                     statusPurpose: revocation
                     statusListIndex: 5
@@ -1295,7 +1294,6 @@ paths:
                     type: BitstringStatusListEntry
                     statusListCredential: 'http://localhost:8090/v1/certify/status-list/7bf52e81-f3bb-40ec-a0f9-a714847fd067'
                   status: false
-                  indexAllocator: test
       responses:
         '200':
           description: Credential status successfully updated. Returns the updated status record.
@@ -1306,14 +1304,10 @@ paths:
               examples:
                 Example 1:
                   value:
-                    credentialId: 52b55d02-613f-432f-b29e-ae842bc404a8
                     issuerId: 'did:web:www.example.com:inji-config:collab:mock-identity'
                     statusListCredentialUrl: 7bf52e81-f3bb-40ec-a0f9-a714847fd067
                     statusListIndex: 5
                     statusPurpose: revocation
-                    issueDate: '2025-08-07T11:57:39'
-                    expirationDate: null
-                    credentialType: 'MockVerifiableCredential,VerifiableCredential'
                     statusTimestamp: '2025-08-07T12:18:55'
         '400':
           description: 'Bad Request - Invalid input data (e.g., missing required fields, invalid format).'
