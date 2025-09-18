@@ -33,6 +33,9 @@ import io.mosip.kernel.keymanagerservice.dto.SymmetricKeyGenerateRequestDto;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+import java.util.Map;
+
 @Configuration
 @EnableJpaRepositories(basePackages = {"io.mosip.kernel.keymanagerservice.repository", "io.mosip.certify.repository"})
 @EntityScan(basePackages = {"io.mosip.kernel.keymanagerservice.entity, io.mosip.certify.entity"})
@@ -53,6 +56,9 @@ public class AppConfig implements ApplicationRunner {
 
     @Value("${mosip.certify.plugin-mode}")
     private String pluginMode;
+
+    @Value("#{${mosip.certify.signature-cryptosuite.key-alias-mapper}}")
+    private Map<String, List<List<String>>> keyAliasMapper;
 
     @Autowired
     private Environment env;
@@ -114,37 +120,21 @@ public class AppConfig implements ApplicationRunner {
         partnerMasterKeyRequest.setReferenceId(org.apache.commons.lang3.StringUtils.EMPTY);
         keymanagerService.generateMasterKey(objectType, partnerMasterKeyRequest);
         if(pluginMode.equals("DataProvider")) {
-            // Generate RSA Key Certificate
-            log.info("===================== CERTIFY_VC_SIGN_RSA KEY CHECK ========================");
-            KeyPairGenerateRequestDto rsaKeyRequest = new KeyPairGenerateRequestDto();
-            rsaKeyRequest.setApplicationId(Constants.CERTIFY_VC_SIGN_RSA);
-            rsaKeyRequest.setReferenceId(Constants.EMPTY_REF_ID);
-            rsaKeyRequest.setForce(false);
-            keymanagerService.generateMasterKey("certificate", rsaKeyRequest);
-            // Generate an Ed25519Key:
-            // 1. Generate a master key first to enable Keymanager to store the key.
-            log.info("===================== CERTIFY_VC_SIGN_ED25519 KEY CHECK ========================");
-            KeyPairGenerateRequestDto storeKey = new KeyPairGenerateRequestDto();
-            storeKey.setApplicationId(Constants.CERTIFY_VC_SIGN_ED25519);
-            storeKey.setReferenceId(Constants.EMPTY_REF_ID);
-            keymanagerService.generateMasterKey("certificate", storeKey);
-            // 2. Generate an Ed25519 key later
-            KeyPairGenerateRequestDto ed25519Req = new KeyPairGenerateRequestDto();
-            ed25519Req.setApplicationId(Constants.CERTIFY_VC_SIGN_ED25519);
-            ed25519Req.setReferenceId(Constants.ED25519_REF_ID);
-            keymanagerService.generateECSignKey("certificate", ed25519Req);
+            keyAliasMapper.values().stream()
+                    .flatMap(List::stream)
+                    .forEach(keySet -> {
+                        log.info("====================== Generating {} key ========================", keySet.getFirst());
+                        KeyPairGenerateRequestDto keyPairGenerateRequestDto = new KeyPairGenerateRequestDto();
+                        keyPairGenerateRequestDto.setApplicationId(keySet.getFirst());
+                        keyPairGenerateRequestDto.setReferenceId(keySet.getLast());
 
-            // Generate an EC K1 Key
-            KeyPairGenerateRequestDto ecK1Req = new KeyPairGenerateRequestDto();
-            ecK1Req.setApplicationId(Constants.CERTIFY_VC_SIGN_EC_K1);
-            ecK1Req.setReferenceId(Constants.EC_SECP256K1_SIGN);
-            keymanagerService.generateECSignKey("certificate", ecK1Req);
-
-            // Generate an EC R1 Key
-            KeyPairGenerateRequestDto ecR1Req = new KeyPairGenerateRequestDto();
-            ecR1Req.setApplicationId(Constants.CERTIFY_VC_SIGN_EC_R1);
-            ecR1Req.setReferenceId(Constants.EC_SECP256R1_SIGN);
-            keymanagerService.generateECSignKey("certificate", ecR1Req);
+                        if (keyPairGenerateRequestDto.getReferenceId().isEmpty()) {
+                            keyPairGenerateRequestDto.setForce(false);
+                            keymanagerService.generateMasterKey("certificate", keyPairGenerateRequestDto);
+                        } else {
+                            keymanagerService.generateECSignKey("certificate", keyPairGenerateRequestDto);
+                        }
+                    });
         }
         log.info("===================== CERTIFY KEY SETUP COMPLETED ========================");
         log.info("===================== INJI Certify -- Started ============================");
