@@ -9,7 +9,7 @@ LedgerSearchAPI:
       inputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPI
       outputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPIResult
       input: '{
-      	"credentialId": "$ID:GetDataFromLedgerTable_For_LandRegistry_cred2_Valid_smoke_Pos_sid_credential_id$",
+      	"credentialId": "$ID:GetDataFromLedgerTable_For_LandRegistry_Valid_smoke_Pos_sid_credential_id$",
         "issuerId": "$ID:GetDataFromLedgerTable_For_LandRegistry_Valid_smoke_Pos_sid_issuer_id$",
         "credentialType": "VerifiableCredential,landregistry_revocation",
       	"indexedAttributesEquals": "$ID:GetDataFromLedgerTable_For_LandRegistry_Valid_smoke_Pos_sid_indexed_attributes$"
@@ -147,4 +147,4 @@ LedgerSearchAPI:
       	"indexedAttributesEquals": "$ID:GetDataFromLedgerTable_For_LandRegistry_cred2_Valid_smoke_Pos_sid_indexed_attributes$"
 }'
       output: '{
-}'                
+}'          
