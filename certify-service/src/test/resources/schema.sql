@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS rendering_template (
 
 -- Changed all `JSONB` and `TEXT[]` types to VARCHAR to make it work with H2 database
 CREATE TABLE IF NOT EXISTS credential_config (
-    credential_config_key_id VARCHAR(255) NOT NULL UNIQUE,
+    credential_config_key_id VARCHAR(2048) NOT NULL UNIQUE,
     config_id VARCHAR(255),
     status VARCHAR(255),
     vc_template VARCHAR(1000),

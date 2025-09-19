@@ -1,0 +1,71 @@
+AuthenticateUserForDataIntegrity:
+   InjiCertify_ESignet_AuthenticateUserVCI_For_landregistry_Cred1_dataIntegrity_uin_Otp_Valid_Smoke:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser
+      description: Authenticate User for data integrity proof for cred1
+      role: noauth
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/DataIntegrityProof/AuthenticateUserForDataIntegrity/AuthenticateUserForDataIntegrity
+      outputTemplate: injicertify/DataIntegrityProof/AuthenticateUserForDataIntegrity/AuthenticateUserForDataIntegrityResult
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred1_dataIntegrity_uin_all_Valid_Smoke_sid_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred1_dataIntegrity_uin_all_Valid_Smoke_sid_transactionId$",
+      	"individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
+      	"authFactorType" : "OTP",
+      	"challenge" : "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_EMAIL$",
+        "format": "alpha-numeric",
+        "sendOtp":{
+    "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred1_dataIntegrity_uin_all_Valid_Smoke_sid_encodedResp$",
+    "requestTime": "$TIMESTAMP$",
+    "transactionId": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred1_dataIntegrity_uin_all_Valid_Smoke_sid_transactionId$",
+	"individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
+    "otpChannels": [{channel: "email"},{channel: "phone"}],
+    "sendOtpReqTemplate": "injicertify/SendOtp/SendOtp",
+    "sendOtpEndPoint": "$ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/send-otp"
+    }
+    }'
+      output: '{
+  "sendOtpResp":{
+        "maskedMobile": "$IGNORE$",
+        "sendOtpResTemplate":"injicertify/SendOtp/SendOtpResult",
+        "maskedEmail": "$IGNORE$"
+    }
+}'
+   InjiCertify_ESignet_AuthenticateUserVCI_For_landregistry_Cred2_dataIntegrity_uin_Otp_Valid_Smoke:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser
+      description: Authenticate User for data integrity proof for cred2
+      role: noauth
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/DataIntegrityProof/AuthenticateUserForDataIntegrity/AuthenticateUserForDataIntegrity
+      outputTemplate: injicertify/DataIntegrityProof/AuthenticateUserForDataIntegrity/AuthenticateUserForDataIntegrityResult
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred2_dataIntegrity_uin_all_Valid_Smoke_sid_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred2_dataIntegrity_uin_all_Valid_Smoke_sid_transactionId$",
+      	"individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
+      	"authFactorType" : "OTP",
+      	"challenge" : "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_EMAIL$",
+        "format": "alpha-numeric",
+        "sendOtp":{
+    "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred2_dataIntegrity_uin_all_Valid_Smoke_sid_encodedResp$",
+    "requestTime": "$TIMESTAMP$",
+    "transactionId": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred2_dataIntegrity_uin_all_Valid_Smoke_sid_transactionId$",
+	"individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
+    "otpChannels": [{channel: "email"},{channel: "phone"}],
+    "sendOtpReqTemplate": "injicertify/SendOtp/SendOtp",
+    "sendOtpEndPoint": "$ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/send-otp"
+    }
+    }'
+      output: '{
+  "sendOtpResp":{
+        "maskedMobile": "$IGNORE$",
+        "sendOtpResTemplate":"injicertify/SendOtp/SendOtpResult",
+        "maskedEmail": "$IGNORE$"
+    }
+}'

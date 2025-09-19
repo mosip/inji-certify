@@ -1,0 +1,48 @@
+GetStatusListbyID:
+   InjiCertify_GetStatusListbyID_ForLandRegistry_Revocation_Flow_all_Valid_Smoke:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/credentials/status-list/{id}
+      uniqueIdentifier: TC_InjiCertify_Get_Status_List_by_ID_01
+      description: Getting status list by statusListCredential ID for revocation flow
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: get
+      inputTemplate: injicertify/Revocation/GetStatusListbyID/GetStatusListbyID
+      outputTemplate: injicertify/Revocation/GetStatusListbyID/GetStatusListbyIDResult
+      input: '{
+        "id": "$ID:LedgerSearchAPI_ForLandRegistry_Revocation_Flow_all_Valid_Smoke_Sid_statusListCredentialUrl$"
+}'
+      output: '{
+}'
+   InjiCertify_GetStatusListbyID_ForLandRegistry_Revocation_invalid_Id_Neg:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/credentials/status-list/{id}
+      uniqueIdentifier: TC_InjiCertify_Get_Status_List_by_ID_02
+      description: Getting status list by invalid statusListCredential ID
+      role: noauth
+      restMethod: get
+      inputTemplate: injicertify/Revocation/GetStatusListbyID/GetStatusListbyID
+      outputTemplate: injicertify/error
+      input: '{
+        "id": "12345678"
+}'
+      output: '{
+      "errors": [
+      {
+       "errorCode": "status_list_not_found_for_the_given_id"
+       }
+       ]
+    }'
+   InjiCertify_GetStatusListbyID_ForLandRegistry_Revocation_without_Id_Neg:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/credentials/status-list
+      uniqueIdentifier: TC_InjiCertify_Get_Status_List_by_ID_03
+      description: Getting status list by without statusListCredential ID
+      role: noauth
+      checkOnlyStatusCodeInResponse: true      
+      restMethod: get
+      inputTemplate: injicertify/Revocation/GetStatusListbyID/GetStatusListbyID
+      outputTemplate: injicertify/responseCode
+      input: '{
+        "id": "$REMOVE$"
+}'
+      output: '{
+	"responseCode": "404"    
+    }'    
