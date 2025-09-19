@@ -1,0 +1,79 @@
+{
+    "TC_esignetDependent_AuthorizationCodeNeg": [
+        "TC_esignetDependent_OAuthdetailsRequestNeg",
+        "TC_esignetDependent_OAuthdetailsRequestNeg_2"
+    ],
+    "TC_injicertify_credentialissuance_20": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_21": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_22": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_23": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_24": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_25": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_26": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_27": ["TC_esignetDependent_CreateOidc"],
+    "TC_esignetDependent_OAuthdetailsRequestNeg": ["TC_esignetDependent_CreateOidc"],
+    "TC_SunbirdDependent_Getpolicy": ["TC_SunbirdDependent_createpolicy"],
+    "TC_SunbirdDependent_deletepolicy": ["TC_SunbirdDependent_createpolicy"],
+    "TC_injicertify_credentialissuance": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_31": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_32": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_33": ["TC_esignetDependent_CreateOidc"],
+    "TC_esignetDependent_AuthenticateUser": ["TC_esignetDependent_OAuthdetailsRequest"],
+    "TC_injicertify_credentialissuance_34": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_35": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_36": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_37": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_38": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_39": ["TC_esignetDependent_CreateOidc"],
+    "TC_esignetDependent_GenerateTokenNeg": [
+        "TC_esignetDependent_CreateOidc",
+        "TC_esignetDependent_AuthorizationCodeNeg"
+    ],
+    "TC_esignetDependent_AuthenticateUser_vd11": ["TC_esignetDependent_OAuthdetailsRequest_vd11"],
+    "TC_esignetDependent_AuthenticateUser_vd12": ["TC_esignetDependent_OAuthdetailsRequest_vd12"],
+    "TC_injicertify_credentialissuance_40": ["TC_esignetDependent_CreateOidc"],
+    "TC_esignetDependent_GenerateToken_vd12": [
+        "TC_esignetDependent_CreateOidc",
+        "TC_esignetDependent_AuthorizationCode_vd12"
+    ],
+    "TC_esignetDependent_GenerateToken_vd11": [
+        "TC_esignetDependent_CreateOidc",
+        "TC_esignetDependent_AuthorizationCode_vd11"
+    ],
+    "TC_injicertify_credentialissuance_01": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_02": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_03": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_04": ["TC_esignetDependent_CreateOidc"],
+    "TC_esignetDependent_AuthorizationCode": ["TC_esignetDependent_OAuthdetailsRequest"],
+    "TC_injicertify_credentialissuance_05": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_06": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_Vd12": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_07": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_Vd11": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_08": ["TC_esignetDependent_CreateOidc"],
+    "TC_esignetDependent_AuthorizationCode_vd12": ["TC_esignetDependent_OAuthdetailsRequest_vd12"],
+    "TC_injicertify_credentialissuance_09": ["TC_esignetDependent_CreateOidc"],
+    "TC_esignetDependent_AuthorizationCode_vd11": ["TC_esignetDependent_OAuthdetailsRequest_vd11"],
+    "TC_esignetDependent_AuthenticateUserNeg": [
+        "TC_esignetDependent_OAuthdetailsRequestNeg",
+        "TC_esignetDependent_OAuthdetailsRequestNeg_2"
+    ],
+    "TC_esignetDependent_OAuthdetailsRequest_vd12": ["TC_esignetDependent_CreateOidc"],
+    "TC_esignetDependent_OAuthdetailsRequest_vd11": ["TC_esignetDependent_CreateOidc"],
+    "TC_esignetDependent_OAuthdetailsRequestNeg_2": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_10": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_11": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_12": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_13": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_14": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_15": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_16": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_17": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_18": ["TC_esignetDependent_CreateOidc"],
+    "TC_injicertify_credentialissuance_19": ["TC_esignetDependent_CreateOidc"],
+    "TC_esignetDependent_OAuthdetailsRequest": ["TC_esignetDependent_CreateOidc"],
+    "TC_esignetDependent_GenerateToken": [
+        "TC_esignetDependent_CreateOidc",
+        "TC_esignetDependent_AuthorizationCode"
+    ]
+}

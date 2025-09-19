@@ -78,6 +78,8 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	private static String policyNumberForSunBirdR = generateRandomNumberString(9);
 	private static final ObjectMapper mapper = new ObjectMapper();
 	
+	public static List<String> testCasesInRunScope = new ArrayList<>();
+	
 	public static void setLogLevel() {
 		if (InjiCertifyConfigManager.IsDebugEnabled())
 			logger.setLevel(Level.ALL);
@@ -864,6 +866,17 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	
 	public static TestCaseDTO isTestCaseValidForExecution(TestCaseDTO testCaseDTO) {
 		String testCaseName = testCaseDTO.getTestCaseName();
+		currentTestCaseName = testCaseName;
+		
+		int indexof = testCaseName.indexOf("_");
+		String modifiedTestCaseName = testCaseName.substring(indexof + 1);
+
+		addTestCaseDetailsToMap(modifiedTestCaseName, testCaseDTO.getUniqueIdentifier());
+		
+		if (!testCasesInRunScope.isEmpty()
+				&& testCasesInRunScope.contains(testCaseDTO.getUniqueIdentifier()) == false) {
+			throw new SkipException(GlobalConstants.NOT_IN_RUN_SCOPE_MESSAGE);
+		}
 		
 		//When the captcha is enabled we cannot execute the test case as we can not generate the captcha token
 		if (isCaptchaEnabled() == true) {

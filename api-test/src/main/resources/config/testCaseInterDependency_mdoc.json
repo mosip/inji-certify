@@ -1,0 +1,13 @@
+{
+    "TC_InjiCertify_GetCredentialFormDoc_01": ["TC_esignetDependent_CreateOidc"],
+    "TC_esignetDependent_AuthenticateUser": [
+        "TC_mDoc_identity_dependency_01",
+        "TC_esignetDependent_OAuthdetailsRequest"
+    ],
+    "TC_esignetDependent_AuthorizationCode": ["TC_esignetDependent_OAuthdetailsRequest"],
+    "TC_esignetDependent_OAuthdetailsRequest": ["TC_esignetDependent_CreateOidc"],
+    "TC_esignetDependent_GenerateToken": [
+        "TC_esignetDependent_CreateOidc",
+        "TC_esignetDependent_AuthorizationCode"
+    ]
+}
