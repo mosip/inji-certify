@@ -117,8 +117,7 @@ public class SimplePostForAutoGenId extends InjiCertifyUtil implements ITest {
 		}
 		
 		
-		if (requestJson.has("credentialId")
-				|| testCaseName.contains("LedgerSearchAPI_ForLandRegistry_Revocation_Flow_all_Valid_Smoke_Sid")) {
+		if (requestJson.has("credentialId")) {
 
 			String key = requestJson.get("credentialId").toString();
 			if (key.contains("$ID:") && key.contains("$")) {
