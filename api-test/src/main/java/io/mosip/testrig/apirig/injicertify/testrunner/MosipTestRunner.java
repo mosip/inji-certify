@@ -32,6 +32,7 @@ import io.mosip.testrig.apirig.testrunner.OTPListener;
 import io.mosip.testrig.apirig.utils.AdminTestUtil;
 import io.mosip.testrig.apirig.utils.AuthTestsUtil;
 import io.mosip.testrig.apirig.utils.CertsUtil;
+import io.mosip.testrig.apirig.utils.DependencyResolver;
 import io.mosip.testrig.apirig.utils.GlobalConstants;
 import io.mosip.testrig.apirig.utils.GlobalMethods;
 import io.mosip.testrig.apirig.utils.JWKKeyUtil;
@@ -81,7 +82,7 @@ public class MosipTestRunner {
 			SkipTestCaseHandler.loadTestcaseToBeSkippedList("testCaseSkippedList.txt");
 			GlobalMethods.setModuleNameAndReCompilePattern(InjiCertifyConfigManager.getproperty("moduleNamePattern"));
 			setLogLevels();
-			
+
 			useCaseToExecute = InjiCertifyConfigManager.getproperty("useCaseToExecute");
 
 			HealthChecker healthcheck = new HealthChecker();
@@ -96,8 +97,10 @@ public class MosipTestRunner {
 
 			BaseTestCase.getLanguageList();
 			InjiCertifyUtil.getSupportedCredentialSigningAlg();
-			
+
 			InjiCertifyUtil.configureOtp();
+
+			String testCasesToExecuteString = InjiCertifyConfigManager.getproperty("testCasesToExecute");
 
 			if (useCaseToExecute.equalsIgnoreCase("mosipid")) {
 
@@ -111,20 +114,39 @@ public class MosipTestRunner {
 
 				BiometricDataProvider.generateBiometricTestData("Registration");
 
+				DependencyResolver.loadDependencies(
+						getGlobalResourcePath() + "/config/testCaseInterDependency_" + useCaseToExecute + ".json");
+				if (!testCasesToExecuteString.isBlank()) {
+					InjiCertifyUtil.testCasesInRunScope = DependencyResolver.getDependencies(testCasesToExecuteString);
+				}
+
 				startTestRunner();
+				// Used for generating the test case interdependency JSON file
+				//AdminTestUtil.generateTestCaseInterDependencies(
+				//		getGlobalResourcePath() + "/config/testCaseInterDependency_" + useCaseToExecute + ".json");
 
 				InjiCertifyUtil.dBCleanup();
 			} else {
+
+				DependencyResolver.loadDependencies(
+						getGlobalResourcePath() + "/config/testCaseInterDependency_" + useCaseToExecute + ".json");
+				if (!testCasesToExecuteString.isBlank()) {
+					InjiCertifyUtil.testCasesInRunScope = DependencyResolver.getDependencies(testCasesToExecuteString);
+				}
+
 				startTestRunner();
+				// Used for generating the test case interdependency JSON file
+				//AdminTestUtil.generateTestCaseInterDependencies(
+				//		getGlobalResourcePath() + "/config/testCaseInterDependency_" + useCaseToExecute + ".json");
 			}
 		} catch (Exception e) {
 			LOGGER.error("Exception " + e.getMessage());
 		}
-		
+
 		if (useCaseToExecute.equalsIgnoreCase("landregistry")) {
 			InjiCertifyUtil.landRegistryDBCleanup();
 		}
-		
+
 		KeycloakUserManager.removeUser();
 		KeycloakUserManager.closeKeycloakInstance();
 
@@ -135,7 +157,7 @@ public class MosipTestRunner {
 		System.exit(0);
 
 	}
-	
+
 	public static void suiteSetup(String runType) {
 		if (InjiCertifyConfigManager.IsDebugEnabled())
 			LOGGER.setLevel(Level.ALL);

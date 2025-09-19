@@ -1,0 +1,107 @@
+{
+    "TC_esignetDependent_AuthorizationCodeNeg": ["TC_esignetDependent_OAuthdetailsRequestNeg"],
+    "TC_injicertify_Mosipidcredentialissuance_11": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_10": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_13": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_12": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_19": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_18": ["TC_pms_dependency_01"],
+    "TC_esignetDependent_OAuthdetailsRequestNeg": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_15": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_17": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_16": ["TC_pms_dependency_01"],
+    "TC_IDRepo_CreateVID_01": ["TC_idrepo_dependency_01"],
+    "TC_esignetDependent_GenerateTokenNeg_2": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_AuthorizationCodeNeg_2"
+    ],
+    "TC_pms_dependency_10": ["TC_pms_dependency_03"],
+    "TC_injicertify_Mosipidcredentialissuance_02": ["TC_pms_dependency_01"],
+    "TC_esignetDependent_AuthenticateUser": [
+        "TC_IDRepo_CreateVID_01",
+        "TC_idrepo_dependency_01",
+        "TC_esignetDependent_OAuthdetailsRequestNeg"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_01": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_08": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_07": ["TC_pms_dependency_01"],
+    "TC_pms_dependency_09": ["TC_pms_dependency_03"],
+    "TC_esignetDependent_GenerateTokenNeg": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_AuthorizationCodeNeg"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_09": ["TC_pms_dependency_01"],
+    "TC_pms_dependency_08": ["TC_pms_dependency_03"],
+    "TC_pms_dependency_07": [
+        "TC_pms_dependency_04",
+        "TC_pms_dependency_03"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_03": ["TC_pms_dependency_01"],
+    "TC_pms_dependency_06": [
+        "TC_pms_dependency_04",
+        "TC_pms_dependency_05"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_06": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_05": ["TC_pms_dependency_01"],
+    "TC_pms_dependency_04": ["TC_pms_dependency_05"],
+    "TC_pms_dependency_03": ["TC_pms_dependency_05"],
+    "TC_pms_dependency_02": ["TC_pms_dependency_07"],
+    "TC_esignetDependent_AuthenticateUser_vd11": [
+        "TC_idrepo_dependency_01",
+        "TC_esignetDependent_OAuthdetailsRequest_vd11"
+    ],
+    "TC_pms_dependency_01": [
+        "TC_pms_dependency_04",
+        "TC_pms_dependency_03"
+    ],
+    "TC_esignetDependent_AuthenticateUser_vd12": [
+        "TC_idrepo_dependency_01",
+        "TC_esignetDependent_OAuthdetailsRequest_vd12"
+    ],
+    "TC_esignetDependent_GenerateToken_vd12": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_AuthorizationCode_vd12"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_33": ["TC_pms_dependency_01"],
+    "TC_esignetDependent_GenerateToken_vd11": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_AuthorizationCode_vd12"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_32": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_35": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_34": ["TC_pms_dependency_01"],
+    "TC_esignetDependent_AuthenticateUserNeg_2": [
+        "TC_idrepo_dependency_01",
+        "TC_esignetDependent_OAuthdetailsRequestNeg_2"
+    ],
+    "TC_esignetDependent_AuthorizationCode": ["TC_esignetDependent_OAuthdetailsRequestNeg"],
+    "TC_injicertify_Mosipidcredentialissuance_30": ["TC_pms_dependency_01"],
+    "TC_esignetDependent_AuthorizationCode_vd12": [
+        "TC_esignetDependent_OAuthdetailsRequest_vd12",
+        "TC_esignetDependent_OAuthdetailsRequest_vd11"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_37": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_36": ["TC_pms_dependency_01"],
+    "TC_esignetDependent_AuthorizationCodeNeg_2": ["TC_esignetDependent_OAuthdetailsRequestNeg_2"],
+    "TC_esignetDependent_AuthenticateUserNeg": [
+        "TC_idrepo_dependency_01",
+        "TC_esignetDependent_OAuthdetailsRequestNeg"
+    ],
+    "TC_esignetDependent_OAuthdetailsRequest_vd12": ["TC_pms_dependency_01"],
+    "TC_esignetDependent_OAuthdetailsRequest_vd11": ["TC_pms_dependency_01"],
+    "TC_esignetDependent_OAuthdetailsRequestNeg_2": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_22": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_21": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_24": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_23": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_20": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_29": ["TC_pms_dependency_01"],
+    "TC_esignetDependent_GenerateToken": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_AuthorizationCode"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_26": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_25": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_28": ["TC_pms_dependency_01"],
+    "TC_injicertify_Mosipidcredentialissuance_27": ["TC_pms_dependency_01"]
+}
