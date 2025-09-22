@@ -131,15 +131,15 @@ LedgerSearchAPI:
        }
        ]  
     }'
-   InjiCertify_LedgerSearchAPI_ForLandRegistry_cred2_Revocation_without_credentilId_value_Neg:
+   InjiCertify_LedgerSearchAPI_ForLandRegistry_cred2_Revocation_without_credentilId_value:
       endPoint: $INJICERTIFYBASEURL$/v1/certify/ledger-search
       uniqueIdentifier: TC_InjiCertify_Ledger_Search_08
       description: Get Ledger details without CredentialId value
       role: noauth
       restMethod: post
-      checkOnlyStatusCodeInResponse: true      
+      checkErrorsOnlyInResponse: true      
       inputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPI
-      outputTemplate: injicertify/responseCode
+      outputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPIResult
       input: '{
       	"credentialId": "",
         "issuerId": "$ID:GetDataFromLedgerTable_For_LandRegistry_cred2_Valid_smoke_Pos_sid_issuer_id$",
@@ -147,5 +147,4 @@ LedgerSearchAPI:
       	"indexedAttributesEquals": "$ID:GetDataFromLedgerTable_For_LandRegistry_cred2_Valid_smoke_Pos_sid_indexed_attributes$"
 }'
       output: '{
-	"responseCode": "204"    
-    }'                
+}'          
