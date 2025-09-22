@@ -1,11 +1,12 @@
 package io.mosip.certify.validators.credentialconfigvalidators;
 
-import io.mosip.certify.entity.CredentialConfig;
+import io.mosip.certify.core.dto.CredentialConfigurationDTO;
 import io.mosip.certify.repository.CredentialConfigRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -15,26 +16,26 @@ class LdpVcCredentialConfigValidatorTest {
 
     @Test
     void testIsValidCheck_missingContext_returnsFalse() {
-        CredentialConfig config = new CredentialConfig();
-        config.setContext(null);
-        config.setCredentialType("VerifiableCredential,TestVerifiableCredential");
+        CredentialConfigurationDTO config = new CredentialConfigurationDTO();
+        config.setContextURLs(null);
+        config.setCredentialTypes(List.of("VerifiableCredential", "TestVerifiableCredential"));
         assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config));
     }
 
     @Test
     void testIsValidCheck_missingSignatureCryptoSuite_returnsFalse() {
-        CredentialConfig config = new CredentialConfig();
-        config.setContext("https://example.org/context");
-        config.setCredentialType("VerifiableCredential,TestVerifiableCredential");
+        CredentialConfigurationDTO config = new CredentialConfigurationDTO();
+        config.setContextURLs(List.of("https://example.org/context"));
+        config.setCredentialTypes(List.of("VerifiableCredential", "TestVerifiableCredential"));
         config.setSignatureCryptoSuite(null);
         assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config));
     }
 
     @Test
     void testIsValidCheck_allValidFields_returnsTrue() {
-        CredentialConfig config = new CredentialConfig();
-        config.setContext("https://example.org/context");
-        config.setCredentialType("VerifiableCredential,TestVerifiableCredential");
+        CredentialConfigurationDTO config = new CredentialConfigurationDTO();
+        config.setContextURLs(List.of("https://example.org/context"));
+        config.setCredentialTypes(List.of("VerifiableCredential", "TestVerifiableCredential"));
         config.setSignatureCryptoSuite("Ed25519Signature2020");
         config.setDocType(null);
         config.setSdJwtVct(null);
@@ -45,42 +46,42 @@ class LdpVcCredentialConfigValidatorTest {
 
     @Test
     void testIsValidCheck_emptyContext_returnsFalse() {
-        CredentialConfig config = new CredentialConfig();
-        config.setContext("");
-        config.setCredentialType("VerifiableCredential,TestVerifiableCredential");
+        CredentialConfigurationDTO config = new CredentialConfigurationDTO();
+        config.setContextURLs(List.of(""));
+        config.setCredentialTypes(List.of("VerifiableCredential", "TestVerifiableCredential"));
         assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config));
     }
 
     @Test
     void testIsValidCheck_missingCredentialType_returnsFalse() {
-        CredentialConfig config = new CredentialConfig();
-        config.setContext("https://example.org/context");
-        config.setCredentialType(null);
+        CredentialConfigurationDTO config = new CredentialConfigurationDTO();
+        config.setContextURLs(List.of("https://example.org/context"));
+        config.setCredentialTypes(null);
         assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config));
     }
 
     @Test
     void testIsValidCheck_emptyCredentialType_returnsFalse() {
-        CredentialConfig config = new CredentialConfig();
-        config.setContext("https://example.org/context");
-        config.setCredentialType("");
+        CredentialConfigurationDTO config = new CredentialConfigurationDTO();
+        config.setContextURLs(List.of("https://example.org/context"));
+        config.setCredentialTypes(List.of());
         assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config));
     }
 
     @Test
     void testIsValidCheck_docTypeNotNull_returnsFalse() {
-        CredentialConfig config = new CredentialConfig();
-        config.setContext("https://example.org/context");
-        config.setCredentialType("VerifiableCredential,TestVerifiableCredential");
+        CredentialConfigurationDTO config = new CredentialConfigurationDTO();
+        config.setContextURLs(List.of("https://example.org/context"));
+        config.setCredentialTypes(List.of("VerifiableCredential", "TestVerifiableCredential"));
         config.setDocType("docType");
         assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config));
     }
 
     @Test
     void testIsValidCheck_claimsNotNull_returnsFalse() {
-        CredentialConfig config = new CredentialConfig();
-        config.setContext("https://example.org/context");
-        config.setCredentialType("TestType");
+        CredentialConfigurationDTO config = new CredentialConfigurationDTO();
+        config.setContextURLs(List.of("https://example.org/context"));
+        config.setCredentialTypes(List.of("TestType"));
         config.setMsoMdocClaims(new HashMap<>());
         config.setSdJwtClaims(new HashMap<>());
         assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config));
@@ -88,22 +89,27 @@ class LdpVcCredentialConfigValidatorTest {
 
     @Test
     void testIsValidCheck_sdJwtVctNotNull_returnsFalse() {
-        CredentialConfig config = new CredentialConfig();
-        config.setContext("https://example.org/context");
-        config.setCredentialType("VerifiableCredential,TestVerifiableCredential");
+        CredentialConfigurationDTO config = new CredentialConfigurationDTO();
+        config.setContextURLs(List.of("https://example.org/context"));
+        config.setCredentialTypes(List.of("VerifiableCredential", "TestVerifiableCredential"));
         config.setSdJwtVct("sdJwtVct");
         assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config));
     }
 
     @Test
     void testIsConfigAlreadyPresent_whenPresent_returnsTrue() {
-        CredentialConfig config = Mockito.mock(CredentialConfig.class);
+        CredentialConfigurationDTO config = Mockito.mock(CredentialConfigurationDTO.class);
         CredentialConfigRepository repo = Mockito.mock(CredentialConfigRepository.class);
+        Mockito.when(config.getCredentialFormat()).thenReturn("format");
+        Mockito.when(config.getCredentialTypes()).thenReturn(List.of("type1", "type2"));
+        Mockito.when(config.getContextURLs()).thenReturn(List.of("context1", "context2"));
+        String credentialTypes = String.join(",", config.getCredentialTypes());
+        String context = String.join(",", config.getContextURLs());
         Mockito.when(repo.findByCredentialFormatAndCredentialTypeAndContext(
                 config.getCredentialFormat(),
-                config.getCredentialType(),
-                config.getContext()
-        )).thenReturn(Optional.of(config));
+                credentialTypes,
+                context
+        )).thenReturn(Optional.of(new io.mosip.certify.entity.CredentialConfig()));
 
         boolean result = LdpVcCredentialConfigValidator.isConfigAlreadyPresent(config, repo);
         assertTrue(result);
@@ -111,16 +117,20 @@ class LdpVcCredentialConfigValidatorTest {
 
     @Test
     void testIsConfigAlreadyPresent_whenNotPresent_returnsFalse() {
-        CredentialConfig config = Mockito.mock(CredentialConfig.class);
+        CredentialConfigurationDTO config = Mockito.mock(CredentialConfigurationDTO.class);
         CredentialConfigRepository repo = Mockito.mock(CredentialConfigRepository.class);
+        Mockito.when(config.getCredentialFormat()).thenReturn("format");
+        Mockito.when(config.getCredentialTypes()).thenReturn(List.of("type1", "type2"));
+        Mockito.when(config.getContextURLs()).thenReturn(List.of("context1", "context2"));
+        String credentialTypes = String.join(",", config.getCredentialTypes());
+        String context = String.join(",", config.getContextURLs());
         Mockito.when(repo.findByCredentialFormatAndCredentialTypeAndContext(
                 config.getCredentialFormat(),
-                config.getCredentialType(),
-                config.getContext()
+                credentialTypes,
+                context
         )).thenReturn(Optional.empty());
 
         boolean result = LdpVcCredentialConfigValidator.isConfigAlreadyPresent(config, repo);
         assertFalse(result);
     }
 }
-
