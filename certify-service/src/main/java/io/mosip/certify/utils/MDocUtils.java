@@ -8,7 +8,9 @@ package io.mosip.certify.utils;
 import co.nstant.in.cbor.CborEncoder;
 import co.nstant.in.cbor.CborException;
 import co.nstant.in.cbor.model.*;
+
 import java.io.ByteArrayOutputStream;
+
 import io.mosip.kernel.signature.dto.CoseSignRequestDto;
 import io.mosip.kernel.signature.service.CoseSignatureService;
 import lombok.extern.slf4j.Slf4j;
@@ -72,8 +74,7 @@ public class MDocUtils {
                     String validFromValue = (String) validity.get("validFrom");
                     if ("${_validFrom}".equals(validFromValue)) {
                         // Replace with current timestamp in UTC
-                        String currentTime = ZonedDateTime.now(ZoneOffset.UTC)
-                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'"));
+                        String currentTime = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'"));
                         validity.put("validFrom", currentTime);
                     }
                 }
@@ -149,12 +150,8 @@ public class MDocUtils {
         Set<String> forbiddenIdentifiers = Set.of("templateName", "issuer", "issuerURI", "didUrl");
 
         for (Map.Entry<String, Object> param : templateParams.entrySet()) {
-            Set<Integer> digestIDs = existingItems.stream()
-                    .map(item -> (Integer) item.get("digestID"))
-                    .collect(Collectors.toSet());
-            Set<String> existingIdentifiers = existingItems.stream()
-                    .map(item -> (String) item.get("elementIdentifier"))
-                    .collect(Collectors.toSet());
+            Set<Integer> digestIDs = existingItems.stream().map(item -> (Integer) item.get("digestID")).collect(Collectors.toSet());
+            Set<String> existingIdentifiers = existingItems.stream().map(item -> (String) item.get("elementIdentifier")).collect(Collectors.toSet());
             String identifier = param.getKey();
 
             // Skip if field already exists in template or not present in templateParams
@@ -193,9 +190,6 @@ public class MDocUtils {
                 byte[] randomSalt = new byte[24];
                 new SecureRandom().nextBytes(randomSalt);
 
-                // Convert byte array to hex string
-                String randomHex = bytesToHex(randomSalt);
-
                 // Clone element with random salt as hex string
                 Map<String, Object> saltedElement = new HashMap<>(element);
                 saltedElement.put("random", randomSalt);
@@ -209,20 +203,10 @@ public class MDocUtils {
         return saltedNamespaces;
     }
 
-    private static String bytesToHex(byte[] bytes) {
-        StringBuilder result = new StringBuilder();
-        for (byte b : bytes) {
-            result.append(String.format("%02X", b));
-        }
-        return result.toString();
-    }
-
     /**
      * Calculates SHA-256 digests for salted elements
      */
-    public static Map<String, Object> calculateDigests(
-            Map<String, Object> saltedNamespaces,
-            Map<String, Map<Integer, byte[]>> namespaceDigests) throws Exception {
+    public static Map<String, Object> calculateDigests(Map<String, Object> saltedNamespaces, Map<String, Map<Integer, byte[]>> namespaceDigests) throws Exception {
 
         Map<String, Object> taggedNamespaces = new HashMap<>();
 
@@ -401,8 +385,7 @@ public class MDocUtils {
         int len = hexStr.length();
         byte[] data = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(hexStr.charAt(i), 16) << 4)
-                    + Character.digit(hexStr.charAt(i + 1), 16));
+            data[i / 2] = (byte) ((Character.digit(hexStr.charAt(i), 16) << 4) + Character.digit(hexStr.charAt(i + 1), 16));
         }
         return data;
     }
@@ -410,10 +393,7 @@ public class MDocUtils {
     /**
      * Creates the Mobile Security Object (MSO) structure
      */
-    public static Map<String, Object> createMobileSecurityObject(
-            Map<String, Object> mDocJson,
-            Map<String, Map<Integer, byte[]>> namespaceDigests,
-            String appID, String refID) throws Exception {
+    public static Map<String, Object> createMobileSecurityObject(Map<String, Object> mDocJson, Map<String, Map<Integer, byte[]>> namespaceDigests, String appID, String refID) throws Exception {
 
         Map<String, Object> mso = new HashMap<>();
         mso.put("version", "1.0");
@@ -438,8 +418,7 @@ public class MDocUtils {
 
         // Create validity info with current timestamp
         Map<String, Object> validityInfo = new HashMap<>();
-        String currentTime = ZonedDateTime.now(ZoneOffset.UTC)
-                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"));
+        String currentTime = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"));
 
         if (mDocJson.containsKey("validityInfo")) {
             Map<String, Object> originalValidity = (Map<String, Object>) mDocJson.get("validityInfo");
@@ -480,22 +459,17 @@ public class MDocUtils {
     /**
      * Signs the MSO using COSE_Sign1 structure
      */
-    public static byte[] signMSO(Map<String, Object> mso, String appID, String refID,
-                                 String signAlgorithm, DIDDocumentUtil didDocumentUtil, CoseSignatureService coseSignatureService) throws Exception {
+    public static byte[] signMSO(Map<String, Object> mso, String appID, String refID, String signAlgorithm, DIDDocumentUtil didDocumentUtil, CoseSignatureService coseSignatureService) throws Exception {
 
         try {
             log.info("Starting COSE signing for MSO with algorithm: {}", signAlgorithm);
 
             byte[] msoPayload = encodeToCBOR(mso);
-            String msoJsonPayload = objectMapper.writeValueAsString(mso);
-            // log.debug("MSO payload encoded to CBOR, size: {} bytes", msoJsonPayload);
             log.debug("MSO payload encoded to CBOR, size: {} bytes", msoPayload.length);
 
             CoseSignRequestDto signRequest = new CoseSignRequestDto();
 
-            // Set the payload as base64url encoded
             String base64UrlPayload = Base64.getUrlEncoder().withoutPadding().encodeToString(msoPayload);
-            // String base64UrlPayload = Base64.getUrlEncoder().withoutPadding().encodeToString(msoJsonPayload.getBytes(StandardCharsets.UTF_8));
             signRequest.setPayload(base64UrlPayload);
             signRequest.setApplicationId(appID);
             signRequest.setReferenceId(refID);
@@ -533,16 +507,10 @@ public class MDocUtils {
     /**
      * Creates the final IssuerSigned structure combining namespaces and issuerAuth
      */
-    public static Map<String, Object> createIssuerSignedStructure(
-            Map<String, Object> processedNamespaces,
-            byte[] signedMSO) {
+    public static Map<String, Object> createIssuerSignedStructure(Map<String, Object> processedNamespaces, byte[] signedMSO) {
 
         Map<String, Object> issuerSigned = new HashMap<>();
-
-        // Add the processed namespaces (already wrapped with Tag 24)
         issuerSigned.put("nameSpaces", processedNamespaces);
-
-        // Add the signed MSO as issuerAuth
         issuerSigned.put("issuerAuth", signedMSO);
 
         log.info("Created IssuerSigned structure with {} namespaces", processedNamespaces.size());

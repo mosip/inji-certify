@@ -12,7 +12,6 @@ import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.utils.MDocUtils;
 import io.mosip.kernel.signature.service.CoseSignatureService;
-import io.mosip.kernel.signature.service.SignatureServicev2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import io.mosip.certify.utils.DIDDocumentUtil;
@@ -31,9 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class MDocCredential extends Credential {
-
-    @Autowired
-    SignatureServicev2 signatureService;
 
     @Autowired
     CoseSignatureService coseSignatureService;
@@ -73,8 +69,7 @@ public class MDocCredential extends Credential {
     }
 
     @Override
-    public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm,
-                                String appID, String refID, String didUrl, String signatureCryptoSuite) {
+    public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm, String appID, String refID, String didUrl, String signatureCryptoSuite) {
         try {
             log.info("Starting mDoc proof generation for appID: {}, refID: {}", appID, refID);
 
@@ -84,30 +79,19 @@ public class MDocCredential extends Credential {
             Map<String, Object> mDocJson = objectMapper.readValue(vcToSign, Map.class);
             log.info("Parsed mDoc JSON: {}", mDocJson);
 
-            // Step 1: Generate random salts
             Map<String, Object> saltedNamespaces = MDocUtils.addRandomSalts(mDocJson);
-
-            // Step 2: Calculate digests
             Map<String, Map<Integer, byte[]>> namespaceDigests = new HashMap<>();
             Map<String, Object> taggedNamespaces = MDocUtils.calculateDigests(saltedNamespaces, namespaceDigests);
 
-            // Step 3: Create Mobile Security Object (MSO)
+            // Create Mobile Security Object (MSO)
             Map<String, Object> mso = MDocUtils.createMobileSecurityObject(mDocJson, namespaceDigests, appID, refID);
             log.info("Created MSO: {}", mso);
 
-            // Step 4: Sign MSO
             byte[] signedMSO = MDocUtils.signMSO(mso, appID, refID, signAlgorithm, didDocumentUtil, coseSignatureService);
-
-            // Step 5: Create final IssuerSigned structure
             Map<String, Object> issuerSigned = MDocUtils.createIssuerSignedStructure(taggedNamespaces, signedMSO);
-
-            // Step 7: Encode entire structure to CBOR
             byte[] cborIssuerSigned = MDocUtils.encodeToCBOR(issuerSigned);
-
-            // Step 8: Base64url encode for transport
             String base64UrlCredential = Base64.getUrlEncoder().withoutPadding().encodeToString(cborIssuerSigned);
 
-            // Step 9: Set result
             vcResult.setCredential(base64UrlCredential);
             vcResult.setFormat(Constants.MSO_MDOC_FORMAT);
 
