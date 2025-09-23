@@ -21,7 +21,6 @@ public class IarConstants {
 
     // OAuth 2.0 Response Types
     public static final String RESPONSE_TYPE_CODE = "code";
-    public static final String RESPONSE_TYPE_VP_TOKEN = "vp_token";
 
     // PKCE Code Challenge Methods
     public static final String CODE_CHALLENGE_METHOD_S256 = "S256";
@@ -30,22 +29,12 @@ public class IarConstants {
     // OpenID4VP Response Modes
     public static final String RESPONSE_MODE_IAR_POST = "iar-post";
     public static final String RESPONSE_MODE_IAR_POST_JWT = "iar-post.jwt";
-    public static final String RESPONSE_MODE_DIRECT_POST = "direct_post";
-    public static final String RESPONSE_MODE_DIRECT_POST_JWT = "direct_post.jwt";
 
     // Interaction Types
     public static final String INTERACTION_TYPE_OPENID4VP = "openid4vp_presentation";
     public static final String INTERACTION_TYPE_REDIRECT_TO_WEB = "redirect_to_web";
 
-    // Default Presentation Definition values
-    public static final String DEFAULT_PRESENTATION_ID = "employment-check";
-    public static final String DEFAULT_INPUT_DESCRIPTOR_IDENTITY_ID = "identity";
-    public static final String DEFAULT_INPUT_DESCRIPTOR_CONTRACT_ID = "contract";
-
-    // JSON Path expressions for common fields
-    public static final String JSON_PATH_GIVEN_NAME = "$.credentialSubject.given_name";
-    public static final String JSON_PATH_FAMILY_NAME = "$.credentialSubject.family_name";
-    public static final String JSON_PATH_CONTRACT_ID = "$.credentialSubject.contract_id";
+    // (Removed unused default presentation and JSONPath constants)
 
     // Session and ID prefixes
     public static final String AUTH_SESSION_PREFIX = "session-";
@@ -64,5 +53,5 @@ public class IarConstants {
     public static final String INVALID_CLIENT = "invalid_client";
     public static final String INTERACTION_REQUIRED = "interaction_required";
     public static final String INVALID_AUTH_SESSION = "invalid_auth_session";
-    public static final String RESPONSE_URI = null;
+    // (Removed unused RESPONSE_URI placeholder)
 }
