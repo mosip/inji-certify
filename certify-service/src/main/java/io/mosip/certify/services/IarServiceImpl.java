@@ -73,35 +73,19 @@ public class IarServiceImpl implements IarService {
     @Value("${mosip.certify.iar.require-interaction:true}")
     private boolean requireInteractionByDefault;
 
-    @Value("${mosip.certify.verify.service.base-url:http://localhost:8080}")
+    @Value("${mosip.certify.verify.service.base-url}")
     private String verifyServiceBaseUrl;
 
-    @Value("${mosip.certify.verify.service.vp-request-endpoint:/v1/verify/vp-request}")
+    @Value("${mosip.certify.verify.service.vp-request-endpoint}")
     private String verifyServiceVpRequestEndpoint;
 
-    @Value("${mosip.certify.verify.service.vp-submission-endpoint:/v1/verify/vp-submission/direct-post}")
+    @Value("${mosip.certify.verify.service.vp-submission-endpoint}")
     private String verifyServiceVpSubmissionEndpoint;
 
-    @Value("${mosip.certify.verify.service.vp-result-endpoint:/v1/verify/vp-result}")
+    @Value("${mosip.certify.verify.service.vp-result-endpoint}")
     private String verifyServiceVpResultEndpoint;
 
-    @Value("${mosip.certify.iar.presentation.default-id:employment-check}")
-    private String defaultPresentationId;
-
-    @Value("${mosip.certify.iar.presentation.identity-descriptor-id:identity}")
-    private String identityDescriptorId;
-
-    @Value("${mosip.certify.iar.presentation.contract-descriptor-id:contract}")
-    private String contractDescriptorId;
-
-    @Value("${mosip.certify.iar.presentation.fields.given-name:$.credentialSubject.given_name}")
-    private String givenNamePath;
-
-    @Value("${mosip.certify.iar.presentation.fields.family-name:$.credentialSubject.family_name}")
-    private String familyNamePath;
-
-    @Value("${mosip.certify.iar.presentation.fields.contract-id:$.credentialSubject.contract_id}")
-    private String contractIdPath;
+    // Removed unused presentation-related configuration properties
 
     @Value("${mosip.certify.iar.openid4vp.response-type:vp_token}")
     private String openid4vpResponseType;
@@ -386,12 +370,20 @@ public class IarServiceImpl implements IarService {
             authDetails.getResponseType() : openid4vpResponseType
         );
         
-        // Map direct-post to iar-post and direct-post.jwt to iar-post.jwt as per OpenID4VCI spec
+        // Map direct-post/direct_post to iar-post and direct-post.jwt/direct_post.jwt as per OpenID4VCI spec
         String responseMode = authDetails.getResponseMode();
-        if (directPostResponseMode.equals(responseMode)) {
-            responseMode = iarPostResponseMode;
-        } else if (directPostJwtResponseMode.equals(responseMode)) {
-            responseMode = iarPostJwtResponseMode;
+        if (StringUtils.hasText(responseMode)) {
+            String normalizedIncoming = responseMode.replace('_', '-');
+            String normalizedDirect = directPostResponseMode != null ? directPostResponseMode.replace('_', '-') : "direct-post";
+            String normalizedDirectJwt = directPostJwtResponseMode != null ? directPostJwtResponseMode.replace('_', '-') : "direct-post.jwt";
+
+            if (normalizedIncoming.equalsIgnoreCase(normalizedDirect)) {
+                responseMode = iarPostResponseMode;
+            } else if (normalizedIncoming.equalsIgnoreCase(normalizedDirectJwt)) {
+                responseMode = iarPostJwtResponseMode;
+            } else {
+                responseMode = normalizedIncoming;
+            }
         }
         
         openId4VpRequest.setResponseMode(
@@ -401,11 +393,8 @@ public class IarServiceImpl implements IarService {
         
         openId4VpRequest.setClientId(iarRequest.getClientId());
         
-        // Use response_uri from verify service
-        openId4VpRequest.setResponseUri(
-            StringUtils.hasText(authDetails.getResponseUri()) ? 
-            authDetails.getResponseUri() : openid4vpResponseUri
-        );
+        // Force response_uri to issuer's IAR endpoint for presentation during issuance
+        openId4VpRequest.setResponseUri(openid4vpResponseUri);
 
         // Use nonce from verify service
         openId4VpRequest.setNonce(authDetails.getNonce());
@@ -457,7 +446,7 @@ public class IarServiceImpl implements IarService {
                 String authorizationCode = generateAndStoreAuthorizationCode(presentationRequest.getAuthSession());
                 response.setStatus(IarConstants.STATUS_OK);
                 response.setAuthorizationCode(authorizationCode);
-                log.info("🎯 AUTHORIZATION CODE GENERATED after successful VP cryptographic verification for auth_session: {}, request_id: {}", 
+                log.info("Authorization code generated after successful VP cryptographic verification for auth_session: {}, request_id: {}", 
                          presentationRequest.getAuthSession(), session.getRequestId());
             } else {
                 // Step 18: ACTUAL CRYPTOGRAPHIC VERIFICATION FAILED
@@ -466,7 +455,7 @@ public class IarServiceImpl implements IarService {
                                  verificationResponse.getError() : IarConstants.INVALID_REQUEST);
                 response.setErrorDescription(verificationResponse.getErrorDescription() != null ?
                                            verificationResponse.getErrorDescription() : "VP cryptographic verification failed");
-                log.warn("🚨 AUTHORIZATION DENIED - VP cryptographic verification failed for auth_session: {}, request_id: {}, error: {}", 
+                log.warn("Authorization denied - VP cryptographic verification failed for auth_session: {}, request_id: {}, error: {}", 
                          presentationRequest.getAuthSession(), session.getRequestId(), 
                          verificationResponse.getError());
             }
@@ -643,7 +632,7 @@ public class IarServiceImpl implements IarService {
                         // ACTUAL VERIFICATION SUCCESSFUL
                         response.setStatus("ok");
                         response.setVerificationDetails(verificationResult);
-                        log.info("🎯 VP CRYPTOGRAPHIC VERIFICATION SUCCESSFUL for request_id: {}", requestId);
+                        log.info("VP cryptographic verification successful for request_id: {}", requestId);
                         
                     } else {
                         // ACTUAL VERIFICATION FAILED
@@ -651,7 +640,7 @@ public class IarServiceImpl implements IarService {
                         response.setError("verification_failed");
                         response.setErrorDescription("VP cryptographic verification failed: " + verificationResult.get("errorDescription"));
                         response.setVerificationDetails(verificationResult);
-                        log.warn("🚨 VP CRYPTOGRAPHIC VERIFICATION FAILED for request_id: {}, status: {}", requestId, status);
+                        log.warn("VP cryptographic verification failed for request_id: {}, status: {}", requestId, status);
                     }
                 } else {
                     response.setStatus("error");

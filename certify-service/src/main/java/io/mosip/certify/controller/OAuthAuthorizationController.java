@@ -56,36 +56,12 @@ public class OAuthAuthorizationController {
     
     @PostMapping(value = "/iar",
                  consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-                 produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> processIarRequest(@RequestParam Map<String, String> params)
-            throws CertifyException {
-        log.info("Processing IAR request with parameters: {}", params.keySet());
-
-        // Determine which type of request this is based on parameters
-        if (params.containsKey("auth_session") && params.containsKey("openid4vp_presentation")) {
-            // Step 13-18: Handle VP presentation response
-            return processVpPresentationResponse(params);
-        } else {
-            // Step 5-9: Handle initial IAR request
-            return processInitialIarRequest(params);
-        }
-    }
-
-    /**
-     * Process initial IAR request (Steps 5-9)
-     *
-     * @param params Form parameters containing response_type, client_id, etc.
-     * @return ResponseEntity with IarResponse containing status, auth_session, and openid4vp_request
-     * @throws CertifyException if request processing fails
-     */
-    private ResponseEntity<?> processInitialIarRequest(Map<String, String> params)
+                 produces = MediaType.APPLICATION_JSON_VALUE,
+                 params = {"!auth_session", "!openid4vp_presentation"})
+    public ResponseEntity<?> processInitialIarRequest(@RequestParam Map<String, String> params)
             throws CertifyException {
         log.info("Processing initial IAR request for client_id: {}", params.get("client_id"));
-        log.debug("IAR Request details - response_type: {}, code_challenge_method: {}, interaction_types: {}",
-                  params.get("response_type"), params.get("code_challenge_method"),
-                  params.get("interaction_types_supported"));
 
-        // Create IarRequest from params
         IarRequest iarRequest = new IarRequest();
         iarRequest.setResponseType(params.get("response_type"));
         iarRequest.setClientId(params.get("client_id"));
@@ -96,71 +72,27 @@ public class OAuthAuthorizationController {
         iarRequest.setRedirectToWeb(params.get("redirect_to_web"));
         iarRequest.setScope(params.get("scope"));
 
-        try {
-            // Validate the IAR request
-            iarService.validateIarRequest(iarRequest);
-
-            // Process the authorization request
-            IarResponse response = iarService.processAuthorizationRequest(iarRequest);
-
-            log.info("IAR processed successfully - status: {}, auth_session: {}",
-                     response.getStatus(), response.getAuthSession());
-
-            return ResponseEntity.ok(response);
-
-        } catch (CertifyException e) {
-            log.error("Failed to process IAR for client_id: {}, error: {}",
-                      params.get("client_id"), e.getMessage(), e);
-            throw e;
-        } catch (Exception e) {
-            log.error("Unexpected error processing IAR for client_id: {}",
-                      params.get("client_id"), e);
-            throw new CertifyException(IarConstants.INVALID_REQUEST, "IAR processing failed", e);
-        }
+        IarResponse response = iarService.processAuthorizationRequest(iarRequest);
+        return ResponseEntity.ok(response);
     }
 
-    /**
-     * Process VP presentation response (Steps 13-18)
-     *
-     * @param params Form parameters containing auth_session and openid4vp_presentation
-     * @return ResponseEntity with IarPresentationResponse containing status and authorization_code
-     * @throws CertifyException if VP processing fails
-     */
-    private ResponseEntity<?> processVpPresentationResponse(Map<String, String> params)
+    @PostMapping(value = "/iar",
+                 consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+                 produces = MediaType.APPLICATION_JSON_VALUE,
+                 params = {"auth_session", "openid4vp_presentation"})
+    public ResponseEntity<?> processVpPresentationResponse(@RequestParam Map<String, String> params)
             throws CertifyException {
-        String authSession = params.get("auth_session");
-        String presentation = params.get("openid4vp_presentation");
+        log.info("Processing VP presentation response for auth_session: {}", params.get("auth_session"));
 
-        log.info("Processing VP presentation response for auth_session: {}", authSession);
-        log.debug("VP presentation: {}", presentation);
-
-        // Create IarPresentationRequest DTO
         IarPresentationRequest presentationRequest = new IarPresentationRequest();
-        presentationRequest.setAuthSession(authSession);
-        presentationRequest.setOpenid4vpPresentation(presentation);
+        presentationRequest.setAuthSession(params.get("auth_session"));
+        presentationRequest.setOpenid4vpPresentation(params.get("openid4vp_presentation"));
 
-        try {
-            // Process the presentation through service layer
-            IarPresentationResponse response = iarService.processVpPresentationResponse(presentationRequest);
-
-            log.info("VP presentation processed - status: {}", response.getStatus());
-
-            // Return appropriate response based on VP verification result
-            if ("ok".equals(response.getStatus())) {
-                return ResponseEntity.ok(response);
-            } else {
-                return ResponseEntity.badRequest().body(response);
-            }
-
-        } catch (CertifyException e) {
-            log.error("Failed to process VP presentation for auth_session: {}, error: {}",
-                      authSession, e.getMessage(), e);
-            throw e;
-        } catch (Exception e) {
-            log.error("Unexpected error processing VP presentation for auth_session: {}",
-                      authSession, e);
-            throw new CertifyException(IarConstants.INVALID_REQUEST, "VP presentation processing failed", e);
+        IarPresentationResponse response = iarService.processVpPresentationResponse(presentationRequest);
+        if (IarConstants.STATUS_OK.equals(response.getStatus())) {
+            return ResponseEntity.ok(response);
         }
+        return ResponseEntity.badRequest().body(response);
     }
 
     /**
