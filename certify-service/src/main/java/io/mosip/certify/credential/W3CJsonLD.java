@@ -111,7 +111,8 @@ public class W3CJsonLD extends Credential{
         CertificateResponseDTO certificateResponseDTO = didDocumentUtil.getCertificateDataResponseDto(appID, refID);
         String kid = certificateResponseDTO.getKeyId();
         DataIntegrityProofDataIntegritySuite dataIntegrityProofDataIntegritySuite = DataIntegritySuites.DATA_INTEGRITY_SUITE_DATAINTEGRITYPROOF;
-        if (!dataIntegrityProofDataIntegritySuite.findCryptosuitesForJwsAlgorithm(signAlgorithm).contains(signatureCryptoSuite)) {
+        List<String> supportedCryptoSuites = dataIntegrityProofDataIntegritySuite.findCryptosuitesForJwsAlgorithm(signAlgorithm);
+        if (supportedCryptoSuites == null || !supportedCryptoSuites.contains(signatureCryptoSuite)) {
             // legacy signature algos such as Ed25519Signature{2018,2020}
             ProofGenerator proofGenerator = proofGeneratorFactory.getProofGenerator(signatureCryptoSuite)
                     .orElseThrow(() ->
