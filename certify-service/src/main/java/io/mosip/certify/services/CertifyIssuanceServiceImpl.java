@@ -188,7 +188,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
             // Handle format-specific setup
             switch (format) {
-                case "ldp_vc":
+            case "ldp_vc" :
                     vcRequestDto.setContext(credentialRequest.getCredential_definition().getContext());
                     vcRequestDto.setType(credentialRequest.getCredential_definition().getType());
                     vcRequestDto.setCredentialSubject(credentialRequest.getCredential_definition().getCredentialSubject());
@@ -247,7 +247,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             templateParams.put(VCDM2Constants.VALID_UNTIL, expiryTime);
 
             Credential cred = credentialFactory.getCredential(format).orElseThrow(() -> new CertifyException(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT));
-            String unsignedCredential = cred.createCredential(templateParams, templateName);
+                    String unsignedCredential=cred.createCredential(templateParams, templateName);
             if(isLedgerEnabled) {
                 Map<String, Object> indexedAttributes = ledgerUtils.extractIndexedAttributes(jsonObject);
                 String credentialType = LedgerUtils.extractCredentialType(jsonObject);
@@ -265,7 +265,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             jsonObject.remove(VCDM2Constants.CREDENTIAL_STATUS);
             return result;
 
-        } catch (DataProviderExchangeException e) {
+                } catch(DataProviderExchangeException e) {
             throw new CertifyException(e.getErrorCode());
         } catch (JSONException e) {
             log.error(e.getMessage(), e);

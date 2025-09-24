@@ -38,6 +38,9 @@ public class CredentialUtils {
         if(vcRequestDto.getFormat().equals(VCFormats.VC_SD_JWT)) {
             return String.join(Constants.DELIMITER, vcRequestDto.getFormat(), vcRequestDto.getVct());
         }
+        if(vcRequestDto.getFormat().equals(VCFormats.MSO_MDOC)) {
+            return String.join(Constants.DELIMITER, vcRequestDto.getFormat(), vcRequestDto.getDoctype());
+        }
         List<String> c = new ArrayList<>(vcRequestDto.getContext());
         List<String> t = new ArrayList<>(vcRequestDto.getType());
         Collections.sort(c);
