@@ -15,19 +15,24 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * Utility class for mDoc (Mobile Document) specific operations.
  * Provides helper methods for mDoc structure creation and manipulation.
  */
 @Slf4j
+@Component
 public class MDocUtils {
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     /**
      * Process templated JSON to create final mDoc structure
      */
-    public static Map<String, Object> processTemplatedJson(String templatedJSON, Map<String, Object> templateParams) {
+    public Map<String, Object> processTemplatedJson(String templatedJSON, Map<String, Object> templateParams) {
         try {
             JsonNode templateNode = objectMapper.readTree(templatedJSON);
             Map<String, Object> finalMDoc = new HashMap<>();
@@ -50,7 +55,7 @@ public class MDocUtils {
     /**
      * Extract basic fields from template node
      */
-    private static void extractBasicFields(JsonNode templateNode, Map<String, Object> finalMDoc, Map<String, Object> templateParams) {
+    private void extractBasicFields(JsonNode templateNode, Map<String, Object> finalMDoc, Map<String, Object> templateParams) {
         if (templateNode.has("docType")) {
             finalMDoc.put("docType", templateNode.get("docType").asText());
         }
@@ -69,7 +74,7 @@ public class MDocUtils {
     /**
      * Process namespaces from template node
      */
-    private static Map<String, Object> processNamespaces(JsonNode templateNode, Map<String, Object> templateParams) {
+    private Map<String, Object> processNamespaces(JsonNode templateNode, Map<String, Object> templateParams) {
         Map<String, Object> nameSpaces = new HashMap<>();
 
         if (templateNode.has("nameSpaces")) {
@@ -91,7 +96,7 @@ public class MDocUtils {
     /**
      * Process items within a namespace
      */
-    private static List<Map<String, Object>> processNamespaceItems(JsonNode namespaceItems, Map<String, Object> templateParams) {
+    private List<Map<String, Object>> processNamespaceItems(JsonNode namespaceItems, Map<String, Object> templateParams) {
         List<Map<String, Object>> processedItems = new ArrayList<>();
 
         // First, add all items from template
@@ -122,7 +127,7 @@ public class MDocUtils {
     /**
      * Add missing fields from templateParams that are not present in the template
      */
-    private static List<Map<String, Object>> addMissingFields(List<Map<String, Object>> existingItems, Map<String, Object> templateParams) {
+    private List<Map<String, Object>> addMissingFields(List<Map<String, Object>> existingItems, Map<String, Object> templateParams) {
         Set<String> forbiddenIdentifiers = Set.of("templateName", "issuer", "issuerURI");
 
         for (Map.Entry<String, Object> param : templateParams.entrySet()) {
@@ -155,7 +160,7 @@ public class MDocUtils {
     /**
      * Calculate the minimum excludant (mex) for a set of integers
      */
-    public static int calculateMex(Set<Integer> numbers) {
+    public int calculateMex(Set<Integer> numbers) {
         int mex = 0;
         while (numbers.contains(mex)) {
             mex++;
@@ -166,7 +171,7 @@ public class MDocUtils {
     /**
      * Convert JsonNode to appropriate Java object
      */
-    private static Object convertJsonNode(JsonNode node) {
+    private Object convertJsonNode(JsonNode node) {
         if (node.isTextual()) return node.asText();
         if (node.isInt()) return node.asInt();
         if (node.isLong()) return node.asLong();
