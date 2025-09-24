@@ -47,14 +47,8 @@ public class MDocCredential extends Credential {
     public String createCredential(Map<String, Object> templateParams, String templateName) {
         try {
             String templatedJSON = super.createCredential(templateParams, templateName);
-            log.info("Templated JSON: {}", templatedJSON);
-
             Map<String, Object> finalMDoc = mDocUtils.processTemplatedJson(templatedJSON, templateParams);
-
-            // Convert to JSON and return
-            String result = objectMapper.writeValueAsString(finalMDoc);
-            log.info("Final mDoc credential created: {}", result);
-            return result;
+            return objectMapper.writeValueAsString(finalMDoc);
 
         } catch (Exception e) {
             log.error("Error creating mDoc credential: {}", e.getMessage(), e);
