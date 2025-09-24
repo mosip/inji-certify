@@ -167,27 +167,4 @@ public class MDocUtils {
         }
         return mex;
     }
-
-    /**
-     * Convert JsonNode to appropriate Java object
-     */
-    private Object convertJsonNode(JsonNode node) {
-        if (node.isTextual()) return node.asText();
-        if (node.isInt()) return node.asInt();
-        if (node.isLong()) return node.asLong();
-        if (node.isDouble()) return node.asDouble();
-        if (node.isBoolean()) return node.asBoolean();
-        if (node.isArray()) {
-            List<Object> list = new ArrayList<>();
-            node.elements().forEachRemaining(element -> list.add(convertJsonNode(element)));
-            return list;
-        }
-        if (node.isObject()) {
-            Map<String, Object> map = new HashMap<>();
-            node.fields().forEachRemaining(field -> map.put(field.getKey(), convertJsonNode(field.getValue())));
-            return map;
-        }
-        return node.asText(); // fallback
-    }
-
 }
