@@ -8,6 +8,7 @@ package io.mosip.certify.credential;
 
 import java.util.*;
 
+import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.utils.MDocUtils;
@@ -49,21 +50,15 @@ public class MDocCredential extends Credential {
 
     @Override
     public boolean canHandle(String format) {
-        return Constants.MSO_MDOC_FORMAT.equals(format);
+        return VCFormats.MSO_MDOC.equals(format);
     }
 
     @Override
     public String createCredential(Map<String, Object> templateParams, String templateName) {
         try {
             String templatedJSON = super.createCredential(templateParams, templateName);
-            log.info("Templated JSON: {}", templatedJSON);
-
             Map<String, Object> finalMDoc = mDocUtils.processTemplatedJson(templatedJSON, templateParams);
-
-            // Convert to JSON and return
-            String result = objectMapper.writeValueAsString(finalMDoc);
-            log.info("Final mDoc credential created: {}", result);
-            return result;
+            return objectMapper.writeValueAsString(finalMDoc);
 
         } catch (Exception e) {
             log.error("Error creating mDoc credential: {}", e.getMessage(), e);
@@ -96,7 +91,7 @@ public class MDocCredential extends Credential {
             String base64UrlCredential = Base64.getUrlEncoder().withoutPadding().encodeToString(cborIssuerSigned);
 
             vcResult.setCredential(base64UrlCredential);
-            vcResult.setFormat(Constants.MSO_MDOC_FORMAT);
+            vcResult.setFormat(VCFormats.MSO_MDOC);
 
             log.info("mDoc proof generation completed successfully");
             return vcResult;

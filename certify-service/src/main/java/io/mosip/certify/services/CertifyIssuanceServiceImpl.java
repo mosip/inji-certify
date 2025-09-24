@@ -249,7 +249,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
                     // Fetch data from the configured plugin
                     JSONObject jsonObject = dataProviderPlugin.fetchData(rawData);
-                    log.info("Raw jsonObject from data provider: {}", jsonObject);
 
                     // Prepare template parameters
                     Map<String, Object> templateParams = new HashMap<>();
@@ -266,7 +265,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     templateParams.putAll(jsonObject.toMap());
 
                     String unsignedCredential = cred.createCredential(templateParams, templateName);
-                    log.info("Generated unsigned mDOC credential: {}", unsignedCredential);
 
                     return cred.addProof(
                             unsignedCredential,
@@ -277,7 +275,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                             vcFormatter.getDidUrl(templateName),
                             vcFormatter.getSignatureCryptoSuite(templateName)
                     );
-
 
                 } catch (DataProviderExchangeException e) {
                     log.error("Error fetching data from provider for mDOC: ", e);
