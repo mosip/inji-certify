@@ -106,7 +106,6 @@ public class MDocUtils {
                     }
                 });
             }
-
             finalMDoc.put("nameSpaces", nameSpaces);
 
             return finalMDoc;
