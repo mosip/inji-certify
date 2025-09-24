@@ -260,17 +260,11 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     if (!StringUtils.isEmpty(renderTemplateId)) {
                         templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
                     }
-
-                    // Add holder ID for proof binding
                     jsonObject.put("_holderId", holderId);
-
-                    // Get the mDOC credential factory
                     Credential cred = credentialFactory.getCredential(CredentialFormat.VC_MDOC.toString())
                             .orElseThrow(() -> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
-
                     templateParams.putAll(jsonObject.toMap());
 
-                    // Create the unsigned mDOC credential using the formatter
                     String unsignedCredential = cred.createCredential(templateParams, templateName);
                     log.info("Generated unsigned mDOC credential: {}", unsignedCredential);
 
