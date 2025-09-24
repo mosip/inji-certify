@@ -39,4 +39,6 @@ public class Constants {
     public  static final String CONFIRMATION = "cnf";
     public  static final String ISSUER = "iss";
     public static final String TYPE = "type";
+    public static final String DOCTYPE = "doctype";
+    public static final String CLAIMS = "claims";
 }
