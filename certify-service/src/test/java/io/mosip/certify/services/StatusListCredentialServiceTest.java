@@ -262,12 +262,7 @@ public class StatusListCredentialServiceTest {
         when(statusListCredentialRepository.findSuitableStatusList(anyString(), any())).thenReturn(Optional.of(slc));
         when(indexProvider.acquireIndex(anyString(), anyMap())).thenReturn(Optional.of(1L));
         JSONObject json = new JSONObject();
-        CredentialStatusDetail detail = new CredentialStatusDetail();
-        service.addCredentialStatus(json, "revocation", detail);
-        assertEquals("revocation", detail.getStatusPurpose());
-        assertEquals("slid", detail.getStatusListCredentialId());
-        assertEquals(1L, detail.getStatusListIndex().longValue());
-        assertFalse(detail.getStatusValue());
+        service.addCredentialStatus(json, "revocation");
         assertTrue(json.has(VCDM2Constants.CREDENTIAL_STATUS));
     }
 
@@ -303,9 +298,7 @@ public class StatusListCredentialServiceTest {
         when(mockQuery.executeUpdate()).thenReturn(2);
 
         JSONObject json = new JSONObject();
-        CredentialStatusDetail detail = new CredentialStatusDetail();
-        service.addCredentialStatus(json, "revocation", detail);
-        assertEquals("revocation", detail.getStatusPurpose());
+        service.addCredentialStatus(json, "revocation");
         assertTrue(json.has(VCDM2Constants.CREDENTIAL_STATUS));
     }
 
@@ -325,7 +318,7 @@ public class StatusListCredentialServiceTest {
         JSONObject json = new JSONObject();
         CredentialStatusDetail detail = new CredentialStatusDetail();
         try {
-            service.addCredentialStatus(json, "revocation", detail);
+            service.addCredentialStatus(json, "revocation");
             fail("Expected CertifyException");
         } catch (CertifyException ex) {
             // expected

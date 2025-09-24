@@ -496,7 +496,7 @@ public class CertifyIssuanceServiceImplTest {
         assertTrue("Response credential should be JsonLDObject", response.getCredential() instanceof JsonLDObject);
 
         // Assert
-        verify(statusListCredentialService).addCredentialStatus(any(JSONObject.class), eq("revocation"), any());
+        verify(statusListCredentialService).addCredentialStatus(any(JSONObject.class), eq("revocation"));
     }
 
     @Test
@@ -536,7 +536,6 @@ public class CertifyIssuanceServiceImplTest {
         when(vcFormatter.getCredentialStatusPurpose(anyString())).thenReturn(statusPurposeList);
         // Mock ledgerUtils and vcFormatter
         when(ledgerUtils.extractIndexedAttributes(any())).thenReturn(Map.of("attr", "val"));
-        when(vcFormatter.getCredentialId()).thenReturn("cred-id");
         when(vcFormatter.getCredentialStatusPurpose(anyString())).thenReturn(statusPurposeList);
 
         // Corrected declaration of mockVcResultLdp

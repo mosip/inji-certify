@@ -299,7 +299,7 @@ public class StatusListCredentialService {
     }
 
     @Transactional
-    public void addCredentialStatus(JSONObject jsonObject, String statusPurpose, CredentialStatusDetail credentialStatusDetail) throws CertifyException {
+    public void addCredentialStatus(JSONObject jsonObject, String statusPurpose) throws CertifyException {
         log.info("Adding credential status for status list integration");
 
         // Assign next available index using database approach
@@ -325,12 +325,6 @@ public class StatusListCredentialService {
         credentialStatus.put("statusListIndex", String.valueOf(assignedIndex));
         credentialStatus.put("statusListCredential", statusId);
         jsonObject.put(VCDM2Constants.CREDENTIAL_STATUS, credentialStatus);
-
-        credentialStatusDetail.setStatusPurpose(statusPurpose);
-        credentialStatusDetail.setStatusValue(false);
-        credentialStatusDetail.setStatusListCredentialId(statusList.getId());
-        credentialStatusDetail.setStatusListIndex(assignedIndex);
-        credentialStatusDetail.setCreatedTimes(System.currentTimeMillis());
 
         log.info("Successfully added credential status with index {} in status list {}", assignedIndex, statusList.getId());
     }

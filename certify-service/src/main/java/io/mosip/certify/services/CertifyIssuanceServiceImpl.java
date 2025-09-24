@@ -18,10 +18,7 @@ import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
 import io.mosip.certify.api.util.AuditHelper;
 import io.mosip.certify.config.IndexedAttributesConfig;
-import io.mosip.certify.core.constants.Constants;
-import io.mosip.certify.core.constants.ErrorConstants;
-import io.mosip.certify.core.constants.SignatureAlg;
-import io.mosip.certify.core.constants.VCDM2Constants;
+import io.mosip.certify.core.constants.*;
 import io.mosip.certify.core.dto.CredentialMetadata;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
@@ -123,8 +120,11 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Autowired
     private LedgerUtils ledgerUtils;
 
-    @Value("#{${mosip.certify.issuer.config.ledger.enabled:true}}")
+    @Value("#{${mosip.certify.issuer.ledger-enabled:true}}")
     private boolean isLedgerEnabled;
+
+    @Value("${mosip.certify.data-provider-plugin.id-field-prefix-uri:}")
+    String idPrefix;
 
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
@@ -188,7 +188,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             String templateName;
             Map<String, Object> templateParams = new HashMap<>();
             String format = credentialRequest.getFormat();
-            CredentialStatusDetail credentialStatusDetail = null;
 
             // Handle format-specific setup
             switch (format) {
@@ -205,8 +204,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                         if(!isLedgerEnabled) {
                             log.warn("Ledger feature is currently disabled. Since revocation is enabled, please note that searching for VCs to revoke within Certify is not available.");
                         }
-                        credentialStatusDetail = new CredentialStatusDetail();
-                        statusListCredentialService.addCredentialStatus(jsonObject, credentialStatusPurposeList.getFirst(), credentialStatusDetail);
+                        statusListCredentialService.addCredentialStatus(jsonObject, credentialStatusPurposeList.getFirst());
                     }
                     break;
 
@@ -231,13 +229,20 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             }
             jsonObject.put("_holderId", holderId);
             templateParams.putAll(jsonObject.toMap());
+            if(!StringUtils.isEmpty(idPrefix)) {
+                templateParams.put(VCDMConstants.CREDENTIAL_ID, idPrefix + UUID.randomUUID());
+            }
 
             Credential cred = credentialFactory.getCredential(format).orElseThrow(() -> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
             String unsignedCredential = cred.createCredential(templateParams, templateName);
             if(isLedgerEnabled) {
                 Map<String, Object> indexedAttributes = ledgerUtils.extractIndexedAttributes(jsonObject);
                 String credentialType = LedgerUtils.extractCredentialType(jsonObject);
-                String credentialId = vcFormatter.getCredentialId();
+                String credentialId = null;
+                if(templateParams.containsKey(VCDMConstants.CREDENTIAL_ID)) {
+                    credentialId = templateParams.get(VCDMConstants.CREDENTIAL_ID).toString();
+                }
+                CredentialStatusDetail credentialStatusDetail = ledgerUtils.extractCredentialStatusDetails(jsonObject);
                 statusListCredentialService.storeLedgerEntry(credentialId, didUrl, credentialType, credentialStatusDetail, indexedAttributes);
                 log.info("Successfully stored the credential issuance data in ledger with credentialType: {}", credentialType);
             }
