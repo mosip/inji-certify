@@ -40,6 +40,9 @@ public class MDocCredential extends Credential {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private MDocUtils mDocUtils;
+
     public MDocCredential(VCFormatter vcFormatter, SignatureService signatureService) {
         super(vcFormatter, signatureService);
     }
@@ -55,7 +58,7 @@ public class MDocCredential extends Credential {
             String templatedJSON = super.createCredential(templateParams, templateName);
             log.info("Templated JSON: {}", templatedJSON);
 
-            Map<String, Object> finalMDoc = MDocUtils.processTemplatedJson(templatedJSON, templateParams);
+            Map<String, Object> finalMDoc = mDocUtils.processTemplatedJson(templatedJSON, templateParams);
 
             // Convert to JSON and return
             String result = objectMapper.writeValueAsString(finalMDoc);
