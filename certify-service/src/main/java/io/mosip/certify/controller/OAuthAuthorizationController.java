@@ -14,6 +14,7 @@ import io.mosip.certify.core.dto.OAuthTokenRequest;
 import io.mosip.certify.core.dto.OAuthTokenResponse;
 import io.mosip.certify.core.dto.OAuthTokenError;
 import io.mosip.certify.core.dto.VCError;
+import io.mosip.certify.core.dto.UnifiedIarRequest;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.IarService;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 import java.util.Map;
 
 import java.util.Locale;
@@ -43,57 +45,43 @@ public class OAuthAuthorizationController {
     private MessageSource messageSource;
 
     /**
-     * Interactive Authorization Request (IAR) endpoint
+     * Unified Interactive Authorization Request (IAR) endpoint
      * POST /oauth/iar
      * 
-     * Handles authorization requests from wallets to determine if interaction is required
-     * for credential issuance. Returns OpenID4VP presentation requirements if needed.
+     * Handles both initial authorization requests and VP presentation responses.
+     * Determines the request type based on the presence of auth_session and openid4vp_presentation.
      * 
-     * @param iarRequest The authorization request containing client_id, code_challenge, etc.
-     * @return IarResponse containing status, auth_session, and openid4vp_request if interaction required
+     * For initial requests: Returns IarResponse containing status, auth_session, and openid4vp_request if interaction required
+     * For VP presentations: Returns IarPresentationResponse containing authorization code or error
+     * 
+     * @param params Form parameters containing either authorization request fields or VP presentation fields
+     * @return ResponseEntity with IarResponse or IarPresentationResponse
      * @throws CertifyException if request processing fails
      */
-    
     @PostMapping(value = "/iar",
-                 consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-                 produces = MediaType.APPLICATION_JSON_VALUE,
-                 params = {"!auth_session", "!openid4vp_presentation"})
-    public ResponseEntity<?> processInitialIarRequest(@RequestParam Map<String, String> params)
-            throws CertifyException {
-        log.info("Processing initial IAR request for client_id: {}", params.get("client_id"));
+             consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+             produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> handleIarRequest(@Valid @ModelAttribute UnifiedIarRequest unifiedRequest)
+        throws CertifyException {
 
-        IarRequest iarRequest = new IarRequest();
-        iarRequest.setResponseType(params.get("response_type"));
-        iarRequest.setClientId(params.get("client_id"));
-        iarRequest.setCodeChallenge(params.get("code_challenge"));
-        iarRequest.setCodeChallengeMethod(params.get("code_challenge_method"));
-        iarRequest.setRedirectUri(params.get("redirect_uri"));
-        iarRequest.setInteractionTypesSupported(params.get("interaction_types_supported"));
-        iarRequest.setRedirectToWeb(params.get("redirect_to_web"));
-        iarRequest.setScope(params.get("scope"));
+        log.info("Received unified IAR request");
 
-        IarResponse response = iarService.processAuthorizationRequest(iarRequest);
-        return ResponseEntity.ok(response);
-    }
+        Object response = iarService.handleIarRequest(unifiedRequest);
 
-    @PostMapping(value = "/iar",
-                 consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-                 produces = MediaType.APPLICATION_JSON_VALUE,
-                 params = {"auth_session", "openid4vp_presentation"})
-    public ResponseEntity<?> processVpPresentationResponse(@RequestParam Map<String, String> params)
-            throws CertifyException {
-        log.info("Processing VP presentation response for auth_session: {}", params.get("auth_session"));
-
-        IarPresentationRequest presentationRequest = new IarPresentationRequest();
-        presentationRequest.setAuthSession(params.get("auth_session"));
-        presentationRequest.setOpenid4vpPresentation(params.get("openid4vp_presentation"));
-
-        IarPresentationResponse response = iarService.processVpPresentationResponse(presentationRequest);
-        if (IarConstants.STATUS_OK.equals(response.getStatus())) {
+        if (response instanceof IarPresentationResponse presentationResponse) {
+            if (IarConstants.STATUS_OK.equals(presentationResponse.getStatus())) {
+                return ResponseEntity.ok(presentationResponse);
+            }
+            return ResponseEntity.badRequest().body(presentationResponse);
+        } else if (response instanceof IarResponse) {
             return ResponseEntity.ok(response);
+        } else {
+            log.error("Unexpected response type from service: {}",
+                    response != null ? response.getClass().getSimpleName() : "null");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error");
         }
-        return ResponseEntity.badRequest().body(response);
     }
+
 
     /**
      * OAuth Token endpoint (Step 19-20)

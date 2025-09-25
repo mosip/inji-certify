@@ -69,10 +69,6 @@ public class IarServiceImpl implements IarService {
     @Value("${mosip.certify.iar.presentation.default-id:employment-check}")
     private String defaultPresentationDefinitionId;
 
-
-    @Value("${mosip.certify.iar.require-interaction:true}")
-    private boolean requireInteractionByDefault;
-
     @Value("${mosip.certify.verify.service.base-url}")
     private String verifyServiceBaseUrl;
 
@@ -120,8 +116,6 @@ public class IarServiceImpl implements IarService {
     @Value("#{${mosip.certify.iar.scope.mappings:{'employee_id_vc_ldp':'MOSIPVerifiableCredential','manager_badge_vc_ldp':'MOSIPVerifiableCredential'}}}")
     private Map<String, String> scopeToCredentialTypeMappings;
 
-    @Value("#{${mosip.certify.iar.scope.requires-presentation:{'manager_badge_vc_ldp':true,'employee_id_vc_ldp':true,'VisitorBadge':false}}}")
-    private Map<String, Boolean> scopeRequiresPresentationMappings;
 
     @Value("#{${mosip.certify.iar.client-id.patterns:{'insurance':'InsuranceCredential','land':'LandStatementCredential'}}}")
     private Map<String, String> clientIdPatterns;
@@ -138,13 +132,8 @@ public class IarServiceImpl implements IarService {
             // Generate auth session
             String authSession = generateAuthSession();
 
-            // Smart decision based on scope and business logic (OpenID4VCI Section 5.1.2)
-            if (shouldRequireInteractionForScope(iarRequest)) {
-                return generateOpenId4VpRequest(iarRequest, authSession);
-            } else {
-                // Direct authorization without interaction
-                return createDirectAuthorizationResponse(authSession);
-            }
+            // Always require interaction (no direct authorization path)
+            return generateOpenId4VpRequest(iarRequest, authSession);
 
         } catch (CertifyException e) {
             log.error("IAR processing failed for client: {}, scope: {}, error: {}", 
@@ -169,26 +158,8 @@ public class IarServiceImpl implements IarService {
     public void validateIarRequest(IarRequest iarRequest) throws CertifyException {
         log.debug("Validating IAR request for client: {}", iarRequest.getClientId());
 
-        // Validate required fields
-        if (!StringUtils.hasText(iarRequest.getResponseType())) {
-            throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
-        }
-
-        if (!StringUtils.hasText(iarRequest.getClientId())) {
-            throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
-        }
-
-        if (!StringUtils.hasText(iarRequest.getCodeChallenge())) {
-            throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
-        }
-
-        if (!StringUtils.hasText(iarRequest.getCodeChallengeMethod())) {
-            throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
-        }
-
-        if (!StringUtils.hasText(iarRequest.getRedirectUri())) {
-            throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
-        }
+        // Field presence is enforced at controller via Bean Validation on UnifiedIarRequest
+        // Here we keep domain/business validation only.
 
         // Validate response_type
         if (!IarConstants.RESPONSE_TYPE_CODE.equals(iarRequest.getResponseType())) {
@@ -202,7 +173,7 @@ public class IarServiceImpl implements IarService {
             throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
         }
 
-        // Validate scope parameter (OpenID4VCI Section 5.1.2)
+        // Optional scope: warn on unknown scopes but do not fail
         validateScopeParameter(iarRequest);
 
         log.debug("IAR request validation successful for client: {}, scope: {}", 
@@ -228,7 +199,7 @@ public class IarServiceImpl implements IarService {
         boolean hasKnownScope = false;
         
         for (String singleScope : scopes) {
-            if (isKnownScope(singleScope)) {
+            if (scopeToCredentialTypeMappings.containsKey(singleScope)) {
                 hasKnownScope = true;
                 log.debug("Known scope '{}' found for client: {}", singleScope, iarRequest.getClientId());
             } else {
@@ -417,9 +388,6 @@ public class IarServiceImpl implements IarService {
         log.info("Processing VP presentation for auth_session: {}", presentationRequest.getAuthSession());
 
         try {
-            // Validate the presentation request
-            validateIarPresentationRequest(presentationRequest);
-
             // Validate auth_session (step 14)
             if (!isValidAuthSession(presentationRequest.getAuthSession())) {
                 log.warn("Invalid auth_session: {}", presentationRequest.getAuthSession());
@@ -473,22 +441,7 @@ public class IarServiceImpl implements IarService {
         }
     }
 
-    /**
-     * Validates the Verifiable Presentation request
-     */
-    private void validateIarPresentationRequest(IarPresentationRequest presentationRequest) throws CertifyException {
-        log.debug("Validating VP presentation request for auth_session: {}", presentationRequest.getAuthSession());
-
-        if (!StringUtils.hasText(presentationRequest.getAuthSession())) {
-            throw new InvalidRequestException(IarConstants.INVALID_REQUEST);
-        }
-
-        if (!StringUtils.hasText(presentationRequest.getOpenid4vpPresentation())) {
-            throw new InvalidRequestException(IarConstants.INVALID_REQUEST);
-        }
-
-        log.debug("VP presentation request validation successful for auth_session: {}", presentationRequest.getAuthSession());
-    }
+    // Removed duplicate field-presence validation; controller-level bean validation enforces structure
 
     /**
      * Validates auth_session against stored IAR sessions
@@ -735,116 +688,36 @@ public class IarServiceImpl implements IarService {
     
     /**
      * Extract credential type from IAR request
-     * Priority: scope -> client_id patterns -> default
+     * Per OpenID4VCI 5.1.2: interpret each scope value individually; ignore unknown scopes.
+     * No non-normative client_id fallback is applied here.
      */
     private String extractCredentialTypeFromRequest(IarRequest iarRequest) {
         String scope = iarRequest.getScope();
-        String clientId = iarRequest.getClientId();
         
-        // First, try to extract from scope using configuration
+        // Resolve from scopes
         if (StringUtils.hasText(scope)) {
             String[] scopes = scope.trim().split("\\s+");
-            String primaryScope = scopes[0];
-            
-            // Check configured scope mappings
-            if (scopeToCredentialTypeMappings.containsKey(primaryScope)) {
-                String credentialType = scopeToCredentialTypeMappings.get(primaryScope);
-                log.debug("Found configured scope mapping: {} -> {}", primaryScope, credentialType);
-                return credentialType;
-            } else {
-                log.debug("Unknown scope '{}' not in configuration, falling back to client_id extraction", primaryScope);
-            }
-        }
-        
-        // Fall back to client_id pattern matching using configuration
-        if (StringUtils.hasText(clientId)) {
-            for (Map.Entry<String, String> entry : clientIdPatterns.entrySet()) {
-                if (clientId.contains(entry.getKey())) {
-                    log.debug("Found client_id pattern match: {} contains {} -> {}", 
-                             clientId, entry.getKey(), entry.getValue());
-                    return entry.getValue();
+            for (String s : scopes) {
+                if (scopeToCredentialTypeMappings.containsKey(s)) {
+                    String credentialType = scopeToCredentialTypeMappings.get(s);
+                    log.debug("Found configured scope mapping: {} -> {}", s, credentialType);
+                    return credentialType;
+                } else {
+                    log.info("Unknown scope '{}' ignored per OpenID4VCI", s);
                 }
             }
         }
         
-        // No fallbacks in production - explicit configuration required
-        log.error("No credential type could be determined for scope '{}' and client_id '{}' - explicit configuration required", scope, clientId);
+        // Could not resolve
+        log.error("No credential type could be determined from scopes '{}' - explicit configuration required", scope);
         throw new CertifyException(ErrorConstants.INVALID_REQUEST, 
-            "Cannot determine credential type for request - configure proper scope mappings or client_id patterns");
+            "Cannot determine credential type for request - configure proper scope mappings");
     }
     
 
-    /**
-     * Determines if interaction should be required based on scope and business logic
-     * Implements OpenID4VCI Section 5.1.2 scope-based credential request handling
-     */
-    private boolean shouldRequireInteractionForScope(IarRequest iarRequest) {
-        String scope = iarRequest.getScope();
-        
-        if (scope == null || scope.trim().isEmpty()) {
-            log.debug("No scope provided, falling back to default interaction requirement");
-            return requireInteractionByDefault;
-        }
-        
-        // Parse multiple scopes (space-separated as per OAuth 2.0 spec)
-        String[] scopes = scope.trim().split("\\s+");
-        
-        for (String singleScope : scopes) {
-            if (isKnownScope(singleScope)) {
-                // Check if this specific scope requires VP presentation
-                if (scopeRequiresPresentation(singleScope)) {
-                    log.info("Scope '{}' requires VP presentation for client: {}", singleScope, iarRequest.getClientId());
-        return true;
-                }
-            } else {
-                // As per OpenID4VCI spec: "Credential Issuers MUST ignore unknown scope values"
-                log.warn("Unknown scope '{}' ignored for client: {}", singleScope, iarRequest.getClientId());
-            }
-        }
-        
-        log.info("No scopes require VP presentation for client: {}, scope: {}", iarRequest.getClientId(), scope);
-        return false;
-    }
-    
-    /**
-     * Check if a scope value is known/supported by this Credential Issuer
-     * Uses configuration-driven mappings instead of hardcoded values
-     */
-    private boolean isKnownScope(String scope) {
-        // Check if scope is configured in either mappings
-        boolean isInScopeMappings = scopeToCredentialTypeMappings.containsKey(scope);
-        boolean isInPresentationMappings = scopeRequiresPresentationMappings.containsKey(scope);
-        
-        return isInScopeMappings || isInPresentationMappings;
-    }
-    
-    /**
-     * Determine if a specific scope requires VP presentation during issuance
-     * Uses configuration-driven mappings instead of hardcoded values
-     */
-    private boolean scopeRequiresPresentation(String scope) {
-        // Check configured scope presentation requirements
-        if (scopeRequiresPresentationMappings.containsKey(scope)) {
-            boolean requiresPresentation = scopeRequiresPresentationMappings.get(scope);
-            log.debug("Found configured presentation requirement for scope '{}': {}", scope, requiresPresentation);
-            return requiresPresentation;
-        }
-        
-        log.debug("No specific presentation policy configured for scope '{}', using default: {}", 
-                 scope, requireInteractionByDefault);
-        return requireInteractionByDefault;
-    }
+    // Removed legacy interaction policy helpers; interaction is always required now
 
-    /**
-     * Creates direct authorization response when no interaction is needed
-     */
-    private IarResponse createDirectAuthorizationResponse(String authSession) {
-        IarResponse response = new IarResponse();
-        response.setStatus(IarConstants.STATUS_COMPLETE);
-        response.setAuthSession(authSession);
-        // No openid4vp_request needed for direct a     uthorization
-        return response;
-    }
+    // Removed direct authorization path; interaction is always required
 
     @Override
     public OAuthTokenResponse processTokenRequest(OAuthTokenRequest tokenRequest) throws CertifyException {
@@ -973,6 +846,44 @@ public class IarServiceImpl implements IarService {
         String cNonce = IarConstants.NONCE_PREFIX + UUID.randomUUID().toString().substring(0, 16);
         log.debug("Generated c_nonce: {}", cNonce);
         return cNonce;
+    }
+
+    @Override
+    public Object handleIarRequest(UnifiedIarRequest unifiedRequest) throws CertifyException {
+        log.info("Handling unified IAR request");
+
+        boolean hasAuthSession = unifiedRequest.getAuthSession() != null && !unifiedRequest.getAuthSession().trim().isEmpty();
+        boolean hasVp = unifiedRequest.getOpenid4vpPresentation() != null && !unifiedRequest.getOpenid4vpPresentation().trim().isEmpty();
+
+        if (hasAuthSession && hasVp) {
+            log.info("Processing VP presentation response for auth_session: {}", unifiedRequest.getAuthSession());
+            IarPresentationRequest presentationRequest = new IarPresentationRequest();
+            presentationRequest.setAuthSession(unifiedRequest.getAuthSession());
+            presentationRequest.setOpenid4vpPresentation(unifiedRequest.getOpenid4vpPresentation());
+            return processVpPresentationResponse(presentationRequest);
+        }
+
+        // Controller validation guarantees one valid flow; default to initial flow if not presentation
+        if (!hasAuthSession || !hasVp) {
+            log.info("Processing initial authorization request for client_id: {}", unifiedRequest.getClientId());
+            IarRequest iarRequest = new IarRequest();
+            iarRequest.setResponseType(unifiedRequest.getResponseType());
+            iarRequest.setClientId(unifiedRequest.getClientId());
+            iarRequest.setCodeChallenge(unifiedRequest.getCodeChallenge());
+            iarRequest.setCodeChallengeMethod(unifiedRequest.getCodeChallengeMethod());
+            iarRequest.setRedirectUri(unifiedRequest.getRedirectUri());
+            iarRequest.setInteractionTypesSupported(unifiedRequest.getInteractionTypesSupported());
+            iarRequest.setRedirectToWeb(unifiedRequest.getRedirectToWeb());
+            iarRequest.setScope(unifiedRequest.getScope());
+            return processAuthorizationRequest(iarRequest);
+        }
+        // Should not reach here due to controller validation
+        log.error("Invalid unified IAR request - neither initial authorization nor VP presentation response");
+        throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
+    }
+
+    private boolean isNonEmpty(String value) {
+        return value != null && !value.trim().isEmpty();
     }
 
 }

@@ -8,12 +8,12 @@ package io.mosip.certify.util;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,6 +26,9 @@ import java.util.Map;
 public class VpParsingUtil {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Value("${mosip.certify.vp-parsing.auto-detection.enabled:true}")
+    private boolean autoDetectionEnabled;
 
     /**
      * Parse VP presentation data and extract vp_token
@@ -89,12 +92,6 @@ public class VpParsingUtil {
      */
     private String extractVpTokenFromJwt(String jwtPresentation) {
         try {
-            // Check if it's a direct JWT
-            if (jwtPresentation.startsWith("eyJ")) {
-                log.debug("Processing direct JWT vp_token");
-                return jwtPresentation;
-            }
-            
             // Try to parse as JSON containing JWT
             JsonNode jsonNode = objectMapper.readTree(jwtPresentation);
             if (jsonNode.has("response")) {
@@ -140,20 +137,29 @@ public class VpParsingUtil {
 
     /**
      * Auto-detect format and extract vp_token
+     * Uses configurable auto-detection settings
      */
     private String extractVpTokenAuto(String vpPresentation) {
+        if (!autoDetectionEnabled) {
+            log.debug("Auto-detection disabled, returning presentation as-is");
+            return vpPresentation;
+        }
+        
         // Try form data first
         if (vpPresentation.contains("vp_token=") || vpPresentation.contains("\"vp_token\"")) {
+            log.debug("Auto-detected form data format");
             return extractVpTokenFromForm(vpPresentation);
         }
         
-        // Try JWT
-        if (vpPresentation.startsWith("eyJ") || vpPresentation.contains("response=")) {
+        // Try JWT-like formats next (no validation here, just extraction attempts)
+        if (vpPresentation.contains("response=") || vpPresentation.contains("\"response\"")) {
+            log.debug("Auto-detected JWT-like format");
             return extractVpTokenFromJwt(vpPresentation);
         }
-        
-        // Return as-is if no specific format detected
-        return vpPresentation;
+
+        // As a fallback, attempt JWT extraction; if it doesn't parse as JSON, it will return as-is
+        log.debug("Attempting JWT extraction as fallback");
+        return extractVpTokenFromJwt(vpPresentation);
     }
 
     /**
@@ -161,14 +167,15 @@ public class VpParsingUtil {
      */
     private String extractSubmissionFromJwt(String jwtPresentation, String defaultDefinitionId) {
         try {
-            // For JWT, we typically need to decode and extract submission
+            // Try to parse as JSON containing presentation_submission
             JsonNode jsonNode = objectMapper.readTree(jwtPresentation);
             if (jsonNode.has("presentation_submission")) {
                 return jsonNode.get("presentation_submission").toString();
             }
             
-            log.error("No presentation_submission found in JWT for definition_id: {}", defaultDefinitionId);
-            throw new RuntimeException("No presentation_submission found in JWT presentation");
+            log.warn("No presentation_submission found in JWT for definition_id: {}, generating default", defaultDefinitionId);
+            return generateDefaultPresentationSubmission(defaultDefinitionId);
+            
         } catch (Exception e) {
             log.error("Failed to parse JWT for presentation_submission", e);
             throw new RuntimeException("Invalid JWT format for presentation_submission: " + e.getMessage(), e);
@@ -241,27 +248,28 @@ public class VpParsingUtil {
         return result;
     }
 
-
+    
+    
     /**
-     * Validate if a string is a valid JWT
+     * Generate default presentation submission when not found in the presentation
      */
-    public boolean isValidJwt(String token) {
-        if (!StringUtils.hasText(token)) {
-            return false;
-        }
-        
-        String[] parts = token.split("\\.");
-        if (parts.length != 3) {
-            return false;
-        }
-        
+    private String generateDefaultPresentationSubmission(String defaultDefinitionId) {
         try {
-            // Try to decode header and payload
-            Base64.getUrlDecoder().decode(parts[0]);
-            Base64.getUrlDecoder().decode(parts[1]);
-            return true;
+            Map<String, Object> submission = new HashMap<>();
+            submission.put("id", "default_submission_" + System.currentTimeMillis());
+            submission.put("definition_id", StringUtils.hasText(defaultDefinitionId) ? defaultDefinitionId : "default");
+            
+            Map<String, Object> descriptorMap = new HashMap<>();
+            descriptorMap.put("id", "default_identity");
+            descriptorMap.put("format", "ldp_vp");
+            descriptorMap.put("path", "$.verifiableCredential[0]");
+            
+            submission.put("descriptor_map", new Object[]{descriptorMap});
+            
+            return objectMapper.writeValueAsString(submission);
         } catch (Exception e) {
-            return false;
+            log.error("Failed to generate default presentation submission", e);
+            return "{\"id\":\"default_submission\",\"definition_id\":\"" + defaultDefinitionId + "\",\"descriptor_map\":[{\"id\":\"default_identity\",\"format\":\"ldp_vp\",\"path\":\"$.verifiableCredential[0]\"}]}";
         }
     }
 }
