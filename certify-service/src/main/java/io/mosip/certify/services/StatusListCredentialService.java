@@ -15,6 +15,7 @@ import io.mosip.certify.credential.Credential;
 import io.mosip.certify.credential.CredentialFactory;
 import io.mosip.certify.entity.Ledger;
 import io.mosip.certify.entity.StatusListCredential;
+import io.mosip.certify.entity.attributes.CredentialStatusDetail;
 import io.mosip.certify.repository.LedgerRepository;
 import io.mosip.certify.repository.StatusListAvailableIndicesRepository;
 import io.mosip.certify.repository.StatusListCredentialRepository;
@@ -38,6 +39,8 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.*;
 
+import static io.mosip.certify.utils.LedgerUtils.extractCredentialType;
+
 /**
  * Service class for managing Status List Credentials
  * Responsible for generating, retrieving, and managing status list VCs
@@ -60,9 +63,6 @@ public class StatusListCredentialService {
 
     @Autowired
     private LedgerRepository ledgerRepository;
-
-    @Autowired
-    private IndexedAttributesConfig indexedAttributesConfig;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -317,8 +317,6 @@ public class StatusListCredentialService {
             }
         }
 
-        Map<String, Object> indexedAttributes = extractIndexedAttributes(jsonObject);
-
         JSONObject credentialStatus = new JSONObject();
             String statusId = domainUrl + "/v1/certify/credentials/status-list/" + statusList.getId();
         credentialStatus.put("id", statusId + "#" + assignedIndex);
@@ -328,128 +326,11 @@ public class StatusListCredentialService {
         credentialStatus.put("statusListCredential", statusId);
         jsonObject.put(VCDM2Constants.CREDENTIAL_STATUS, credentialStatus);
 
-        String credentialType = extractCredentialType(jsonObject);
-
-        Map<String, Object> statusDetails = new HashMap<>();
-        statusDetails.put("status_purpose", statusPurpose);
-        statusDetails.put("status_value", false); // Initially not revoked
-        statusDetails.put("status_list_credential_id", statusList.getId());
-        statusDetails.put("status_list_index", assignedIndex);
-        statusDetails.put("cr_dtimes", System.currentTimeMillis());
-
-        String credentialId = null;
-        if(jsonObject.has("credentialId")) {
-            credentialId = jsonObject.getString("credentialId");
-        }
-        storeLedgerEntry(credentialId, didUrl, credentialType, statusDetails, indexedAttributes);
-
-        log.info("Successfully added credential status with index {} in status list {} and stored in ledger", assignedIndex, statusList.getId());
-    }
-
-    private static String extractCredentialType(JSONObject jsonObject) {
-        try {
-            if(jsonObject.has(Constants.TYPE)) {
-                Object typeObj = jsonObject.get(Constants.TYPE);
-                if (typeObj instanceof org.json.JSONArray typeArray) {
-                    List<String> types = new ArrayList<>();
-
-                    // Extract all types from the array
-                    for(int i = 0; i < typeArray.length(); i++) {
-                        String type = typeArray.getString(i);
-                        if(type != null && !type.trim().isEmpty()) {
-                            types.add(type.trim());
-                        }
-                    }
-
-                    if(!types.isEmpty()) {
-                        // Sort the types and join with comma
-                        Collections.sort(types);
-                        return String.join(",", types);
-                    }
-                } else {
-                    // Single type as string
-                    String singleType = typeObj.toString().trim();
-                    if(!singleType.isEmpty()) {
-                        return singleType;
-                    }
-                }
-            }
-            return "VerifiableCredential";
-        } catch (Exception e) {
-            log.warn("Error extracting credential type, using default", e);
-            return "VerifiableCredential";
-        }
-    }
-
-    // Enhanced version with better complex field support
-    public Map<String, Object> extractIndexedAttributes(JSONObject jsonObject) {
-        Configuration jsonPathConfig = Configuration.defaultConfiguration().addOptions(Option.SUPPRESS_EXCEPTIONS);
-        Map<String, Object> indexedAttributes = new HashMap<>();
-
-        if(jsonObject == null) {
-            return indexedAttributes;
-        }
-
-        Map<String, String> indexedMappings = indexedAttributesConfig.getIndexedMappings();
-        if(indexedMappings.isEmpty()) {
-            log.info("No indexed mappings configured, returning empty attributes");
-            return indexedAttributes;
-        }
-        log.info("Indexed Mapping Found: {}", indexedMappings);
-
-        String sourceJsonString = jsonObject.toString();
-        for (Map.Entry<String, String> entry : indexedMappings.entrySet()) {
-            String targetKey = entry.getKey();
-            String pathsConfig = entry.getValue();
-            String[] paths = pathsConfig.split("\\|");
-            Object extractedValue = null;
-
-            for (String jsonPath : paths) {
-                jsonPath = jsonPath.trim();
-                try {
-                    extractedValue = JsonPath.using(jsonPathConfig).parse(sourceJsonString).read(jsonPath);
-                    if (extractedValue != null) {
-                        break; // Found a value, no need to check other fallback paths
-                    }
-                } catch (Exception e) {
-                    log.warn("Error extracting value for path '{}' and key '{}': {}", jsonPath, targetKey, e.getMessage());
-                }
-            }
-
-            if (extractedValue != null) {
-                Object processedValue = processExtractedIndexedAttributes(extractedValue);
-                if (processedValue != null) {
-                    indexedAttributes.put(targetKey, processedValue);
-                    log.info("Added processed value '{}' to indexed attributes under key '{}'", processedValue, targetKey);
-                }
-            } else {
-                log.info("No value extracted for key '{}'; skipping indexing.", targetKey);
-            }
-        }
-        return indexedAttributes;
-    }
-
-    /**
-     * Process extracted values to handle complex types appropriately
-     */
-    private Object processExtractedIndexedAttributes(Object extractedValue) {
-        if(extractedValue == null) {
-            return null;
-        }
-        if (extractedValue instanceof List<?> list) {
-            if (list.isEmpty()) {
-                return null;
-            }
-            return list.size() == 1 ? list.get(0) : extractedValue;
-        } else if (extractedValue instanceof String stringValue) {
-            return stringValue.trim().isEmpty() ? null : stringValue;
-        }
-
-        return extractedValue;
+        log.info("Successfully added credential status with index {} in status list {}", assignedIndex, statusList.getId());
     }
 
     @jakarta.transaction.Transactional
-    public void storeLedgerEntry(String credentialId, String issuerId, String credentialType, Map<String, Object> statusDetails, Map<String, Object> indexedAttributes) {
+    public void storeLedgerEntry(String credentialId, String issuerId, String credentialType, CredentialStatusDetail statusDetails, Map<String, Object> indexedAttributes) {
         try {
             Ledger ledger = new Ledger();
             if(credentialId != null) {
@@ -461,8 +342,10 @@ public class StatusListCredentialService {
             ledger.setIndexedAttributes(indexedAttributes);
 
             // Store status details as array
-            List<Map<String, Object>> statusDetailsList = new ArrayList<>();
-            statusDetailsList.add(statusDetails);
+            List<CredentialStatusDetail> statusDetailsList = new ArrayList<>();
+            if(statusDetails != null) {
+                statusDetailsList.add(statusDetails);
+            }
             ledger.setCredentialStatusDetails(statusDetailsList);
 
             ledgerRepository.save(ledger);

@@ -334,8 +334,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         VelocityContext context = new VelocityContext(finalTemplate);
         engine.evaluate(context, writer, /*logTag */ templateName, vcTemplateString); // use vcTemplateString
         JSONObject jsonObject = new JSONObject(writer.toString());
-        if (StringUtils.isNotEmpty(idPrefix)) {
-            jsonObject.put(VCDMConstants.ID, idPrefix + UUID.randomUUID());
+        if (templateInput.containsKey(VCDMConstants.CREDENTIAL_ID)) {
+            jsonObject.put(VCDMConstants.ID, templateInput.get(VCDMConstants.CREDENTIAL_ID));
         }
         if(templateInput.containsKey(VCDM2Constants.CREDENTIAL_STATUS) && templateName.contains(VCDM2Constants.URL)) {
             jsonObject.put(VCDM2Constants.CREDENTIAL_STATUS, templateInput.get(VCDM2Constants.CREDENTIAL_STATUS));
