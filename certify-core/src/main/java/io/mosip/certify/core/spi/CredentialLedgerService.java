@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface CredentialLedgerService {
     List<CredentialStatusResponse> searchCredentialLedger(CredentialLedgerSearchRequest request);
+    List<CredentialStatusResponse> searchCredentialLedgerV2(CredentialLedgerSearchRequest request);
 }

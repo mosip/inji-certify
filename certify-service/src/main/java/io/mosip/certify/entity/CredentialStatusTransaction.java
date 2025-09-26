@@ -19,7 +19,7 @@ public class CredentialStatusTransaction {
     @Column(name = "transaction_log_id")
     private Long transactionLogId;
 
-    @Column(name = "credential_id", length = 255, nullable = false)
+    @Column(name = "credential_id", length = 255)
     private String credentialId;
 
     @Column(name = "status_purpose", length = 100)

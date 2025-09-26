@@ -1,5 +1,6 @@
 package io.mosip.certify.entity;
 
+import io.mosip.certify.entity.attributes.CredentialStatusDetail;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -28,11 +29,11 @@ public class Ledger {
     @Column(name = "issuer_id", length = 255, nullable = false)
     private String issuerId;
 
-    @Column(name = "issue_date", nullable = false)
-    private OffsetDateTime issueDate;
+    @Column(name = "issuance_date", nullable = false)
+    private LocalDateTime issuanceDate;
 
     @Column(name = "expiration_date")
-    private OffsetDateTime expirationDate;
+    private LocalDateTime expirationDate;
 
     @Column(name = "credential_type", length = 100, nullable = false)
     private String credentialType;
@@ -41,9 +42,9 @@ public class Ledger {
     @JdbcTypeCode(SqlTypes.JSON)
     private Map<String, Object> indexedAttributes;
 
-    @Column(name = "credential_status_details", nullable = false)
+    @Column(name = "credential_status_details")
     @JdbcTypeCode(SqlTypes.JSON)
-    private List<Map<String, Object>> credentialStatusDetails;
+    private List<CredentialStatusDetail> credentialStatusDetails;
 
     @Column(name = "cr_dtimes", nullable = false, updatable = false)
     private LocalDateTime createdDtimes;

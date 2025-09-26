@@ -5,6 +5,7 @@ import io.mosip.certify.core.dto.UpdateCredentialStatusRequest;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.entity.CredentialStatusTransaction;
 import io.mosip.certify.entity.Ledger;
+import io.mosip.certify.entity.attributes.CredentialStatusDetail;
 import io.mosip.certify.repository.CredentialStatusTransactionRepository;
 import io.mosip.certify.repository.LedgerRepository;
 import org.junit.Before;
@@ -17,7 +18,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -68,6 +68,14 @@ public class CredentialStatusServiceImplTest {
 
         Ledger ledger = createLedger(credentialId);
 
+        // Add a CredentialStatusDetail to avoid CertifyException
+        CredentialStatusDetail detail = new CredentialStatusDetail();
+        detail.setStatusListCredentialId(statusListCredential);
+        detail.setStatusListIndex(87823L);
+        detail.setStatusPurpose("revocation");
+        detail.setCreatedTimes(System.currentTimeMillis());
+        ledger.getCredentialStatusDetails().add(detail);
+
         // Existing transaction with old values
         CredentialStatusTransaction existingTransaction = new CredentialStatusTransaction();
         existingTransaction.setTransactionLogId(42L);
@@ -79,8 +87,6 @@ public class CredentialStatusServiceImplTest {
 
         // Mocking
         when(ledgerRepository.findByCredentialId(credentialId)).thenReturn(Optional.of(ledger));
-
-        // Simulate repository save just returns the same transaction (with updated fields)
         when(credentialStatusTransactionRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
@@ -95,7 +101,7 @@ public class CredentialStatusServiceImplTest {
         assertEquals(87823, response.getStatusListIndex().longValue());
         assertEquals(statusListCredential, response.getStatusListCredentialUrl());
         assertEquals("VerifiableCredential", response.getCredentialType());
-        assertEquals(ledger.getIssueDate().toLocalDateTime(), response.getIssueDate());
+        assertEquals(ledger.getIssuanceDate(), response.getIssueDate());
         assertNull(response.getExpirationDate());
     }
 
@@ -107,11 +113,20 @@ public class CredentialStatusServiceImplTest {
 
         UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(credentialId, statusListCredential);
         Ledger ledger = createLedger(credentialId);
+
+        // Add a CredentialStatusDetail to the ledger
+        CredentialStatusDetail detail = new CredentialStatusDetail();
+        detail.setStatusListCredentialId(statusListCredential);
+        detail.setStatusListIndex(87823L);
+        detail.setStatusPurpose("revocation");
+        detail.setCreatedTimes(System.currentTimeMillis());
+        ledger.getCredentialStatusDetails().add(detail);
+
         CredentialStatusTransaction savedTransaction = createSavedTransaction(credentialId, statusListCredential);
 
         when(ledgerRepository.findByCredentialId(credentialId)).thenReturn(Optional.of(ledger));
         when(credentialStatusTransactionRepository.save(any(CredentialStatusTransaction.class)))
-            .thenReturn(savedTransaction);
+                .thenReturn(savedTransaction);
 
         CredentialStatusResponse result = credentialStatusService.updateCredentialStatus(request);
 
@@ -156,6 +171,15 @@ public class CredentialStatusServiceImplTest {
         request.getCredentialStatus().setStatusPurpose(null);
 
         Ledger ledger = createLedger(credentialId);
+
+        // Add a CredentialStatusDetail to the ledger
+        CredentialStatusDetail detail = new CredentialStatusDetail();
+        detail.setStatusListCredentialId(statusListCredential);
+        detail.setStatusListIndex(87823L);
+        detail.setStatusPurpose(null);
+        detail.setCreatedTimes(System.currentTimeMillis());
+        ledger.getCredentialStatusDetails().add(detail);
+
         when(ledgerRepository.findByCredentialId(credentialId)).thenReturn(Optional.of(ledger));
         when(credentialStatusTransactionRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -177,7 +201,6 @@ public class CredentialStatusServiceImplTest {
         request.setCredentialId(credentialId);
         request.setCredentialStatus(statusDto);
         request.setStatus(true); // Mark as revoked
-        request.setIndexAllocator("default");
 
         return request;
     }
@@ -198,7 +221,7 @@ public class CredentialStatusServiceImplTest {
         ledger.setId(1L);
         ledger.setCredentialId(credentialId);
         ledger.setIssuerId("did:web:Nandeesh778.github.io:local-test:certify_did");
-        ledger.setIssueDate(OffsetDateTime.parse("2025-06-10T10:23:24Z"));
+        ledger.setIssuanceDate(LocalDateTime.parse("2025-06-11T11:41:30.236"));
         ledger.setExpirationDate(null);
         ledger.setCredentialType("VerifiableCredential");
         ledger.setCredentialStatusDetails(new ArrayList<>());

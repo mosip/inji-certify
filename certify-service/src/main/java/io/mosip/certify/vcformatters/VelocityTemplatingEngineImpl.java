@@ -6,6 +6,7 @@
 package io.mosip.certify.vcformatters;
 
 import java.io.StringWriter;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -68,6 +69,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
 
     @Value("${mosip.certify.data-provider-plugin.id-field-prefix-uri:}")
     String idPrefix;
+
+    String credentialId;
 
     @PostConstruct
     public void initialize() {
@@ -323,19 +326,13 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
                 log.error("Template: " + templateInput.get(Constants.RENDERING_TEMPLATE_ID) + " not available in DB", e);
             }
         }
-        if (!(templateInput.containsKey(VCDM2Constants.VALID_FROM)
-                && templateInput.containsKey(VCDM2Constants.VALID_UNITL))) {
-            String time = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            // hardcoded time
-            String expiryTime = ZonedDateTime.now(ZoneOffset.UTC).plusYears(2).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            finalTemplate.put(VCDM2Constants.VALID_FROM, time);
-            finalTemplate.put(VCDM2Constants.VALID_UNITL, expiryTime);
-        }
+
         VelocityContext context = new VelocityContext(finalTemplate);
         engine.evaluate(context, writer, /*logTag */ templateName, vcTemplateString); // use vcTemplateString
         JSONObject jsonObject = new JSONObject(writer.toString());
         if (StringUtils.isNotEmpty(idPrefix)) {
             jsonObject.put(VCDMConstants.ID, idPrefix + UUID.randomUUID());
+            credentialId = jsonObject.get(VCDMConstants.ID).toString();
         }
         if(templateInput.containsKey(VCDM2Constants.CREDENTIAL_STATUS) && templateName.contains(VCDM2Constants.URL)) {
             jsonObject.put(VCDM2Constants.CREDENTIAL_STATUS, templateInput.get(VCDM2Constants.CREDENTIAL_STATUS));
@@ -348,5 +345,10 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         }
 
         return jsonObject.toString();
+    }
+
+    @Override
+    public String getCredentialId() {
+        return credentialId;
     }
 }
