@@ -7,6 +7,7 @@ import io.mosip.certify.core.spi.CredentialStatusService;
 import io.mosip.certify.entity.CredentialStatusTransaction;
 import io.mosip.certify.entity.Ledger;
 import io.mosip.certify.entity.StatusListCredential;
+import io.mosip.certify.entity.attributes.CredentialStatusDetail;
 import io.mosip.certify.repository.CredentialStatusTransactionRepository;
 import io.mosip.certify.repository.LedgerRepository;
 import io.mosip.certify.repository.StatusListCredentialRepository;
@@ -50,12 +51,13 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
             throw new CertifyException("CredentialStatus details are not present in the issued credential.");
         }
 
+        CredentialStatusDetail credentialStatusDetail = ledger.getCredentialStatusDetails().getFirst();
         CredentialStatusTransaction transaction = new CredentialStatusTransaction();
-        transaction.setCredentialId(request.getCredentialId());
-        transaction.setStatusPurpose(request.getCredentialStatus().getStatusPurpose());
+        transaction.setCredentialId(ledger.getCredentialId());
+        transaction.setStatusPurpose(credentialStatusDetail.getStatusPurpose());
         transaction.setStatusValue(request.getStatus());
-        transaction.setStatusListCredentialId(request.getCredentialStatus().getStatusListCredential());
-        transaction.setStatusListIndex(request.getCredentialStatus().getStatusListIndex());
+        transaction.setStatusListCredentialId(credentialStatusDetail.getStatusListCredentialId());
+        transaction.setStatusListIndex(credentialStatusDetail.getStatusListIndex());
         CredentialStatusTransaction savedTransaction =credentialStatusTransactionRepository.save(transaction);
 
         CredentialStatusResponse dto = new CredentialStatusResponse();
@@ -64,9 +66,9 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
         dto.setCredentialType(ledger.getCredentialType());
         dto.setIssueDate(ledger.getIssuanceDate());
         dto.setExpirationDate(ledger.getExpirationDate() != null ? ledger.getExpirationDate() : null);
-        dto.setStatusListCredentialUrl(request.getCredentialStatus().getStatusListCredential());
-        dto.setStatusListIndex(request.getCredentialStatus().getStatusListIndex());
-        dto.setStatusPurpose(request.getCredentialStatus().getStatusPurpose());
+        dto.setStatusListCredentialUrl(credentialStatusDetail.getStatusListCredentialId());
+        dto.setStatusListIndex(credentialStatusDetail.getStatusListIndex());
+        dto.setStatusPurpose(credentialStatusDetail.getStatusPurpose());
         dto.setStatusTimestamp(savedTransaction.getCreatedDtimes());
         return dto;
     }

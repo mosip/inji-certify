@@ -29,6 +29,9 @@ ALTER TABLE ledger
     ALTER COLUMN issue_date TYPE TIMESTAMPTZ,
     ALTER COLUMN expiration_date TYPE TIMESTAMPTZ;
 
+ALTER TABLE certify.credential_status_transaction
+    ALTER COLUMN credential_id SET NOT NULL;
+
 -- Recreate foreign key to ledger table
 ALTER TABLE certify.credential_status_transaction
     ADD CONSTRAINT fk_credential_status_transaction_ledger
