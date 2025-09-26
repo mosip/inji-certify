@@ -7,6 +7,7 @@ import io.mosip.certify.core.spi.CredentialStatusService;
 import io.mosip.certify.entity.CredentialStatusTransaction;
 import io.mosip.certify.entity.Ledger;
 import io.mosip.certify.entity.StatusListCredential;
+import io.mosip.certify.entity.attributes.CredentialStatusDetail;
 import io.mosip.certify.repository.CredentialStatusTransactionRepository;
 import io.mosip.certify.repository.LedgerRepository;
 import io.mosip.certify.repository.StatusListCredentialRepository;
@@ -34,14 +35,14 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
     @Value("#{${mosip.certify.data-provider-plugin.credential-status.allowed-status-purposes:{}}}")
     private List<String> allowedCredentialStatusPurposes;
 
-    @Value("${mosip.certify.data-provider-plugin.did-url}")
-    private String didUrl;
-
     @Override
     public CredentialStatusResponse updateCredentialStatus(UpdateCredentialStatusRequest request) {
 
         if (request.getCredentialStatus().getStatusPurpose() != null && !allowedCredentialStatusPurposes.contains(request.getCredentialStatus().getStatusPurpose())) {
             throw new CertifyException("Invalid credential status purpose. Allowed values are: " + allowedCredentialStatusPurposes);
+        }
+        if(request.getCredentialId() == null || request.getCredentialId().isEmpty()) {
+            throw new CertifyException("Credential ID is mandatory for updating credential status record.");
         }
         Ledger ledger = ledgerRepository.findByCredentialId(request.getCredentialId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Credential not found: " + request.getCredentialId()));
@@ -50,12 +51,13 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
             throw new CertifyException("CredentialStatus details are not present in the issued credential.");
         }
 
+        CredentialStatusDetail credentialStatusDetail = ledger.getCredentialStatusDetails().getFirst();
         CredentialStatusTransaction transaction = new CredentialStatusTransaction();
-        transaction.setCredentialId(request.getCredentialId());
-        transaction.setStatusPurpose(request.getCredentialStatus().getStatusPurpose());
+        transaction.setCredentialId(ledger.getCredentialId());
+        transaction.setStatusPurpose(credentialStatusDetail.getStatusPurpose());
         transaction.setStatusValue(request.getStatus());
-        transaction.setStatusListCredentialId(request.getCredentialStatus().getStatusListCredential());
-        transaction.setStatusListIndex(request.getCredentialStatus().getStatusListIndex());
+        transaction.setStatusListCredentialId(credentialStatusDetail.getStatusListCredentialId());
+        transaction.setStatusListIndex(credentialStatusDetail.getStatusListIndex());
         CredentialStatusTransaction savedTransaction =credentialStatusTransactionRepository.save(transaction);
 
         CredentialStatusResponse dto = new CredentialStatusResponse();
@@ -64,9 +66,9 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
         dto.setCredentialType(ledger.getCredentialType());
         dto.setIssueDate(ledger.getIssuanceDate());
         dto.setExpirationDate(ledger.getExpirationDate() != null ? ledger.getExpirationDate() : null);
-        dto.setStatusListCredentialUrl(request.getCredentialStatus().getStatusListCredential());
-        dto.setStatusListIndex(request.getCredentialStatus().getStatusListIndex());
-        dto.setStatusPurpose(request.getCredentialStatus().getStatusPurpose());
+        dto.setStatusListCredentialUrl(credentialStatusDetail.getStatusListCredentialId());
+        dto.setStatusListIndex(credentialStatusDetail.getStatusListIndex());
+        dto.setStatusPurpose(credentialStatusDetail.getStatusPurpose());
         dto.setStatusTimestamp(savedTransaction.getCreatedDtimes());
         return dto;
     }
@@ -82,11 +84,7 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "StatusListCredential not found with id: " + statusListCredentialId));
 
         CredentialStatusTransaction transaction = new CredentialStatusTransaction();
-        if(request.getCredentialStatus().getStatusPurpose() == null) {
-            transaction.setStatusPurpose(statusListCredential.getStatusPurpose());
-        } else {
-            transaction.setStatusPurpose(request.getCredentialStatus().getStatusPurpose());
-        }
+        transaction.setStatusPurpose(statusListCredential.getStatusPurpose());
         transaction.setStatusValue(request.getStatus());
         transaction.setStatusListCredentialId(statusListCredentialId);
         transaction.setStatusListIndex(statusListIndex);

@@ -6,7 +6,6 @@
 package io.mosip.certify.vcformatters;
 
 import java.io.StringWriter;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -324,7 +323,6 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
                 log.error("Template: " + templateInput.get(Constants.RENDERING_TEMPLATE_ID) + " not available in DB", e);
             }
         }
-
         VelocityContext context = new VelocityContext(finalTemplate);
         engine.evaluate(context, writer, /*logTag */ templateName, vcTemplateString); // use vcTemplateString
         JSONObject jsonObject = new JSONObject(writer.toString());

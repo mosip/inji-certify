@@ -120,6 +120,7 @@ public class CertifyIssuanceServiceImplTest {
         ReflectionTestUtils.setField(issuanceService, "didUrl", "https://test.issuer.com");
         ReflectionTestUtils.setField(issuanceService, "ledgerUtils", ledgerUtils);
         ReflectionTestUtils.setField(issuanceService, "statusListCredentialService", statusListCredentialService);
+        ReflectionTestUtils.setField(issuanceService, "defaultExpiryDuration", "P730D");
 
         when(parsedAccessToken.getAccessTokenHash()).thenReturn(TEST_ACCESS_TOKEN_HASH);
 
@@ -536,7 +537,6 @@ public class CertifyIssuanceServiceImplTest {
         when(vcFormatter.getCredentialStatusPurpose(anyString())).thenReturn(statusPurposeList);
         // Mock ledgerUtils and vcFormatter
         when(ledgerUtils.extractIndexedAttributes(any())).thenReturn(Map.of("attr", "val"));
-        when(vcFormatter.getCredentialId()).thenReturn("cred-id");
         when(vcFormatter.getCredentialStatusPurpose(anyString())).thenReturn(statusPurposeList);
 
         // Corrected declaration of mockVcResultLdp

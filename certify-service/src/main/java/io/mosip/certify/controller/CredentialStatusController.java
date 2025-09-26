@@ -58,7 +58,7 @@ public class CredentialStatusController {
         return ResponseEntity.ok(result);
     }
 
-    @PostMapping("/status/v2")
+    @PostMapping("/v2/status")
     public ResponseEntity<CredentialStatusResponse> updateCredentialV2(
             @Valid @RequestBody UpdateCredentialStatusRequest updateCredentialStatusRequest) {
         CredentialStatusResponse result = credentialStatusService.updateCredentialStatusV2(updateCredentialStatusRequest);

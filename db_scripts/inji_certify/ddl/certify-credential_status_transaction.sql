@@ -14,6 +14,7 @@
 -- Create credential_status_transaction table
 CREATE TABLE IF NOT EXISTS credential_status_transaction (
     transaction_log_id SERIAL PRIMARY KEY,        -- Unique ID for this transaction log entry
+    credential_id VARCHAR(255), -- The ID of the credential this transaction pertains to (should exist in ledger.credential_id)
     status_purpose VARCHAR(100),                  -- The purpose of this status update
     status_value boolean,                         -- The status value (true/false)
     status_list_credential_id VARCHAR(255),       -- The ID of the status list credential involved, if any
@@ -25,6 +26,7 @@ CREATE TABLE IF NOT EXISTS credential_status_transaction (
 -- Add comments for documentation
 COMMENT ON TABLE credential_status_transaction IS 'Transaction log for credential status changes and updates.';
 COMMENT ON COLUMN credential_status_transaction.transaction_log_id IS 'Serial primary key for the transaction log entry.';
+COMMENT ON COLUMN credential_status_transaction.credential_id IS 'The ID of the credential this transaction pertains to (references ledger.credential_id).';
 COMMENT ON COLUMN credential_status_transaction.status_purpose IS 'The purpose of this status update (e.g., revocation, suspension).';
 COMMENT ON COLUMN credential_status_transaction.status_value IS 'The status value (true for revoked/suspended, false for active).';
 COMMENT ON COLUMN credential_status_transaction.status_list_credential_id IS 'The ID of the status list credential involved, if any.';
@@ -33,6 +35,7 @@ COMMENT ON COLUMN credential_status_transaction.cr_dtimes IS 'Timestamp when thi
 COMMENT ON COLUMN credential_status_transaction.upd_dtimes IS 'Timestamp when this transaction was last updated.';
 
 -- Create indexes for credential_status_transaction
+CREATE INDEX IF NOT EXISTS idx_cst_credential_id ON credential_status_transaction(credential_id);
 CREATE INDEX IF NOT EXISTS idx_cst_status_purpose ON credential_status_transaction(status_purpose);
 CREATE INDEX IF NOT EXISTS idx_cst_status_list_credential_id ON credential_status_transaction(status_list_credential_id);
 CREATE INDEX IF NOT EXISTS idx_cst_status_list_index ON credential_status_transaction(status_list_index);

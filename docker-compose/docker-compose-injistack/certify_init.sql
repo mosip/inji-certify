@@ -259,6 +259,7 @@ CREATE INDEX IF NOT EXISTS idx_gin_ledger_status_details ON certify.ledger USING
 
 CREATE TABLE IF NOT EXISTS certify.credential_status_transaction (
     transaction_log_id SERIAL PRIMARY KEY,        -- Unique ID for this transaction log entry
+    credential_id VARCHAR(255), -- The ID of the credential this transaction pertains to (should exist in ledger.credential_id)
     status_purpose VARCHAR(100),                  -- The purpose of this status update
     status_value boolean,                         -- The status value (true/false)
     status_list_credential_id VARCHAR(255),       -- The ID of the status list credential involved, if any
@@ -267,6 +268,7 @@ CREATE TABLE IF NOT EXISTS certify.credential_status_transaction (
     upd_dtimes TIMESTAMP                         -- Update timestamp
 );
 
+CREATE INDEX IF NOT EXISTS idx_cst_credential_id ON certify.credential_status_transaction(credential_id);
 CREATE INDEX IF NOT EXISTS idx_cst_status_purpose ON certify.credential_status_transaction(status_purpose);
 CREATE INDEX IF NOT EXISTS idx_cst_status_list_credential_id ON certify.credential_status_transaction(status_list_credential_id);
 CREATE INDEX IF NOT EXISTS idx_cst_status_list_index ON certify.credential_status_transaction(status_list_index);

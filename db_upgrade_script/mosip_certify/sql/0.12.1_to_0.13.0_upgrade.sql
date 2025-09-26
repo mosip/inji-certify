@@ -30,6 +30,9 @@ ALTER TABLE certify.ledger
     ALTER COLUMN issuance_date TYPE TIMESTAMP,
     ALTER COLUMN expiration_date TYPE TIMESTAMP;
 
+ALTER TABLE certify.credential_status_transaction
+    ALTER COLUMN credential_id DROP NOT NULL;
+
 -- Drop foreign key to ledger table
 ALTER TABLE certify.credential_status_transaction
     DROP CONSTRAINT IF EXISTS fk_credential_status_transaction_ledger;

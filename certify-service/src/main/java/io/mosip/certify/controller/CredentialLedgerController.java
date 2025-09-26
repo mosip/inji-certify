@@ -16,13 +16,13 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/ledger-search")
+@RequestMapping()
 public class CredentialLedgerController {
 
     @Autowired
     private CredentialLedgerService credentialLedgerService;
 
-    @PostMapping()
+    @PostMapping("/ledger-search")
     public ResponseEntity<List<CredentialStatusResponse>> searchCredentials(
             @Valid @RequestBody CredentialLedgerSearchRequest request) {
         List<CredentialStatusResponse> result = credentialLedgerService.searchCredentialLedger(request);
@@ -32,7 +32,7 @@ public class CredentialLedgerController {
         return ResponseEntity.ok(result);
     }
 
-    @PostMapping("/v2")
+    @PostMapping("/v2/ledger-search")
     public ResponseEntity<List<CredentialStatusResponse>> searchCredentialsV2(
             @Valid @RequestBody CredentialLedgerSearchRequest request) {
         List<CredentialStatusResponse> result = credentialLedgerService.searchCredentialLedgerV2(request);
