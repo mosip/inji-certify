@@ -6,4 +6,5 @@ public class VCDMConstants {
     public static final String ASSERTION_METHOD = "assertionMethod";
     public static final String PROOF = "proof";
     public static final String ID = "id";
+    public static final String CREDENTIAL_ID = "credentialId";
 }

@@ -28,6 +28,7 @@ import io.mosip.certify.credential.W3CJsonLD;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
+import io.mosip.certify.utils.LedgerUtils;
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 import org.json.JSONObject;
@@ -76,6 +77,10 @@ public class CertifyIssuanceServiceImplTest {
     private KeymanagerService keymanagerService;
     @Mock
     private CredentialConfigurationService credentialConfigurationService;
+    @Mock
+    private LedgerUtils ledgerUtils;
+    @Mock
+    private StatusListCredentialService statusListCredentialService;
 
     @InjectMocks
     private CertifyIssuanceServiceImpl issuanceService;
@@ -113,6 +118,8 @@ public class CertifyIssuanceServiceImplTest {
 
         ReflectionTestUtils.setField(issuanceService, "cNonceExpireSeconds", 300);
         ReflectionTestUtils.setField(issuanceService, "didUrl", "https://test.issuer.com");
+        ReflectionTestUtils.setField(issuanceService, "ledgerUtils", ledgerUtils);
+        ReflectionTestUtils.setField(issuanceService, "statusListCredentialService", statusListCredentialService);
 
         when(parsedAccessToken.getAccessTokenHash()).thenReturn(TEST_ACCESS_TOKEN_HASH);
 
@@ -143,6 +150,15 @@ public class CertifyIssuanceServiceImplTest {
         credDefDtoForLDP.setType(List.of("VerifiableCredential", "TestCredential"));
         supportedDTO_LDP.setCredentialDefinition(credDefDtoForLDP);
         supportedCredsMap.put("test-credential-id-ldp", supportedDTO_LDP);
+
+        CredentialConfigurationSupportedDTO supportedDTO_LDP_DM2_0 = new CredentialConfigurationSupportedDTO();
+        supportedDTO_LDP_DM2_0.setScope(DEFAULT_SCOPE);
+        supportedDTO_LDP_DM2_0.setFormat(DEFAULT_FORMAT_LDP);
+        CredentialDefinition credDefDtoForLDP_DM2_0 = new CredentialDefinition(); // Using your DTO structure
+        credDefDtoForLDP_DM2_0.setContext(List.of("https://www.w3.org/ns/credentials/v2"));
+        credDefDtoForLDP_DM2_0.setType(List.of("VerifiableCredential", "TestCredential"));
+        supportedDTO_LDP_DM2_0.setCredentialDefinition(credDefDtoForLDP_DM2_0);
+        supportedCredsMap.put("test-credential-id-ldp-dm-2.0", supportedDTO_LDP_DM2_0);
 
         // SD-JWT Config DTO
         CredentialConfigurationSupportedDTO supportedDTO_SDJWT = new CredentialConfigurationSupportedDTO();
@@ -420,5 +436,131 @@ public class CertifyIssuanceServiceImplTest {
         String credential = (String) response.getCredential();
         assertTrue("Credential string should contain SD-JWT disclosure separator '~'", credential.contains("~"));
         verify(auditWrapper).logAudit(any(), any(), any(), isNull());
+    }
+
+    @Test
+    public void getCredential_LedgerStatusDetailAdded_WhenPurposeListAndContextMatch() throws Exception {
+        // Arrange
+        request = createValidCredentialRequest(DEFAULT_FORMAT_LDP);
+        // Add VCDM2Constants.URL to context to trigger the branch
+        request.getCredential_definition().setContext(
+                List.of("https://www.w3.org/ns/credentials/v2")
+        );
+
+        // Mock credentialFactory and W3CJsonLD
+        when(parsedAccessToken.isActive()).thenReturn(true);
+        when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
+        when(vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH)).thenReturn(transaction);
+        when(proofValidatorFactory.getProofValidator(anyString())).thenReturn(proofValidator);
+
+        // Stub getKeyMaterial, its result is used in templateParams for createCredential
+        when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn("");
+
+        when(proofValidator.validate(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
+        when(dataProviderPlugin.fetchData(claimsFromAccessToken)).thenReturn(new JSONObject().put("subjectKey", "subjectValue"));
+
+        W3CJsonLD mockW3CJsonLD = mock(W3CJsonLD.class);
+        when(credentialFactory.getCredential(DEFAULT_FORMAT_LDP)).thenReturn(Optional.of(mockW3CJsonLD));
+        when(mockW3CJsonLD.createCredential(anyMap(), anyString())).thenReturn("{\"unsigned\":\"credential\"}");
+
+        // Stub vcFormatter methods called by service's getVerifiableCredential method for addProof
+        when(vcFormatter.getProofAlgorithm(anyString())).thenReturn("EdDSA"); // Example value
+        when(vcFormatter.getAppID(anyString())).thenReturn("testAppIdLdp");   // Example value
+        when(vcFormatter.getRefID(anyString())).thenReturn("testRefIdLdp");   // Example value
+        when(vcFormatter.getDidUrl(anyString())).thenReturn("did:example:ldp"); // Example value
+        when(vcFormatter.getSignatureCryptoSuite(anyString())).thenReturn("testSignatureCryptoSuite"); // Example Value
+        // Mock credentialStatusPurposeList to be non-empty
+        List<String> statusPurposeList = List.of("revocation");
+        when(vcFormatter.getCredentialStatusPurpose(anyString())).thenReturn(statusPurposeList);
+
+        // Corrected declaration of mockVcResultLdp
+        VCResult mockVcResultLdp = new VCResult<JsonLDObject>();
+        JsonLDObject signedCredObj = JsonLDObject.fromJson("{\"signed\":\"credential\", \"proof\":{}}");
+        mockVcResultLdp.setCredential(signedCredObj);
+
+        // The holderId argument to addProof in the service is "" for LDP
+        when(mockW3CJsonLD.addProof(
+                eq("{\"unsigned\":\"credential\"}"),
+                eq(""),  // Service code passes "" for LDP's addProof holderId
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString()
+        )).thenReturn(mockVcResultLdp);
+
+        CredentialResponse<?> response = issuanceService.getCredential(request);
+
+        assertNotNull("CredentialResponse should not be null", response);
+        assertNotNull("Response credential should not be null", response.getCredential());
+        assertTrue("Response credential should be JsonLDObject", response.getCredential() instanceof JsonLDObject);
+
+        // Assert
+        verify(statusListCredentialService).addCredentialStatus(any(JSONObject.class), eq("revocation"));
+    }
+
+    @Test
+    public void getCredential_LedgerEntryStored_WhenLedgerEnabled() throws Exception {
+        ReflectionTestUtils.setField(issuanceService, "isLedgerEnabled", true);
+        // Arrange
+        request = createValidCredentialRequest(DEFAULT_FORMAT_LDP);
+        // Add VCDM2Constants.URL to context to trigger the branch
+        request.getCredential_definition().setContext(
+                List.of("https://www.w3.org/ns/credentials/v2")
+        );
+
+        // Mock credentialFactory and W3CJsonLD
+        when(parsedAccessToken.isActive()).thenReturn(true);
+        when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
+        when(vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH)).thenReturn(transaction);
+        when(proofValidatorFactory.getProofValidator(anyString())).thenReturn(proofValidator);
+
+        // Stub getKeyMaterial, its result is used in templateParams for createCredential
+        when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn("");
+
+        when(proofValidator.validate(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
+        when(dataProviderPlugin.fetchData(claimsFromAccessToken)).thenReturn(new JSONObject().put("subjectKey", "subjectValue"));
+
+        W3CJsonLD mockW3CJsonLD = mock(W3CJsonLD.class);
+        when(credentialFactory.getCredential(DEFAULT_FORMAT_LDP)).thenReturn(Optional.of(mockW3CJsonLD));
+        when(mockW3CJsonLD.createCredential(anyMap(), anyString())).thenReturn("{\"unsigned\":\"credential\"}");
+
+        // Stub vcFormatter methods called by service's getVerifiableCredential method for addProof
+        when(vcFormatter.getProofAlgorithm(anyString())).thenReturn("EdDSA"); // Example value
+        when(vcFormatter.getAppID(anyString())).thenReturn("testAppIdLdp");   // Example value
+        when(vcFormatter.getRefID(anyString())).thenReturn("testRefIdLdp");   // Example value
+        when(vcFormatter.getDidUrl(anyString())).thenReturn("did:example:ldp"); // Example value
+        when(vcFormatter.getSignatureCryptoSuite(anyString())).thenReturn("testSignatureCryptoSuite"); // Example Value
+        // Mock credentialStatusPurposeList to be non-empty
+        List<String> statusPurposeList = List.of("revocation");
+        when(vcFormatter.getCredentialStatusPurpose(anyString())).thenReturn(statusPurposeList);
+        // Mock ledgerUtils and vcFormatter
+        when(ledgerUtils.extractIndexedAttributes(any())).thenReturn(Map.of("attr", "val"));
+        when(vcFormatter.getCredentialStatusPurpose(anyString())).thenReturn(statusPurposeList);
+
+        // Corrected declaration of mockVcResultLdp
+        VCResult mockVcResultLdp = new VCResult<JsonLDObject>();
+        JsonLDObject signedCredObj = JsonLDObject.fromJson("{\"signed\":\"credential\", \"proof\":{}}");
+        mockVcResultLdp.setCredential(signedCredObj);
+
+        // The holderId argument to addProof in the service is "" for LDP
+        when(mockW3CJsonLD.addProof(
+                eq("{\"unsigned\":\"credential\"}"),
+                eq(""),  // Service code passes "" for LDP's addProof holderId
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString()
+        )).thenReturn(mockVcResultLdp);
+
+        CredentialResponse<?> response = issuanceService.getCredential(request);
+
+        assertNotNull("CredentialResponse should not be null", response);
+        assertNotNull("Response credential should not be null", response.getCredential());
+        assertTrue("Response credential should be JsonLDObject", response.getCredential() instanceof JsonLDObject);
+
+        // Act
+        issuanceService.getCredential(request);
     }
 }

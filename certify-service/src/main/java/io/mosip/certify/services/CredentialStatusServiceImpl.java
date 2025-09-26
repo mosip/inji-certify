@@ -39,6 +39,10 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
         Ledger ledger = ledgerRepository.findByCredentialId(request.getCredentialId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Credential not found: " + request.getCredentialId()));
 
+        if(ledger.getCredentialStatusDetails() == null || ledger.getCredentialStatusDetails().isEmpty()) {
+            throw new CertifyException("No credential status details found for credential: " + request.getCredentialId());
+        }
+
         CredentialStatusTransaction transaction = new CredentialStatusTransaction();
         transaction.setCredentialId(request.getCredentialId());
         transaction.setStatusPurpose(request.getCredentialStatus().getStatusPurpose());

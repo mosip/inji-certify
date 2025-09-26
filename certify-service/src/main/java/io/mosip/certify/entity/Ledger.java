@@ -1,5 +1,6 @@
 package io.mosip.certify.entity;
 
+import io.mosip.certify.entity.attributes.CredentialStatusDetail;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -41,9 +42,9 @@ public class Ledger {
     @JdbcTypeCode(SqlTypes.JSON)
     private Map<String, Object> indexedAttributes;
 
-    @Column(name = "credential_status_details", nullable = false)
+    @Column(name = "credential_status_details")
     @JdbcTypeCode(SqlTypes.JSON)
-    private List<Map<String, Object>> credentialStatusDetails;
+    private List<CredentialStatusDetail> credentialStatusDetails;
 
     @Column(name = "cr_dtimes", nullable = false, updatable = false)
     private LocalDateTime createdDtimes;
