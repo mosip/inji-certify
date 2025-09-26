@@ -29,22 +29,6 @@ ALTER TABLE ledger
     ALTER COLUMN issue_date TYPE TIMESTAMPTZ,
     ALTER COLUMN expiration_date TYPE TIMESTAMPTZ;
 
--- Add credential_id column as NOT NULL (no default)
-ALTER TABLE credential_status_transaction
-    ADD COLUMN credential_id VARCHAR(255);
-
--- Update existing rows with random UUIDs
-UPDATE credential_status_transaction
-    SET credential_id = gen_random_uuid()
-    WHERE credential_id IS NULL;
-
--- Set NOT NULL constraint after populating values
-ALTER TABLE credential_status_transaction
-    ALTER COLUMN credential_id SET NOT NULL;
-
--- Recreate the index on credential_id
-CREATE INDEX idx_cst_credential_id ON credential_status_transaction (credential_id);
-
 -- Recreate foreign key to ledger table
 ALTER TABLE certify.credential_status_transaction
     ADD CONSTRAINT fk_credential_status_transaction_ledger

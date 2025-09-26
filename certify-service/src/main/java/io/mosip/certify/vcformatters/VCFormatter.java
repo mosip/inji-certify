@@ -73,8 +73,4 @@ public interface VCFormatter {
     List<String> getCredentialStatusPurpose(String templateName);
 
     String getCredentialId();
-
-    LocalDateTime getIssuanceDate();
-
-    LocalDateTime getExpirationDate();
 }

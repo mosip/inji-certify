@@ -71,8 +71,6 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     String idPrefix;
 
     String credentialId;
-    LocalDateTime issuanceDate;
-    LocalDateTime expirationDate;
 
     @PostConstruct
     public void initialize() {
@@ -328,16 +326,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
                 log.error("Template: " + templateInput.get(Constants.RENDERING_TEMPLATE_ID) + " not available in DB", e);
             }
         }
-        if (!(templateInput.containsKey(VCDM2Constants.VALID_FROM)
-                && templateInput.containsKey(VCDM2Constants.VALID_UNITL))) {
-            ZonedDateTime zonedDateTime = ZonedDateTime.now(ZoneOffset.UTC);
-            issuanceDate = zonedDateTime.toLocalDateTime();
-            expirationDate = zonedDateTime.plusYears(2).toLocalDateTime();
-            String time = issuanceDate.format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            String expiryTime = expirationDate.format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            finalTemplate.put(VCDM2Constants.VALID_FROM, time);
-            finalTemplate.put(VCDM2Constants.VALID_UNITL, expiryTime);
-        }
+
         VelocityContext context = new VelocityContext(finalTemplate);
         engine.evaluate(context, writer, /*logTag */ templateName, vcTemplateString); // use vcTemplateString
         JSONObject jsonObject = new JSONObject(writer.toString());
@@ -361,15 +350,5 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     @Override
     public String getCredentialId() {
         return credentialId;
-    }
-
-    @Override
-    public LocalDateTime getIssuanceDate() {
-        return issuanceDate;
-    }
-
-    @Override
-    public LocalDateTime getExpirationDate() {
-        return expirationDate;
     }
 }
