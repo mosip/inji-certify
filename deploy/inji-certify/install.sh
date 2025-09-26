@@ -99,8 +99,7 @@ function installing_inji-certify() {
         kubectl patch configmap inji-stack-config -n default --type merge -p "{\"data\": {\"mosipid-identity-esignet-host\": \"$ESIGNET_MOSIPID_HOST\"}}"
         kubectl patch configmap inji-stack-config -n config-server --type merge -p "{\"data\": {\"mosip-api-cre-internal-host\": \"$IDA_EXTERNAL_HOST\"}}"
         kubectl patch configmap inji-stack-config -n default --type merge -p "{\"data\": {\"mosip-api-cre-internal-host\": \"$IDA_EXTERNAL_HOST\"}}"
-        kubectl create configmap redis-config --from-literal=redis-host="$REDIS_HOST" -n config-server --dry-run=client -o yaml | kubectl apply -f -
-        kubectl create configmap redis-config --from-literal=redis-port="$REDIS_PORT" -n config-server --dry-run=client -o yaml | kubectl apply -f -
+        kubectl create configmap redis-config --from-literal=redis-host="$REDIS_HOST" --from-literal=redis-port="$REDIS_PORT" -n config-server --dry-run=client -o yaml | kubectl apply -f -
         kubectl create secret generic certify-misp-onboarder-key --from-literal=certify-misp-key="$CERTIFY_MISP_KEY" -n config-server --dry-run=client -o yaml | kubectl apply -f -
         kubectl create secret generic keycloak-client-secrets --from-literal=mosip_ida_client_secret="$IDA_CLIENT_SECRET" -n config-server --dry-run=client -o yaml | kubectl apply -f -
         kubectl create secret generic redis --from-literal=redis-password="$REDIS_PASSWORD" -n config-server --dry-run=client -o yaml | kubectl apply -f -
