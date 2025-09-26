@@ -9,4 +9,6 @@ import java.util.List;
 public interface CredentialStatusService {
 
     CredentialStatusResponse updateCredentialStatus(UpdateCredentialStatusRequest updateCredentialStatusRequest);
+
+    CredentialStatusResponse updateCredentialStatusV2(UpdateCredentialStatusRequest updateCredentialStatusRequest);
 }

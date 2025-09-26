@@ -324,14 +324,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
                 log.error("Template: " + templateInput.get(Constants.RENDERING_TEMPLATE_ID) + " not available in DB", e);
             }
         }
-        if (!(templateInput.containsKey(VCDM2Constants.VALID_FROM)
-                && templateInput.containsKey(VCDM2Constants.VALID_UNITL))) {
-            String time = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            // hardcoded time
-            String expiryTime = ZonedDateTime.now(ZoneOffset.UTC).plusYears(2).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            finalTemplate.put(VCDM2Constants.VALID_FROM, time);
-            finalTemplate.put(VCDM2Constants.VALID_UNITL, expiryTime);
-        }
+
         VelocityContext context = new VelocityContext(finalTemplate);
         engine.evaluate(context, writer, /*logTag */ templateName, vcTemplateString); // use vcTemplateString
         JSONObject jsonObject = new JSONObject(writer.toString());

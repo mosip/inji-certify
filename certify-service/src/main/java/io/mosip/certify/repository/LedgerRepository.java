@@ -15,12 +15,4 @@ import java.util.Optional;
 @Repository
 public interface LedgerRepository extends JpaRepository<Ledger, Long>, LedgerIssuanceTableCustomRepository {
     Optional<Ledger> findByCredentialId(String credentialId);
-
-    @Query(value = "SELECT * FROM ledger l " +
-            "WHERE l.credential_status_details @> " +
-            "jsonb_build_array(" +
-            "jsonb_build_object('status_list_credential_id', :statusListCredential, 'status_list_index', :statusListIndex)" +
-            ")",
-            nativeQuery = true)
-    Optional<Ledger> findByStatusListCredentialIdAndStatusListIndex(@Param("statusListCredential") String statusListCredential, @Param("statusListIndex") Long statusListIndex);
 }

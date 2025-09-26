@@ -34,7 +34,11 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
             }
 
             return records.stream()
-                    .map(this::mapToSearchResponse)
+                    .map(record -> {
+                        CredentialStatusResponse response = mapToSearchResponse(record);
+                        response.setIssuanceDate(null); // Set issuanceDate as null
+                        return response;
+                    })
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
@@ -46,6 +50,7 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
         CredentialStatusResponse response = new CredentialStatusResponse();
         response.setCredentialId(record.getCredentialId());
         response.setIssuerId(record.getIssuerId());
+        response.setIssueDate(record.getIssuanceDate());
         response.setIssuanceDate(record.getIssuanceDate());
         response.setExpirationDate(record.getExpirationDate() != null ? record.getExpirationDate() : null);
         response.setCredentialType(record.getCredentialType());
@@ -81,6 +86,29 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
 
         if (!hasValid) {
             throw new CertifyException("INVALID_SEARCH_CRITERIA");
+        }
+    }
+
+    @Override
+    public List<CredentialStatusResponse> searchCredentialLedgerV2(CredentialLedgerSearchRequest request) {
+        validateSearchRequest(request);
+        try {
+            List<Ledger> records = ledgerRepository.findBySearchRequest(request);
+
+            if (records.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            return records.stream()
+                    .map(record -> {
+                        CredentialStatusResponse response = mapToSearchResponse(record);
+                        response.setIssueDate(null); // Set issuanceDate as null
+                        return response;
+                    })
+                    .collect(Collectors.toList());
+
+        } catch (Exception e) {
+            throw new CertifyException("SEARCH_CREDENTIALS_FAILED");
         }
     }
 }

@@ -31,4 +31,14 @@ public class CredentialLedgerController {
         }
         return ResponseEntity.ok(result);
     }
+
+    @PostMapping("/v2")
+    public ResponseEntity<List<CredentialStatusResponse>> searchCredentialsV2(
+            @Valid @RequestBody CredentialLedgerSearchRequest request) {
+        List<CredentialStatusResponse> result = credentialLedgerService.searchCredentialLedgerV2(request);
+        if (result.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(result);
+    }
 }

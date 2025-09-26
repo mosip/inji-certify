@@ -22,6 +22,8 @@ import java.util.List;
 @Slf4j
 @Service
 public class CredentialStatusServiceImpl implements CredentialStatusService {
+    @Autowired
+    private LedgerRepository ledgerRepository;
 
     @Autowired
     private CredentialStatusTransactionRepository credentialStatusTransactionRepository;
@@ -38,6 +40,39 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
     @Override
     public CredentialStatusResponse updateCredentialStatus(UpdateCredentialStatusRequest request) {
 
+        if (request.getCredentialStatus().getStatusPurpose() != null && !allowedCredentialStatusPurposes.contains(request.getCredentialStatus().getStatusPurpose())) {
+            throw new CertifyException("Invalid credential status purpose. Allowed values are: " + allowedCredentialStatusPurposes);
+        }
+        Ledger ledger = ledgerRepository.findByCredentialId(request.getCredentialId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Credential not found: " + request.getCredentialId()));
+
+        if(ledger.getCredentialStatusDetails() == null || ledger.getCredentialStatusDetails().isEmpty()) {
+            throw new CertifyException("CredentialStatus details are not present in the issued credential.");
+        }
+
+        CredentialStatusTransaction transaction = new CredentialStatusTransaction();
+        transaction.setCredentialId(request.getCredentialId());
+        transaction.setStatusPurpose(request.getCredentialStatus().getStatusPurpose());
+        transaction.setStatusValue(request.getStatus());
+        transaction.setStatusListCredentialId(request.getCredentialStatus().getStatusListCredential());
+        transaction.setStatusListIndex(request.getCredentialStatus().getStatusListIndex());
+        CredentialStatusTransaction savedTransaction =credentialStatusTransactionRepository.save(transaction);
+
+        CredentialStatusResponse dto = new CredentialStatusResponse();
+        dto.setCredentialId(ledger.getCredentialId());
+        dto.setIssuerId(ledger.getIssuerId());
+        dto.setCredentialType(ledger.getCredentialType());
+        dto.setIssueDate(ledger.getIssuanceDate());
+        dto.setExpirationDate(ledger.getExpirationDate() != null ? ledger.getExpirationDate() : null);
+        dto.setStatusListCredentialUrl(request.getCredentialStatus().getStatusListCredential());
+        dto.setStatusListIndex(request.getCredentialStatus().getStatusListIndex());
+        dto.setStatusPurpose(request.getCredentialStatus().getStatusPurpose());
+        dto.setStatusTimestamp(savedTransaction.getCreatedDtimes());
+        return dto;
+    }
+
+    @Override
+    public CredentialStatusResponse updateCredentialStatusV2(UpdateCredentialStatusRequest request) {
         if (request.getCredentialStatus().getStatusPurpose() != null && !allowedCredentialStatusPurposes.contains(request.getCredentialStatus().getStatusPurpose())) {
             throw new CertifyException("Invalid credential status purpose. Allowed values are: " + allowedCredentialStatusPurposes);
         }
@@ -58,7 +93,6 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
         CredentialStatusTransaction savedTransaction =credentialStatusTransactionRepository.save(transaction);
 
         CredentialStatusResponse dto = new CredentialStatusResponse();
-        dto.setIssuerId(didUrl);
         dto.setStatusListCredentialUrl(transaction.getStatusListCredentialId());
         dto.setStatusListIndex(transaction.getStatusListIndex());
         dto.setStatusPurpose(transaction.getStatusPurpose());

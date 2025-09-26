@@ -56,8 +56,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 
 import static io.mosip.certify.utils.VCIssuanceUtil.getScopeCredentialMapping;
@@ -126,6 +127,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     @Value("${mosip.certify.data-provider-plugin.id-field-prefix-uri:}")
     String idPrefix;
+
+    @Value("${mosip.certify.data-provider-plugin.vc-expiry-duration:P730d}")
+    String defaultExpiryDuration;
 
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
@@ -233,6 +237,19 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             if(!StringUtils.isEmpty(idPrefix)) {
                 templateParams.put(VCDMConstants.CREDENTIAL_ID, idPrefix + UUID.randomUUID());
             }
+            ZonedDateTime zonedDateTime = ZonedDateTime.now(ZoneOffset.UTC);
+            // current time
+            String time = zonedDateTime.format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
+            Duration duration;
+            try {
+                duration = Duration.parse(defaultExpiryDuration);
+            } catch (DateTimeParseException e) {
+                log.warn("Incorrect expiry duration format in properties: {}. Using default P730D ~ 2Y", defaultExpiryDuration);
+                duration = Duration.parse("P730D");
+            }
+            String expiryTime = zonedDateTime.plusSeconds(duration.getSeconds()).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
+            templateParams.put(VCDM2Constants.VALID_FROM, time);
+            templateParams.put(VCDM2Constants.VALID_UNITL, expiryTime);
 
             Credential cred = credentialFactory.getCredential(format).orElseThrow(() -> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
             String unsignedCredential = cred.createCredential(templateParams, templateName);
@@ -244,7 +261,8 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     credentialId = templateParams.get(VCDMConstants.CREDENTIAL_ID).toString();
                 }
                 CredentialStatusDetail credentialStatusDetail = ledgerUtils.extractCredentialStatusDetails(jsonObject);
-                statusListCredentialService.storeLedgerEntry(credentialId, didUrl, credentialType, credentialStatusDetail, indexedAttributes);
+                LocalDateTime issuanceDate = LocalDateTime.parse(time, DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
+                statusListCredentialService.storeLedgerEntry(credentialId, didUrl, credentialType, credentialStatusDetail, indexedAttributes, issuanceDate);
                 log.info("Successfully stored the credential issuance data in ledger with credentialType: {}", credentialType);
             }
             VCResult<?> result = cred.addProof(unsignedCredential, "", vcFormatter.getProofAlgorithm(templateName), vcFormatter.getAppID(templateName), vcFormatter.getRefID(templateName), vcFormatter.getDidUrl(templateName), vcFormatter.getSignatureCryptoSuite(templateName));

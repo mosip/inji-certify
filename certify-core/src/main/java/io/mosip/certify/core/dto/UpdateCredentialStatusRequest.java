@@ -7,6 +7,7 @@ import lombok.Data;
 
 @Data
 public class UpdateCredentialStatusRequest {
+    private String credentialId;
 
     @NotNull
     @Valid
