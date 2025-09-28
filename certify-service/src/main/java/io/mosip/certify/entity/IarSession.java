@@ -39,6 +39,9 @@ public class IarSession {
     @Column(name = "authorization_code", length = 128)
     private String authorizationCode;
 
+    @Column(name = "response_uri", length = 512)
+    private String responseUri;
+
     @Column(name = "code_issued_at")
     private LocalDateTime codeIssuedAt;
 

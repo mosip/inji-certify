@@ -32,6 +32,12 @@ public class VerifyVpRequest {
     private PresentationDefinition presentationDefinition;
 
     /**
+     * Presentation definition ID (alternative to full definition)
+     */
+    @JsonProperty("presentationDefinitionId")
+    private String presentationDefinitionId;
+
+    /**
      * Supported response modes for the VP request
      */
     @JsonProperty("responseModesSupported")
@@ -43,3 +49,4 @@ public class VerifyVpRequest {
     @JsonProperty("encryptionRequired")
     private Boolean encryptionRequired;
 }
+
