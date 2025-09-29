@@ -75,16 +75,12 @@ public class MDocCredential extends Credential {
 
             // Parse the input mDoc JSON
             Map<String, Object> mDocJson = objectMapper.readValue(vcToSign, Map.class);
-            log.info("Parsed mDoc JSON: {}", mDocJson);
-
             Map<String, Object> saltedNamespaces = MDocUtils.addRandomSalts(mDocJson);
             Map<String, Map<Integer, byte[]>> namespaceDigests = new HashMap<>();
             Map<String, Object> taggedNamespaces = MDocUtils.calculateDigests(saltedNamespaces, namespaceDigests);
 
             // Create Mobile Security Object (MSO)
             Map<String, Object> mso = MDocUtils.createMobileSecurityObject(mDocJson, namespaceDigests, appID, refID);
-            log.info("Created MSO: {}", mso);
-
             byte[] signedMSO = MDocUtils.signMSO(mso, appID, refID, signAlgorithm, didDocumentUtil, coseSignatureService);
             Map<String, Object> issuerSigned = MDocUtils.createIssuerSignedStructure(taggedNamespaces, signedMSO);
             byte[] cborIssuerSigned = MDocUtils.encodeToCBOR(issuerSigned);
