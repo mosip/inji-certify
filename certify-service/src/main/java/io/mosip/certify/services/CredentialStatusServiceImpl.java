@@ -2,6 +2,7 @@ package io.mosip.certify.services;
 
 import io.mosip.certify.core.dto.CredentialStatusResponse;
 import io.mosip.certify.core.dto.UpdateCredentialStatusRequest;
+import io.mosip.certify.core.dto.UpdateCredentialStatusRequestV2;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.CredentialStatusService;
 import io.mosip.certify.entity.CredentialStatusTransaction;
@@ -41,9 +42,6 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
         if (request.getCredentialStatus().getStatusPurpose() != null && !allowedCredentialStatusPurposes.contains(request.getCredentialStatus().getStatusPurpose())) {
             throw new CertifyException("Invalid credential status purpose. Allowed values are: " + allowedCredentialStatusPurposes);
         }
-        if(request.getCredentialId() == null || request.getCredentialId().isEmpty()) {
-            throw new CertifyException("Credential ID is mandatory for updating credential status record.");
-        }
         Ledger ledger = ledgerRepository.findByCredentialId(request.getCredentialId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Credential not found: " + request.getCredentialId()));
 
@@ -65,7 +63,7 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
         dto.setIssuerId(ledger.getIssuerId());
         dto.setCredentialType(ledger.getCredentialType());
         dto.setIssueDate(ledger.getIssuanceDate());
-        dto.setExpirationDate(ledger.getExpirationDate() != null ? ledger.getExpirationDate() : null);
+        dto.setExpirationDate(ledger.getExpirationDate());
         dto.setStatusListCredentialUrl(credentialStatusDetail.getStatusListCredentialId());
         dto.setStatusListIndex(credentialStatusDetail.getStatusListIndex());
         dto.setStatusPurpose(credentialStatusDetail.getStatusPurpose());
@@ -74,7 +72,7 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
     }
 
     @Override
-    public CredentialStatusResponse updateCredentialStatusV2(UpdateCredentialStatusRequest request) {
+    public CredentialStatusResponse updateCredentialStatusV2(UpdateCredentialStatusRequestV2 request) {
         if (request.getCredentialStatus().getStatusPurpose() != null && !allowedCredentialStatusPurposes.contains(request.getCredentialStatus().getStatusPurpose())) {
             throw new CertifyException("Invalid credential status purpose. Allowed values are: " + allowedCredentialStatusPurposes);
         }

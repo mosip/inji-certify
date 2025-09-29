@@ -8,6 +8,7 @@ package io.mosip.certify.controller;
 import io.mosip.certify.core.dto.CredentialLedgerSearchRequest;
 import io.mosip.certify.core.dto.CredentialStatusResponse;
 import io.mosip.certify.core.dto.UpdateCredentialStatusRequest;
+import io.mosip.certify.core.dto.UpdateCredentialStatusRequestV2;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.CredentialStatusService;
 import io.mosip.certify.services.StatusListCredentialService;
@@ -60,8 +61,8 @@ public class CredentialStatusController {
 
     @PostMapping("/v2/status")
     public ResponseEntity<CredentialStatusResponse> updateCredentialV2(
-            @Valid @RequestBody UpdateCredentialStatusRequest updateCredentialStatusRequest) {
-        CredentialStatusResponse result = credentialStatusService.updateCredentialStatusV2(updateCredentialStatusRequest);
+            @Valid @RequestBody UpdateCredentialStatusRequestV2 updateCredentialStatusRequestV2) {
+        CredentialStatusResponse result = credentialStatusService.updateCredentialStatusV2(updateCredentialStatusRequestV2);
         if (result == null) {
             return ResponseEntity.noContent().build();
         }
