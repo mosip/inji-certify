@@ -62,7 +62,7 @@ public final class BitStringStatusListUtils {
     /**
      * Creates an empty encoded list (all bits set to 0) according to W3C Bitstring Status List v1.0.
      *
-     * @param capacityInKB The number of bits in the list.
+     * @param capacityInKB Capacity of the status list in kilobytes (KB).
      * @return Multibase-encoded base64url string representing the GZIP-compressed bit array.
      */
     public static String createEmptyEncodedList(long capacityInKB) {
