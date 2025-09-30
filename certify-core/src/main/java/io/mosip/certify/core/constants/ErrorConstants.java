@@ -45,4 +45,6 @@ public class ErrorConstants {
     public static final String TRANSACTION_FETCH_FAILED = "transaction_fetch_failed";
     public static final String ENCODED_LIST_UPDATE_FAILED = "encoded_list_update_failed";
     public static final String STATUS_LIST_CREDENTIAL_UPDATE_FAILED = "status_list_credential_update_failed";
+    public static final String STATUS_LIST_INDEX_INITIALIZATION_FAILED = "status_list_index_initialization_failed";
+    public static final String STATUS_LIST_INDEX_UNAVAILABLE = "status_list_index_unavailable";
 }

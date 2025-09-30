@@ -165,7 +165,7 @@ public class StatusListCredentialService {
 
             statusListData.put("credentialSubject", credentialSubject);
 
-            log.debug("Created status list VC structure: {}", statusListData.toString(2));
+            log.debug("Created status list VC: id={}, purpose={}", statusListId, statusPurpose);
 
             String vcDocS = addProofAndHandleResult(statusListData, ErrorConstants.VC_ISSUANCE_FAILED);
 
@@ -225,7 +225,7 @@ public class StatusListCredentialService {
             log.info("Successfully initialized {} available indices for status list: {}", rowsInserted, statusListCredential.getId());
         } catch (Exception e) {
             log.error("Error initializing available indices for status list: {}", statusListCredential.getId(), e);
-            throw new CertifyException("STATUS_LIST_INDEX_INITIALIZATION_FAILED");
+            throw new CertifyException(ErrorConstants.STATUS_LIST_INDEX_INITIALIZATION_FAILED);
         }
     }
 
@@ -278,8 +278,6 @@ public class StatusListCredentialService {
                 vcDocument.remove("proof");
             }
 
-            // Update validFrom timestamp to current time
-            vcDocument.put("validFrom", new Date().toInstant().toString());
             return addProofAndHandleResult(vcDocument, ErrorConstants.VC_RESIGNING_FAILED);
         } catch (Exception e) {
             log.error("Error re-signing status list credential", e);
@@ -302,7 +300,7 @@ public class StatusListCredentialService {
 
             if (assignedIndex == -1) {
                 log.error("Failed to get available index even from new status list");
-                throw new CertifyException("STATUS_LIST_INDEX_UNAVAILABLE");
+                throw new CertifyException(ErrorConstants.STATUS_LIST_INDEX_UNAVAILABLE);
             }
         }
 
@@ -318,7 +316,7 @@ public class StatusListCredentialService {
         log.info("Successfully added credential status with index {} in status list {}", assignedIndex, statusList.getId());
     }
 
-    @jakarta.transaction.Transactional
+    @Transactional
     public void storeLedgerEntry(String credentialId, String issuerId, String credentialType, CredentialStatusDetail statusDetails, Map<String, Object> indexedAttributes, LocalDateTime issuanceDate) {
         try {
             Ledger ledger = new Ledger();
