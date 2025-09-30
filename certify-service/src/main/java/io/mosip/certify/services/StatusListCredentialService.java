@@ -348,12 +348,15 @@ public class StatusListCredentialService {
      * Helper method to add a proof to a VC and handle the result.
      */
     private String addProofAndHandleResult(JSONObject vcDocument, String errorConstant) throws CertifyException {
-        String appId = keyAliasMapper.get(signatureCryptoSuite).getFirst().getFirst();
-
-        if (appId == null || appId.isEmpty()) {
+        List<List<String>> aliases =
+                (keyAliasMapper != null) ? keyAliasMapper.get(signatureCryptoSuite) : null;
+        if (aliases == null || aliases.isEmpty()
+                || aliases.get(0) == null || aliases.get(0).isEmpty()
+                || aliases.get(0).get(0) == null || aliases.get(0).get(0).isBlank()) {
             log.error("No key alias configured for signature crypto suite: {}", signatureCryptoSuite);
             throw new CertifyException(ErrorConstants.KEY_ALIAS_NOT_CONFIGURED);
         }
+        String appId = aliases.get(0).get(0);
 
         Credential cred = credentialFactory.getCredential(VCFormats.LDP_VC)
                 .orElseThrow(() -> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));

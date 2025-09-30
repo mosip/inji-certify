@@ -182,7 +182,7 @@ public class StatusListUpdateBatchJob {
             JSONObject vcDocument = new JSONObject(statusListCredential.getVcDocument());
 
             // Generate new encoded list
-            String newEncodedList = BitStringStatusListUtils.updateEncodedList(vcDocument.getString("encodedList"),updatedStatuses, statusListCredential.getCapacity());
+            String newEncodedList = BitStringStatusListUtils.updateEncodedList(vcDocument.getJSONObject("credentialSubject").getString("encodedList"),updatedStatuses, statusListCredential.getCapacity());
 
             // Update the status list credential with new encoded list
             updateStatusListCredential(statusListCredential, newEncodedList);
@@ -246,7 +246,7 @@ public class StatusListUpdateBatchJob {
 
         } catch (Exception e) {
             log.error("Error updating StatusListCredential ID: {}", statusListCredential.getId(), e);
-            throw new CertifyException("STATUS_LIST_CREDENTIAL_UPDATE_FAILED");
+            throw new CertifyException(ErrorConstants.STATUS_LIST_CREDENTIAL_UPDATE_FAILED);
         }
     }
 }
