@@ -20,15 +20,10 @@ ALTER TABLE certify.ledger RENAME COLUMN issue_date TO issuance_date;
 ALTER TABLE certify.ledger
     ALTER COLUMN credential_id DROP NOT NULL;
 
--- Update all existing values to UTC (remove time zone info)
-UPDATE certify.ledger SET
-    issuance_date = issuance_date AT TIME ZONE 'UTC',
-    expiration_date = expiration_date AT TIME ZONE 'UTC';
-
--- Change column types to TIMESTAMP (without time zone)
+-- Change column types to TIMESTAMP (without time zone) while normalizing to UTC
 ALTER TABLE certify.ledger
-    ALTER COLUMN issuance_date TYPE TIMESTAMP,
-    ALTER COLUMN expiration_date TYPE TIMESTAMP;
+    ALTER COLUMN issuance_date TYPE TIMESTAMP USING (issuance_date AT TIME ZONE 'UTC'),
+    ALTER COLUMN expiration_date TYPE TIMESTAMP USING (expiration_date AT TIME ZONE 'UTC');
 
 ALTER TABLE certify.credential_status_transaction
     ALTER COLUMN credential_id DROP NOT NULL;
@@ -42,10 +37,10 @@ ALTER TABLE certify.credential_status_transaction
     DROP CONSTRAINT IF EXISTS fk_credential_status_transaction_status_list;
 
 -- Step 2: Create shedlock table for distributed locking
-CREATE TABLE IF NOT EXISTS shedlock (
+CREATE TABLE IF NOT EXISTS certify.shedlock (
   name VARCHAR(64),
-  lock_until TIMESTAMP(3) NULL,
-  locked_at TIMESTAMP(3) NULL,
-  locked_by VARCHAR(255),
+  lock_until TIMESTAMPTZ(3) NOT NULL,
+  locked_at TIMESTAMPTZ(3) NOT NULL,
+  locked_by VARCHAR(255) NOT NULL,
   PRIMARY KEY (name)
-)
+);

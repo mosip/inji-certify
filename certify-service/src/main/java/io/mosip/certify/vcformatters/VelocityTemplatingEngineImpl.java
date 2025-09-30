@@ -232,7 +232,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
                 log.error("SVG Template: " + templateSettings.get(Constants.RENDERING_TEMPLATE_ID) + " not available in DB", e);
             }
         }
-        if (!valueMap.has(VCDM2Constants.VALID_UNITL) && StringUtils.isNotEmpty(defaultExpiryDuration)) {
+        if (!valueMap.has(VCDM2Constants.VALID_UNTIL) && StringUtils.isNotEmpty(defaultExpiryDuration)) {
             Duration duration;
             try {
                 duration = Duration.parse(defaultExpiryDuration);
@@ -241,7 +241,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
                 duration = Duration.parse("P730D");
             }
             String expiryTime = ZonedDateTime.now(ZoneOffset.UTC).plusSeconds(duration.getSeconds()).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            finalTemplate.put(VCDM2Constants.VALID_UNITL, expiryTime);
+            finalTemplate.put(VCDM2Constants.VALID_UNTIL, expiryTime);
         }
         if (!valueMap.has(VCDM2Constants.VALID_FROM)) {
             finalTemplate.put(VCDM2Constants.VALID_FROM, ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN)));

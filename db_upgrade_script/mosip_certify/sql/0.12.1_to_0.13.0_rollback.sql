@@ -14,20 +14,15 @@
 -- ------------------------------------------------------------------------------------------
 
 -- Step 1: Rename issuance_date to issue_date in ledger table.
-ALTER TABLE ledger RENAME COLUMN issuance_date TO issue_date;
+ALTER TABLE certify.ledger RENAME COLUMN issuance_date TO issue_date;
 
 ALTER TABLE certify.ledger
     ALTER COLUMN credential_id SET NOT NULL;
 
--- Update all existing values to UTC (assume current values are UTC)
-UPDATE ledger SET
-    issue_date = issue_date AT TIME ZONE 'UTC',
-    expiration_date = expiration_date AT TIME ZONE 'UTC';
-
--- Change column types back to TIMESTAMPTZ
-ALTER TABLE ledger
-    ALTER COLUMN issue_date TYPE TIMESTAMPTZ,
-    ALTER COLUMN expiration_date TYPE TIMESTAMPTZ;
+-- Change column types back to TIMESTAMPTZ while preserving UTC semantics
+ALTER TABLE certify.ledger
+    ALTER COLUMN issue_date TYPE TIMESTAMPTZ USING issue_date AT TIME ZONE 'UTC',
+    ALTER COLUMN expiration_date TYPE TIMESTAMPTZ USING expiration_date AT TIME ZONE 'UTC';
 
 ALTER TABLE certify.credential_status_transaction
     ALTER COLUMN credential_id SET NOT NULL;

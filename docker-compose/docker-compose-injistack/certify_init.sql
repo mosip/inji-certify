@@ -308,8 +308,8 @@ CREATE INDEX IF NOT EXISTS idx_sla_cr_dtimes ON certify.status_list_available_in
 -- Create shedlock table for distributed locking
 CREATE TABLE IF NOT EXISTS shedlock (
   name VARCHAR(64),
-  lock_until TIMESTAMP(3) NULL,
-  locked_at TIMESTAMP(3) NULL,
-  locked_by VARCHAR(255),
+  lock_until TIMESTAMPTZ(3) NOT NULL,
+  locked_at TIMESTAMPTZ(3) NOT NULL,
+  locked_by VARCHAR(255) NOT NULL,
   PRIMARY KEY (name)
 );

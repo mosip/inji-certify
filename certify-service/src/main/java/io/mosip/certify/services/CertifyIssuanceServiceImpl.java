@@ -128,7 +128,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Value("${mosip.certify.data-provider-plugin.id-field-prefix-uri:}")
     String idPrefix;
 
-    @Value("${mosip.certify.data-provider-plugin.vc-expiry-duration:P730d}")
+    @Value("${mosip.certify.data-provider-plugin.vc-expiry-duration:P730D}")
     String defaultExpiryDuration;
 
     @Override
@@ -247,9 +247,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 log.warn("Incorrect expiry duration format in properties: {}. Using default P730D ~ 2Y", defaultExpiryDuration);
                 duration = Duration.parse("P730D");
             }
-            String expiryTime = zonedDateTime.plusSeconds(duration.getSeconds()).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
+            String expiryTime = zonedDateTime.plus(duration).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
             templateParams.put(VCDM2Constants.VALID_FROM, time);
-            templateParams.put(VCDM2Constants.VALID_UNITL, expiryTime);
+            templateParams.put(VCDM2Constants.VALID_UNTIL, expiryTime);
 
             Credential cred = credentialFactory.getCredential(format).orElseThrow(() -> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
             String unsignedCredential = cred.createCredential(templateParams, templateName);

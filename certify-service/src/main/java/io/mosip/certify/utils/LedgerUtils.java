@@ -133,10 +133,13 @@ public class LedgerUtils {
         credentialStatusDetail.setStatusValue(false);
         credentialStatusDetail.setStatusPurpose((String) credentialStatus.get("statusPurpose"));
         credentialStatusDetail.setStatusListIndex(Long.parseLong((String) credentialStatus.get("statusListIndex")));
-        String statusListCredentialUrl = (String) credentialStatus.get("statusListCredential");
-        String statusListCredentialId = statusListCredentialUrl.substring(statusListCredentialUrl.lastIndexOf('/') + 1);
+        String statusListCredentialUrl = credentialStatus.getString("statusListCredential");
+        String statusListCredentialId = statusListCredentialUrl;
+        int lastSlash = statusListCredentialUrl.lastIndexOf('/');
+        if (lastSlash >= 0 && lastSlash < statusListCredentialUrl.length() - 1) {
+            statusListCredentialId = statusListCredentialUrl.substring(lastSlash + 1);
+        }
         credentialStatusDetail.setStatusListCredentialId(statusListCredentialId);
-        credentialStatusDetail.setCreatedTimes(System.currentTimeMillis());
 
         return credentialStatusDetail;
     }
