@@ -42,8 +42,8 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Value("${mosip.certify.domain.url:}")
     private String credentialIssuer;
 
-    @Value("#{'${mosip.certify.authorization.url}'.split(',')}")
-    private List<String> authUrlList;
+    @Value("${mosip.certify.authorization.url}")
+    private String authUrl;
 
     @Value("${server.servlet.path}")
     private String servletPath;
@@ -271,7 +271,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                     });
             credentialIssuerMetadata.setCredentialConfigurationSupportedDTO(credentialConfigurationSupportedMap);
             credentialIssuerMetadata.setCredentialIssuer(credentialIssuer);
-            credentialIssuerMetadata.setAuthorizationServers(authUrlList);
+            credentialIssuerMetadata.setAuthorizationServers(Collections.singletonList(authUrl));
             String credentialEndpoint = credentialIssuer + servletPath + "/issuance" + (!version.equals("latest") ? "/" + version : "") + "/credential";
             credentialIssuerMetadata.setCredentialEndpoint(credentialEndpoint);
             credentialIssuerMetadata.setDisplay(issuerDisplay);
@@ -289,7 +289,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                     });
             credentialIssuerMetadata.setCredentialConfigurationSupportedDTO(credentialConfigurationSupportedMap); // Use a different setter for vd12
             credentialIssuerMetadata.setCredentialIssuer(credentialIssuer);
-            credentialIssuerMetadata.setAuthorizationServers(authUrlList);
+            credentialIssuerMetadata.setAuthorizationServers(Collections.singletonList(authUrl));
             String credentialEndpoint = credentialIssuer + servletPath + "/issuance/" + version + "/credential";
             credentialIssuerMetadata.setCredentialEndpoint(credentialEndpoint);
             credentialIssuerMetadata.setDisplay(issuerDisplay);
@@ -308,7 +308,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                     });
             credentialIssuerMetadata.setCredentialConfigurationSupportedDTO(credentialConfigurationSupportedList); // Use a different setter for vd11
             credentialIssuerMetadata.setCredentialIssuer(credentialIssuer);
-            credentialIssuerMetadata.setAuthorizationServers(authUrlList);
+            credentialIssuerMetadata.setAuthorizationServers(Collections.singletonList(authUrl));
             String credentialEndpoint = credentialIssuer + servletPath + "/issuance/" + version + "/credential";
             credentialIssuerMetadata.setCredentialEndpoint(credentialEndpoint);
             credentialIssuerMetadata.setDisplay(issuerDisplay);
