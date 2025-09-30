@@ -1,26 +1,26 @@
 package io.mosip.certify.core.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class UpdateCredentialStatusRequest {
-    @NotBlank
-    private String credentialId;
-
+public class UpdateCredentialStatusRequestV2 {
     @NotNull
-    private CredentialStatusDto credentialStatus;
+    @Valid
+    private CredentialStatusDtoV2 credentialStatus;
 
     @NotNull
     private Boolean status;
 
     @Data
-    public static class CredentialStatusDto {
+    public static class CredentialStatusDtoV2 {
         private String id;
         private String type;
         private String statusPurpose;
+        @NotNull
         private Long statusListIndex;
+        @NotNull
         private String statusListCredential;
-    } 
+    }
 }

@@ -233,10 +233,10 @@ CREATE INDEX IF NOT EXISTS idx_slc_cr_dtimes ON certify.status_list_credential(c
 -- Create the ledger table
 CREATE TABLE certify.ledger (
     id SERIAL PRIMARY KEY,                          -- Auto-incrementing serial primary key
-    credential_id VARCHAR(255) NOT NULL,            -- Unique ID of the Verifiable Credential WHOSE STATUS IS BEING TRACKED
+    credential_id VARCHAR(255),            -- Unique ID of the Verifiable Credential WHOSE STATUS IS BEING TRACKED
     issuer_id VARCHAR(255) NOT NULL,                -- Issuer of the TRACKED credential
-    issue_date TIMESTAMPTZ NOT NULL,                -- Issuance date of the TRACKED credential
-    expiration_date TIMESTAMPTZ,                    -- Expiration date of the TRACKED credential, if any
+    issue_date TIMESTAMP NOT NULL,                -- Issuance date of the TRACKED credential
+    expiration_date TIMESTAMP,                    -- Expiration date of the TRACKED credential, if any
     credential_type VARCHAR(100) NOT NULL,          -- Type of the TRACKED credential (e.g., 'VerifiableId')
     indexed_attributes JSONB,                       -- Optional searchable attributes from the TRACKED credential
     credential_status_details JSONB NOT NULL DEFAULT '[]'::jsonb,    -- Stores a list of status objects for this credential, defaults to an empty array.
@@ -251,7 +251,7 @@ CREATE TABLE certify.ledger (
 CREATE INDEX IF NOT EXISTS idx_ledger_credential_id ON certify.ledger(credential_id);
 CREATE INDEX IF NOT EXISTS idx_ledger_issuer_id ON certify.ledger(issuer_id);
 CREATE INDEX IF NOT EXISTS idx_ledger_credential_type ON certify.ledger(credential_type);
-CREATE INDEX IF NOT EXISTS idx_ledger_issue_date ON certify.ledger(issue_date);
+CREATE INDEX IF NOT EXISTS idx_ledger_issue_date ON certify.ledger(issuance_date);
 CREATE INDEX IF NOT EXISTS idx_ledger_expiration_date ON certify.ledger(expiration_date);
 CREATE INDEX IF NOT EXISTS idx_ledger_cr_dtimes ON certify.ledger(cr_dtimes);
 CREATE INDEX IF NOT EXISTS idx_gin_ledger_indexed_attrs ON certify.ledger USING GIN (indexed_attributes);
@@ -259,27 +259,13 @@ CREATE INDEX IF NOT EXISTS idx_gin_ledger_status_details ON certify.ledger USING
 
 CREATE TABLE IF NOT EXISTS certify.credential_status_transaction (
     transaction_log_id SERIAL PRIMARY KEY,        -- Unique ID for this transaction log entry
-    credential_id VARCHAR(255) NOT NULL,          -- The ID of the credential this transaction pertains to (should exist in ledger.credential_id)
+    credential_id VARCHAR(255), -- The ID of the credential this transaction pertains to (should exist in ledger.credential_id)
     status_purpose VARCHAR(100),                  -- The purpose of this status update
     status_value boolean,                         -- The status value (true/false)
     status_list_credential_id VARCHAR(255),       -- The ID of the status list credential involved, if any
     status_list_index BIGINT,                     -- The index on the status list, if any
     cr_dtimes TIMESTAMP NOT NULL DEFAULT NOW(),   -- Creation timestamp
-    upd_dtimes TIMESTAMP,                         -- Update timestamp
-
-    -- Foreign key constraint to ledger table
-    CONSTRAINT fk_credential_status_transaction_ledger
-        FOREIGN KEY(credential_id)
-        REFERENCES certify.ledger(credential_id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-
-    -- Foreign key constraint to status_list_credential table
-    CONSTRAINT fk_credential_status_transaction_status_list
-        FOREIGN KEY(status_list_credential_id)
-        REFERENCES certify.status_list_credential(id)
-        ON DELETE SET NULL
-        ON UPDATE CASCADE
+    upd_dtimes TIMESTAMP                         -- Update timestamp
 );
 
 CREATE INDEX IF NOT EXISTS idx_cst_credential_id ON certify.credential_status_transaction(credential_id);
@@ -318,3 +304,12 @@ CREATE INDEX IF NOT EXISTS idx_sla_status_list_credential_id ON certify.status_l
 CREATE INDEX IF NOT EXISTS idx_sla_is_assigned ON certify.status_list_available_indices(is_assigned);
 CREATE INDEX IF NOT EXISTS idx_sla_list_index ON certify.status_list_available_indices(list_index);
 CREATE INDEX IF NOT EXISTS idx_sla_cr_dtimes ON certify.status_list_available_indices(cr_dtimes);
+
+-- Create shedlock table for distributed locking
+CREATE TABLE IF NOT EXISTS shedlock (
+  name VARCHAR(64),
+  lock_until TIMESTAMPTZ(3) NOT NULL,
+  locked_at TIMESTAMPTZ(3) NOT NULL,
+  locked_by VARCHAR(255) NOT NULL,
+  PRIMARY KEY (name)
+);

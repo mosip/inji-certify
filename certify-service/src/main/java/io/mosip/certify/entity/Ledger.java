@@ -29,11 +29,11 @@ public class Ledger {
     @Column(name = "issuer_id", length = 255, nullable = false)
     private String issuerId;
 
-    @Column(name = "issue_date", nullable = false)
-    private OffsetDateTime issueDate;
+    @Column(name = "issuance_date", nullable = false)
+    private LocalDateTime issuanceDate;
 
     @Column(name = "expiration_date")
-    private OffsetDateTime expirationDate;
+    private LocalDateTime expirationDate;
 
     @Column(name = "credential_type", length = 100, nullable = false)
     private String credentialType;
