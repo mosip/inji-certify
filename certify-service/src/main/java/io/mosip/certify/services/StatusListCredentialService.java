@@ -330,14 +330,14 @@ public class StatusListCredentialService {
     }
 
     @jakarta.transaction.Transactional
-    public void storeLedgerEntry(String credentialId, String issuerId, String credentialType, CredentialStatusDetail statusDetails, Map<String, Object> indexedAttributes) {
+    public void storeLedgerEntry(String credentialId, String issuerId, String credentialType, CredentialStatusDetail statusDetails, Map<String, Object> indexedAttributes, LocalDateTime issuanceDate) {
         try {
             Ledger ledger = new Ledger();
             if(credentialId != null) {
                 ledger.setCredentialId(credentialId);
             }
             ledger.setIssuerId(issuerId);
-            ledger.setIssueDate(OffsetDateTime.now());
+            ledger.setIssuanceDate(issuanceDate);
             ledger.setCredentialType(credentialType);
             ledger.setIndexedAttributes(indexedAttributes);
 

@@ -329,7 +329,7 @@ public class StatusListCredentialServiceTest {
     public void storeLedgerEntry_Success() {
         CredentialStatusDetail detail = new CredentialStatusDetail();
         Map<String, Object> attrs = Collections.singletonMap("foo", "bar");
-        service.storeLedgerEntry("cid", "issuer", "ctype", detail, attrs);
+        service.storeLedgerEntry("cid", "issuer", "ctype", detail, attrs, LocalDateTime.now());
         verify(ledgerRepository).save(any(Ledger.class));
     }
 
@@ -337,7 +337,7 @@ public class StatusListCredentialServiceTest {
     public void storeLedgerEntry_Error_Throws() {
         doThrow(new RuntimeException("fail")).when(ledgerRepository).save(any());
         try {
-            service.storeLedgerEntry("cid", "issuer", "ctype", new CredentialStatusDetail(), Collections.emptyMap());
+            service.storeLedgerEntry("cid", "issuer", "ctype", new CredentialStatusDetail(), Collections.emptyMap(), LocalDateTime.now());
             fail("Expected RuntimeException");
         } catch (RuntimeException ex) {
             // expected

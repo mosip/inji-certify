@@ -1222,9 +1222,9 @@ paths:
   /ledger-search:
     post:
       tags:
-        - '[Experimental] Ledger Search'
+        - 'Ledger Search'
       summary: Search for Credential Status Records (Ledger Search)
-      description: '[EXPERIMENTAL FEATURE] Search based on credentialId, issuerId, and potentially indexedAttributes (via specific criteria) from the ledger. AND logic applied.'
+      description: 'Search based on credentialId, issuerId, credentialType and potentially indexedAttributes (via specific criteria) from the ledger. AND logic applied.'
       operationId: searchLedgerRecords
       requestBody:
         required: true
@@ -1269,13 +1269,63 @@ paths:
       servers:
         - url: 'http://localhost:8090/v1/certify'
           description: Generated server url
+  /v2/ledger-search:
+    post:
+      tags:
+        - 'Ledger Search'
+      summary: Search for Credential Status Records (Ledger Search) - v2
+      description: '[V2] Search based on credentialId, issuerId, credentialType, and indexedAttributes. Returns matching credential status records.'
+      operationId: searchLedgerRecordsV2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CredentialSearchCriteria'
+            examples:
+              Example 1:
+                value:
+                  credentialId: afce16e8-02ac-4210-80d9-a0a20132bda3
+                  issuerId: 'did:web:sample.github.io:my-files:sample'
+                  credentialType: 'FarmerCredential,VerifiableCredential'
+                  indexedAttributesEquals:
+                    district: Bengaluru
+                    state: Karnataka
+      responses:
+        '200':
+          description: List of matching credential status records.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CredentialStatusResponseDto'
+              examples:
+                Example 1:
+                  value:
+                    - credentialId: 52b55d02-613f-432f-b29e-ae842bc404a8
+                      issuerId: 'did:web:www.example.com:inji-config:collab:mock-identity'
+                      statusListCredentialUrl: 7bf52e81-f3bb-40ec-a0f9-a714847fd067
+                      statusListIndex: 5
+                      statusPurpose: revocation
+                      issuanceDate: '2025-08-07T11:57:39'
+                      expirationDate: null
+                      credentialType: 'MockVerifiableCredential,VerifiableCredential'
+                      statusTimestamp: '2025-08-07T11:57:39'
+        '204':
+          description: No matching records found.
+        '400':
+          description: Invalid search criteria provided.
+      servers:
+        - url: 'http://localhost:8090/v1/certify'
+          description: Generated server url
   /credentials/status:
     post:
       tags:
-        - '[Experimental] Credential Status'
+        - 'Credential Status'
       summary: Update Credential Status
       description: |
-        [EXPERIMENTAL FEATURE] Updates the status of an issued credential. This is the primary endpoint for changing a credential's status (e.g., revoking, suspending, activating by setting the 'status' boolean). It can potentially assign a credential to a status list index using fields within the 'credentialStatus' object. This operation is potentially complex: if a status list mechanism (like Bitstring Status List v1.0) is used, this may trigger fetching the relevant Status List VC, modifying its `encodedList`, calculating a new proof, and storing the updated Status List VC, in addition to updating the local credential status record. Requires appropriate authorization. This endpoint directly applies the status change. compliant to https://w3c-ccg.github.io/vc-api/#update-status
+        Updates the status of an issued credential. This is the primary endpoint for changing a credential's status (e.g., revoking, suspending, activating by setting the 'status' boolean). It can potentially assign a credential to a status list index using fields within the 'credentialStatus' object. This operation is potentially complex: if a status list mechanism (like Bitstring Status List v1.0) is used, this may trigger fetching the relevant Status List VC, modifying its `encodedList`, calculating a new proof, and storing the updated Status List VC, in addition to updating the local credential status record. Requires appropriate authorization. This endpoint directly applies the status change. compliant to https://w3c-ccg.github.io/vc-api/#update-status
       operationId: updateCredentialStatus
       requestBody:
         description: 'Specifies the credential to update, the new status value, and associated status mechanism details.'
@@ -1295,7 +1345,6 @@ paths:
                     type: BitstringStatusListEntry
                     statusListCredential: 'http://localhost:8090/v1/certify/status-list/7bf52e81-f3bb-40ec-a0f9-a714847fd067'
                   status: false
-                  indexAllocator: test
       responses:
         '200':
           description: Credential status successfully updated. Returns the updated status record.
@@ -1311,9 +1360,8 @@ paths:
                     statusListCredentialUrl: 7bf52e81-f3bb-40ec-a0f9-a714847fd067
                     statusListIndex: 5
                     statusPurpose: revocation
-                    issueDate: '2025-08-07T11:57:39'
-                    expirationDate: null
-                    credentialType: 'MockVerifiableCredential,VerifiableCredential'
+                    issueDate: '2025-08-07T12:18:55'
+                    credentialType: 'FarmerCredential,VerifiableCredential'
                     statusTimestamp: '2025-08-07T12:18:55'
         '400':
           description: 'Bad Request - Invalid input data (e.g., missing required fields, invalid format).'
@@ -1325,6 +1373,56 @@ paths:
           description: 'Conflict - The requested status update cannot be performed (e.g., index already allocated and conflict occurs, state transition not allowed).'
         '500':
           description: 'Internal Server Error - An error occurred during the status update process (e.g., failed to update Status List VC).'
+      servers:
+        - url: 'http://localhost:8090/v1/certify'
+          description: Generated server url
+  /credentials/v2/status:
+    post:
+      tags:
+        - 'Credential Status'
+      summary: Update Credential Status - V2
+      description: '[V2] Updates the status of an issued credential. Returns the updated status record. The v2 endpoint for status update is no longer dependent on ledger. Hence it will not use credentialId to search for the credentialStatusDetails in Ledger but it will check if the statusListCredential with given statusListCredentialId is present in the status_list_credential table.'
+      operationId: updateCredentialStatusV2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCredentialStatusRequestV2Dto'
+            examples:
+              Example 1:
+                value:
+                  credentialStatus:
+                    statusPurpose: revocation
+                    statusListIndex: 5
+                    id: 'http://localhost:8090/v1/certify/status-list/7bf52e81-f3bb-40ec-a0f9-a714847fd067#5'
+                    type: BitstringStatusListEntry
+                    statusListCredential: 'http://localhost:8090/v1/certify/status-list/7bf52e81-f3bb-40ec-a0f9-a714847fd067'
+                  status: false
+      responses:
+        '200':
+          description: Credential status successfully updated. Returns the updated status record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialStatusResponseDto'
+              examples:
+                Example 1:
+                  value:
+                    statusListCredentialUrl: 7bf52e81-f3bb-40ec-a0f9-a714847fd067
+                    statusListIndex: 5
+                    statusPurpose: revocation
+                    statusTimestamp: '2025-08-07T12:18:55'
+        '400':
+          description: 'Bad Request - Invalid input data.'
+        '403':
+          description: Forbidden - Caller does not have permission.
+        '404':
+          description: Not Found - The specified credentialId or statusListCredential does not exist.
+        '409':
+          description: 'Conflict - The requested status update cannot be performed.'
+        '500':
+          description: 'Internal Server Error - An error occurred during the status update process.'
       servers:
         - url: 'http://localhost:8090/v1/certify'
           description: Generated server url
@@ -1988,11 +2086,6 @@ components:
     CredentialStatusResponseDto:
       type: object
       description: 'Representation of a Credential Status record read from the system, reflecting the ''ledger'' table structure (excluding indexedAttributes) and current status from ''credential_status'' table.'
-      required:
-        - credentialId
-        - issuerId
-        - issueDate
-        - credentialType
       properties:
         credentialId:
           type: string
@@ -2015,8 +2108,14 @@ components:
           nullable: true
         issueDate:
           type: string
-          description: Issuance date of the credential being tracked (from ledger.issue_date).
+          description: Issuance date of the credential being tracked (from ledger.issuance_date).
           format: date-time
+          nullable: true
+        issuanceDate:
+          type: string
+          description: Issuance date of the credential being tracked (from ledger.issuance_date).
+          format: date-time
+          nullable: true
         expirationDate:
           type: string
           description: 'Expiration date of the credential being tracked, if applicable (from ledger.expiration_date).'
@@ -2071,6 +2170,45 @@ components:
           description: Optional hint or identifier for index allocation strategy or service component. Usage is implementation-defined.
       required:
         - credentialId
+        - credentialStatus
+        - status
+    UpdateCredentialStatusRequestV2Dto:
+      type: object
+      properties:
+        credentialStatus:
+          type: object
+          description: 'Object containing details related to the credential''s status mechanism, especially if using a status list.'
+          properties:
+            id:
+              type: string
+              nullable: true
+              description: 'The identifier for the credential status entry itself (e.g., https://example.com/status/1#123). Optional, system may generate/manage.'
+              format: uri
+            type:
+              type: string
+              nullable: true
+              description: 'The type of the status mechanism being used (e.g., BitstringStatusList). Optional, may be inferred or managed by system.'
+            statusPurpose:
+              type: string
+              nullable: true
+              description: 'Indicates the purpose of the status (e.g., ''revocation'', ''suspension''). Determines interpretation of the ''status'' bit. Should align with system policy/list purpose.'
+            statusListIndex:
+              type: integer
+              nullable: true
+              description: The index assigned to this credential within the referenced status list. Required if using StatusList.
+              format: int64
+            statusListCredential:
+              type: string
+              nullable: true
+              description: The URL/ID of the Status List VC document to use. Required if using StatusList.
+              format: uri
+          required:
+            - statusListIndex
+            - statusListCredential
+        status:
+          type: boolean
+          description: 'The new status value (true typically means ''status asserted'', e.g., revoked/suspended; false means ''status not asserted''). Interpretation depends on statusPurpose and system policy.'
+      required:
         - credentialStatus
         - status
     StatusListCredentialDto:

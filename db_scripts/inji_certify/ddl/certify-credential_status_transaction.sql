@@ -14,7 +14,7 @@
 -- Create credential_status_transaction table
 CREATE TABLE IF NOT EXISTS credential_status_transaction (
     transaction_log_id SERIAL PRIMARY KEY,        -- Unique ID for this transaction log entry
-    credential_id VARCHAR(255) NOT NULL,          -- The ID of the credential this transaction pertains to (should exist in ledger.credential_id)
+    credential_id VARCHAR(255), -- The ID of the credential this transaction pertains to (should exist in ledger.credential_id)
     status_purpose VARCHAR(100),                  -- The purpose of this status update
     status_value boolean,                         -- The status value (true/false)
     status_list_credential_id VARCHAR(255),       -- The ID of the status list credential involved, if any

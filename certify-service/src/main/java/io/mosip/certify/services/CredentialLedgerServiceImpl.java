@@ -11,8 +11,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -34,7 +38,11 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
             }
 
             return records.stream()
-                    .map(this::mapToSearchResponse)
+                    .map(record -> {
+                        CredentialStatusResponse response = mapToSearchResponse(record);
+                        response.setIssuanceDate(null); // Set issuanceDate as null
+                        return response;
+                    })
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
@@ -46,12 +54,16 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
         CredentialStatusResponse response = new CredentialStatusResponse();
         response.setCredentialId(record.getCredentialId());
         response.setIssuerId(record.getIssuerId());
-        response.setIssueDate(record.getIssueDate().toLocalDateTime());
-        response.setExpirationDate(record.getExpirationDate() != null ? record.getExpirationDate().toLocalDateTime() : null);
+        response.setIssueDate(record.getIssuanceDate());
+        response.setIssuanceDate(record.getIssuanceDate());
+        response.setExpirationDate(record.getExpirationDate() != null ? record.getExpirationDate() : null);
         response.setCredentialType(record.getCredentialType());
         List<CredentialStatusDetail> statusDetails = record.getCredentialStatusDetails();
         if (statusDetails != null && !statusDetails.isEmpty()) {
-            CredentialStatusDetail latestStatus = statusDetails.get(0);
+            CredentialStatusDetail latestStatus = statusDetails.stream()
+                                       .filter(s -> s.getCreatedTimes() != null)
+                                        .max(Comparator.comparingLong(CredentialStatusDetail::getCreatedTimes))
+                                       .orElse(statusDetails.getFirst());
 
             String statusListCredentialId = latestStatus.getStatusListCredentialId();
             Long statusListIndex = latestStatus.getStatusListIndex();
@@ -61,12 +73,12 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
             response.setStatusListCredentialUrl(statusListCredentialId);
             response.setStatusListIndex(statusListIndex);
             response.setStatusPurpose(statusPurpose);
-            long timestampMillis = createdDtimes;
-            OffsetDateTime createdDateTime = OffsetDateTime.ofInstant(
-                    java.time.Instant.ofEpochMilli(timestampMillis),
-                    java.time.ZoneOffset.UTC
-            );
-            response.setStatusTimestamp(createdDateTime.toLocalDateTime());
+            if (createdDtimes != null) {
+                LocalDateTime ts = LocalDateTime.ofInstant(
+                        Instant.ofEpochMilli(createdDtimes),
+                        ZoneOffset.UTC);
+                response.setStatusTimestamp(ts);
+            }
         }
         return response;
     }
@@ -81,6 +93,29 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
 
         if (!hasValid) {
             throw new CertifyException("INVALID_SEARCH_CRITERIA");
+        }
+    }
+
+    @Override
+    public List<CredentialStatusResponse> searchCredentialLedgerV2(CredentialLedgerSearchRequest request) {
+        validateSearchRequest(request);
+        try {
+            List<Ledger> records = ledgerRepository.findBySearchRequest(request);
+
+            if (records.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            return records.stream()
+                    .map(record -> {
+                        CredentialStatusResponse response = mapToSearchResponse(record);
+                        response.setIssueDate(null); // Set issueDate as null
+                        return response;
+                    })
+                    .collect(Collectors.toList());
+
+        } catch (Exception e) {
+            throw new CertifyException("SEARCH_CREDENTIALS_FAILED");
         }
     }
 }
