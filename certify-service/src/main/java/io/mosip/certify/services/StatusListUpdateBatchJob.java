@@ -226,7 +226,7 @@ public class StatusListUpdateBatchJob {
             // Update the encodedList in the credential subject
             JSONObject credentialSubject = vcDocument.getJSONObject("credentialSubject");
             credentialSubject.put("encodedList", newEncodedList);
-            log.info("Updated encodedList for StatusListCredential ID: {}", newEncodedList);
+            log.info("Updated encodedList for StatusListCredential ID: {}", statusListCredential.getId());
 
             // Update timestamps
             String newValidFrom = new Date().toInstant().toString();
