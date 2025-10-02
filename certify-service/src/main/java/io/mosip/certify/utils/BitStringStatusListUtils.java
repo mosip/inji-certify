@@ -18,6 +18,10 @@ import java.util.zip.GZIPOutputStream;
 @Slf4j
 public final class BitStringStatusListUtils {
 
+    // Constants for capacity calculations
+    private static final long KB_TO_BITS_MULTIPLIER = 8192L; // 1024 * 8
+    private static final long MIN_CAPACITY_BITS = 131072L; // 16KB minimum
+
     // Private constructor to prevent instantiation
     private BitStringStatusListUtils() {
         throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
@@ -31,14 +35,11 @@ public final class BitStringStatusListUtils {
      * @return Base64URL encoded compressed bitstring.
      */
     public static String updateEncodedList(String encodedStatusList, Map<Long, Boolean> statusMap, long capacityInKB) {
-        log.info("Generating encoded list from status map with {} entries for capacity {}",
+        log.debug("Generating encoded list from status map with {} entries for capacity {}",
                 statusMap.size(), capacityInKB);
 
         try {
-            long actualCapacity = Math.max(capacityInKB * 1024L * 8L, 131072L);
-            if (actualCapacity > Integer.MAX_VALUE) {
-                throw new IllegalArgumentException("Capacity exceeds maximum supported size for Java BitSet");
-            }
+            long actualCapacity = safeConvertKBToBits(capacityInKB);
             BitSet bitstring = decodeEncodedList(encodedStatusList, (int) actualCapacity);
             for (Map.Entry<Long, Boolean> entry : statusMap.entrySet()) {
                 long index = entry.getKey();
@@ -51,14 +52,17 @@ public final class BitStringStatusListUtils {
                 }
             }
             byte[] byteArray = convertBitstringToByteArray(bitstring, (int) actualCapacity);
-            String encodedList = compressAndEncode(byteArray);
+            String encodedList = "u" + compressAndEncode(byteArray);
 
             log.info("Generated encoded list of length {} from {} status entries", encodedList.length(), statusMap.size());
 
             return encodedList;
-        } catch (Exception e) {
+        } catch (CertifyException exception) {
+            throw exception;
+        }
+        catch (Exception e) {
             log.error("Error generating encoded list from status map", e);
-            throw new CertifyException(ErrorConstants.ENCODED_LIST_UPDATE_FAILED);
+            throw new CertifyException(ErrorConstants.ENCODED_LIST_UPDATE_FAILED, e.getMessage(), e);
         }
     }
 
@@ -70,18 +74,14 @@ public final class BitStringStatusListUtils {
      */
     public static String createEmptyEncodedList(long capacityInKB) {
         log.debug("Creating empty encoded list with capacity {}", capacityInKB);
-        long actualCapacity = Math.max(capacityInKB * 1024L * 8L, 131072L);
-        if (actualCapacity > Integer.MAX_VALUE) {
-            throw new IllegalArgumentException("Capacity exceeds maximum supported size for Java BitSet");
-        }
-        int numBytes = (int) Math.ceil(actualCapacity / 8.0);
+        long actualCapacity = safeConvertKBToBits(capacityInKB);
         BitSet emptyBitstring = new BitSet((int) actualCapacity);
         byte[] emptyByteArray = convertBitstringToByteArray(emptyBitstring, (int) actualCapacity);
         return "u" + compressAndEncode(emptyByteArray);
     }
 
     /**
-     * Convert bitstring boolean array to byte array. Each byte contains 8 bits.
+     * Convert bitstring to byte array. Each byte contains 8 bits, with the most significant bit first (big-endian within each byte).
      */
     private static byte[] convertBitstringToByteArray(BitSet bitstring, int capacity) {
         int byteLength = (capacity + 7) / 8;
@@ -90,7 +90,7 @@ public final class BitStringStatusListUtils {
             if (bitstring.get(i)) {
                 int byteIndex = i / 8;
                 int bitIndex = i % 8;
-                byteArray[byteIndex] |= (1 << (7 - bitIndex));
+                byteArray[byteIndex] = (byte) (byteArray[byteIndex] | (1 << (7 - bitIndex)));
             }
         }
         return byteArray;
@@ -98,7 +98,7 @@ public final class BitStringStatusListUtils {
 
     /**
      * Compresses a byte array using GZIP and then encodes it to Base64URL.
-     * This method centralizes the duplicated logic.
+     * Uses multibase prefix 'u' for the encoded string as per W3C Bitstring Status List spec.
      *
      * @param input The byte array to compress and encode.
      * @return A Base64URL encoded string.
@@ -120,11 +120,11 @@ public final class BitStringStatusListUtils {
     }
 
     /**
-     * Decodes an encoded list string (Base64URL + GZIP) back to a boolean array bitstring.
+     * Decodes an encoded list string (Base64URL + GZIP) back to a BitSet bitstring.
      *
      * @param encodedList The encoded list string (may have multibase prefix 'u').
      * @param capacity The number of bits to decode (should match the original capacity).
-     * @return boolean array representing the bitstring status list.
+     * @return BitSet representing the bitstring status list.
      */
     private static BitSet decodeEncodedList(String encodedList, int capacity) throws IOException {
         if (encodedList == null || encodedList.isEmpty()) {
@@ -160,6 +160,43 @@ public final class BitStringStatusListUtils {
                 baos.write(buffer, 0, len);
             }
             return baos.toByteArray();
+        }
+    }
+
+    /**
+     * Safely converts capacity from KB to bits, checking for overflow.
+     * Ensures the result is at least the minimum capacity (131072 bits = 16KB).
+     * Also validates that the result fits within Integer.MAX_VALUE for BitSet compatibility.
+     *
+     * @param capacityInKB Capacity in kilobytes
+     * @return Capacity in bits
+     * @throws CertifyException if capacity is negative, overflow occurs, or result exceeds BitSet limits
+     */
+    private static long safeConvertKBToBits(long capacityInKB) {
+        // Check for negative input
+        if (capacityInKB < 0) {
+            log.error("Negative capacity provided: {}", capacityInKB);
+            throw new CertifyException("Capacity cannot be negative: " + capacityInKB);
+        }
+
+        try {
+            // Directly convert KB to bits using the pre-calculated constant
+            long capacityInBits = Math.multiplyExact(capacityInKB, KB_TO_BITS_MULTIPLIER);
+
+            // Ensure minimum capacity (131072 bits = 16KB)
+            long actualCapacity = Math.max(capacityInBits, MIN_CAPACITY_BITS);
+
+            // Check if the result exceeds Integer.MAX_VALUE for array compatibility
+            if (actualCapacity > Integer.MAX_VALUE) {
+                log.error("Capacity exceeds maximum supported size for BitString operations: {}", actualCapacity);
+                throw new CertifyException(ErrorConstants.STATUS_LIST_CAPACITY_MISCONFIGURED,"Capacity exceeds maximum supported size for BitString operations: " + actualCapacity);
+            }
+
+            return actualCapacity;
+
+        } catch (ArithmeticException e) {
+            log.error("Overflow occurred while converting capacity from KB to bits for capacity: {}", capacityInKB, e);
+            throw new CertifyException(ErrorConstants.STATUS_LIST_CAPACITY_MISCONFIGURED, "Overflow occurred while converting capacity from KB to bits for capacity: " + capacityInKB);
         }
     }
 }
