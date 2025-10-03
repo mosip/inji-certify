@@ -69,8 +69,6 @@ public class MDocCredential extends Credential {
     @Override
     public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm, String appID, String refID, String didUrl, String signatureCryptoSuite) {
         try {
-            log.info("Starting mDoc proof generation for appID: {}, refID: {}", appID, refID);
-
             VCResult<String> vcResult = new VCResult<>();
 
             // Parse the input mDoc JSON
@@ -83,6 +81,8 @@ public class MDocCredential extends Credential {
             Map<String, Object> mso = MDocUtils.createMobileSecurityObject(mDocJson, namespaceDigests, appID, refID);
             byte[] signedMSO = MDocUtils.signMSO(mso, appID, refID, signAlgorithm, didDocumentUtil, coseSignatureService);
             Map<String, Object> issuerSigned = MDocUtils.createIssuerSignedStructure(taggedNamespaces, signedMSO);
+
+            // Encode to CBOR, then to Base64
             byte[] cborIssuerSigned = MDocUtils.encodeToCBOR(issuerSigned);
             String base64UrlCredential = Base64.getUrlEncoder().withoutPadding().encodeToString(cborIssuerSigned);
 

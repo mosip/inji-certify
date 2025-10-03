@@ -11,6 +11,7 @@ import co.nstant.in.cbor.model.*;
 
 import java.io.ByteArrayOutputStream;
 
+import io.mosip.certify.core.constants.Constants;
 import io.mosip.kernel.signature.dto.CoseSignRequestDto;
 import io.mosip.kernel.signature.service.CoseSignatureService;
 import lombok.extern.slf4j.Slf4j;
@@ -62,33 +63,38 @@ public class MDocUtils {
             JsonNode templateNode = objectMapper.readTree(templatedJSON);
             Map<String, Object> finalMDoc = new HashMap<>();
 
-            // Extract basic fields
-            if (templateNode.has("docType")) {
-                finalMDoc.put("docType", templateNode.get("docType").asText());
-            }
-            if (templateNode.has("holderId")) {
-                finalMDoc.put("holderId", templateNode.get("holderId").asText());
-            }
-
             if (templateNode.has("validityInfo")) {
                 JsonNode validityInfo = templateNode.get("validityInfo");
                 Map<String, Object> validity = objectMapper.convertValue(validityInfo, Map.class);
 
-                // Handle _validFrom placeholder
                 if (validity.containsKey("validFrom")) {
                     String validFromValue = (String) validity.get("validFrom");
                     if ("${_validFrom}".equals(validFromValue)) {
                         // Replace with current timestamp in UTC
-                        String currentTime = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'"));
+                        String currentTime = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
                         validity.put("validFrom", currentTime);
+                    }
+                }
+                if (validity.containsKey("validUntil")) {
+                    String validUntilValue = (String) validity.get("validUntil");
+                    if ("${_validUntil}".equals(validUntilValue)) {
+                        // Replace with current timestamp in UTC
+                        String currentTime = ZonedDateTime.now(ZoneOffset.UTC).plusYears(2).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
+                        validity.put("validUntil", currentTime);
                     }
                 }
 
                 finalMDoc.put("validityInfo", validity);
             }
 
-            if (templateParams.containsKey("_issuer")) {
-                finalMDoc.put("issuer", templateParams.get("_issuer"));
+            if (templateParams.containsKey("didUrl")) {
+                finalMDoc.put("_issuer", templateParams.get("didUrl"));
+            }
+            if (templateParams.containsKey("_holderId")) {
+                finalMDoc.put("_holderId", templateParams.get("_holderId"));
+            }
+            if (templateNode.has("docType")) {
+                finalMDoc.put("_docType", templateNode.get("docType").asText());
             }
 
             // Process namespaces
@@ -142,7 +148,7 @@ public class MDocUtils {
         }
 
         // add missing fields from templateParams
-        processedItems = addMissingFields(processedItems, templateParams);
+//        processedItems = addMissingFields(processedItems, templateParams);
 
         return processedItems;
     }
@@ -418,7 +424,7 @@ public class MDocUtils {
         mso.put("valueDigests", valueDigests);
 
         // Add document metadata
-        mso.put("docType", mDocJson.get("docType"));
+        mso.put("docType", mDocJson.get("_docType"));
 
         // Create validity info with current timestamp
         Map<String, Object> validityInfo = new HashMap<>();
@@ -432,7 +438,7 @@ public class MDocUtils {
         mso.put("validityInfo", validityInfo);
 
         // Add device key info (placeholder - should be from wallet's PoP)
-        Map<String, Object> deviceKeyInfo = createDeviceKeyInfo(mDocJson.get("holderId"));
+        Map<String, Object> deviceKeyInfo = createDeviceKeyInfo(mDocJson.get("_holderId"));
         mso.put("deviceKeyInfo", deviceKeyInfo);
 
         return mso;
