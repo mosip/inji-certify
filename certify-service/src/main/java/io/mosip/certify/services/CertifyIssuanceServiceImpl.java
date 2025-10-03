@@ -240,15 +240,8 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 }
             case "mso_mdoc":
                 vcRequestDto.setDoctype(credentialRequest.getDoctype());
-                vcRequestDto.setClaims(credentialRequest.getClaims());
                 try {
-                    // Prepare raw data for the data provider
-                    Map<String, Object> rawData = new HashMap<>();
-                    rawData.put(Constants.DOCTYPE, vcRequestDto.getDoctype());
-                    rawData.put(Constants.CLAIMS, vcRequestDto.getClaims());
-
-                    // Fetch data from the configured plugin
-                    JSONObject jsonObject = dataProviderPlugin.fetchData(rawData);
+                    JSONObject jsonObject = dataProviderPlugin.fetchData(parsedAccessToken.getClaims());
 
                     // Prepare template parameters
                     Map<String, Object> templateParams = new HashMap<>();
@@ -260,12 +253,14 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                         templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
                     }
                     jsonObject.put("_holderId", holderId);
+                    jsonObject.put("_docType", vcRequestDto.getDoctype());
                     Credential cred = credentialFactory.getCredential(CredentialFormat.VC_MDOC.toString())
                             .orElseThrow(() -> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
+
                     templateParams.putAll(jsonObject.toMap());
 
                     String unsignedCredential = cred.createCredential(templateParams, templateName);
-
+                    log.info("unsignedCredential: " + unsignedCredential);
                     return cred.addProof(
                             unsignedCredential,
                             "",
