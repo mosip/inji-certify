@@ -105,7 +105,7 @@ public class MDocUtils {
                 nameSpacesNode.fieldNames().forEachRemaining(namespaceName -> {
                     try {
                         JsonNode namespaceItems = nameSpacesNode.get(namespaceName);
-                        List<Map<String, Object>> processedItems = processNamespaceItems(namespaceItems, templateParams);
+                        List<Map<String, Object>> processedItems = processNamespaceItems(namespaceItems);
                         nameSpaces.put(namespaceName, processedItems);
                     } catch (Exception e) {
                         log.error("Error processing namespace {}: {}", namespaceName, e.getMessage());
@@ -125,7 +125,7 @@ public class MDocUtils {
     /**
      * Process items within a namespace
      */
-    public List<Map<String, Object>> processNamespaceItems(JsonNode namespaceItems, Map<String, Object> templateParams) {
+    public List<Map<String, Object>> processNamespaceItems(JsonNode namespaceItems) {
         List<Map<String, Object>> processedItems = new ArrayList<>();
 
         // First, add all items from template
@@ -261,7 +261,9 @@ public class MDocUtils {
      * Preprocesses objects for CBOR encoding (handles dates, byte arrays, etc.)
      */
     public static Object preprocessForCBOR(Object obj) {
-        if (obj == null) return null;
+        if (obj == null) {
+            return null;
+        }
 
         // Handle byte arrays directly - don't convert to hex
         if (obj instanceof byte[]) {
@@ -428,7 +430,6 @@ public class MDocUtils {
 
         // Create validity info with current timestamp
         Map<String, Object> validityInfo = new HashMap<>();
-        String currentTime = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"));
 
         if (mDocJson.containsKey("validityInfo")) {
             Map<String, Object> originalValidity = (Map<String, Object>) mDocJson.get("validityInfo");
@@ -472,10 +473,7 @@ public class MDocUtils {
     public static byte[] signMSO(Map<String, Object> mso, String appID, String refID, String signAlgorithm, DIDDocumentUtil didDocumentUtil, CoseSignatureService coseSignatureService) throws Exception {
 
         try {
-            log.info("Starting COSE signing for MSO with algorithm: {}", signAlgorithm);
-
             byte[] msoPayload = encodeToCBOR(mso);
-            log.debug("MSO payload encoded to CBOR, size: {} bytes", msoPayload.length);
 
             CoseSignRequestDto signRequest = new CoseSignRequestDto();
 
@@ -518,12 +516,9 @@ public class MDocUtils {
      * Creates the final IssuerSigned structure combining namespaces and issuerAuth
      */
     public static Map<String, Object> createIssuerSignedStructure(Map<String, Object> processedNamespaces, byte[] signedMSO) {
-
-        Map<String, Object> issuerSigned = new HashMap<>();
-        issuerSigned.put("nameSpaces", processedNamespaces);
-        issuerSigned.put("issuerAuth", signedMSO);
-
-        log.info("Created IssuerSigned structure with {} namespaces", processedNamespaces.size());
-        return issuerSigned;
+        return Map.of(
+                "nameSpaces", processedNamespaces,
+                "issuerAuth", signedMSO
+        );
     }
 }
