@@ -260,7 +260,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     templateParams.putAll(jsonObject.toMap());
 
                     String unsignedCredential = cred.createCredential(templateParams, templateName);
-                    log.info("unsignedCredential: " + unsignedCredential);
                     return cred.addProof(
                             unsignedCredential,
                             "",
@@ -274,9 +273,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 } catch (DataProviderExchangeException e) {
                     log.error("Error fetching data from provider for mDOC: ", e);
                     throw new CertifyException(e.getErrorCode());
-                } catch (JSONException e) {
-                    log.error("JSON processing error for mDOC: {}", e.getMessage(), e);
-                    throw new CertifyException(ErrorConstants.UNKNOWN_ERROR);
                 } catch (Exception e) {
                     log.error("Unexpected error processing mDOC credential: {}", e.getMessage(), e);
                     throw new CertifyException(ErrorConstants.VC_ISSUANCE_FAILED);
