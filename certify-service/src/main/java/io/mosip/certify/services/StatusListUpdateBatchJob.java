@@ -13,12 +13,12 @@ import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -45,12 +45,9 @@ public class StatusListUpdateBatchJob {
     @Value("${mosip.certify.batch.status-list-update.batch-size:1000}")
     private int batchSize;
 
-    @Value("${mosip.certify.batch.status-list-update.since-time:1970-01-01T00:00:00}")
-    private String sinceTime;
-
     /**
-     * Scheduled method that runs every hour to update status lists
-     * Uses @Scheduled with fixedRate to run every hour (3600000 ms)
+     * Scheduled method that runs periodically (schedule controlled by cron expression property)
+     * to update status lists by processing new credential status transactions.
      */
     @Scheduled(cron = "${mosip.certify.batch.status-list-update.cron-expression:0 0 * * * *}")
     @SchedulerLock(
@@ -69,19 +66,15 @@ public class StatusListUpdateBatchJob {
         log.info("Starting status list update batch job");
 
         try {
-            // Determine the starting timestamp for processing
-            LocalDateTime startTime = determineStartTime();
-            log.info("Processing transactions since: {}", startTime);
-
-            // Fetch new transactions
-            List<CredentialStatusTransaction> newTransactions = fetchNewTransactions(startTime);
+            // Fetch a batch of unprocessed transactions
+            List<CredentialStatusTransaction> newTransactions = transactionRepository.findTopNByProcessedTimeIsNullOrderByCreatedDtimesAsc(PageRequest.of(0, batchSize));
 
             if (newTransactions.isEmpty()) {
-                log.info("No new transactions found since {}", startTime);
+                log.info("No unprocessed transactions found");
                 return;
             }
 
-            log.info("Found {} new transactions to process", newTransactions.size());
+            log.info("Found {} unprocessed transactions to process", newTransactions.size());
 
             // Group transactions by status list credential ID
             Map<String, List<CredentialStatusTransaction>> transactionsByStatusList = groupTransactionsByStatusList(newTransactions);
@@ -94,8 +87,14 @@ public class StatusListUpdateBatchJob {
 
                 try {
                     updateStatusList(statusListId, transactions);
+                    // Mark transactions as processed
+                    LocalDateTime processedTime = LocalDateTime.now();
+                    for (CredentialStatusTransaction txn : transactions) {
+                        txn.setProcessedTime(processedTime);
+                    }
+                    transactionRepository.saveAll(transactions);
                     updatedLists++;
-                    log.info("Successfully updated status list: {}", statusListId);
+                    log.info("Successfully updated status list: {} and marked {} transactions as processed", statusListId, transactions.size());
                 } catch (Exception e) {
                     log.error("Failed to update status list: {}", statusListId, e);
                     // Continue processing other status lists even if one fails
@@ -107,44 +106,6 @@ public class StatusListUpdateBatchJob {
         } catch (Exception e) {
             log.error("Error in status list update batch job", e);
             throw new CertifyException(ErrorConstants.BATCH_JOB_EXECUTION_FAILED);
-        }
-    }
-
-    /**
-     * Determine the starting timestamp for processing transactions
-     */
-    private LocalDateTime determineStartTime() {
-
-        // First run - get the latest update time from existing status lists
-        Optional<LocalDateTime> lastKnownUpdate = statusListRepository.findMaxUpdatedTime();
-
-        if (lastKnownUpdate.isPresent()) {
-            log.info("Using last known status list update time: {}", lastKnownUpdate.get());
-            return lastKnownUpdate.get();
-        }
-
-        // No previous updates found, using configured since time
-        try {
-            LocalDateTime defaultStart = LocalDateTime.parse(sinceTime);
-            log.info("No previous update time found, using configured default start time: {}", defaultStart);
-            return defaultStart;
-        } catch (DateTimeParseException e) {
-            // Fallback: safe default to 24 hours ago if parsing fails
-            LocalDateTime fallbackStart = LocalDateTime.now().minusHours(24);
-            log.warn("Failed to parse configured since-time '{}'. Falling back to 24 hours ago: {}", sinceTime, fallbackStart);
-            return fallbackStart;
-        }
-    }
-
-    /**
-     * Fetch new transactions since the given timestamp
-     */
-    private List<CredentialStatusTransaction> fetchNewTransactions(LocalDateTime since) {
-        try {
-            return transactionRepository.findTransactionsSince(since, batchSize);
-        } catch (Exception e) {
-            log.error("Error fetching new transactions since {}", since, e);
-            throw new CertifyException(ErrorConstants.TRANSACTION_FETCH_FAILED);
         }
     }
 
@@ -195,8 +156,8 @@ public class StatusListUpdateBatchJob {
         }
     }
 
-    /**
-     * Apply transaction updates to the current status data
+    /** Returns a map of status list index to the latest status value, based on transaction creation time.
+     * If multiple transactions exist for the same index, the latest one (by createdDtimes) is used.
      */
     private Map<Long, Boolean> getUpdatedStatus(List<CredentialStatusTransaction> transactions) {
         return transactions.stream()
