@@ -44,3 +44,14 @@ CREATE TABLE IF NOT EXISTS certify.shedlock (
   locked_by VARCHAR(255) NOT NULL,
   PRIMARY KEY (name)
 );
+
+ALTER TABLE certify.credential_status_transaction
+ADD COLUMN processed_time TIMESTAMP NULL;
+
+COMMENT ON COLUMN credential_status_transaction.processed_time IS 'Timestamp when this transaction was processed by status list batch job.';
+
+UPDATE certify.credential_status_transaction
+SET processed_time = NOW()
+WHERE created_dtimes < (
+    SELECT MAX(updated_dtimes) FROM certify.status_list_credential
+);

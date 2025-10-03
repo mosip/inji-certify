@@ -40,6 +40,9 @@ public class CredentialStatusTransaction {
     @Column(name = "upd_dtimes")
     private LocalDateTime updatedDtimes;
 
+    @Column(name = "processed_time")
+    private LocalDateTime processedTime;
+
     @PrePersist
     protected void onCreate() {
         createdDtimes = LocalDateTime.now();
