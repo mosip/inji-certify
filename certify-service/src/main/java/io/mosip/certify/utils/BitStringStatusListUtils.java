@@ -176,7 +176,7 @@ public final class BitStringStatusListUtils {
         // Check for negative input
         if (capacityInKB < 0) {
             log.error("Negative capacity provided: {}", capacityInKB);
-            throw new CertifyException("Capacity cannot be negative: " + capacityInKB);
+            throw new CertifyException(ErrorConstants.STATUS_LIST_CAPACITY_MISCONFIGURED,"Capacity cannot be negative: " + capacityInKB);
         }
 
         try {
