@@ -265,7 +265,8 @@ CREATE TABLE IF NOT EXISTS certify.credential_status_transaction (
     status_list_credential_id VARCHAR(255),       -- The ID of the status list credential involved, if any
     status_list_index BIGINT,                     -- The index on the status list, if any
     cr_dtimes TIMESTAMP NOT NULL DEFAULT NOW(),   -- Creation timestamp
-    upd_dtimes TIMESTAMP                         -- Update timestamp
+    upd_dtimes TIMESTAMP,                         -- Update timestamp
+    processed_time TIMESTAMP                      -- Timestamp when processed by status list batch job
 );
 
 CREATE INDEX IF NOT EXISTS idx_cst_credential_id ON certify.credential_status_transaction(credential_id);
