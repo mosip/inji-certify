@@ -15,21 +15,7 @@ import java.util.List;
 public interface CredentialStatusTransactionRepository extends JpaRepository<CredentialStatusTransaction, Long> {
 
     /**
-     * Find all transactions created since the given timestamp, ordered by creation time
-     * Limited by the specified batch size
-     */
-    @Query("SELECT t FROM CredentialStatusTransaction t WHERE t.createdDtimes > :since ORDER BY t.createdDtimes ASC")
-    List<CredentialStatusTransaction> findTransactionsSince(@Param("since") LocalDateTime since, Pageable pageable);
-
-    /**
-     * Convenience method for batch processing
-     */
-    default List<CredentialStatusTransaction> findTransactionsSince(LocalDateTime since, int batchSize) {
-        return findTransactionsSince(since, PageRequest.of(0, batchSize));
-    }
-
-    /**
      * Find a batch of unprocessed transactions, ordered by creation time, with custom batch size.
      */
-    List<CredentialStatusTransaction> findTopNByProcessedTimeIsNullOrderByCreatedDtimesAsc(Pageable pageable);
+    List<CredentialStatusTransaction> findByProcessedTimeIsNullOrderByCreatedDtimesAsc(Pageable pageable);
 }

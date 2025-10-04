@@ -98,7 +98,7 @@ public final class BitStringStatusListUtils {
 
     /**
      * Compresses a byte array using GZIP and then encodes it to Base64URL.
-     * Uses multibase prefix 'u' for the encoded string as per W3C Bitstring Status List spec.
+     * Returns a Base64URL-encoded string (without multibase prefix).
      *
      * @param input The byte array to compress and encode.
      * @return A Base64URL encoded string.
@@ -128,7 +128,7 @@ public final class BitStringStatusListUtils {
      */
     private static BitSet decodeEncodedList(String encodedList, int capacity) throws IOException {
         if (encodedList == null || encodedList.isEmpty()) {
-            throw new IllegalArgumentException("Encoded list string is null or empty");
+            throw new CertifyException(ErrorConstants.INVALID_ENCODED_LIST, "Encoded list string is null or empty");
         }
         String base64Part = encodedList.startsWith("u") ? encodedList.substring(1) : encodedList;
         byte[] compressedBytes = Base64.getUrlDecoder().decode(base64Part);
