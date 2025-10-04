@@ -67,7 +67,7 @@ public class StatusListUpdateBatchJob {
 
         try {
             // Fetch a batch of unprocessed transactions
-            List<CredentialStatusTransaction> newTransactions = transactionRepository.findTopNByProcessedTimeIsNullOrderByCreatedDtimesAsc(PageRequest.of(0, batchSize));
+            List<CredentialStatusTransaction> newTransactions = transactionRepository.findByProcessedTimeIsNullOrderByCreatedDtimesAsc(PageRequest.of(0, batchSize));
 
             if (newTransactions.isEmpty()) {
                 log.info("No unprocessed transactions found");

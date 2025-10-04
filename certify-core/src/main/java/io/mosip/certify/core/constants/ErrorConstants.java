@@ -48,4 +48,5 @@ public class ErrorConstants {
     public static final String STATUS_LIST_INDEX_INITIALIZATION_FAILED = "status_list_index_initialization_failed";
     public static final String STATUS_LIST_INDEX_UNAVAILABLE = "status_list_index_unavailable";
     public static final String STATUS_LIST_CAPACITY_MISCONFIGURED = "status_list_capacity_misconfigured";
+    public static final String INVALID_ENCODED_LIST = "invalid_encoded_list";
 }

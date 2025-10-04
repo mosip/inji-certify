@@ -22,10 +22,4 @@ public interface StatusListCredentialRepository extends JpaRepository<StatusList
             "AND s.credentialStatus = :status " +
             "ORDER BY s.createdDtimes DESC")
     Optional<StatusListCredential> findSuitableStatusList(@Param("statusPurpose") String statusPurpose, StatusListCredential.CredentialStatus status);
-
-    /**
-     * Find the maximum updated timestamp from all status list credentials
-     */
-    @Query("SELECT MAX(s.updatedDtimes) FROM StatusListCredential s WHERE s.updatedDtimes IS NOT NULL")
-    Optional<LocalDateTime> findMaxUpdatedTime();
 }

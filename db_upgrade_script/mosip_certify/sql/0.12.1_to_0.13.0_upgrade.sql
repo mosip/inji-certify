@@ -52,6 +52,6 @@ COMMENT ON COLUMN credential_status_transaction.processed_time IS 'Timestamp whe
 
 UPDATE certify.credential_status_transaction
 SET processed_time = NOW()
-WHERE created_dtimes < (
-    SELECT MAX(updated_dtimes) FROM certify.status_list_credential
+WHERE cr_dtimes < (
+    SELECT MAX(upd_dtimes) FROM certify.status_list_credential
 );
