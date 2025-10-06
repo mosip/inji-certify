@@ -1,71 +1,248 @@
 {
-    "TC_esignetDependent_AuthenticateUser_vd11": [
+    "TC_esignetDependent_AuthorizationCode_28": ["TC_esignetDependent_AuthenticateUser_27"],
+    "TC_esignetDependent_AuthorizationCode_vd11_24": [
+        "TC_esignetDependent_OAuthdetailsRequest_vd11_23",
+        "TC_esignetDependent_AuthenticateUser_vd11_23"
+    ],
+    "TC_esignetDependent_AuthenticateUser_vd11_23": [
+        "TC_esignetDependent_OAuthdetailsRequest_vd11_23",
+        "TC_mock_identity_dependency_01"
+    ],
+    "TC_esignetDependent_AuthorizationCode_vd12_30": ["TC_esignetDependent_AuthenticateUser_vd12_29"],
+    "TC_InjiCertify_GetCredentialForMockIDA_29": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_esignetDependent_GenerateToken_23": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_AuthorizationCode_23"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_28": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_esignetDependent_AuthorizationCodeNeg_31": ["TC_esignetDependent_AuthenticateUserNeg_30"],
+    "TC_esignetDependent_AuthenticateUser_22": [
         "TC_mock_identity_dependency_01",
-        "TC_esignetDependent_OAuthdetailsRequest_vd11"
+        "TC_esignetDependent_OAuthdetailsRequest_22"
     ],
-    "TC_esignetDependent_AuthenticateUser_vd12": [
+    "TC_InjiCertify_GetCredentialForMockIDA_30": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_esignetDependent_GenerateToken_vd11_24": [
+        "TC_esignetDependent_AuthorizationCode_vd11_24",
+        "TC_esignetDependent_CreateOidc_05"
+    ],
+    "TC_esignetDependent_AuthorizationCode_18": ["TC_esignetDependent_AuthenticateUser_18"],
+    "TC_esignetDependent_OAuthdetailsRequest_vd12_24": ["TC_esignetDependent_CreateOidc_05"],
+    "TC_esignetDependent_AuthorizationCode_17": [
+        "TC_esignetDependent_AuthenticateUser_16",
+        "TC_esignetDependent_AuthenticateUser_17",
+        "TC_esignetDependent_AuthenticateUser_18"
+    ],
+    "TC_esignetDependent_AuthorizationCode_vd12_25": [
+        "TC_esignetDependent_OAuthdetailsRequest_vd12_24",
+        "TC_esignetDependent_AuthenticateUser_vd12_24"
+    ],
+    "TC_esignetDependent_AuthorizationCode_19": ["TC_esignetDependent_AuthenticateUser_19"],
+    "TC_esignetDependent_AuthorizationCodeNeg_26": [
+        "TC_esignetDependent_AuthenticateUser_Neg_25",
+        "TC_esignetDependent_OAuthdetailsRequestNeg_25"
+    ],
+    "TC_esignetDependent_AuthorizationCode_vd12_29": ["TC_esignetDependent_AuthenticateUser_vd11_28"],
+    "TC_InjiCertify_GetCredentialForMockIDA_19": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_18": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_17": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_esignetDependent_AuthorizationCode_vd11_10": ["TC_esignetDependent_AuthenticateUser_vd11_10"],
+    "TC_esignetDependent_AuthenticateUser_09": [
+        "TC_SunbirdDependent_Getpolicy",
+        "TC_SunbirdDependent_searchpolicy",
+        "TC_SunbirdDependent_createpolicy"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_23": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_22": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_21": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_20": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_27": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_26": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_25": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_24": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_esignetDependent_AuthorizationCode_21": ["TC_esignetDependent_AuthenticateUser_21"],
+    "TC_esignetDependent_AuthorizationCode_20": ["TC_esignetDependent_AuthenticateUser_20"],
+    "TC_esignetDependent_AuthorizationCode_23": [
+        "TC_esignetDependent_AuthenticateUser_22",
+        "TC_esignetDependent_OAuthdetailsRequest_22"
+    ],
+    "TC_esignetDependent_OAuthdetailsRequestNeg_25": ["TC_esignetDependent_CreateOidc_05"],
+    "TC_esignetDependent_AuthorizationCode_22": ["TC_esignetDependent_AuthenticateUser_021"],
+    "TC_esignetDependent_AuthorizationCode_27": ["TC_esignetDependent_AuthenticateUser_26"],
+    "TC_esignetDependent_GenerateToken_vd12_25": [
+        "TC_esignetDependent_AuthorizationCode_vd12_25",
+        "TC_esignetDependent_CreateOidc_05"
+    ],
+    "TC_esignetDependent_OAuthdetailsRequest_vd11_23": ["TC_esignetDependent_CreateOidc_05"],
+    "TC_esignetDependent_AuthorizationCode_07": ["TC_esignetDependent_AuthenticateUser_07"],
+    "TC_pms_dependency_03": ["TC_pms_dependency_06"],
+    "TC_esignetDependent_AuthorizationCode_06": ["TC_esignetDependent_AuthenticateUser_06"],
+    "TC_esignetDependent_AuthorizationCode_09": ["TC_esignetDependent_AuthenticateUser_09"],
+    "TC_esignetDependent_AuthenticateUser_vd12_11": [
+        "TC_SunbirdDependent_Getpolicy",
+        "TC_SunbirdDependent_searchpolicy",
+        "TC_SunbirdDependent_createpolicy"
+    ],
+    "TC_pms_dependency_01": [
+        "TC_pms_dependency_02",
+        "TC_pms_dependency_10",
+        "TC_pms_dependency_09",
+        "TC_pms_dependency_08",
+        "TC_pms_dependency_07"
+    ],
+    "TC_esignetDependent_AuthorizationCode_08": ["TC_esignetDependent_AuthenticateUser_08"],
+    "TC_esignetDependent_AuthorizationCodeNeg_12": ["TC_esignetDependent_AuthenticateUserNeg_12"],
+    "TC_InjiCertify_GetCredentialForMockIDA_09": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_08": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_07": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_esignetDependent_AuthorizationCodeNeg_13": ["TC_esignetDependent_AuthenticateUserNeg_13"],
+    "TC_InjiCertify_GetCredentialForMockIDA_06": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateToken_vd12_25"
+    ],
+    "TC_esignetDependent_AuthorizationCode_vd12_11": ["TC_esignetDependent_AuthenticateUser_vd12_11"],
+    "TC_esignetDependent_AuthenticateUserNeg_13": [
+        "TC_SunbirdDependent_Getpolicy",
+        "TC_SunbirdDependent_searchpolicy",
+        "TC_SunbirdDependent_createpolicy"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_12": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_11": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_10": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_esignetDependent_AuthenticateUserNeg_12": [
+        "TC_SunbirdDependent_Getpolicy",
+        "TC_SunbirdDependent_searchpolicy",
+        "TC_SunbirdDependent_createpolicy"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_16": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_15": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_14": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_13": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateTokenNeg_26"
+    ],
+    "InjiCertify_GetCredentialForMockIDA_Vd12_IdpAccessToken_ED25519_Sign_all_Valid_Smoke": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateToken_vd12_25"
+    ],
+    "TC_esignetDependent_AuthorizationCode_14": ["TC_esignetDependent_AuthenticateUser_14"],
+    "TC_esignetDependent_AuthorizationCode_16": ["TC_esignetDependent_AuthenticateUser_16"],
+    "TC_esignetDependent_AuthorizationCode_15": ["TC_esignetDependent_AuthenticateUser_15"],
+    "TC_esignetDependent_AuthenticateUser_vd11_10": [
+        "TC_SunbirdDependent_Getpolicy",
+        "TC_SunbirdDependent_searchpolicy",
+        "TC_SunbirdDependent_createpolicy"
+    ],
+    "TC_esignetDependent_AuthenticateUser_vd12_24": [
         "TC_mock_identity_dependency_01",
-        "TC_esignetDependent_OAuthdetailsRequest_vd12"
+        "TC_esignetDependent_OAuthdetailsRequest_vd12_24"
     ],
-    "TC_InjiCertify_GetCredentialForMockIDA_09": ["TC_esignetDependent_CreateOidc"],
-    "TC_InjiCertify_GetCredentialForMockIDA_08": ["TC_esignetDependent_CreateOidc"],
-    "TC_InjiCertify_GetCredentialForMockIDA_29": ["TC_esignetDependent_CreateOidc"],
-    "TC_esignetDependent_AuthorizationCodeNeg": ["TC_esignetDependent_OAuthdetailsRequestNeg"],
-    "TC_InjiCertify_GetCredentialForMockIDA_07": ["TC_esignetDependent_CreateOidc"],
-    "TC_InjiCertify_GetCredentialForMockIDA_28": ["TC_esignetDependent_CreateOidc"],
-    "TC_InjiCertify_GetCredentialForMockIDA_06": ["TC_esignetDependent_CreateOidc"],
-    "TC_esignetDependent_GenerateToken_vd12": [
-        "TC_esignetDependent_CreateOidc",
-        "TC_esignetDependent_AuthorizationCode_vd12"
+    "TC_esignetDependent_AuthorizationCodeNeg_2": ["TC_esignetDependent_AuthenticateUserNeg_2"],
+    "TC_esignetDependent_OAuthdetailsRequest_22": ["TC_esignetDependent_CreateOidc_05"],
+    "TC_esignetDependent_AuthenticateUser_27": ["TC_IDRepo_CreateVID_01"],
+    "TC_esignetDependent_GenerateTokenNeg_26": [
+        "TC_esignetDependent_AuthorizationCodeNeg_26",
+        "TC_esignetDependent_CreateOidc_05"
     ],
-    "TC_InjiCertify_GetCredentialForMockIDA_12": ["TC_esignetDependent_CreateOidc"],
-    "TC_esignetDependent_GenerateToken_vd11": [
-        "TC_esignetDependent_CreateOidc",
-        "TC_esignetDependent_AuthorizationCode_vd11"
+    "TC_InjiCertify_GetCredentialForMockIDA_01": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateToken_23"
     ],
-    "TC_InjiCertify_GetCredentialForMockIDA_11": ["TC_esignetDependent_CreateOidc"],
-    "TC_InjiCertify_GetCredentialForMockIDA_10": ["TC_esignetDependent_CreateOidc"],
-    "TC_InjiCertify_GetCredentialForMockIDA_16": ["TC_esignetDependent_CreateOidc"],
-    "TC_InjiCertify_GetCredentialForMockIDA_15": ["TC_esignetDependent_CreateOidc"],
-    "TC_InjiCertify_GetCredentialForMockIDA_14": ["TC_esignetDependent_CreateOidc"],
-    "TC_esignetDependent_AuthorizationCode": ["TC_esignetDependent_OAuthdetailsRequest"],
-    "TC_InjiCertify_GetCredentialForMockIDA_13": ["TC_esignetDependent_CreateOidc"],
-    "TC_esignetDependent_AuthorizationCode_vd12": ["TC_esignetDependent_OAuthdetailsRequest_vd12"],
-    "TC_esignetDependent_AuthorizationCode_vd11": ["TC_esignetDependent_OAuthdetailsRequest_vd11"],
-    "InjiCertify_GetCredentialForMockIDA_Vd12_IdpAccessToken_ED25519_Sign_all_Valid_Smoke": ["TC_esignetDependent_CreateOidc"],
-    "TC_esignetDependent_OAuthdetailsRequestNeg": ["TC_esignetDependent_CreateOidc"],
-    "TC_esignetDependent_AuthenticateUser_Neg": [
+    "TC_InjiCertify_GetCredentialForMockIDA_05": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateToken_vd11_24"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_04": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateToken_23"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_03": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateToken_23"
+    ],
+    "TC_InjiCertify_GetCredentialForMockIDA_02": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateToken_23"
+    ],
+    "InjiCertify_GetCredentialForMockIDA_Vd11_IdpAccessToken_ED25519_Sign_all_Valid_Smoke": [
+        "TC_esignetDependent_CreateOidc_05",
+        "TC_esignetDependent_GenerateToken_vd11_24"
+    ],
+    "TC_esignetDependent_AuthorizationCode_01": ["TC_esignetDependent_AuthenticateUser_01"],
+    "TC_esignetDependent_AuthenticateUser_Neg_25": [
         "TC_mock_identity_dependency_01",
-        "TC_esignetDependent_OAuthdetailsRequestNeg"
+        "TC_esignetDependent_OAuthdetailsRequestNeg_25"
     ],
-    "TC_InjiCertify_GetCredentialForMockIDA_19": ["TC_esignetDependent_CreateOidc"],
-    "TC_InjiCertify_GetCredentialForMockIDA_18": ["TC_esignetDependent_CreateOidc"],
-    "TC_InjiCertify_GetCredentialForMockIDA_17": ["TC_esignetDependent_CreateOidc"],
-    "TC_esignetDependent_OAuthdetailsRequest_vd12": ["TC_esignetDependent_CreateOidc"],
-    "TC_esignetDependent_OAuthdetailsRequest_vd11": ["TC_esignetDependent_CreateOidc"],
-    "TC_InjiCertify_GetCredentialForMockIDA_01": ["TC_esignetDependent_CreateOidc"],
-    "TC_InjiCertify_GetCredentialForMockIDA_23": ["TC_esignetDependent_CreateOidc"],
-    "TC_InjiCertify_GetCredentialForMockIDA_22": ["TC_esignetDependent_CreateOidc"],
-    "TC_InjiCertify_GetCredentialForMockIDA_21": ["TC_esignetDependent_CreateOidc"],
-    "TC_esignetDependent_AuthenticateUser": [
-        "TC_mock_identity_dependency_01",
-        "TC_esignetDependent_OAuthdetailsRequest"
-    ],
-    "TC_InjiCertify_GetCredentialForMockIDA_20": ["TC_esignetDependent_CreateOidc"],
-    "TC_InjiCertify_GetCredentialForMockIDA_05": ["TC_esignetDependent_CreateOidc"],
-    "TC_InjiCertify_GetCredentialForMockIDA_27": ["TC_esignetDependent_CreateOidc"],
-    "TC_InjiCertify_GetCredentialForMockIDA_04": ["TC_esignetDependent_CreateOidc"],
-    "TC_InjiCertify_GetCredentialForMockIDA_03": ["TC_esignetDependent_CreateOidc"],
-    "TC_InjiCertify_GetCredentialForMockIDA_02": ["TC_esignetDependent_CreateOidc"],
-    "TC_InjiCertify_GetCredentialForMockIDA_24": ["TC_esignetDependent_CreateOidc"],
-    "InjiCertify_GetCredentialForMockIDA_Vd11_IdpAccessToken_ED25519_Sign_all_Valid_Smoke": ["TC_esignetDependent_CreateOidc"],
-    "TC_esignetDependent_OAuthdetailsRequest": ["TC_esignetDependent_CreateOidc"],
-    "TC_esignetDependent_GenerateToken": [
-        "TC_esignetDependent_CreateOidc",
-        "TC_esignetDependent_AuthorizationCode"
-    ],
-    "TC_esignetDependent_GenerateTokenNeg": [
-        "TC_esignetDependent_CreateOidc",
-        "TC_esignetDependent_AuthorizationCodeNeg"
-    ]
+    "TC_esignetDependent_AuthorizationCode_03": ["TC_esignetDependent_AuthenticateUser_03"],
+    "TC_esignetDependent_AuthorizationCode_02": ["TC_esignetDependent_AuthenticateUser_02"],
+    "TC_esignetDependent_AuthorizationCode_05": ["TC_esignetDependent_AuthenticateUser_05"],
+    "TC_esignetDependent_AuthorizationCode_04": ["TC_esignetDependent_AuthenticateUser_04"]
 }

@@ -1,7 +1,7 @@
 AuthenticateUserVCI:
    InjiCertify_ESignet_AuthenticateUserVCI_MOSIPID_uin_Otp_Valid_Smoke:
       endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUser      
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_26      
       description: Authenticate User  
       role: resident
       restMethod: post
@@ -34,10 +34,11 @@ AuthenticateUserVCI:
 
    InjiCertify_ESignet_AuthenticateUserVCI_MOSIPID_Vid_Otp_Valid_Smoke:
       endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUser      
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_27      
       description: Authenticate User with vid
       role: resident
       restMethod: post
+      additionalDependencies: TC_IDRepo_CreateVID_01
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
       inputTemplate: injicertify/VCIMosipID/AuthenticateUserVCI/AuthenticateUserVCI

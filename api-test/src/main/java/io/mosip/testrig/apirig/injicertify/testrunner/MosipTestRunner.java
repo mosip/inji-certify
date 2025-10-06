@@ -123,8 +123,8 @@ public class MosipTestRunner {
 
 				startTestRunner();
 				// Used for generating the test case interdependency JSON file
-				//AdminTestUtil.generateTestCaseInterDependencies(
-				//		getGlobalResourcePath() + "/config/testCaseInterDependency_" + useCaseToExecute + ".json");
+//				AdminTestUtil.generateTestCaseInterDependencies(
+//						getGlobalResourcePath() + "/config/testCaseInterDependency_" + useCaseToExecute + ".json");
 
 				InjiCertifyUtil.dBCleanup();
 			} else {
@@ -137,8 +137,8 @@ public class MosipTestRunner {
 
 				startTestRunner();
 				// Used for generating the test case interdependency JSON file
-				//AdminTestUtil.generateTestCaseInterDependencies(
-				//		getGlobalResourcePath() + "/config/testCaseInterDependency_" + useCaseToExecute + ".json");
+//				AdminTestUtil.generateTestCaseInterDependencies(
+//						getGlobalResourcePath() + "/config/testCaseInterDependency_" + useCaseToExecute + ".json");
 			}
 		} catch (Exception e) {
 			LOGGER.error("Exception " + e.getMessage());

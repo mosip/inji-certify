@@ -1,13 +1,88 @@
 {
-    "TC_InjiCertify_GetCredentialFormDoc_01": ["TC_esignetDependent_CreateOidc"],
-    "TC_esignetDependent_AuthenticateUser": [
-        "TC_mDoc_identity_dependency_01",
-        "TC_esignetDependent_OAuthdetailsRequest"
+    "TC_esignetDependent_AuthorizationCode_07": ["TC_esignetDependent_AuthenticateUser_07"],
+    "TC_pms_dependency_03": ["TC_pms_dependency_06"],
+    "TC_esignetDependent_AuthorizationCode_28": ["TC_esignetDependent_AuthenticateUser_27"],
+    "TC_esignetDependent_AuthorizationCode_06": ["TC_esignetDependent_AuthenticateUser_06"],
+    "TC_esignetDependent_AuthorizationCode_09": ["TC_esignetDependent_AuthenticateUser_09"],
+    "TC_esignetDependent_AuthenticateUser_vd12_11": [
+        "TC_SunbirdDependent_Getpolicy",
+        "TC_SunbirdDependent_searchpolicy",
+        "TC_SunbirdDependent_createpolicy"
     ],
-    "TC_esignetDependent_AuthorizationCode": ["TC_esignetDependent_OAuthdetailsRequest"],
-    "TC_esignetDependent_OAuthdetailsRequest": ["TC_esignetDependent_CreateOidc"],
-    "TC_esignetDependent_GenerateToken": [
-        "TC_esignetDependent_CreateOidc",
-        "TC_esignetDependent_AuthorizationCode"
+    "TC_pms_dependency_01": [
+        "TC_pms_dependency_02",
+        "TC_pms_dependency_10",
+        "TC_pms_dependency_09",
+        "TC_pms_dependency_08",
+        "TC_pms_dependency_07"
+    ],
+    "TC_esignetDependent_AuthorizationCode_vd11_24": ["TC_esignetDependent_AuthenticateUser_vd11_23"],
+    "TC_esignetDependent_AuthorizationCode_08": ["TC_esignetDependent_AuthenticateUser_08"],
+    "TC_esignetDependent_AuthorizationCodeNeg_12": ["TC_esignetDependent_AuthenticateUserNeg_12"],
+    "TC_esignetDependent_AuthorizationCode_vd12_30": ["TC_esignetDependent_AuthenticateUser_vd12_29"],
+    "TC_esignetDependent_AuthorizationCodeNeg_13": ["TC_esignetDependent_AuthenticateUserNeg_13"],
+    "TC_esignetDependent_AuthorizationCode_vd12_11": ["TC_esignetDependent_AuthenticateUser_vd12_11"],
+    "TC_esignetDependent_AuthorizationCodeNeg_31": ["TC_esignetDependent_AuthenticateUserNeg_30"],
+    "TC_esignetDependent_AuthenticateUserNeg_13": [
+        "TC_SunbirdDependent_Getpolicy",
+        "TC_SunbirdDependent_searchpolicy",
+        "TC_SunbirdDependent_createpolicy"
+    ],
+    "TC_esignetDependent_AuthenticateUserNeg_12": [
+        "TC_SunbirdDependent_Getpolicy",
+        "TC_SunbirdDependent_searchpolicy",
+        "TC_SunbirdDependent_createpolicy"
+    ],
+    "TC_esignetDependent_OAuthdetailsRequest_04": ["TC_esignetDependent_CreateOidc_01"],
+    "TC_esignetDependent_AuthorizationCode_14": ["TC_esignetDependent_AuthenticateUser_14"],
+    "TC_esignetDependent_AuthorizationCode_16": ["TC_esignetDependent_AuthenticateUser_16"],
+    "TC_esignetDependent_AuthorizationCode_15": ["TC_esignetDependent_AuthenticateUser_15"],
+    "TC_esignetDependent_AuthorizationCode_18": ["TC_esignetDependent_AuthenticateUser_18"],
+    "TC_esignetDependent_AuthorizationCode_17": [
+        "TC_esignetDependent_AuthenticateUser_16",
+        "TC_esignetDependent_AuthenticateUser_17",
+        "TC_esignetDependent_AuthenticateUser_18"
+    ],
+    "TC_esignetDependent_AuthenticateUser_vd11_10": [
+        "TC_SunbirdDependent_Getpolicy",
+        "TC_SunbirdDependent_searchpolicy",
+        "TC_SunbirdDependent_createpolicy"
+    ],
+    "TC_esignetDependent_AuthorizationCode_vd12_25": ["TC_esignetDependent_AuthenticateUser_vd12_24"],
+    "TC_InjiCertify_GetCredentialFormDoc_01": [
+        "TC_esignetDependent_GenerateToken_04",
+        "TC_esignetDependent_CreateOidc_01"
+    ],
+    "TC_esignetDependent_AuthorizationCode_19": ["TC_esignetDependent_AuthenticateUser_19"],
+    "TC_esignetDependent_AuthorizationCodeNeg_2": ["TC_esignetDependent_AuthenticateUserNeg_2"],
+    "TC_esignetDependent_AuthorizationCodeNeg_26": ["TC_esignetDependent_AuthenticateUser_Neg_25"],
+    "TC_esignetDependent_AuthorizationCode_vd12_29": ["TC_esignetDependent_AuthenticateUser_vd11_28"],
+    "TC_esignetDependent_AuthenticateUser_04": [
+        "TC_esignetDependent_OAuthdetailsRequest_04",
+        "TC_mDoc_identity_dependency_01"
+    ],
+    "TC_esignetDependent_AuthenticateUser_27": ["TC_IDRepo_CreateVID_01"],
+    "TC_esignetDependent_AuthorizationCode_vd11_10": ["TC_esignetDependent_AuthenticateUser_vd11_10"],
+    "TC_esignetDependent_AuthenticateUser_09": [
+        "TC_SunbirdDependent_Getpolicy",
+        "TC_SunbirdDependent_searchpolicy",
+        "TC_SunbirdDependent_createpolicy"
+    ],
+    "TC_esignetDependent_GenerateToken_04": [
+        "TC_esignetDependent_CreateOidc_01",
+        "TC_esignetDependent_AuthorizationCode_04"
+    ],
+    "TC_esignetDependent_AuthorizationCode_21": ["TC_esignetDependent_AuthenticateUser_21"],
+    "TC_esignetDependent_AuthorizationCode_20": ["TC_esignetDependent_AuthenticateUser_20"],
+    "TC_esignetDependent_AuthorizationCode_23": ["TC_esignetDependent_AuthenticateUser_22"],
+    "TC_esignetDependent_AuthorizationCode_01": ["TC_esignetDependent_AuthenticateUser_01"],
+    "TC_esignetDependent_AuthorizationCode_22": ["TC_esignetDependent_AuthenticateUser_021"],
+    "TC_esignetDependent_AuthorizationCode_03": ["TC_esignetDependent_AuthenticateUser_03"],
+    "TC_esignetDependent_AuthorizationCode_02": ["TC_esignetDependent_AuthenticateUser_02"],
+    "TC_esignetDependent_AuthorizationCode_27": ["TC_esignetDependent_AuthenticateUser_26"],
+    "TC_esignetDependent_AuthorizationCode_05": ["TC_esignetDependent_AuthenticateUser_05"],
+    "TC_esignetDependent_AuthorizationCode_04": [
+        "TC_esignetDependent_OAuthdetailsRequest_04",
+        "TC_esignetDependent_AuthenticateUser_04"
     ]
 }
