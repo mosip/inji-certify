@@ -412,20 +412,12 @@ public class MDocUtils {
         mso.put("digestAlgorithm", "SHA-256");
 
         // Create valueDigests structure
+        Map<String, Object> nameSpacesDigests = new HashMap<>();
+        nameSpacesDigests.putAll(namespaceDigests);
         Map<String, Object> valueDigests = new HashMap<>();
-        for (Map.Entry<String, Map<Integer, byte[]>> namespaceEntry : namespaceDigests.entrySet()) {
-            String namespaceName = namespaceEntry.getKey();
-            Map<Integer, byte[]> digests = namespaceEntry.getValue();
+        valueDigests.put("nameSpaces", nameSpacesDigests);
 
-            Map<Integer, byte[]> digestBytes = new HashMap<>();
-            for (Map.Entry<Integer, byte[]> digestEntry : digests.entrySet()) {
-                digestBytes.put(digestEntry.getKey(), digestEntry.getValue());
-            }
-            valueDigests.put(namespaceName, digestBytes);
-        }
         mso.put("valueDigests", valueDigests);
-
-        // Add document metadata
         mso.put("docType", mDocJson.get("_docType"));
 
         // Create validity info with current timestamp
@@ -440,7 +432,7 @@ public class MDocUtils {
 
         // Add device key info (placeholder - should be from wallet's PoP)
         Map<String, Object> deviceKeyInfo = createDeviceKeyInfo(mDocJson.get("_holderId"));
-        mso.put("deviceKeyInfo", deviceKeyInfo);
+        mso.putAll(deviceKeyInfo);
 
         return mso;
     }
