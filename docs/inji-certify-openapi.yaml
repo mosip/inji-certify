@@ -369,7 +369,7 @@ paths:
                     referenceId: REF20250807
                     commonName: CERT-AUTH
                     organization: CERT AUTH ORG
-                    organizationalUnit: IT
+                    organizationUnit: IT
                     country: US
                     state: California
                     location: Bangalore
