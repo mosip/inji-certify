@@ -147,39 +147,7 @@ public class MDocUtils {
             processedItems.add(itemMap);
         }
 
-        // add missing fields from templateParams
-//        processedItems = addMissingFields(processedItems, templateParams);
-
         return processedItems;
-    }
-
-    /**
-     * Add missing fields from templateParams that are not present in the template
-     */
-    public static List<Map<String, Object>> addMissingFields(List<Map<String, Object>> existingItems, Map<String, Object> templateParams) {
-        Set<String> forbiddenIdentifiers = Set.of("templateName", "issuer", "issuerURI", "didUrl");
-
-        for (Map.Entry<String, Object> param : templateParams.entrySet()) {
-            Set<Integer> digestIDs = existingItems.stream().map(item -> (Integer) item.get("digestID")).collect(Collectors.toSet());
-            Set<String> existingIdentifiers = existingItems.stream().map(item -> (String) item.get("elementIdentifier")).collect(Collectors.toSet());
-            String identifier = param.getKey();
-
-            // Skip if field already exists in template or not present in templateParams
-            if (existingIdentifiers.contains(identifier) || identifier.startsWith("_") || forbiddenIdentifiers.contains(identifier)) {
-                continue;
-            }
-
-            Object value = templateParams.get(identifier);
-            if (value != null) {
-                Map<String, Object> newItem = new HashMap<>();
-                newItem.put("digestID", calculateMex(digestIDs));
-                newItem.put("elementIdentifier", identifier);
-                newItem.put("elementValue", value);
-                existingItems.add(newItem);
-            }
-        }
-
-        return existingItems;
     }
 
     /**
@@ -432,7 +400,7 @@ public class MDocUtils {
 
         // Add device key info (placeholder - should be from wallet's PoP)
         Map<String, Object> deviceKeyInfo = createDeviceKeyInfo(mDocJson.get("_holderId"));
-        mso.putAll(deviceKeyInfo);
+        mso.put("deviceKeyInfo", deviceKeyInfo);
 
         return mso;
     }
@@ -442,7 +410,6 @@ public class MDocUtils {
      */
     public static Map<String, Object> createDeviceKeyInfo(Object deviceInfo) throws Exception {
         String deviceKeyEncoded = deviceInfo.toString();
-
         if (deviceKeyEncoded.startsWith("did:jwk:")) {
             deviceKeyEncoded = deviceKeyEncoded.substring("did:jwk:".length());
         }
@@ -451,11 +418,32 @@ public class MDocUtils {
         String decodedJson = new String(decodedBytes);
 
         ObjectMapper mapper = new ObjectMapper();
-        Map<String, Object> deviceKey = mapper.readValue(decodedJson, Map.class);
+        Map<String, Object> jwk = mapper.readValue(decodedJson, Map.class);
+
+        Map<Object, Object> coseKey = new HashMap<>();
+        coseKey.put(1, 2);  // kty: EC2
+        coseKey.put(3, -7); // alg: ES256 (ECDSA with SHA-256)
+
+        if (jwk.containsKey("kid")) {
+            // Pass through the key ID if it exists in the source JWK
+            coseKey.put(2, ((String) jwk.get("kid")).getBytes());
+        }
+        // Map curve
+        String crv = (String) jwk.get("crv");
+        switch (crv) {
+            case "P-256" -> coseKey.put(-1, 1);
+            case "P-384" -> coseKey.put(-1, 2);
+            case "P-521" -> coseKey.put(-1, 3);
+            case null, default -> throw new IllegalArgumentException("Unsupported curve for EC2 key type: " + crv);
+        }
+
+        coseKey.put(-2, Base64.getUrlDecoder().decode((String) jwk.get("x")));
+        if (jwk.containsKey("y")) {
+            coseKey.put(-3, Base64.getUrlDecoder().decode((String) jwk.get("y")));
+        }
 
         Map<String, Object> deviceKeyInfo = new HashMap<>();
-        deviceKeyInfo.put("deviceKey", deviceKey);
-
+        deviceKeyInfo.put("deviceKey", coseKey);
         return deviceKeyInfo;
     }
 
@@ -465,11 +453,11 @@ public class MDocUtils {
     public static byte[] signMSO(Map<String, Object> mso, String appID, String refID, String signAlgorithm, DIDDocumentUtil didDocumentUtil, CoseSignatureService coseSignatureService) throws Exception {
 
         try {
-            byte[] msoPayload = encodeToCBOR(mso);
+            byte[] msoCbor = encodeToCBOR(mso);
 
             CoseSignRequestDto signRequest = new CoseSignRequestDto();
 
-            String base64UrlPayload = Base64.getUrlEncoder().withoutPadding().encodeToString(msoPayload);
+            String base64UrlPayload = Base64.getUrlEncoder().withoutPadding().encodeToString(msoCbor);
             signRequest.setPayload(base64UrlPayload);
             signRequest.setApplicationId(appID);
             signRequest.setReferenceId(refID);
@@ -488,17 +476,22 @@ public class MDocUtils {
         }
     }
 
-
     public static byte[] wrapWithCBORTag24(Map<String, Object> element) throws IOException {
         try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            CborEncoder encoder = new CborEncoder(baos);
+            // First encode the element to CBOR
+            ByteArrayOutputStream innerBaos = new ByteArrayOutputStream();
+            CborEncoder innerEncoder = new CborEncoder(innerBaos);
+            innerEncoder.encode(convertToDataItem(element));
+            byte[] elementCbor = innerBaos.toByteArray();
 
-            DataItem elementDataItem = convertToDataItem(element);
-            elementDataItem.setTag(24);  // Tag the actual structure
-            encoder.encode(elementDataItem);
+            // Then wrap that byte string in Tag 24
+            ByteArrayOutputStream outerBaos = new ByteArrayOutputStream();
+            CborEncoder outerEncoder = new CborEncoder(outerBaos);
+            ByteString wrappedBytes = new ByteString(elementCbor);
+            wrappedBytes.setTag(24);
+            outerEncoder.encode(wrappedBytes);
 
-            return baos.toByteArray();
+            return outerBaos.toByteArray();
         } catch (CborException e) {
             throw new IOException("Failed to wrap with CBOR tag 24", e);
         }
