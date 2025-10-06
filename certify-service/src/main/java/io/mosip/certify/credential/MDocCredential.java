@@ -78,7 +78,7 @@ public class MDocCredential extends Credential {
             Map<String, Object> taggedNamespaces = MDocUtils.calculateDigests(saltedNamespaces, namespaceDigests);
 
             // Create Mobile Security Object (MSO)
-            Map<String, Object> mso = MDocUtils.createMobileSecurityObject(mDocJson, namespaceDigests, appID, refID);
+            Map<String, Object> mso = mDocUtils.createMobileSecurityObject(mDocJson, namespaceDigests);
             byte[] signedMSO = MDocUtils.signMSO(mso, appID, refID, signAlgorithm, didDocumentUtil, coseSignatureService);
             Map<String, Object> issuerSigned = MDocUtils.createIssuerSignedStructure(taggedNamespaces, signedMSO);
 

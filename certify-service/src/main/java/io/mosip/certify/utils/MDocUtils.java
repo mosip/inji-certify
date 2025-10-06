@@ -11,6 +11,7 @@ import co.nstant.in.cbor.model.*;
 
 import java.io.ByteArrayOutputStream;
 
+import io.mosip.certify.config.MDocConfig;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.kernel.signature.dto.CoseSignRequestDto;
 import io.mosip.kernel.signature.service.CoseSignatureService;
@@ -44,6 +45,9 @@ public class MDocUtils {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private MDocConfig mDocConfig;
+
     /**
      * Process templated JSON to create final mDoc structure
      */
@@ -59,19 +63,21 @@ public class MDocUtils {
                 if (validity.containsKey("validFrom")) {
                     String validFromValue = (String) validity.get("validFrom");
                     if ("${_validFrom}".equals(validFromValue)) {
-                        // Replace with current timestamp in UTC
-                        String currentTime = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
+                        String currentTime = ZonedDateTime.now(ZoneOffset.UTC)
+                                .format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
                         validity.put("validFrom", currentTime);
                     }
                 }
                 if (validity.containsKey("validUntil")) {
                     String validUntilValue = (String) validity.get("validUntil");
                     if ("${_validUntil}".equals(validUntilValue)) {
-                        // Replace with current timestamp in UTC
-                        String currentTime = ZonedDateTime.now(ZoneOffset.UTC).plusYears(2).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-                        validity.put("validUntil", currentTime);
+                        String futureTime = ZonedDateTime.now(ZoneOffset.UTC)
+                                .plusYears(mDocConfig.getValidityPeriodYears())
+                                .format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
+                        validity.put("validUntil", futureTime);
                     }
                 }
+
 
                 finalMDoc.put("validityInfo", validity);
             }
@@ -362,11 +368,11 @@ public class MDocUtils {
     /**
      * Creates the Mobile Security Object (MSO) structure
      */
-    public static Map<String, Object> createMobileSecurityObject(Map<String, Object> mDocJson, Map<String, Map<Integer, byte[]>> namespaceDigests, String appID, String refID) throws Exception {
+    public Map<String, Object> createMobileSecurityObject(Map<String, Object> mDocJson, Map<String, Map<Integer, byte[]>> namespaceDigests) throws Exception {
 
         Map<String, Object> mso = new HashMap<>();
-        mso.put("version", "1.0");
-        mso.put("digestAlgorithm", "SHA-256");
+        mso.put("version", mDocConfig.getMsoVersion());
+        mso.put("digestAlgorithm", mDocConfig.getDigestAlgorithm());
 
         // Create valueDigests structure
         Map<String, Object> nameSpacesDigests = new HashMap<>();
