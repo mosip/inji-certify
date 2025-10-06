@@ -45,17 +45,6 @@ public class MDocUtils {
     private ObjectMapper objectMapper;
 
     /**
-     * Calculate the minimum excludant (mex) for a set of integers
-     */
-    public static int calculateMex(Set<Integer> numbers) {
-        int mex = 0;
-        while (numbers.contains(mex)) {
-            mex++;
-        }
-        return mex;
-    }
-
-    /**
      * Process templated JSON to create final mDoc structure
      */
     public Map<String, Object> processTemplatedJson(String templatedJSON, Map<String, Object> templateParams) {
