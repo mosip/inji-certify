@@ -79,7 +79,7 @@ public class SystemInfoController {
         log.info("CSR Generation request received for applicationId: {}, referenceId: {}", csrGenerateRequestDto.getApplicationId(), csrGenerateRequestDto.getReferenceId());
         try {
             responseWrapper.setResponse(keymanagerService.generateCSR(csrGenerateRequestDto));
-        } catch (Exception ex) {
+        } catch (CertifyException ex) {
             log.error("Error during CSR generation: {}", ex.getMessage(), ex);
             throw ex;
         }
