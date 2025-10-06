@@ -22,7 +22,7 @@ services:
       - redis-data:/data
 
   certify:
-    image: mosipdev/inji-certify-with-plugins:develop
+    image: mosipqa/inji-certify-with-plugins:develop
     user: root
     ports:
       - 8090:8090
@@ -71,7 +71,7 @@ services:
       - active_profile_env=default
       - SPRING_CONFIG_NAME=mimoto
       - SPRING_CONFIG_LOCATION=/home/mosip/
-      - oidc_p12_password=xy4gh6swa2i
+      - oidc_p12_password=dummypassword
       - SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/inji_mimoto
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
@@ -110,7 +110,7 @@ services:
 networks:
   network:
     name: mosip_network
-#    external: true
+    external: true
 
 volumes:
   cache:
