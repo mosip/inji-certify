@@ -11,6 +11,7 @@ import io.mosip.certify.core.dto.ResponseWrapper;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.util.CommonUtil;
 import io.mosip.kernel.core.http.RequestWrapper;
+import io.mosip.kernel.keymanagerservice.dto.CSRGenerateRequestDto;
 import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
 import io.mosip.kernel.keymanagerservice.dto.UploadCertificateRequestDto;
 import io.mosip.kernel.keymanagerservice.dto.UploadCertificateResponseDto;
@@ -69,4 +70,21 @@ public class SystemInfoController {
         return responseWrapper;
     }
 
+    @PostMapping("/generate-csr")
+    public ResponseWrapper<KeyPairGenerateResponseDto> generateCSR(
+            @Valid @RequestBody RequestWrapper<CSRGenerateRequestDto> requestWrapper) {
+
+        ResponseWrapper<KeyPairGenerateResponseDto> responseWrapper = new ResponseWrapper<>();
+        CSRGenerateRequestDto csrGenerateRequestDto = requestWrapper.getRequest();
+        log.info("CSR Generation request received for applicationId: {}, referenceId: {}", csrGenerateRequestDto.getApplicationId(), csrGenerateRequestDto.getReferenceId());
+        try {
+            responseWrapper.setResponse(keymanagerService.generateCSR(csrGenerateRequestDto));
+        } catch (CertifyException ex) {
+            log.error("Error during CSR generation: {}", ex.getMessage(), ex);
+            throw ex;
+        }
+
+        responseWrapper.setResponseTime(CommonUtil.getUTCDateTime());
+        return responseWrapper;
+    }
 }
