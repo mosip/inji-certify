@@ -459,7 +459,7 @@ public class MDocUtils {
 
             signRequest.setAlgorithm(signAlgorithm);
             Map<String, Object> protectedHeader = new HashMap<>();
-            protectedHeader.put("x5c", true); // Request certificate chain in protected header
+            protectedHeader.put("x5c", true);
             signRequest.setProtectedHeader(protectedHeader);
 
             String hexSignedData = coseSignatureService.coseSign1(signRequest).getSignedData();
