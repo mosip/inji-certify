@@ -882,7 +882,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		
 		// Handle extra workflow dependencies
 		if (testCaseDTO != null && testCaseDTO.getAdditionalDependencies() != null
-				&& AdminTestUtil.generateDependency == false) {
+				&& AdminTestUtil.generateDependency == true) {
 			    addAdditionalDependencies(testCaseDTO);
 		}
 		
