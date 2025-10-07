@@ -3,8 +3,8 @@
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -- -------------------------------------------------------------------------------------------------
 -- Database Name: inji_certify
--- Table Name : status_list_available_indices
--- Purpose    : status_list_available_indices to store status list available indices
+-- Table Name : shedlock
+-- Purpose    : Table for managing distributed locks using ShedLock library
 --
 --
 -- Modified Date        Modified By         Comments / Remarks

@@ -301,11 +301,16 @@ CREATE INDEX IF NOT EXISTS idx_sla_is_assigned ON certify.status_list_available_
 CREATE INDEX IF NOT EXISTS idx_sla_list_index ON certify.status_list_available_indices(list_index);
 CREATE INDEX IF NOT EXISTS idx_sla_cr_dtimes ON certify.status_list_available_indices(cr_dtimes);
 
--- Create shedlock table for distributed locking
-CREATE TABLE IF NOT EXISTS shedlock (
+CREATE TABLE IF NOT EXISTS certify.shedlock (
   name VARCHAR(64),
   lock_until TIMESTAMPTZ(3) NOT NULL,
   locked_at TIMESTAMPTZ(3) NOT NULL,
   locked_by VARCHAR(255) NOT NULL,
   PRIMARY KEY (name)
 );
+
+COMMENT ON TABLE shedlock IS 'Table for managing distributed locks using ShedLock library.';
+COMMENT ON COLUMN shedlock.name IS 'Unique name of the lock.';
+COMMENT ON COLUMN shedlock.lock_until IS 'Timestamp until which the lock is held. NULL if not locked.';
+COMMENT ON COLUMN shedlock.locked_at IS 'Timestamp when the lock was acquired. NULL if not locked.';
+COMMENT ON COLUMN shedlock.locked_by IS 'Identifier of the node/process that holds the lock. NULL if not locked.';
