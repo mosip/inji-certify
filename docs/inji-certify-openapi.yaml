@@ -342,6 +342,58 @@ paths:
       servers:
         - url: 'http://localhost:8090/v1/certify'
           description: Generated server url
+  /system-info/generate-csr:
+    post:
+      tags:
+        - System Information
+      summary: Generate Certificate Signing Request (CSR)
+      description: 'This endpoint allows clients to generate a certificate signing request (CSR) for a particular appId and refId. The generated CSR can be used to request a signed certificate from a Certificate Authority (CA). The client must provide the necessary details in the request body, wrapped in a request object. Upon receiving a valid request, the service generates the CSR and returns it in a response object, including the response time. If the generation fails due to validation errors or other issues, the endpoint responds with a relevant error message. The certificate signed using the CSR can be uploaded using the /system-info/uploadCertificate endpoint.'
+      operationId: generateCSR
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestWrapperCSRGenerateRequestDto'
+            examples:
+              Example 1:
+                value:
+                  id: req-12345
+                  version: '1.0'
+                  requesttime: '2025-08-07T10:49:54.980Z'
+                  metadata:
+                    source: web-portal
+                    ip: 192.168.1.10
+                  request:
+                    applicationId: APP001
+                    referenceId: REF20250807
+                    commonName: CERT-AUTH
+                    organization: CERT AUTH ORG
+                    organizationUnit: IT
+                    country: US
+                    state: California
+                    location: Bangalore
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResponseWrapperKeyPairGenerateResponseDto'
+              examples:
+                Example 1:
+                  value:
+                    responseTime: '2025-08-14T04:36:23.066Z'
+                    response:
+                      certificate: null
+                      certSignRequest: "-----BEGIN CERTIFICATE REQUEST-----\nMIIBVzCBuAIBADA..."
+                      issuedAt: '2025-08-07T10:49:54.980Z'
+                      expiryAt: '2026-08-07T10:49:54.980Z'
+                      timestamp: '2025-08-07T10:49:54.980Z'
+                    errors: [ ]
+      servers:
+        - url: 'http://localhost:8090/v1/certify'
+          description: Generated server url
   /issuance/vd12/credential:
     post:
       tags:
@@ -1763,6 +1815,55 @@ components:
           type: string
           description: UTC timestamp when upload operation was completed.
           format: date-time
+    RequestWrapperCSRGenerateRequestDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the request.
+        version:
+          type: string
+          description: API version of the request. Used to indicate the version of the contract or schema being used.
+        requesttime:
+          type: string
+          format: date-time
+          description: UTC timestamp when the request was sent.
+        metadata:
+          type: object
+          description: 'Optional field for additional request-related information or custom attributes. Can be used to pass extra data needed for processing, auditing, or tracking the request.'
+        request:
+          $ref: '#/components/schemas/CSRGenerateRequestDto'
+      required:
+        - request
+    CSRGenerateRequestDto:
+      type: object
+      properties:
+        applicationId:
+          type: string
+          description: Identifier for the application the certificate is for.
+        referenceId:
+          type: string
+          description: Optional reference for tracking or versioning.
+        commonName:
+          type: string
+          description: Common Name (CN) for the certificate subject.
+        organization:
+          type: string
+          description: Organization (O) for the certificate subject.
+        organizationUnit:
+          type: string
+          description: Organizational Unit (OU) for the certificate subject.
+        location:
+          type: string
+          description: Location (L) for the certificate subject.
+        state:
+          type: string
+          description: State (ST) for the certificate subject.
+        country:
+          type: string
+          description: Country (C) for the certificate subject.
+      required:
+        - applicationId
     CredentialRequest:
       type: object
       x-examples: {}
