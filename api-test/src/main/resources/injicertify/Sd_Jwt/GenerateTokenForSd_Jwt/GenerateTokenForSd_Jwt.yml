@@ -1,7 +1,7 @@
 GenerateTokenForSd_Jwt:
    InjiCertify_ESignet_GenerateToken_ForLandRegistry_Cred1_Sd_Jwt_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/oauth/v2/token
-      uniqueIdentifier: TC_esignetDependent_GenerateToken
+      uniqueIdentifier: TC_esignetDependent_GenerateToken_07
       description: Generate Token for Sd_Jwt for cred1
       role: resident
       restMethod: post
@@ -22,7 +22,7 @@ GenerateTokenForSd_Jwt:
 }'
    InjiCertify_ESignet_GenerateToken_ForLandRegistry_Cred2_Sd_Jwt_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/oauth/v2/token
-      uniqueIdentifier: TC_esignetDependent_GenerateToken
+      uniqueIdentifier: TC_esignetDependent_GenerateToken_08
       description: Generate Token for Sd_Jwt for cred2
       role: resident
       restMethod: post

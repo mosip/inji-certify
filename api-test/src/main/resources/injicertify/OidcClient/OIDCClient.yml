@@ -5,6 +5,7 @@ CreateOIDCClient:
       description: create OIDC clientid      
       role: partner
       restMethod: post
+      additionalDependencies: TC_pms_dependency_09,TC_pms_dependency_10,TC_pms_dependency_08,TC_pms_dependency_07,TC_pms_dependency_02
       inputTemplate: injicertify/OidcClient/OIDCClient
       outputTemplate: injicertify/OidcClient/OIDCClientResult
       input: '{

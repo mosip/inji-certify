@@ -1,7 +1,7 @@
 AuthenticateUserForMockIDANegTC:
    InjiCertify_ESignet_AuthenticateUserVCI_ForMockIDA_uin_Otp_Valid_For_Neg_Flow:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_Neg      
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_Neg_25      
       description: Authenticate User for mock ida negative    
       role: resident
       restMethod: post

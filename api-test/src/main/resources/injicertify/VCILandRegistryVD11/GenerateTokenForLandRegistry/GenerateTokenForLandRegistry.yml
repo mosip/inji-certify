@@ -1,7 +1,7 @@
 GenerateTokenForLandRegistry:
    InjiCertify_ESignet_GenerateToken_ForLandRegistry_Vd11_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/oauth/v2/token
-      uniqueIdentifier: TC_esignetDependent_GenerateToken
+      uniqueIdentifier: TC_esignetDependent_GenerateToken_19
       description: Generate Token for mock ida
       role: resident
       restMethod: post
@@ -23,7 +23,7 @@ GenerateTokenForLandRegistry:
 
    InjiCertify_ESignet_GenerateToken_ForLandRegistry_Vd11_Cred_2_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/oauth/v2/token
-      uniqueIdentifier: TC_esignetDependent_GenerateToken
+      uniqueIdentifier: TC_esignetDependent_GenerateToken_20
       description: Generate Token for mock ida
       role: resident
       restMethod: post

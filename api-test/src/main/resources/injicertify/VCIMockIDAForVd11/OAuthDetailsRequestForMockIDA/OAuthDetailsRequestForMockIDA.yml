@@ -1,7 +1,7 @@
 OAuthDetailsRequestForMockIDA:
    InjiCertify_ESignet_OAuthDetailsRequest_ForMockIDA_Vd11_uin_all_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
-      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_vd11      
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_vd11_23      
       description: OAuth details request for mock ida vd11 version     
       role: resident
       restMethod: post

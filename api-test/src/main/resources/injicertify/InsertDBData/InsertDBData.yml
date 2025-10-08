@@ -15,7 +15,7 @@ InsertDBData:
 
    InjiCertify_InsertDBData_For_LandRegistry_Certify_Statement_Valid_smoke_Pos:
       endPoint: no endpoint
-      uniqueIdentifier: TC_DBDependent_InsertQuery_01
+      uniqueIdentifier: TC_DBDependent_InsertQuery_02
       description: Inserting data in Certify_Statement table to authenticate and get credential for Land registry usecase
       role: idrepo
       restMethod: post
