@@ -265,21 +265,7 @@ CREATE TABLE IF NOT EXISTS certify.credential_status_transaction (
     status_list_credential_id VARCHAR(255),       -- The ID of the status list credential involved, if any
     status_list_index BIGINT,                     -- The index on the status list, if any
     cr_dtimes TIMESTAMP NOT NULL DEFAULT NOW(),   -- Creation timestamp
-    upd_dtimes TIMESTAMP,                         -- Update timestamp
-
-    -- Foreign key constraint to ledger table
-    CONSTRAINT fk_credential_status_transaction_ledger
-        FOREIGN KEY(credential_id)
-        REFERENCES certify.ledger(credential_id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-
-    -- Foreign key constraint to status_list_credential table
-    CONSTRAINT fk_credential_status_transaction_status_list
-        FOREIGN KEY(status_list_credential_id)
-        REFERENCES certify.status_list_credential(id)
-        ON DELETE SET NULL
-        ON UPDATE CASCADE
+    upd_dtimes TIMESTAMP                          -- Update timestamp
 );
 
 CREATE INDEX IF NOT EXISTS idx_cst_credential_id ON certify.credential_status_transaction(credential_id);
@@ -318,3 +304,17 @@ CREATE INDEX IF NOT EXISTS idx_sla_status_list_credential_id ON certify.status_l
 CREATE INDEX IF NOT EXISTS idx_sla_is_assigned ON certify.status_list_available_indices(is_assigned);
 CREATE INDEX IF NOT EXISTS idx_sla_list_index ON certify.status_list_available_indices(list_index);
 CREATE INDEX IF NOT EXISTS idx_sla_cr_dtimes ON certify.status_list_available_indices(cr_dtimes);
+
+CREATE TABLE IF NOT EXISTS certify.shedlock (
+  name VARCHAR(64),
+  lock_until TIMESTAMPTZ(3) NOT NULL,
+  locked_at TIMESTAMPTZ(3) NOT NULL,
+  locked_by VARCHAR(255) NOT NULL,
+  PRIMARY KEY (name)
+);
+
+COMMENT ON TABLE shedlock IS 'Table for managing distributed locks using ShedLock library.';
+COMMENT ON COLUMN shedlock.name IS 'Unique name of the lock.';
+COMMENT ON COLUMN shedlock.lock_until IS 'Timestamp until which the lock is held. NULL if not locked.';
+COMMENT ON COLUMN shedlock.locked_at IS 'Timestamp when the lock was acquired. NULL if not locked.';
+COMMENT ON COLUMN shedlock.locked_by IS 'Identifier of the node/process that holds the lock. NULL if not locked.';
