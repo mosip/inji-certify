@@ -93,8 +93,7 @@
         "TC_InjiCertify_EccR1_Signature_01",
         "TC_DBDependent_InsertQuery_02",
         "TC_esignetDependent_CreateOidc_For_EccR1_04",
-        "TC_esignetDependent_GenerateToken_03",
-        "TC_InjiCertify_EccR1_Signature_04"
+        "TC_esignetDependent_GenerateToken_03"
     ],
     "TC_esignetDependent_AuthenticateUser_06": [
         "TC_mock_identity_dependency_02",
@@ -114,8 +113,7 @@
         "TC_InjiCertify_EccR1_Signature_01",
         "TC_DBDependent_InsertQuery_02",
         "TC_esignetDependent_CreateOidc_For_EccR1_04",
-        "TC_esignetDependent_GenerateToken_03",
-        "TC_InjiCertify_EccR1_Signature_04"
+        "TC_esignetDependent_GenerateToken_03"
     ],
     "TC_esignetDependent_AuthenticateUser_08": [
         "TC_esignetDependent_OAuthdetailsRequest_08",
@@ -139,6 +137,8 @@
         "TC_esignetDependent_GenerateToken_03"
     ],
     "TC_InjiCertify_GetCredentialForLandRegistryEccR1_14": [
+        "TC_InjiCertify_EccR1_Signature_02",
+        "TC_DBDependent_InsertQuery_02",
         "TC_esignetDependent_CreateOidc_For_EccR1_04",
         "TC_esignetDependent_GenerateToken_03"
     ],
@@ -154,15 +154,13 @@
         "TC_InjiCertify_EccR1_Signature_01",
         "TC_DBDependent_InsertQuery_02",
         "TC_esignetDependent_CreateOidc_For_EccR1_04",
-        "TC_esignetDependent_GenerateToken_03",
-        "TC_InjiCertify_EccR1_Signature_04"
+        "TC_esignetDependent_GenerateToken_03"
     ],
     "TC_InjiCertify_GetCredentialForLandRegistryEccR1_10": [
         "TC_InjiCertify_EccR1_Signature_01",
         "TC_DBDependent_InsertQuery_02",
         "TC_esignetDependent_CreateOidc_For_EccR1_04",
-        "TC_esignetDependent_GenerateToken_03",
-        "TC_InjiCertify_EccR1_Signature_04"
+        "TC_esignetDependent_GenerateToken_03"
     ],
     "TC_esignetDependent_AuthorizationCode_21": [
         "TC_esignetDependent_AuthenticateUser_21",
@@ -254,6 +252,9 @@
     "TC_esignetDependent_AuthorizationCodeNeg_13": ["TC_esignetDependent_AuthenticateUserNeg_13"],
     "TC_InjiCertify_dataIntegrity_proof_07": ["TC_InjiCertify_DeleteCredentialConfig_14"],
     "TC_InjiCertify_GetCredentialForEccK1Siganture_13": [
+        "TC_InjiCertify_EccR1_Signature_01",
+        "TC_DBDependent_InsertQuery_02",
+        "TC_InjiCertify_EccR1_Signature_05",
         "TC_esignetDependent_CreateOidc_For_EccR1_04",
         "TC_esignetDependent_GenerateToken_03"
     ],
@@ -792,22 +793,19 @@
         "TC_InjiCertify_EccR1_Signature_01",
         "TC_DBDependent_InsertQuery_02",
         "TC_esignetDependent_CreateOidc_For_EccR1_04",
-        "TC_esignetDependent_GenerateToken_03",
-        "TC_InjiCertify_EccR1_Signature_04"
+        "TC_esignetDependent_GenerateToken_03"
     ],
     "TC_InjiCertify_GetCredentialForEccR1Siganture_04": [
         "TC_InjiCertify_EccR1_Signature_01",
         "TC_DBDependent_InsertQuery_02",
         "TC_esignetDependent_CreateOidc_For_EccR1_04",
-        "TC_esignetDependent_GenerateToken_03",
-        "TC_InjiCertify_EccR1_Signature_04"
+        "TC_esignetDependent_GenerateToken_03"
     ],
     "TC_InjiCertify_GetCredentialForEccR1Siganture_03": [
         "TC_InjiCertify_EccR1_Signature_01",
         "TC_DBDependent_InsertQuery_02",
         "TC_esignetDependent_CreateOidc_For_EccR1_04",
-        "TC_esignetDependent_GenerateToken_03",
-        "TC_InjiCertify_EccR1_Signature_04"
+        "TC_esignetDependent_GenerateToken_03"
     ],
     "TC_InjiCertify_GetCredentialForEccR1Siganture_02": [
         "TC_InjiCertify_EccR1_Signature_02",

@@ -117,6 +117,7 @@ public class MosipTestRunner {
 
 				// Used for loading dependency from dependency json, When generating the
 				// dependency json file comment it out
+
 				DependencyResolver.loadDependencies(
 						getGlobalResourcePath() + "/config/testCaseInterDependency_" + useCaseToExecute + ".json");
 				if (!testCasesToExecuteString.isBlank()) {
@@ -138,12 +139,13 @@ public class MosipTestRunner {
 
 				// Used for loading dependency from dependency json, When generating the
 				// dependency json file comment it out
+
 				DependencyResolver.loadDependencies(
 						getGlobalResourcePath() + "/config/testCaseInterDependency_" + useCaseToExecute + ".json");
 				if (!testCasesToExecuteString.isBlank()) {
 					InjiCertifyUtil.testCasesInRunScope = DependencyResolver.getDependencies(testCasesToExecuteString);
 				}
-				 
+
 				startTestRunner();
 				
 				// Used for generating the test case interdependency JSON file
