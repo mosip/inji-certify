@@ -10,6 +10,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.NotBlank;
 
+import java.util.List;
+
 /**
  * Interactive Authorization Request (IAR) DTO for OpenID4VCI
  * Used for POST /iar endpoint to initiate authorization flow
@@ -26,9 +28,8 @@ public class IarRequest {
     private String responseType;
 
     /**
-     * OAuth 2.0 Client Identifier
+     * OAuth 2.0 Client Identifier (optional for public clients)
      */
-    @NotBlank(message = "client_id is required")
     @JsonProperty("client_id")
     private String clientId;
 
@@ -66,9 +67,10 @@ public class IarRequest {
     private String redirectToWeb;
 
     /**
-     * OAuth 2.0 Scope parameter - specifies the credential types being requested
+     * Authorization details as per OpenID4VCI specification
+     * Specifies the credential types being requested
      */
-    @JsonProperty("scope")
-    private String scope;
+    @JsonProperty("authorization_details")
+    private List<AuthorizationDetail> authorizationDetails;
 
 }

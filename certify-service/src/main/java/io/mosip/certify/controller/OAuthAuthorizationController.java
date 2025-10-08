@@ -6,9 +6,7 @@
 package io.mosip.certify.controller;
 
 import io.mosip.certify.core.constants.IarConstants;
-import io.mosip.certify.core.dto.IarRequest;
 import io.mosip.certify.core.dto.IarResponse;
-import io.mosip.certify.core.dto.IarPresentationRequest;
 import io.mosip.certify.core.dto.IarPresentationResponse;
 import io.mosip.certify.core.dto.OAuthTokenRequest;
 import io.mosip.certify.core.dto.OAuthTokenResponse;
@@ -25,7 +23,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
-import java.util.Map;
 
 import java.util.Locale;
 
@@ -90,25 +87,16 @@ public class OAuthAuthorizationController {
      * Exchanges authorization code for access token and c_nonce.
      * Supports authorization_code grant type for IAR flow.
      * 
-     * @param params Form parameters containing grant_type, code, redirect_uri, client_id, code_verifier
+     * @param tokenRequest OAuth token request containing grant_type, code, redirect_uri, client_id, code_verifier
      * @return ResponseEntity with OAuthTokenResponse containing access_token and c_nonce
      * @throws CertifyException if token request processing fails
      */
     @PostMapping(value = "/token",
                  consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
                  produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> processTokenRequest(@RequestParam Map<String, String> params)
+    public ResponseEntity<?> processTokenRequest(@Valid OAuthTokenRequest tokenRequest)
             throws CertifyException {
-        log.info("Processing OAuth token request for grant_type: {}", params.get("grant_type"));
-
-        // Create OAuthTokenRequest from params
-        OAuthTokenRequest tokenRequest = new OAuthTokenRequest();
-        tokenRequest.setGrantType(params.get("grant_type"));
-        tokenRequest.setCode(params.get("code"));
-        tokenRequest.setRedirectUri(params.get("redirect_uri"));
-        tokenRequest.setClientId(params.get("client_id"));
-        tokenRequest.setCodeVerifier(params.get("code_verifier"));
-        tokenRequest.setClientSecret(params.get("client_secret"));
+        log.info("Processing OAuth token request for grant_type: {}", tokenRequest.getGrantType());
 
         try {
             // Process the token request

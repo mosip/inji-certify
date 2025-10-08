@@ -21,7 +21,6 @@ public class UnifiedIarValidator implements ConstraintValidator<ValidUnifiedIar,
 
 		boolean hasInitial =
 			hasText(value.getResponseType()) &&
-			hasText(value.getClientId()) &&
 			hasText(value.getCodeChallenge()) &&
 			hasText(value.getCodeChallengeMethod()) &&
 			hasText(value.getRedirectUri());

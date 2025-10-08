@@ -10,6 +10,8 @@ import io.mosip.certify.core.validation.ValidUnifiedIar;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * Unified Interactive Authorization Request DTO for OpenID4VCI
  * Combines fields from both IarRequest and IarPresentationRequest
@@ -65,10 +67,11 @@ public class UnifiedIarRequest {
     private String redirectToWeb;
 
     /**
-     * OAuth 2.0 Scope parameter - specifies the credential types being requested
+     * Authorization details as per OpenID4VCI specification
+     * Specifies the credential types being requested
      */
-    @JsonProperty("scope")
-    private String scope;
+    @JsonProperty("authorization_details")
+    private List<AuthorizationDetail> authorizationDetails;
 
     // Fields from IarPresentationRequest (for VP presentation responses)
     

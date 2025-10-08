@@ -42,6 +42,15 @@ public class IarSession {
     @Column(name = "response_uri", length = 512)
     private String responseUri;
 
+    @Column(name = "redirect_uri", length = 512)
+    private String redirectUri;
+
+    @Column(name = "code_challenge", length = 128)
+    private String codeChallenge;
+
+    @Column(name = "code_challenge_method", length = 10)
+    private String codeChallengeMethod;
+
     @Column(name = "code_issued_at")
     private LocalDateTime codeIssuedAt;
 

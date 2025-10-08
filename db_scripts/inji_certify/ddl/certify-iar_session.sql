@@ -7,6 +7,9 @@ CREATE TABLE IF NOT EXISTS iar_session (
     expires_at TIMESTAMP,
     client_id VARCHAR(128),
     authorization_code VARCHAR(128),
+    redirect_uri VARCHAR(512),
+    code_challenge VARCHAR(128),
+    code_challenge_method VARCHAR(10),
     code_issued_at TIMESTAMP,
     is_code_used BOOLEAN NOT NULL DEFAULT FALSE,
     cr_dtimes TIMESTAMP NOT NULL DEFAULT NOW()

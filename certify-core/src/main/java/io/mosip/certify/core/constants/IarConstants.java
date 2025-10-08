@@ -22,6 +22,9 @@ public class IarConstants {
     // OAuth 2.0 Response Types
     public static final String RESPONSE_TYPE_CODE = "code";
 
+    // OAuth 2.0 Grant Types
+    public static final String GRANT_TYPE_AUTHORIZATION_CODE = "authorization_code";
+
     // PKCE Code Challenge Methods
     public static final String CODE_CHALLENGE_METHOD_S256 = "S256";
     public static final String CODE_CHALLENGE_METHOD_PLAIN = "plain";
