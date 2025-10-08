@@ -20,6 +20,6 @@ public interface StatusListCredentialRepository extends JpaRepository<StatusList
      */
     @Query("SELECT s FROM StatusListCredential s WHERE s.statusPurpose = :statusPurpose " +
             "AND s.credentialStatus = :status " +
-            "ORDER BY s.createdDtimes DESC")
+            "ORDER BY s.createdDtimes DESC LIMIT 1")
     Optional<StatusListCredential> findSuitableStatusList(@Param("statusPurpose") String statusPurpose, StatusListCredential.CredentialStatus status);
 }
