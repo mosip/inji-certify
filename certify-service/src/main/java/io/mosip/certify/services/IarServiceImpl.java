@@ -71,7 +71,6 @@ public class IarServiceImpl implements IarService {
     @Value("${mosip.certify.verify.service.vp-result-endpoint}")
     private String verifyServiceVpResultEndpoint;
 
-    // Removed unused presentation-related configuration properties
 
     @Value("${mosip.certify.iar.openid4vp.response-type:vp_token}")
     private String openid4vpResponseType;
@@ -79,10 +78,13 @@ public class IarServiceImpl implements IarService {
     @Value("${mosip.certify.iar.openid4vp.response-mode:iar-post.jwt}")
     private String openid4vpResponseMode;
 
-    @Value("${mosip.certify.iar.session.prefix:session-}")
+    @Value("${mosip.certify.iar.session.prefix:iar_session_}")
     private String sessionPrefix;
 
-    @Value("${mosip.certify.iar.token.access-token-prefix:access_token_}")
+    @Value("${mosip.certify.iar.auth-code.prefix:iar_auth_}")
+    private String authCodePrefix;
+
+    @Value("${mosip.certify.iar.token.access-token-prefix:iar_token_}")
     private String accessTokenPrefix;
 
     @Value("${mosip.certify.iar.response-mode.direct-post:direct-post}")
@@ -150,7 +152,7 @@ public class IarServiceImpl implements IarService {
     @Override
     public String generateAuthSession() {
         // Generate dynamic auth_session for production security
-        String authSession = sessionPrefix + UUID.randomUUID().toString();
+        String authSession = sessionPrefix + UUID.randomUUID().toString().replace("-", "");
         log.debug("Generated dynamic auth session: {}", authSession);
         return authSession;
     }
@@ -159,8 +161,6 @@ public class IarServiceImpl implements IarService {
     public void validateIarRequest(IarRequest iarRequest) throws CertifyException {
         log.debug("Validating IAR request for client: {}", iarRequest.getClientId());
 
-        // Field presence is enforced at controller via Bean Validation on UnifiedIarRequest
-        // Here we keep domain/business validation only.
 
         // Validate response_type
         if (!IarConstants.RESPONSE_TYPE_CODE.equals(iarRequest.getResponseType())) {
@@ -195,7 +195,6 @@ public class IarServiceImpl implements IarService {
             OpenId4VpRequest openId4VpRequest = convertToOpenId4VpRequest(verifyResponse, iarRequest);
             response.setOpenid4vpRequest(openId4VpRequest);
 
-            // Use transaction ID from verify service response - this is required
             String transactionId = verifyResponse.getTransactionId();
             if (!StringUtils.hasText(transactionId)) {
                 log.error("No transaction ID provided by verify service - this is required for VP verification");
@@ -205,31 +204,22 @@ public class IarServiceImpl implements IarService {
             
             log.info("Using transaction_id from verify service: {} for auth_session: {}", transactionId, authSession);
             
-            // Store complete IAR request details for later validation
             IarSession iarSession = new IarSession();
             iarSession.setAuthSession(authSession);
             iarSession.setTransactionId(transactionId);
             iarSession.setRequestId(verifyResponse.getRequestId());
             iarSession.setVerifyNonce(verifyResponse.getAuthorizationDetails() != null ? 
                                       verifyResponse.getAuthorizationDetails().getNonce() : null);
-            // Convert expiresAt from milliseconds to LocalDateTime
             if (verifyResponse.getExpiresAt() != null) {
                 iarSession.setExpiresAt(LocalDateTime.ofInstant(
                     java.time.Instant.ofEpochMilli(verifyResponse.getExpiresAt()),
                     java.time.ZoneOffset.UTC));
             }
             iarSession.setClientId(iarRequest.getClientId());
-            log.debug("Stored wallet client_id in session: {} (can be null for public clients)", iarRequest.getClientId());
-            
-            // Store PKCE parameters for token request validation
             iarSession.setCodeChallenge(iarRequest.getCodeChallenge());
             iarSession.setCodeChallengeMethod(iarRequest.getCodeChallengeMethod());
             iarSession.setRedirectUri(iarRequest.getRedirectUri());
             
-            log.debug("Stored PKCE parameters - codeChallenge: {}, codeChallengeMethod: {}, redirectUri: {}", 
-                     iarRequest.getCodeChallenge(), iarRequest.getCodeChallengeMethod(), iarRequest.getRedirectUri());
-            
-            // Store responseUri from verify service for later VP submission
             if (verifyResponse.getAuthorizationDetails() != null) {
                 iarSession.setResponseUri(verifyResponse.getAuthorizationDetails().getResponseUri());
             }
@@ -244,17 +234,12 @@ public class IarServiceImpl implements IarService {
     }
     
 
-    /**
-     * Call verify service to generate VP request - Certify only forwards the request
-     */
     private VerifyVpResponse callVerifyServiceForVpRequest(IarRequest iarRequest) throws CertifyException {
         log.info("Calling verify service for VP request generation for wallet client_id: {} using verifier client_id: {}", 
                  iarRequest.getClientId(), verifierClientId);
 
         try {
-            // Create verify service request with minimal data - let Verify service handle everything
             VerifyVpRequest verifyRequest = new VerifyVpRequest();
-            // Use verifier client ID (not wallet's client_id) - wallet client_id is for public client identification
             verifyRequest.setClientId(verifierClientId);
             log.debug("Using verifier client_id: {} for VP request (wallet client_id: {})", 
                      verifierClientId, iarRequest.getClientId());
@@ -264,7 +249,6 @@ public class IarServiceImpl implements IarService {
             ));
             verifyRequest.setEncryptionRequired(true);
 
-            // Extract presentationDefinitionId from authorization_details
             if (iarRequest.getAuthorizationDetails() != null 
                 && !iarRequest.getAuthorizationDetails().isEmpty()) {
                 AuthorizationDetail authDetail = iarRequest.getAuthorizationDetails().get(0);
@@ -277,13 +261,11 @@ public class IarServiceImpl implements IarService {
                 }
             }
 
-            // Set up headers
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<VerifyVpRequest> requestEntity = new HttpEntity<>(verifyRequest, headers);
 
-            // Make the API call to VP verifier using configured endpoint
             String verifyServiceUrl = verifyServiceBaseUrl + verifyServiceVpRequestEndpoint;
             log.debug("Calling verify service at: {}", verifyServiceUrl);
 
@@ -310,30 +292,23 @@ public class IarServiceImpl implements IarService {
         }
     }
 
-    /**
-     * Convert verify service response to OpenId4VpRequest - only handle response_mode mapping
-     */
     private OpenId4VpRequest convertToOpenId4VpRequest(VerifyVpResponse verifyResponse, IarRequest iarRequest) {
         OpenId4VpRequest openId4VpRequest = new OpenId4VpRequest();
         
-        // Extract authorization details from verify service response
         VerifyVpResponse.AuthorizationDetails authDetails = verifyResponse.getAuthorizationDetails();
         if (authDetails == null) {
             log.error("No authorization details found in verify service response - this is required for production");
             throw new CertifyException(ErrorConstants.UNKNOWN_ERROR, "Invalid response from verify service: missing authorization details");
         }
 
-        // Forward all fields from verify service as-is
         openId4VpRequest.setResponseType(authDetails.getResponseType());
         openId4VpRequest.setClientId(authDetails.getClientId() != null ? authDetails.getClientId() : iarRequest.getClientId());
         
-        // Use nonce from Verify service - critical for cryptographic proof verification
         openId4VpRequest.setNonce(authDetails.getNonce());
         log.info("Forwarding VP request nonce from Verify: {}", authDetails.getNonce());
         
         openId4VpRequest.setPresentationDefinition(authDetails.getPresentationDefinition());
         
-        // Only handle response_mode mapping from direct-post → iar-post and direct-post.jwt → iar-post.jwt
         String responseMode = authDetails.getResponseMode();
         if (StringUtils.hasText(responseMode)) {
             String normalizedIncoming = responseMode.replace('_', '-');
@@ -348,7 +323,6 @@ public class IarServiceImpl implements IarService {
         }
         openId4VpRequest.setResponseMode(responseMode);
         
-        // Use response_uri from Verify service - must match domain expected by Verify for VP submission
         openId4VpRequest.setResponseUri(authDetails.getResponseUri());
         log.info("Forwarding VP request response_uri from Verify: {}", authDetails.getResponseUri());
 
@@ -356,82 +330,60 @@ public class IarServiceImpl implements IarService {
         log.debug("OpenId4VpRequest - responseType: {}, responseMode: {}, responseUri: {}, nonce: {}", 
                   openId4VpRequest.getResponseType(), openId4VpRequest.getResponseMode(), 
                   openId4VpRequest.getResponseUri(), openId4VpRequest.getNonce());
-        log.debug("Using verify service values - transactionId: {}, requestId: {}, expiresAt: {}", 
-                  verifyResponse.getTransactionId(), verifyResponse.getRequestId(), verifyResponse.getExpiresAt());
 
         return openId4VpRequest;
     }
 
-    /**
-     * Submit VP presentation to the verify service using the responseUri
-     * Parses the wallet's VP presentation JSON and extracts vp_token, presentation_submission, and state
-     * Sends data as application/x-www-form-urlencoded with these three fields
-     */
     private void submitVpToVerifier(String responseUri, String vpPresentationJson, String requestId, String transactionId) throws CertifyException {
         log.info("Submitting VP to Verify at {} with state(requestId)={}, transactionId={}", 
                 responseUri, requestId, transactionId);
         
         try {
-            // Parse the wallet's VP presentation JSON to extract the three required fields
             Map<String, Object> vpPresentationData = objectMapper.readValue(vpPresentationJson, new TypeReference<Map<String, Object>>() {});
             
-            // Extract vp_token (can be an object or a JWT string)
             Object vpTokenObj = vpPresentationData.get("vp_token");
             if (vpTokenObj == null) {
                 log.error("Missing vp_token in wallet's VP presentation");
                 throw new CertifyException("vp_submission_failed", "Missing vp_token in VP presentation");
             }
             
-            // Extract presentation_submission (should be an object)
             Object presentationSubmissionObj = vpPresentationData.get("presentation_submission");
             if (presentationSubmissionObj == null) {
                 log.error("Missing presentation_submission in wallet's VP presentation");
                 throw new CertifyException("vp_submission_failed", "Missing presentation_submission in VP presentation");
             }
             
-            // Extract state from wallet's response (for validation/logging purposes)
             String walletState = (String) vpPresentationData.get("state");
             log.debug("Wallet provided state: {}, using requestId: {} for Verify service", walletState, requestId);
             
-            // Serialize vp_token to JSON string
             String vpTokenJson;
             if (vpTokenObj instanceof String) {
-                // If it's already a JWT string, use as-is
                 vpTokenJson = (String) vpTokenObj;
                 log.debug("vp_token is a JWT string");
             } else {
-                // If it's an object, serialize to JSON
                 vpTokenJson = objectMapper.writeValueAsString(vpTokenObj);
                 log.debug("vp_token serialized to JSON, length: {}", vpTokenJson.length());
             }
             
-            // Serialize presentation_submission to JSON string
             String presentationSubmissionJson = objectMapper.writeValueAsString(presentationSubmissionObj);
             log.debug("presentation_submission serialized to JSON, length: {}", presentationSubmissionJson.length());
             
-            // Build form body with vp_token, presentation_submission, and state
             MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
             
-            // Add vp_token as JSON string
             formData.add("vp_token", vpTokenJson);
             
-            // Add presentation_submission as JSON string
             formData.add("presentation_submission", presentationSubmissionJson);
             
-            // Add state - use requestId (not transactionId) as this is what Verify service uses for lookup
             formData.add("state", requestId);
             
             log.debug("Form data prepared - vp_token length: {}, presentation_submission length: {}, state(requestId): {}", 
                      vpTokenJson.length(), presentationSubmissionJson.length(), requestId);
             
-            // Create headers with form-urlencoded content type
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
             
-            // Create request entity with form data
             HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(formData, headers);
             
-            // Submit VP to verify service using POST
             ResponseEntity<String> response = restTemplate.exchange(
                 responseUri,
                 HttpMethod.POST,
@@ -439,7 +391,6 @@ public class IarServiceImpl implements IarService {
                 String.class
             );
             
-            // Check for successful response (200 OK)
             if (response.getStatusCode().is2xxSuccessful()) {
                 log.info("Successfully submitted VP presentation to verify service, response status: {}, body: {}", 
                         response.getStatusCode(), response.getBody());
@@ -451,7 +402,6 @@ public class IarServiceImpl implements IarService {
             }
             
         } catch (CertifyException e) {
-            // Re-throw CertifyException as-is
             throw e;
         } catch (Exception e) {
             log.error("Failed to submit VP presentation to verify service at: {}, requestId: {}, transactionId: {}", 
@@ -466,41 +416,32 @@ public class IarServiceImpl implements IarService {
         log.info("Processing VP presentation for auth_session: {}", presentationRequest.getAuthSession());
 
         try {
-            // Validate auth_session (step 14)
             if (!isValidAuthSession(presentationRequest.getAuthSession())) {
                 log.warn("Invalid auth_session: {}", presentationRequest.getAuthSession());
                 throw new InvalidRequestException(IarConstants.INVALID_AUTH_SESSION);
             }
 
-            // Get IAR session to retrieve request_id for VP verification
             Optional<IarSession> sessionOpt = iarSessionRepository.findByAuthSession(presentationRequest.getAuthSession());
             if (sessionOpt.isEmpty()) {
                 throw new CertifyException("invalid_request", "Invalid auth_session");
             }
             IarSession session = sessionOpt.get();
 
-            // Submit VP presentation to verify service using stored responseUri
-            // Parse wallet's VP presentation JSON and extract vp_token, presentation_submission, and state
-            // Use requestId as state (Verify service uses requestId for lookup, not transactionId)
             submitVpToVerifier(session.getResponseUri(), 
                              presentationRequest.getOpenid4vpPresentation(),
                              session.getRequestId(), 
                              session.getTransactionId());
 
-            // VP Verifier interaction (steps 15-17)
-            // Get verification results using transaction ID - Verify service handles VP processing internally
             VpVerificationResponse verificationResponse = getVpVerificationResult(session.getTransactionId());
 
             IarPresentationResponse response = new IarPresentationResponse();
             if ("ok".equals(verificationResponse.getStatus())) {
-                // Step 18: ACTUAL CRYPTOGRAPHIC VERIFICATION SUCCESSFUL
                 String authorizationCode = generateAndStoreAuthorizationCode(presentationRequest.getAuthSession());
                 response.setStatus(IarConstants.STATUS_OK);
                 response.setAuthorizationCode(authorizationCode);
                 log.info("Authorization code generated after successful VP cryptographic verification for auth_session: {}, request_id: {}", 
                          presentationRequest.getAuthSession(), session.getRequestId());
             } else {
-                // Step 18: ACTUAL CRYPTOGRAPHIC VERIFICATION FAILED
                 response.setStatus(IarConstants.STATUS_ERROR);
                 response.setError(verificationResponse.getError() != null ? 
                                  verificationResponse.getError() : IarConstants.INVALID_REQUEST);
@@ -524,20 +465,13 @@ public class IarServiceImpl implements IarService {
         }
     }
 
-    // Removed duplicate field-presence validation; controller-level bean validation enforces structure
 
-    /**
-     * Validates auth_session against stored IAR sessions
-     */
     private boolean isValidAuthSession(String authSession) {
         boolean isValid = iarSessionRepository.findByAuthSession(authSession).isPresent();
         log.debug("Validated auth_session: {}, result: {}", authSession, isValid);
         return isValid;
     }
 
-    /**
-     * Get VP verification results using transaction ID
-     */
     private VpVerificationResponse getVpVerificationResult(String transactionId) throws CertifyException {
         try {
             String vpResultUrl = verifyServiceBaseUrl + verifyServiceVpResultEndpoint + "/" + transactionId;
@@ -555,7 +489,6 @@ public class IarServiceImpl implements IarService {
             response.setRequestId(transactionId);
             
             if (verificationResult != null) {
-                // Check vpResultStatus field from Verify service response
                 String vpResultStatus = (String) verificationResult.get("vpResultStatus");
                 log.debug("Verify service vpResultStatus: {}, expected success value: {}", vpResultStatus, verificationSuccessStatus);
                 
@@ -591,14 +524,10 @@ public class IarServiceImpl implements IarService {
             return errorResponse;
         }
     }
-    /**
-     * Generates an authorization code for successful VP verification
-     */
     private String generateAndStoreAuthorizationCode(String authSession) throws CertifyException {
-        String authCode = IarConstants.AUTH_CODE_PREFIX + UUID.randomUUID().toString().substring(0, authorizationCodeLength);
-        log.debug("Generated authorization code: {} for auth_session: {}", authCode, authSession);
+        String authCode = authCodePrefix + UUID.randomUUID().toString().replace("-", "").substring(0, authorizationCodeLength);
+        log.debug("Generated authorization code for auth_session: {} (length: {})", authSession, authCode.length());
         
-        // Update the IAR session with the authorization code
         Optional<IarSession> sessionOpt = iarSessionRepository.findByAuthSession(authSession);
         if (sessionOpt.isPresent()) {
             IarSession session = sessionOpt.get();
@@ -622,17 +551,10 @@ public class IarServiceImpl implements IarService {
                  tokenRequest.getClientId(), tokenRequest.getGrantType());
 
         try {
-            // Bean Validation is now handled at controller level via @Valid annotation
-            // No need for manual validation here
 
-            // Validate authorization code and get session
-            IarSession session = validateAuthorizationCode(tokenRequest);
+            // Validate authorization code and atomically mark as used to prevent race conditions
+            IarSession session = validateAndMarkAuthorizationCodeUsed(tokenRequest);
 
-            // Mark authorization code as used
-            session.setIsCodeUsed(true);
-            iarSessionRepository.save(session);
-
-            // Generate access token and c_nonce
             OAuthTokenResponse response = new OAuthTokenResponse();
             response.setAccessToken(generateAccessToken());
             response.setTokenType(tokenType);
@@ -656,22 +578,23 @@ public class IarServiceImpl implements IarService {
 
 
     /**
-     * Validate authorization code from IAR flow with proper database validation
+     * Atomically validate and mark authorization code as used to prevent race conditions
+     * This method uses database-level locking to ensure only one token request can use a code
      */
-    private IarSession validateAuthorizationCode(OAuthTokenRequest tokenRequest) throws CertifyException {
-        log.debug("Validating authorization code: {} for client_id: {}", 
-                  tokenRequest.getCode(), tokenRequest.getClientId());
+    private IarSession validateAndMarkAuthorizationCodeUsed(OAuthTokenRequest tokenRequest) throws CertifyException {
+        log.debug("Atomically validating and marking authorization code as used for client_id: {} (code length: {})", 
+                  tokenRequest.getClientId(), tokenRequest.getCode() != null ? tokenRequest.getCode().length() : 0);
 
         if (!StringUtils.hasText(tokenRequest.getCode())) {
             throw new CertifyException("invalid_grant", "Invalid authorization code");
         }
 
-        // Validate authorization code format
-        if (!tokenRequest.getCode().startsWith(IarConstants.AUTH_CODE_PREFIX)) {
+        if (!tokenRequest.getCode().startsWith(authCodePrefix)) {
             throw new CertifyException("invalid_grant", "Invalid authorization code format");
         }
 
-        // Find the IAR session by authorization code
+        // Use database-level atomic update to prevent race conditions
+        // This ensures only one thread can mark the code as used
         Optional<IarSession> sessionOpt = iarSessionRepository.findByAuthorizationCode(tokenRequest.getCode());
         if (!sessionOpt.isPresent()) {
             throw new CertifyException("invalid_grant", "Authorization code not found");
@@ -679,58 +602,122 @@ public class IarServiceImpl implements IarService {
 
         IarSession session = sessionOpt.get();
 
-        // Validate code hasn't been used already
+        // Check if already used (double-check after database retrieval)
         if (Boolean.TRUE.equals(session.getIsCodeUsed())) {
+            log.warn("Authorization code already used - potential replay attack for client_id: {}", tokenRequest.getClientId());
             throw new CertifyException("invalid_grant", "Authorization code already used");
         }
 
-        // Validate code hasn't expired
+        // Validate expiration
         if (session.getCodeIssuedAt() != null && 
             session.getCodeIssuedAt().isBefore(LocalDateTime.now().minusMinutes(authorizationCodeExpiresMinutes))) {
             throw new CertifyException("invalid_grant", "Authorization code expired");
         }
 
         // Validate client_id matches per RFC 7636 Section 3.2
-        // Public clients (null client_id) can use any authorization code
-        // Confidential clients must match the client_id from authorization request
         String tokenClientId = tokenRequest.getClientId();
         String sessionClientId = session.getClientId();
         
-        // If token request has no client_id, it's a public client - always allowed
         if (tokenClientId == null) {
             log.debug("Public client (no client_id) - validation passed");
         } else if (!Objects.equals(tokenClientId, sessionClientId)) {
-            // Confidential client must match the client_id from authorization request
             log.warn("Client ID mismatch - token: {}, session: {}", tokenClientId, sessionClientId);
             throw new CertifyException("invalid_grant", "Client ID mismatch");
         } else {
             log.debug("Client ID validation successful for confidential client: {}", tokenClientId);
         }
 
-        // Validate PKCE code_verifier against stored code_challenge
+        // Validate PKCE, redirect_uri, and client_secret
+        validatePkceCodeVerifier(tokenRequest, session);
+        validateRedirectUri(tokenRequest, session);
+        validateClientSecret(tokenRequest, session);
+
+        // ATOMIC UPDATE: Mark code as used in single database operation
+        // This prevents race conditions where multiple requests try to use the same code
+        try {
+            int updatedRows = iarSessionRepository.markAuthorizationCodeAsUsed(
+                tokenRequest.getCode(), 
+                LocalDateTime.now()
+            );
+            
+            if (updatedRows == 0) {
+                // Another thread already marked this code as used
+                log.warn("Authorization code was used by another request - potential race condition prevented for client_id: {}", tokenRequest.getClientId());
+                throw new CertifyException("invalid_grant", "Authorization code already used");
+            }
+            
+            // Update the session object to reflect the change
+            session.setIsCodeUsed(true);
+            session.setCodeUsedAt(LocalDateTime.now());
+            
+            log.debug("Authorization code atomically marked as used for client_id: {}", tokenRequest.getClientId());
+            return session;
+            
+        } catch (Exception e) {
+            log.error("Failed to atomically mark authorization code as used for client_id: {}", tokenRequest.getClientId(), e);
+            throw new CertifyException("server_error", "Failed to process authorization code", e);
+        }
+    }
+
+    private IarSession validateAuthorizationCode(OAuthTokenRequest tokenRequest) throws CertifyException {
+        log.debug("Validating authorization code for client_id: {} (code length: {})", 
+                  tokenRequest.getClientId(), tokenRequest.getCode() != null ? tokenRequest.getCode().length() : 0);
+
+        if (!StringUtils.hasText(tokenRequest.getCode())) {
+            throw new CertifyException("invalid_grant", "Invalid authorization code");
+        }
+
+        if (!tokenRequest.getCode().startsWith(authCodePrefix)) {
+            throw new CertifyException("invalid_grant", "Invalid authorization code format");
+        }
+
+        Optional<IarSession> sessionOpt = iarSessionRepository.findByAuthorizationCode(tokenRequest.getCode());
+        if (!sessionOpt.isPresent()) {
+            throw new CertifyException("invalid_grant", "Authorization code not found");
+        }
+
+        IarSession session = sessionOpt.get();
+
+        if (Boolean.TRUE.equals(session.getIsCodeUsed())) {
+            throw new CertifyException("invalid_grant", "Authorization code already used");
+        }
+
+        if (session.getCodeIssuedAt() != null && 
+            session.getCodeIssuedAt().isBefore(LocalDateTime.now().minusMinutes(authorizationCodeExpiresMinutes))) {
+            throw new CertifyException("invalid_grant", "Authorization code expired");
+        }
+
+        String tokenClientId = tokenRequest.getClientId();
+        String sessionClientId = session.getClientId();
+        
+        if (tokenClientId == null) {
+            log.debug("Public client (no client_id) - validation passed");
+        } else if (!Objects.equals(tokenClientId, sessionClientId)) {
+            log.warn("Client ID mismatch - token: {}, session: {}", tokenClientId, sessionClientId);
+            throw new CertifyException("invalid_grant", "Client ID mismatch");
+        } else {
+            log.debug("Client ID validation successful for confidential client: {}", tokenClientId);
+        }
+
         validatePkceCodeVerifier(tokenRequest, session);
         
-        // Validate redirect_uri matches the one from authorization request
         validateRedirectUri(tokenRequest, session);
         
-        // Validate client_secret is not provided for public clients
         validateClientSecret(tokenRequest, session);
 
         log.debug("Authorization code validation successful for client_id: {}", tokenRequest.getClientId());
         return session;
     }
 
-    /**
-     * Validate PKCE code_verifier against stored code_challenge
-     * RFC 7636 Section 4.6: Verify code_verifier using code_challenge_method
-     */
     private void validatePkceCodeVerifier(OAuthTokenRequest tokenRequest, IarSession session) throws CertifyException {
         String codeVerifier = tokenRequest.getCodeVerifier();
         String codeChallenge = session.getCodeChallenge();
         String codeChallengeMethod = session.getCodeChallengeMethod();
         
-        log.debug("PKCE validation - codeVerifier: {}, codeChallenge: {}, codeChallengeMethod: {}", 
-                 codeVerifier, codeChallenge, codeChallengeMethod);
+        log.debug("PKCE validation - codeVerifier length: {}, codeChallenge length: {}, codeChallengeMethod: {}", 
+                 codeVerifier != null ? codeVerifier.length() : 0, 
+                 codeChallenge != null ? codeChallenge.length() : 0, 
+                 codeChallengeMethod);
         
         if (!StringUtils.hasText(codeVerifier)) {
             throw new CertifyException("invalid_request", "code_verifier is required for PKCE");
@@ -745,12 +732,10 @@ public class IarServiceImpl implements IarService {
         try {
             String computedChallenge;
             if (IarConstants.CODE_CHALLENGE_METHOD_S256.equals(codeChallengeMethod)) {
-                // S256: code_challenge = BASE64URL-ENCODE(SHA256(ASCII(code_verifier)))
                 java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
                 byte[] hash = digest.digest(codeVerifier.getBytes(java.nio.charset.StandardCharsets.UTF_8));
                 computedChallenge = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
             } else if (IarConstants.CODE_CHALLENGE_METHOD_PLAIN.equals(codeChallengeMethod)) {
-                // Plain: code_challenge = code_verifier
                 computedChallenge = codeVerifier;
             } else {
                 throw new CertifyException("invalid_request", "Unsupported code_challenge_method: " + codeChallengeMethod);
@@ -769,10 +754,6 @@ public class IarServiceImpl implements IarService {
         }
     }
     
-    /**
-     * Validate redirect_uri matches the one from authorization request
-     * RFC 6749 Section 4.1.3: redirect_uri MUST be identical to the one in authorization request
-     */
     private void validateRedirectUri(OAuthTokenRequest tokenRequest, IarSession session) throws CertifyException {
         String tokenRedirectUri = tokenRequest.getRedirectUri();
         String sessionRedirectUri = session.getRedirectUri();
@@ -793,15 +774,10 @@ public class IarServiceImpl implements IarService {
         log.debug("Redirect URI validation successful for client_id: {}", tokenRequest.getClientId());
     }
     
-    /**
-     * Validate client_secret is not provided for public clients
-     * RFC 7636 Section 3.2: Public clients MUST NOT use client_secret
-     */
     private void validateClientSecret(OAuthTokenRequest tokenRequest, IarSession session) throws CertifyException {
         String clientSecret = tokenRequest.getClientSecret();
         String clientId = tokenRequest.getClientId();
         
-        // If client_id is null or empty, it's a public client
         boolean isPublicClient = !StringUtils.hasText(clientId);
         
         if (isPublicClient && StringUtils.hasText(clientSecret)) {
@@ -809,28 +785,25 @@ public class IarServiceImpl implements IarService {
             throw new CertifyException("invalid_request", "client_secret not allowed for public clients");
         }
         
-        // For confidential clients, client_secret validation would be handled by authentication mechanism
-        // This implementation focuses on preventing public clients from using client_secret
         
         log.debug("Client secret validation successful for client_id: {} (public: {})", clientId, isPublicClient);
     }
 
-    /**
-     * Generate access token for credential issuance
-     */
     private String generateAccessToken() {
-        // Generate access token for credential issuance
-        String accessToken = accessTokenPrefix + UUID.randomUUID().toString().replace("-", "");
-        log.debug("Generated access token: {}", accessToken.substring(0, 20) + "...");
+        // Generate cryptographically secure random token with 32 bytes (256 bits) of entropy
+        byte[] randomBytes = new byte[32];
+        new java.security.SecureRandom().nextBytes(randomBytes);
+        String accessToken = accessTokenPrefix + java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+        log.debug("Generated secure access token (length: {})", accessToken.length());
         return accessToken;
     }
 
-    /**
-     * Generate c_nonce for proof of possession
-     */
     private String generateCNonce() {
-        String cNonce = IarConstants.NONCE_PREFIX + UUID.randomUUID().toString().substring(0, cNonceLength);
-        log.debug("Generated c_nonce: {}", cNonce);
+        // Generate cryptographically secure random c_nonce with 16 bytes (128 bits) of entropy
+        byte[] randomBytes = new byte[16];
+        new java.security.SecureRandom().nextBytes(randomBytes);
+        String cNonce = "iar_nonce_" + java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+        log.debug("Generated secure c_nonce (length: {})", cNonce.length());
         return cNonce;
     }
 
@@ -849,7 +822,6 @@ public class IarServiceImpl implements IarService {
             return processVpPresentationResponse(presentationRequest);
         }
 
-        // Controller validation guarantees one valid flow; default to initial flow if not presentation
         if (!hasAuthSession || !hasVp) {
             log.info("Processing initial authorization request for client_id: {}", unifiedRequest.getClientId());
             IarRequest iarRequest = new IarRequest();
@@ -863,7 +835,6 @@ public class IarServiceImpl implements IarService {
             iarRequest.setAuthorizationDetails(unifiedRequest.getAuthorizationDetails());
             return processAuthorizationRequest(iarRequest);
         }
-        // Should not reach here due to controller validation
         log.error("Invalid unified IAR request - neither initial authorization nor VP presentation response");
         throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
     }

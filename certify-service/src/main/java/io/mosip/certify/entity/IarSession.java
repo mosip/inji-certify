@@ -57,6 +57,9 @@ public class IarSession {
     @Column(name = "is_code_used", nullable = false)
     private Boolean isCodeUsed = false;
 
+    @Column(name = "code_used_at")
+    private LocalDateTime codeUsedAt;
+
     @Column(name = "cr_dtimes", nullable = false, updatable = false)
     private LocalDateTime createdDtimes;
 

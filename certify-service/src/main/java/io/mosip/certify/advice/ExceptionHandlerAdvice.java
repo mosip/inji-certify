@@ -96,6 +96,10 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
             return handleVCIControllerExceptions(ex);
         }
 
+        if(pathInfo != null && pathInfo.startsWith("/oauth/")) {
+            return handleOAuthControllerExceptions(ex);
+        }
+
         return handleInternalControllerException(ex);
     }
 
@@ -168,6 +172,49 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
         return new ResponseEntity<VCError>(getVCErrorDto(UNKNOWN_ERROR, ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    public ResponseEntity<Object> handleOAuthControllerExceptions(Exception ex) {
+        if(ex instanceof MethodArgumentNotValidException) {
+            FieldError fieldError = ((MethodArgumentNotValidException) ex).getBindingResult().getFieldError();
+            String message = fieldError != null ? fieldError.getDefaultMessage() : ex.getMessage();
+            VCError vcError = getVCErrorDto("invalid_request", message);
+            return new ResponseEntity<Object>(vcError, HttpStatus.BAD_REQUEST);
+        }
+        if(ex instanceof javax.validation.ConstraintViolationException) {
+            Set<ConstraintViolation<?>> violations = ((ConstraintViolationException) ex).getConstraintViolations();
+            String message = !violations.isEmpty() ? violations.stream().findFirst().get().getMessage() : ex.getMessage();
+            VCError vcError = getVCErrorDto("invalid_request", message);
+            return new ResponseEntity<Object>(vcError, HttpStatus.BAD_REQUEST);
+        }
+        if(ex instanceof MissingServletRequestParameterException) {
+            VCError vcError = getVCErrorDto("invalid_request", ex.getMessage());
+            return new ResponseEntity<Object>(vcError, HttpStatus.BAD_REQUEST);
+        }
+        if(ex instanceof HttpMediaTypeNotAcceptableException) {
+            VCError vcError = getVCErrorDto("invalid_request", ex.getMessage());
+            return new ResponseEntity<Object>(vcError, HttpStatus.BAD_REQUEST);
+        }
+        if(ex instanceof CertifyException) {
+            String errorCode = ((CertifyException) ex).getErrorCode();
+            // Map CertifyException error codes to OAuth 2.0 error codes
+            String oauthErrorCode = mapToOAuthErrorCode(errorCode);
+            VCError vcError = getVCErrorDto(oauthErrorCode, getMessage(errorCode));
+            HttpStatus status = getOAuthErrorStatus(oauthErrorCode);
+            return new ResponseEntity<Object>(vcError, status);
+        }
+        if(ex instanceof NotAuthenticatedException) {
+            String errorCode = ((CertifyException) ex).getErrorCode();
+            VCError vcError = getVCErrorDto("invalid_client", getMessage(errorCode));
+            return new ResponseEntity<Object>(vcError, HttpStatus.UNAUTHORIZED);
+        }
+        if(ex instanceof AccessDeniedException) {
+            VCError vcError = getVCErrorDto("access_denied", "Access denied");
+            return new ResponseEntity<Object>(vcError, HttpStatus.FORBIDDEN);
+        }
+        log.error("Unhandled exception encountered in OAuth controller", ex);
+        VCError vcError = getVCErrorDto("server_error", "Internal server error");
+        return new ResponseEntity<Object>(vcError, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
     private ResponseWrapper getResponseWrapper(String errorCode, String errorMessage) {
         Error error = new Error();
         error.setErrorCode(errorCode);
@@ -202,5 +249,67 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
         errorRespDto.setError(errorCode);
         errorRespDto.setError_description(description);
         return errorRespDto;
+    }
+
+    /**
+     * Maps internal CertifyException error codes to OAuth 2.0 error codes
+     */
+    private String mapToOAuthErrorCode(String certifyErrorCode) {
+        if (certifyErrorCode == null) {
+            return "server_error";
+        }
+        
+        // Map common error codes to OAuth 2.0 equivalents
+        switch (certifyErrorCode.toLowerCase()) {
+            case "invalid_request":
+            case "invalid_grant":
+            case "invalid_client":
+            case "unauthorized_client":
+            case "unsupported_grant_type":
+            case "invalid_scope":
+                return certifyErrorCode.toLowerCase();
+            case "invalid_auth_session":
+            case "session_not_found":
+                return "invalid_grant";
+            case "invalid_authorization_code":
+            case "authorization_code_not_found":
+            case "authorization_code_expired":
+            case "authorization_code_already_used":
+                return "invalid_grant";
+            case "client_id_mismatch":
+                return "invalid_client";
+            case "invalid_redirect_uri":
+                return "invalid_request";
+            case "pkce_validation_failed":
+            case "invalid_code_verifier":
+                return "invalid_request";
+            default:
+                return "invalid_request";
+        }
+    }
+
+    /**
+     * Determines the appropriate HTTP status code for OAuth 2.0 error codes
+     */
+    private HttpStatus getOAuthErrorStatus(String oauthErrorCode) {
+        if (oauthErrorCode == null) {
+            return HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+        
+        switch (oauthErrorCode.toLowerCase()) {
+            case "invalid_client":
+                return HttpStatus.UNAUTHORIZED;
+            case "invalid_grant":
+            case "invalid_request":
+            case "unsupported_grant_type":
+            case "invalid_scope":
+                return HttpStatus.BAD_REQUEST;
+            case "unauthorized_client":
+                return HttpStatus.FORBIDDEN;
+            case "server_error":
+                return HttpStatus.INTERNAL_SERVER_ERROR;
+            default:
+                return HttpStatus.BAD_REQUEST;
+        }
     }
 }

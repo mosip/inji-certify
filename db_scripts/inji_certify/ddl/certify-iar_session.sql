@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS iar_session (
     code_challenge_method VARCHAR(10),
     code_issued_at TIMESTAMP,
     is_code_used BOOLEAN NOT NULL DEFAULT FALSE,
+    code_used_at TIMESTAMP,
     cr_dtimes TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
@@ -20,3 +21,4 @@ CREATE INDEX IF NOT EXISTS idx_iar_session_auth_session ON iar_session(auth_sess
 CREATE INDEX IF NOT EXISTS idx_iar_session_authorization_code ON iar_session(authorization_code);
 CREATE INDEX IF NOT EXISTS idx_iar_session_request_id ON iar_session(request_id);
 CREATE INDEX IF NOT EXISTS idx_iar_session_expires_at ON iar_session(expires_at);
+CREATE INDEX IF NOT EXISTS idx_iar_session_authorization_code_used ON iar_session(authorization_code, is_code_used) WHERE authorization_code IS NOT NULL;

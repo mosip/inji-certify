@@ -301,6 +301,61 @@ class OAuthAuthorizationControllerTest {
         verify(iarService, times(1)).processAuthorizationRequest(any(IarRequest.class));
     }
 
+    @Test
+    void processTokenRequest_invalidGrant_returnsOAuthError() throws Exception {
+        // Arrange
+        CertifyException certifyException = new CertifyException("invalid_grant", "Authorization code expired");
+        when(iarService.processTokenRequest(any())).thenThrow(certifyException);
+
+        // Act & Assert
+        mockMvc.perform(post("/oauth/token")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("grant_type", "authorization_code")
+                .param("code", "invalid-code")
+                .param("redirect_uri", "https://test.com/callback")
+                .param("client_id", "test-client")
+                .param("code_verifier", "test-verifier"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.error").value("invalid_grant"))
+                .andExpect(jsonPath("$.error_description").value("invalid_grant"));
+
+        verify(iarService, times(1)).processTokenRequest(any());
+    }
+
+    @Test
+    void processTokenRequest_invalidClient_returnsOAuthError() throws Exception {
+        // Arrange
+        CertifyException certifyException = new CertifyException("invalid_client", "Client authentication failed");
+        when(iarService.processTokenRequest(any())).thenThrow(certifyException);
+
+        // Act & Assert
+        mockMvc.perform(post("/oauth/token")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("grant_type", "authorization_code")
+                .param("code", "test-code")
+                .param("redirect_uri", "https://test.com/callback")
+                .param("client_id", "invalid-client")
+                .param("code_verifier", "test-verifier"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.error").value("invalid_client"))
+                .andExpect(jsonPath("$.error_description").value("invalid_client"));
+
+        verify(iarService, times(1)).processTokenRequest(any());
+    }
+
+    @Test
+    void processTokenRequest_missingParameters_returnsOAuthError() throws Exception {
+        // Act & Assert - Missing required parameters should return 400 with OAuth error format
+        mockMvc.perform(post("/oauth/token")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("grant_type", "authorization_code"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.error").value("invalid_request"));
+    }
+
     /**
      * Helper method to create a mock IAR response
      */

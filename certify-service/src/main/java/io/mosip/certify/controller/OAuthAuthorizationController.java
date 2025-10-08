@@ -11,20 +11,16 @@ import io.mosip.certify.core.dto.IarPresentationResponse;
 import io.mosip.certify.core.dto.OAuthTokenRequest;
 import io.mosip.certify.core.dto.OAuthTokenResponse;
 import io.mosip.certify.core.dto.OAuthTokenError;
-import io.mosip.certify.core.dto.VCError;
 import io.mosip.certify.core.dto.UnifiedIarRequest;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.IarService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
-
-import java.util.Locale;
 
 /**
  * OAuth Authorization Controller
@@ -37,9 +33,6 @@ public class OAuthAuthorizationController {
 
     @Autowired
     private IarService iarService;
-
-    @Autowired
-    private MessageSource messageSource;
 
     /**
      * Unified Interactive Authorization Request (IAR) endpoint
@@ -128,20 +121,4 @@ public class OAuthAuthorizationController {
         }
     }
 
-    /**
-     * Exception handler for IAR-related CertifyExceptions
-     * Returns structured error response following OAuth 2.0 error format
-     */
-    @ResponseBody
-    @ExceptionHandler(CertifyException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public VCError iarExceptionHandler(CertifyException ex) {
-        VCError vcError = new VCError();
-        vcError.setError(ex.getErrorCode());
-        vcError.setError_description(messageSource.getMessage(ex.getErrorCode(), null, ex.getErrorCode(), Locale.getDefault()));
-        
-        log.error("IAR processing error - code: {}, description: {}", ex.getErrorCode(), vcError.getError_description());
-        
-        return vcError;
-    }
 }

@@ -37,24 +37,15 @@ public class IarConstants {
     public static final String INTERACTION_TYPE_OPENID4VP = "openid4vp_presentation";
     public static final String INTERACTION_TYPE_REDIRECT_TO_WEB = "redirect_to_web";
 
-    // (Removed unused default presentation and JSONPath constants)
-
-    // Session and ID prefixes
-    public static final String AUTH_SESSION_PREFIX = "session-";
-    public static final String AUTH_CODE_PREFIX = "authcode-";
-    public static final String TRANSACTION_ID_PREFIX = "tx-";
-    public static final String NONCE_PREFIX = "nonce-";
-    public static final String STATE_PREFIX = "state-";
 
     // Content Types
     public static final String CONTENT_TYPE_FORM_URLENCODED = "application/x-www-form-urlencoded";
     public static final String CONTENT_TYPE_JSON = "application/json";
 
-    // Error codes (using existing ErrorConstants)
+    // Error codes
     public static final String INVALID_REQUEST = "invalid_request";
     public static final String UNSUPPORTED_RESPONSE_TYPE = "unsupported_response_type";
     public static final String INVALID_CLIENT = "invalid_client";
     public static final String INTERACTION_REQUIRED = "interaction_required";
     public static final String INVALID_AUTH_SESSION = "invalid_auth_session";
-    // (Removed unused RESPONSE_URI placeholder)
 }
