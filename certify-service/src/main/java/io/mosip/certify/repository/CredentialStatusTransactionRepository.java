@@ -17,5 +17,5 @@ public interface CredentialStatusTransactionRepository extends JpaRepository<Cre
     /**
      * Find a batch of unprocessed transactions, ordered by creation time, with custom batch size.
      */
-    List<CredentialStatusTransaction> findByProcessedTimeIsNullOrderByCreatedDtimesAsc(Pageable pageable);
+    List<CredentialStatusTransaction> findByIsProcessedFalseOrderByCreatedDtimesAsc(Pageable pageable);
 }

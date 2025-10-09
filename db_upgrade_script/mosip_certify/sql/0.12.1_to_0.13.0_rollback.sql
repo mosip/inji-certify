@@ -48,3 +48,6 @@ DROP TABLE IF EXISTS certify.shedlock;
 
 ALTER TABLE certify.credential_status_transaction
 DROP COLUMN IF EXISTS processed_time;
+
+ALTER TABLE certify.credential_status_transaction
+DROP COLUMN IF EXISTS is_processed;

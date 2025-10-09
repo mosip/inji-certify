@@ -55,7 +55,6 @@ public class StatusListUpdateBatchJob {
             lockAtMostFor = "${mosip.certify.batch.status-list-update.lock-at-most-for:50m}",
             lockAtLeastFor = "${mosip.certify.batch.status-list-update.lock-at-least-for:5m}"
     )
-    @Transactional
     public void updateStatusLists() {
         LockAssert.assertLocked();
         if (!batchJobEnabled) {
@@ -67,7 +66,7 @@ public class StatusListUpdateBatchJob {
 
         try {
             // Fetch a batch of unprocessed transactions
-            List<CredentialStatusTransaction> newTransactions = transactionRepository.findByProcessedTimeIsNullOrderByCreatedDtimesAsc(PageRequest.of(0, batchSize));
+            List<CredentialStatusTransaction> newTransactions = transactionRepository.findByIsProcessedFalseOrderByCreatedDtimesAsc(PageRequest.of(0, batchSize));
 
             if (newTransactions.isEmpty()) {
                 log.info("No unprocessed transactions found");
@@ -87,12 +86,6 @@ public class StatusListUpdateBatchJob {
 
                 try {
                     updateStatusList(statusListId, transactions);
-                    // Mark transactions as processed
-                    LocalDateTime processedTime = LocalDateTime.now();
-                    for (CredentialStatusTransaction txn : transactions) {
-                        txn.setProcessedTime(processedTime);
-                    }
-                    transactionRepository.saveAll(transactions);
                     updatedLists++;
                     log.info("Successfully updated status list: {} and marked {} transactions as processed", statusListId, transactions.size());
                 } catch (Exception e) {
@@ -147,6 +140,14 @@ public class StatusListUpdateBatchJob {
 
             // Update the status list credential with new encoded list
             updateStatusListCredential(statusListCredential, newEncodedList);
+
+            // Mark transactions as processed
+            LocalDateTime processedTime = LocalDateTime.now();
+            for (CredentialStatusTransaction txn : transactions) {
+                txn.setProcessedTime(processedTime);
+                txn.setIsProcessed(true);
+            }
+            transactionRepository.saveAll(transactions);
 
             log.info("Successfully updated status list credential: {}", statusListId);
 

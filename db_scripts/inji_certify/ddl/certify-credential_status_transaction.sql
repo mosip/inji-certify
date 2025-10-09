@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS credential_status_transaction (
     status_list_index BIGINT,                     -- The index on the status list, if any
     cr_dtimes TIMESTAMP NOT NULL DEFAULT NOW(),   -- Creation timestamp
     upd_dtimes TIMESTAMP,                         -- Update timestamp
-    processed_time TIMESTAMP                      -- Timestamp when processed by status list batch job
+    processed_time TIMESTAMP,                     -- Timestamp when processed by status list batch job
+    is_processed BOOLEAN NOT NULL DEFAULT FALSE   -- Indicates if processed by status list batch job
 );
 
 -- Add comments for documentation
@@ -35,6 +36,7 @@ COMMENT ON COLUMN credential_status_transaction.status_list_index IS 'The index 
 COMMENT ON COLUMN credential_status_transaction.cr_dtimes IS 'Timestamp when this transaction was created.';
 COMMENT ON COLUMN credential_status_transaction.upd_dtimes IS 'Timestamp when this transaction was last updated.';
 COMMENT ON COLUMN credential_status_transaction.processed_time IS 'Timestamp when this transaction was processed by status list batch job.';
+COMMENT ON COLUMN credential_status_transaction.is_processed IS 'Indicates if the transaction has been processed by the status list batch job.';
 
 -- Create indexes for credential_status_transaction
 CREATE INDEX IF NOT EXISTS idx_cst_credential_id ON credential_status_transaction(credential_id);

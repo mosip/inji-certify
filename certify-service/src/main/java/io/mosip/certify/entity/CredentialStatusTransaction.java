@@ -43,6 +43,9 @@ public class CredentialStatusTransaction {
     @Column(name = "processed_time")
     private LocalDateTime processedTime;
 
+    @Column(name = "is_processed", nullable = false)
+    private Boolean isProcessed;
+
     @PrePersist
     protected void onCreate() {
         createdDtimes = LocalDateTime.now();
