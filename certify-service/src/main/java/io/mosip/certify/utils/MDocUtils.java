@@ -13,6 +13,7 @@ import java.io.ByteArrayOutputStream;
 
 import io.mosip.certify.config.MDocConfig;
 import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.kernel.signature.dto.CoseSignRequestDto;
 import io.mosip.kernel.signature.service.CoseSignatureService;
 import lombok.extern.slf4j.Slf4j;
@@ -453,11 +454,12 @@ public class MDocUtils {
             CoseSignRequestDto signRequest = new CoseSignRequestDto();
 
             String base64UrlPayload = Base64.getUrlEncoder().withoutPadding().encodeToString(msoCbor);
+
             signRequest.setPayload(base64UrlPayload);
             signRequest.setApplicationId(appID);
             signRequest.setReferenceId(refID);
-
             signRequest.setAlgorithm(signAlgorithm);
+
             Map<String, Object> protectedHeader = new HashMap<>();
             protectedHeader.put("x5c", true);
             signRequest.setProtectedHeader(protectedHeader);
@@ -465,11 +467,12 @@ public class MDocUtils {
             String hexSignedData = coseSignatureService.coseSign1(signRequest).getSignedData();
             return hexStringToByteArray(hexSignedData);
 
-        } catch (Exception e) {
+        } catch (CertifyException e) {
             log.error("Error during COSE signing: {}", e.getMessage(), e);
-            throw new Exception("COSE signing failed: " + e.getMessage(), e);
+            throw new CertifyException("COSE signing failed: " + e.getMessage());
         }
     }
+
 
     public static byte[] wrapWithCBORTag24(Map<String, Object> element) throws IOException {
         try {
