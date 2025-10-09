@@ -90,8 +90,8 @@ public class MDocUtils {
             if (templateParams.containsKey("_holderId")) {
                 finalMDoc.put("_holderId", templateParams.get("_holderId"));
             }
-            if (templateNode.has("docType")) {
-                finalMDoc.put("_docType", templateNode.get("docType").asText());
+            if (templateNode.has(Constants.DOCTYPE)) {
+                finalMDoc.put("_docType", templateNode.get(Constants.DOCTYPE).asText());
             }
 
             // Process namespaces
@@ -118,7 +118,7 @@ public class MDocUtils {
     /**
      * Process items within a namespace
      */
-    public List<Map<String, Object>> processNamespaceItems(JsonNode namespaceItems) {
+    private List<Map<String, Object>> processNamespaceItems(JsonNode namespaceItems) {
         List<Map<String, Object>> processedItems = new ArrayList<>();
 
         // First, add all items from template
@@ -221,7 +221,7 @@ public class MDocUtils {
     /**
      * Preprocesses objects for CBOR encoding (handles dates, byte arrays, etc.)
      */
-    public static Object preprocessForCBOR(Object obj) {
+    private static Object preprocessForCBOR(Object obj) {
         if (obj == null) {
             return null;
         }
@@ -332,7 +332,7 @@ public class MDocUtils {
     /**
      * Checks if a string represents a date-only value (YYYY-MM-DD)
      */
-    public static boolean isDateOnlyString(String str) {
+    private static boolean isDateOnlyString(String str) {
         try {
             LocalDate.parse(str, DateTimeFormatter.ISO_LOCAL_DATE);
             return str.matches("\\d{4}-\\d{2}-\\d{2}");
@@ -344,7 +344,7 @@ public class MDocUtils {
     /**
      * Creates a CBOR tagged date (tag 1004) for date-only strings
      */
-    public static Map<String, Object> createCBORTaggedDate(String dateStr) {
+    private static Map<String, Object> createCBORTaggedDate(String dateStr) {
         Map<String, Object> taggedDate = new HashMap<>();
         taggedDate.put("__cbor_tag", 1004);
         taggedDate.put("__cbor_value", dateStr);
@@ -354,7 +354,7 @@ public class MDocUtils {
     /**
      * Converts hex string to byte array
      */
-    public static byte[] hexStringToByteArray(String hexStr) {
+    private static byte[] hexStringToByteArray(String hexStr) {
         int len = hexStr.length();
         byte[] data = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {
@@ -379,7 +379,7 @@ public class MDocUtils {
         valueDigests.put("nameSpaces", nameSpacesDigests);
 
         mso.put("valueDigests", valueDigests);
-        mso.put("docType", mDocJson.get("_docType"));
+        mso.put(Constants.DOCTYPE, mDocJson.get("_docType"));
 
         // Create validity info with current timestamp
         Map<String, Object> validityInfo = new HashMap<>();
@@ -401,10 +401,10 @@ public class MDocUtils {
     /**
      * Creates device key info structure (placeholder implementation)
      */
-    public static Map<String, Object> createDeviceKeyInfo(Object deviceInfo) throws Exception {
+    private static Map<String, Object> createDeviceKeyInfo(Object deviceInfo) throws Exception {
         String deviceKeyEncoded = deviceInfo.toString();
-        if (deviceKeyEncoded.startsWith("did:jwk:")) {
-            deviceKeyEncoded = deviceKeyEncoded.substring("did:jwk:".length());
+        if (deviceKeyEncoded.startsWith(Constants.DID_JWK_PREFIX)) {
+            deviceKeyEncoded = deviceKeyEncoded.substring(Constants.DID_JWK_PREFIX.length());
         }
 
         byte[] decodedBytes = Base64.getUrlDecoder().decode(deviceKeyEncoded);
@@ -419,8 +419,10 @@ public class MDocUtils {
 
         if (jwk.containsKey("kid")) {
             // Pass through the key ID if it exists in the source JWK
-            coseKey.put(2, ((String) jwk.get("kid")).getBytes());
+            coseKey.put(2, ((String) jwk.get("kid")).getBytes(java.nio.charset.StandardCharsets.UTF_8));
         }
+
+
         // Map curve
         String crv = (String) jwk.get("crv");
         switch (crv) {
@@ -443,7 +445,7 @@ public class MDocUtils {
     /**
      * Signs the MSO using COSE_Sign1 structure
      */
-    public static byte[] signMSO(Map<String, Object> mso, String appID, String refID, String signAlgorithm, DIDDocumentUtil didDocumentUtil, CoseSignatureService coseSignatureService) throws Exception {
+    public static byte[] signMSO(Map<String, Object> mso, String appID, String refID, String signAlgorithm, CoseSignatureService coseSignatureService) throws Exception {
 
         try {
             byte[] msoCbor = encodeToCBOR(mso);
@@ -471,7 +473,7 @@ public class MDocUtils {
     }
 
 
-    public static byte[] wrapWithCBORTag24(Map<String, Object> element) throws IOException {
+    private static byte[] wrapWithCBORTag24(Map<String, Object> element) throws IOException {
         try {
             // First encode the element to CBOR
             ByteArrayOutputStream innerBaos = new ByteArrayOutputStream();
