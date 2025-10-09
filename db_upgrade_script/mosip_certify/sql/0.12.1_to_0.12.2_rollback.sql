@@ -16,18 +16,24 @@
 -- Step 1: Drop shedlock table
 DROP TABLE IF EXISTS certify.shedlock;
 
+------------------------------ ************************************************** ------------------------------
+-- Note: From version 0.13.0 onwards, the `credential_status_transaction` table is decoupled from the `ledger` table.
+-- As a result, some rows may have missing `credential_id` values. Therefore, the foreign key constraint to the `ledger` table is not re-added to ensure smooth migration.
+-- The foreign key constraint to the `status_list_credential` table is also excluded, as no operations in the `status_list_transaction` table require updates to the `status_list_credential` table.
+------------------------------ ************************************************** ------------------------------
+
 -- Recreate foreign key to ledger table
-ALTER TABLE certify.credential_status_transaction
-    ADD CONSTRAINT fk_credential_status_transaction_ledger
-    FOREIGN KEY (credential_id)
-    REFERENCES certify.ledger(credential_id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE;
+--ALTER TABLE certify.credential_status_transaction
+--    ADD CONSTRAINT fk_credential_status_transaction_ledger
+--    FOREIGN KEY (credential_id)
+--    REFERENCES certify.ledger(credential_id)
+--    ON DELETE CASCADE
+--    ON UPDATE CASCADE;
 
 -- Recreate foreign key to status_list_credential table
-ALTER TABLE certify.credential_status_transaction
-    ADD CONSTRAINT fk_credential_status_transaction_status_list
-    FOREIGN KEY (status_list_credential_id)
-    REFERENCES certify.status_list_credential(id)
-    ON DELETE SET NULL
-    ON UPDATE CASCADE;
+--ALTER TABLE certify.credential_status_transaction
+--    ADD CONSTRAINT fk_credential_status_transaction_status_list
+--    FOREIGN KEY (status_list_credential_id)
+--    REFERENCES certify.status_list_credential(id)
+--    ON DELETE SET NULL
+--    ON UPDATE CASCADE;
