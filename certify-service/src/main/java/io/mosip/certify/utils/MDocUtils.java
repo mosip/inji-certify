@@ -14,8 +14,11 @@ import java.io.ByteArrayOutputStream;
 
 import io.mosip.certify.config.MDocConfig;
 import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.exception.CertifyException;
+import io.mosip.certify.proofgenerators.CoseSign1ProofGenerator;
+import io.mosip.certify.proofgenerators.ProofGeneratorFactory;
 import io.mosip.kernel.signature.dto.CoseSignRequestDto;
 import io.mosip.kernel.signature.service.CoseSignatureService;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +53,9 @@ public class MDocUtils {
 
     @Autowired
     private MDocConfig mDocConfig;
+
+    @Autowired
+    private ProofGeneratorFactory proofGeneratorFactory;
 
     /**
      * Process templated JSON to create final mDoc structure
@@ -200,7 +206,7 @@ public class MDocUtils {
                 // 2) Build Tag(24) DataItem for final structure
                 ByteString tag24Value = new ByteString(elementCbor);
                 tag24Value.setTag(24);
-                taggedElements.add(tag24Value); // will pass through via convertToDataItem
+                taggedElements.add(tag24Value);
 
                 // 3) Calculate digest over Tag(24) encoded bytes
                 ByteArrayOutputStream outerBaos = new ByteArrayOutputStream();
@@ -367,18 +373,6 @@ public class MDocUtils {
     }
 
     /**
-     * Converts hex string to byte array
-     */
-    private static byte[] hexStringToByteArray(String hexStr) {
-        int len = hexStr.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(hexStr.charAt(i), 16) << 4) + Character.digit(hexStr.charAt(i + 1), 16));
-        }
-        return data;
-    }
-
-    /**
      * Creates the Mobile Security Object (MSO) structure
      */
     public Map<String, Object> createMobileSecurityObject
@@ -459,29 +453,20 @@ public class MDocUtils {
     }
 
     /**
-     * Signs the MSO using COSE_Sign1 structure
+     * Signs the MSO using COSE_Sign1 structure via ProofGenerator
      */
-    public static byte[] signMSO(Map<String, Object> mso, String appID, String refID, String
-            signAlgorithm, CoseSignatureService coseSignatureService) throws Exception {
+    public byte[] signMSO(Map<String, Object> mso, String appID, String refID,
+                          String signAlgorithm) throws Exception {
 
         try {
             byte[] msoCbor = encodeToCBOR(mso);
 
-            CoseSignRequestDto signRequest = new CoseSignRequestDto();
+            CoseSign1ProofGenerator coseProofGen = proofGeneratorFactory
+                    .getProofGenerator(SignatureAlg.COSE_SIGN1)
+                    .map(pg -> (CoseSign1ProofGenerator) pg)
+                    .orElseThrow(() -> new CertifyException("CoseSign1 proof generator not found"));
 
-            String base64UrlPayload = Base64.getUrlEncoder().withoutPadding().encodeToString(msoCbor);
-
-            signRequest.setPayload(base64UrlPayload);
-            signRequest.setApplicationId(appID);
-            signRequest.setReferenceId(refID);
-            signRequest.setAlgorithm(signAlgorithm);
-
-            Map<String, Object> protectedHeader = new HashMap<>();
-            protectedHeader.put("x5c", true);
-            signRequest.setProtectedHeader(protectedHeader);
-
-            String hexSignedData = coseSignatureService.coseSign1(signRequest).getSignedData();
-            return hexStringToByteArray(hexSignedData);
+            return coseProofGen.signMSO(msoCbor, appID, refID, signAlgorithm);
 
         } catch (CertifyException e) {
             log.error("Error during COSE signing: {}", e.getMessage(), e);
