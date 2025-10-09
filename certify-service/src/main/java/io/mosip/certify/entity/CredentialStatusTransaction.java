@@ -44,11 +44,14 @@ public class CredentialStatusTransaction {
     private LocalDateTime processedTime;
 
     @Column(name = "is_processed", nullable = false)
-    private Boolean isProcessed;
+    private Boolean isProcessed = Boolean.FALSE;
 
     @PrePersist
     protected void onCreate() {
         createdDtimes = LocalDateTime.now();
+        if (isProcessed == null) {
+            isProcessed = Boolean.FALSE;
+        }
     }
 
     @PreUpdate
