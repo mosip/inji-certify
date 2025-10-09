@@ -5,6 +5,7 @@
  */
 package io.mosip.certify.utils;
 
+import co.nstant.in.cbor.CborDecoder;
 import co.nstant.in.cbor.CborEncoder;
 import co.nstant.in.cbor.CborException;
 import co.nstant.in.cbor.model.*;
@@ -156,10 +157,11 @@ public class MDocUtils {
 
             List<Map<String, Object>> saltedElements = new ArrayList<>();
 
+            SecureRandom sr = new SecureRandom();
             for (Map<String, Object> element : elements) {
                 // Generate 24-byte random salt
                 byte[] randomSalt = new byte[24];
-                new SecureRandom().nextBytes(randomSalt);
+                sr.nextBytes(randomSalt);
 
                 // Clone element with random salt as hex string
                 Map<String, Object> saltedElement = new HashMap<>(element);
@@ -177,7 +179,8 @@ public class MDocUtils {
     /**
      * Calculates SHA-256 digests for salted elements
      */
-    public static Map<String, Object> calculateDigests(Map<String, Object> saltedNamespaces, Map<String, Map<Integer, byte[]>> namespaceDigests) throws Exception {
+    public static Map<String, Object> calculateDigests
+    (Map<String, Object> saltedNamespaces, Map<String, Map<Integer, byte[]>> namespaceDigests) throws Exception {
 
         Map<String, Object> taggedNamespaces = new HashMap<>();
 
@@ -185,15 +188,24 @@ public class MDocUtils {
             String namespaceName = namespaceEntry.getKey();
             List<Map<String, Object>> elements = (List<Map<String, Object>>) namespaceEntry.getValue();
 
-            List<byte[]> taggedElements = new ArrayList<>();
+            List<Object> taggedElements = new ArrayList<>();
             Map<Integer, byte[]> digestMap = new HashMap<>();
 
             for (Map<String, Object> element : elements) {
-                // Encode to CBOR and wrap with Tag 24 in one step
-                byte[] taggedCbor = wrapWithCBORTag24(element);
-                taggedElements.add(taggedCbor);
+                // 1) Encode element (IssuerSignedItem) to CBOR
+                ByteArrayOutputStream innerBaos = new ByteArrayOutputStream();
+                new CborEncoder(innerBaos).encode(convertToDataItem(preprocessForCBOR(element)));
+                byte[] elementCbor = innerBaos.toByteArray();
 
-                // Calculate digest of the Tag 24 wrapped CBOR
+                // 2) Build Tag(24) DataItem for final structure
+                ByteString tag24Value = new ByteString(elementCbor);
+                tag24Value.setTag(24);
+                taggedElements.add(tag24Value); // will pass through via convertToDataItem
+
+                // 3) Calculate digest over Tag(24) encoded bytes
+                ByteArrayOutputStream outerBaos = new ByteArrayOutputStream();
+                new CborEncoder(outerBaos).encode(tag24Value);
+                byte[] taggedCbor = outerBaos.toByteArray();
                 byte[] digest = MessageDigest.getInstance("SHA-256").digest(taggedCbor);
                 digestMap.put((Integer) element.get("digestID"), digest);
             }
@@ -264,6 +276,9 @@ public class MDocUtils {
     }
 
     private static DataItem convertToDataItem(Object obj) {
+        if (obj instanceof DataItem di) {
+            return di;
+        }
         if (obj == null) {
             return SimpleValue.NULL;
         }
@@ -366,7 +381,8 @@ public class MDocUtils {
     /**
      * Creates the Mobile Security Object (MSO) structure
      */
-    public Map<String, Object> createMobileSecurityObject(Map<String, Object> mDocJson, Map<String, Map<Integer, byte[]>> namespaceDigests) throws Exception {
+    public Map<String, Object> createMobileSecurityObject
+    (Map<String, Object> mDocJson, Map<String, Map<Integer, byte[]>> namespaceDigests) throws Exception {
 
         Map<String, Object> mso = new HashMap<>();
         mso.put("version", mDocConfig.getMsoVersion());
@@ -445,7 +461,8 @@ public class MDocUtils {
     /**
      * Signs the MSO using COSE_Sign1 structure
      */
-    public static byte[] signMSO(Map<String, Object> mso, String appID, String refID, String signAlgorithm, CoseSignatureService coseSignatureService) throws Exception {
+    public static byte[] signMSO(Map<String, Object> mso, String appID, String refID, String
+            signAlgorithm, CoseSignatureService coseSignatureService) throws Exception {
 
         try {
             byte[] msoCbor = encodeToCBOR(mso);
@@ -497,10 +514,17 @@ public class MDocUtils {
     /**
      * Creates the final IssuerSigned structure combining namespaces and issuerAuth
      */
-    public static Map<String, Object> createIssuerSignedStructure(Map<String, Object> processedNamespaces, byte[] signedMSO) {
-        return Map.of(
-                "nameSpaces", processedNamespaces,
-                "issuerAuth", signedMSO
-        );
+
+    public static Map<String, Object> createIssuerSignedStructure(Map<String, Object> processedNamespaces, byte[] signedMSO) throws IOException {
+        try {
+            var di = new CborDecoder(new java.io.ByteArrayInputStream(signedMSO)).decode();
+            DataItem cose = di.isEmpty() ? SimpleValue.NULL : di.get(0);
+            Map<String, Object> out = new HashMap<>();
+            out.put("nameSpaces", processedNamespaces);
+            out.put("issuerAuth", cose);
+            return out;
+        } catch (CborException e) {
+            throw new IOException("Failed to decode COSE_Sign1", e);
+        }
     }
 }

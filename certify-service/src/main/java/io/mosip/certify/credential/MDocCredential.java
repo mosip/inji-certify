@@ -9,13 +9,11 @@ package io.mosip.certify.credential;
 import java.util.*;
 
 import io.mosip.certify.core.constants.VCFormats;
-import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.utils.MDocUtils;
 import io.mosip.kernel.signature.service.CoseSignatureService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import io.mosip.certify.utils.DIDDocumentUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -91,7 +89,7 @@ public class MDocCredential extends Credential {
 
         } catch (Exception e) {
             log.error("Error adding proof to mDoc: {}", e.getMessage(), e);
-            throw new CertifyException("Failed to add proof to mDoc: " + e.getMessage());
+            throw new CertifyException("MDOC_PROOF_FAILED", "Failed to add proof to mDoc", e);
         }
     }
 }

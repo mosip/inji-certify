@@ -146,9 +146,9 @@ public class MDocCredentialTest {
             mockedStatic.when(() -> MDocUtils.addRandomSalts(mDocJson)).thenReturn(saltedNamespaces);
             mockedStatic.when(() -> MDocUtils.calculateDigests(eq(saltedNamespaces), any()))
                     .thenReturn(taggedNamespaces);
-            mockedStatic.when(() -> MDocUtils.createMobileSecurityObject(mDocJson, namespaceDigests, appID, refID))
+            mockedStatic.when(() -> MDocUtils.createMobileSecurityObject(mDocJson, namespaceDigests))
                     .thenReturn(mso);
-            mockedStatic.when(() -> MDocUtils.signMSO(mso, appID, refID, signAlgorithm, didDocumentUtil, coseSignatureService))
+            mockedStatic.when(() -> MDocUtils.signMSO(mso, appID, refID, signAlgorithm, coseSignatureService))
                     .thenReturn(signedMSO);
             mockedStatic.when(() -> MDocUtils.createIssuerSignedStructure(taggedNamespaces, signedMSO))
                     .thenReturn(issuerSigned);

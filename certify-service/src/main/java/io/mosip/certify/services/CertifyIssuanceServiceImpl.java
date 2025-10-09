@@ -274,7 +274,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     log.error("Error fetching data from provider for mDOC: ", e);
                     throw new CertifyException(e.getErrorCode());
                 } catch (Exception e) {
-                    log.error("Unexpected error processing mDOC credential: {}", e.getMessage(), e);
+                    log.error("Unexpected error processing mDOC credential", e);
                     throw new CertifyException(ErrorConstants.VC_ISSUANCE_FAILED);
                 }
             default:
