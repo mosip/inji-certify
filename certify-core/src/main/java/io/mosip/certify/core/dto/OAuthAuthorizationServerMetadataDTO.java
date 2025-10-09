@@ -33,12 +33,6 @@ public class OAuthAuthorizationServerMetadataDTO {
     private String tokenEndpoint;
 
     /**
-     * URL of the authorization server's JWK Set document
-     */
-    @JsonProperty("jwks_uri")
-    private String jwksUri;
-
-    /**
      * JSON array containing a list of the OAuth 2.0 grant type values that this authorization server supports
      */
     @JsonProperty("grant_types_supported")
@@ -51,10 +45,10 @@ public class OAuthAuthorizationServerMetadataDTO {
     private List<String> responseTypesSupported;
 
     /**
-     * JSON array containing a list of client authentication methods supported by this token endpoint
+     * JSON array containing a list of PKCE code challenge methods supported by this authorization server
      */
-    @JsonProperty("token_endpoint_auth_methods_supported")
-    private List<String> tokenEndpointAuthMethodsSupported;
+    @JsonProperty("code_challenge_methods_supported")
+    private List<String> codeChallengeMethodsSupported;
 
     /**
      * Interactive authorization endpoint for OAuth 2.0 flows
