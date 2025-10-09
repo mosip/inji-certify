@@ -6,7 +6,7 @@
 package io.mosip.certify.core.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.mosip.certify.core.validation.ValidUnifiedIar;
+import io.mosip.certify.core.validation.ValidIar;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -19,7 +19,7 @@ import java.util.List;
  */
 @Data
 @NoArgsConstructor
-@ValidUnifiedIar
+@ValidIar
 public class IarRequest {
 
     // Fields from InteractiveAuthorizationRequest (for initial authorization requests)

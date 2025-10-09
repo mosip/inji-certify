@@ -8,22 +8,25 @@ package io.mosip.certify.core.validation;
 import io.mosip.certify.core.dto.IarRequest;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import org.springframework.util.StringUtils;
 
-public class UnifiedIarValidator implements ConstraintValidator<ValidUnifiedIar, IarRequest> {
+public class IarValidator implements ConstraintValidator<ValidIar, IarRequest> {
 	@Override
 	public boolean isValid(IarRequest value, ConstraintValidatorContext context) {
 		if (value == null) {
-			return true;
+			context.disableDefaultConstraintViolation();
+			context.buildConstraintViolationWithTemplate("IAR request is required")
+				   .addConstraintViolation();
+			return false;
 		}
 
-		boolean hasAuthSession = hasText(value.getAuthSession());
-		boolean hasVp = hasText(value.getOpenid4vpPresentation());
+		boolean hasAuthSession = StringUtils.hasText(value.getAuthSession());
+		boolean hasVp = StringUtils.hasText(value.getOpenid4vpPresentation());
 
 		boolean hasInitial =
-			hasText(value.getResponseType()) &&
-			hasText(value.getCodeChallenge()) &&
-			hasText(value.getCodeChallengeMethod()) &&
-			hasText(value.getRedirectUri());
+			StringUtils.hasText(value.getResponseType()) &&
+			StringUtils.hasText(value.getCodeChallenge()) &&
+			StringUtils.hasText(value.getCodeChallengeMethod());
 
 		// Exactly one of the flows must be present
 		boolean isPresentationFlow = hasAuthSession && hasVp;
@@ -39,10 +42,4 @@ public class UnifiedIarValidator implements ConstraintValidator<ValidUnifiedIar,
 		).addConstraintViolation();
 		return false;
 	}
-
-	private boolean hasText(String s) {
-		return s != null && !s.trim().isEmpty();
-	}
 }
-
-

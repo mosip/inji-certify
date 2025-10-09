@@ -7,6 +7,8 @@ package io.mosip.certify.services;
 
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.IarConstants;
+import io.mosip.certify.core.constants.IarStatus;
+import io.mosip.certify.core.constants.InteractionType;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
@@ -55,14 +57,9 @@ public class IarServiceImpl implements IarService {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Value("${mosip.certify.iar.default-client-id:default-wallet-client}")
-    private String defaultClientId;
 
     @Value("${mosip.certify.iar.session-timeout-seconds:1800}")
     private int sessionTimeoutSeconds;
-
-    @Value("${mosip.certify.verify.service.base-url}")
-    private String verifyServiceBaseUrl;
 
     @Value("${mosip.certify.verify.service.vp-request-endpoint}")
     private String verifyServiceVpRequestEndpoint;
@@ -70,33 +67,19 @@ public class IarServiceImpl implements IarService {
     @Value("${mosip.certify.verify.service.vp-result-endpoint}")
     private String verifyServiceVpResultEndpoint;
 
-
-    @Value("${mosip.certify.iar.openid4vp.response-type:vp_token}")
-    private String openid4vpResponseType;
-
-    @Value("${mosip.certify.iar.openid4vp.response-mode:iar-post.jwt}")
+    @Value("${mosip.certify.iar.openid4vp.response-mode:iar-post}")
     private String openid4vpResponseMode;
 
-    @Value("${mosip.certify.iar.session.prefix:iar_session_}")
-    private String sessionPrefix;
 
-    @Value("${mosip.certify.iar.auth-code.prefix:iar_auth_}")
-    private String authCodePrefix;
+    private static final String SESSION_PREFIX = "iar_session_";
+    private static final String AUTH_CODE_PREFIX = "iar_auth_";
+    private static final String ACCESS_TOKEN_PREFIX = "iar_token_";
 
-    @Value("${mosip.certify.iar.token.access-token-prefix:iar_token_}")
-    private String accessTokenPrefix;
 
-    @Value("${mosip.certify.iar.response-mode.direct-post:direct-post}")
-    private String directPostResponseMode;
-
-    @Value("${mosip.certify.iar.response-mode.direct-post-jwt:direct-post.jwt}")
-    private String directPostJwtResponseMode;
 
     @Value("${mosip.certify.iar.response-mode.iar-post:iar-post}")
     private String iarPostResponseMode;
 
-    @Value("${mosip.certify.iar.response-mode.iar-post-jwt:iar-post.jwt}")
-    private String iarPostJwtResponseMode;
 
     @Value("${mosip.certify.iar.verification.success-status:SUCCESS}")
     private String verificationSuccessStatus;
@@ -110,11 +93,10 @@ public class IarServiceImpl implements IarService {
     @Value("${mosip.certify.iar.authorization-code.expires-minutes:10}")
     private int authorizationCodeExpiresMinutes;
 
-    @Value("${mosip.certify.iar.authorization-code.length:8}")
+    @Value("${mosip.certify.iar.authorization-code.length:24}")
     private int authorizationCodeLength;
 
-    @Value("${mosip.certify.iar.c-nonce.length:16}")
-    private int cNonceLength;
+    private static final int CNONCE_LENGTH = 16;
 
     @Value("${mosip.certify.oauth.token.type:Bearer}")
     private String tokenType;
@@ -154,7 +136,7 @@ public class IarServiceImpl implements IarService {
         new java.security.SecureRandom().nextBytes(randomBytes);
         String encoded = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
         
-        String authSession = sessionPrefix + encoded;
+        String authSession = SESSION_PREFIX + encoded;
         log.debug("Generated auth session: {}", authSession);
         return authSession;
     }
@@ -193,14 +175,14 @@ public class IarServiceImpl implements IarService {
             interactionTypes[i] = interactionTypes[i].trim();
         }
 
-        if (interactionTypes.length == 1 && IarConstants.INTERACTION_TYPE_REDIRECT_TO_WEB.equals(interactionTypes[0])) {
+        if (interactionTypes.length == 1 && InteractionType.REDIRECT_TO_WEB.getValue().equals(interactionTypes[0])) {
             throw new CertifyException(IarConstants.UNSUPPORTED_INTERACTION_TYPE, 
                                      "redirect_to_web interaction type is not supported");
         }
 
         boolean hasOpenId4Vp = false;
         for (String interactionType : interactionTypes) {
-            if (IarConstants.INTERACTION_TYPE_OPENID4VP.equals(interactionType)) {
+            if (InteractionType.OPENID4VP_PRESENTATION.getValue().equals(interactionType)) {
                 hasOpenId4Vp = true;
                 break;
             }
@@ -220,8 +202,8 @@ public class IarServiceImpl implements IarService {
 
         try {
             IarResponse response = new IarResponse();
-            response.setStatus(IarConstants.STATUS_REQUIRE_INTERACTION);
-            response.setType(IarConstants.OPENID4VP_PRESENTATION);
+            response.setStatus(IarStatus.REQUIRE_INTERACTION);
+            response.setType(InteractionType.OPENID4VP_PRESENTATION);
             response.setAuthSession(authSession);
 
             // Call verify service to get VP request and transaction ID
@@ -279,8 +261,8 @@ public class IarServiceImpl implements IarService {
             log.debug("Using verifier client_id: {} for VP request (wallet client_id: {})", 
                      verifierClientId, iarRequest.getClientId());
             verifyRequest.setResponseModesSupported(Arrays.asList(
-                directPostResponseMode, 
-                directPostJwtResponseMode
+                "direct-post", 
+                "direct-post.jwt"
             ));
             verifyRequest.setEncryptionRequired(true);
 
@@ -299,7 +281,7 @@ public class IarServiceImpl implements IarService {
 
             HttpEntity<VerifyVpRequest> requestEntity = new HttpEntity<>(verifyRequest, headers);
 
-            String verifyServiceUrl = verifyServiceBaseUrl + verifyServiceVpRequestEndpoint;
+            String verifyServiceUrl = verifyServiceVpRequestEndpoint;
             log.debug("Calling verify service at: {}", verifyServiceUrl);
 
             ResponseEntity<VerifyVpResponse> responseEntity = restTemplate.exchange(
@@ -346,13 +328,13 @@ public class IarServiceImpl implements IarService {
         String responseMode = authDetails.getResponseMode();
         if (StringUtils.hasText(responseMode)) {
             String normalizedIncoming = responseMode.replace('_', '-');
-            String normalizedDirect = directPostResponseMode.replace('_', '-');
-            String normalizedDirectJwt = directPostJwtResponseMode.replace('_', '-');
+            String normalizedDirect = "direct-post".replace('_', '-');
+            String normalizedDirectJwt = "direct-post.jwt".replace('_', '-');
 
             if (normalizedIncoming.equalsIgnoreCase(normalizedDirect)) {
                 responseMode = iarPostResponseMode;
             } else if (normalizedIncoming.equalsIgnoreCase(normalizedDirectJwt)) {
-                responseMode = iarPostJwtResponseMode;
+                responseMode = "iar-post.jwt";
             }
         }
         openId4VpRequest.put("response_mode", responseMode);
@@ -471,12 +453,12 @@ public class IarServiceImpl implements IarService {
             IarPresentationResponse response = new IarPresentationResponse();
             if ("ok".equals(verificationResponse.getStatus())) {
                 String authorizationCode = generateAndStoreAuthorizationCode(presentationRequest.getAuthSession());
-                response.setStatus(IarConstants.STATUS_OK);
+                response.setStatus(IarStatus.OK);
                 response.setAuthorizationCode(authorizationCode);
                 log.info("Authorization code generated after successful VP cryptographic verification for auth_session: {}, request_id: {}", 
                          presentationRequest.getAuthSession(), session.getRequestId());
             } else {
-                response.setStatus(IarConstants.STATUS_ERROR);
+                response.setStatus(IarStatus.ERROR);
                 log.warn("Authorization denied - VP cryptographic verification failed for auth_session: {}, request_id: {}, error: {}", 
                          presentationRequest.getAuthSession(), session.getRequestId(), 
                          verificationResponse.getError());
@@ -504,7 +486,7 @@ public class IarServiceImpl implements IarService {
 
     private VpVerificationResponse getVpVerificationResult(String transactionId) throws CertifyException {
         try {
-            String vpResultUrl = verifyServiceBaseUrl + verifyServiceVpResultEndpoint + "/" + transactionId;
+            String vpResultUrl = verifyServiceVpResultEndpoint + "/" + transactionId;
             log.debug("Getting verification results from: {}", vpResultUrl);
             
             ResponseEntity<Map<String, Object>> resultResponse = restTemplate.exchange(
@@ -566,7 +548,7 @@ public class IarServiceImpl implements IarService {
             encoded = (encoded + additionalEncoded).substring(0, authorizationCodeLength);
         }
         
-        String authCode = authCodePrefix + encoded.substring(0, authorizationCodeLength);
+        String authCode = AUTH_CODE_PREFIX + encoded.substring(0, authorizationCodeLength);
         log.debug("Generated authorization code for auth_session: {} (length: {})", authSession, authCode.length());
         
         Optional<IarSession> sessionOpt = iarSessionRepository.findByAuthSession(authSession);
@@ -634,7 +616,7 @@ public class IarServiceImpl implements IarService {
             throw new CertifyException("invalid_grant", "Invalid authorization code");
         }
 
-        if (!tokenRequest.getCode().startsWith(authCodePrefix)) {
+        if (!tokenRequest.getCode().startsWith(AUTH_CODE_PREFIX)) {
             throw new CertifyException("invalid_grant", "Invalid authorization code format");
         }
 
@@ -752,14 +734,14 @@ public class IarServiceImpl implements IarService {
         // Generate cryptographically secure random token with 32 bytes (256 bits) of entropy
         byte[] randomBytes = new byte[32];
         new java.security.SecureRandom().nextBytes(randomBytes);
-        String accessToken = accessTokenPrefix + java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+        String accessToken = ACCESS_TOKEN_PREFIX + java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
         log.debug("Generated secure access token (length: {})", accessToken.length());
         return accessToken;
     }
 
     private String generateCNonce() {
         // Generate cryptographically secure random c_nonce with 16 bytes (128 bits) of entropy
-        byte[] randomBytes = new byte[16];
+        byte[] randomBytes = new byte[CNONCE_LENGTH];
         new java.security.SecureRandom().nextBytes(randomBytes);
         String cNonce = "iar_nonce_" + java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
         log.debug("Generated secure c_nonce (length: {})", cNonce.length());

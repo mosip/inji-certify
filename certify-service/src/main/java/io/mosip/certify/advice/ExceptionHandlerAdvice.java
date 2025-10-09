@@ -8,6 +8,7 @@ package io.mosip.certify.advice;
 import io.mosip.certify.core.dto.Error;
 import io.mosip.certify.core.dto.ResponseWrapper;
 import io.mosip.certify.core.dto.VCError;
+import io.mosip.certify.core.dto.OAuthTokenError;
 import io.mosip.certify.core.exception.*;
 import io.mosip.certify.core.util.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -174,49 +175,49 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
 
     public ResponseEntity<Object> handleOAuthControllerExceptions(Exception ex) {
         if(ex instanceof IllegalArgumentException) {
-            VCError vcError = getVCErrorDto("invalid_request", ex.getMessage());
-            return new ResponseEntity<Object>(vcError, HttpStatus.BAD_REQUEST);
+            OAuthTokenError oauthError = new OAuthTokenError("invalid_request", ex.getMessage());
+            return new ResponseEntity<Object>(oauthError, HttpStatus.BAD_REQUEST);
         }
         if(ex instanceof MethodArgumentNotValidException) {
             FieldError fieldError = ((MethodArgumentNotValidException) ex).getBindingResult().getFieldError();
             String message = fieldError != null ? fieldError.getDefaultMessage() : ex.getMessage();
-            VCError vcError = getVCErrorDto("invalid_request", message);
-            return new ResponseEntity<Object>(vcError, HttpStatus.BAD_REQUEST);
+            OAuthTokenError oauthError = new OAuthTokenError("invalid_request", message);
+            return new ResponseEntity<Object>(oauthError, HttpStatus.BAD_REQUEST);
         }
         if(ex instanceof javax.validation.ConstraintViolationException) {
             Set<ConstraintViolation<?>> violations = ((ConstraintViolationException) ex).getConstraintViolations();
             String message = !violations.isEmpty() ? violations.stream().findFirst().get().getMessage() : ex.getMessage();
-            VCError vcError = getVCErrorDto("invalid_request", message);
-            return new ResponseEntity<Object>(vcError, HttpStatus.BAD_REQUEST);
+            OAuthTokenError oauthError = new OAuthTokenError("invalid_request", message);
+            return new ResponseEntity<Object>(oauthError, HttpStatus.BAD_REQUEST);
         }
         if(ex instanceof MissingServletRequestParameterException) {
-            VCError vcError = getVCErrorDto("invalid_request", ex.getMessage());
-            return new ResponseEntity<Object>(vcError, HttpStatus.BAD_REQUEST);
+            OAuthTokenError oauthError = new OAuthTokenError("invalid_request", ex.getMessage());
+            return new ResponseEntity<Object>(oauthError, HttpStatus.BAD_REQUEST);
         }
         if(ex instanceof HttpMediaTypeNotAcceptableException) {
-            VCError vcError = getVCErrorDto("invalid_request", ex.getMessage());
-            return new ResponseEntity<Object>(vcError, HttpStatus.BAD_REQUEST);
+            OAuthTokenError oauthError = new OAuthTokenError("invalid_request", ex.getMessage());
+            return new ResponseEntity<Object>(oauthError, HttpStatus.BAD_REQUEST);
         }
         if(ex instanceof CertifyException) {
             String errorCode = ((CertifyException) ex).getErrorCode();
             // Map CertifyException error codes to OAuth 2.0 error codes
             String oauthErrorCode = mapToOAuthErrorCode(errorCode);
-            VCError vcError = getVCErrorDto(oauthErrorCode, getMessage(errorCode));
+            OAuthTokenError oauthError = new OAuthTokenError(oauthErrorCode, getMessage(errorCode));
             HttpStatus status = getOAuthErrorStatus(oauthErrorCode);
-            return new ResponseEntity<Object>(vcError, status);
+            return new ResponseEntity<Object>(oauthError, status);
         }
         if(ex instanceof NotAuthenticatedException) {
             String errorCode = ((CertifyException) ex).getErrorCode();
-            VCError vcError = getVCErrorDto("invalid_client", getMessage(errorCode));
-            return new ResponseEntity<Object>(vcError, HttpStatus.UNAUTHORIZED);
+            OAuthTokenError oauthError = new OAuthTokenError("invalid_client", getMessage(errorCode));
+            return new ResponseEntity<Object>(oauthError, HttpStatus.UNAUTHORIZED);
         }
         if(ex instanceof AccessDeniedException) {
-            VCError vcError = getVCErrorDto("access_denied", "Access denied");
-            return new ResponseEntity<Object>(vcError, HttpStatus.FORBIDDEN);
+            OAuthTokenError oauthError = new OAuthTokenError("access_denied", "Access denied");
+            return new ResponseEntity<Object>(oauthError, HttpStatus.FORBIDDEN);
         }
         log.error("Unhandled exception encountered in OAuth controller", ex);
-        VCError vcError = getVCErrorDto("server_error", "Internal server error");
-        return new ResponseEntity<Object>(vcError, HttpStatus.INTERNAL_SERVER_ERROR);
+        OAuthTokenError oauthError = new OAuthTokenError("server_error", "Internal server error");
+        return new ResponseEntity<Object>(oauthError, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     private ResponseWrapper getResponseWrapper(String errorCode, String errorMessage) {

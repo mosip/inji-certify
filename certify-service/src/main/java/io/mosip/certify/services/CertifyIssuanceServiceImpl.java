@@ -189,6 +189,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 vcRequestDto.setCredentialSubject(credentialRequest.getCredential_definition().getCredentialSubject());
                 validateLdpVcFormatRequest(credentialRequest, credentialMetadata);
                 try {
+                     // TODO(multitenancy): later decide which plugin out of n plugins is the correct one
                     JSONObject jsonObject = dataProviderPlugin.fetchData(parsedAccessToken.getClaims());
                     Map<String, Object> templateParams = new HashMap<>();
                     String templateName = CredentialUtils.getTemplateName(vcRequestDto);
@@ -217,6 +218,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 case "vc+sd-jwt":
                 vcRequestDto.setVct(credentialRequest.getVct());
                 try {
+                    // TODO(multitenancy): later decide which plugin out of n plugins is the correct one
                     JSONObject jsonObject = dataProviderPlugin.fetchData(parsedAccessToken.getClaims());
                     Map<String, Object> templateParams = new HashMap<>();
                     String templateName = CredentialUtils.getTemplateName(vcRequestDto);

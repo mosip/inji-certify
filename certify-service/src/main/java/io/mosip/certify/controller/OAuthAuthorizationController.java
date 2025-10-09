@@ -5,7 +5,7 @@
  */
 package io.mosip.certify.controller;
 
-import io.mosip.certify.core.constants.IarConstants;
+import io.mosip.certify.core.constants.IarStatus;
 import io.mosip.certify.core.dto.IarResponse;
 import io.mosip.certify.core.dto.IarPresentationResponse;
 import io.mosip.certify.core.dto.OAuthTokenRequest;
@@ -35,7 +35,7 @@ public class OAuthAuthorizationController {
     private IarService iarService;
 
     /**
-     * Unified Interactive Authorization Request (IAR) endpoint
+     * Interactive Authorization Request (IAR) endpoint
      * POST /oauth/iar
      * 
      * Handles both initial authorization requests and VP presentation responses.
@@ -44,22 +44,22 @@ public class OAuthAuthorizationController {
      * For initial requests: Returns IarResponse containing status, auth_session, and openid4vp_request if interaction required
      * For VP presentations: Returns IarPresentationResponse containing authorization code or error
      * 
-     * @param params Form parameters containing either authorization request fields or VP presentation fields
+     * @param iarRequest Form parameters containing either authorization request fields or VP presentation fields
      * @return ResponseEntity with IarResponse or IarPresentationResponse
      * @throws CertifyException if request processing fails
      */
     @PostMapping(value = "/iar",
              consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
              produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> handleIarRequest(@Valid @ModelAttribute IarRequest unifiedRequest)
+    public ResponseEntity<?> handleIarRequest(@Valid @ModelAttribute IarRequest iarRequest)
         throws CertifyException {
 
-        log.info("Received unified IAR request");
+        log.info("Received IAR request");
 
-        Object response = iarService.handleIarRequest(unifiedRequest);
+        Object response = iarService.handleIarRequest(iarRequest);
 
         if (response instanceof IarPresentationResponse presentationResponse) {
-            if (IarConstants.STATUS_OK.equals(presentationResponse.getStatus())) {
+            if (IarStatus.OK.equals(presentationResponse.getStatus())) {
                 return ResponseEntity.ok(presentationResponse);
             }
             return ResponseEntity.badRequest().body(presentationResponse);
@@ -104,17 +104,13 @@ public class OAuthAuthorizationController {
                       e.getMessage(), e);
             
             // Return OAuth error response
-            OAuthTokenError errorResponse = new OAuthTokenError();
-            errorResponse.setError(e.getErrorCode());
-            errorResponse.setErrorDescription(e.getMessage());
+            OAuthTokenError errorResponse = new OAuthTokenError(e.getErrorCode(), e.getMessage());
             
             return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {
             log.error("Unexpected error processing token request", e);
             
-            OAuthTokenError errorResponse = new OAuthTokenError();
-            errorResponse.setError("server_error");
-            errorResponse.setErrorDescription("Internal server error");
+            OAuthTokenError errorResponse = new OAuthTokenError("server_error", "Internal server error");
             
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }

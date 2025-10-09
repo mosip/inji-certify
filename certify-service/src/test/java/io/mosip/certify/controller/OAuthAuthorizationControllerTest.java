@@ -1,6 +1,8 @@
 package io.mosip.certify.controller;
 
 import io.mosip.certify.core.constants.IarConstants;
+import io.mosip.certify.core.constants.IarStatus;
+import io.mosip.certify.core.constants.InteractionType;
 import io.mosip.certify.core.dto.InteractiveAuthorizationRequest;
 import io.mosip.certify.core.dto.IarResponse;
 import io.mosip.certify.core.dto.PresentationDefinition;
@@ -61,7 +63,7 @@ class OAuthAuthorizationControllerTest {
     @Test
     void processInteractiveAuthorizationRequest_success_requireInteraction() throws Exception {
         // Arrange
-        IarResponse mockResponse = createMockIarResponse(IarConstants.STATUS_REQUIRE_INTERACTION);
+        IarResponse mockResponse = createMockIarResponse(IarStatus.REQUIRE_INTERACTION);
         when(iarService.processAuthorizationRequest(any(InteractiveAuthorizationRequest.class))).thenReturn(mockResponse);
 
         // Act & Assert
@@ -75,8 +77,8 @@ class OAuthAuthorizationControllerTest {
                 .param("interaction_types_supported", "openid4vp_presentation"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status").value(IarConstants.STATUS_REQUIRE_INTERACTION))
-                .andExpect(jsonPath("$.type").value(IarConstants.OPENID4VP_PRESENTATION))
+                .andExpect(jsonPath("$.status").value(IarStatus.REQUIRE_INTERACTION))
+                .andExpect(jsonPath("$.type").value(InteractionType.OPENID4VP_PRESENTATION))
                 .andExpect(jsonPath("$.auth_session").value("test-session"))
                 .andExpect(jsonPath("$.openid4vp_request.response_type").value("vp_token"))
                 .andExpect(jsonPath("$.openid4vp_request.response_mode").value("iar-post.jwt"));
@@ -88,7 +90,7 @@ class OAuthAuthorizationControllerTest {
     @Test
     void processInteractiveAuthorizationRequest_success_complete() throws Exception {
         // Arrange
-        IarResponse mockResponse = createMockIarResponse(IarConstants.STATUS_REQUIRE_INTERACTION);
+        IarResponse mockResponse = createMockIarResponse(IarStatus.REQUIRE_INTERACTION);
         when(iarService.processAuthorizationRequest(any(InteractiveAuthorizationRequest.class))).thenReturn(mockResponse);
 
         // Act & Assert
@@ -100,7 +102,7 @@ class OAuthAuthorizationControllerTest {
                 .param("code_challenge_method", "S256")
                 .param("redirect_uri", "https://test.com/callback"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(IarConstants.STATUS_REQUIRE_INTERACTION))
+                .andExpect(jsonPath("$.status").value(IarStatus.REQUIRE_INTERACTION))
                 .andExpect(jsonPath("$.type").doesNotExist())
                 .andExpect(jsonPath("$.openid4vp_request").doesNotExist());
 
@@ -111,7 +113,7 @@ class OAuthAuthorizationControllerTest {
     @Test
     void processInteractiveAuthorizationRequest_minimalRequiredParams() throws Exception {
         // Arrange
-        IarResponse mockResponse = createMockIarResponse(IarConstants.STATUS_REQUIRE_INTERACTION);
+        IarResponse mockResponse = createMockIarResponse(IarStatus.REQUIRE_INTERACTION);
         when(iarService.processAuthorizationRequest(any(InteractiveAuthorizationRequest.class))).thenReturn(mockResponse);
 
         // Act & Assert - Only required parameters
@@ -131,7 +133,7 @@ class OAuthAuthorizationControllerTest {
     @Test
     void processInteractiveAuthorizationRequest_withOptionalParams() throws Exception {
         // Arrange
-        IarResponse mockResponse = createMockIarResponse(IarConstants.STATUS_REQUIRE_INTERACTION);
+        IarResponse mockResponse = createMockIarResponse(IarStatus.REQUIRE_INTERACTION);
         when(iarService.processAuthorizationRequest(any(InteractiveAuthorizationRequest.class))).thenReturn(mockResponse);
 
         // Act & Assert - All parameters including optional ones
@@ -223,7 +225,7 @@ class OAuthAuthorizationControllerTest {
     @Test
     void processInteractiveAuthorizationRequest_differentCodeChallengeMethods() throws Exception {
         // Arrange
-        IarResponse mockResponse = createMockIarResponse(IarConstants.STATUS_REQUIRE_INTERACTION);
+        IarResponse mockResponse = createMockIarResponse(IarStatus.REQUIRE_INTERACTION);
         when(iarService.processAuthorizationRequest(any(InteractiveAuthorizationRequest.class))).thenReturn(mockResponse);
 
         // Test S256 method
@@ -253,7 +255,7 @@ class OAuthAuthorizationControllerTest {
     @Test
     void processInteractiveAuthorizationRequest_differentResponseTypes() throws Exception {
         // Arrange
-        IarResponse mockResponse = createMockIarResponse(IarConstants.STATUS_REQUIRE_INTERACTION);
+        IarResponse mockResponse = createMockIarResponse(IarStatus.REQUIRE_INTERACTION);
         when(iarService.processAuthorizationRequest(any(InteractiveAuthorizationRequest.class))).thenReturn(mockResponse);
 
         // Test with code response type
@@ -283,7 +285,7 @@ class OAuthAuthorizationControllerTest {
     @Test
     void processInteractiveAuthorizationRequest_contentTypeValidation() throws Exception {
         // Arrange
-        IarResponse mockResponse = createMockIarResponse(IarConstants.STATUS_REQUIRE_INTERACTION);
+        IarResponse mockResponse = createMockIarResponse(IarStatus.REQUIRE_INTERACTION);
         when(iarService.processAuthorizationRequest(any(InteractiveAuthorizationRequest.class))).thenReturn(mockResponse);
 
         // Act & Assert - Should accept form-urlencoded content type
@@ -359,13 +361,13 @@ class OAuthAuthorizationControllerTest {
     /**
      * Helper method to create a mock IAR response
      */
-    private IarResponse createMockIarResponse(String status) {
+    private IarResponse createMockIarResponse(IarStatus status) {
         IarResponse response = new IarResponse();
         response.setStatus(status);
         response.setAuthSession("test-session");
         
-        if (IarConstants.STATUS_REQUIRE_INTERACTION.equals(status)) {
-            response.setType(IarConstants.OPENID4VP_PRESENTATION);
+        if (IarStatus.REQUIRE_INTERACTION.equals(status)) {
+            response.setType(InteractionType.OPENID4VP_PRESENTATION);
             
             Map<String, Object> openId4VpRequest = new HashMap<>();
             openId4VpRequest.put("response_type", "vp_token");

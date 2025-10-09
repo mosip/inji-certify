@@ -6,6 +6,7 @@
 package io.mosip.certify.core.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.mosip.certify.core.constants.IarStatus;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -23,7 +24,7 @@ public class IarPresentationResponse {
      * - "error": VP verification failed
      */
     @JsonProperty("status")
-    private String status;
+    private IarStatus status;
 
     /**
      * OAuth 2.0 authorization code (if status is "ok")

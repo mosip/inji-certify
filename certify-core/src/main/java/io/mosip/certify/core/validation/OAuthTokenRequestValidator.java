@@ -8,17 +8,21 @@ package io.mosip.certify.core.validation;
 import io.mosip.certify.core.dto.OAuthTokenRequest;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import org.springframework.util.StringUtils;
 
 public class OAuthTokenRequestValidator implements ConstraintValidator<ValidOAuthTokenRequest, OAuthTokenRequest> {
     
     @Override
     public boolean isValid(OAuthTokenRequest value, ConstraintValidatorContext context) {
         if (value == null) {
-            return true;
+            context.disableDefaultConstraintViolation();
+            context.buildConstraintViolationWithTemplate("OAuth token request is required")
+                   .addConstraintViolation();
+            return false;
         }
 
         // Validate grant_type
-        if (!hasText(value.getGrantType())) {
+        if (!StringUtils.hasText(value.getGrantType())) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate("grant_type is required")
                    .addPropertyNode("grantType")
@@ -37,8 +41,8 @@ public class OAuthTokenRequestValidator implements ConstraintValidator<ValidOAut
 
         // For authorization_code grant, validate required fields
         if ("authorization_code".equals(value.getGrantType())) {
-            boolean hasCode = hasText(value.getCode());
-            boolean hasCodeVerifier = hasText(value.getCodeVerifier());
+            boolean hasCode = StringUtils.hasText(value.getCode());
+            boolean hasCodeVerifier = StringUtils.hasText(value.getCodeVerifier());
 
             if (!hasCode) {
                 context.disableDefaultConstraintViolation();
@@ -62,9 +66,5 @@ public class OAuthTokenRequestValidator implements ConstraintValidator<ValidOAut
         }
 
         return true;
-    }
-
-    private boolean hasText(String s) {
-        return s != null && !s.trim().isEmpty();
     }
 }

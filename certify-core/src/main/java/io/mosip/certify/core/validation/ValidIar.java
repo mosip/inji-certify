@@ -17,14 +17,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 @Target({ TYPE })
 @Retention(RUNTIME)
-@Constraint(validatedBy = UnifiedIarValidator.class)
+@Constraint(validatedBy = IarValidator.class)
 @Documented
-public @interface ValidUnifiedIar {
+public @interface ValidIar {
 	String message() default "Invalid IAR request: provide either (auth_session and openid4vp_presentation) or initial authorization parameters";
 
 	Class<?>[] groups() default {};
 
 	Class<? extends Payload>[] payload() default {};
 }
-
-

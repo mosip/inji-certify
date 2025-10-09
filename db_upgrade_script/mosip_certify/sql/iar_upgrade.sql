@@ -1,3 +1,6 @@
+-- IAR Session Table Upgrade Script
+-- This script creates the iar_session table for Interactive Authorization Request functionality
+
 CREATE TABLE IF NOT EXISTS iar_session (
     id SERIAL PRIMARY KEY,
     auth_session VARCHAR(128) NOT NULL UNIQUE,
@@ -33,7 +36,10 @@ COMMENT ON COLUMN iar_session.is_code_used IS 'Flag indicating if authorization 
 COMMENT ON COLUMN iar_session.code_used_at IS 'Timestamp when authorization code was used for token exchange';
 COMMENT ON COLUMN iar_session.cr_dtimes IS 'Record creation timestamp';
 
+-- Table comment
 COMMENT ON TABLE iar_session IS 'Maps IAR auth_session to transaction_id and stores OAuth flow state including verify service details for presentation during issuance flow.';
+
+-- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_iar_session_auth_session ON iar_session(auth_session);
 CREATE INDEX IF NOT EXISTS idx_iar_session_authorization_code ON iar_session(authorization_code);
 CREATE INDEX IF NOT EXISTS idx_iar_session_request_id ON iar_session(request_id);

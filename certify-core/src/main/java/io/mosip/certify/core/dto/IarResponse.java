@@ -6,6 +6,8 @@
 package io.mosip.certify.core.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.mosip.certify.core.constants.IarStatus;
+import io.mosip.certify.core.constants.InteractionType;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -23,14 +25,14 @@ public class IarResponse {
      * - "complete": Authorization is complete, no interaction needed
      */
     @JsonProperty("status")
-    private String status;
+    private IarStatus status;
 
     /**
      * Type of interaction required
      * - "openid4vp_presentation": OpenID4VP presentation required
      */
     @JsonProperty("type")
-    private String type;
+    private InteractionType type;
 
     /**
      * Authorization session identifier for tracking the auth flow
