@@ -13,6 +13,7 @@ import java.io.ByteArrayOutputStream;
 
 import io.mosip.certify.config.MDocConfig;
 import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.kernel.signature.dto.CoseSignRequestDto;
 import io.mosip.kernel.signature.service.CoseSignatureService;
@@ -61,21 +62,21 @@ public class MDocUtils {
                 JsonNode validityInfo = templateNode.get("validityInfo");
                 Map<String, Object> validity = objectMapper.convertValue(validityInfo, Map.class);
 
-                if (validity.containsKey("validFrom")) {
-                    String validFromValue = (String) validity.get("validFrom");
+                if (validity.containsKey(VCDM2Constants.VALID_FROM)) {
+                    String validFromValue = (String) validity.get(VCDM2Constants.VALID_FROM);
                     if ("${_validFrom}".equals(validFromValue)) {
                         String currentTime = ZonedDateTime.now(ZoneOffset.UTC)
                                 .format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-                        validity.put("validFrom", currentTime);
+                        validity.put(VCDM2Constants.VALID_FROM, currentTime);
                     }
                 }
-                if (validity.containsKey("validUntil")) {
-                    String validUntilValue = (String) validity.get("validUntil");
+                if (validity.containsKey(VCDM2Constants.VALID_UNITL)) {
+                    String validUntilValue = (String) validity.get(VCDM2Constants.VALID_UNITL);
                     if ("${_validUntil}".equals(validUntilValue)) {
                         String futureTime = ZonedDateTime.now(ZoneOffset.UTC)
                                 .plusYears(mDocConfig.getValidityPeriodYears())
                                 .format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-                        validity.put("validUntil", futureTime);
+                        validity.put(VCDM2Constants.VALID_UNITL, futureTime);
                     }
                 }
 
@@ -99,13 +100,9 @@ public class MDocUtils {
             if (templateNode.has("nameSpaces")) {
                 JsonNode nameSpacesNode = templateNode.get("nameSpaces");
                 nameSpacesNode.fieldNames().forEachRemaining(namespaceName -> {
-                    try {
-                        JsonNode namespaceItems = nameSpacesNode.get(namespaceName);
-                        List<Map<String, Object>> processedItems = processNamespaceItems(namespaceItems);
-                        nameSpaces.put(namespaceName, processedItems);
-                    } catch (Exception e) {
-                        log.error("Error processing namespace {}: {}", namespaceName, e.getMessage());
-                    }
+                    JsonNode namespaceItems = nameSpacesNode.get(namespaceName);
+                    List<Map<String, Object>> processedItems = processNamespaceItems(namespaceItems);
+                    nameSpaces.put(namespaceName, processedItems);
                 });
             }
             finalMDoc.put("nameSpaces", nameSpaces);
@@ -389,8 +386,8 @@ public class MDocUtils {
 
         if (mDocJson.containsKey("validityInfo")) {
             Map<String, Object> originalValidity = (Map<String, Object>) mDocJson.get("validityInfo");
-            validityInfo.put("validFrom", originalValidity.get("validFrom"));
-            validityInfo.put("validUntil", originalValidity.get("validUntil"));
+            validityInfo.put(VCDM2Constants.VALID_FROM, originalValidity.get(VCDM2Constants.VALID_FROM));
+            validityInfo.put(VCDM2Constants.VALID_UNITL, originalValidity.get(VCDM2Constants.VALID_UNITL));
         }
         mso.put("validityInfo", validityInfo);
 
