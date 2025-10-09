@@ -11,11 +11,13 @@ import java.util.*;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.utils.MDocUtils;
+import io.mosip.kernel.signature.service.CoseSignatureService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.kernel.signature.service.SignatureService;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class MDocCredential extends Credential {
+
+    @Autowired
+    CoseSignatureService coseSignatureService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -53,6 +58,38 @@ public class MDocCredential extends Credential {
         } catch (Exception e) {
             log.error("Error creating mDoc credential: {}", e.getMessage(), e);
             throw new CertifyException("MDOC_CREATION_FAILED", "Failed to create mDoc credential", e);
+        }
+    }
+
+    @Override
+    public VCResult<?> addProof(String vcToSign, String headers, String signAlgorithm, String appID, String refID, String didUrl, String signatureCryptoSuite) {
+        try {
+            VCResult<String> vcResult = new VCResult<>();
+
+            // Parse the input mDoc JSON
+            Map<String, Object> mDocJson = objectMapper.readValue(vcToSign, Map.class);
+            Map<String, Object> saltedNamespaces = MDocUtils.addRandomSalts(mDocJson);
+            Map<String, Map<Integer, byte[]>> namespaceDigests = new HashMap<>();
+            Map<String, Object> taggedNamespaces = MDocUtils.calculateDigests(saltedNamespaces, namespaceDigests);
+
+            // Create Mobile Security Object (MSO)
+            Map<String, Object> mso = mDocUtils.createMobileSecurityObject(mDocJson, namespaceDigests);
+            byte[] signedMSO = MDocUtils.signMSO(mso, appID, refID, signAlgorithm, coseSignatureService);
+            Map<String, Object> issuerSigned = MDocUtils.createIssuerSignedStructure(taggedNamespaces, signedMSO);
+
+            // Encode to CBOR, then to Base64
+            byte[] cborIssuerSigned = MDocUtils.encodeToCBOR(issuerSigned);
+            String base64UrlCredential = Base64.getUrlEncoder().withoutPadding().encodeToString(cborIssuerSigned);
+
+            vcResult.setCredential(base64UrlCredential);
+            vcResult.setFormat(VCFormats.MSO_MDOC);
+
+            log.info("mDoc proof generation completed successfully");
+            return vcResult;
+
+        } catch (Exception e) {
+            log.error("Error adding proof to mDoc: {}", e.getMessage(), e);
+            throw new CertifyException("MDOC_PROOF_FAILED", "Failed to add proof to mDoc", e);
         }
     }
 }

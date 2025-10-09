@@ -25,4 +25,5 @@ public class SignatureAlg {
     public static final String ED_JCS_2022 = "eddsa-jcs-2022";
 
     public static final String EC_SD_2023 = "ecdsa-sd-2023";// secp256r1
+    public static final String COSE_SIGN1 = "CoseSign1";
 }
