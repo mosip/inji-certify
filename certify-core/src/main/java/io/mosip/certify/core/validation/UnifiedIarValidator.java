@@ -5,13 +5,13 @@
  */
 package io.mosip.certify.core.validation;
 
-import io.mosip.certify.core.dto.UnifiedIarRequest;
+import io.mosip.certify.core.dto.IarRequest;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-public class UnifiedIarValidator implements ConstraintValidator<ValidUnifiedIar, UnifiedIarRequest> {
+public class UnifiedIarValidator implements ConstraintValidator<ValidUnifiedIar, IarRequest> {
 	@Override
-	public boolean isValid(UnifiedIarRequest value, ConstraintValidatorContext context) {
+	public boolean isValid(IarRequest value, ConstraintValidatorContext context) {
 		if (value == null) {
 			return true;
 		}

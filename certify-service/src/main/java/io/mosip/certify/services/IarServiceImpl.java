@@ -29,9 +29,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import io.mosip.certify.entity.IarSession;
 import io.mosip.certify.repository.IarSessionRepository;
 
@@ -123,7 +123,7 @@ public class IarServiceImpl implements IarService {
     private String verifierClientId;
 
     @Override
-    public IarResponse processAuthorizationRequest(IarRequest iarRequest) throws CertifyException {
+    public IarResponse processAuthorizationRequest(InteractiveAuthorizationRequest iarRequest) throws CertifyException {
         log.info("Processing IAR for client_id: {}, response_type: {}", 
                  iarRequest.getClientId(), iarRequest.getResponseType());
 
@@ -160,7 +160,7 @@ public class IarServiceImpl implements IarService {
     }
 
     @Override
-    public void validateIarRequest(IarRequest iarRequest) throws CertifyException {
+    public void validateIarRequest(InteractiveAuthorizationRequest iarRequest) throws CertifyException {
         log.debug("Validating IAR request for client: {}", iarRequest.getClientId());
 
         // Validate response_type
@@ -215,7 +215,7 @@ public class IarServiceImpl implements IarService {
     }
 
     @Override
-    public IarResponse generateOpenId4VpRequest(IarRequest iarRequest, String authSession) throws CertifyException {
+    public IarResponse generateOpenId4VpRequest(InteractiveAuthorizationRequest iarRequest, String authSession) throws CertifyException {
         log.info("Generating OpenID4VP request for auth_session: {}", authSession);
 
         try {
@@ -227,8 +227,8 @@ public class IarServiceImpl implements IarService {
             // Call verify service to get VP request and transaction ID
             VerifyVpResponse verifyResponse = callVerifyServiceForVpRequest(iarRequest);
             
-            // Convert verify response to OpenId4VpRequest
-            OpenId4VpRequest openId4VpRequest = convertToOpenId4VpRequest(verifyResponse, iarRequest);
+            // Convert verify response to Object (pass-through from Verify service)
+            Object openId4VpRequest = convertToOpenId4VpRequest(verifyResponse, iarRequest);
             response.setOpenid4vpRequest(openId4VpRequest);
 
             String transactionId = verifyResponse.getTransactionId();
@@ -269,7 +269,7 @@ public class IarServiceImpl implements IarService {
     }
     
 
-    private VerifyVpResponse callVerifyServiceForVpRequest(IarRequest iarRequest) throws CertifyException {
+    private VerifyVpResponse callVerifyServiceForVpRequest(InteractiveAuthorizationRequest iarRequest) throws CertifyException {
         log.info("Calling verify service for VP request generation for wallet client_id: {} using verifier client_id: {}", 
                  iarRequest.getClientId(), verifierClientId);
 
@@ -325,8 +325,9 @@ public class IarServiceImpl implements IarService {
         }
     }
 
-    private OpenId4VpRequest convertToOpenId4VpRequest(VerifyVpResponse verifyResponse, IarRequest iarRequest) {
-        OpenId4VpRequest openId4VpRequest = new OpenId4VpRequest();
+    private Object convertToOpenId4VpRequest(VerifyVpResponse verifyResponse, InteractiveAuthorizationRequest iarRequest) {
+        // Create a Map to represent the OpenID4VP request structure
+        Map<String, Object> openId4VpRequest = new HashMap<>();
         
         VerifyVpResponse.AuthorizationDetails authDetails = verifyResponse.getAuthorizationDetails();
         if (authDetails == null) {
@@ -334,13 +335,13 @@ public class IarServiceImpl implements IarService {
             throw new CertifyException(ErrorConstants.UNKNOWN_ERROR, "Invalid response from verify service: missing authorization details");
         }
 
-        openId4VpRequest.setResponseType(authDetails.getResponseType());
-        openId4VpRequest.setClientId(authDetails.getClientId() != null ? authDetails.getClientId() : iarRequest.getClientId());
+        openId4VpRequest.put("response_type", authDetails.getResponseType());
+        openId4VpRequest.put("client_id", authDetails.getClientId() != null ? authDetails.getClientId() : iarRequest.getClientId());
         
-        openId4VpRequest.setNonce(authDetails.getNonce());
+        openId4VpRequest.put("nonce", authDetails.getNonce());
         log.info("Forwarding VP request nonce from Verify: {}", authDetails.getNonce());
         
-        openId4VpRequest.setPresentationDefinition(authDetails.getPresentationDefinition());
+        openId4VpRequest.put("presentation_definition", authDetails.getPresentationDefinition());
         
         String responseMode = authDetails.getResponseMode();
         if (StringUtils.hasText(responseMode)) {
@@ -354,15 +355,15 @@ public class IarServiceImpl implements IarService {
                 responseMode = iarPostJwtResponseMode;
             }
         }
-        openId4VpRequest.setResponseMode(responseMode);
+        openId4VpRequest.put("response_mode", responseMode);
         
-        openId4VpRequest.setResponseUri(authDetails.getResponseUri());
+        openId4VpRequest.put("response_uri", authDetails.getResponseUri());
         log.info("Forwarding VP request response_uri from Verify: {}", authDetails.getResponseUri());
 
         log.info("Successfully converted verify service response to OpenId4VpRequest for client_id: {}", iarRequest.getClientId());
         log.debug("OpenId4VpRequest - responseType: {}, responseMode: {}, responseUri: {}, nonce: {}", 
-                  openId4VpRequest.getResponseType(), openId4VpRequest.getResponseMode(), 
-                  openId4VpRequest.getResponseUri(), openId4VpRequest.getNonce());
+                  openId4VpRequest.get("response_type"), openId4VpRequest.get("response_mode"), 
+                  openId4VpRequest.get("response_uri"), openId4VpRequest.get("nonce"));
 
         return openId4VpRequest;
     }
@@ -766,7 +767,7 @@ public class IarServiceImpl implements IarService {
     }
 
     @Override
-    public Object handleIarRequest(UnifiedIarRequest unifiedRequest) throws CertifyException {
+    public Object handleIarRequest(IarRequest unifiedRequest) throws CertifyException {
         log.info("Handling unified IAR request");
 
         boolean hasAuthSession = unifiedRequest.getAuthSession() != null && !unifiedRequest.getAuthSession().trim().isEmpty();
@@ -782,7 +783,7 @@ public class IarServiceImpl implements IarService {
 
         if (!hasAuthSession || !hasVp) {
             log.info("Processing initial authorization request for client_id: {}", unifiedRequest.getClientId());
-            IarRequest iarRequest = new IarRequest();
+            InteractiveAuthorizationRequest iarRequest = new InteractiveAuthorizationRequest();
             iarRequest.setResponseType(unifiedRequest.getResponseType());
             iarRequest.setClientId(unifiedRequest.getClientId());
             iarRequest.setCodeChallenge(unifiedRequest.getCodeChallenge());

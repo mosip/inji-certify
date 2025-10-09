@@ -9,9 +9,9 @@ import io.mosip.certify.core.dto.IarPresentationRequest;
 import io.mosip.certify.core.dto.IarPresentationResponse;
 import io.mosip.certify.core.dto.IarRequest;
 import io.mosip.certify.core.dto.IarResponse;
+import io.mosip.certify.core.dto.InteractiveAuthorizationRequest;
 import io.mosip.certify.core.dto.OAuthTokenRequest;
 import io.mosip.certify.core.dto.OAuthTokenResponse;
-import io.mosip.certify.core.dto.UnifiedIarRequest;
 import io.mosip.certify.core.exception.CertifyException;
 
 /**
@@ -28,7 +28,7 @@ public interface IarService {
      * @return IarResponse containing status, type, auth session and openid4vp request
      * @throws CertifyException if request processing fails
      */
-    IarResponse processAuthorizationRequest(IarRequest iarRequest) throws CertifyException;
+    IarResponse processAuthorizationRequest(InteractiveAuthorizationRequest iarRequest) throws CertifyException;
 
     /**
      * Generate auth session identifier
@@ -45,7 +45,7 @@ public interface IarService {
      * @param iarRequest The authorization request to validate
      * @throws CertifyException if validation fails
      */
-    void validateIarRequest(IarRequest iarRequest) throws CertifyException;
+    void validateIarRequest(InteractiveAuthorizationRequest iarRequest) throws CertifyException;
 
     /**
      * Generate OpenID4VP request
@@ -57,7 +57,7 @@ public interface IarService {
      * @return IarResponse with OpenID4VP request details
      * @throws CertifyException if generation fails
      */
-    IarResponse generateOpenId4VpRequest(IarRequest iarRequest, String authSession) throws CertifyException;
+    IarResponse generateOpenId4VpRequest(InteractiveAuthorizationRequest iarRequest, String authSession) throws CertifyException;
 
     IarPresentationResponse processVpPresentation(IarPresentationRequest presentationRequest) throws CertifyException;
 
@@ -70,7 +70,7 @@ public interface IarService {
      * @return Object containing either IarResponse or IarPresentationResponse
      * @throws CertifyException if request processing fails
      */
-    Object handleIarRequest(UnifiedIarRequest unifiedRequest) throws CertifyException;
+    Object handleIarRequest(IarRequest unifiedRequest) throws CertifyException;
 
     /**
      * Process OAuth Token Request (Step 19-20)

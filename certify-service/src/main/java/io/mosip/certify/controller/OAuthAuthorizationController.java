@@ -11,7 +11,7 @@ import io.mosip.certify.core.dto.IarPresentationResponse;
 import io.mosip.certify.core.dto.OAuthTokenRequest;
 import io.mosip.certify.core.dto.OAuthTokenResponse;
 import io.mosip.certify.core.dto.OAuthTokenError;
-import io.mosip.certify.core.dto.UnifiedIarRequest;
+import io.mosip.certify.core.dto.IarRequest;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.IarService;
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +51,7 @@ public class OAuthAuthorizationController {
     @PostMapping(value = "/iar",
              consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
              produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> handleIarRequest(@Valid @ModelAttribute UnifiedIarRequest unifiedRequest)
+    public ResponseEntity<?> handleIarRequest(@Valid @ModelAttribute IarRequest unifiedRequest)
         throws CertifyException {
 
         log.info("Received unified IAR request");

@@ -40,7 +40,8 @@ public class IarResponse {
 
     /**
      * OpenID4VP request details when interaction is required
+     * Using Object to handle dynamic structure from Verify service
      */
     @JsonProperty("openid4vp_request")
-    private OpenId4VpRequest openid4vpRequest;
+    private Object openid4vpRequest;
 }
