@@ -95,13 +95,13 @@ public class OAuthAuthorizationController {
             // Process the token request
             OAuthTokenResponse response = iarService.processTokenRequest(tokenRequest);
 
-            log.info("Token issued successfully for client_id: {}", tokenRequest.getClientId());
+            log.info("Token issued successfully");
 
             return ResponseEntity.ok(response);
 
         } catch (CertifyException e) {
-            log.error("Failed to process token request for client_id: {}, error: {}",
-                      tokenRequest.getClientId(), e.getMessage(), e);
+            log.error("Failed to process token request, error: {}",
+                      e.getMessage(), e);
             
             // Return OAuth error response
             OAuthTokenError errorResponse = new OAuthTokenError();
@@ -110,8 +110,7 @@ public class OAuthAuthorizationController {
             
             return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {
-            log.error("Unexpected error processing token request for client_id: {}",
-                      tokenRequest.getClientId(), e);
+            log.error("Unexpected error processing token request", e);
             
             OAuthTokenError errorResponse = new OAuthTokenError();
             errorResponse.setError("server_error");

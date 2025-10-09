@@ -38,21 +38,12 @@ public class OAuthTokenRequestValidator implements ConstraintValidator<ValidOAut
         // For authorization_code grant, validate required fields
         if ("authorization_code".equals(value.getGrantType())) {
             boolean hasCode = hasText(value.getCode());
-            boolean hasRedirectUri = hasText(value.getRedirectUri());
             boolean hasCodeVerifier = hasText(value.getCodeVerifier());
 
             if (!hasCode) {
                 context.disableDefaultConstraintViolation();
                 context.buildConstraintViolationWithTemplate("code is required for authorization_code grant")
                        .addPropertyNode("code")
-                       .addConstraintViolation();
-                return false;
-            }
-
-            if (!hasRedirectUri) {
-                context.disableDefaultConstraintViolation();
-                context.buildConstraintViolationWithTemplate("redirect_uri is required for authorization_code grant")
-                       .addPropertyNode("redirectUri")
                        .addConstraintViolation();
                 return false;
             }
@@ -65,8 +56,9 @@ public class OAuthTokenRequestValidator implements ConstraintValidator<ValidOAut
                 return false;
             }
             
+            // redirect_uri is optional since we don't support redirect_to_web
             // client_id is optional for public clients per RFC 7636 Section 3.2
-            // No validation needed for client_id presence
+            // No validation needed for client_id or redirect_uri presence
         }
 
         return true;

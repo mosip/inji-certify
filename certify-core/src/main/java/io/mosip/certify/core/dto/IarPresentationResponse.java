@@ -31,15 +31,4 @@ public class IarPresentationResponse {
     @JsonProperty("authorization_code")
     private String authorizationCode;
 
-    /**
-     * Error code (if status is "error")
-     */
-    @JsonProperty("error")
-    private String error;
-
-    /**
-     * Error description (if status is "error")
-     */
-    @JsonProperty("error_description")
-    private String errorDescription;
 }

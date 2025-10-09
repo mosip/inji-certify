@@ -21,6 +21,7 @@ import java.util.Base64;
 public class PkceUtil {
 
     private static final Base64.Encoder URL_SAFE_ENCODER = Base64.getUrlEncoder().withoutPadding();
+    private static final String SHA_256_ALGORITHM = "SHA-256";
 
     /**
      * Validates PKCE code_verifier against code_challenge
@@ -37,14 +38,11 @@ public class PkceUtil {
         }
 
         try {
-            switch (codeChallengeMethod.toUpperCase()) {
-                case "S256":
-                    return validateS256CodeVerifier(codeVerifier, codeChallenge);
-                case "PLAIN":
-                    return validatePlainCodeVerifier(codeVerifier, codeChallenge);
-                default:
-                    log.warn("Unsupported code challenge method: {}", codeChallengeMethod);
-                    return false;
+            if ("S256".equals(codeChallengeMethod.toUpperCase())) {
+                return validateS256CodeVerifier(codeVerifier, codeChallenge);
+            } else {
+                log.warn("Unsupported code challenge method: {}", codeChallengeMethod);
+                return false;
             }
         } catch (Exception e) {
             log.error("PKCE validation failed with exception", e);
@@ -57,7 +55,7 @@ public class PkceUtil {
      */
     private static boolean validateS256CodeVerifier(String codeVerifier, String codeChallenge) {
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            MessageDigest digest = MessageDigest.getInstance(SHA_256_ALGORITHM);
             byte[] hash = digest.digest(codeVerifier.getBytes(StandardCharsets.UTF_8));
             String computedChallenge = URL_SAFE_ENCODER.encodeToString(hash);
             
@@ -72,31 +70,5 @@ public class PkceUtil {
         }
     }
 
-    /**
-     * Validates plain code verifier (direct comparison)
-     */
-    private static boolean validatePlainCodeVerifier(String codeVerifier, String codeChallenge) {
-        boolean isValid = codeVerifier.equals(codeChallenge);
-        if (!isValid) {
-            log.warn("Plain PKCE validation failed: code verifier does not match challenge");
-        }
-        return isValid;
-    }
 
-    /**
-     * Generates a code challenge from code verifier using S256 method
-     * 
-     * @param codeVerifier The code verifier
-     * @return The code challenge
-     */
-    public static String generateCodeChallenge(String codeVerifier) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(codeVerifier.getBytes(StandardCharsets.UTF_8));
-            return URL_SAFE_ENCODER.encodeToString(hash);
-        } catch (NoSuchAlgorithmException e) {
-            log.error("SHA-256 algorithm not available", e);
-            throw new RuntimeException("SHA-256 algorithm not available", e);
-        }
-    }
 }

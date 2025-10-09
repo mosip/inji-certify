@@ -14,11 +14,11 @@ import java.util.List;
 
 /**
  * Interactive Authorization Request (IAR) DTO for OpenID4VCI
- * Used for POST /iar endpoint to initiate authorization flow
+ * Used for initial authorization requests (before VP presentation)
  */
 @Data
 @NoArgsConstructor
-public class IarRequest {
+public class InteractiveAuthorizationRequest {
 
     /**
      * OAuth 2.0 Response Type - typically "code"

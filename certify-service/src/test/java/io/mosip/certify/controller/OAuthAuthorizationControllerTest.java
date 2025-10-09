@@ -75,7 +75,7 @@ class OAuthAuthorizationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value(IarConstants.STATUS_REQUIRE_INTERACTION))
-                .andExpect(jsonPath("$.type").value(IarConstants.TYPE_OPENID4VP_PRESENTATION))
+                .andExpect(jsonPath("$.type").value(IarConstants.OPENID4VP_PRESENTATION))
                 .andExpect(jsonPath("$.auth_session").value("test-session"))
                 .andExpect(jsonPath("$.openid4vp_request.response_type").value("vp_token"))
                 .andExpect(jsonPath("$.openid4vp_request.response_mode").value("iar-post.jwt"));
@@ -87,7 +87,7 @@ class OAuthAuthorizationControllerTest {
     @Test
     void processInteractiveAuthorizationRequest_success_complete() throws Exception {
         // Arrange
-        IarResponse mockResponse = createMockIarResponse(IarConstants.STATUS_COMPLETE);
+        IarResponse mockResponse = createMockIarResponse(IarConstants.STATUS_REQUIRE_INTERACTION);
         when(iarService.processAuthorizationRequest(any(IarRequest.class))).thenReturn(mockResponse);
 
         // Act & Assert
@@ -99,7 +99,7 @@ class OAuthAuthorizationControllerTest {
                 .param("code_challenge_method", "S256")
                 .param("redirect_uri", "https://test.com/callback"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(IarConstants.STATUS_COMPLETE))
+                .andExpect(jsonPath("$.status").value(IarConstants.STATUS_REQUIRE_INTERACTION))
                 .andExpect(jsonPath("$.type").doesNotExist())
                 .andExpect(jsonPath("$.openid4vp_request").doesNotExist());
 
@@ -141,8 +141,7 @@ class OAuthAuthorizationControllerTest {
                 .param("code_challenge", "test-challenge")
                 .param("code_challenge_method", "S256")
                 .param("redirect_uri", "https://test.com/callback")
-                .param("interaction_types_supported", "openid4vp_presentation")
-                .param("redirect_to_web", "true"))
+                .param("interaction_types_supported", "openid4vp_presentation"))
                 .andExpect(status().isOk());
 
         verify(iarService, times(1)).validateIarRequest(any(IarRequest.class));
@@ -236,13 +235,13 @@ class OAuthAuthorizationControllerTest {
                 .param("redirect_uri", "https://test.com/callback"))
                 .andExpect(status().isOk());
 
-        // Test plain method
+        // Test S256 method again (plain method removed for security)
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .param("response_type", "code")
                 .param("client_id", "test-client")
-                .param("code_challenge", "test-challenge-plain")
-                .param("code_challenge_method", "plain")
+                .param("code_challenge", "test-challenge-s256-2")
+                .param("code_challenge_method", "S256")
                 .param("redirect_uri", "https://test.com/callback"))
                 .andExpect(status().isOk());
 
@@ -365,7 +364,7 @@ class OAuthAuthorizationControllerTest {
         response.setAuthSession("test-session");
         
         if (IarConstants.STATUS_REQUIRE_INTERACTION.equals(status)) {
-            response.setType(IarConstants.TYPE_OPENID4VP_PRESENTATION);
+            response.setType(IarConstants.OPENID4VP_PRESENTATION);
             
             OpenId4VpRequest openId4VpRequest = new OpenId4VpRequest();
             openId4VpRequest.setResponseType("vp_token");

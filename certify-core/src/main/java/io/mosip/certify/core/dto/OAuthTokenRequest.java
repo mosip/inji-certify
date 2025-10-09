@@ -33,29 +33,6 @@ public class OAuthTokenRequest {
     @JsonProperty("code")
     private String code;
 
-    /**
-     * REQUIRED (for pre-authorized_code grant). The pre-authorized code provided by the Credential Issuer.
-     */
-    @JsonProperty("pre-authorized_code")
-    private String preAuthorizedCode;
-
-    /**
-     * REQUIRED (for authorization_code grant). MUST be identical to the redirect_uri parameter included in the authorization request.
-     */
-    @JsonProperty("redirect_uri")
-    private String redirectUri;
-
-    /**
-     * REQUIRED (if client authentication is not performed via other means). The client identifier.
-     */
-    @JsonProperty("client_id")
-    private String clientId;
-
-    /**
-     * OPTIONAL. The client secret (if client authentication is performed via client_secret_post).
-     */
-    @JsonProperty("client_secret")
-    private String clientSecret;
 
     /**
      * REQUIRED (for PKCE). Code verifier used in the Proof Key for Code Exchange (PKCE) extension.
@@ -69,9 +46,4 @@ public class OAuthTokenRequest {
     @JsonProperty("refresh_token")
     private String refreshToken;
 
-    /**
-     * OPTIONAL. The user PIN associated with the pre-authorized code (for pre-authorized_code grant).
-     */
-    @JsonProperty("user_pin")
-    private String userPin;
 }

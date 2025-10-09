@@ -30,7 +30,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import io.mosip.certify.entity.IarSession;
@@ -151,16 +150,18 @@ public class IarServiceImpl implements IarService {
 
     @Override
     public String generateAuthSession() {
-        // Generate dynamic auth_session for production security
-        String authSession = sessionPrefix + UUID.randomUUID().toString().replace("-", "");
-        log.debug("Generated dynamic auth session: {}", authSession);
+        byte[] randomBytes = new byte[16];
+        new java.security.SecureRandom().nextBytes(randomBytes);
+        String encoded = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+        
+        String authSession = sessionPrefix + encoded;
+        log.debug("Generated auth session: {}", authSession);
         return authSession;
     }
 
     @Override
     public void validateIarRequest(IarRequest iarRequest) throws CertifyException {
         log.debug("Validating IAR request for client: {}", iarRequest.getClientId());
-
 
         // Validate response_type
         if (!IarConstants.RESPONSE_TYPE_CODE.equals(iarRequest.getResponseType())) {
@@ -169,13 +170,48 @@ public class IarServiceImpl implements IarService {
         }
 
         // Validate code_challenge_method
-        if (!IarConstants.CODE_CHALLENGE_METHOD_S256.equals(iarRequest.getCodeChallengeMethod()) &&
-            !IarConstants.CODE_CHALLENGE_METHOD_PLAIN.equals(iarRequest.getCodeChallengeMethod())) {
+        if (!IarConstants.CODE_CHALLENGE_METHOD_S256.equals(iarRequest.getCodeChallengeMethod())) {
             throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
         }
 
+        // Validate interaction_types_supported
+        validateInteractionTypesSupported(iarRequest.getInteractionTypesSupported());
+
         log.debug("IAR request validation successful for client: {}", 
                   iarRequest.getClientId());
+    }
+
+    private void validateInteractionTypesSupported(String interactionTypesSupported) throws CertifyException {
+        if (!StringUtils.hasText(interactionTypesSupported)) {
+            log.debug("No interaction_types_supported provided - using default");
+            return;
+        }
+
+        // Split by comma and trim whitespace
+        String[] interactionTypes = interactionTypesSupported.split(",");
+        for (int i = 0; i < interactionTypes.length; i++) {
+            interactionTypes[i] = interactionTypes[i].trim();
+        }
+
+        if (interactionTypes.length == 1 && IarConstants.INTERACTION_TYPE_REDIRECT_TO_WEB.equals(interactionTypes[0])) {
+            throw new CertifyException(IarConstants.UNSUPPORTED_INTERACTION_TYPE, 
+                                     "redirect_to_web interaction type is not supported");
+        }
+
+        boolean hasOpenId4Vp = false;
+        for (String interactionType : interactionTypes) {
+            if (IarConstants.INTERACTION_TYPE_OPENID4VP.equals(interactionType)) {
+                hasOpenId4Vp = true;
+                break;
+            }
+        }
+
+        if (!hasOpenId4Vp) {
+            throw new CertifyException(IarConstants.UNSUPPORTED_INTERACTION_TYPE, 
+                                     "openid4vp_presentation interaction type is required");
+        }
+
+        log.debug("Interaction types validation successful: {}", interactionTypesSupported);
     }
 
     @Override
@@ -185,7 +221,7 @@ public class IarServiceImpl implements IarService {
         try {
             IarResponse response = new IarResponse();
             response.setStatus(IarConstants.STATUS_REQUIRE_INTERACTION);
-            response.setType(IarConstants.TYPE_OPENID4VP_PRESENTATION);
+            response.setType(IarConstants.OPENID4VP_PRESENTATION);
             response.setAuthSession(authSession);
 
             // Call verify service to get VP request and transaction ID
@@ -218,7 +254,6 @@ public class IarServiceImpl implements IarService {
             iarSession.setClientId(iarRequest.getClientId());
             iarSession.setCodeChallenge(iarRequest.getCodeChallenge());
             iarSession.setCodeChallengeMethod(iarRequest.getCodeChallengeMethod());
-            iarSession.setRedirectUri(iarRequest.getRedirectUri());
             
             if (verifyResponse.getAuthorizationDetails() != null) {
                 iarSession.setResponseUri(verifyResponse.getAuthorizationDetails().getResponseUri());
@@ -252,12 +287,10 @@ public class IarServiceImpl implements IarService {
             if (iarRequest.getAuthorizationDetails() != null 
                 && !iarRequest.getAuthorizationDetails().isEmpty()) {
                 AuthorizationDetail authDetail = iarRequest.getAuthorizationDetails().get(0);
-                if (authDetail.getCredentialDefinition() != null 
-                    && authDetail.getCredentialDefinition().getType() != null
-                    && authDetail.getCredentialDefinition().getType().size() > 1) {
-                    verifyRequest.setPresentationDefinitionId(
-                        authDetail.getCredentialDefinition().getType().get(1)
-                    );
+                
+                // Use credential_configuration_id as presentation definition ID
+                if (authDetail.getCredentialConfigurationId() != null) {
+                    verifyRequest.setPresentationDefinitionId(authDetail.getCredentialConfigurationId());
                 }
             }
 
@@ -312,8 +345,8 @@ public class IarServiceImpl implements IarService {
         String responseMode = authDetails.getResponseMode();
         if (StringUtils.hasText(responseMode)) {
             String normalizedIncoming = responseMode.replace('_', '-');
-            String normalizedDirect = directPostResponseMode != null ? directPostResponseMode.replace('_', '-') : "direct-post";
-            String normalizedDirectJwt = directPostJwtResponseMode != null ? directPostJwtResponseMode.replace('_', '-') : "direct-post.jwt";
+            String normalizedDirect = directPostResponseMode.replace('_', '-');
+            String normalizedDirectJwt = directPostJwtResponseMode.replace('_', '-');
 
             if (normalizedIncoming.equalsIgnoreCase(normalizedDirect)) {
                 responseMode = iarPostResponseMode;
@@ -412,7 +445,7 @@ public class IarServiceImpl implements IarService {
     }
 
     @Override
-    public IarPresentationResponse processVpPresentationResponse(IarPresentationRequest presentationRequest) throws CertifyException {
+    public IarPresentationResponse processVpPresentation(IarPresentationRequest presentationRequest) throws CertifyException {
         log.info("Processing VP presentation for auth_session: {}", presentationRequest.getAuthSession());
 
         try {
@@ -443,10 +476,6 @@ public class IarServiceImpl implements IarService {
                          presentationRequest.getAuthSession(), session.getRequestId());
             } else {
                 response.setStatus(IarConstants.STATUS_ERROR);
-                response.setError(verificationResponse.getError() != null ? 
-                                 verificationResponse.getError() : IarConstants.INVALID_REQUEST);
-                response.setErrorDescription(verificationResponse.getErrorDescription() != null ?
-                                           verificationResponse.getErrorDescription() : "VP cryptographic verification failed");
                 log.warn("Authorization denied - VP cryptographic verification failed for auth_session: {}, request_id: {}, error: {}", 
                          presentationRequest.getAuthSession(), session.getRequestId(), 
                          verificationResponse.getError());
@@ -525,7 +554,18 @@ public class IarServiceImpl implements IarService {
         }
     }
     private String generateAndStoreAuthorizationCode(String authSession) throws CertifyException {
-        String authCode = authCodePrefix + UUID.randomUUID().toString().replace("-", "").substring(0, authorizationCodeLength);
+        byte[] randomBytes = new byte[Math.max(authorizationCodeLength, 16)];
+        new java.security.SecureRandom().nextBytes(randomBytes);
+        String encoded = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+        
+        if (encoded.length() < authorizationCodeLength) {
+            byte[] additionalBytes = new byte[16];
+            new java.security.SecureRandom().nextBytes(additionalBytes);
+            String additionalEncoded = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(additionalBytes);
+            encoded = (encoded + additionalEncoded).substring(0, authorizationCodeLength);
+        }
+        
+        String authCode = authCodePrefix + encoded.substring(0, authorizationCodeLength);
         log.debug("Generated authorization code for auth_session: {} (length: {})", authSession, authCode.length());
         
         Optional<IarSession> sessionOpt = iarSessionRepository.findByAuthSession(authSession);
@@ -547,13 +587,18 @@ public class IarServiceImpl implements IarService {
     
     @Override
     public OAuthTokenResponse processTokenRequest(OAuthTokenRequest tokenRequest) throws CertifyException {
-        log.info("Processing OAuth token request for client_id: {}, grant_type: {}", 
-                 tokenRequest.getClientId(), tokenRequest.getGrantType());
+        log.info("Processing OAuth token request for grant_type: {}", 
+                 tokenRequest.getGrantType());
 
         try {
+            // Validate grant type
+            if (!IarConstants.GRANT_TYPE_AUTHORIZATION_CODE.equals(tokenRequest.getGrantType())) {
+                throw new CertifyException("unsupported_grant_type", 
+                                         "Only authorization_code grant type is supported");
+            }
 
             // Validate authorization code and atomically mark as used to prevent race conditions
-            IarSession session = validateAndMarkAuthorizationCodeUsed(tokenRequest);
+            validateAndMarkAuthorizationCodeUsed(tokenRequest);
 
             OAuthTokenResponse response = new OAuthTokenResponse();
             response.setAccessToken(generateAccessToken());
@@ -562,16 +607,15 @@ public class IarServiceImpl implements IarService {
             response.setCNonce(generateCNonce());
             response.setCNonceExpiresIn(cNonceExpiresInSeconds);
             
-            log.info("Token generated successfully for client_id: {}", tokenRequest.getClientId());
+            log.info("Token generated successfully");
             return response;
 
         } catch (CertifyException e) {
-            log.error("Token request validation failed for client_id: {}, error: {}", 
-                      tokenRequest.getClientId(), e.getErrorCode(), e);
+            log.error("Token request validation failed, error: {}", 
+                      e.getErrorCode(), e);
             throw e;
         } catch (Exception e) {
-            log.error("Unexpected error during token processing for client_id: {}", 
-                      tokenRequest.getClientId(), e);
+            log.error("Unexpected error during token processing", e);
             throw new CertifyException(ErrorConstants.UNKNOWN_ERROR, "Token processing failed", e);
         }
     }
@@ -582,8 +626,8 @@ public class IarServiceImpl implements IarService {
      * This method uses database-level locking to ensure only one token request can use a code
      */
     private IarSession validateAndMarkAuthorizationCodeUsed(OAuthTokenRequest tokenRequest) throws CertifyException {
-        log.debug("Atomically validating and marking authorization code as used for client_id: {} (code length: {})", 
-                  tokenRequest.getClientId(), tokenRequest.getCode() != null ? tokenRequest.getCode().length() : 0);
+        log.debug("Atomically validating and marking authorization code as used (code length: {})", 
+                  tokenRequest.getCode() != null ? tokenRequest.getCode().length() : 0);
 
         if (!StringUtils.hasText(tokenRequest.getCode())) {
             throw new CertifyException("invalid_grant", "Invalid authorization code");
@@ -604,7 +648,7 @@ public class IarServiceImpl implements IarService {
 
         // Check if already used (double-check after database retrieval)
         if (Boolean.TRUE.equals(session.getIsCodeUsed())) {
-            log.warn("Authorization code already used - potential replay attack for client_id: {}", tokenRequest.getClientId());
+            log.warn("Authorization code already used - potential replay attack");
             throw new CertifyException("invalid_grant", "Authorization code already used");
         }
 
@@ -614,18 +658,8 @@ public class IarServiceImpl implements IarService {
             throw new CertifyException("invalid_grant", "Authorization code expired");
         }
 
-        // Validate client_id matches per RFC 7636 Section 3.2
-        String tokenClientId = tokenRequest.getClientId();
-        String sessionClientId = session.getClientId();
-        
-        if (tokenClientId == null) {
-            log.debug("Public client (no client_id) - validation passed");
-        } else if (!Objects.equals(tokenClientId, sessionClientId)) {
-            log.warn("Client ID mismatch - token: {}, session: {}", tokenClientId, sessionClientId);
-            throw new CertifyException("invalid_grant", "Client ID mismatch");
-        } else {
-            log.debug("Client ID validation successful for confidential client: {}", tokenClientId);
-        }
+        // Client ID validation removed since we support public clients only
+        log.debug("Public client validation passed");
 
         // Validate PKCE, redirect_uri, and client_secret
         validatePkceCodeVerifier(tokenRequest, session);
@@ -642,7 +676,7 @@ public class IarServiceImpl implements IarService {
             
             if (updatedRows == 0) {
                 // Another thread already marked this code as used
-                log.warn("Authorization code was used by another request - potential race condition prevented for client_id: {}", tokenRequest.getClientId());
+                log.warn("Authorization code was used by another request - potential race condition prevented");
                 throw new CertifyException("invalid_grant", "Authorization code already used");
             }
             
@@ -650,64 +684,15 @@ public class IarServiceImpl implements IarService {
             session.setIsCodeUsed(true);
             session.setCodeUsedAt(LocalDateTime.now());
             
-            log.debug("Authorization code atomically marked as used for client_id: {}", tokenRequest.getClientId());
+            log.debug("Authorization code atomically marked as used");
             return session;
             
         } catch (Exception e) {
-            log.error("Failed to atomically mark authorization code as used for client_id: {}", tokenRequest.getClientId(), e);
+            log.error("Failed to atomically mark authorization code as used", e);
             throw new CertifyException("server_error", "Failed to process authorization code", e);
         }
     }
 
-    private IarSession validateAuthorizationCode(OAuthTokenRequest tokenRequest) throws CertifyException {
-        log.debug("Validating authorization code for client_id: {} (code length: {})", 
-                  tokenRequest.getClientId(), tokenRequest.getCode() != null ? tokenRequest.getCode().length() : 0);
-
-        if (!StringUtils.hasText(tokenRequest.getCode())) {
-            throw new CertifyException("invalid_grant", "Invalid authorization code");
-        }
-
-        if (!tokenRequest.getCode().startsWith(authCodePrefix)) {
-            throw new CertifyException("invalid_grant", "Invalid authorization code format");
-        }
-
-        Optional<IarSession> sessionOpt = iarSessionRepository.findByAuthorizationCode(tokenRequest.getCode());
-        if (!sessionOpt.isPresent()) {
-            throw new CertifyException("invalid_grant", "Authorization code not found");
-        }
-
-        IarSession session = sessionOpt.get();
-
-        if (Boolean.TRUE.equals(session.getIsCodeUsed())) {
-            throw new CertifyException("invalid_grant", "Authorization code already used");
-        }
-
-        if (session.getCodeIssuedAt() != null && 
-            session.getCodeIssuedAt().isBefore(LocalDateTime.now().minusMinutes(authorizationCodeExpiresMinutes))) {
-            throw new CertifyException("invalid_grant", "Authorization code expired");
-        }
-
-        String tokenClientId = tokenRequest.getClientId();
-        String sessionClientId = session.getClientId();
-        
-        if (tokenClientId == null) {
-            log.debug("Public client (no client_id) - validation passed");
-        } else if (!Objects.equals(tokenClientId, sessionClientId)) {
-            log.warn("Client ID mismatch - token: {}, session: {}", tokenClientId, sessionClientId);
-            throw new CertifyException("invalid_grant", "Client ID mismatch");
-        } else {
-            log.debug("Client ID validation successful for confidential client: {}", tokenClientId);
-        }
-
-        validatePkceCodeVerifier(tokenRequest, session);
-        
-        validateRedirectUri(tokenRequest, session);
-        
-        validateClientSecret(tokenRequest, session);
-
-        log.debug("Authorization code validation successful for client_id: {}", tokenRequest.getClientId());
-        return session;
-    }
 
     private void validatePkceCodeVerifier(OAuthTokenRequest tokenRequest, IarSession session) throws CertifyException {
         String codeVerifier = tokenRequest.getCodeVerifier();
@@ -735,18 +720,16 @@ public class IarServiceImpl implements IarService {
                 java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
                 byte[] hash = digest.digest(codeVerifier.getBytes(java.nio.charset.StandardCharsets.UTF_8));
                 computedChallenge = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
-            } else if (IarConstants.CODE_CHALLENGE_METHOD_PLAIN.equals(codeChallengeMethod)) {
-                computedChallenge = codeVerifier;
             } else {
                 throw new CertifyException("invalid_request", "Unsupported code_challenge_method: " + codeChallengeMethod);
             }
             
             if (!codeChallenge.equals(computedChallenge)) {
-                log.warn("PKCE validation failed - code_challenge mismatch for client_id: {}", tokenRequest.getClientId());
+                log.warn("PKCE validation failed - code_challenge mismatch");
                 throw new CertifyException("invalid_grant", "Invalid code_verifier");
             }
             
-            log.debug("PKCE validation successful for client_id: {}", tokenRequest.getClientId());
+            log.debug("PKCE validation successful");
             
         } catch (java.security.NoSuchAlgorithmException e) {
             log.error("SHA-256 algorithm not available for PKCE validation", e);
@@ -755,38 +738,13 @@ public class IarServiceImpl implements IarService {
     }
     
     private void validateRedirectUri(OAuthTokenRequest tokenRequest, IarSession session) throws CertifyException {
-        String tokenRedirectUri = tokenRequest.getRedirectUri();
-        String sessionRedirectUri = session.getRedirectUri();
-        
-        if (!StringUtils.hasText(tokenRedirectUri)) {
-            throw new CertifyException("invalid_request", "redirect_uri is required");
-        }
-        
-        if (!StringUtils.hasText(sessionRedirectUri)) {
-            throw new CertifyException("invalid_request", "redirect_uri missing from authorization request");
-        }
-        
-        if (!tokenRedirectUri.equals(sessionRedirectUri)) {
-            log.warn("Redirect URI mismatch - token: {}, session: {}", tokenRedirectUri, sessionRedirectUri);
-            throw new CertifyException("invalid_grant", "redirect_uri mismatch");
-        }
-        
-        log.debug("Redirect URI validation successful for client_id: {}", tokenRequest.getClientId());
+        // redirect_uri validation removed since we don't support redirect_to_web
+        log.debug("Redirect URI validation skipped (not supported)");
     }
     
     private void validateClientSecret(OAuthTokenRequest tokenRequest, IarSession session) throws CertifyException {
-        String clientSecret = tokenRequest.getClientSecret();
-        String clientId = tokenRequest.getClientId();
-        
-        boolean isPublicClient = !StringUtils.hasText(clientId);
-        
-        if (isPublicClient && StringUtils.hasText(clientSecret)) {
-            log.warn("Public client attempted to use client_secret - client_id: {}", clientId);
-            throw new CertifyException("invalid_request", "client_secret not allowed for public clients");
-        }
-        
-        
-        log.debug("Client secret validation successful for client_id: {} (public: {})", clientId, isPublicClient);
+        // Client secret validation removed since we support public clients only
+        log.debug("Public client secret validation passed");
     }
 
     private String generateAccessToken() {
@@ -819,7 +777,7 @@ public class IarServiceImpl implements IarService {
             IarPresentationRequest presentationRequest = new IarPresentationRequest();
             presentationRequest.setAuthSession(unifiedRequest.getAuthSession());
             presentationRequest.setOpenid4vpPresentation(unifiedRequest.getOpenid4vpPresentation());
-            return processVpPresentationResponse(presentationRequest);
+            return processVpPresentation(presentationRequest);
         }
 
         if (!hasAuthSession || !hasVp) {
@@ -829,9 +787,7 @@ public class IarServiceImpl implements IarService {
             iarRequest.setClientId(unifiedRequest.getClientId());
             iarRequest.setCodeChallenge(unifiedRequest.getCodeChallenge());
             iarRequest.setCodeChallengeMethod(unifiedRequest.getCodeChallengeMethod());
-            iarRequest.setRedirectUri(unifiedRequest.getRedirectUri());
             iarRequest.setInteractionTypesSupported(unifiedRequest.getInteractionTypesSupported());
-            iarRequest.setRedirectToWeb(unifiedRequest.getRedirectToWeb());
             iarRequest.setAuthorizationDetails(unifiedRequest.getAuthorizationDetails());
             return processAuthorizationRequest(iarRequest);
         }

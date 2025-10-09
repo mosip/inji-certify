@@ -60,11 +60,6 @@ public class UnifiedIarRequest {
     @JsonProperty("interaction_types_supported")
     private String interactionTypesSupported;
 
-    /**
-     * Whether to redirect to web interface
-     */
-    @JsonProperty("redirect_to_web")
-    private String redirectToWeb;
 
     /**
      * Authorization details as per OpenID4VCI specification

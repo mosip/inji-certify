@@ -173,6 +173,10 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
     }
 
     public ResponseEntity<Object> handleOAuthControllerExceptions(Exception ex) {
+        if(ex instanceof IllegalArgumentException) {
+            VCError vcError = getVCErrorDto("invalid_request", ex.getMessage());
+            return new ResponseEntity<Object>(vcError, HttpStatus.BAD_REQUEST);
+        }
         if(ex instanceof MethodArgumentNotValidException) {
             FieldError fieldError = ((MethodArgumentNotValidException) ex).getBindingResult().getFieldError();
             String message = fieldError != null ? fieldError.getDefaultMessage() : ex.getMessage();
@@ -251,15 +255,11 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
         return errorRespDto;
     }
 
-    /**
-     * Maps internal CertifyException error codes to OAuth 2.0 error codes
-     */
     private String mapToOAuthErrorCode(String certifyErrorCode) {
         if (certifyErrorCode == null) {
             return "server_error";
         }
         
-        // Map common error codes to OAuth 2.0 equivalents
         switch (certifyErrorCode.toLowerCase()) {
             case "invalid_request":
             case "invalid_grant":
@@ -283,14 +283,13 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
             case "pkce_validation_failed":
             case "invalid_code_verifier":
                 return "invalid_request";
+            case "interaction_required":
+                return "interaction_required";
             default:
                 return "invalid_request";
         }
     }
 
-    /**
-     * Determines the appropriate HTTP status code for OAuth 2.0 error codes
-     */
     private HttpStatus getOAuthErrorStatus(String oauthErrorCode) {
         if (oauthErrorCode == null) {
             return HttpStatus.INTERNAL_SERVER_ERROR;
@@ -303,6 +302,7 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
             case "invalid_request":
             case "unsupported_grant_type":
             case "invalid_scope":
+            case "interaction_required":
                 return HttpStatus.BAD_REQUEST;
             case "unauthorized_client":
                 return HttpStatus.FORBIDDEN;

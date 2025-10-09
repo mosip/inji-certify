@@ -59,7 +59,7 @@ public interface IarService {
      */
     IarResponse generateOpenId4VpRequest(IarRequest iarRequest, String authSession) throws CertifyException;
 
-    IarPresentationResponse processVpPresentationResponse(IarPresentationRequest presentationRequest) throws CertifyException;
+    IarPresentationResponse processVpPresentation(IarPresentationRequest presentationRequest) throws CertifyException;
 
     /**
      * Handle unified IAR request
