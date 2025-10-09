@@ -39,9 +39,4 @@ COMMENT ON COLUMN credential_status_transaction.processed_time IS 'Timestamp whe
 COMMENT ON COLUMN credential_status_transaction.is_processed IS 'Indicates if the transaction has been processed by the status list batch job.';
 
 -- Create indexes for credential_status_transaction
-CREATE INDEX IF NOT EXISTS idx_cst_credential_id ON credential_status_transaction(credential_id);
-CREATE INDEX IF NOT EXISTS idx_cst_status_purpose ON credential_status_transaction(status_purpose);
-CREATE INDEX IF NOT EXISTS idx_cst_status_list_credential_id ON credential_status_transaction(status_list_credential_id);
-CREATE INDEX IF NOT EXISTS idx_cst_status_list_index ON credential_status_transaction(status_list_index);
-CREATE INDEX IF NOT EXISTS idx_cst_cr_dtimes ON credential_status_transaction(cr_dtimes);
-CREATE INDEX IF NOT EXISTS idx_cst_status_value ON credential_status_transaction(status_value);
+CREATE INDEX IF NOT EXISTS idx_cst_is_processed_created ON certify.credential_status_transaction (is_processed, cr_dtimes);

@@ -53,3 +53,13 @@ ADD COLUMN is_processed BOOLEAN NOT NULL DEFAULT FALSE;
 
 COMMENT ON COLUMN credential_status_transaction.processed_time IS 'Timestamp when this transaction was processed by status list batch job.';
 COMMENT ON COLUMN credential_status_transaction.is_processed IS 'Indicates if the transaction has been processed by the status list batch job.';
+
+CREATE INDEX IF NOT EXISTS idx_cst_is_processed_created
+ON certify.credential_status_transaction (is_processed, cr_dtimes);
+
+DROP INDEX IF EXISTS idx_cst_credential_id;
+DROP INDEX IF EXISTS idx_cst_status_purpose;
+DROP INDEX IF EXISTS idx_cst_status_list_credential_id;
+DROP INDEX IF EXISTS idx_cst_status_list_index;
+DROP INDEX IF EXISTS idx_cst_cr_dtimes;
+DROP INDEX IF EXISTS idx_cst_status_value;
