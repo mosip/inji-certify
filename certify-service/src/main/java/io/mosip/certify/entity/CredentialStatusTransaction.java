@@ -37,10 +37,7 @@ public class CredentialStatusTransaction {
     @Column(name = "cr_dtimes", nullable = false, updatable = false)
     private LocalDateTime createdDtimes;
 
-    @Column(name = "upd_dtimes")
-    private LocalDateTime updatedDtimes;
-
-    @Column(name = "processed_time")
+    @Column(name = "processed_dtimes")
     private LocalDateTime processedTime;
 
     @Column(name = "is_processed", nullable = false)
@@ -52,10 +49,5 @@ public class CredentialStatusTransaction {
         if (isProcessed == null) {
             isProcessed = Boolean.FALSE;
         }
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedDtimes = LocalDateTime.now();
     }
 }

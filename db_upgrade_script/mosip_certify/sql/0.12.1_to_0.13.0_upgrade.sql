@@ -46,16 +46,19 @@ CREATE TABLE IF NOT EXISTS certify.shedlock (
 );
 
 ALTER TABLE certify.credential_status_transaction
-ADD COLUMN processed_time TIMESTAMP NULL;
+ADD COLUMN processed_dtimes TIMESTAMP NULL;
 
 ALTER TABLE certify.credential_status_transaction
 ADD COLUMN is_processed BOOLEAN NOT NULL DEFAULT FALSE;
 
-COMMENT ON COLUMN credential_status_transaction.processed_time IS 'Timestamp when this transaction was processed by status list batch job.';
+COMMENT ON COLUMN credential_status_transaction.processed_dtimes IS 'Timestamp when this transaction was processed by status list batch job.';
 COMMENT ON COLUMN credential_status_transaction.is_processed IS 'Indicates if the transaction has been processed by the status list batch job.';
 
 CREATE INDEX IF NOT EXISTS idx_cst_is_processed_created
 ON certify.credential_status_transaction (is_processed, cr_dtimes);
+
+ALTER TABLE certify.credential_status_transaction
+DROP COLUMN IF EXISTS upd_dtimes;
 
 DROP INDEX IF EXISTS idx_cst_credential_id;
 DROP INDEX IF EXISTS idx_cst_status_purpose;

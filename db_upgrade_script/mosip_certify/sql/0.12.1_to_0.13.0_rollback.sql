@@ -47,7 +47,7 @@ ALTER TABLE certify.credential_status_transaction
 DROP TABLE IF EXISTS certify.shedlock;
 
 ALTER TABLE certify.credential_status_transaction
-DROP COLUMN IF EXISTS processed_time;
+DROP COLUMN IF EXISTS processed_dtimes;
 
 ALTER TABLE certify.credential_status_transaction
 DROP COLUMN IF EXISTS is_processed;
@@ -56,3 +56,6 @@ DROP INDEX IF EXISTS certify.idx_cst_is_processed_created;
 
 CREATE INDEX IF NOT EXISTS idx_cst_cr_dtimes ON certify.credential_status_transaction(cr_dtimes);
 CREATE INDEX IF NOT EXISTS idx_cst_status_list_credential_id ON certify.credential_status_transaction(status_list_credential_id);
+
+ALTER TABLE certify.credential_status_transaction
+ADD COLUMN IF NOT EXISTS upd_dtimes TIMESTAMP;
