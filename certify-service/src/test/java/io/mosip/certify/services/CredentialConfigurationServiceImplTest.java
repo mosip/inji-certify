@@ -505,7 +505,7 @@ public class CredentialConfigurationServiceImplTest {
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
             );
-            assertEquals("Context, credentialType, signatureAlgo and signatureCryptoSuite are mandatory for ldp_vc format", ex.getMessage());
+            assertEquals("Context, credentialType and signatureCryptoSuite are mandatory for ldp_vc format", ex.getMessage());
         }
     }
 

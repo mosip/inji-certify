@@ -111,7 +111,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         switch (credentialConfig.getCredentialFormat()) {
             case VCFormats.LDP_VC:
                 if (!LdpVcCredentialConfigValidator.isValidCheck(credentialConfig)) {
-                    throw new CertifyException("Context, credentialType, signatureAlgo and signatureCryptoSuite are mandatory for ldp_vc format");
+                    throw new CertifyException("Context, credentialType and signatureCryptoSuite are mandatory for ldp_vc format");
                 }
                 if(shouldCheckDuplicate && LdpVcCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException("Configuration already exists for the given context and credentialType");
@@ -152,7 +152,10 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
             }
 
             List<String> signatureAlgos = credentialSigningAlgValuesSupportedMap.get(signatureCryptoSuite);
-            if(signatureAlgo != null && !signatureAlgos.contains(signatureAlgo)) {
+            if(signatureAlgo == null ) {
+                signatureAlgo = signatureAlgos.getFirst();
+                credentialConfig.setSignatureAlgo(signatureAlgo);
+            } else if(!signatureAlgos.contains(signatureAlgo)) {
                 throw new CertifyException("Signature algorithm " + signatureAlgo + " is not supported for the signature crypto suite: " + signatureCryptoSuite);
             }
         }
