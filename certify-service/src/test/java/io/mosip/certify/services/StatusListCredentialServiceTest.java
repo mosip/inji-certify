@@ -164,6 +164,17 @@ public class StatusListCredentialServiceTest {
     }
 
     @Test
+    public void generateStatusListCredential_KeyAliasNotConfigured_Throws() {
+        ReflectionTestUtils.setField(service, "signatureCryptoSuite", "Ed25519Signature20201");
+        try {
+            service.generateStatusListCredential("revocation");
+            fail("Expected CertifyException");
+        } catch (CertifyException ex) {
+            assertEquals(ErrorConstants.STATUS_LIST_GENERATION_FAILED, ex.getErrorCode());
+        }
+    }
+
+    @Test
     public void findOrCreateStatusList_FindsExisting() {
         StatusListCredential slc = new StatusListCredential();
         slc.setId("id6");
