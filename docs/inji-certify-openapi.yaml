@@ -1481,10 +1481,10 @@ paths:
   '/credentials/status-list/{id}':
     get:
       tags:
-        - '[Experimental] Credential Status'
+        - 'Credential Status'
       summary: Get Status List by ID
       description: |
-        [EXPERIMENTAL FEATURE] Retrieves a specific full Status List vc JSON document by its Identifier (URL/URN/DID). This endpoint returns the raw VC content as stored.
+        Retrieves a specific full Status List vc JSON document by its Identifier (URL/URN/DID). This endpoint returns the raw VC content as stored.
       operationId: getStatusListById
       parameters:
         - name: id
@@ -1539,9 +1539,9 @@ tags:
     description: Operations for rendering template
   - name: Well-known
     description: Well-known endpoints
-  - name: '[Experimental] Credential Status'
+  - name: 'Credential Status'
     description: Operations for Credential Status
-  - name: '[Experimental] Ledger Search'
+  - name: 'Ledger Search'
     description: Operations for Ledger Search
 components:
   schemas:
@@ -2265,10 +2265,6 @@ components:
         status:
           type: boolean
           description: 'The new status value (true typically means ''status asserted'', e.g., revoked/suspended; false means ''status not asserted''). Interpretation depends on statusPurpose and system policy.'
-        indexAllocator:
-          type: string
-          nullable: true
-          description: Optional hint or identifier for index allocation strategy or service component. Usage is implementation-defined.
       required:
         - credentialId
         - credentialStatus

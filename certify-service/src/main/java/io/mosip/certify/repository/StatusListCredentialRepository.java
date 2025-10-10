@@ -18,8 +18,20 @@ public interface StatusListCredentialRepository extends JpaRepository<StatusList
      * @param statusPurpose The purpose of the status list (e.g., "revocation", "suspension")
      * @return An optional containing the first available status list credential, or empty if none found
      */
-    @Query("SELECT s FROM StatusListCredential s WHERE s.statusPurpose = :statusPurpose " +
-            "AND s.credentialStatus = :status " +
-            "ORDER BY s.createdDtimes DESC")
-    Optional<StatusListCredential> findSuitableStatusList(@Param("statusPurpose") String statusPurpose, StatusListCredential.CredentialStatus status);
+    Optional<StatusListCredential> findFirstByStatusPurposeAndCredentialStatusOrderByCreatedDtimesDesc(
+            String statusPurpose,
+            StatusListCredential.CredentialStatus credentialStatus
+    );
+
+    /**
+     * Find capacity of status list by ID
+     */
+    @Query("SELECT s.capacity FROM StatusListCredential s WHERE s.id = :id")
+    Optional<Long> findCapacityById(@Param("id") String id);
+
+    /**
+     * Find the maximum updated timestamp from all status list credentials
+     */
+    @Query("SELECT MAX(s.updatedDtimes) FROM StatusListCredential s WHERE s.updatedDtimes IS NOT NULL")
+    Optional<LocalDateTime> findMaxUpdatedTime();
 }

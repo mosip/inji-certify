@@ -120,7 +120,7 @@ public class StatusListCredentialService {
      * @return Optional containing StatusListCredential if found
      */
     public Optional<StatusListCredential> findSuitableStatusList(String statusPurpose, StatusListCredential.CredentialStatus status) {
-        return statusListCredentialRepository.findSuitableStatusList(statusPurpose, status);
+        return statusListCredentialRepository.findFirstByStatusPurposeAndCredentialStatusOrderByCreatedDtimesDesc(statusPurpose, status);
     }
 
     /**
