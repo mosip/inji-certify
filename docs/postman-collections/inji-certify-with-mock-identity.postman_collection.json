@@ -308,7 +308,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://api.qa-inji.mosip.net/v1/mock-identity-system/identity",
+							"raw": "https://api.collab.mosip.net/v1/mock-identity-system/identity",
 							"protocol": "https",
 							"host": [
 								"api",

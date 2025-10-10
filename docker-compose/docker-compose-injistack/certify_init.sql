@@ -235,7 +235,7 @@ CREATE TABLE certify.ledger (
     id SERIAL PRIMARY KEY,                          -- Auto-incrementing serial primary key
     credential_id VARCHAR(255),            -- Unique ID of the Verifiable Credential WHOSE STATUS IS BEING TRACKED
     issuer_id VARCHAR(255) NOT NULL,                -- Issuer of the TRACKED credential
-    issue_date TIMESTAMP NOT NULL,                -- Issuance date of the TRACKED credential
+    issuance_date TIMESTAMP NOT NULL,                -- Issuance date of the TRACKED credential
     expiration_date TIMESTAMP,                    -- Expiration date of the TRACKED credential, if any
     credential_type VARCHAR(100) NOT NULL,          -- Type of the TRACKED credential (e.g., 'VerifiableId')
     indexed_attributes JSONB,                       -- Optional searchable attributes from the TRACKED credential
@@ -251,7 +251,7 @@ CREATE TABLE certify.ledger (
 CREATE INDEX IF NOT EXISTS idx_ledger_credential_id ON certify.ledger(credential_id);
 CREATE INDEX IF NOT EXISTS idx_ledger_issuer_id ON certify.ledger(issuer_id);
 CREATE INDEX IF NOT EXISTS idx_ledger_credential_type ON certify.ledger(credential_type);
-CREATE INDEX IF NOT EXISTS idx_ledger_issue_date ON certify.ledger(issuance_date);
+CREATE INDEX IF NOT EXISTS idx_ledger_issuance_date ON certify.ledger(issuance_date);
 CREATE INDEX IF NOT EXISTS idx_ledger_expiration_date ON certify.ledger(expiration_date);
 CREATE INDEX IF NOT EXISTS idx_ledger_cr_dtimes ON certify.ledger(cr_dtimes);
 CREATE INDEX IF NOT EXISTS idx_gin_ledger_indexed_attrs ON certify.ledger USING GIN (indexed_attributes);
