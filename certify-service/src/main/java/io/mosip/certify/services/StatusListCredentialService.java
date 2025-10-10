@@ -1,12 +1,6 @@
 package io.mosip.certify.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jayway.jsonpath.Configuration;
-import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.Option;
 import io.mosip.certify.api.dto.VCResult;
-import io.mosip.certify.config.IndexedAttributesConfig;
-import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.constants.VCFormats;
@@ -17,12 +11,10 @@ import io.mosip.certify.entity.Ledger;
 import io.mosip.certify.entity.StatusListCredential;
 import io.mosip.certify.entity.attributes.CredentialStatusDetail;
 import io.mosip.certify.repository.LedgerRepository;
-import io.mosip.certify.repository.StatusListAvailableIndicesRepository;
 import io.mosip.certify.repository.StatusListCredentialRepository;
 import io.mosip.certify.utils.BitStringStatusListUtils;
 import io.mosip.certify.vcformatters.VCFormatter;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import lombok.extern.slf4j.Slf4j;
@@ -34,12 +26,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.*;
-
-import static io.mosip.certify.utils.LedgerUtils.extractCredentialType;
 
 /**
  * Service class for managing Status List Credentials
@@ -176,7 +165,7 @@ public class StatusListCredentialService {
 
             statusListData.put("credentialSubject", credentialSubject);
 
-            log.debug("Created status list VC structure: {}", statusListData.toString(2));
+            log.debug("Created status list VC: id={}, purpose={}", statusListId, statusPurpose);
 
             String vcDocS = addProofAndHandleResult(statusListData, ErrorConstants.VC_ISSUANCE_FAILED);
 
@@ -199,10 +188,10 @@ public class StatusListCredentialService {
 
         } catch (JSONException e) {
             log.error("JSON error while generating status list credential", e);
-            throw new CertifyException("STATUS_LIST_JSON_ERROR");
+            throw new CertifyException(ErrorConstants.STATUS_LIST_GENERATION_JSON_ERROR);
         } catch (Exception e) {
             log.error("Error generating status list credential", e);
-            throw new CertifyException("STATUS_LIST_GENERATION_FAILED");
+            throw new CertifyException(ErrorConstants.STATUS_LIST_GENERATION_FAILED);
         }
     }
 
@@ -230,13 +219,13 @@ public class StatusListCredentialService {
 
             Query nativeQuery = entityManager.createNativeQuery(insertSql);
             nativeQuery.setParameter(1, statusListCredential.getId());
-            nativeQuery.setParameter(2, statusListCredential.getCapacity());
+            nativeQuery.setParameter(2, statusListCredential.getCapacity() * 1024L * 8L); // Convert KB to bits
 
             int rowsInserted = nativeQuery.executeUpdate();
             log.info("Successfully initialized {} available indices for status list: {}", rowsInserted, statusListCredential.getId());
         } catch (Exception e) {
             log.error("Error initializing available indices for status list: {}", statusListCredential.getId(), e);
-            throw new CertifyException("STATUS_LIST_INDEX_INITIALIZATION_FAILED");
+            throw new CertifyException(ErrorConstants.STATUS_LIST_INDEX_INITIALIZATION_FAILED);
         }
     }
 
@@ -289,12 +278,10 @@ public class StatusListCredentialService {
                 vcDocument.remove("proof");
             }
 
-            // Update validFrom timestamp to current time
-            vcDocument.put("validFrom", new Date().toInstant().toString());
-            return addProofAndHandleResult(vcDocument, ErrorConstants.VC_RESIGNATION_FAILED);
+            return addProofAndHandleResult(vcDocument, ErrorConstants.VC_RESIGNING_FAILED);
         } catch (Exception e) {
             log.error("Error re-signing status list credential", e);
-            throw new CertifyException(ErrorConstants.VC_RESIGNATION_FAILED);
+            throw new CertifyException(ErrorConstants.VC_RESIGNING_FAILED);
         }
     }
 
@@ -313,7 +300,7 @@ public class StatusListCredentialService {
 
             if (assignedIndex == -1) {
                 log.error("Failed to get available index even from new status list");
-                throw new CertifyException("STATUS_LIST_INDEX_UNAVAILABLE");
+                throw new CertifyException(ErrorConstants.STATUS_LIST_INDEX_UNAVAILABLE);
             }
         }
 
@@ -329,7 +316,7 @@ public class StatusListCredentialService {
         log.info("Successfully added credential status with index {} in status list {}", assignedIndex, statusList.getId());
     }
 
-    @jakarta.transaction.Transactional
+    @Transactional
     public void storeLedgerEntry(String credentialId, String issuerId, String credentialType, CredentialStatusDetail statusDetails, Map<String, Object> indexedAttributes, LocalDateTime issuanceDate) {
         try {
             Ledger ledger = new Ledger();
@@ -359,7 +346,16 @@ public class StatusListCredentialService {
      * Helper method to add a proof to a VC and handle the result.
      */
     private String addProofAndHandleResult(JSONObject vcDocument, String errorConstant) throws CertifyException {
-        String appId = keyAliasMapper.get(signatureCryptoSuite).getFirst().getFirst();
+        List<List<String>> aliases =
+                (keyAliasMapper != null) ? keyAliasMapper.get(signatureCryptoSuite) : null;
+        if (aliases == null || aliases.isEmpty()
+                || aliases.get(0) == null || aliases.get(0).isEmpty()
+                || aliases.get(0).get(0) == null || aliases.get(0).get(0).isBlank()) {
+            log.error("No key alias configured for signature crypto suite: {}", signatureCryptoSuite);
+            throw new CertifyException(ErrorConstants.KEY_ALIAS_NOT_CONFIGURED);
+        }
+        String appId = aliases.get(0).get(0);
+
         Credential cred = credentialFactory.getCredential(VCFormats.LDP_VC)
                 .orElseThrow(() -> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
 

@@ -53,7 +53,7 @@ public class DatabaseStatusListIndexProvider implements StatusListIndexProvider 
             }
 
             StatusListCredential statusList = statusListOpt.get();
-            long physicalCapacity = statusList.getCapacity();
+            long physicalCapacity = statusList.getCapacity()*1024L*8L; // Convert KB to bits
 
             // 2. Calculate effective threshold based on usable capacity
             long effectiveThresholdCount = (long) Math.floor(physicalCapacity * (usableCapacityPercentage / 100.0));

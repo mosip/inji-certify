@@ -265,15 +265,11 @@ CREATE TABLE IF NOT EXISTS certify.credential_status_transaction (
     status_list_credential_id VARCHAR(255),       -- The ID of the status list credential involved, if any
     status_list_index BIGINT,                     -- The index on the status list, if any
     cr_dtimes TIMESTAMP NOT NULL DEFAULT NOW(),   -- Creation timestamp
-    upd_dtimes TIMESTAMP                         -- Update timestamp
+    processed_dtimes TIMESTAMP,                      -- Timestamp when processed by status list batch job
+    is_processed BOOLEAN NOT NULL DEFAULT FALSE   -- Indicates if processed by status list batch job
 );
 
-CREATE INDEX IF NOT EXISTS idx_cst_credential_id ON certify.credential_status_transaction(credential_id);
-CREATE INDEX IF NOT EXISTS idx_cst_status_purpose ON certify.credential_status_transaction(status_purpose);
-CREATE INDEX IF NOT EXISTS idx_cst_status_list_credential_id ON certify.credential_status_transaction(status_list_credential_id);
-CREATE INDEX IF NOT EXISTS idx_cst_status_list_index ON certify.credential_status_transaction(status_list_index);
-CREATE INDEX IF NOT EXISTS idx_cst_cr_dtimes ON certify.credential_status_transaction(cr_dtimes);
-CREATE INDEX IF NOT EXISTS idx_cst_status_value ON certify.credential_status_transaction(status_value);
+CREATE INDEX IF NOT EXISTS idx_cst_is_processed_created ON certify.credential_status_transaction (is_processed, cr_dtimes);
 
 CREATE TABLE certify.status_list_available_indices (
     id SERIAL PRIMARY KEY,                         -- Serial primary key
