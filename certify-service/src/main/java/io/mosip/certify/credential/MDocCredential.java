@@ -83,8 +83,6 @@ public class MDocCredential extends Credential {
 
             vcResult.setCredential(base64UrlCredential);
             vcResult.setFormat(VCFormats.MSO_MDOC);
-
-            log.info("mDoc proof generation completed successfully");
             return vcResult;
 
         } catch (Exception e) {
