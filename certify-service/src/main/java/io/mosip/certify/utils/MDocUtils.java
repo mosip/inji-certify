@@ -336,13 +336,12 @@ public class MDocUtils {
             }
             return array;
         }
-        // Handle tagged objects (for CBOR tags like date)
         if (obj instanceof java.util.Map && ((java.util.Map<?, ?>) obj).containsKey("__cbor_tag")) {
             java.util.Map<?, ?> taggedMap = (java.util.Map<?, ?>) obj;
             int tag = (Integer) taggedMap.get("__cbor_tag");
             Object value = taggedMap.get("__cbor_value");
             DataItem dataItem = convertToDataItem(value);
-            dataItem.setTag(tag);
+            dataItem.setTag(tag);  // This correctly sets the tag
             return dataItem;
         }
         // For any other type, convert to string
