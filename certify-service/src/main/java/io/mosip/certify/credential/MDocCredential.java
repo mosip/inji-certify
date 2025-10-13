@@ -74,7 +74,7 @@ public class MDocCredential extends Credential {
 
             // Create Mobile Security Object (MSO)
             Map<String, Object> mso = mDocUtils.createMobileSecurityObject(mDocJson, namespaceDigests);
-            byte[] signedMSO = MDocUtils.signMSO(mso, appID, refID, signAlgorithm, coseSignatureService);
+            byte[] signedMSO = mDocUtils.signMSO(mso, appID, refID, signAlgorithm);
             Map<String, Object> issuerSigned = MDocUtils.createIssuerSignedStructure(taggedNamespaces, signedMSO);
 
             // Encode to CBOR, then to Base64
