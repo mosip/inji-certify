@@ -160,40 +160,21 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
             }
         }
 
-//        if (!keyAliasMapper.containsKey(credentialConfig.getSignatureCryptoSuite())) {
-//            DataIntegrityProofDataIntegritySuite dataIntegrityProofDataIntegritySuite = DataIntegritySuites.DATA_INTEGRITY_SUITE_DATAINTEGRITYPROOF;
-//
-//            if (credentialConfig.getSignatureAlgo() == null || credentialConfig.getSignatureAlgo().isEmpty()) {
-//                throw new CertifyException("Signature algorithm is mandatory for the provided crypto suite: " + credentialConfig.getSignatureCryptoSuite());
-//            }
-//
-//            List<String> signatureCryptoSuitesByJwsAlgo = dataIntegrityProofDataIntegritySuite.findCryptosuitesForJwsAlgorithm(credentialConfig.getSignatureAlgo());
-//
-//            if (signatureCryptoSuitesByJwsAlgo.isEmpty()) {
-//                throw new CertifyException("Unsupported signature algorithm: " + credentialConfig.getSignatureAlgo());
-//            }
-//
-//            if (!signatureCryptoSuitesByJwsAlgo.contains(credentialConfig.getSignatureCryptoSuite())) {
-//                throw new CertifyException("Signature crypto suite " + credentialConfig.getSignatureCryptoSuite() +
-//                        " is not supported for the signature algorithm: " + credentialConfig.getSignatureAlgo());
-//            }
-//        } else {
-            List<List<String>> keyAliasList = keyAliasMapper.get(credentialConfig.getSignatureAlgo());
-            if (keyAliasList == null || keyAliasList.isEmpty()) {
-                throw new CertifyException("No key chooser configuration found for the signatureAlgo: " + credentialConfig.getSignatureCryptoSuite());
-            }
+        List<List<String>> keyAliasList = keyAliasMapper.get(credentialConfig.getSignatureAlgo());
+        if (keyAliasList == null || keyAliasList.isEmpty()) {
+            throw new CertifyException("No key chooser configuration found for the signatureAlgo: " + credentialConfig.getSignatureCryptoSuite());
+        }
 
-            boolean isMatch = keyAliasList.stream()
-                    .anyMatch(pair ->
-                            credentialConfig.getKeyManagerAppId() != null &&
-                            pair.getFirst().equals(credentialConfig.getKeyManagerAppId()) &&
-                            credentialConfig.getKeyManagerRefId() != null &&
-                            pair.getLast().equals(credentialConfig.getKeyManagerRefId()));
+        boolean isMatch = keyAliasList.stream()
+                .anyMatch(pair ->
+                        credentialConfig.getKeyManagerAppId() != null &&
+                        pair.getFirst().equals(credentialConfig.getKeyManagerAppId()) &&
+                        credentialConfig.getKeyManagerRefId() != null &&
+                        pair.getLast().equals(credentialConfig.getKeyManagerRefId()));
 
-            if (!isMatch) {
-                throw new CertifyException("No matching appId and refId found in the key chooser list.");
-            }
-//        }
+        if (!isMatch) {
+            throw new CertifyException("No matching appId and refId found in the key chooser list.");
+        }
     }
 
     @Override
