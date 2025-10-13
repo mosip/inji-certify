@@ -474,28 +474,6 @@ public class MDocUtils {
         }
     }
 
-
-    private static byte[] wrapWithCBORTag24(Map<String, Object> element) throws IOException {
-        try {
-            // First encode the element to CBOR
-            ByteArrayOutputStream innerBaos = new ByteArrayOutputStream();
-            CborEncoder innerEncoder = new CborEncoder(innerBaos);
-            innerEncoder.encode(convertToDataItem(element));
-            byte[] elementCbor = innerBaos.toByteArray();
-
-            // Then wrap that byte string in Tag 24
-            ByteArrayOutputStream outerBaos = new ByteArrayOutputStream();
-            CborEncoder outerEncoder = new CborEncoder(outerBaos);
-            ByteString wrappedBytes = new ByteString(elementCbor);
-            wrappedBytes.setTag(24);
-            outerEncoder.encode(wrappedBytes);
-
-            return outerBaos.toByteArray();
-        } catch (CborException e) {
-            throw new IOException("Failed to wrap with CBOR tag 24", e);
-        }
-    }
-
     /**
      * Creates the final IssuerSigned structure combining namespaces and issuerAuth
      */
