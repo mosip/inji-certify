@@ -39,9 +39,6 @@ WHERE credential_id IS NULL;
 ALTER TABLE certify.credential_status_transaction
     ALTER COLUMN credential_id SET NOT NULL;
 
--- Step 2: Drop shedlock table
-DROP TABLE IF EXISTS certify.shedlock;
-
 ALTER TABLE certify.credential_status_transaction
 DROP COLUMN IF EXISTS processed_dtimes;
 

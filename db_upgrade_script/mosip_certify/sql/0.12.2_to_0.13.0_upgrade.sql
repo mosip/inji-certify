@@ -28,15 +28,6 @@ ALTER TABLE certify.ledger
 ALTER TABLE certify.credential_status_transaction
     ALTER COLUMN credential_id DROP NOT NULL;
 
--- Step 2: Create shedlock table for distributed locking
-CREATE TABLE IF NOT EXISTS certify.shedlock (
-  name VARCHAR(64),
-  lock_until TIMESTAMPTZ(3) NOT NULL,
-  locked_at TIMESTAMPTZ(3) NOT NULL,
-  locked_by VARCHAR(255) NOT NULL,
-  PRIMARY KEY (name)
-);
-
 ALTER TABLE certify.credential_status_transaction
 ADD COLUMN processed_dtimes TIMESTAMP NULL;
 
