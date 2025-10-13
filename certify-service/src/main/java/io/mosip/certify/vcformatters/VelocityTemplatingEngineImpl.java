@@ -232,7 +232,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
                 log.error("SVG Template: " + templateSettings.get(Constants.RENDERING_TEMPLATE_ID) + " not available in DB", e);
             }
         }
-        if (!valueMap.has(VCDM2Constants.VALID_UNITL) && StringUtils.isNotEmpty(defaultExpiryDuration)) {
+        if (!valueMap.has(VCDM2Constants.VALID_UNTIL) && StringUtils.isNotEmpty(defaultExpiryDuration)) {
             Duration duration;
             try {
                 duration = Duration.parse(defaultExpiryDuration);
@@ -241,7 +241,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
                 duration = Duration.parse("P730D");
             }
             String expiryTime = ZonedDateTime.now(ZoneOffset.UTC).plusSeconds(duration.getSeconds()).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            finalTemplate.put(VCDM2Constants.VALID_UNITL, expiryTime);
+            finalTemplate.put(VCDM2Constants.VALID_UNTIL, expiryTime);
         }
         if (!valueMap.has(VCDM2Constants.VALID_FROM)) {
             finalTemplate.put(VCDM2Constants.VALID_FROM, ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN)));
@@ -323,19 +323,11 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
                 log.error("Template: " + templateInput.get(Constants.RENDERING_TEMPLATE_ID) + " not available in DB", e);
             }
         }
-        if (!(templateInput.containsKey(VCDM2Constants.VALID_FROM)
-                && templateInput.containsKey(VCDM2Constants.VALID_UNITL))) {
-            String time = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            // hardcoded time
-            String expiryTime = ZonedDateTime.now(ZoneOffset.UTC).plusYears(2).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            finalTemplate.put(VCDM2Constants.VALID_FROM, time);
-            finalTemplate.put(VCDM2Constants.VALID_UNITL, expiryTime);
-        }
         VelocityContext context = new VelocityContext(finalTemplate);
         engine.evaluate(context, writer, /*logTag */ templateName, vcTemplateString); // use vcTemplateString
         JSONObject jsonObject = new JSONObject(writer.toString());
-        if (StringUtils.isNotEmpty(idPrefix)) {
-            jsonObject.put(VCDMConstants.ID, idPrefix + UUID.randomUUID());
+        if (templateInput.containsKey(VCDMConstants.CREDENTIAL_ID)) {
+            jsonObject.put(VCDMConstants.ID, templateInput.get(VCDMConstants.CREDENTIAL_ID));
         }
         if(templateInput.containsKey(VCDM2Constants.CREDENTIAL_STATUS) && templateName.contains(VCDM2Constants.URL)) {
             jsonObject.put(VCDM2Constants.CREDENTIAL_STATUS, templateInput.get(VCDM2Constants.CREDENTIAL_STATUS));

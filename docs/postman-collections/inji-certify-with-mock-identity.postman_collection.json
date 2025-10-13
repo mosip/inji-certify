@@ -308,7 +308,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://api.qa-inji.mosip.net/v1/mock-identity-system/identity",
+							"raw": "https://api.collab.mosip.net/v1/mock-identity-system/identity",
 							"protocol": "https",
 							"host": [
 								"api",
@@ -2581,12 +2581,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{certifyurl}}/credential-configurations/.well-known/openid-credential-issuer",
+							"raw": "{{certifyurl}}/.well-known/openid-credential-issuer",
 							"host": [
 								"{{certifyurl}}"
 							],
 							"path": [
-								"credential-configurations",
 								".well-known",
 								"openid-credential-issuer"
 							]

@@ -19,7 +19,7 @@ public class CredentialStatusTransaction {
     @Column(name = "transaction_log_id")
     private Long transactionLogId;
 
-    @Column(name = "credential_id", length = 255, nullable = false)
+    @Column(name = "credential_id", length = 255)
     private String credentialId;
 
     @Column(name = "status_purpose", length = 100)
@@ -37,16 +37,17 @@ public class CredentialStatusTransaction {
     @Column(name = "cr_dtimes", nullable = false, updatable = false)
     private LocalDateTime createdDtimes;
 
-    @Column(name = "upd_dtimes")
-    private LocalDateTime updatedDtimes;
+    @Column(name = "processed_dtimes")
+    private LocalDateTime processedTime;
+
+    @Column(name = "is_processed", nullable = false)
+    private Boolean isProcessed = Boolean.FALSE;
 
     @PrePersist
     protected void onCreate() {
         createdDtimes = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedDtimes = LocalDateTime.now();
+        if (isProcessed == null) {
+            isProcessed = Boolean.FALSE;
+        }
     }
 }

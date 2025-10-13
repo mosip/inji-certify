@@ -7,7 +7,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -23,16 +22,4 @@ public interface StatusListCredentialRepository extends JpaRepository<StatusList
             "AND s.credentialStatus = :status " +
             "ORDER BY s.createdDtimes DESC")
     Optional<StatusListCredential> findSuitableStatusList(@Param("statusPurpose") String statusPurpose, StatusListCredential.CredentialStatus status);
-
-    /**
-     * Find capacity of status list by ID
-     */
-    @Query("SELECT s.capacity FROM StatusListCredential s WHERE s.id = :id")
-    Optional<Long> findCapacityById(@Param("id") String id);
-
-    /**
-     * Find the maximum updated timestamp from all status list credentials
-     */
-    @Query("SELECT MAX(s.updatedDtimes) FROM StatusListCredential s WHERE s.updatedDtimes IS NOT NULL")
-    Optional<LocalDateTime> findMaxUpdatedTime();
 }

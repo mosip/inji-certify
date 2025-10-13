@@ -26,7 +26,7 @@ You have two options for the certify plugin which gives Verifiable Credentials o
 
 ## Directory Structure Setup
 
-Create the following directory structure before proceeding:
+Create the following directory structure in your local codebase before proceeding inside the `docker-compose` directory:
 
 ```
 docker-compose-injistack/
@@ -84,9 +84,11 @@ public interface VCIssuancePlugin {
 
 ## Certificate Setup
 
+**Note**: This step is required only if you are using the Inji Web application for your usecase.
+
 - Create a `certs/` directory inside the docker-compose-injistack directory.
 - Place your PKCS12 keystore file in the `certs` directory as `oidckeystore.p12`. This is required for the Inji Web application and other applications which rely on Mimoto as a BFF and it can be configured as per these [docs](https://docs.inji.io/inji-wallet/inji-mobile/technical-overview/customization-overview/credential_providers#onboarding-mimoto-as-oidc-client-for-a-new-issuer) after the file is downloaded in the `certs` directory as shown in the directory tree.
-- Update `mosip.oidc.p12.password` to the password of the `oidckeystore.p12` file in the Mimoto [Config file](./config/mimoto-default.properties).
+- Update `oidc_p12_password` env variable under `mimoto-service` in the [docker-compose.yaml](./docker-compose.yaml) to the password of the `oidckeystore.p12` file.
 
 
 ## Configuration Setup
@@ -123,6 +125,9 @@ Ensure all configuration files are properly updated in the config directory if y
 
 - certify-default.properties
 - certify-csvdp-farmer.properties
+
+Following files are optional and can be used to configure the Inji Web application for your usecase, if you are not using web application, you can skip these files:
+
 - mimoto-default.properties
 - mimoto-issuers-config.json
 - mimoto-trusted-verifiers.json
@@ -133,6 +138,8 @@ Ensure all configuration files are properly updated in the config directory if y
 ## Running the Application
 
 ### Start the Services
+
+**Note** : In case you want to access only certify service, you can modify the docker-compose.yaml to remove the other services and run only the `certify` service.
 
 ```bash
 docker-compose up -d
@@ -164,7 +171,7 @@ The following services will be available:
     - View credential status at a Standards Compliant VC Verfier such as [Inji Verify](https://injiverify.collab.mosip.net).
 3. As a sample, you can try downloading VC with the UIN `5860356276` or `2154189532`. The OTP for this purpose can be given as `111111` which is the Mock OTP for eSignet Collab Environment. The above sample identities should be present at both the Identity Provider(here, National ID) and at the Local Issuer(here, Agriculture Department or Transport Department).
 
-### Advanced Users: Accessing the Credentials via the Postman Interface
+### Running only certify service - Accessing the Credentials via the Postman Interface
 
 1. Open Postman
 2. Import the [Mock Collections & Environments](../../docs/postman-collections/) from here, make appropriate changes to the Credential Type and contexts as per your VerifiableCredential and the configured WellKnown.
@@ -172,6 +179,8 @@ The following services will be available:
     - Download credentials
     - View credential status
     - Manage your digital identity
+
+Refer to [API documentation](https://mosip.stoplight.io/docs/inji-certify) for detailed usage instructions and examples.
 
 
 ## Advanced Configurations
@@ -193,6 +202,15 @@ The digest multibase can be hardcoded or if the template has been stored with Ce
 2. Deploying Inji Certify over a public URL, _using ngrok to demonstrate this_
 
 - change the value of the `mosipbox_public_url` to point to the public URL in ./docker-compose.yaml where Certify service will be accessible, when using locally with ngrok create an HTTP tunnel for the port `8090`, which is the port for Certify and access the Inji Web at http://localhost:3001, to access Inji Web you may have to create another client with the Authorization service and more configuration should be required at Mimoto side
+
+3. To configure your own Google Auth Credentials:
+- Refer to the steps documented in the `mimoto` for the same. [GOOGLE_AUTH_SETUP](https://github.com/mosip/mimoto/blob/master/docker-compose/README.md#how-to-create-google-client-credentials)
+- Replace the placeholders under the `mimoto-service` in the `docker-compose.yml` file with the generated credentials:
+
+   ```yaml
+       environment:
+         - GOOGLE_OAUTH_CLIENT_ID=<your-client-id>
+         - GOOGLE_OAUTH_CLIENT_SECRET=<your-client-secret>
 
 ## Troubleshooting
 

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.vcformatters.VCFormatter;
+import io.mosip.kernel.signature.dto.JWSSignatureRequestDtoV2;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
 import io.mosip.kernel.signature.service.SignatureService;
@@ -101,7 +102,7 @@ public class SDJWTTest {
         JWTSignatureResponseDto signedResponse = new JWTSignatureResponseDto();
         signedResponse.setJwtSignedData(signedJwt);
 
-        when(mockSignatureService.jwsSign(any(JWSSignatureRequestDto.class))).thenReturn(signedResponse);
+        when(mockSignatureService.jwsSignV2(any(JWSSignatureRequestDtoV2.class))).thenReturn(signedResponse);
 
         VCResult<?> result = sdjwt.addProof(unsignedVC, null, "RS256", "appID", "refID", "url", "Ed25519Signature2020");
 
@@ -115,16 +116,16 @@ public class SDJWTTest {
 
         JWTSignatureResponseDto response = new JWTSignatureResponseDto();
         response.setJwtSignedData("signed.jwt");
-        when(mockSignatureService.jwsSign(any(JWSSignatureRequestDto.class))).thenReturn(response);
+        when(mockSignatureService.jwsSignV2(any(JWSSignatureRequestDtoV2.class))).thenReturn(response);
 
         sdjwt.addProof(unsignedVC, null, "PS256", "myApp", "myRef", "https://example.com", "Ed25519Signature2020");
 
-        verify(mockSignatureService).jwsSign(argThat(dto ->
+        verify(mockSignatureService).jwsSignV2(argThat(dto ->
                 "myApp".equals(dto.getApplicationId()) &&
                         "myRef".equals(dto.getReferenceId()) &&
                         "PS256".equals(dto.getSignAlgorithm()) &&
                         dto.getIncludePayload() &&
-                        dto.getIncludeCertificate() &&
+                        dto.getIncludeCertificateChain() &&
                         "".equals(dto.getCertificateUrl())
         ));
     }

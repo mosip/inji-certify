@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -108,7 +109,7 @@ public class CredentialLedgerServiceTestImpl {
         ledger.setId(1L);
         ledger.setCredentialId(credentialId);
         ledger.setIssuerId("did:web:Nandeesh778.github.io:local-test:certify_did");
-        ledger.setIssueDate(OffsetDateTime.parse("2025-06-10T10:23:24Z"));
+        ledger.setIssuanceDate(LocalDateTime.parse("2025-06-10T10:23:24"));
         ledger.setExpirationDate(null);
         ledger.setCredentialType("VerifiableCredential");
         ledger.setCredentialStatusDetails(new ArrayList<>());

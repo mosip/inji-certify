@@ -1,6 +1,6 @@
 WellKnownEndpoint:
    InjiCertify_WellKnownEndpoint_LandRegistry_all_Valid_Smoke:
-      endPoint: $INJICERTIFYBASEURL$/v1/certify/issuance/.well-known/openid-credential-issuer?version=latest
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/.well-known/openid-credential-issuer?version=latest
       uniqueIdentifier: TC_InjiCertify_WellKnownEndpoint_LandRegistry_01
       description: WellKnownEndpoint for Land registry with all valid details
       role: resident
@@ -14,7 +14,7 @@ WellKnownEndpoint:
 }'
 
    InjiCertify_WellKnownEndpoint_VD11_LandRegistry_all_Valid_Smoke:
-      endPoint: $INJICERTIFYBASEURL$/v1/certify/issuance/.well-known/openid-credential-issuer?version=vd11
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/.well-known/openid-credential-issuer?version=vd11
       uniqueIdentifier: TC_InjiCertify_WellKnownEndpoint_LandRegistry_02
       description: WellKnownEndpoint VD11 for Land registry with all valid details
       role: resident
@@ -28,7 +28,7 @@ WellKnownEndpoint:
 }'
 
    InjiCertify_WellKnownEndpoint_VD12_LandRegistry_all_Valid_Smoke:
-      endPoint: $INJICERTIFYBASEURL$/v1/certify/issuance/.well-known/openid-credential-issuer?version=vd12
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/.well-known/openid-credential-issuer?version=vd12
       uniqueIdentifier: TC_InjiCertify_WellKnownEndpoint_LandRegistry_03
       description: WellKnownEndpoint VD12 for Land registry with all valid details
       role: resident
@@ -42,7 +42,7 @@ WellKnownEndpoint:
 }'
 
    InjiCertify_WellKnownEndpoint_Mock_all_Valid_Smoke:
-      endPoint: $INJICERTIFYBASEURL$/v1/certify/issuance/.well-known/openid-credential-issuer?version=latest
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/.well-known/openid-credential-issuer?version=latest
       uniqueIdentifier: TC_InjiCertify_WellKnownEndpoint_Mock_01
       description: WellKnownEndpoint for Mock with all valid details
       role: resident
@@ -56,7 +56,7 @@ WellKnownEndpoint:
 }'
 
    InjiCertify_WellKnownEndpoint_VD11_Mock_all_Valid_Smoke:
-      endPoint: $INJICERTIFYBASEURL$/v1/certify/issuance/.well-known/openid-credential-issuer?version=vd11
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/.well-known/openid-credential-issuer?version=vd11
       uniqueIdentifier: TC_InjiCertify_WellKnownEndpoint_Mock_02
       description: WellKnownEndpoint VD11 for Mock with all valid details
       role: resident
@@ -70,7 +70,7 @@ WellKnownEndpoint:
 }'
 
    InjiCertify_WellKnownEndpoint_VD12_Mock_all_Valid_Smoke:
-      endPoint: $INJICERTIFYBASEURL$/v1/certify/issuance/.well-known/openid-credential-issuer?version=vd12
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/.well-known/openid-credential-issuer?version=vd12
       uniqueIdentifier: TC_InjiCertify_WellKnownEndpoint_Mock_03
       description: WellKnownEndpoint VD12 for Mock with all valid details
       role: resident
@@ -84,7 +84,7 @@ WellKnownEndpoint:
 }'
 
    InjiCertify_WellKnownEndpoint_MosipID_all_Valid_Smoke:
-      endPoint: $INJICERTIFYBASEURL$/v1/certify/issuance/.well-known/openid-credential-issuer?version=latest
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/.well-known/openid-credential-issuer?version=latest
       uniqueIdentifier: TC_InjiCertify_WellKnownEndpoint_MosipID_01
       description: WellKnownEndpoint for MosipID with all valid details
       role: resident
@@ -98,7 +98,7 @@ WellKnownEndpoint:
 }'
 
    InjiCertify_WellKnownEndpoint_VD11_MosipID_all_Valid_Smoke:
-      endPoint: $INJICERTIFYBASEURL$/v1/certify/issuance/.well-known/openid-credential-issuer?version=vd11
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/.well-known/openid-credential-issuer?version=vd11
       uniqueIdentifier: TC_InjiCertify_WellKnownEndpoint_MosipID_02
       description: WellKnownEndpoint VD11 for MosipID with all valid details
       role: resident
@@ -112,7 +112,7 @@ WellKnownEndpoint:
 }'
 
    InjiCertify_WellKnownEndpoint_VD12_MosipID_all_Valid_Smoke:
-      endPoint: $INJICERTIFYBASEURL$/v1/certify/issuance/.well-known/openid-credential-issuer?version=vd12
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/.well-known/openid-credential-issuer?version=vd12
       uniqueIdentifier: TC_InjiCertify_WellKnownEndpoint_MosipID_03
       description: WellKnownEndpoint VD12 for MosipID with all valid details
       role: resident
@@ -126,7 +126,7 @@ WellKnownEndpoint:
 }'
 
    InjiCertify_WellKnownEndpoint_Sunbird_all_Valid_Smoke:
-      endPoint: $INJICERTIFYBASEURL$/v1/certify/issuance/.well-known/openid-credential-issuer?version=latest
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/.well-known/openid-credential-issuer?version=latest
       uniqueIdentifier: TC_InjiCertify_WellKnownEndpoint_Sunbird_01
       description: WellKnownEndpoint for sunbird with all valid details
       role: resident
@@ -140,7 +140,7 @@ WellKnownEndpoint:
 }'
 
    InjiCertify_WellKnownEndpoint_VD11_Sunbird_all_Valid_Smoke:
-      endPoint: $INJICERTIFYBASEURL$/v1/certify/issuance/.well-known/openid-credential-issuer?version=vd11
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/.well-known/openid-credential-issuer?version=vd11
       uniqueIdentifier: TC_InjiCertify_WellKnownEndpoint_Sunbird_02
       description: WellKnownEndpoint VD11 for sunbird with all valid details
       role: resident
@@ -154,7 +154,7 @@ WellKnownEndpoint:
 }'
 
    InjiCertify_WellKnownEndpoint_VD12_Sunbird_all_Valid_Smoke:
-      endPoint: $INJICERTIFYBASEURL$/v1/certify/issuance/.well-known/openid-credential-issuer?version=vd12
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/.well-known/openid-credential-issuer?version=vd12
       uniqueIdentifier: TC_InjiCertify_WellKnownEndpoint_Sunbird_03
       description: WellKnownEndpoint VD12 for sunbird with all valid details
       role: resident
@@ -167,7 +167,7 @@ WellKnownEndpoint:
       output: '{
 }'
    InjiCertify_WellKnownEndpoint_mDoc_all_Valid_Smoke:
-      endPoint: $INJICERTIFYBASEURL$/v1/certify/issuance/.well-known/openid-credential-issuer?version=latest
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/.well-known/openid-credential-issuer?version=latest
       uniqueIdentifier: TC_InjiCertify_WellKnownEndpoint_mDoc_01
       description: WellKnownEndpoint for mDoc with all valid details
       role: resident
@@ -181,7 +181,7 @@ WellKnownEndpoint:
 }'
 
    InjiCertify_WellKnownEndpoint_VD11_mDoc_all_Valid_Smoke:
-      endPoint: $INJICERTIFYBASEURL$/v1/certify/issuance/.well-known/openid-credential-issuer?version=vd11
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/.well-known/openid-credential-issuer?version=vd11
       uniqueIdentifier: TC_InjiCertify_WellKnownEndpoint_mDoc_02
       description: WellKnownEndpoint VD11 for mDoc with all valid details
       role: resident
@@ -195,7 +195,7 @@ WellKnownEndpoint:
 }'
 
    InjiCertify_WellKnownEndpoint_VD12_mDoc_all_Valid_Smoke:
-      endPoint: $INJICERTIFYBASEURL$/v1/certify/issuance/.well-known/openid-credential-issuer?version=vd12
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/.well-known/openid-credential-issuer?version=vd12
       uniqueIdentifier: TC_InjiCertify_WellKnownEndpoint_mDoc_03
       description: WellKnownEndpoint VD12 for mDoc with all valid details
       role: resident

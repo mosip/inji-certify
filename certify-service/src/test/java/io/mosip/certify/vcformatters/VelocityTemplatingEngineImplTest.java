@@ -6,6 +6,7 @@ import java.util.*;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCDM2Constants;
+import io.mosip.certify.core.constants.VCDMConstants;
 import io.mosip.certify.core.exception.CertifyException;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -340,9 +341,9 @@ public class VelocityTemplatingEngineImplTest {
 
         JSONObject jsonResult = new JSONObject(result);
         assertTrue(jsonResult.has(VCDM2Constants.VALID_FROM)); // Check using constant
-        assertTrue(jsonResult.has(VCDM2Constants.VALID_UNITL)); // Check using constant
+        assertTrue(jsonResult.has(VCDM2Constants.VALID_UNTIL)); // Check using constant
         assertNotNull(jsonResult.getString(VCDM2Constants.VALID_FROM));
-        assertNotNull(jsonResult.getString(VCDM2Constants.VALID_UNITL));
+        assertNotNull(jsonResult.getString(VCDM2Constants.VALID_UNTIL));
     }
 
     @Test
@@ -402,7 +403,8 @@ public class VelocityTemplatingEngineImplTest {
         templateInput.put("region", "VC3 Region");   // String, template vc3 quotes it.
         templateInput.put("face", "data:image/gif;base64,vc3facedata");
         templateInput.put(VCDM2Constants.VALID_FROM, "2023-03-01T00:00:00Z"); // Explicitly provide
-        templateInput.put(VCDM2Constants.VALID_UNITL, "2025-03-01T00:00:00Z"); // Explicitly provide
+        templateInput.put(VCDM2Constants.VALID_UNTIL, "2025-03-01T00:00:00Z"); // Explicitly provide
+        templateInput.put(VCDMConstants.CREDENTIAL_ID, "uurn:uuid:");
 
 
         String result = formatter.format(templateInput); // Uses the overloaded format(Map)
