@@ -301,8 +301,7 @@ CREATE INDEX IF NOT EXISTS idx_sla_is_assigned ON certify.status_list_available_
 CREATE INDEX IF NOT EXISTS idx_sla_list_index ON certify.status_list_available_indices(list_index);
 CREATE INDEX IF NOT EXISTS idx_sla_cr_dtimes ON certify.status_list_available_indices(cr_dtimes);
 
--- Create shedlock table for distributed locking
-CREATE TABLE IF NOT EXISTS shedlock (
+CREATE TABLE IF NOT EXISTS certify.shedlock (
   name VARCHAR(64),
   lock_until TIMESTAMPTZ(3) NOT NULL,
   locked_at TIMESTAMPTZ(3) NOT NULL,
