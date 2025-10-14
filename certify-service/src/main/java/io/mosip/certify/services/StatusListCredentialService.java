@@ -71,7 +71,7 @@ public class StatusListCredentialService {
     @Value("#{${mosip.certify.statuslist.size-in-kb:16}}") // value in kb
     private long statusListSizeInKB;
 
-    @Value("#{${mosip.certify.signature-cryptosuite.key-alias-mapper}}")
+    @Value("#{${mosip.certify.signature-algo.key-alias-mapper}}")
     private Map<String, List<List<String>>> keyAliasMapper;
 
     @Value("${mosip.certify.status-list.key-manager-ref-id:ED25519_SIGN}")

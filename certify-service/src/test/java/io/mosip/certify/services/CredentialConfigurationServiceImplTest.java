@@ -50,9 +50,9 @@ public class CredentialConfigurationServiceImplTest {
     @Before
     public void setup() {
         Map<String, List<List<String>>> keyAliasMapper = new HashMap<>();
-        keyAliasMapper.put("Ed25519Signature2020", List.of(
+        keyAliasMapper.put("EdDSA", List.of(
                 List.of("TEST2019", "TEST2019-REF")));
-        keyAliasMapper.put("RsaSignature2018", List.of());
+//        keyAliasMapper.put("RS256", List.of());
 
         MockitoAnnotations.openMocks(this);
         credentialConfig = new CredentialConfig();
@@ -91,8 +91,11 @@ public class CredentialConfigurationServiceImplTest {
         ReflectionTestUtils.setField(credentialConfigurationService, "servletPath", "v1/test");
         ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "DataProvider");
         ReflectionTestUtils.setField(credentialConfigurationService, "issuerDisplay", List.of(Map.of()));
+        Map<String, List<String>> credentialSigningMap = new LinkedHashMap<>();
+        credentialSigningMap.put("Ed25519Signature2020", List.of("EdDSA"));
+        credentialSigningMap.put("RsaSignature2018", List.of("RS256"));
         ReflectionTestUtils.setField(credentialConfigurationService, "cryptographicBindingMethodsSupportedMap", new LinkedHashMap<>());
-        ReflectionTestUtils.setField(credentialConfigurationService, "credentialSigningAlgValuesSupportedMap", new LinkedHashMap<>());
+        ReflectionTestUtils.setField(credentialConfigurationService, "credentialSigningAlgValuesSupportedMap", credentialSigningMap);
         ReflectionTestUtils.setField(credentialConfigurationService, "proofTypesSupported", new LinkedHashMap<>());
         ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper", keyAliasMapper);
     }
@@ -102,6 +105,7 @@ public class CredentialConfigurationServiceImplTest {
         credentialConfigurationDTO.setContextURLs(List.of("https://www.w3.org/2018/credentials/v1"));
         credentialConfigurationDTO.setCredentialTypes(List.of("VerifiableCredential", "TestVerifiableCredential"));
         credentialConfigurationDTO.setSignatureCryptoSuite("Ed25519Signature2020");
+        credentialConfigurationDTO.setSignatureAlgo("EdDSA");
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(credentialConfig);
         when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(credentialConfig);
 
@@ -583,7 +587,7 @@ public class CredentialConfigurationServiceImplTest {
         CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
         dto.setCredentialFormat("ldp_vc");
         dto.setVcTemplate("test_template");
-        dto.setSignatureCryptoSuite("ecdsa-rdfc-2019");
+        dto.setSignatureCryptoSuite("test-rdfc-2019");
         dto.setSignatureAlgo("");
         try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
             mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
@@ -591,7 +595,7 @@ public class CredentialConfigurationServiceImplTest {
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
             );
-            assertEquals("Signature algorithm is mandatory for the provided crypto suite: ecdsa-rdfc-2019", ex.getMessage());
+            assertEquals("Unsupported signature crypto suite: test-rdfc-2019", ex.getMessage());
         }
     }
 
@@ -630,6 +634,7 @@ public class CredentialConfigurationServiceImplTest {
         dto.setContextURLs(List.of("https://www.w3.org/2018/credentials/v1"));
         dto.setCredentialTypes(List.of("VerifiableCredential"));
         dto.setSignatureCryptoSuite("Ed25519Signature2020");
+        dto.setSignatureAlgo("EdDSA");
         dto.setKeyManagerAppId("TEST2019");
         dto.setKeyManagerRefId("TEST2019-REF");
         ReflectionTestUtils.setField(credentialConfigurationService, "allowedCredentialStatusPurposes", List.of("purpose1", "purpose2"));
@@ -648,6 +653,7 @@ public class CredentialConfigurationServiceImplTest {
         dto.setContextURLs(List.of("https://www.w3.org/2018/credentials/v1"));
         dto.setCredentialTypes(List.of("VerifiableCredential"));
         dto.setSignatureCryptoSuite("Ed25519Signature2020");
+        dto.setSignatureAlgo("EdDSA");
         dto.setKeyManagerAppId("TEST2019");
         dto.setKeyManagerRefId("TEST2019-REF");
         ReflectionTestUtils.setField(credentialConfigurationService, "allowedCredentialStatusPurposes", List.of("purpose1", "purpose2"));
@@ -666,6 +672,7 @@ public class CredentialConfigurationServiceImplTest {
         dto.setContextURLs(List.of("https://www.w3.org/2018/credentials/v1"));
         dto.setCredentialTypes(List.of("VerifiableCredential"));
         dto.setSignatureCryptoSuite("Ed25519Signature2020");
+        dto.setSignatureAlgo("EdDSA");
         dto.setKeyManagerAppId("TEST2019");
         dto.setKeyManagerRefId("TEST2019-REF");
         ReflectionTestUtils.setField(credentialConfigurationService, "allowedCredentialStatusPurposes", List.of("purpose1", "purpose2"));
@@ -682,13 +689,14 @@ public class CredentialConfigurationServiceImplTest {
         dto.setContextURLs(List.of("https://www.w3.org/2018/credentials/v1"));
         dto.setCredentialTypes(List.of("VerifiableCredential", "TestVerifiableCredential"));
         dto.setSignatureCryptoSuite("RsaSignature2018");
+        dto.setSignatureAlgo("RS256");
         dto.setVcTemplate("test_template");
 
         // Act & Assert
         CertifyException exception = assertThrows(CertifyException.class, () ->
                 credentialConfigurationService.addCredentialConfiguration(dto)
         );
-        assertEquals("No key chooser configuration found for the signature crypto suite: RsaSignature2018", exception.getMessage());
+        assertEquals("No key chooser configuration found for the signatureAlgo: RsaSignature2018", exception.getMessage());
     }
 
     @Test
@@ -698,6 +706,7 @@ public class CredentialConfigurationServiceImplTest {
         dto.setContextURLs(List.of("https://www.w3.org/2018/credentials/v1"));
         dto.setCredentialTypes(List.of("VerifiableCredential", "TestVerifiableCredential"));
         dto.setSignatureCryptoSuite("Ed25519Signature2020");
+        dto.setSignatureAlgo("EdDSA");
         dto.setKeyManagerAppId("appId");
         dto.setKeyManagerRefId("refId");
         dto.setVcTemplate("test_template");
