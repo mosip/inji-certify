@@ -19,8 +19,6 @@ import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.proofgenerators.CoseSign1ProofGenerator;
 import io.mosip.certify.proofgenerators.ProofGeneratorFactory;
-import io.mosip.kernel.signature.dto.CoseSignRequestDto;
-import io.mosip.kernel.signature.service.CoseSignatureService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -33,7 +31,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -65,8 +62,8 @@ public class MDocUtils {
             JsonNode templateNode = objectMapper.readTree(templatedJSON);
             Map<String, Object> finalMDoc = new HashMap<>();
 
-            if (templateNode.has("validityInfo")) {
-                JsonNode validityInfo = templateNode.get("validityInfo");
+            if (templateNode.has(Constants.VALIDITY_INFO)) {
+                JsonNode validityInfo = templateNode.get(Constants.VALIDITY_INFO);
                 Map<String, Object> validity = objectMapper.convertValue(validityInfo, Map.class);
 
                 if (validity.containsKey(VCDM2Constants.VALID_FROM)) {
@@ -88,31 +85,31 @@ public class MDocUtils {
                 }
 
 
-                finalMDoc.put("validityInfo", validity);
+                finalMDoc.put(Constants.VALIDITY_INFO, validity);
             }
 
-            if (templateParams.containsKey("didUrl")) {
-                finalMDoc.put("_issuer", templateParams.get("didUrl"));
-            }
-            if (templateParams.containsKey("_holderId")) {
-                finalMDoc.put("_holderId", templateParams.get("_holderId"));
+            if (templateParams.containsKey(Constants.DID_URL)) {
+                finalMDoc.put("_issuer", templateParams.get(Constants.DID_URL));
             }
             if (templateNode.has(Constants.DOCTYPE)) {
                 finalMDoc.put("_docType", templateNode.get(Constants.DOCTYPE).asText());
+            }
+            if (templateParams.containsKey(Constants._HOLDER_ID)) {
+                finalMDoc.put(Constants._HOLDER_ID, templateParams.get(Constants._HOLDER_ID));
             }
 
             // Process namespaces
             Map<String, Object> nameSpaces = new HashMap<>();
 
-            if (templateNode.has("nameSpaces")) {
-                JsonNode nameSpacesNode = templateNode.get("nameSpaces");
+            if (templateNode.has(Constants.NAMESPACES)) {
+                JsonNode nameSpacesNode = templateNode.get(Constants.NAMESPACES);
                 nameSpacesNode.fieldNames().forEachRemaining(namespaceName -> {
                     JsonNode namespaceItems = nameSpacesNode.get(namespaceName);
                     List<Map<String, Object>> processedItems = processNamespaceItems(namespaceItems);
                     nameSpaces.put(namespaceName, processedItems);
                 });
             }
-            finalMDoc.put("nameSpaces", nameSpaces);
+            finalMDoc.put(Constants.NAMESPACES, nameSpaces);
 
             return finalMDoc;
 
@@ -131,17 +128,17 @@ public class MDocUtils {
         // First, add all items from template
         for (JsonNode item : namespaceItems) {
             Map<String, Object> itemMap = new HashMap<>();
-            itemMap.put("digestID", item.get("digestID").asInt());
-            itemMap.put("elementIdentifier", item.get("elementIdentifier").asText());
+            itemMap.put(Constants.DIGEST_ID, item.get(Constants.DIGEST_ID).asInt());
+            itemMap.put(Constants.ELEMENT_IDENTIFIER, item.get(Constants.ELEMENT_IDENTIFIER).asText());
 
             // Handle elementValue which could be string or complex object
-            JsonNode elementValue = item.get("elementValue");
+            JsonNode elementValue = item.get(Constants.ELEMENT_VALUE);
             if (elementValue.isTextual()) {
-                itemMap.put("elementValue", elementValue.asText());
+                itemMap.put(Constants.ELEMENT_VALUE, elementValue.asText());
             } else {
                 // Convert complex objects (like driving_privileges)
                 Object value = objectMapper.convertValue(elementValue, Object.class);
-                itemMap.put("elementValue", value);
+                itemMap.put(Constants.ELEMENT_VALUE, value);
             }
 
             processedItems.add(itemMap);
@@ -154,7 +151,7 @@ public class MDocUtils {
      * Adds random salts to each data element
      */
     public static Map<String, Object> addRandomSalts(Map<String, Object> mDocJson) {
-        Map<String, Object> nameSpaces = (Map<String, Object>) mDocJson.get("nameSpaces");
+        Map<String, Object> nameSpaces = (Map<String, Object>) mDocJson.get(Constants.NAMESPACES);
         Map<String, Object> saltedNamespaces = new HashMap<>();
 
         for (Map.Entry<String, Object> namespaceEntry : nameSpaces.entrySet()) {
@@ -213,7 +210,7 @@ public class MDocUtils {
                 new CborEncoder(outerBaos).encode(tag24Value);
                 byte[] taggedCbor = outerBaos.toByteArray();
                 byte[] digest = MessageDigest.getInstance("SHA-256").digest(taggedCbor);
-                digestMap.put((Integer) element.get("digestID"), digest);
+                digestMap.put((Integer) element.get(Constants.DIGEST_ID), digest);
             }
 
             taggedNamespaces.put(namespaceName, taggedElements);
@@ -336,10 +333,10 @@ public class MDocUtils {
             }
             return array;
         }
-        if (obj instanceof java.util.Map && ((java.util.Map<?, ?>) obj).containsKey("__cbor_tag")) {
+        if (obj instanceof java.util.Map && ((java.util.Map<?, ?>) obj).containsKey(Constants.__CBOR_TAG)) {
             java.util.Map<?, ?> taggedMap = (java.util.Map<?, ?>) obj;
-            int tag = (Integer) taggedMap.get("__cbor_tag");
-            Object value = taggedMap.get("__cbor_value");
+            int tag = (Integer) taggedMap.get(Constants.__CBOR_TAG);
+            Object value = taggedMap.get(Constants.__CBOR_VALUE);
             DataItem dataItem = convertToDataItem(value);
             dataItem.setTag(tag);  // This correctly sets the tag
             return dataItem;
@@ -366,8 +363,8 @@ public class MDocUtils {
      */
     private static Map<String, Object> createCBORTaggedDate(String dateStr) {
         Map<String, Object> taggedDate = new HashMap<>();
-        taggedDate.put("__cbor_tag", 1004);
-        taggedDate.put("__cbor_value", dateStr);
+        taggedDate.put(Constants.__CBOR_TAG, 1004);
+        taggedDate.put(Constants.__CBOR_VALUE, dateStr);
         return taggedDate;
     }
 
@@ -385,7 +382,7 @@ public class MDocUtils {
         Map<String, Object> nameSpacesDigests = new HashMap<>();
         nameSpacesDigests.putAll(namespaceDigests);
         Map<String, Object> valueDigests = new HashMap<>();
-        valueDigests.put("nameSpaces", nameSpacesDigests);
+        valueDigests.put(Constants.NAMESPACES, nameSpacesDigests);
 
         mso.put("valueDigests", valueDigests);
         mso.put(Constants.DOCTYPE, mDocJson.get("_docType"));
@@ -393,15 +390,15 @@ public class MDocUtils {
         // Create validity info with current timestamp
         Map<String, Object> validityInfo = new HashMap<>();
 
-        if (mDocJson.containsKey("validityInfo")) {
-            Map<String, Object> originalValidity = (Map<String, Object>) mDocJson.get("validityInfo");
+        if (mDocJson.containsKey(Constants.VALIDITY_INFO)) {
+            Map<String, Object> originalValidity = (Map<String, Object>) mDocJson.get(Constants.VALIDITY_INFO);
             validityInfo.put(VCDM2Constants.VALID_FROM, originalValidity.get(VCDM2Constants.VALID_FROM));
             validityInfo.put(VCDM2Constants.VALID_UNITL, originalValidity.get(VCDM2Constants.VALID_UNITL));
         }
-        mso.put("validityInfo", validityInfo);
+        mso.put(Constants.VALIDITY_INFO, validityInfo);
 
         // Add device key info (placeholder - should be from wallet's PoP)
-        Map<String, Object> deviceKeyInfo = createDeviceKeyInfo(mDocJson.get("_holderId"));
+        Map<String, Object> deviceKeyInfo = createDeviceKeyInfo(mDocJson.get(Constants._HOLDER_ID));
         mso.put("deviceKeyInfo", deviceKeyInfo);
 
         return mso;
@@ -482,7 +479,7 @@ public class MDocUtils {
             var di = new CborDecoder(new java.io.ByteArrayInputStream(signedMSO)).decode();
             DataItem cose = di.isEmpty() ? SimpleValue.NULL : di.get(0);
             Map<String, Object> out = new HashMap<>();
-            out.put("nameSpaces", processedNamespaces);
+            out.put(Constants.NAMESPACES, processedNamespaces);
             out.put("issuerAuth", cose);
             return out;
         } catch (CborException e) {
