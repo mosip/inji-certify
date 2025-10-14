@@ -31,9 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 public class MDocCredential extends Credential {
 
     @Autowired
-    CoseSignatureService coseSignatureService;
-
-    @Autowired
     private ObjectMapper objectMapper;
 
     @Autowired
