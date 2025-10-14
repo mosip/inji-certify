@@ -8,7 +8,6 @@ import io.mosip.certify.config.MDocConfig;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.proofgenerators.ProofGeneratorFactory;
 import io.mosip.kernel.signature.dto.CoseSignRequestDto;
 import io.mosip.kernel.signature.dto.CoseSignResponseDto;
 import io.mosip.kernel.signature.service.CoseSignatureService;
@@ -44,7 +43,7 @@ import static org.mockito.Mockito.*;
  * - Error handling and edge cases
  */
 @RunWith(MockitoJUnitRunner.class)
-public class MDocUtilsTest {
+public class MDocProcessorTest {
 
     @Mock
     private MDocConfig mDocConfig;
@@ -53,14 +52,14 @@ public class MDocUtilsTest {
     private CoseSignatureService coseSignatureService;
 
     @InjectMocks
-    private MDocUtils mDocUtils;
+    private MDocProcessor mDocProcessor;
 
     private ObjectMapper objectMapper;
 
     @Before
     public void setUp() {
         objectMapper = new ObjectMapper();
-        ReflectionTestUtils.setField(mDocUtils, "objectMapper", objectMapper);
+        ReflectionTestUtils.setField(mDocProcessor, "objectMapper", objectMapper);
 
         // Setup default mock behavior
         when(mDocConfig.getValidityPeriodYears()).thenReturn(5);
@@ -91,7 +90,7 @@ public class MDocUtilsTest {
         templateParams.put("didUrl", "https://issuer.example.com/did");
         templateParams.put("_holderId", "did:jwk:test123");
 
-        Map<String, Object> result = mDocUtils.processTemplatedJson(templatedJSON, templateParams);
+        Map<String, Object> result = mDocProcessor.processTemplatedJson(templatedJSON, templateParams);
 
         assertNotNull("Result should not be null", result);
         assertEquals("DocType should match", "org.iso.18013.5.1.mDL", result.get("_docType"));
@@ -120,7 +119,7 @@ public class MDocUtilsTest {
                 + "\"nameSpaces\": {}"
                 + "}";
 
-        Map<String, Object> result = mDocUtils.processTemplatedJson(templatedJSON, new HashMap<>());
+        Map<String, Object> result = mDocProcessor.processTemplatedJson(templatedJSON, new HashMap<>());
 
         Map<String, Object> validityInfo = (Map<String, Object>) result.get("validityInfo");
         assertNotNull("ValidityInfo should not be null", validityInfo);
@@ -157,7 +156,7 @@ public class MDocUtilsTest {
                 + "}"
                 + "}";
 
-        Map<String, Object> result = mDocUtils.processTemplatedJson(templatedJSON, new HashMap<>());
+        Map<String, Object> result = mDocProcessor.processTemplatedJson(templatedJSON, new HashMap<>());
 
         Map<String, Object> nameSpaces = (Map<String, Object>) result.get("nameSpaces");
         List<Map<String, Object>> items = (List<Map<String, Object>>) nameSpaces.get("org.iso.18013.5.1");
@@ -175,7 +174,7 @@ public class MDocUtilsTest {
     public void processTemplatedJson_InvalidJson_ReturnsEmptyMap() {
         String invalidJSON = "{invalid json}";
 
-        Map<String, Object> result = mDocUtils.processTemplatedJson(invalidJSON, new HashMap<>());
+        Map<String, Object> result = mDocProcessor.processTemplatedJson(invalidJSON, new HashMap<>());
 
         assertNotNull("Result should not be null", result);
         assertTrue("Result should be empty", result.isEmpty());
@@ -195,7 +194,7 @@ public class MDocUtilsTest {
                 + "}"
                 + "}";
 
-        Map<String, Object> result = mDocUtils.processTemplatedJson(templatedJSON, new HashMap<>());
+        Map<String, Object> result = mDocProcessor.processTemplatedJson(templatedJSON, new HashMap<>());
 
         Map<String, Object> nameSpaces = (Map<String, Object>) result.get("nameSpaces");
         assertTrue("Should contain ISO namespace", nameSpaces.containsKey("org.iso.18013.5.1"));
@@ -208,7 +207,7 @@ public class MDocUtilsTest {
     public void addRandomSalts_AddsRandomBytesToAllElements() {
         Map<String, Object> mDocJson = createTestMDocJson();
 
-        Map<String, Object> result = MDocUtils.addRandomSalts(mDocJson);
+        Map<String, Object> result = MDocProcessor.addRandomSalts(mDocJson);
 
         assertNotNull("Result should not be null", result);
         List<Map<String, Object>> saltedElements = (List<Map<String, Object>>) result.get("org.iso.18013.5.1");
@@ -233,7 +232,7 @@ public class MDocUtilsTest {
         nameSpaces.put("org.iso.18013.5.1", elements);
         mDocJson.put("nameSpaces", nameSpaces);
 
-        Map<String, Object> result = MDocUtils.addRandomSalts(mDocJson);
+        Map<String, Object> result = MDocProcessor.addRandomSalts(mDocJson);
         List<Map<String, Object>> saltedElements = (List<Map<String, Object>>) result.get("org.iso.18013.5.1");
 
         Set<String> saltSet = new HashSet<>();
@@ -249,7 +248,7 @@ public class MDocUtilsTest {
     public void addRandomSalts_PreservesOriginalData() {
         Map<String, Object> mDocJson = createTestMDocJson();
 
-        Map<String, Object> result = MDocUtils.addRandomSalts(mDocJson);
+        Map<String, Object> result = MDocProcessor.addRandomSalts(mDocJson);
         List<Map<String, Object>> saltedElements = (List<Map<String, Object>>) result.get("org.iso.18013.5.1");
 
         assertEquals("family_name", saltedElements.get(0).get("elementIdentifier"));
@@ -267,7 +266,7 @@ public class MDocUtilsTest {
         saltedNamespaces.put("org.iso.18013.5.1", elements);
 
         Map<String, Map<Integer, byte[]>> namespaceDigests = new HashMap<>();
-        Map<String, Object> result = MDocUtils.calculateDigests(saltedNamespaces, namespaceDigests);
+        Map<String, Object> result = MDocProcessor.calculateDigests(saltedNamespaces, namespaceDigests);
 
         assertNotNull("Result should not be null", result);
         assertTrue("Should contain namespace", result.containsKey("org.iso.18013.5.1"));
@@ -289,7 +288,7 @@ public class MDocUtilsTest {
         saltedNamespaces.put("org.iso.18013.5.1", elements);
 
         Map<String, Map<Integer, byte[]>> namespaceDigests = new HashMap<>();
-        MDocUtils.calculateDigests(saltedNamespaces, namespaceDigests);
+        MDocProcessor.calculateDigests(saltedNamespaces, namespaceDigests);
 
         Map<Integer, byte[]> digests = namespaceDigests.get("org.iso.18013.5.1");
         assertEquals("Should have 5 digests", 5, digests.size());
@@ -308,7 +307,7 @@ public class MDocUtilsTest {
         saltedNamespaces.put("org.iso.18013.5.1", elements);
 
         Map<String, Map<Integer, byte[]>> namespaceDigests = new HashMap<>();
-        Map<String, Object> result = MDocUtils.calculateDigests(saltedNamespaces, namespaceDigests);
+        Map<String, Object> result = MDocProcessor.calculateDigests(saltedNamespaces, namespaceDigests);
 
         List<Object> taggedElements = (List<Object>) result.get("org.iso.18013.5.1");
         assertNotNull("Tagged elements should not be null", taggedElements);
@@ -334,13 +333,13 @@ public class MDocUtilsTest {
         saltedNamespaces.put("test.namespace", Collections.singletonList(element));
 
         Map<String, Map<Integer, byte[]>> namespaceDigests = new HashMap<>();
-        MDocUtils.calculateDigests(saltedNamespaces, namespaceDigests);
+        MDocProcessor.calculateDigests(saltedNamespaces, namespaceDigests);
 
         byte[] digest = namespaceDigests.get("test.namespace").get(0);
 
         // Verify digest is deterministic for same input
         Map<String, Map<Integer, byte[]>> namespaceDigests2 = new HashMap<>();
-        MDocUtils.calculateDigests(saltedNamespaces, namespaceDigests2);
+        MDocProcessor.calculateDigests(saltedNamespaces, namespaceDigests2);
         byte[] digest2 = namespaceDigests2.get("test.namespace").get(0);
 
         assertArrayEquals("Digests should be deterministic", digest, digest2);
@@ -355,7 +354,7 @@ public class MDocUtilsTest {
         data.put("number", 42);
         data.put("boolean", true);
 
-        byte[] result = MDocUtils.encodeToCBOR(data);
+        byte[] result = MDocProcessor.encodeToCBOR(data);
 
         assertNotNull("Result should not be null", result);
         assertTrue("Result should have data", result.length > 0);
@@ -371,7 +370,7 @@ public class MDocUtilsTest {
         Map<String, Object> data = new HashMap<>();
         data.put("bytes", testBytes);
 
-        byte[] result = MDocUtils.encodeToCBOR(data);
+        byte[] result = MDocProcessor.encodeToCBOR(data);
 
         assertNotNull("Result should not be null", result);
 
@@ -392,7 +391,7 @@ public class MDocUtilsTest {
         data.put("outer", nested);
         data.put("list", Arrays.asList(1, 2, 3));
 
-        byte[] result = MDocUtils.encodeToCBOR(data);
+        byte[] result = MDocProcessor.encodeToCBOR(data);
 
         assertNotNull("Result should not be null", result);
         assertTrue("Result should have data", result.length > 0);
@@ -403,7 +402,7 @@ public class MDocUtilsTest {
         Map<String, Object> data = new HashMap<>();
         data.put("birthDate", "1990-08-25");
 
-        byte[] result = MDocUtils.encodeToCBOR(data);
+        byte[] result = MDocProcessor.encodeToCBOR(data);
 
         assertNotNull("Result should not be null", result);
         assertTrue("Result should have data", result.length > 0);
@@ -430,7 +429,7 @@ public class MDocUtilsTest {
         data.put("list", Arrays.asList(1, 2, 3));
         data.put("map", Collections.singletonMap("nested", "value"));
 
-        byte[] result = MDocUtils.encodeToCBOR(data);
+        byte[] result = MDocProcessor.encodeToCBOR(data);
 
         assertNotNull("Result should not be null", result);
         assertTrue("Result should have data", result.length > 0);
@@ -439,7 +438,7 @@ public class MDocUtilsTest {
     @Test
     public void encodeToCBOR_NullInput_HandlesGracefully() throws Exception {
         // Null is handled by preprocessForCBOR and converted to SimpleValue.NULL
-        byte[] result = MDocUtils.encodeToCBOR(Collections.singletonMap("nullKey", null));
+        byte[] result = MDocProcessor.encodeToCBOR(Collections.singletonMap("nullKey", null));
 
         assertNotNull("Result should not be null", result);
         assertTrue("Result should have data", result.length > 0);
@@ -460,7 +459,7 @@ public class MDocUtilsTest {
             Map<String, Object> data = new HashMap<>();
             data.put("date", date);
 
-            byte[] encoded = MDocUtils.encodeToCBOR(data);
+            byte[] encoded = MDocProcessor.encodeToCBOR(data);
             assertNotNull("Should encode date: " + date, encoded);
 
             // Decode and verify date was tagged
@@ -490,7 +489,7 @@ public class MDocUtilsTest {
             Map<String, Object> data = new HashMap<>();
             data.put("text", nonDate);
 
-            byte[] encoded = MDocUtils.encodeToCBOR(data);
+            byte[] encoded = MDocProcessor.encodeToCBOR(data);
             assertNotNull("Should encode non-date: " + nonDate, encoded);
 
             // These should be encoded as regular strings without tag 1004
@@ -515,7 +514,7 @@ public class MDocUtilsTest {
         mDocJson.put("_holderId", didJwk);
 
         // Test through public method
-        Map<String, Object> mso = mDocUtils.createMobileSecurityObject(
+        Map<String, Object> mso = mDocProcessor.createMobileSecurityObject(
                 mDocJson, new HashMap<>()
         );
 
@@ -544,7 +543,7 @@ public class MDocUtilsTest {
         Map<String, Object> mDocJson = new HashMap<>();
         mDocJson.put("_holderId", didJwk);
 
-        Map<String, Object> mso = mDocUtils.createMobileSecurityObject(mDocJson, new HashMap<>());
+        Map<String, Object> mso = mDocProcessor.createMobileSecurityObject(mDocJson, new HashMap<>());
         Map<String, Object> deviceKeyInfo = (Map<String, Object>) mso.get("deviceKeyInfo");
         Map<Object, Object> deviceKey = (Map<Object, Object>) deviceKeyInfo.get("deviceKey");
 
@@ -562,7 +561,7 @@ public class MDocUtilsTest {
         Map<String, Object> mDocJson = new HashMap<>();
         mDocJson.put("_holderId", didJwk);
 
-        Map<String, Object> mso = mDocUtils.createMobileSecurityObject(mDocJson, new HashMap<>());
+        Map<String, Object> mso = mDocProcessor.createMobileSecurityObject(mDocJson, new HashMap<>());
         Map<String, Object> deviceKeyInfo = (Map<String, Object>) mso.get("deviceKeyInfo");
         Map<Object, Object> deviceKey = (Map<Object, Object>) deviceKeyInfo.get("deviceKey");
 
@@ -580,7 +579,7 @@ public class MDocUtilsTest {
         Map<String, Object> mDocJson = new HashMap<>();
         mDocJson.put("_holderId", didJwk);
 
-        mDocUtils.createMobileSecurityObject(mDocJson, new HashMap<>());
+        mDocProcessor.createMobileSecurityObject(mDocJson, new HashMap<>());
     }
 
     @Test
@@ -595,7 +594,7 @@ public class MDocUtilsTest {
         Map<String, Object> mDocJson = new HashMap<>();
         mDocJson.put("_holderId", didJwk);
 
-        Map<String, Object> mso = mDocUtils.createMobileSecurityObject(mDocJson, new HashMap<>());
+        Map<String, Object> mso = mDocProcessor.createMobileSecurityObject(mDocJson, new HashMap<>());
         Map<String, Object> deviceKeyInfo = (Map<String, Object>) mso.get("deviceKeyInfo");
         Map<Object, Object> deviceKey = (Map<Object, Object>) deviceKeyInfo.get("deviceKey");
 
@@ -624,7 +623,7 @@ public class MDocUtilsTest {
         digests.put(1, new byte[32]);
         namespaceDigests.put("org.iso.18013.5.1", digests);
 
-        Map<String, Object> result = mDocUtils.createMobileSecurityObject(mDocJson, namespaceDigests);
+        Map<String, Object> result = mDocProcessor.createMobileSecurityObject(mDocJson, namespaceDigests);
 
         assertNotNull("MSO should not be null", result);
         assertEquals("Version should match config", "1.0", result.get("version"));
@@ -652,7 +651,7 @@ public class MDocUtilsTest {
         digests2.put(0, new byte[32]);
         namespaceDigests.put("namespace2", digests2);
 
-        Map<String, Object> result = mDocUtils.createMobileSecurityObject(mDocJson, namespaceDigests);
+        Map<String, Object> result = mDocProcessor.createMobileSecurityObject(mDocJson, namespaceDigests);
 
         Map<String, Object> valueDigests = (Map<String, Object>) result.get("valueDigests");
         assertNotNull("ValueDigests should not be null", valueDigests);
@@ -678,7 +677,7 @@ public class MDocUtilsTest {
         validityInfo.put(VCDM2Constants.VALID_UNITL, validUntil);
         mDocJson.put("validityInfo", validityInfo);
 
-        Map<String, Object> result = mDocUtils.createMobileSecurityObject(mDocJson, new HashMap<>());
+        Map<String, Object> result = mDocProcessor.createMobileSecurityObject(mDocJson, new HashMap<>());
 
         Map<String, Object> resultValidity = (Map<String, Object>) result.get("validityInfo");
         assertEquals("ValidFrom should match", validFrom, resultValidity.get(VCDM2Constants.VALID_FROM));
@@ -702,7 +701,7 @@ public class MDocUtilsTest {
         when(coseSignatureService.coseSign1(any(CoseSignRequestDto.class)))
                 .thenReturn(mockResponse);
 
-        byte[] result = mDocUtils.signMSO(mso, "testApp", "testRef", "ES256");
+        byte[] result = mDocProcessor.signMSO(mso, "testApp", "testRef", "ES256");
 
         assertNotNull("Result should not be null", result);
         assertTrue("Result should have data", result.length > 0);
@@ -724,7 +723,7 @@ public class MDocUtilsTest {
         when(coseSignatureService.coseSign1(any(CoseSignRequestDto.class)))
                 .thenThrow(new CertifyException("Signing failed"));
 
-        mDocUtils.signMSO(mso, "app", "ref", "ES256");
+        mDocProcessor.signMSO(mso, "app", "ref", "ES256");
     }
 
     // ==================== IssuerSigned Structure Tests ====================
@@ -751,7 +750,7 @@ public class MDocUtilsTest {
         new CborEncoder(baos).encode(coseArray);
         byte[] signedMSO = baos.toByteArray();
 
-        Map<String, Object> result = MDocUtils.createIssuerSignedStructure(processedNamespaces, signedMSO);
+        Map<String, Object> result = MDocProcessor.createIssuerSignedStructure(processedNamespaces, signedMSO);
 
         assertNotNull("Result should not be null", result);
         assertTrue("Should have nameSpaces", result.containsKey("nameSpaces"));
@@ -775,7 +774,7 @@ public class MDocUtilsTest {
         new CborEncoder(baos).encode(coseArray);
         byte[] signedMSO = baos.toByteArray();
 
-        Map<String, Object> result = MDocUtils.createIssuerSignedStructure(processedNamespaces, signedMSO);
+        Map<String, Object> result = MDocProcessor.createIssuerSignedStructure(processedNamespaces, signedMSO);
 
         assertNotNull("Result should not be null", result);
         Map<String, Object> nameSpaces = (Map<String, Object>) result.get("nameSpaces");
@@ -789,7 +788,7 @@ public class MDocUtilsTest {
         // Use bytes that will cause CborException - incomplete CBOR structure
         byte[] invalidCBOR = new byte[]{(byte)0x9f}; // Start of indefinite-length array with no end
 
-        MDocUtils.createIssuerSignedStructure(processedNamespaces, invalidCBOR);
+        MDocProcessor.createIssuerSignedStructure(processedNamespaces, invalidCBOR);
     }
     // ==================== Integration Tests ====================
 
@@ -808,9 +807,9 @@ public class MDocUtilsTest {
         ));
         mDocJson.put("nameSpaces", nameSpaces);
 
-        Map<String, Object> saltedNamespaces = MDocUtils.addRandomSalts(mDocJson);
+        Map<String, Object> saltedNamespaces = MDocProcessor.addRandomSalts(mDocJson);
         Map<String, Map<Integer, byte[]>> namespaceDigests = new HashMap<>();
-        MDocUtils.calculateDigests(saltedNamespaces, namespaceDigests);
+        MDocProcessor.calculateDigests(saltedNamespaces, namespaceDigests);
 
         assertEquals("Should have 2 namespaces", 2, namespaceDigests.size());
         assertTrue("Should have ISO namespace", namespaceDigests.containsKey("org.iso.18013.5.1"));
@@ -826,7 +825,7 @@ public class MDocUtilsTest {
         nameSpaces.put("org.iso.18013.5.1", new ArrayList<>());
         mDocJson.put("nameSpaces", nameSpaces);
 
-        Map<String, Object> result = MDocUtils.addRandomSalts(mDocJson);
+        Map<String, Object> result = MDocProcessor.addRandomSalts(mDocJson);
 
         assertNotNull("Result should not be null", result);
         assertTrue("Should have namespace", result.containsKey("org.iso.18013.5.1"));
@@ -840,7 +839,7 @@ public class MDocUtilsTest {
         saltedNamespaces.put("org.iso.18013.5.1", new ArrayList<>());
 
         Map<String, Map<Integer, byte[]>> namespaceDigests = new HashMap<>();
-        Map<String, Object> result = MDocUtils.calculateDigests(saltedNamespaces, namespaceDigests);
+        Map<String, Object> result = MDocProcessor.calculateDigests(saltedNamespaces, namespaceDigests);
 
         assertNotNull("Result should not be null", result);
         assertTrue("Should have namespace", result.containsKey("org.iso.18013.5.1"));
@@ -854,7 +853,7 @@ public class MDocUtilsTest {
         data.put("nullField", null);
         data.put("normalField", "value");
 
-        byte[] result = MDocUtils.encodeToCBOR(data);
+        byte[] result = MDocProcessor.encodeToCBOR(data);
 
         assertNotNull("Result should not be null", result);
 
@@ -873,7 +872,7 @@ public class MDocUtilsTest {
         data.put("maxLong", Long.MAX_VALUE);
         data.put("minLong", Long.MIN_VALUE);
 
-        byte[] result = MDocUtils.encodeToCBOR(data);
+        byte[] result = MDocProcessor.encodeToCBOR(data);
 
         assertNotNull("Result should not be null", result);
         assertTrue("Result should have data", result.length > 0);
@@ -886,7 +885,7 @@ public class MDocUtilsTest {
         data.put("negative", -2.5);
         data.put("zero", 0.0);
 
-        byte[] result = MDocUtils.encodeToCBOR(data);
+        byte[] result = MDocProcessor.encodeToCBOR(data);
 
         assertNotNull("Result should not be null", result);
         assertTrue("Result should have data", result.length > 0);
@@ -901,7 +900,7 @@ public class MDocUtilsTest {
         data.put("negative", -42);
         data.put("zero", 0);
 
-        byte[] encoded = MDocUtils.encodeToCBOR(data);
+        byte[] encoded = MDocProcessor.encodeToCBOR(data);
         List<DataItem> decoded = new CborDecoder(new ByteArrayInputStream(encoded)).decode();
 
         assertNotNull("Decoded data should not be null", decoded);
@@ -914,7 +913,7 @@ public class MDocUtilsTest {
         data.put("trueValue", true);
         data.put("falseValue", false);
 
-        byte[] encoded = MDocUtils.encodeToCBOR(data);
+        byte[] encoded = MDocProcessor.encodeToCBOR(data);
         List<DataItem> decoded = new CborDecoder(new ByteArrayInputStream(encoded)).decode();
 
         co.nstant.in.cbor.model.Map map = (co.nstant.in.cbor.model.Map) decoded.get(0);
@@ -931,7 +930,7 @@ public class MDocUtilsTest {
         Map<String, Object> data = new HashMap<>();
         data.put("list", Arrays.asList("a", "b", "c"));
 
-        byte[] encoded = MDocUtils.encodeToCBOR(data);
+        byte[] encoded = MDocProcessor.encodeToCBOR(data);
         List<DataItem> decoded = new CborDecoder(new ByteArrayInputStream(encoded)).decode();
 
         co.nstant.in.cbor.model.Map map = (co.nstant.in.cbor.model.Map) decoded.get(0);
@@ -946,7 +945,7 @@ public class MDocUtilsTest {
         when(mDocConfig.getValidityPeriodYears()).thenReturn(10);
 
         String template = "{\"validityInfo\": {\"validFrom\": \"${_validFrom}\", \"validUntil\": \"${_validUntil}\"}}";
-        Map<String, Object> result = mDocUtils.processTemplatedJson(template, new HashMap<>());
+        Map<String, Object> result = mDocProcessor.processTemplatedJson(template, new HashMap<>());
 
         Map<String, Object> validityInfo = (Map<String, Object>) result.get("validityInfo");
         String validUntil = (String) validityInfo.get(VCDM2Constants.VALID_UNITL);
@@ -964,7 +963,7 @@ public class MDocUtilsTest {
         mDocJson.put("_docType", "test");
         mDocJson.put("_holderId", createTestDidJwk());
 
-        Map<String, Object> mso = mDocUtils.createMobileSecurityObject(mDocJson, new HashMap<>());
+        Map<String, Object> mso = mDocProcessor.createMobileSecurityObject(mDocJson, new HashMap<>());
 
         assertEquals("MSO version should match config", "2.0", mso.get("version"));
     }
@@ -977,7 +976,7 @@ public class MDocUtilsTest {
         mDocJson.put("_docType", "test");
         mDocJson.put("_holderId", createTestDidJwk());
 
-        Map<String, Object> mso = mDocUtils.createMobileSecurityObject(mDocJson, new HashMap<>());
+        Map<String, Object> mso = mDocProcessor.createMobileSecurityObject(mDocJson, new HashMap<>());
 
         assertEquals("Digest algorithm should match config", "SHA-512", mso.get("digestAlgorithm"));
     }
@@ -990,7 +989,7 @@ public class MDocUtilsTest {
         processedNamespaces.put("org.iso.18013.5.1", new ArrayList<>());
 
         byte[] signedMSO = createMockCoseSign1();
-        Map<String, Object> issuerSigned = MDocUtils.createIssuerSignedStructure(processedNamespaces, signedMSO);
+        Map<String, Object> issuerSigned = MDocProcessor.createIssuerSignedStructure(processedNamespaces, signedMSO);
 
         assertTrue("Must have nameSpaces field", issuerSigned.containsKey("nameSpaces"));
         assertTrue("Must have issuerAuth field", issuerSigned.containsKey("issuerAuth"));
@@ -1003,7 +1002,7 @@ public class MDocUtilsTest {
         mDocJson.put("_docType", "org.iso.18013.5.1.mDL");
         mDocJson.put("_holderId", createTestDidJwk());
 
-        Map<String, Object> mso = mDocUtils.createMobileSecurityObject(mDocJson, new HashMap<>());
+        Map<String, Object> mso = mDocProcessor.createMobileSecurityObject(mDocJson, new HashMap<>());
 
         assertTrue("Must have version", mso.containsKey("version"));
         assertTrue("Must have digestAlgorithm", mso.containsKey("digestAlgorithm"));

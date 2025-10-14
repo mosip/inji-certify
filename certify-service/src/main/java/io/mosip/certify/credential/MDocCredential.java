@@ -10,8 +10,7 @@ import java.util.*;
 
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.utils.MDocUtils;
-import io.mosip.kernel.signature.service.CoseSignatureService;
+import io.mosip.certify.utils.MDocProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -34,7 +33,7 @@ public class MDocCredential extends Credential {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private MDocUtils mDocUtils;
+    private MDocProcessor mDocProcessor;
 
     public MDocCredential(VCFormatter vcFormatter, SignatureService signatureService) {
         super(vcFormatter, signatureService);
@@ -49,7 +48,7 @@ public class MDocCredential extends Credential {
     public String createCredential(Map<String, Object> templateParams, String templateName) {
         try {
             String templatedJSON = super.createCredential(templateParams, templateName);
-            Map<String, Object> finalMDoc = mDocUtils.processTemplatedJson(templatedJSON, templateParams);
+            Map<String, Object> finalMDoc = mDocProcessor.processTemplatedJson(templatedJSON, templateParams);
             return objectMapper.writeValueAsString(finalMDoc);
 
         } catch (Exception e) {
@@ -65,17 +64,17 @@ public class MDocCredential extends Credential {
 
             // Parse the input mDoc JSON
             Map<String, Object> mDocJson = objectMapper.readValue(vcToSign, Map.class);
-            Map<String, Object> saltedNamespaces = MDocUtils.addRandomSalts(mDocJson);
+            Map<String, Object> saltedNamespaces = MDocProcessor.addRandomSalts(mDocJson);
             Map<String, Map<Integer, byte[]>> namespaceDigests = new HashMap<>();
-            Map<String, Object> taggedNamespaces = MDocUtils.calculateDigests(saltedNamespaces, namespaceDigests);
+            Map<String, Object> taggedNamespaces = MDocProcessor.calculateDigests(saltedNamespaces, namespaceDigests);
 
             // Create Mobile Security Object (MSO)
-            Map<String, Object> mso = mDocUtils.createMobileSecurityObject(mDocJson, namespaceDigests);
-            byte[] signedMSO = mDocUtils.signMSO(mso, appID, refID, signAlgorithm);
-            Map<String, Object> issuerSigned = MDocUtils.createIssuerSignedStructure(taggedNamespaces, signedMSO);
+            Map<String, Object> mso = mDocProcessor.createMobileSecurityObject(mDocJson, namespaceDigests);
+            byte[] signedMSO = mDocProcessor.signMSO(mso, appID, refID, signAlgorithm);
+            Map<String, Object> issuerSigned = MDocProcessor.createIssuerSignedStructure(taggedNamespaces, signedMSO);
 
             // Encode to CBOR, then to Base64
-            byte[] cborIssuerSigned = MDocUtils.encodeToCBOR(issuerSigned);
+            byte[] cborIssuerSigned = MDocProcessor.encodeToCBOR(issuerSigned);
             String base64UrlCredential = Base64.getUrlEncoder().withoutPadding().encodeToString(cborIssuerSigned);
 
             vcResult.setCredential(base64UrlCredential);

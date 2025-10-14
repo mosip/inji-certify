@@ -4,17 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.utils.MDocUtils;
+import io.mosip.certify.utils.MDocProcessor;
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.kernel.signature.service.SignatureService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.*;
 
@@ -46,7 +44,7 @@ public class MDocCredentialTest {
     private ObjectMapper objectMapper;
 
     @Mock
-    private MDocUtils mDocUtils;
+    private MDocProcessor mDocProcessor;
 
     @Before
     public void setUp() {
@@ -86,7 +84,7 @@ public class MDocCredentialTest {
         String expectedResult = "{\"_docType\":\"org.iso.18013.5.1.mDL\",\"nameSpaces\":{}}";
 
         when(vcFormatter.format(templateParams)).thenReturn(templatedJSON);
-        when(mDocUtils.processTemplatedJson(templatedJSON, templateParams)).thenReturn(finalMDoc);
+        when(mDocProcessor.processTemplatedJson(templatedJSON, templateParams)).thenReturn(finalMDoc);
         when(objectMapper.writeValueAsString(finalMDoc)).thenReturn(expectedResult);
 
         String result = mDocCredential.createCredential(templateParams, templateName);
@@ -95,7 +93,7 @@ public class MDocCredentialTest {
         assertEquals("Result should match expected JSON", expectedResult, result);
 
         verify(vcFormatter).format(templateParams);
-        verify(mDocUtils).processTemplatedJson(templatedJSON, templateParams);
+        verify(mDocProcessor).processTemplatedJson(templatedJSON, templateParams);
         verify(objectMapper).writeValueAsString(finalMDoc);
     }
 
@@ -115,13 +113,13 @@ public class MDocCredentialTest {
         finalMDoc.put("nameSpaces", nameSpaces);
 
         when(vcFormatter.format(templateParams)).thenReturn(templatedJSON);
-        when(mDocUtils.processTemplatedJson(templatedJSON, templateParams)).thenReturn(finalMDoc);
+        when(mDocProcessor.processTemplatedJson(templatedJSON, templateParams)).thenReturn(finalMDoc);
         when(objectMapper.writeValueAsString(finalMDoc)).thenReturn("{}");
 
         String result = mDocCredential.createCredential(templateParams, templateName);
 
         assertNotNull("Result should not be null", result);
-        verify(mDocUtils).processTemplatedJson(templatedJSON, templateParams);
+        verify(mDocProcessor).processTemplatedJson(templatedJSON, templateParams);
     }
 
     @Test(expected = CertifyException.class)
@@ -142,7 +140,7 @@ public class MDocCredentialTest {
         String templatedJSON = "{\"docType\":\"org.iso.18013.5.1.mDL\"}";
 
         when(vcFormatter.format(templateParams)).thenReturn(templatedJSON);
-        when(mDocUtils.processTemplatedJson(templatedJSON, templateParams))
+        when(mDocProcessor.processTemplatedJson(templatedJSON, templateParams))
                 .thenThrow(new RuntimeException("Processing failed"));
 
         mDocCredential.createCredential(templateParams, templateName);
@@ -156,7 +154,7 @@ public class MDocCredentialTest {
         Map<String, Object> finalMDoc = new HashMap<>();
 
         when(vcFormatter.format(templateParams)).thenReturn(templatedJSON);
-        when(mDocUtils.processTemplatedJson(templatedJSON, templateParams)).thenReturn(finalMDoc);
+        when(mDocProcessor.processTemplatedJson(templatedJSON, templateParams)).thenReturn(finalMDoc);
         when(objectMapper.writeValueAsString(finalMDoc))
                 .thenThrow(new RuntimeException("Serialization failed"));
 
@@ -182,18 +180,18 @@ public class MDocCredentialTest {
         Map<String, Object> issuerSigned = createTestIssuerSigned();
         byte[] cborIssuerSigned = new byte[]{5, 6, 7, 8};
 
-        try (MockedStatic<MDocUtils> mockedStatic = mockStatic(MDocUtils.class)) {
+        try (MockedStatic<MDocProcessor> mockedStatic = mockStatic(MDocProcessor.class)) {
             when(objectMapper.readValue(vcToSign, Map.class)).thenReturn(mDocJson);
-            mockedStatic.when(() -> MDocUtils.addRandomSalts(mDocJson)).thenReturn(saltedNamespaces);
-            mockedStatic.when(() -> MDocUtils.calculateDigests(eq(saltedNamespaces), any()))
+            mockedStatic.when(() -> MDocProcessor.addRandomSalts(mDocJson)).thenReturn(saltedNamespaces);
+            mockedStatic.when(() -> MDocProcessor.calculateDigests(eq(saltedNamespaces), any()))
                     .thenReturn(taggedNamespaces);
-            when(mDocUtils.createMobileSecurityObject(eq(mDocJson), any()))
+            when(mDocProcessor.createMobileSecurityObject(eq(mDocJson), any()))
                     .thenReturn(mso);
-            when(mDocUtils.signMSO(mso, appID, refID, signAlgorithm))
+            when(mDocProcessor.signMSO(mso, appID, refID, signAlgorithm))
                     .thenReturn(signedMSO);
-            mockedStatic.when(() -> MDocUtils.createIssuerSignedStructure(taggedNamespaces, signedMSO))
+            mockedStatic.when(() -> MDocProcessor.createIssuerSignedStructure(taggedNamespaces, signedMSO))
                     .thenReturn(issuerSigned);
-            mockedStatic.when(() -> MDocUtils.encodeToCBOR(issuerSigned))
+            mockedStatic.when(() -> MDocProcessor.encodeToCBOR(issuerSigned))
                     .thenReturn(cborIssuerSigned);
 
             VCResult<?> result = mDocCredential.addProof(
@@ -205,8 +203,8 @@ public class MDocCredentialTest {
             assertNotNull("Credential should not be null", result.getCredential());
             assertTrue("Credential should be a String", result.getCredential() instanceof String);
 
-            verify(mDocUtils).createMobileSecurityObject(eq(mDocJson), any());
-            verify(mDocUtils).signMSO(mso, appID, refID, signAlgorithm);
+            verify(mDocProcessor).createMobileSecurityObject(eq(mDocJson), any());
+            verify(mDocProcessor).signMSO(mso, appID, refID, signAlgorithm);
         }
     }
 
@@ -221,17 +219,17 @@ public class MDocCredentialTest {
         Map<String, Object> issuerSigned = createTestIssuerSigned();
         byte[] cborIssuerSigned = "test data for base64url encoding".getBytes();
 
-        try (MockedStatic<MDocUtils> mockedStatic = mockStatic(MDocUtils.class)) {
+        try (MockedStatic<MDocProcessor> mockedStatic = mockStatic(MDocProcessor.class)) {
             when(objectMapper.readValue(vcToSign, Map.class)).thenReturn(mDocJson);
-            mockedStatic.when(() -> MDocUtils.addRandomSalts(mDocJson)).thenReturn(saltedNamespaces);
-            mockedStatic.when(() -> MDocUtils.calculateDigests(eq(saltedNamespaces), any()))
+            mockedStatic.when(() -> MDocProcessor.addRandomSalts(mDocJson)).thenReturn(saltedNamespaces);
+            mockedStatic.when(() -> MDocProcessor.calculateDigests(eq(saltedNamespaces), any()))
                     .thenReturn(taggedNamespaces);
-            when(mDocUtils.createMobileSecurityObject(eq(mDocJson), any())).thenReturn(mso);
-            when(mDocUtils.signMSO(eq(mso), anyString(), anyString(), anyString()))
+            when(mDocProcessor.createMobileSecurityObject(eq(mDocJson), any())).thenReturn(mso);
+            when(mDocProcessor.signMSO(eq(mso), anyString(), anyString(), anyString()))
                     .thenReturn(signedMSO);
-            mockedStatic.when(() -> MDocUtils.createIssuerSignedStructure(any(), any()))
+            mockedStatic.when(() -> MDocProcessor.createIssuerSignedStructure(any(), any()))
                     .thenReturn(issuerSigned);
-            mockedStatic.when(() -> MDocUtils.encodeToCBOR(any())).thenReturn(cborIssuerSigned);
+            mockedStatic.when(() -> MDocProcessor.encodeToCBOR(any())).thenReturn(cborIssuerSigned);
 
             VCResult<?> result = mDocCredential.addProof(
                     vcToSign, null, "ES256", "appID", "refID", "https://example.com/did", "Ed25519Signature2020"
@@ -261,17 +259,17 @@ public class MDocCredentialTest {
             Map<String, Object> issuerSigned = createTestIssuerSigned();
             byte[] cborIssuerSigned = new byte[]{4, 5, 6};
 
-            try (MockedStatic<MDocUtils> mockedStatic = mockStatic(MDocUtils.class)) {
+            try (MockedStatic<MDocProcessor> mockedStatic = mockStatic(MDocProcessor.class)) {
                 when(objectMapper.readValue(vcToSign, Map.class)).thenReturn(mDocJson);
-                mockedStatic.when(() -> MDocUtils.addRandomSalts(mDocJson)).thenReturn(saltedNamespaces);
-                mockedStatic.when(() -> MDocUtils.calculateDigests(eq(saltedNamespaces), any()))
+                mockedStatic.when(() -> MDocProcessor.addRandomSalts(mDocJson)).thenReturn(saltedNamespaces);
+                mockedStatic.when(() -> MDocProcessor.calculateDigests(eq(saltedNamespaces), any()))
                         .thenReturn(taggedNamespaces);
-                when(mDocUtils.createMobileSecurityObject(eq(mDocJson), any())).thenReturn(mso);
-                when(mDocUtils.signMSO(eq(mso), anyString(), anyString(), eq(algorithm)))
+                when(mDocProcessor.createMobileSecurityObject(eq(mDocJson), any())).thenReturn(mso);
+                when(mDocProcessor.signMSO(eq(mso), anyString(), anyString(), eq(algorithm)))
                         .thenReturn(signedMSO);
-                mockedStatic.when(() -> MDocUtils.createIssuerSignedStructure(any(), any()))
+                mockedStatic.when(() -> MDocProcessor.createIssuerSignedStructure(any(), any()))
                         .thenReturn(issuerSigned);
-                mockedStatic.when(() -> MDocUtils.encodeToCBOR(any())).thenReturn(cborIssuerSigned);
+                mockedStatic.when(() -> MDocProcessor.encodeToCBOR(any())).thenReturn(cborIssuerSigned);
 
                 VCResult<?> result = mDocCredential.addProof(
                         vcToSign, null, algorithm, "appID", "refID", "https://example.com/did", "Ed25519Signature2020"
@@ -294,17 +292,17 @@ public class MDocCredentialTest {
         Map<String, Object> issuerSigned = createTestIssuerSigned();
         byte[] cborIssuerSigned = new byte[]{4, 5, 6};
 
-        try (MockedStatic<MDocUtils> mockedStatic = mockStatic(MDocUtils.class)) {
+        try (MockedStatic<MDocProcessor> mockedStatic = mockStatic(MDocProcessor.class)) {
             when(objectMapper.readValue(vcToSign, Map.class)).thenReturn(mDocJson);
-            mockedStatic.when(() -> MDocUtils.addRandomSalts(mDocJson)).thenReturn(saltedNamespaces);
-            mockedStatic.when(() -> MDocUtils.calculateDigests(eq(saltedNamespaces), any()))
+            mockedStatic.when(() -> MDocProcessor.addRandomSalts(mDocJson)).thenReturn(saltedNamespaces);
+            mockedStatic.when(() -> MDocProcessor.calculateDigests(eq(saltedNamespaces), any()))
                     .thenReturn(taggedNamespaces);
-            when(mDocUtils.createMobileSecurityObject(eq(mDocJson), any())).thenReturn(mso);
-            when(mDocUtils.signMSO(eq(mso), anyString(), anyString(), anyString()))
+            when(mDocProcessor.createMobileSecurityObject(eq(mDocJson), any())).thenReturn(mso);
+            when(mDocProcessor.signMSO(eq(mso), anyString(), anyString(), anyString()))
                     .thenReturn(signedMSO);
-            mockedStatic.when(() -> MDocUtils.createIssuerSignedStructure(any(), any()))
+            mockedStatic.when(() -> MDocProcessor.createIssuerSignedStructure(any(), any()))
                     .thenReturn(issuerSigned);
-            mockedStatic.when(() -> MDocUtils.encodeToCBOR(any())).thenReturn(cborIssuerSigned);
+            mockedStatic.when(() -> MDocProcessor.encodeToCBOR(any())).thenReturn(cborIssuerSigned);
 
             VCResult<?> result = mDocCredential.addProof(
                     vcToSign, null, "ES256", "appID", "refID", "https://example.com/did", "Ed25519Signature2020"
@@ -336,9 +334,9 @@ public class MDocCredentialTest {
         String vcToSign = "{\"_docType\":\"org.iso.18013.5.1.mDL\"}";
         Map<String, Object> mDocJson = createTestMDocJson();
 
-        try (MockedStatic<MDocUtils> mockedStatic = mockStatic(MDocUtils.class)) {
+        try (MockedStatic<MDocProcessor> mockedStatic = mockStatic(MDocProcessor.class)) {
             when(objectMapper.readValue(vcToSign, Map.class)).thenReturn(mDocJson);
-            mockedStatic.when(() -> MDocUtils.addRandomSalts(mDocJson))
+            mockedStatic.when(() -> MDocProcessor.addRandomSalts(mDocJson))
                     .thenThrow(new RuntimeException("Salting failed"));
 
             mDocCredential.addProof(
@@ -353,10 +351,10 @@ public class MDocCredentialTest {
         Map<String, Object> mDocJson = createTestMDocJson();
         Map<String, Object> saltedNamespaces = createTestSaltedNamespaces();
 
-        try (MockedStatic<MDocUtils> mockedStatic = mockStatic(MDocUtils.class)) {
+        try (MockedStatic<MDocProcessor> mockedStatic = mockStatic(MDocProcessor.class)) {
             when(objectMapper.readValue(vcToSign, Map.class)).thenReturn(mDocJson);
-            mockedStatic.when(() -> MDocUtils.addRandomSalts(mDocJson)).thenReturn(saltedNamespaces);
-            mockedStatic.when(() -> MDocUtils.calculateDigests(eq(saltedNamespaces), any()))
+            mockedStatic.when(() -> MDocProcessor.addRandomSalts(mDocJson)).thenReturn(saltedNamespaces);
+            mockedStatic.when(() -> MDocProcessor.calculateDigests(eq(saltedNamespaces), any()))
                     .thenThrow(new RuntimeException("Digest calculation failed"));
 
             mDocCredential.addProof(
@@ -372,12 +370,12 @@ public class MDocCredentialTest {
         Map<String, Object> saltedNamespaces = createTestSaltedNamespaces();
         Map<String, Object> taggedNamespaces = createTestTaggedNamespaces();
 
-        try (MockedStatic<MDocUtils> mockedStatic = mockStatic(MDocUtils.class)) {
+        try (MockedStatic<MDocProcessor> mockedStatic = mockStatic(MDocProcessor.class)) {
             when(objectMapper.readValue(vcToSign, Map.class)).thenReturn(mDocJson);
-            mockedStatic.when(() -> MDocUtils.addRandomSalts(mDocJson)).thenReturn(saltedNamespaces);
-            mockedStatic.when(() -> MDocUtils.calculateDigests(eq(saltedNamespaces), any()))
+            mockedStatic.when(() -> MDocProcessor.addRandomSalts(mDocJson)).thenReturn(saltedNamespaces);
+            mockedStatic.when(() -> MDocProcessor.calculateDigests(eq(saltedNamespaces), any()))
                     .thenReturn(taggedNamespaces);
-            when(mDocUtils.createMobileSecurityObject(any(), any()))
+            when(mDocProcessor.createMobileSecurityObject(any(), any()))
                     .thenThrow(new RuntimeException("MSO creation failed"));
 
             mDocCredential.addProof(
@@ -394,13 +392,13 @@ public class MDocCredentialTest {
         Map<String, Object> taggedNamespaces = createTestTaggedNamespaces();
         Map<String, Object> mso = createTestMSO();
 
-        try (MockedStatic<MDocUtils> mockedStatic = mockStatic(MDocUtils.class)) {
+        try (MockedStatic<MDocProcessor> mockedStatic = mockStatic(MDocProcessor.class)) {
             when(objectMapper.readValue(vcToSign, Map.class)).thenReturn(mDocJson);
-            mockedStatic.when(() -> MDocUtils.addRandomSalts(mDocJson)).thenReturn(saltedNamespaces);
-            mockedStatic.when(() -> MDocUtils.calculateDigests(eq(saltedNamespaces), any()))
+            mockedStatic.when(() -> MDocProcessor.addRandomSalts(mDocJson)).thenReturn(saltedNamespaces);
+            mockedStatic.when(() -> MDocProcessor.calculateDigests(eq(saltedNamespaces), any()))
                     .thenReturn(taggedNamespaces);
-            when(mDocUtils.createMobileSecurityObject(any(), any())).thenReturn(mso);
-            when(mDocUtils.signMSO(any(), anyString(), anyString(), anyString()))
+            when(mDocProcessor.createMobileSecurityObject(any(), any())).thenReturn(mso);
+            when(mDocProcessor.signMSO(any(), anyString(), anyString(), anyString()))
                     .thenThrow(new RuntimeException("MSO signing failed"));
 
             mDocCredential.addProof(
@@ -419,17 +417,17 @@ public class MDocCredentialTest {
         byte[] signedMSO = new byte[]{1, 2, 3};
         Map<String, Object> issuerSigned = createTestIssuerSigned();
 
-        try (MockedStatic<MDocUtils> mockedStatic = mockStatic(MDocUtils.class)) {
+        try (MockedStatic<MDocProcessor> mockedStatic = mockStatic(MDocProcessor.class)) {
             when(objectMapper.readValue(vcToSign, Map.class)).thenReturn(mDocJson);
-            mockedStatic.when(() -> MDocUtils.addRandomSalts(mDocJson)).thenReturn(saltedNamespaces);
-            mockedStatic.when(() -> MDocUtils.calculateDigests(eq(saltedNamespaces), any()))
+            mockedStatic.when(() -> MDocProcessor.addRandomSalts(mDocJson)).thenReturn(saltedNamespaces);
+            mockedStatic.when(() -> MDocProcessor.calculateDigests(eq(saltedNamespaces), any()))
                     .thenReturn(taggedNamespaces);
-            when(mDocUtils.createMobileSecurityObject(any(), any())).thenReturn(mso);
-            when(mDocUtils.signMSO(any(), anyString(), anyString(), anyString()))
+            when(mDocProcessor.createMobileSecurityObject(any(), any())).thenReturn(mso);
+            when(mDocProcessor.signMSO(any(), anyString(), anyString(), anyString()))
                     .thenReturn(signedMSO);
-            mockedStatic.when(() -> MDocUtils.createIssuerSignedStructure(any(), any()))
+            mockedStatic.when(() -> MDocProcessor.createIssuerSignedStructure(any(), any()))
                     .thenReturn(issuerSigned);
-            mockedStatic.when(() -> MDocUtils.encodeToCBOR(any()))
+            mockedStatic.when(() -> MDocProcessor.encodeToCBOR(any()))
                     .thenThrow(new RuntimeException("CBOR encoding failed"));
 
             mDocCredential.addProof(
@@ -447,15 +445,15 @@ public class MDocCredentialTest {
         Map<String, Object> mso = createTestMSO();
         byte[] signedMSO = new byte[]{1, 2, 3};
 
-        try (MockedStatic<MDocUtils> mockedStatic = mockStatic(MDocUtils.class)) {
+        try (MockedStatic<MDocProcessor> mockedStatic = mockStatic(MDocProcessor.class)) {
             when(objectMapper.readValue(vcToSign, Map.class)).thenReturn(mDocJson);
-            mockedStatic.when(() -> MDocUtils.addRandomSalts(mDocJson)).thenReturn(saltedNamespaces);
-            mockedStatic.when(() -> MDocUtils.calculateDigests(eq(saltedNamespaces), any()))
+            mockedStatic.when(() -> MDocProcessor.addRandomSalts(mDocJson)).thenReturn(saltedNamespaces);
+            mockedStatic.when(() -> MDocProcessor.calculateDigests(eq(saltedNamespaces), any()))
                     .thenReturn(taggedNamespaces);
-            when(mDocUtils.createMobileSecurityObject(any(), any())).thenReturn(mso);
-            when(mDocUtils.signMSO(any(), anyString(), anyString(), anyString()))
+            when(mDocProcessor.createMobileSecurityObject(any(), any())).thenReturn(mso);
+            when(mDocProcessor.signMSO(any(), anyString(), anyString(), anyString()))
                     .thenReturn(signedMSO);
-            mockedStatic.when(() -> MDocUtils.createIssuerSignedStructure(any(), any()))
+            mockedStatic.when(() -> MDocProcessor.createIssuerSignedStructure(any(), any()))
                     .thenThrow(new RuntimeException("IssuerSigned structure creation failed"));
 
             mDocCredential.addProof(

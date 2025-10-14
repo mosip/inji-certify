@@ -16,7 +16,6 @@ import io.mosip.certify.config.MDocConfig;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.proofgenerators.ProofGeneratorFactory;
 import io.mosip.kernel.signature.dto.CoseSignRequestDto;
 import io.mosip.kernel.signature.service.CoseSignatureService;
 import lombok.extern.slf4j.Slf4j;
@@ -43,16 +42,13 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-public class MDocUtils {
+public class MDocProcessor {
 
     @Autowired
     private ObjectMapper objectMapper;
 
     @Autowired
     private MDocConfig mDocConfig;
-
-    @Autowired
-    private ProofGeneratorFactory proofGeneratorFactory;
 
     @Autowired
     private CoseSignatureService coseSignatureService;
