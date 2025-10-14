@@ -66,7 +66,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Value("#{${mosip.certify.credential-config.proof-types-supported}}")
     private LinkedHashMap<String, Object> proofTypesSupported;
 
-    @Value("#{${mosip.certify.signature-cryptosuite.key-alias-mapper}}")
+    @Value("#{${mosip.certify.signature-algo.key-alias-mapper}}")
     private Map<String, List<List<String>>> keyAliasMapper;
 
     private static final String CREDENTIAL_CONFIG_CACHE_NAME = "credentialConfig";

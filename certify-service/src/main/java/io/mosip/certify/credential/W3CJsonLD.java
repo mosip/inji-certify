@@ -52,7 +52,7 @@ public class W3CJsonLD extends Credential{
     @Autowired
     DIDDocumentUtil didDocumentUtil;
 
-    @Value("#{${mosip.certify.signature-cryptosuite.key-alias-mapper}}")
+    @Value("#{${mosip.certify.signature-algo.key-alias-mapper}}")
     private Map<String, List<List<String>>> keyAliasMapper;
 
 
