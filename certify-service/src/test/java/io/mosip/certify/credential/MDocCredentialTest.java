@@ -34,7 +34,6 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 public class MDocCredentialTest {
 
-    @InjectMocks
     private MDocCredential mDocCredential;
 
     @Mock
@@ -51,11 +50,7 @@ public class MDocCredentialTest {
 
     @Before
     public void setUp() {
-        // Only set fields that actually exist in MDocCredential
-        ReflectionTestUtils.setField(mDocCredential, "objectMapper", objectMapper);
-        ReflectionTestUtils.setField(mDocCredential, "mDocUtils", mDocUtils);
-        // signatureService is inherited from parent Credential class
-        ReflectionTestUtils.setField(mDocCredential, "signatureService", signatureService);
+        mDocCredential = new MDocCredential(vcFormatter, signatureService);
     }
 
     // ==================== Format Handling Tests ====================
