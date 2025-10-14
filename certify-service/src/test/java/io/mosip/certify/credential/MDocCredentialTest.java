@@ -6,7 +6,6 @@ import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.utils.MDocUtils;
 import io.mosip.certify.vcformatters.VCFormatter;
-import io.mosip.kernel.signature.service.CoseSignatureService;
 import io.mosip.kernel.signature.service.SignatureService;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +41,7 @@ public class MDocCredentialTest {
     private VCFormatter vcFormatter;
 
     @Mock
-    private CoseSignatureService coseSignatureService;
+    private SignatureService signatureService;
 
     @Mock
     private ObjectMapper objectMapper;
@@ -52,9 +51,11 @@ public class MDocCredentialTest {
 
     @Before
     public void setUp() {
-        ReflectionTestUtils.setField(mDocCredential, "coseSignatureService", coseSignatureService);
+        // Only set fields that actually exist in MDocCredential
         ReflectionTestUtils.setField(mDocCredential, "objectMapper", objectMapper);
         ReflectionTestUtils.setField(mDocCredential, "mDocUtils", mDocUtils);
+        // signatureService is inherited from parent Credential class
+        ReflectionTestUtils.setField(mDocCredential, "signatureService", signatureService);
     }
 
     // ==================== Format Handling Tests ====================
@@ -191,15 +192,10 @@ public class MDocCredentialTest {
             mockedStatic.when(() -> MDocUtils.addRandomSalts(mDocJson)).thenReturn(saltedNamespaces);
             mockedStatic.when(() -> MDocUtils.calculateDigests(eq(saltedNamespaces), any()))
                     .thenReturn(taggedNamespaces);
-
-            // Fixed: Remove appID and refID from createMobileSecurityObject
             when(mDocUtils.createMobileSecurityObject(eq(mDocJson), any()))
                     .thenReturn(mso);
-
-            // Fixed: Remove coseSignatureService from signMSO
             when(mDocUtils.signMSO(mso, appID, refID, signAlgorithm))
                     .thenReturn(signedMSO);
-
             mockedStatic.when(() -> MDocUtils.createIssuerSignedStructure(taggedNamespaces, signedMSO))
                     .thenReturn(issuerSigned);
             mockedStatic.when(() -> MDocUtils.encodeToCBOR(issuerSigned))
@@ -386,8 +382,6 @@ public class MDocCredentialTest {
             mockedStatic.when(() -> MDocUtils.addRandomSalts(mDocJson)).thenReturn(saltedNamespaces);
             mockedStatic.when(() -> MDocUtils.calculateDigests(eq(saltedNamespaces), any()))
                     .thenReturn(taggedNamespaces);
-
-            // Fixed: Correct parameter count
             when(mDocUtils.createMobileSecurityObject(any(), any()))
                     .thenThrow(new RuntimeException("MSO creation failed"));
 
@@ -411,8 +405,6 @@ public class MDocCredentialTest {
             mockedStatic.when(() -> MDocUtils.calculateDigests(eq(saltedNamespaces), any()))
                     .thenReturn(taggedNamespaces);
             when(mDocUtils.createMobileSecurityObject(any(), any())).thenReturn(mso);
-
-            // Fixed: Correct parameter count (removed didDocumentUtil and coseSignatureService)
             when(mDocUtils.signMSO(any(), anyString(), anyString(), anyString()))
                     .thenThrow(new RuntimeException("MSO signing failed"));
 

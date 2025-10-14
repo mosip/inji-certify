@@ -14,11 +14,11 @@ import java.io.ByteArrayOutputStream;
 
 import io.mosip.certify.config.MDocConfig;
 import io.mosip.certify.core.constants.Constants;
-import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.proofgenerators.CoseSign1ProofGenerator;
 import io.mosip.certify.proofgenerators.ProofGeneratorFactory;
+import io.mosip.kernel.signature.dto.CoseSignRequestDto;
+import io.mosip.kernel.signature.service.CoseSignatureService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -53,6 +53,9 @@ public class MDocUtils {
 
     @Autowired
     private ProofGeneratorFactory proofGeneratorFactory;
+
+    @Autowired
+    private CoseSignatureService coseSignatureService;
 
     /**
      * Process templated JSON to create final mDoc structure
@@ -451,23 +454,42 @@ public class MDocUtils {
     /**
      * Signs the MSO using COSE_Sign1 structure via ProofGenerator
      */
-    public byte[] signMSO(Map<String, Object> mso, String appID, String refID,
-                          String signAlgorithm) throws Exception {
-
+    public byte[] signMSO(Map<String, Object> mso, String appID, String refID, String signAlgorithm) throws Exception {
         try {
             byte[] msoCbor = encodeToCBOR(mso);
 
-            CoseSign1ProofGenerator coseProofGen = proofGeneratorFactory
-                    .getProofGenerator(SignatureAlg.COSE_SIGN1)
-                    .map(pg -> (CoseSign1ProofGenerator) pg)
-                    .orElseThrow(() -> new CertifyException("CoseSign1 proof generator not found"));
+            CoseSignRequestDto signRequest = new CoseSignRequestDto();
 
-            return coseProofGen.signMSO(msoCbor, appID, refID, signAlgorithm);
+            String base64UrlPayload = Base64.getUrlEncoder().withoutPadding().encodeToString(msoCbor);
+
+            signRequest.setPayload(base64UrlPayload);
+            signRequest.setApplicationId(appID);
+            signRequest.setReferenceId(refID);
+            signRequest.setAlgorithm(signAlgorithm);
+
+            Map<String, Object> protectedHeader = new HashMap<>();
+            protectedHeader.put("x5c", true);
+            signRequest.setProtectedHeader(protectedHeader);
+
+            String hexSignedData = coseSignatureService.coseSign1(signRequest).getSignedData();
+            return hexStringToByteArray(hexSignedData);
 
         } catch (CertifyException e) {
             log.error("Error during COSE signing: {}", e.getMessage(), e);
             throw new CertifyException("COSE signing failed: " + e.getMessage());
         }
+    }
+
+    /**
+     * Converts hex string to byte array
+     */
+    private static byte[] hexStringToByteArray(String hexStr) {
+        int len = hexStr.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(hexStr.charAt(i), 16) << 4) + Character.digit(hexStr.charAt(i + 1), 16));
+        }
+        return data;
     }
 
     /**

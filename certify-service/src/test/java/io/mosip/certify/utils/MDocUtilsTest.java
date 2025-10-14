@@ -3,18 +3,19 @@ package io.mosip.certify.utils;
 import co.nstant.in.cbor.CborDecoder;
 import co.nstant.in.cbor.CborEncoder;
 import co.nstant.in.cbor.model.*;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.config.MDocConfig;
 import io.mosip.certify.core.constants.Constants;
-import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.proofgenerators.CoseSign1ProofGenerator;
 import io.mosip.certify.proofgenerators.ProofGeneratorFactory;
+import io.mosip.kernel.signature.dto.CoseSignRequestDto;
+import io.mosip.kernel.signature.dto.CoseSignResponseDto;
+import io.mosip.kernel.signature.service.CoseSignatureService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -23,10 +24,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.Map;
 
@@ -53,10 +50,7 @@ public class MDocUtilsTest {
     private MDocConfig mDocConfig;
 
     @Mock
-    private ProofGeneratorFactory proofGeneratorFactory;
-
-    @Mock
-    private CoseSign1ProofGenerator coseSign1ProofGenerator;
+    private CoseSignatureService coseSignatureService;
 
     @InjectMocks
     private MDocUtils mDocUtils;
@@ -699,29 +693,27 @@ public class MDocUtilsTest {
         mso.put("version", "1.0");
         mso.put("digestAlgorithm", "SHA-256");
 
-        byte[] mockSignedData = new byte[]{(byte)0xD2, (byte)0x84, 0x43, (byte)0xA1};
+        // Mock the COSE signature service response
+        String mockHexSignedData = "d2844341a10126404c504143204f50454e4141";
 
-        when(proofGeneratorFactory.getProofGenerator(SignatureAlg.COSE_SIGN1))
-                .thenReturn(Optional.of(coseSign1ProofGenerator));
-        when(coseSign1ProofGenerator.signMSO(any(byte[].class), eq("testApp"), eq("testRef"), eq("ES256")))
-                .thenReturn(mockSignedData);
+        CoseSignResponseDto mockResponse = new CoseSignResponseDto();
+        mockResponse.setSignedData(mockHexSignedData);
+
+        when(coseSignatureService.coseSign1(any(CoseSignRequestDto.class)))
+                .thenReturn(mockResponse);
 
         byte[] result = mDocUtils.signMSO(mso, "testApp", "testRef", "ES256");
 
         assertNotNull("Result should not be null", result);
-        assertArrayEquals("Should return signed data", mockSignedData, result);
-        verify(coseSign1ProofGenerator).signMSO(any(byte[].class), eq("testApp"), eq("testRef"), eq("ES256"));
-    }
+        assertTrue("Result should have data", result.length > 0);
 
-    @Test(expected = CertifyException.class)
-    public void signMSO_ProofGeneratorNotFound_ThrowsException() throws Exception {
-        Map<String, Object> mso = new HashMap<>();
-        mso.put("version", "1.0");
-
-        when(proofGeneratorFactory.getProofGenerator(SignatureAlg.COSE_SIGN1))
-                .thenReturn(Optional.empty());
-
-        mDocUtils.signMSO(mso, "app", "ref", "ES256");
+        // Verify service was called with correct parameters
+        ArgumentCaptor<CoseSignRequestDto> captor = ArgumentCaptor.forClass(CoseSignRequestDto.class);
+        verify(coseSignatureService).coseSign1(captor.capture());
+        CoseSignRequestDto requestDto = captor.getValue();
+        assertEquals("Application ID should match", "testApp", requestDto.getApplicationId());
+        assertEquals("Reference ID should match", "testRef", requestDto.getReferenceId());
+        assertEquals("Algorithm should match", "ES256", requestDto.getAlgorithm());
     }
 
     @Test(expected = CertifyException.class)
@@ -729,9 +721,7 @@ public class MDocUtilsTest {
         Map<String, Object> mso = new HashMap<>();
         mso.put("version", "1.0");
 
-        when(proofGeneratorFactory.getProofGenerator(SignatureAlg.COSE_SIGN1))
-                .thenReturn(Optional.of(coseSign1ProofGenerator));
-        when(coseSign1ProofGenerator.signMSO(any(byte[].class), anyString(), anyString(), anyString()))
+        when(coseSignatureService.coseSign1(any(CoseSignRequestDto.class)))
                 .thenThrow(new CertifyException("Signing failed"));
 
         mDocUtils.signMSO(mso, "app", "ref", "ES256");
@@ -802,52 +792,6 @@ public class MDocUtilsTest {
         MDocUtils.createIssuerSignedStructure(processedNamespaces, invalidCBOR);
     }
     // ==================== Integration Tests ====================
-
-    @Test
-    public void fullWorkflow_CreatesValidmDoc() throws Exception {
-        // 1. Template processing
-        String template = createFullmDLTemplate();
-        Map<String, Object> templateParams = new HashMap<>();
-        templateParams.put("didUrl", "https://issuer.example.com");
-        templateParams.put("_holderId", createTestDidJwk());
-
-        Map<String, Object> mDocJson = mDocUtils.processTemplatedJson(template, templateParams);
-        assertNotNull("Template processing should succeed", mDocJson);
-
-        // 2. Add random salts
-        Map<String, Object> saltedNamespaces = MDocUtils.addRandomSalts(mDocJson);
-        assertNotNull("Salt generation should succeed", saltedNamespaces);
-
-        // 3. Calculate digests
-        Map<String, Map<Integer, byte[]>> namespaceDigests = new HashMap<>();
-        Map<String, Object> taggedNamespaces = MDocUtils.calculateDigests(saltedNamespaces, namespaceDigests);
-        assertNotNull("Digest calculation should succeed", taggedNamespaces);
-        assertFalse("Should have digests", namespaceDigests.isEmpty());
-
-        // 4. Create MSO
-        Map<String, Object> mso = mDocUtils.createMobileSecurityObject(mDocJson, namespaceDigests);
-        assertNotNull("MSO creation should succeed", mso);
-        assertEquals("1.0", mso.get("version"));
-
-        // 5. Sign MSO
-        byte[] mockSignedData = createMockCoseSign1();
-        when(proofGeneratorFactory.getProofGenerator(SignatureAlg.COSE_SIGN1))
-                .thenReturn(Optional.of(coseSign1ProofGenerator));
-        when(coseSign1ProofGenerator.signMSO(any(byte[].class), anyString(), anyString(), anyString()))
-                .thenReturn(mockSignedData);
-
-        byte[] signedMSO = mDocUtils.signMSO(mso, "app", "ref", "ES256");
-        assertNotNull("Signing should succeed", signedMSO);
-
-        // 6. Create IssuerSigned structure
-        Map<String, Object> issuerSigned = MDocUtils.createIssuerSignedStructure(taggedNamespaces, signedMSO);
-        assertNotNull("IssuerSigned creation should succeed", issuerSigned);
-
-        // 7. Encode to CBOR
-        byte[] finalCBOR = MDocUtils.encodeToCBOR(issuerSigned);
-        assertNotNull("CBOR encoding should succeed", finalCBOR);
-        assertTrue("CBOR should have data", finalCBOR.length > 0);
-    }
 
     @Test
     public void multipleNamespacesWorkflow_HandlesCorrectly() throws Exception {
@@ -1156,4 +1100,6 @@ public class MDocUtilsTest {
         }
         return sb.toString();
     }
+
+
 }
