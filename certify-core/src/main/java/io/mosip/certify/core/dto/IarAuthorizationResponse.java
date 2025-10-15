@@ -11,12 +11,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Interactive Authorization Presentation Response DTO for OpenID4VCI
+ * Interactive Authorization Response DTO for OpenID4VCI
  * Response from POST /iar endpoint for Verifiable Presentation submission
  */
 @Data
 @NoArgsConstructor
-public class IarPresentationResponse {
+public class IarAuthorizationResponse {
 
     /**
      * Status of the presentation response

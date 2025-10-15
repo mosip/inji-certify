@@ -7,7 +7,7 @@ package io.mosip.certify.controller;
 
 import io.mosip.certify.core.constants.IarStatus;
 import io.mosip.certify.core.dto.IarResponse;
-import io.mosip.certify.core.dto.IarPresentationResponse;
+import io.mosip.certify.core.dto.IarAuthorizationResponse;
 import io.mosip.certify.core.dto.OAuthTokenRequest;
 import io.mosip.certify.core.dto.OAuthTokenResponse;
 import io.mosip.certify.core.dto.OAuthTokenError;
@@ -42,10 +42,10 @@ public class OAuthAuthorizationController {
      * Determines the request type based on the presence of auth_session and openid4vp_presentation.
      * 
      * For initial requests: Returns IarResponse containing status, auth_session, and openid4vp_request if interaction required
-     * For VP presentations: Returns IarPresentationResponse containing authorization code or error
+     * For VP presentations: Returns IarAuthorizationResponse containing authorization code or error
      * 
      * @param iarRequest Form parameters containing either authorization request fields or VP presentation fields
-     * @return ResponseEntity with IarResponse or IarPresentationResponse
+     * @return ResponseEntity with IarResponse or IarAuthorizationResponse
      * @throws CertifyException if request processing fails
      */
     @PostMapping(value = "/iar",
@@ -58,7 +58,7 @@ public class OAuthAuthorizationController {
 
         Object response = iarService.handleIarRequest(iarRequest);
 
-        if (response instanceof IarPresentationResponse presentationResponse) {
+        if (response instanceof IarAuthorizationResponse presentationResponse) {
             if (IarStatus.OK.equals(presentationResponse.getStatus())) {
                 return ResponseEntity.ok(presentationResponse);
             }

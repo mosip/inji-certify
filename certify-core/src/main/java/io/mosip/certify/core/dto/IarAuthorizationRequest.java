@@ -11,12 +11,12 @@ import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.NotBlank;
 
 /**
- * Interactive Authorization Presentation Request DTO for OpenID4VCI
+ * Interactive Authorization Request DTO for OpenID4VCI
  * Used for POST /iar endpoint to submit Verifiable Presentation response
  */
 @Data
 @NoArgsConstructor
-public class IarPresentationRequest {
+public class IarAuthorizationRequest {
 
     /**
      * Authorization session identifier from initial IAR response

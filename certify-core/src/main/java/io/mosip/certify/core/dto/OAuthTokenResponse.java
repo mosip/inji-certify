@@ -5,6 +5,7 @@
  */
 package io.mosip.certify.core.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
@@ -15,6 +16,7 @@ import lombok.Data;
  * Based on RFC 6749 and OpenID4VCI specification
  */
 @Data
+@JsonIgnoreProperties({"cnonce", "cnonceExpiresIn"})
 public class OAuthTokenResponse {
 
     /**

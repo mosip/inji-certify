@@ -14,7 +14,7 @@ import java.util.List;
 
 /**
  * Interactive Authorization Request DTO for OpenID4VCI
- * Combines fields from both InteractiveAuthorizationRequest and IarPresentationRequest
+ * Combines fields from both InteractiveAuthorizationRequest and IarAuthorizationRequest
  * Used for the unified /iar endpoint to handle both initial requests and VP presentation responses
  */
 @Data
@@ -68,7 +68,7 @@ public class IarRequest {
     @JsonProperty("authorization_details")
     private List<AuthorizationDetail> authorizationDetails;
 
-    // Fields from IarPresentationRequest (for VP presentation responses)
+    // Fields from IarAuthorizationRequest (for VP presentation responses)
     
     /**
      * Authorization session identifier from initial IAR response

@@ -3,7 +3,7 @@ package io.mosip.certify.controller;
 import io.mosip.certify.core.constants.IarConstants;
 import io.mosip.certify.core.constants.IarStatus;
 import io.mosip.certify.core.constants.InteractionType;
-import io.mosip.certify.core.dto.InteractiveAuthorizationRequest;
+import io.mosip.certify.core.dto.IarRequest;
 import io.mosip.certify.core.dto.IarResponse;
 import io.mosip.certify.core.dto.PresentationDefinition;
 import io.mosip.certify.core.exception.CertifyException;
@@ -64,7 +64,7 @@ class OAuthAuthorizationControllerTest {
     void processInteractiveAuthorizationRequest_success_requireInteraction() throws Exception {
         // Arrange
         IarResponse mockResponse = createMockIarResponse(IarStatus.REQUIRE_INTERACTION);
-        when(iarService.processAuthorizationRequest(any(InteractiveAuthorizationRequest.class))).thenReturn(mockResponse);
+        when(iarService.handleIarRequest(any(IarRequest.class))).thenReturn(mockResponse);
 
         // Act & Assert
         mockMvc.perform(post("/oauth/iar")
@@ -83,15 +83,14 @@ class OAuthAuthorizationControllerTest {
                 .andExpect(jsonPath("$.openid4vp_request.response_type").value("vp_token"))
                 .andExpect(jsonPath("$.openid4vp_request.response_mode").value("iar-post.jwt"));
 
-        verify(iarService, times(1)).validateIarRequest(any(InteractiveAuthorizationRequest.class));
-        verify(iarService, times(1)).processAuthorizationRequest(any(InteractiveAuthorizationRequest.class));
+        verify(iarService, times(1)).handleIarRequest(any(IarRequest.class));
     }
 
     @Test
     void processInteractiveAuthorizationRequest_success_complete() throws Exception {
         // Arrange
         IarResponse mockResponse = createMockIarResponse(IarStatus.REQUIRE_INTERACTION);
-        when(iarService.processAuthorizationRequest(any(InteractiveAuthorizationRequest.class))).thenReturn(mockResponse);
+        when(iarService.handleIarRequest(any(IarRequest.class))).thenReturn(mockResponse);
 
         // Act & Assert
         mockMvc.perform(post("/oauth/iar")
@@ -106,15 +105,14 @@ class OAuthAuthorizationControllerTest {
                 .andExpect(jsonPath("$.type").doesNotExist())
                 .andExpect(jsonPath("$.openid4vp_request").doesNotExist());
 
-        verify(iarService, times(1)).validateIarRequest(any(InteractiveAuthorizationRequest.class));
-        verify(iarService, times(1)).processAuthorizationRequest(any(InteractiveAuthorizationRequest.class));
+        verify(iarService, times(1)).handleIarRequest(any(IarRequest.class));
     }
 
     @Test
     void processInteractiveAuthorizationRequest_minimalRequiredParams() throws Exception {
         // Arrange
         IarResponse mockResponse = createMockIarResponse(IarStatus.REQUIRE_INTERACTION);
-        when(iarService.processAuthorizationRequest(any(InteractiveAuthorizationRequest.class))).thenReturn(mockResponse);
+        when(iarService.handleIarRequest(any(IarRequest.class))).thenReturn(mockResponse);
 
         // Act & Assert - Only required parameters
         mockMvc.perform(post("/oauth/iar")
@@ -126,15 +124,14 @@ class OAuthAuthorizationControllerTest {
                 .param("redirect_uri", "https://test.com/callback"))
                 .andExpect(status().isOk());
 
-        verify(iarService, times(1)).validateIarRequest(any(InteractiveAuthorizationRequest.class));
-        verify(iarService, times(1)).processAuthorizationRequest(any(InteractiveAuthorizationRequest.class));
+        verify(iarService, times(1)).handleIarRequest(any(IarRequest.class));
     }
 
     @Test
     void processInteractiveAuthorizationRequest_withOptionalParams() throws Exception {
         // Arrange
         IarResponse mockResponse = createMockIarResponse(IarStatus.REQUIRE_INTERACTION);
-        when(iarService.processAuthorizationRequest(any(InteractiveAuthorizationRequest.class))).thenReturn(mockResponse);
+        when(iarService.handleIarRequest(any(IarRequest.class))).thenReturn(mockResponse);
 
         // Act & Assert - All parameters including optional ones
         mockMvc.perform(post("/oauth/iar")
@@ -147,15 +144,14 @@ class OAuthAuthorizationControllerTest {
                 .param("interaction_types_supported", "openid4vp_presentation"))
                 .andExpect(status().isOk());
 
-        verify(iarService, times(1)).validateIarRequest(any(InteractiveAuthorizationRequest.class));
-        verify(iarService, times(1)).processAuthorizationRequest(any(InteractiveAuthorizationRequest.class));
+        verify(iarService, times(1)).handleIarRequest(any(IarRequest.class));
     }
 
     @Test
     void processInteractiveAuthorizationRequest_validationFailure() throws Exception {
         // Arrange
         CertifyException validationException = new CertifyException(IarConstants.INVALID_REQUEST, "invalid_request");
-        doThrow(validationException).when(iarService).validateIarRequest(any(InteractiveAuthorizationRequest.class));
+        doThrow(validationException).when(iarService).handleIarRequest(any(IarRequest.class));
 
         // Act & Assert
         mockMvc.perform(post("/oauth/iar")
@@ -170,16 +166,14 @@ class OAuthAuthorizationControllerTest {
                 .andExpect(jsonPath("$.error").value(IarConstants.INVALID_REQUEST))
                 .andExpect(jsonPath("$.error_description").value("invalid_request"));
 
-        verify(iarService, times(1)).validateIarRequest(any(InteractiveAuthorizationRequest.class));
-        verify(iarService, never()).processAuthorizationRequest(any(InteractiveAuthorizationRequest.class));
+        verify(iarService, never()).handleIarRequest(any(IarRequest.class));
     }
 
     @Test
     void processInteractiveAuthorizationRequest_processingFailure() throws Exception {
         // Arrange
         CertifyException processingException = new CertifyException(IarConstants.INTERACTION_REQUIRED, "Interaction required");
-        doNothing().when(iarService).validateIarRequest(any(InteractiveAuthorizationRequest.class));
-        doThrow(processingException).when(iarService).processAuthorizationRequest(any(InteractiveAuthorizationRequest.class));
+        doThrow(processingException).when(iarService).handleIarRequest(any(IarRequest.class));
 
         // Act & Assert
         mockMvc.perform(post("/oauth/iar")
@@ -194,16 +188,15 @@ class OAuthAuthorizationControllerTest {
                 .andExpect(jsonPath("$.error").value(IarConstants.INTERACTION_REQUIRED))
                 .andExpect(jsonPath("$.error_description").value("interaction_required"));
 
-        verify(iarService, times(1)).validateIarRequest(any(InteractiveAuthorizationRequest.class));
-        verify(iarService, times(1)).processAuthorizationRequest(any(InteractiveAuthorizationRequest.class));
+        verify(iarService, times(1)).handleIarRequest(any(IarRequest.class));
     }
 
     @Test
     void processInteractiveAuthorizationRequest_unexpectedException() throws Exception {
         // Arrange
         RuntimeException unexpectedException = new RuntimeException("Unexpected error");
-        doNothing().when(iarService).validateIarRequest(any(InteractiveAuthorizationRequest.class));
-        doThrow(unexpectedException).when(iarService).processAuthorizationRequest(any(InteractiveAuthorizationRequest.class));
+        // Validation is now handled internally by processAuthorizationRequest
+        doThrow(unexpectedException).when(iarService).handleIarRequest(any(IarRequest.class));
 
         // Act & Assert
         mockMvc.perform(post("/oauth/iar")
@@ -218,15 +211,14 @@ class OAuthAuthorizationControllerTest {
                 .andExpect(jsonPath("$.error").value(IarConstants.INVALID_REQUEST))
                 .andExpect(jsonPath("$.error_description").value("invalid_request"));
 
-        verify(iarService, times(1)).validateIarRequest(any(InteractiveAuthorizationRequest.class));
-        verify(iarService, times(1)).processAuthorizationRequest(any(InteractiveAuthorizationRequest.class));
+        verify(iarService, times(1)).handleIarRequest(any(IarRequest.class));
     }
 
     @Test
     void processInteractiveAuthorizationRequest_differentCodeChallengeMethods() throws Exception {
         // Arrange
         IarResponse mockResponse = createMockIarResponse(IarStatus.REQUIRE_INTERACTION);
-        when(iarService.processAuthorizationRequest(any(InteractiveAuthorizationRequest.class))).thenReturn(mockResponse);
+        when(iarService.handleIarRequest(any(IarRequest.class))).thenReturn(mockResponse);
 
         // Test S256 method
         mockMvc.perform(post("/oauth/iar")
@@ -248,15 +240,14 @@ class OAuthAuthorizationControllerTest {
                 .param("redirect_uri", "https://test.com/callback"))
                 .andExpect(status().isOk());
 
-        verify(iarService, times(2)).validateIarRequest(any(InteractiveAuthorizationRequest.class));
-        verify(iarService, times(2)).processAuthorizationRequest(any(InteractiveAuthorizationRequest.class));
+        verify(iarService, times(2)).handleIarRequest(any(IarRequest.class));
     }
 
     @Test
     void processInteractiveAuthorizationRequest_differentResponseTypes() throws Exception {
         // Arrange
         IarResponse mockResponse = createMockIarResponse(IarStatus.REQUIRE_INTERACTION);
-        when(iarService.processAuthorizationRequest(any(InteractiveAuthorizationRequest.class))).thenReturn(mockResponse);
+        when(iarService.handleIarRequest(any(IarRequest.class))).thenReturn(mockResponse);
 
         // Test with code response type
         mockMvc.perform(post("/oauth/iar")
@@ -278,15 +269,14 @@ class OAuthAuthorizationControllerTest {
                 .param("redirect_uri", "https://test.com/callback"))
                 .andExpect(status().isOk());
 
-        verify(iarService, times(2)).validateIarRequest(any(InteractiveAuthorizationRequest.class));
-        verify(iarService, times(2)).processAuthorizationRequest(any(InteractiveAuthorizationRequest.class));
+        verify(iarService, times(2)).handleIarRequest(any(IarRequest.class));
     }
 
     @Test
     void processInteractiveAuthorizationRequest_contentTypeValidation() throws Exception {
         // Arrange
         IarResponse mockResponse = createMockIarResponse(IarStatus.REQUIRE_INTERACTION);
-        when(iarService.processAuthorizationRequest(any(InteractiveAuthorizationRequest.class))).thenReturn(mockResponse);
+        when(iarService.handleIarRequest(any(IarRequest.class))).thenReturn(mockResponse);
 
         // Act & Assert - Should accept form-urlencoded content type
         mockMvc.perform(post("/oauth/iar")
@@ -299,8 +289,7 @@ class OAuthAuthorizationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-        verify(iarService, times(1)).validateIarRequest(any(InteractiveAuthorizationRequest.class));
-        verify(iarService, times(1)).processAuthorizationRequest(any(InteractiveAuthorizationRequest.class));
+        verify(iarService, times(1)).handleIarRequest(any(IarRequest.class));
     }
 
     @Test
