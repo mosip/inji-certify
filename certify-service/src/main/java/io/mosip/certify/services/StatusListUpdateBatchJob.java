@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 /**
  * Batch job service for updating Status List Credentials
- * Runs hourly to process new credential status transactions and update status lists
+ * Runs every minute(can be configured) to process new credential status transactions and update status lists
  */
 @Slf4j
 @Service
