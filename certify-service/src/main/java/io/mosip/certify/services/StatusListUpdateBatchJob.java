@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 /**
  * Batch job service for updating Status List Credentials
- * Runs hourly to process new credential status transactions and update status lists
+ * Runs every minute(can be configured) to process new credential status transactions and update status lists
  */
 @Slf4j
 @Service
@@ -49,11 +49,11 @@ public class StatusListUpdateBatchJob {
      * Scheduled method that runs periodically (schedule controlled by cron expression property)
      * to update status lists by processing new credential status transactions.
      */
-    @Scheduled(cron = "${mosip.certify.batch.status-list-update.cron-expression:0 0 * * * *}")
+    @Scheduled(cron = "${mosip.certify.batch.status-list-update.cron-expression:0 0/1 * * * *}")
     @SchedulerLock(
             name = "updateStatusLists",
             lockAtMostFor = "${mosip.certify.batch.status-list-update.lock-at-most-for:50m}",
-            lockAtLeastFor = "${mosip.certify.batch.status-list-update.lock-at-least-for:5m}"
+            lockAtLeastFor = "${mosip.certify.batch.status-list-update.lock-at-least-for:50s}"
     )
     public void updateStatusLists() {
         LockAssert.assertLocked();
