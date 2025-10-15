@@ -18,7 +18,7 @@ ALTER TABLE certify.credential_template RENAME TO credential_config;
 
 -- Step 2: Add new columns
 ALTER TABLE certify.credential_config
-    ADD COLUMN credential_config_key_id VARCHAR(255) NOT NULL UNIQUE,
+    ADD COLUMN credential_config_key_id VARCHAR(2048),
     ADD COLUMN config_id VARCHAR(255) DEFAULT gen_random_uuid(),
     ADD COLUMN status VARCHAR(255) DEFAULT 'active',
     ADD COLUMN doctype VARCHAR,
@@ -26,7 +26,7 @@ ALTER TABLE certify.credential_config
     ADD COLUMN credential_format VARCHAR(255) NOT NULL DEFAULT '', -- Adding a default value for NOT NULL constraint
     ADD COLUMN did_url VARCHAR DEFAULT 'did:web:mosip.github.io:inji-config:default', -- Adding a default value for NOT NULL constraint
     ADD COLUMN key_manager_app_id VARCHAR(36) DEFAULT '', -- Adding a default value for NOT NULL constraint
-    ADD COLUMN key_manager_ref_id VARCHAR(128) DEFAULT 'ED25519_SIGN', -- Adding a default value for NOT NULL constraint
+    ADD COLUMN key_manager_ref_id VARCHAR(128) DEFAULT '', -- Adding a default value for NOT NULL constraint
     ADD COLUMN signature_algo VARCHAR(36),
     ADD COLUMN signature_crypto_suite VARCHAR(128) DEFAULT 'Ed25519Signature2020', -- Adding a default value for NOT NULL constraint
     ADD COLUMN sd_claim VARCHAR,
@@ -39,13 +39,17 @@ ALTER TABLE certify.credential_config
     ADD COLUMN credential_subject JSONB DEFAULT '{}'::jsonb,
     ADD COLUMN mso_mdoc_claims JSONB,
     ADD COLUMN sd_jwt_claims JSONB,
-    ADD COLUMN plugin_configurations JSONB;
+    ADD COLUMN plugin_configurations JSONB,
     ADD COLUMN credential_status_purpose TEXT[];
 
 -- Adding a default value for NOT NULL constraint
 UPDATE certify.credential_config
-SET credential_config_key_id = credential_type || '_ldp_vc'
+SET credential_config_key_id = context || credential_type || '_ldp_vc'
 WHERE credential_config_key_id IS NULL;
+
+UPDATE certify.credential_config
+SET template = encode(convert_to(template, 'UTF8'), 'base64')
+WHERE template IS NOT NULL AND template <> '';
 
 UPDATE certify.credential_config
 SET credential_format = 'ldp_vc'
@@ -77,7 +81,11 @@ ALTER TABLE certify.credential_config ADD CONSTRAINT pk_config_id PRIMARY KEY (c
 ALTER TABLE certify.credential_config
     ALTER COLUMN vc_template DROP NOT NULL,
     ALTER COLUMN context DROP NOT NULL,
-    ALTER COLUMN credential_type DROP NOT NULL;
+    ALTER COLUMN credential_type DROP NOT NULL,
+    ALTER COLUMN credential_config_key_id SET NOT NULL;
+
+ALTER TABLE certify.credential_config
+    ADD CONSTRAINT uq_credential_config_key_id UNIQUE (credential_config_key_id);
 
 -- Step 6: Create the unique index on vct
 CREATE UNIQUE INDEX idx_credential_config_type_context_unique
@@ -274,3 +282,12 @@ CREATE INDEX IF NOT EXISTS idx_sla_status_list_credential_id ON status_list_avai
 CREATE INDEX IF NOT EXISTS idx_sla_is_assigned ON status_list_available_indices(is_assigned);
 CREATE INDEX IF NOT EXISTS idx_sla_list_index ON status_list_available_indices(list_index);
 CREATE INDEX IF NOT EXISTS idx_sla_cr_dtimes ON status_list_available_indices(cr_dtimes);
+
+INSERT INTO certify.key_policy_def(APP_ID,KEY_VALIDITY_DURATION,PRE_EXPIRE_DAYS,ACCESS_ALLOWED,IS_ACTIVE,CR_BY,CR_DTIMES) VALUES('CERTIFY_VC_SIGN_EC_R1', 1095, 60, 'NA', true, 'mosipadmin', now());
+
+GRANT USAGE, SELECT
+   ON ALL SEQUENCES IN SCHEMA certify
+   TO certifyuser;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA certify
+   GRANT USAGE, SELECT ON SEQUENCES TO certifyuser;

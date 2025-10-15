@@ -1,26 +1,26 @@
 AuthenticateUserForLandRegistryEccR1:
-   InjiCertify_ESignet_AuthenticateUserVCI_For_LandRegistry_uin_Otp_Valid_Smoke:
+   InjiCertify_ESignet_AuthenticateUserVCI_For_LandRegistry_EccR1_uin_Otp_Valid_Smoke:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
       uniqueIdentifier: TC_esignetDependent_AuthenticateUser
       description: Authenticate User for mock ida
-      role: noauth
+      role: resident
       restMethod: post
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
       inputTemplate: injicertify/EccR1/AuthenticateUserForLandRegistryEccR1/AuthenticateUserForLandRegistry
       outputTemplate: injicertify/EccR1/AuthenticateUserForLandRegistryEccR1/AuthenticateUserForLandRegistryResult
       input: '{
-        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_LandRegistry_uin_all_Valid_Smoke_sid_encodedResp$",
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_LandRegistry_EccR1_uin_all_Valid_Smoke_sid_encodedResp$",
       	"requestTime": "$TIMESTAMP$",
-      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_For_LandRegistry_uin_all_Valid_Smoke_sid_transactionId$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_For_LandRegistry_EccR1_uin_all_Valid_Smoke_sid_transactionId$",
       	"individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
       	"authFactorType" : "OTP",
-      	"challenge" : "111111",
+      	"challenge" : "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_EMAIL$",
         "format": "alpha-numeric",
         "sendOtp":{
-    "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_LandRegistry_uin_all_Valid_Smoke_sid_encodedResp$",
+    "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_LandRegistry_EccR1_uin_all_Valid_Smoke_sid_encodedResp$",
     "requestTime": "$TIMESTAMP$",
-    "transactionId": "$ID:ESignet_OAuthDetailsRequest_For_LandRegistry_uin_all_Valid_Smoke_sid_transactionId$",
+    "transactionId": "$ID:ESignet_OAuthDetailsRequest_For_LandRegistry_EccR1_uin_all_Valid_Smoke_sid_transactionId$",
     "individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
     "otpChannels": [{channel: "email"},{channel: "phone"}],
     "sendOtpReqTemplate": "injicertify/SendOtp/SendOtp",

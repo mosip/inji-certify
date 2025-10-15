@@ -15,8 +15,6 @@ public class UpdateCredentialStatusRequest {
     @NotNull
     private Boolean status;
 
-    private String indexAllocator;
-
     @Data
     public static class CredentialStatusDto {
         private String id;

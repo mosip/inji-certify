@@ -1,13 +1,17 @@
 package io.mosip.testrig.apirig.injicertify.utils;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.PublicKey;
+import java.security.Security;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECGenParameterSpec;
+import java.security.spec.ECPoint;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Calendar;
@@ -17,8 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 
 import javax.ws.rs.core.MediaType;
 
@@ -28,27 +31,29 @@ import org.bitcoinj.core.Base58;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 import org.testng.SkipException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
-import com.nimbusds.jose.*;
-import com.nimbusds.jose.crypto.ECDSASigner;
-import com.nimbusds.jose.crypto.Ed25519Signer;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.crypto.ECDSASigner;
+import com.nimbusds.jose.crypto.Ed25519Signer;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.OctetKeyPair;
 import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
 import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import io.mosip.testrig.apirig.dataprovider.BiometricDataProvider;
 import io.mosip.testrig.apirig.dbaccess.DBManager;
@@ -71,6 +76,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	private static String fullNameForSunBirdR = generateFullNameForSunBirdR();
 	private static String dobForSunBirdR = generateDobForSunBirdR();
 	private static String policyNumberForSunBirdR = generateRandomNumberString(9);
+	private static final ObjectMapper mapper = new ObjectMapper();
 	
 	public static void setLogLevel() {
 		if (InjiCertifyConfigManager.IsDebugEnabled())
@@ -407,6 +413,25 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_ES256$",
 					signES256JWT(clientId, accessToken, testCaseName, tempUrl));
 		}
+		
+		if (jsonString.contains("$PROOF_JWT_ES256K$")) {
+			JSONObject request = new JSONObject(jsonString);
+			String clientId = "";
+			String accessToken = "";
+			String tempUrl = "";
+			if (request.has("client_id")) {
+				clientId = request.getString("client_id");
+				request.remove("client_id");
+			}
+			if (request.has("idpAccessToken")) {
+				accessToken = request.getString("idpAccessToken");
+			}
+			jsonString = request.toString();
+			tempUrl = getBaseURL(testCaseName, InjiCertifyConfigManager.getInjiCertifyBaseUrl());
+
+			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_ES256K$",
+					signES256KJWT(clientId, accessToken, testCaseName, tempUrl));
+		}
 
 		if (jsonString.contains("$CLIENT_ASSERTION_JWT$")) {
 			String oidcJWKKeyString = JWKKeyUtil.getJWKKey(OIDCJWK1);
@@ -495,6 +520,10 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			}
 			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_2$",
 					signJWKForMockID(clientId, accessToken, oidcJWKKey4, testCaseName, tempUrl));
+		}
+		
+		if (jsonString.contains("indexedAttributesEquals")) {
+			jsonString = normalizeIndexedAttributes(jsonString);
 		}
 
 		return jsonString;
@@ -627,7 +656,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			Date expirationTime = calendar.getTime();
 
 			JWTClaimsSet claimsSet = new JWTClaimsSet.Builder().subject(clientId).audience(tempUrl).issuer(clientId)
-					.issueTime(currentTime).expirationTime(expirationTime).build();
+					.issueTime(currentTime).expirationTime(expirationTime).jwtID(UUID.randomUUID().toString()).build();
 
 			logger.info("JWT current and expiry time " + currentTime + " & " + expirationTime);
 
@@ -675,7 +704,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			String nonce = new ObjectMapper().readTree(jwtPayload).get("c_nonce").asText();
 
 			claimsSet = new JWTClaimsSet.Builder().audience(tempUrl).claim("nonce", nonce).issuer(clientId)
-					.issueTime(currentTime).expirationTime(expirationTime).build();
+					.issueTime(currentTime).expirationTime(expirationTime).jwtID(UUID.randomUUID().toString()).build();
 			signedJWT = new SignedJWT(
 					new JWSHeader.Builder(JWSAlgorithm.RS256).type(new JOSEObjectType(typ)).jwk(jwkHeader).build(),
 					claimsSet);
@@ -710,7 +739,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			Date expirationTime = calendar.getTime();
 
 			JWTClaimsSet claimsSet = new JWTClaimsSet.Builder().subject(clientId).audience(tempUrl).issuer(clientId)
-					.issueTime(currentTime).expirationTime(expirationTime).build();
+					.issueTime(currentTime).expirationTime(expirationTime).jwtID(UUID.randomUUID().toString()).build();
 
 			logger.info("JWT current and expiry time " + currentTime + " & " + expirationTime);
 
@@ -790,6 +819,9 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		} else if (testCaseDTO.getEndPoint().startsWith("$INJICERTIFYINSURANCEBASEURL$")
 				&& testCaseName.contains("GetCredentialSunBirdC")) {
 			return InjiCertifyConfigManager. getInjiCertifyBaseUrl();
+		} else if (testCaseDTO.getEndPoint().startsWith("$INJICERTIFYINSURANCEBASEURL$")
+					&& testCaseName.contains("CredentialConfig")) {
+				return InjiCertifyConfigManager. getInjiCertifyBaseUrl();
 		} else if (testCaseDTO.getEndPoint().startsWith("$INJICERTIFYMOSIPIDBASEURL$")
 				&& testCaseName.contains("_GetCredentialMosipID")) {
 			return InjiCertifyConfigManager. getInjiCertifyBaseUrl();
@@ -832,6 +864,8 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	
 	public static TestCaseDTO isTestCaseValidForExecution(TestCaseDTO testCaseDTO) {
 		String testCaseName = testCaseDTO.getTestCaseName();
+		
+		currentTestCaseName = testCaseName;
 		
 		//When the captcha is enabled we cannot execute the test case as we can not generate the captcha token
 		if (isCaptchaEnabled() == true) {
@@ -972,7 +1006,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 				idTokenExpirySecs = 0;
 
 			claimsSet = new JWTClaimsSet.Builder().audience(tempUrl).claim("nonce", nonce).issuer(clientId)
-					.issueTime(currentTime).expirationTime(expirationTime).build();
+					.issueTime(currentTime).expirationTime(expirationTime).jwtID(UUID.randomUUID().toString()).build();
 			
 			if (testCaseName.contains("_Missing_Typ_")) {
 				signedJWT = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.RS256).jwk(jwkHeader).build(), claimsSet);
@@ -997,30 +1031,189 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		return proofJWT;
 	}
 	
-	public static String signES256JWT(String clientId, String accessToken, String testCaseName, String tempUrl) {
-	    int idTokenExpirySecs = Integer.parseInt(getValueFromEsignetActuator(
-	            InjiCertifyConfigManager.getEsignetActuatorPropertySection(),
-	            GlobalConstants.MOSIP_ESIGNET_ID_TOKEN_EXPIRE_SECONDS));
+	public static String generateP256DidKey(byte[] rawP256PublicKey) {
+        // P-256 public keys in compressed format are 33 bytes
+        if (rawP256PublicKey == null || rawP256PublicKey.length != 33) {
+            throw new IllegalArgumentException(
+                    "Invalid P-256 public key: must be 33 bytes (compressed format)");
+        }
 
+     // Multicodec prefix for P-256 (0x8024) as expected by DIDkeysProofManager
+        byte[] prefix = new byte[] { (byte) 0x80, (byte) 0x24 };
+
+        byte[] combined = new byte[prefix.length + rawP256PublicKey.length];
+        System.arraycopy(prefix, 0, combined, 0, prefix.length);
+        System.arraycopy(rawP256PublicKey, 0, combined, prefix.length, rawP256PublicKey.length);
+
+        return "did:key:z" + Base58.encode(combined);
+    }
+	
+	/**
+     * Extract compressed raw P-256 public key from an EC JWK using Bouncy Castle
+     * for correct compression.
+     */
+    private static byte[] extractRawP256PublicKey(ECKey ecJWK) throws Exception {
+        ECPublicKey publicKey = ecJWK.toECPublicKey();
+
+        // Use BouncyCastle EC curve for compression
+        org.bouncycastle.jce.spec.ECParameterSpec ecSpec =
+                org.bouncycastle.jce.ECNamedCurveTable.getParameterSpec("secp256r1");
+        org.bouncycastle.math.ec.ECCurve curve = ecSpec.getCurve();
+
+        java.security.spec.ECPoint javaPoint = publicKey.getW();
+        org.bouncycastle.math.ec.ECPoint bcPoint = curve.createPoint(
+                javaPoint.getAffineX(),
+                javaPoint.getAffineY()
+        );
+
+        // true = compressed format (33 bytes)
+        return bcPoint.getEncoded(true);
+    }
+	public static String signES256JWT(String clientId, String accessToken, String testCaseName, String tempUrl) {
+		int idTokenExpirySecs = Integer
+				.parseInt(getValueFromEsignetActuator(InjiCertifyConfigManager.getEsignetActuatorPropertySection(),
+						GlobalConstants.MOSIP_ESIGNET_ID_TOKEN_EXPIRE_SECONDS));
+
+		String proofJWT = "";
+		SignedJWT signedJWT;
+		JWSHeader header = null;
+		ECKey signingKey;
+		
+
+		try {
+			// Generate EC P-256 keypair
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC");
+            keyGen.initialize(new ECGenParameterSpec("secp256r1"));
+            KeyPair keyPair = keyGen.generateKeyPair();
+            ECPrivateKey privateKey = (ECPrivateKey) keyPair.getPrivate();
+            ECPublicKey publicKey = (ECPublicKey) keyPair.getPublic();
+
+            if (testCaseName.contains("_Did_Key_Sign_")) {
+                // Convert to ECKey
+                ECKey ecJWK = new ECKey.Builder(Curve.P_256, publicKey)
+                        .privateKey(privateKey)
+                        .build();
+
+                // Extract compressed P-256 public key
+                byte[] compressedKey = extractRawP256PublicKey(ecJWK);
+
+                // Generate DID:key
+                String didKey = generateP256DidKey(compressedKey);
+
+                // Build header with DID key
+                header = new JWSHeader.Builder(JWSAlgorithm.ES256)
+                        .keyID(didKey)
+                        .type(new JOSEObjectType("openid4vci-proof+jwt"))
+                        .build();
+
+                signingKey = new ECKey.Builder(Curve.P_256, publicKey)
+                        .privateKey(privateKey)
+                        .build();
+
+            } else {
+                signingKey = new ECKey.Builder(Curve.P_256, publicKey)
+                        .privateKey(privateKey)
+                        .keyID(UUID.randomUUID().toString())
+                        .build();
+
+                header = new JWSHeader.Builder(JWSAlgorithm.ES256)
+                        .jwk(signingKey.toPublicJWK())
+                        .type(new JOSEObjectType("openid4vci-proof+jwt"))
+                        .build();
+            }
+          
+
+			Date currentTime = new Date();
+
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(currentTime);
+			calendar.add(Calendar.SECOND, idTokenExpirySecs);
+			Date expirationTime = calendar.getTime();
+
+			signedJWT = SignedJWT.parse(accessToken);
+			String nonce = signedJWT.getJWTClaimsSet().getClaim("c_nonce").toString();
+
+			JWTClaimsSet claimsSet = new JWTClaimsSet.Builder().audience(tempUrl).claim("nonce", nonce).issuer(clientId)
+					.issueTime(currentTime).expirationTime(expirationTime).jwtID(UUID.randomUUID().toString()).build();
+
+			signedJWT = new SignedJWT(header, claimsSet);
+			JWSSigner signer = new ECDSASigner(signingKey);
+
+			signedJWT.sign(signer);
+			proofJWT = signedJWT.serialize();
+
+		} catch (Exception e) {
+			logger.error("Exception while signing proof_jwt with ES256: " + e.getMessage());
+		}
+
+		return proofJWT;
+	}
+	
+	public static String generateSecp256k1DidKey(byte[] rawSecp256k1PublicKey) {
+	    // secp256k1 compressed public keys are always 33 bytes (0x02/0x03 + 32-byte x coordinate)
+	    if (rawSecp256k1PublicKey == null || rawSecp256k1PublicKey.length != 33) {
+	        throw new IllegalArgumentException("Invalid secp256k1 public key: must be 33 bytes (compressed format)");
+	    }
+
+	    // Multicodec prefix for secp256k1 (0xE701)
+	    byte[] prefix = new byte[]{(byte) 0xE7, 0x01};
+
+	    byte[] combined = new byte[prefix.length + rawSecp256k1PublicKey.length];
+	    System.arraycopy(prefix, 0, combined, 0, prefix.length);
+	    System.arraycopy(rawSecp256k1PublicKey, 0, combined, prefix.length, rawSecp256k1PublicKey.length);
+
+	    return "did:key:z" + Base58.encode(combined);
+	}
+
+	public static String signES256KJWT(String clientId, String accessToken, String testCaseName, String tempUrl) {
+	    int idTokenExpirySecs = Integer.parseInt(
+	            getValueFromEsignetActuator(
+	                    InjiCertifyConfigManager.getEsignetActuatorPropertySection(),
+	                    GlobalConstants.MOSIP_ESIGNET_ID_TOKEN_EXPIRE_SECONDS
+	            )
+	    );
+
+	    JWSSigner signer;
 	    String proofJWT = "";
-	    String typ = "openid4vci-proof+jwt";
 	    SignedJWT signedJWT;
+	    JWSHeader header;
 
 	    try {
-	        // Generate EC key pair using Java KeyPairGenerator
-	        KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("EC");
-	        keyPairGen.initialize(new ECGenParameterSpec("secp256r1")); // P-256
-	        KeyPair keyPair = keyPairGen.generateKeyPair();
+	    	// 🔑 Ensure BC is available
+	        if (Security.getProvider("BC") == null) {
+	            Security.addProvider(new BouncyCastleProvider());
+	        }
+	        // Generate secp256k1 key pair using BouncyCastle provider
+	        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC", "BC");
+	        keyGen.initialize(new ECGenParameterSpec("secp256k1"));
+	        KeyPair keyPair = keyGen.generateKeyPair();
 
-	        ECKey ecJWK = new ECKey.Builder(Curve.P_256, (ECPublicKey) keyPair.getPublic())
-	                .privateKey((ECPrivateKey) keyPair.getPrivate())
+	        ECPublicKey publicKey = (ECPublicKey) keyPair.getPublic();
+	        ECPrivateKey privateKey = (ECPrivateKey) keyPair.getPrivate();
+
+	        // Nimbus ECKey
+	        ECKey ecJWK = new ECKey.Builder(Curve.SECP256K1, publicKey)
+	                .privateKey(privateKey)
 	                .keyID(UUID.randomUUID().toString())
 	                .build();
 
-	        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.ES256)
-	                .type(new JOSEObjectType(typ))
-	                .jwk(ecJWK.toPublicJWK())
-	                .build();
+	        if (testCaseName.contains("_Did_Key_Sign_")) {
+	            // Compress public key (33 bytes: 0x02/0x03 + X)
+	            byte[] compressedKey = compressSecp256k1PublicKey(publicKey);
+
+	            // Generate did:key
+	            String didKey = generateSecp256k1DidKey(compressedKey);
+
+	            header = new JWSHeader.Builder(JWSAlgorithm.ES256K)
+	                    .type(new JOSEObjectType("openid4vci-proof+jwt"))
+	                    .keyID(didKey)
+	                    .build();
+	        } else {
+	            header = new JWSHeader.Builder(JWSAlgorithm.ES256K)
+	                    .type(new JOSEObjectType("openid4vci-proof+jwt"))
+	                    .jwk(ecJWK.toPublicJWK())
+	                    .build();
+	        }
 
 	        Date currentTime = new Date();
 
@@ -1038,21 +1231,53 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	                .issuer(clientId)
 	                .issueTime(currentTime)
 	                .expirationTime(expirationTime)
+	                .jwtID(UUID.randomUUID().toString())
 	                .build();
 
 	        signedJWT = new SignedJWT(header, claimsSet);
-	        JWSSigner signer = new ECDSASigner(ecJWK);
+	        signer = new ECDSASigner(privateKey);
+
+	        // ✅ Fix: pass actual Provider object
+	        signer.getJCAContext().setProvider(Security.getProvider("BC"));
 
 	        signedJWT.sign(signer);
 	        proofJWT = signedJWT.serialize();
 
 	    } catch (Exception e) {
-	        logger.error("Exception while signing proof_jwt with ES256: " + e.getMessage());
+	        logger.error("Exception while signing proof_jwt with ES256K: " + e.getMessage(), e);
 	    }
 
 	    return proofJWT;
 	}
-	
+
+	/**
+	 * Compress a secp256k1 public key into 33-byte format.
+	 */
+	private static byte[] compressSecp256k1PublicKey(ECPublicKey publicKey) {
+	    java.security.spec.ECPoint w = publicKey.getW();
+	    BigInteger x = w.getAffineX();
+	    BigInteger y = w.getAffineY();
+
+	    // Prefix 0x02 if y is even, 0x03 if odd
+	    byte prefix = (y.testBit(0)) ? (byte) 0x03 : (byte) 0x02;
+
+	    byte[] xBytes = x.toByteArray();
+	    if (xBytes.length > 32) {
+	        xBytes = Arrays.copyOfRange(xBytes, xBytes.length - 32, xBytes.length);
+	    } else if (xBytes.length < 32) {
+	        byte[] padded = new byte[32];
+	        System.arraycopy(xBytes, 0, padded, 32 - xBytes.length, xBytes.length);
+	        xBytes = padded;
+	    }
+
+	    byte[] compressed = new byte[33];
+	    compressed[0] = prefix;
+	    System.arraycopy(xBytes, 0, compressed, 1, 32);
+
+	    return compressed;
+	}
+
+
 	public static String generateEd25519DidKey(byte[] rawEd25519PublicKey) {
 	    // Ed25519 public keys are 32 bytes
 	    if (rawEd25519PublicKey == null || rawEd25519PublicKey.length != 32) {
@@ -1111,7 +1336,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			JWTClaimsSet claimsSet = null;
 
 			claimsSet = new JWTClaimsSet.Builder().audience(tempUrl).claim("nonce", nonce).issuer(clientId)
-					.issueTime(currentTime).expirationTime(expirationTime).build();
+					.issueTime(currentTime).expirationTime(expirationTime).jwtID(UUID.randomUUID().toString()).build();
 
 			signedJWT = new SignedJWT(header, claimsSet);
 			signer = new Ed25519Signer(edJWK);
@@ -1133,6 +1358,192 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		LocalDate dob = faker.date().birthday().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		return dob.format(formatter);
+	}
+	
+	public static JSONArray certifyActuatorResponseArray = null;
+	
+	public static String getValueFromCertifyActuator(String section, String key, String url) {
+		// Combine the cache key to uniquely identify each request
+		String actuatorCacheKey = url + section + key;
+
+		// Check if the value is already cached
+		String value = actuatorValueCache.get(actuatorCacheKey);
+		if (value != null) {
+			return value; // Return cached value if available
+		}
+
+		try {
+			// Fetch the actuator response array if it's not already populated
+			if (certifyActuatorResponseArray == null) {
+				Response response = RestClient.getRequest(url, MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON);
+				JSONObject responseJson = new JSONObject(response.getBody().asString());
+				certifyActuatorResponseArray = responseJson.getJSONArray("propertySources");
+			}
+
+			// Loop through the "propertySources" to find the matching section and key
+			for (int i = 0, size = certifyActuatorResponseArray.length(); i < size; i++) {
+				JSONObject eachJson = certifyActuatorResponseArray.getJSONObject(i);
+				// Check if the section matches
+				if (eachJson.get("name").toString().contains(section)) {
+					// Get the value from the properties object
+					JSONObject properties = eachJson.getJSONObject(GlobalConstants.PROPERTIES);
+					if (properties.has(key)) {
+						value = properties.getJSONObject(key).get(GlobalConstants.VALUE).toString();
+						// Log the value if debug is enabled
+						if (InjiCertifyConfigManager.IsDebugEnabled()) {
+							logger.info("Actuator: " + url + " key: " + key + " value: " + value);
+						}
+						break; // Exit the loop once the value is found
+					} else {
+						logger.warn("Key '" + key + "' not found in section '" + section + "'.");
+					}
+				}
+			}
+
+			// Cache the retrieved value for future lookups
+			if (value != null) {
+				actuatorValueCache.put(actuatorCacheKey, value);
+			} else {
+				logger.warn("No value found for section: " + section + ", key: " + key);
+			}
+
+			return value;
+		} catch (JSONException e) {
+			// Handle JSON parsing exceptions separately
+			logger.error("JSON parsing error for section: " + section + ", key: " + key + " - " + e.getMessage());
+			return null; // Return null if JSON parsing fails
+		} catch (Exception e) {
+			// Catch any other exceptions (e.g., network issues)
+			logger.error("Error fetching value for section: " + section + ", key: " + key + " - " + e.getMessage());
+			return null; // Return null if any other exception occurs
+		}
+	}
+	
+	public void updateCacheFromRow(Map<String, Object> row, String idKeyName, String testCaseName) {
+		if (row == null || row.isEmpty() || idKeyName == null || idKeyName.trim().isEmpty()) {
+			return;
+		}
+
+		String[] keys = idKeyName.split(",");
+		for (String key : keys) {
+			String trimmedKey = key.trim();
+			if (!trimmedKey.isEmpty()) {
+				if (row.containsKey(trimmedKey)) {
+					Object value = row.get(trimmedKey);
+					if (value != null) {
+						writeAutoGeneratedId(testCaseName, trimmedKey, value.toString());
+					} else {
+						logger.error("Key '" + trimmedKey + "' has null value in DB row for testCase: " + testCaseName);
+					}
+				} else {
+					logger.error("Key '" + trimmedKey + "' not found in DB row for testCase: " + testCaseName);
+				}
+			}
+		}
+	}
+	
+	public static String normalizeIndexedAttributes(String json) {
+		try {
+			
+			json = fixBrokenJson(json);
+
+			// read top-level JSON into a Map
+			Map<String, Object> requestMap = mapper.readValue(json, Map.class);
+
+			// Process only if key exists
+			if (requestMap.containsKey(InjiCertifyConstants.INDEXED_ATTRIBUTES_EQUALS_STRING)) {
+				Object raw = requestMap.get(InjiCertifyConstants.INDEXED_ATTRIBUTES_EQUALS_STRING);
+
+				requestMap.put(InjiCertifyConstants.INDEXED_ATTRIBUTES_EQUALS_STRING, convertToMapIfJsonObject(raw));
+			}
+
+			// Convert back to JSON string
+			return mapper.writeValueAsString(requestMap);
+
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to normalize indexedAttributesEquals", e);
+		}
+	}
+
+	private static Object convertToMapIfJsonObject(Object value) {
+		try {
+			if (value instanceof Map) {
+				return value; // already a map
+			} else if (value instanceof String) {
+				String str = ((String) value).trim();
+				if (str.startsWith("{") && str.endsWith("}")) {
+					JsonNode node = mapper.readTree(str);
+					if (node.isObject()) {
+						// convert JSON object string into Map
+						return mapper.readValue(str, Map.class);
+					}
+				}
+			}
+		} catch (Exception ignore) {
+			// if parsing fails, just return the original value
+		}
+		return value;
+	}
+	
+	public static String fixBrokenJson(String json) {
+		// Look for "indexedAttributesEquals": "{"..."}"
+		return json.replaceAll("\"indexedAttributesEquals\"\\s*:\\s*\"\\{", "\"indexedAttributesEquals\": {")
+				.replaceAll("\\}\"\\s*(,?)", "}$1");
+	}
+	
+	protected void writeAutoGeneratedIdWithResponse(Response response, String idKeyName, String testCaseName) {
+		JSONObject responseJson = null;
+		try {
+			// 🔹 Parse JSON safely (handles both JSONObject and JSONArray)
+			Object parsedResponse = new JSONTokener(response.getBody().asString()).nextValue();
+			JSONObject jsonObject = null;
+
+			if (parsedResponse instanceof JSONArray) {
+				JSONArray jsonArray = (JSONArray) parsedResponse;
+				if (jsonArray.length() > 0) {
+					jsonObject = jsonArray.getJSONObject(0); // take first object
+				} else {
+					logger.error("Empty JSON array in response");
+					return;
+				}
+			} else if (parsedResponse instanceof JSONObject) {
+				jsonObject = (JSONObject) parsedResponse;
+			} else {
+				logger.error("Unexpected JSON format: " + response.getBody().asString());
+				return;
+			}
+
+			// 🔹 Decide which object to use based on testcase
+			if (jsonObject.has(GlobalConstants.RESPONSE)) {
+				responseJson = jsonObject.getJSONObject(GlobalConstants.RESPONSE);
+			} else {
+				responseJson = jsonObject;
+			}
+
+			// 🔹 Extract all requested fields
+			String[] fieldNames = idKeyName.split(",");
+			for (String filedName : fieldNames) {
+				String identifierKeyName = getAutogenIdKeyName(testCaseName, filedName);
+
+				if (responseJson != null) {
+					if (responseJson.has(filedName)) {
+						autoGeneratedIDValueCache.put(identifierKeyName, responseJson.get(filedName).toString());
+					} else {
+						String keyValue = findClientId(responseJson.toString(), filedName);
+						if (keyValue != null) {
+							autoGeneratedIDValueCache.put(identifierKeyName, keyValue);
+						}
+					}
+
+				} else {
+					logger.error(GlobalConstants.ERROR_STRING_3 + filedName + GlobalConstants.WRITE_STRING
+							+ response.asString());
+				}
+			}
+
+		} catch (Exception e) {
+			logger.error("Exception while getting autogenerated id and writing in property file:" + e.getMessage());
+		}
 	}
 	
 }

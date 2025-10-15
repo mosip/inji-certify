@@ -1,7 +1,13 @@
 package io.mosip.testrig.apirig.injicertify.utils;
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -63,6 +69,39 @@ public class ExtendedDBManager extends DBManager {
 		} finally {
 			closeDataBaseConnection(session);
 		}
+	}
+	
+	public static List<Map<String, Object>> executeSelectQuery(String dbURL, String dbUser, String dbPassword,
+			String dbSchema, String query) throws AdminTestException {
+		Session session = null;
+		List<Map<String, Object>> records = new ArrayList<>();
+		try {
+			session = getDataBaseConnection(dbURL, dbUser, dbPassword, dbSchema);
+			if (session == null) {
+				throw new AdminTestException("Error:: While getting DB connection");
+			}
+			session.doWork(connection -> {
+				try (Statement statement = connection.createStatement(); ResultSet rs = statement.executeQuery(query)) {
+
+					ResultSetMetaData md = rs.getMetaData();
+					int columns = md.getColumnCount();
+
+					while (rs.next()) {
+						Map<String, Object> row = new HashMap<>();
+						for (int i = 1; i <= columns; i++) {
+							row.put(md.getColumnName(i), rs.getObject(i));
+						}
+						records.add(row);
+					}
+				}
+			});
+		} catch (Exception e) {
+			logger.error("Error while executing SELECT query: ", e);
+			throw new AdminTestException(e.getMessage());
+		} finally {
+			closeDataBaseConnection(session);
+		}
+		return records;
 	}
 	
 	

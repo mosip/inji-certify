@@ -30,8 +30,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.io.IOException;
 import java.net.URI;
 import java.security.GeneralSecurityException;
-import java.util.Date;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -62,15 +61,13 @@ public class W3CJsonLDTest {
 
     @Before
     public void setUp() {
-//        vcFormatter = mock(VCFormatter.class);
-//        signatureService = mock(SignatureService.class);
-//        proofGenerator = mock(ProofGenerator.class);
-//
-//        w3cJsonLd = new W3cJsonLd(vcFormatter, signatureService);
-//        w3cJsonLd.proofGenerator = proofGenerator;
+        Map<String, List<List<String>>> keyAliasMapper = new HashMap<>();
+        keyAliasMapper.put("Ed25519Signature2020", Arrays.asList(
+                Arrays.asList("appID", "refID")));
 
         ReflectionTestUtils.setField(w3cJsonLd, "proofGeneratorFactory", proofGeneratorFactory);
         ReflectionTestUtils.setField(w3cJsonLd, "didDocumentUtil", didDocumentUtil);
+        ReflectionTestUtils.setField(w3cJsonLd, "keyAliasMapper", keyAliasMapper);
         when(proofGeneratorFactory.getProofGenerator(any())).thenReturn(Optional.of(proofGenerator));
     }
 

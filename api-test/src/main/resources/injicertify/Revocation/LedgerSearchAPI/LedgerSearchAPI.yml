@@ -1,0 +1,150 @@
+LedgerSearchAPI:
+   InjiCertify_LedgerSearchAPI_ForLandRegistry_Revocation_Flow_all_Valid_Smoke_Sid:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/ledger-search
+      uniqueIdentifier: TC_InjiCertify_Ledger_Search_01
+      description: Get Ledger details based on given filters
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPI
+      outputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPIResult
+      input: '{
+      	"credentialId": "$ID:GetDataFromLedgerTable_For_LandRegistry_Valid_smoke_Pos_sid_credential_id$",
+        "issuerId": "$ID:GetDataFromLedgerTable_For_LandRegistry_Valid_smoke_Pos_sid_issuer_id$",
+        "credentialType": "VerifiableCredential,landregistry_revocation",
+      	"indexedAttributesEquals": "$ID:GetDataFromLedgerTable_For_LandRegistry_Valid_smoke_Pos_sid_indexed_attributes$"
+}'
+      output: '{
+}'
+   InjiCertify_LedgerSearchAPI_ForLandRegistry_cred2_Revocation_Flow_all_Valid_Smoke_Sid:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/ledger-search
+      uniqueIdentifier: TC_InjiCertify_Ledger_Search_02
+      description: Get Ledger details based on given filters
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPI
+      outputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPIResult
+      input: '{
+      	"credentialId": "$ID:GetDataFromLedgerTable_For_LandRegistry_cred2_Valid_smoke_Pos_sid_credential_id$",
+        "issuerId": "$ID:GetDataFromLedgerTable_For_LandRegistry_cred2_Valid_smoke_Pos_sid_issuer_id$",
+        "credentialType": "VerifiableCredential,landstatement_revocation",
+      	"indexedAttributesEquals": "$ID:GetDataFromLedgerTable_For_LandRegistry_cred2_Valid_smoke_Pos_sid_indexed_attributes$"
+}'
+      output: '{
+}'
+   InjiCertify_LedgerSearchAPI_ForLandRegistry_cred2_Revocation_without_credentialId_attribute:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/ledger-search
+      uniqueIdentifier: TC_InjiCertify_Ledger_Search_03
+      description: Get Ledger details without credentialId
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPI
+      outputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPIResult
+      input: '{
+      	"credentialId": "$REMOVE$",
+        "issuerId": "$ID:GetDataFromLedgerTable_For_LandRegistry_cred2_Valid_smoke_Pos_sid_issuer_id$",
+        "credentialType": "VerifiableCredential,landstatement_revocation",
+      	"indexedAttributesEquals": "$ID:GetDataFromLedgerTable_For_LandRegistry_cred2_Valid_smoke_Pos_sid_indexed_attributes$"
+}'
+      output: '{
+}'
+   InjiCertify_LedgerSearchAPI_ForLandRegistry_cred2_Revocation_without_IssuerId_Neg:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/ledger-search
+      uniqueIdentifier: TC_InjiCertify_Ledger_Search_04
+      description: Get Ledger details without IssuerId
+      role: noauth
+      restMethod: post
+      inputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPI
+      outputTemplate: injicertify/error
+      input: '{
+      	"credentialId": "$ID:GetDataFromLedgerTable_For_LandRegistry_cred2_Valid_smoke_Pos_sid_credential_id$",
+        "issuerId": "$REMOVE$",
+        "credentialType": "VerifiableCredential,landstatement_revocation",
+      	"indexedAttributesEquals": "$ID:GetDataFromLedgerTable_For_LandRegistry_cred2_Valid_smoke_Pos_sid_indexed_attributes$"
+}'
+      output: '{
+      "errors": [
+      {
+       "errorCode": "issuerId is mandatory"
+       }
+       ]  
+    }'
+   InjiCertify_LedgerSearchAPI_ForLandRegistry_cred2_Revocation_random_IssuerId_Neg:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/ledger-search
+      uniqueIdentifier: TC_InjiCertify_Ledger_Search_05
+      description: Get Ledger details with random IssuerId value
+      role: noauth
+      checkOnlyStatusCodeInResponse: true      
+      restMethod: post
+      inputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPI
+      outputTemplate: injicertify/responseCode
+      input: '{
+      	"credentialId": "$ID:GetDataFromLedgerTable_For_LandRegistry_cred2_Valid_smoke_Pos_sid_credential_id$",
+        "issuerId": "dfdghdhd",
+        "credentialType": "VerifiableCredential,landstatement_revocation",
+      	"indexedAttributesEquals": "$ID:GetDataFromLedgerTable_For_LandRegistry_cred2_Valid_smoke_Pos_sid_indexed_attributes$"
+}'
+      output: '{
+	"responseCode": "204"    
+    }'
+   InjiCertify_LedgerSearchAPI_ForLandRegistry_cred2_Revocation_without_CredentialType_Neg:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/ledger-search
+      uniqueIdentifier: TC_InjiCertify_Ledger_Search_06
+      description: Get Ledger details without credential type details
+      role: noauth
+      restMethod: post
+      inputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPI
+      outputTemplate: injicertify/error
+      input: '{
+      	"credentialId": "$ID:GetDataFromLedgerTable_For_LandRegistry_cred2_Valid_smoke_Pos_sid_credential_id$",
+        "issuerId": "$ID:GetDataFromLedgerTable_For_LandRegistry_cred2_Valid_smoke_Pos_sid_issuer_id$",
+        "credentialType": "$REMOVE$",
+      	"indexedAttributesEquals": "$ID:GetDataFromLedgerTable_For_LandRegistry_cred2_Valid_smoke_Pos_sid_indexed_attributes$"
+}'
+      output: '{
+      "errors": [
+      {
+       "errorCode": "credentialType is mandatory"
+       }
+       ]  
+    }'
+   InjiCertify_LedgerSearchAPI_ForLandRegistry_cred2_Revocation_without_indexedAttributes_Neg:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/ledger-search
+      uniqueIdentifier: TC_InjiCertify_Ledger_Search_07
+      description: Get Ledger details without indexed Attributes
+      role: noauth
+      restMethod: post
+      inputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPI
+      outputTemplate: injicertify/error
+      input: '{
+      	"credentialId": "$ID:GetDataFromLedgerTable_For_LandRegistry_cred2_Valid_smoke_Pos_sid_credential_id$",
+        "issuerId": "$ID:GetDataFromLedgerTable_For_LandRegistry_cred2_Valid_smoke_Pos_sid_issuer_id$",
+        "credentialType": "VerifiableCredential,landstatement_revocation",
+      	"indexedAttributesEquals": "$REMOVE$"
+}'
+      output: '{
+      "errors": [
+      {
+       "errorCode": "INVALID_SEARCH_CRITERIA"
+       }
+       ]  
+    }'
+   InjiCertify_LedgerSearchAPI_ForLandRegistry_cred2_Revocation_without_credentilId_value:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/ledger-search
+      uniqueIdentifier: TC_InjiCertify_Ledger_Search_08
+      description: Get Ledger details without CredentialId value
+      role: noauth
+      restMethod: post
+      checkErrorsOnlyInResponse: true      
+      inputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPI
+      outputTemplate: injicertify/Revocation/LedgerSearchAPI/LedgerSearchAPIResult
+      input: '{
+      	"credentialId": "",
+        "issuerId": "$ID:GetDataFromLedgerTable_For_LandRegistry_cred2_Valid_smoke_Pos_sid_issuer_id$",
+        "credentialType": "VerifiableCredential,landstatement_revocation",
+      	"indexedAttributesEquals": "$ID:GetDataFromLedgerTable_For_LandRegistry_cred2_Valid_smoke_Pos_sid_indexed_attributes$"
+}'
+      output: '{
+}'          
