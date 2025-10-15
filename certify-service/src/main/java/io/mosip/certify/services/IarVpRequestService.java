@@ -19,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
+import jakarta.annotation.PostConstruct;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,6 +47,23 @@ public class IarVpRequestService {
 
     @Value("${mosip.certify.oauth.interactive-authorization-endpoint}")
     private String certifyIarEndpoint;
+
+    /**
+     * Validate required configuration properties at startup
+     */
+    @PostConstruct
+    public void validateConfiguration() {
+        if (!StringUtils.hasText(verifyServiceVpRequestEndpoint)) {
+            throw new IllegalStateException("mosip.certify.verify.service.vp-request-endpoint must be configured");
+        }
+        if (!StringUtils.hasText(verifierClientId)) {
+            throw new IllegalStateException("mosip.certify.verify.service.verifier-client-id must be configured");
+        }
+        if (!StringUtils.hasText(certifyIarEndpoint)) {
+            throw new IllegalStateException("mosip.certify.oauth.interactive-authorization-endpoint must be configured");
+        }
+        log.info("IarVpRequestService configuration validation successful");
+    }
 
     /**
      * Create VP request with verify service

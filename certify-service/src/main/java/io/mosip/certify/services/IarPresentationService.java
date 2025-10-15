@@ -22,7 +22,10 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
+
+import jakarta.annotation.PostConstruct;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 
@@ -55,6 +58,20 @@ public class IarPresentationService {
 
     @Value("${mosip.certify.iar.authorization-code.length:24}")
     private int authorizationCodeLength;
+
+    /**
+     * Validate required configuration properties at startup
+     */
+    @PostConstruct
+    public void validateConfiguration() {
+        if (!StringUtils.hasText(verifyServiceVpResultEndpoint)) {
+            throw new IllegalStateException("mosip.certify.verify.service.vp-result-endpoint must be configured");
+        }
+        if (!StringUtils.hasText(verificationSuccessStatus)) {
+            throw new IllegalStateException("mosip.certify.iar.verification.success-status must be configured");
+        }
+        log.info("IarPresentationService configuration validation successful");
+    }
 
     /**
      * Process VP presentation and return authorization response

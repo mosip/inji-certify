@@ -114,7 +114,7 @@ public class IarServiceImpl implements IarService {
             return processVpPresentation(presentationRequest);
         }
 
-        if (!hasAuthSession || !hasVp) {
+        if (!hasAuthSession && !hasVp) {
             log.info("Processing initial authorization request for client_id: {}", unifiedRequest.getClientId());
             InteractiveAuthorizationRequest iarRequest = new InteractiveAuthorizationRequest();
             iarRequest.setResponseType(unifiedRequest.getResponseType());
@@ -125,7 +125,10 @@ public class IarServiceImpl implements IarService {
             iarRequest.setAuthorizationDetails(unifiedRequest.getAuthorizationDetails());
             return processAuthorizationRequest(iarRequest);
         }
-        log.error("Invalid unified IAR request - neither initial authorization nor VP presentation response");
+        
+        // Invalid state: only one of auth_session or openid4vp_presentation is present
+        log.error("Invalid unified IAR request - only one of auth_session or openid4vp_presentation is present. auth_session: {}, hasVp: {}", 
+                 hasAuthSession, hasVp);
         throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
     }
     

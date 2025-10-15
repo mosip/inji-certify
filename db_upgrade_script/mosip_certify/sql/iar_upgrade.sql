@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS iar_session (
     transaction_id VARCHAR(64) NOT NULL,
     request_id VARCHAR(64),
     verify_nonce VARCHAR(64),
-    expires_at TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
     client_id VARCHAR(128),
     authorization_code VARCHAR(128),
     response_uri VARCHAR(512),
@@ -25,7 +25,7 @@ COMMENT ON COLUMN iar_session.auth_session IS 'Unique session identifier returne
 COMMENT ON COLUMN iar_session.transaction_id IS 'Transaction identifier from verify service, used to track the verification process';
 COMMENT ON COLUMN iar_session.request_id IS 'Request identifier for tracking and logging purposes';
 COMMENT ON COLUMN iar_session.verify_nonce IS 'Nonce value from verify service for VP request security';
-COMMENT ON COLUMN iar_session.expires_at IS 'Session expiration timestamp, after which the session becomes invalid';
+COMMENT ON COLUMN iar_session.expires_at IS 'Session expiration timestamp, after which the session becomes invalid. Mandatory field for security - all sessions must have an expiration time.';
 COMMENT ON COLUMN iar_session.client_id IS 'OAuth client identifier, optional for public clients';
 COMMENT ON COLUMN iar_session.authorization_code IS 'OAuth authorization code generated for token exchange';
 COMMENT ON COLUMN iar_session.response_uri IS 'URI where VP presentation response should be sent';
