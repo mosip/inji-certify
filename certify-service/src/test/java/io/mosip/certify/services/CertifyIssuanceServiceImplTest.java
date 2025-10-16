@@ -25,12 +25,14 @@ import io.mosip.certify.core.spi.CredentialConfigurationService;
 import io.mosip.certify.core.spi.CredentialLedgerService;
 import io.mosip.certify.core.util.SecurityHelperService;
 import io.mosip.certify.credential.CredentialFactory;
+import io.mosip.certify.credential.MDocCredential;
 import io.mosip.certify.credential.SDJWT;
 import io.mosip.certify.credential.W3CJsonLD;
 import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
 import io.mosip.certify.utils.LedgerUtils;
+import io.mosip.certify.validators.CredentialRequestValidator;
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 
@@ -40,6 +42,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -93,6 +96,7 @@ public class CertifyIssuanceServiceImplTest {
     private static final String DEFAULT_SCOPE = "test-scope";
     private static final String DEFAULT_FORMAT_LDP = VCFormats.LDP_VC;
     private static final String DEFAULT_FORMAT_SDJWT = VCFormats.VC_SD_JWT; // vc+sd-jwt
+    private static final String DEFAULT_FORMAT_MDOC = VCFormats.MSO_MDOC; // mso_mdoc
 
     CredentialRequest request;
     Map<String, Object> claimsFromAccessToken; // Renamed for clarity
@@ -175,6 +179,17 @@ public class CertifyIssuanceServiceImplTest {
         credDefDtoForSDJWT.setType(List.of("VerifiableCredential", "TestCredential", "SDJWTCredential"));
         supportedDTO_SDJWT.setCredentialDefinition(credDefDtoForSDJWT);
         supportedCredsMap.put("test-credential-id-sdjwt", supportedDTO_SDJWT);
+
+        // MSO_MDOC Config DTO
+        CredentialConfigurationSupportedDTO supportedDTO_MDOC = new CredentialConfigurationSupportedDTO();
+        supportedDTO_MDOC.setScope(DEFAULT_SCOPE); // IMPORTANT: Must match claimsFromAccessToken
+        supportedDTO_MDOC.setFormat(DEFAULT_FORMAT_MDOC);
+        supportedDTO_MDOC.setDocType("org.iso.18013.5.1.mDL");
+        CredentialDefinition credDefDtoForMDOC = new CredentialDefinition();
+        credDefDtoForMDOC.setContext(List.of("https://www.w3.org/2018/credentials/v1"));
+        credDefDtoForMDOC.setType(List.of("VerifiableCredential", "mDLCredential"));
+        supportedDTO_MDOC.setCredentialDefinition(credDefDtoForMDOC);
+        supportedCredsMap.put("test-credential-id-mdoc", supportedDTO_MDOC);
 
         mockGlobalCredentialIssuerMetadataDTO.setCredentialConfigurationSupportedDTO(supportedCredsMap);
 
@@ -570,5 +585,62 @@ public class CertifyIssuanceServiceImplTest {
         verify(credentialLedgerService, atLeastOnce()).storeLedgerEntry(
                 isNull(), anyString(), anyString(), isNull(), anyMap(), any(LocalDateTime.class)
         );
+    }
+
+    @Test
+    public void getCredential_MDOC_Success() throws Exception {
+        // Create MDOC request with matching doctype
+        request = createValidCredentialRequest(DEFAULT_FORMAT_MDOC);
+
+        try (MockedStatic<CredentialRequestValidator> mockedValidator = mockStatic(CredentialRequestValidator.class)) {
+            mockedValidator.when(() -> CredentialRequestValidator.isValid(any(CredentialRequest.class))).thenReturn(true);
+            // CRITICAL: Verify the request has the correct doctype
+            assertEquals("org.iso.18013.5.1.mDL", request.getDoctype());
+
+            when(parsedAccessToken.isActive()).thenReturn(true);
+            when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
+            when(vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH)).thenReturn(transaction);
+            when(proofValidatorFactory.getProofValidator(anyString())).thenReturn(proofValidator);
+
+            // Stub getKeyMaterial to return ""
+            when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn("");
+
+            when(proofValidator.validate(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
+            when(dataProviderPlugin.fetchData(claimsFromAccessToken)).thenReturn(new JSONObject().put("key", "value"));
+
+            // Mock the mDOC credential
+            MDocCredential mockMdoc = mock(MDocCredential.class);
+            when(credentialFactory.getCredential(DEFAULT_FORMAT_MDOC)).thenReturn(Optional.of(mockMdoc));
+            when(mockMdoc.createCredential(anyMap(), anyString())).thenReturn("unsigned_mdoc_data");
+
+            VCResult mockVcResultMdoc = new VCResult<String>();
+            mockVcResultMdoc.setCredential("signed.mdoc.credential.data");
+
+            // Stub vcFormatter methods
+            when(vcFormatter.getProofAlgorithm(anyString())).thenReturn("ES256");
+            when(vcFormatter.getAppID(anyString())).thenReturn("testAppIdMdoc");
+            when(vcFormatter.getRefID(anyString())).thenReturn("testRefIdMdoc");
+            when(vcFormatter.getDidUrl(anyString())).thenReturn("did:example:mdoc");
+            when(vcFormatter.getSignatureCryptoSuite(anyString())).thenReturn("testSignatureCryptoSuite");
+
+            when(mockMdoc.addProof(
+                    eq("unsigned_mdoc_data"),
+                    eq(""),
+                    anyString(),
+                    anyString(),
+                    anyString(),
+                    anyString(),
+                    anyString()
+            )).thenReturn(mockVcResultMdoc);
+
+            CredentialResponse<?> response = issuanceService.getCredential(request);
+
+            assertNotNull("CredentialResponse should not be null", response);
+            assertNotNull("Response credential should not be null", response.getCredential());
+            assertTrue("Response credential should be a String", response.getCredential() instanceof String);
+            String credential = (String) response.getCredential();
+            assertEquals("signed.mdoc.credential.data", credential);
+            verify(auditWrapper).logAudit(any(), any(), any(), isNull());
+        }
     }
 }

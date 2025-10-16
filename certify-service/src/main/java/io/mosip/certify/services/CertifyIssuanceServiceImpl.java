@@ -188,7 +188,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
             // Handle format-specific setup
             switch (format) {
-            case "ldp_vc" :
+                case "ldp_vc":
                     vcRequestDto.setContext(credentialRequest.getCredential_definition().getContext());
                     vcRequestDto.setType(credentialRequest.getCredential_definition().getType());
                     vcRequestDto.setCredentialSubject(credentialRequest.getCredential_definition().getCredentialSubject());
@@ -198,7 +198,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
                     List<String> credentialStatusPurposeList = vcFormatter.getCredentialStatusPurpose(templateName);
                     if (credentialStatusPurposeList != null && !credentialStatusPurposeList.isEmpty() && credentialRequest.getCredential_definition().getContext().contains(VCDM2Constants.URL)) {
-                        if(!isLedgerEnabled) {
+                        if (!isLedgerEnabled) {
                             log.warn("Ledger feature is currently disabled. Since revocation is enabled, please note that searching for VCs to revoke within Certify is not available.");
                         }
                         statusListCredentialService.addCredentialStatus(jsonObject, credentialStatusPurposeList.getFirst());
@@ -214,20 +214,24 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     jsonObject.put(Constants.TYPE, vcRequestDto.getVct());
                     break;
 
+                case "mso_mdoc":
+                    vcRequestDto.setDoctype(credentialRequest.getDoctype());
+                    templateName = CredentialUtils.getTemplateName(vcRequestDto);
+                    templateParams.put("_doctype", vcRequestDto.getDoctype());
+                    jsonObject.put(Constants.TYPE, vcRequestDto.getDoctype());
+                    break;
+
                 default:
                     throw new CertifyException(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT, "Invalid or unsupported VC format requested.");
-            }
 
+            }
             // Common logic for all formats
             templateParams.put(Constants.TEMPLATE_NAME, templateName);
-                    templateParams.put(Constants.ISSUER_URI, issuerURI);
-                    if (statusListEnabled) {
-                        addCredentialStatus(jsonObject);
-                    }
+            templateParams.put(Constants.DID_URL, didUrl);
             if (!StringUtils.isEmpty(renderTemplateId)) {
                 templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
             }
-                    jsonObject.put("_holderId", holderId);
+            jsonObject.put("_holderId", holderId);
             templateParams.putAll(jsonObject.toMap());
             if(!StringUtils.isEmpty(idPrefix)) {
                 templateParams.put(VCDMConstants.CREDENTIAL_ID, idPrefix + UUID.randomUUID());
@@ -265,7 +269,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             jsonObject.remove(VCDM2Constants.CREDENTIAL_STATUS);
             return result;
 
-                } catch(DataProviderExchangeException e) {
+        } catch(DataProviderExchangeException e) {
             throw new CertifyException(e.getErrorCode());
         } catch (JSONException e) {
             log.error(e.getMessage(), e);
