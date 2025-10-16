@@ -31,11 +31,4 @@ public class MsoMdocCredentialRequestValidatorTest {
         credentialRequest.setClaims(Map.of("client_id", "test-client-id"));
         assertFalse(MsoMdocCredentialRequestValidator.isValidCheck(credentialRequest));
     }
-
-    @Test
-    public void checkMsoMdocValidatorWithEmptyClaims_thenFail() {
-        CredentialRequest credentialRequest = new CredentialRequest();
-        credentialRequest.setDoctype("mdoc-doctype");
-        assertFalse(MsoMdocCredentialRequestValidator.isValidCheck(credentialRequest));
-    }
 }

@@ -240,15 +240,8 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 }
             case "mso_mdoc":
                 vcRequestDto.setDoctype(credentialRequest.getDoctype());
-                vcRequestDto.setClaims(credentialRequest.getClaims());
                 try {
-                    // Prepare raw data for the data provider
-                    Map<String, Object> rawData = new HashMap<>();
-                    rawData.put(Constants.DOCTYPE, vcRequestDto.getDoctype());
-                    rawData.put(Constants.CLAIMS, vcRequestDto.getClaims());
-
-                    // Fetch data from the configured plugin
-                    JSONObject jsonObject = dataProviderPlugin.fetchData(rawData);
+                    JSONObject jsonObject = dataProviderPlugin.fetchData(parsedAccessToken.getClaims());
 
                     // Prepare template parameters
                     Map<String, Object> templateParams = new HashMap<>();
@@ -259,19 +252,14 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     if (!StringUtils.isEmpty(renderTemplateId)) {
                         templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
                     }
-
-                    // Add holder ID for proof binding
                     jsonObject.put("_holderId", holderId);
-
-                    // Get the mDOC credential factory
+                    jsonObject.put("_docType", vcRequestDto.getDoctype());
                     Credential cred = credentialFactory.getCredential(CredentialFormat.VC_MDOC.toString())
                             .orElseThrow(() -> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
 
                     templateParams.putAll(jsonObject.toMap());
 
-                    // Create the unsigned mDOC credential using the formatter
                     String unsignedCredential = cred.createCredential(templateParams, templateName);
-
                     return cred.addProof(
                             unsignedCredential,
                             "",
@@ -285,11 +273,8 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 } catch (DataProviderExchangeException e) {
                     log.error("Error fetching data from provider for mDOC: ", e);
                     throw new CertifyException(e.getErrorCode());
-                } catch (JSONException e) {
-                    log.error("JSON processing error for mDOC: {}", e.getMessage(), e);
-                    throw new CertifyException(ErrorConstants.UNKNOWN_ERROR);
                 } catch (Exception e) {
-                    log.error("Unexpected error processing mDOC credential: {}", e.getMessage(), e);
+                    log.error("Unexpected error processing mDOC credential", e);
                     throw new CertifyException(ErrorConstants.VC_ISSUANCE_FAILED);
                 }
             default:
