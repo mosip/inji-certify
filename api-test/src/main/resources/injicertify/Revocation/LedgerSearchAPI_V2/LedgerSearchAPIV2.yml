@@ -16,6 +16,7 @@ LedgerSearchAPIV2Endpoint:
 }'
       output: '{
 }'
+
    InjiCertify_LedgerSearchAPIV2_ForLandRegistry_cred2_Revocation_Flow_all_Valid_Smoke_Sid:
       endPoint: $INJICERTIFYBASEURL$/v1/certify/v2/ledger-search
       uniqueIdentifier: TC_InjiCertify_Ledger_Search_02
@@ -33,6 +34,7 @@ LedgerSearchAPIV2Endpoint:
 }'
       output: '{
 }'
+
    InjiCertify_LedgerSearchAPIV2_ForLandRegistry_cred2_Revocation_without_credentialId_attribute:
       endPoint: $INJICERTIFYBASEURL$/v1/certify/v2/ledger-search
       uniqueIdentifier: TC_InjiCertify_Ledger_Search_03
@@ -50,6 +52,7 @@ LedgerSearchAPIV2Endpoint:
 }'
       output: '{
 }'
+
    InjiCertify_LedgerSearchAPIV2_ForLandRegistry_cred2_Revocation_without_IssuerId_Neg:
       endPoint: $INJICERTIFYBASEURL$/v1/certify/v2/ledger-search
       uniqueIdentifier: TC_InjiCertify_Ledger_Search_04
@@ -71,6 +74,7 @@ LedgerSearchAPIV2Endpoint:
        }
        ]  
     }'
+    
    InjiCertify_LedgerSearchAPIV2_ForLandRegistry_cred2_Revocation_random_IssuerId_Neg:
       endPoint: $INJICERTIFYBASEURL$/v1/certify/v2/ledger-search
       uniqueIdentifier: TC_InjiCertify_Ledger_Search_05
@@ -89,6 +93,7 @@ LedgerSearchAPIV2Endpoint:
       output: '{
 	"responseCode": "204"    
     }'
+    
    InjiCertify_LedgerSearchAPIV2_ForLandRegistry_cred2_Revocation_without_CredentialType_Neg:
       endPoint: $INJICERTIFYBASEURL$/v1/certify/v2/ledger-search
       uniqueIdentifier: TC_InjiCertify_Ledger_Search_06
@@ -110,6 +115,7 @@ LedgerSearchAPIV2Endpoint:
        }
        ]  
     }'
+    
    InjiCertify_LedgerSearchAPIV2_ForLandRegistry_cred2_Revocation_without_indexedAttributes_Neg:
       endPoint: $INJICERTIFYBASEURL$/v1/certify/v2/ledger-search
       uniqueIdentifier: TC_InjiCertify_Ledger_Search_07
@@ -131,6 +137,7 @@ LedgerSearchAPIV2Endpoint:
        }
        ]  
     }'
+    
    InjiCertify_LedgerSearchAPIV2_ForLandRegistry_cred2_Revocation_without_credentilId_value:
       endPoint: $INJICERTIFYBASEURL$/v1/certify/v2/ledger-search
       uniqueIdentifier: TC_InjiCertify_Ledger_Search_08
