@@ -75,54 +75,60 @@ A status list credential is a special Verifiable Credential with this structure:
 
 ```mermaid
   sequenceDiagram
-      participant Client as 🌐 Client
-      box Inji Certify #E6F3FF
-      participant CredentialAPI as 🔗 Credential API
-      participant CredentialConfiguration as ⚙️ Credential Configuration
-      participant DataProviderPlugin as 🔌 Data Provider Plugin
-      participant VelocityTemplatingEngine as ⚙️ Velocity Templating Engine
-      participant W3CJsonLdCredential as 🔐 W3CJsonLdCredential
-      participant StatusListCredentialService as 📜 StatusListCredentialService
-      participant Database as 🗄️ Database
-      end
+    participant Client as 🌐 Client
+    box Inji Certify #E6F3FF
+    participant CredentialAPI as 🔗 Credential API
+    participant CredentialConfiguration as ⚙️ Credential Configuration
+    participant DataProviderPlugin as 🔌 Data Provider Plugin
+    participant VelocityTemplatingEngine as ⚙️ Velocity Templating Engine
+    participant W3CJsonLdCredential as 🔐 W3CJsonLdCredential
+    participant StatusListCredentialService as 📜 StatusListCredentialService
+    participant Database as 🗄️ Database
+    end
 
-      Client->>CredentialAPI: Request VC Issuance (format: ldp_vc)
+    Client->>CredentialAPI: Request VC Issuance (format: ldp_vc)
 
-      CredentialAPI->>CredentialConfiguration: Validate request & get config
-      CredentialConfiguration-->>CredentialAPI: Return success & config
+    CredentialAPI->>CredentialConfiguration: Validate request & get config
+    CredentialConfiguration-->>CredentialAPI: Return success & config
 
-      CredentialAPI->>DataProviderPlugin: Request data
-      DataProviderPlugin-->>CredentialAPI: Return raw data
+    CredentialAPI->>DataProviderPlugin: Request data
+    DataProviderPlugin-->>CredentialAPI: Return raw data
 
-      CredentialAPI->>VelocityTemplatingEngine: Format raw data with template
-      VelocityTemplatingEngine-->>CredentialAPI: Return unsigned VC data
+    CredentialAPI->>VelocityTemplatingEngine: Format raw data with template
+    VelocityTemplatingEngine-->>CredentialAPI: Return unsigned VC data
 
-      CredentialAPI->>W3CJsonLdCredential: Instantiate with unsigned data
-      W3CJsonLdCredential-->>CredentialAPI: Return unsigned VC object
+    CredentialAPI->>W3CJsonLdCredential: Instantiate with unsigned data
+    W3CJsonLdCredential-->>CredentialAPI: Return unsigned VC object
 
-      opt W3C Data Model 2.0 Context is present
-          CredentialAPI->>StatusListCredentialService: addCredentialStatus(unsigned VC)
+    opt W3C Data Model 2.0 Context is present
+        CredentialAPI->>StatusListCredentialService: addCredentialStatus(unsigned VC)
 
-          note right of StatusListCredentialService: Generate and sign the StatusList VC
-          StatusListCredentialService->>StatusListCredentialService: Generate BitStringStatusList VC
-          StatusListCredentialService->>W3CJsonLdCredential: Sign StatusList VC
-          W3CJsonLdCredential-->>StatusListCredentialService: Return signed StatusList VC
+        note right of StatusListCredentialService: Generate and sign the StatusList VC
+        StatusListCredentialService->>StatusListCredentialService: Generate BitStringStatusList VC
+        StatusListCredentialService->>W3CJsonLdCredential: Sign StatusList VC
+        W3CJsonLdCredential-->>StatusListCredentialService: Return signed StatusList VC
 
-          StatusListCredentialService->>Database: Save signed StatusList VC in Status List Credential
-          Database-->>StatusListCredentialService: Confirm save
+        StatusListCredentialService->>Database: Save signed StatusList VC in Status List Credential
+        Database-->>StatusListCredentialService: Confirm save
 
-          note right of StatusListCredentialService: Update original VC with status
-          StatusListCredentialService->>StatusListCredentialService: Add credentialStatus property to original VC
-          StatusListCredentialService->>Database: Save status details to Ledger
-          Database-->>StatusListCredentialService: Confirm save
+        note right of StatusListCredentialService: Update original VC with status
+        StatusListCredentialService->>StatusListCredentialService: Add credentialStatus property to original VC
 
-          StatusListCredentialService-->>CredentialAPI: Return updated unsigned VC
-      end
+        alt mosip.certify.issuer.ledger.enabled = true
+            StatusListCredentialService->>Database: Save status details to Ledger
+            Database-->>StatusListCredentialService: Confirm save
+        else mosip.certify.issuer.ledger.enabled = false
+            Note over StatusListCredentialService: Skip saving status details to Ledger
+        end
 
-      CredentialAPI->>W3CJsonLdCredential: addProof(final unsigned VC)
-      W3CJsonLdCredential-->>CredentialAPI: Return signed VC
+        StatusListCredentialService-->>CredentialAPI: Return updated unsigned VC
+    end
 
-      CredentialAPI-->>Client: Return final signed ldp_vc
+    CredentialAPI->>W3CJsonLdCredential: addProof(final unsigned VC)
+    W3CJsonLdCredential-->>CredentialAPI: Return signed VC
+
+    CredentialAPI-->>Client: Return final signed ldp_vc
+
 ```
 
 2. **Retrieving a Status List**
@@ -166,6 +172,7 @@ sequenceDiagram
 }
 ```
 Sample response of ledger search :
+  - `/ledger-search`
 ```json
   [
     {
@@ -175,12 +182,31 @@ Sample response of ledger search :
       "statusListIndex": 5,
       "statusPurpose": "revocation",
       "issueDate": "2025-08-07T11:57:39",
-      "expirationDate": null,
       "credentialType": "MockVerifiableCredential,VerifiableCredential",
       "statusTimestamp": "2025-08-07T11:57:39"
     }
   ]
 ```
+  - `/v2/ledger-search`
+```json
+    [
+      {
+        "credentialId": "afce16e8-02ac-4210-80d9-a0a20132bda3",
+        "issuerId": "did:web:sample.github.io:my-files:sample",
+        "statusListCredentialUrl": "7bf52e81-f3bb-40ec-a0f9-a714847fd067",
+        "statusListIndex": 5,
+        "statusPurpose": "revocation",
+        "issuanceDate": "2025-08-07T11:57:39",
+        "credentialType": "MockVerifiableCredential,VerifiableCredential",
+        "statusTimestamp": "2025-08-07T11:57:39"
+      }
+    ]
+```
+
+**Ledger Test Scenarios**
+  - When `credentialId` is not provided during ledger search, the system returns all credentials matching the other criteria along with their status information.
+  - `credentialId` is same as the `id` of the issued VC. So if the VC does not have id, then `credentialId` in ledger will be null.
+  - If statusList is not enabled, then `credentialStatusDetail` will be empty for such credentials.
 
 **Sequence diagram for Ledger Search** :
 ```mermaid
@@ -222,46 +248,51 @@ Sample response of ledger search :
    - The system updates the status list independently of the ledger.
    
     **Provide**:
-     - The credential’s ID
-     - The credential status details (purpose, status list, index)
-     - The new status (true for revoked/suspended, false for active)
-- The system records this change for audit and updates the ledger.
+     - For `/credential/status` - credentialId is mandatory
+     - For `/credentials/v2/status` - The credential status details (statusListCredentialId, statusListIndex) inside credentialStatus is mandatory.
+- The system records this change for audit and adds the entry in `credential_status_transaction` table.
 - Sequence diagram for updating credential status:
 ```mermaid
-  sequenceDiagram
-      participant Client as 🌐 Client
-      box Inji Certify #E6F3FF
-      participant Controller as 🔗 CredentialStatusController
-      participant Service as ⚙️ CredentialStatusServiceImpl
-      participant LedgerRepo as 🗄️ LedgerRepository
-      participant StatusRepo as 🗄️ CredentialStatusTransactionRepository
-      end
+sequenceDiagram
+    participant Client as 🌐 Client
+    box Inji Certify #E6F3FF
+    participant Controller as 🔗 CredentialStatusController
+    participant Service as ⚙️ CredentialStatusServiceImpl
+    participant LedgerRepo as 🗄️ LedgerRepository
+    participant StatusRepo as 🗄️ CredentialStatusTransactionRepository
+    end
 
-      Client->>Controller: POST /credentials/status
-      Note over Client,Controller: UpdateCredentialStatusRequest with credential ID and status details
+    %% v1 endpoint flow
+    Client->>Controller: POST /credentials/status (credentialId mandatory)
+    Controller->>Service: updateCredentialStatusV1(request)
+    Service->>LedgerRepo: findByCredentialId(credentialId)
+    LedgerRepo-->>Service: Optional<Ledger>
+    alt Credential Found
+        Service->>Service: Create CredentialStatusTransaction
+        Service->>StatusRepo: save(transaction)
+        StatusRepo-->>Service: CredentialStatusTransaction with timestamp
+        Service-->>Controller: CredentialStatusResponse
+        Controller-->>Client: 200 OK
+    else Credential Not Found
+        Service-->>Controller: ResponseStatusException (404)
+        Controller-->>Client: 404 Not Found
+    end
 
-      Controller->>Service: updateCredentialStatus(request)
-
-      Service->>LedgerRepo: findByCredentialId(credentialId)
-      LedgerRepo-->>Service: Optional<Ledger>
-
-      alt Credential Found
-          Service->>Service: Create CredentialStatusTransaction
-          Note over Service: Set status purpose, value, list credential ID, and index
-
-          Service->>StatusRepo: save(transaction)
-          StatusRepo-->>Service: CredentialStatusTransaction with timestamp
-
-          Service->>Service: Map to CredentialStatusResponse
-          Note over Service: Include ledger info and status details
-
-          Service-->>Controller: CredentialStatusResponse
-          Controller-->>Client: 200 OK with status response
-
-      else Credential Not Found
-          Service-->>Controller: ResponseStatusException (404)
-          Controller-->>Client: 404 Not Found
-      end
+    %% v2 endpoint flow
+    Client->>Controller: POST /credentials/v2/status (credentialStatus mandatory)
+    Controller->>Service: updateCredentialStatusV2(request)
+    Service->>LedgerRepo: findByStatusListCredentialIdAndIndex(statusListCredentialId, statusListIndex)
+    LedgerRepo-->>Service: Optional<Ledger>
+    alt Credential Found
+        Service->>Service: Create CredentialStatusTransaction
+        Service->>StatusRepo: save(transaction)
+        StatusRepo-->>Service: CredentialStatusTransaction with timestamp
+        Service-->>Controller: CredentialStatusResponse
+        Controller-->>Client: 200 OK
+    else Credential Not Found
+        Service-->>Controller: ResponseStatusException (404)
+        Controller-->>Client: 404 Not Found
+    end
 ```
 
 4. **Status List Update Batch Job**
