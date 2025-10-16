@@ -301,50 +301,48 @@ sequenceDiagram
    - Sequence diagram for the batch job:
 ```mermaid
   sequenceDiagram
-      participant Scheduler as 🕐 Scheduler
-      participant BatchJob as 🔄 StatusListUpdateBatchJob
-      participant TransactionRepo as 🗄️ Transaction Repository
-      participant StatusListRepo as 📋 StatusList Repository
-      participant StatusListService as 🔧 StatusListCredentialService
-
-      Note over Scheduler: Runs hourly (cron)
-
-      Scheduler->>BatchJob: @Scheduled trigger
-      BatchJob->>BatchJob: Acquire distributed lock
-      BatchJob->>BatchJob: Check if job enabled
-
-      BatchJob->>BatchJob: determineStartTime()
-      BatchJob->>StatusListRepo: findMaxUpdatedTime()
-      StatusListRepo-->>BatchJob: Return last update time
-
-      BatchJob->>TransactionRepo: findTransactionsSince(startTime, batchSize)
-      TransactionRepo-->>BatchJob: Return new transactions
-
-      alt Has new transactions
-          BatchJob->>BatchJob: groupTransactionsByStatusList()
-
-          loop For each affected status list
-              BatchJob->>StatusListRepo: findById(statusListId)
-              StatusListRepo-->>BatchJob: Return StatusListCredential
-
-              BatchJob->>TransactionRepo: findLatestStatusByStatusListId()
-              TransactionRepo-->>BatchJob: Return current status data
-
-              BatchJob->>BatchJob: applyTransactionUpdates()
-              BatchJob->>BatchJob: generateEncodedList()
-
-              BatchJob->>StatusListService: resignStatusListCredential()
-              StatusListService-->>BatchJob: Return signed VC document
-
-              BatchJob->>StatusListRepo: save(updated credential)
-          end
-
-          BatchJob->>BatchJob: Update lastProcessedTime
-      else No new transactions
-          BatchJob->>BatchJob: Skip processing
-      end
-
-      BatchJob->>BatchJob: Release lock
+    participant Scheduler as ⏰ Scheduled Task
+    participant BatchJob as 🔄 Batch Processor
+    participant TransactionDB as 📋 Status Changes
+    participant StatusDB as 📜 Status Lists
+    Note over Scheduler: Runs every minute
+    Scheduler->>BatchJob: Start processing status updates
+    alt Feature disabled
+        BatchJob-->>Scheduler: Skip processing
+    else Feature enabled
+        BatchJob->>TransactionDB: Get pending status changes
+        TransactionDB-->>BatchJob: List of changes
+        alt No changes pending
+            BatchJob-->>Scheduler: Nothing to process
+        else Changes found
+            BatchJob->>BatchJob: Group changes by status list
+            BatchJob-->>BatchJob: Organized groups
+            loop For each status list
+                BatchJob->>BatchJob: Process status list updates
+                BatchJob->>StatusDB: Find status list
+                StatusDB-->>BatchJob: Status list document
+                alt Status list missing
+                    BatchJob-->>BatchJob: Report error
+                else Status list found
+                    BatchJob->>BatchJob: Calculate new status values
+                    BatchJob-->>BatchJob: Updated positions
+                    BatchJob->>BatchJob: Update the bit string
+                    BatchJob-->>BatchJob: New encoded list
+                    BatchJob->>BatchJob: Update credential document
+                    Note over BatchJob: Modify the credential data
+                    Note over BatchJob: Update timestamps
+                    BatchJob->>BatchJob: Re-sign the credential
+                    BatchJob-->>BatchJob: Signed credential
+                    BatchJob->>StatusDB: Save updated credential
+                    StatusDB-->>BatchJob: Confirmation
+                    Note over BatchJob: Mark changes as completed
+                    BatchJob->>TransactionDB: Update transaction status
+                    TransactionDB-->>BatchJob: Confirmation
+                end
+            end
+            BatchJob-->>Scheduler: Processing complete
+        end
+    end
 ```
 
 
