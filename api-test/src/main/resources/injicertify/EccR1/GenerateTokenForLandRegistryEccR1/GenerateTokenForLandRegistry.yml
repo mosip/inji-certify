@@ -1,17 +1,17 @@
 GenerateTokenForLandRegistry:
-   InjiCertify_ESignet_GenerateToken_ForLandRegistry_Valid_Smoke_sid:
+   InjiCertify_ESignet_GenerateToken_ForLandRegistry_EccR1_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/oauth/v2/token
       uniqueIdentifier: TC_esignetDependent_GenerateToken
       description: Generate Token for mock ida
-      role: noauth
+      role: resident
       restMethod: post
       validityCheckRequired: true
       inputTemplate: injicertify/EccR1/GenerateTokenForLandRegistryEccR1/GenerateTokenForLandRegistry
       outputTemplate: injicertify/EccR1/GenerateTokenForLandRegistryEccR1/GenerateTokenForLandRegistryResult
       input: '{
 		  "grant_type": "authorization_code",
-		  "code": "$ID:ESignet_AuthorizationCode_For_LandRegistry_All_Valid_Smoke_sid_code$",
-		  "client_id": "$ID:ESignet_CreateOIDCClientV2_For_LandRegistry_EccR1_all_Valid_Smoke_sid_clientId$",
+		  "code": "$ID:ESignet_AuthorizationCode_For_LandRegistry_EccR1_All_Valid_Smoke_sid_code$",
+		  "client_id": "$ID:ESignet_CreateOIDCClientV2_For_LandRegistry2_all_Valid_Smoke_sid_clientId$",
 		  "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
 		  "client_assertion": "$CLIENT_ASSERTION_JWT$",
 		  "redirect_uri": "$IDPREDIRECTURI$",

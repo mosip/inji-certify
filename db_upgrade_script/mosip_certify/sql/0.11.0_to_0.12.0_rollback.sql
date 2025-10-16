@@ -33,6 +33,7 @@ ALTER TABLE certify.credential_config
     DROP COLUMN key_manager_app_id,
     DROP COLUMN key_manager_ref_id,
     DROP COLUMN signature_algo,
+    DROP COLUMN signature_crypto_suite,
     DROP COLUMN sd_claim,
     DROP COLUMN display,
     DROP COLUMN display_order,
@@ -41,8 +42,14 @@ ALTER TABLE certify.credential_config
     DROP COLUMN credential_signing_alg_values_supported,
     DROP COLUMN proof_types_supported,
     DROP COLUMN credential_subject,
-    DROP COLUMN claims,
-    DROP COLUMN plugin_configurations;
+    DROP COLUMN mso_mdoc_claims,
+    DROP COLUMN sd_jwt_claims,
+    DROP COLUMN plugin_configurations,
+    DROP COLUMN credential_status_purpose;
+
+UPDATE certify.credential_config
+SET vc_template = convert_from(decode(vc_template, 'base64'), 'UTF8')
+WHERE vc_template IS NOT NULL AND vc_template <> '';
 
 -- Step 4: Rename vc_template back to template
 ALTER TABLE certify.credential_config RENAME COLUMN vc_template TO template;
@@ -83,6 +90,7 @@ COMMENT ON COLUMN credential_template.template IS 'Template Content: Velocity Te
 COMMENT ON COLUMN credential_template.cr_dtimes IS 'Date when the template was inserted in table.';
 COMMENT ON COLUMN credential_template.upd_dtimes IS 'Date when the template was last updated in table.';
 
+DELETE FROM certify.key_policy_def WHERE APP_ID = 'CERTIFY_VC_SIGN_EC_R1';
 
 -- Indexes for credential_status_transaction
 DROP INDEX IF EXISTS certify.idx_cst_credential_id;

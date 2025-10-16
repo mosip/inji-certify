@@ -59,7 +59,7 @@ public class DIDkeysProofManager implements JwtProofKeyManager {
             ECPoint ecPoint = curve.decodePoint(Arrays.copyOfRange(b, 2, b.length));
             byte[] xBytes = BigIntegers.asUnsignedByteArray(ecPoint.getAffineXCoord().toBigInteger());
             byte[] yBytes = BigIntegers.asUnsignedByteArray(ecPoint.getAffineYCoord().toBigInteger());
-            JWK j = new ECKey.Builder(Curve.P_256, Base64URL.encode(xBytes), Base64URL.encode(yBytes)).build();
+            JWK j = new ECKey.Builder(Curve.P_256, Base64URL.encode(xBytes), Base64URL.encode(yBytes)).keyID(header.getKeyID()).build();
             return Optional.of(j);
         } else if (b[0] == (byte) 0x85 && b[1] == (byte) 0x24) {
             // RSA2048

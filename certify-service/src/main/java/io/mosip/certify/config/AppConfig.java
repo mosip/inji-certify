@@ -80,9 +80,7 @@ public class AppConfig implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-//        if (env.matchesProfiles("local")) {
             initKeys();
-//        }
     }
 
     private void initKeys(){
@@ -100,11 +98,6 @@ public class AppConfig implements ApplicationRunner {
         masterKeyRequest.setReferenceId(org.apache.commons.lang3.StringUtils.EMPTY);
         keymanagerService.generateMasterKey(objectType, masterKeyRequest);
         // TODO: Generate an EC & ED key via K8s Job(INJICERT-469)
-        KeyPairGenerateRequestDto rsaKeyRequest = new KeyPairGenerateRequestDto();
-        rsaKeyRequest.setApplicationId(KeyManagerConstants.CERTIFY_VC_SIGN_RSA);
-        rsaKeyRequest.setReferenceId(KeyManagerConstants.EMPTY_REF_ID);
-        rsaKeyRequest.setForce(false);
-        keymanagerService.generateMasterKey("certificate", rsaKeyRequest);
         if(!ObjectUtils.isEmpty(cacheSecretKeyRefId)) {
             SymmetricKeyGenerateRequestDto symmetricKeyGenerateRequestDto = new SymmetricKeyGenerateRequestDto();
             symmetricKeyGenerateRequestDto.setApplicationId(Constants.CERTIFY_SERVICE_APP_ID);
@@ -121,6 +114,13 @@ public class AppConfig implements ApplicationRunner {
         partnerMasterKeyRequest.setReferenceId(org.apache.commons.lang3.StringUtils.EMPTY);
         keymanagerService.generateMasterKey(objectType, partnerMasterKeyRequest);
         if(pluginMode.equals("DataProvider")) {
+            // Generate RSA Key Certificate
+            log.info("===================== CERTIFY_VC_SIGN_RSA KEY CHECK ========================");
+            KeyPairGenerateRequestDto rsaKeyRequest = new KeyPairGenerateRequestDto();
+            rsaKeyRequest.setApplicationId(Constants.CERTIFY_VC_SIGN_RSA);
+            rsaKeyRequest.setReferenceId(Constants.EMPTY_REF_ID);
+            rsaKeyRequest.setForce(false);
+            keymanagerService.generateMasterKey("certificate", rsaKeyRequest);
             // Generate an Ed25519Key:
             // 1. Generate a master key first to enable Keymanager to store the key.
             log.info("===================== CERTIFY_VC_SIGN_ED25519 KEY CHECK ========================");

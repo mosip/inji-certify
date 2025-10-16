@@ -55,19 +55,19 @@ public class SDJsonUtilsTest extends TestCase {
       assertTrue(SDJsonUtils.compareJsonPaths(path1, path2));
       path2 = "$.store.book[1].author";
       assertFalse(SDJsonUtils.compareJsonPaths(path1, path2));
-      path1 = "$.store.book[0].*";
-      path2 = "$.store.book[0].author";
-      assertTrue(SDJsonUtils.compareJsonPaths(path1, path2));
-      path1 = "$.store.*.author";
-      path2 = "$.store.book.author";
-      assertTrue(SDJsonUtils.compareJsonPaths(path1, path2));
       path1 = "$.store.book[0].author";
+      path2 = "$.store.book[0].*";
+      assertTrue(SDJsonUtils.compareJsonPaths(path1, path2));
+      path1 = "$.store.book.author";
+      path2 = "$.store.*.author";
+      assertTrue(SDJsonUtils.compareJsonPaths(path1, path2));
+      path2 = "$.store.book[0].author";
       assertFalse(SDJsonUtils.compareJsonPaths(path1, path2));
       path1 = "$";
       path2 = "$";
       assertTrue(SDJsonUtils.compareJsonPaths(path1, path2));
-      path1 = "$.store.book[*].author";
-      path2 = "$.store.book[0].author";
+      path1 = "$.store.book[0].author";
+      path2 = "$.store.book[*].author";
       assertTrue(SDJsonUtils.compareJsonPaths(path1, path2));
       path1 = "$.store.book[0";
       path2 = "$.store.book[0]";
@@ -131,7 +131,6 @@ public class SDJsonUtilsTest extends TestCase {
 
       // Initialize SDObjectBuilder and the list of SDPaths
       SDObjectBuilder sdObjectBuilder = new SDObjectBuilder();
-     // List<String> sdPaths = Arrays.asList("$.age","$.address.street", "$.phoneNumbers", "$.address.geo.latitude");
       List<String> sdPaths = Arrays.asList("$.address.street","$.address.pincode","$.address.geo","$.dob","$.is_above_18","$.phoneNumbers[0].number","$.lucky_numbers","$.lucky_characters[1]");
       String currentPath = "$";
       List<Disclosure> disclosures = new ArrayList<>();
@@ -177,14 +176,89 @@ public class SDJsonUtilsTest extends TestCase {
       //assertFalse(sdObjectBuilder.);
 
       // Check claims for address fields
-     // assertTrue(sdObjectBuilder.containsClaim("address"));
-     // assertTrue(sdObjectBuilder.containsClaim("street"));
-     // assertTrue(sdObjectBuilder.containsClaim("city"));
+      assertTrue(sdClaims.containsKey("address"));
+      assertFalse(((Map<String, Object>)sdClaims.get("address")).containsKey("street"));
+      assertTrue(((Map<String, Object>)sdClaims.get("address")).containsKey("city"));
 
       // Check claims for phoneNumbers array
-     // assertTrue(sdObjectBuilder.containsClaim("phoneNumbers"));
-     // assertTrue(sdObjectBuilder.containsClaim("type"));
-     // assertTrue(sdObjectBuilder.containsClaim("number"));
+      assertTrue(sdClaims.containsKey("phoneNumbers"));
+      ArrayList<Object> phoneNumbers = (ArrayList<Object>) sdClaims.get("phoneNumbers");
+      assertEquals(2, phoneNumbers.size());
+      Map<String, Object> homePhoneObject = (Map<String, Object>) phoneNumbers.get(0);
+      Map<String, Object> mobilePhoneObject = (Map<String, Object>) phoneNumbers.get(1);
+      assertTrue(homePhoneObject.containsKey("type"));
+      assertFalse(homePhoneObject.containsKey("number"));
+      assertTrue(mobilePhoneObject.containsKey("type"));
+      assertTrue(mobilePhoneObject.containsKey("number"));
     }
 
+  public void testConstructSDPayload_WildcardPatterns(){
+    // Create the input JSONNode from the provided JSON
+    ObjectNode node = JsonNodeFactory.instance.objectNode();
+    node.put("name", "John");
+    node.put("dob", "2000-10-31");
+    node.put("is_above_18", true);
+    node.put("is_above_21", true);
+
+    ArrayNode luckyNumberNode = JsonNodeFactory.instance.arrayNode();
+    luckyNumberNode.add(251);
+    luckyNumberNode.add(252);
+    node.set("lucky_numbers",luckyNumberNode);
+
+    ArrayNode luckyCharacterNode = JsonNodeFactory.instance.arrayNode();
+    luckyCharacterNode.add('A');
+    luckyCharacterNode.add('B');
+    node.set("lucky_characters",luckyCharacterNode);
+
+    // Create and set nested address object
+    ObjectNode geoLocation = JsonNodeFactory.instance.objectNode();
+    geoLocation.put("latitude", "11.004556");
+    geoLocation.put("longitude", "76.961632");
+
+    // Create and set nested address object
+    ObjectNode addressNode = JsonNodeFactory.instance.objectNode();
+    addressNode.put("street", "123 My St");
+    addressNode.put("city", "Coimbatore");
+    addressNode.put("pincode","641047");
+    addressNode.put("geo", geoLocation);
+    node.set("address", addressNode);
+
+    // Create and set phoneNumbers array
+    ArrayNode phoneNumbersNode = JsonNodeFactory.instance.arrayNode();
+    ObjectNode homePhone = JsonNodeFactory.instance.objectNode();
+    homePhone.put("type", "home");
+    homePhone.put("number", "123-4567");
+    phoneNumbersNode.add(homePhone);
+    ObjectNode mobilePhone = JsonNodeFactory.instance.objectNode();
+    mobilePhone.put("type", "mobile");
+    mobilePhone.put("number", "987-6543");
+    phoneNumbersNode.add(mobilePhone);
+    node.set("phoneNumbers", phoneNumbersNode);
+
+    // Initialize SDObjectBuilder and the list of SDPaths
+    SDObjectBuilder sdObjectBuilder = new SDObjectBuilder();
+    List<String> sdPaths = Arrays.asList("$.address.*","$.phoneNumbers[*].number","$.lucky_numbers","$.lucky_characters[*]");
+    String currentPath = "$";
+    List<Disclosure> disclosures = new ArrayList<>();
+    SDJsonUtils.constructSDPayload(node, sdObjectBuilder, disclosures, sdPaths, currentPath);
+    System.out.println(sdObjectBuilder.build());
+    Map<String,Object> sdClaims = sdObjectBuilder.build();
+
+    // Check claims for address fields
+    assertTrue(sdClaims.containsKey("address"));
+    assertFalse(((Map<String, Object>)sdClaims.get("address")).containsKey("street"));
+    assertFalse(((Map<String, Object>)sdClaims.get("address")).containsKey("city"));
+
+
+    // Check claims for phoneNumbers array
+    assertTrue(sdClaims.containsKey("phoneNumbers"));
+    ArrayList<Object> phoneNumbers = (ArrayList<Object>) sdClaims.get("phoneNumbers");
+    assertEquals(2, phoneNumbers.size());
+    Map<String, Object> homePhoneObject = (Map<String, Object>) phoneNumbers.get(0);
+    Map<String, Object> mobilePhoneObject = (Map<String, Object>) phoneNumbers.get(1);
+    assertTrue(homePhoneObject.containsKey("type"));
+    assertFalse(homePhoneObject.containsKey("number"));
+    assertTrue(mobilePhoneObject.containsKey("type"));
+    assertFalse(mobilePhoneObject.containsKey("number"));
+  }
 }

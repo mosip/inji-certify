@@ -1,18 +1,20 @@
 package io.mosip.certify.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.api.dto.VCResult;
-import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
+import io.mosip.certify.core.constants.VCDM2Constants;
+import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.exception.CertifyException;
+import io.mosip.certify.credential.Credential;
+import io.mosip.certify.credential.CredentialFactory;
+import io.mosip.certify.entity.Ledger;
 import io.mosip.certify.entity.StatusListCredential;
-import io.mosip.certify.repository.StatusListAvailableIndicesRepository;
+import io.mosip.certify.entity.attributes.CredentialStatusDetail;
+import io.mosip.certify.repository.LedgerRepository;
 import io.mosip.certify.repository.StatusListCredentialRepository;
 import io.mosip.certify.utils.BitStringStatusListUtils;
 import io.mosip.certify.vcformatters.VCFormatter;
-import io.mosip.certify.vcsigners.VCSigner;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import lombok.extern.slf4j.Slf4j;
@@ -24,8 +26,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -43,49 +45,46 @@ public class StatusListCredentialService {
     private VCFormatter vcFormatter;
 
     @Autowired
-    private VCSigner vcSigner;
+    private CredentialFactory credentialFactory;
 
     @Autowired
     private DatabaseStatusListIndexProvider indexProvider;
 
+    @Autowired
+    private LedgerRepository ledgerRepository;
+
     @PersistenceContext
     private EntityManager entityManager;
 
-    @Value("${mosip.certify.data-provider-plugin.issuer.vc-sign-algo:Ed25519Signature2020}")
-    private String vcSignAlgorithm;
+    @Value("${mosip.certify.status-list.signature-crypto-suite:Ed25519Signature2020}")
+    private String signatureCryptoSuite;
 
-    @Value("${mosip.certify.data-provider-plugin.issuer-uri}")
-    private String issuerId;
+    @Value("${mosip.certify.status-list.signature-algo:EdDSA}")
+    private String signatureAlgo;
+
+    @Value("${mosip.certify.data-provider-plugin.did-url}")
+    private String didUrl;
 
     @Value("${mosip.certify.domain.url}")
     private String domainUrl;
 
-    @Value("#{${mosip.certify.statuslist.default-capacity:16}}") // value in kb
-    private long defaultCapacity;
+    @Value("#{${mosip.certify.statuslist.size-in-kb:16}}") // value in kb
+    private long statusListSizeInKB;
+
+    @Value("#{${mosip.certify.signature-algo.key-alias-mapper}}")
+    private Map<String, List<List<String>>> keyAliasMapper;
+
+    @Value("${mosip.certify.status-list.key-manager-ref-id:ED25519_SIGN}")
+    private String statusListKeyManagerRefId;
 
     public String getStatusListCredential(String id) throws CertifyException {
         log.info("Processing status list credential request for ID: {}", id);
 
+        StatusListCredential statusList = findStatusListById(id)
+                .orElseThrow(() -> new CertifyException(ErrorConstants.STATUS_LIST_NOT_FOUND));
+
         try {
-            // Find the status list credential by ID
-            Optional<StatusListCredential> statusListOpt = findStatusListById(id);
-
-            if (statusListOpt.isEmpty()) {
-                log.warn("Status list credential not found for ID: {}", id);
-                throw new CertifyException(ErrorConstants.STATUS_LIST_NOT_FOUND);
-            }
-
-            StatusListCredential statusList = statusListOpt.get();
-
-            // Parse the VC document
-            JSONObject vcDocument;
-            try {
-                vcDocument = new JSONObject(statusList.getVcDocument());
-            } catch (Exception e) {
-                log.error("Error parsing VC document for status list ID: {}", id, e);
-                throw new CertifyException(ErrorConstants.STATUS_RETRIEVAL_ERROR);
-            }
-
+            JSONObject vcDocument = new JSONObject(statusList.getVcDocument());
             log.info("Successfully retrieved status list credential for ID: {}", id);
 
             // Convert JSONObject to Map for consistent return type
@@ -121,7 +120,7 @@ public class StatusListCredentialService {
      * @return Optional containing StatusListCredential if found
      */
     public Optional<StatusListCredential> findSuitableStatusList(String statusPurpose, StatusListCredential.CredentialStatus status) {
-        return statusListCredentialRepository.findSuitableStatusList(statusPurpose, status);
+        return statusListCredentialRepository.findFirstByStatusPurposeAndCredentialStatusOrderByCreatedDtimesDesc(statusPurpose, status);
     }
 
     /**
@@ -137,7 +136,7 @@ public class StatusListCredentialService {
         try {
             // Generate unique ID for status list
             String id = UUID.randomUUID().toString();
-            String statusListId = domainUrl + "/status-list/" + id;
+            String statusListId = domainUrl + "/v1/certify/credentials/status-list/" + id;
 
             // Create the template data for the status list VC
             JSONObject statusListData = new JSONObject();
@@ -152,7 +151,7 @@ public class StatusListCredentialService {
             statusListData.put("type", typeList);
 
             statusListData.put("id", statusListId);
-            statusListData.put("issuer", issuerId);
+            statusListData.put("issuer", didUrl);
             statusListData.put("validFrom", new Date().toInstant().toString());
 
             JSONObject credentialSubject = new JSONObject();
@@ -161,37 +160,14 @@ public class StatusListCredentialService {
             credentialSubject.put("statusPurpose", statusPurpose);
 
             // Create empty encoded list (all 0s)
-            String encodedList = BitStringStatusListUtils.createEmptyEncodedList(defaultCapacity);
+            String encodedList = BitStringStatusListUtils.createEmptyEncodedList(statusListSizeInKB);
             credentialSubject.put("encodedList", encodedList);
 
             statusListData.put("credentialSubject", credentialSubject);
 
-            log.debug("Created status list VC structure: {}", statusListData.toString(2));
+            log.debug("Created status list VC: id={}, purpose={}", statusListId, statusPurpose);
 
-            // Sign the status list credential
-            Map<String, String> signerSettings = new HashMap<>();
-            signerSettings.put(Constants.APPLICATION_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignAlgorithm).getFirst());
-            signerSettings.put(Constants.REFERENCE_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignAlgorithm).getLast());
-
-            // Attach signature to the VC
-            VCResult<?> vcResult = vcSigner.attachSignature(statusListData.toString(), signerSettings);
-
-            if (vcResult.getCredential() == null) {
-                log.error("Failed to generate status list VC - vcResult.getCredential() returned null");
-                throw new CertifyException("VC_ISSUANCE_FAILED");
-            }
-
-            // Convert to byte array for storage
-            byte[] vcDocument;
-            try {
-                vcDocument = vcResult.getCredential().toString().getBytes(StandardCharsets.UTF_8);
-            } catch (Exception e) {
-                log.error("Error converting VC to byte array", e);
-                throw new CertifyException("VC_SERIALIZATION_FAILED");
-            }
-
-            String vcDocS = vcResult.getCredential().toString();
-            log.info("Signed VC document: {}", vcDocS);
+            String vcDocS = addProofAndHandleResult(statusListData, ErrorConstants.VC_ISSUANCE_FAILED);
 
             // Create and save the status list credential entity
             StatusListCredential statusListCredential = new StatusListCredential();
@@ -199,7 +175,7 @@ public class StatusListCredentialService {
             statusListCredential.setVcDocument(vcDocS);
             statusListCredential.setCredentialType("BitstringStatusListCredential");
             statusListCredential.setStatusPurpose(statusPurpose);
-            statusListCredential.setCapacity(defaultCapacity);
+            statusListCredential.setCapacity(statusListSizeInKB);
             statusListCredential.setCredentialStatus(StatusListCredential.CredentialStatus.AVAILABLE);
             statusListCredential.setCreatedDtimes(LocalDateTime.now());
 
@@ -212,11 +188,10 @@ public class StatusListCredentialService {
 
         } catch (JSONException e) {
             log.error("JSON error while generating status list credential", e);
-            throw new CertifyException("STATUS_LIST_JSON_ERROR");
+            throw new CertifyException(ErrorConstants.STATUS_LIST_GENERATION_JSON_ERROR);
         } catch (Exception e) {
-            e.printStackTrace();
             log.error("Error generating status list credential", e);
-            throw new CertifyException("STATUS_LIST_GENERATION_FAILED");
+            throw new CertifyException(ErrorConstants.STATUS_LIST_GENERATION_FAILED);
         }
     }
 
@@ -242,27 +217,15 @@ public class StatusListCredentialService {
                     SELECT ?, generate_series(0, ? - 1), false, NOW()
                     """;
 
-            try {
-                Query nativeQuery = entityManager.createNativeQuery(insertSql);
-                nativeQuery.setParameter(1, statusListCredential.getId());
-                nativeQuery.setParameter(2, statusListCredential.getCapacity());
+            Query nativeQuery = entityManager.createNativeQuery(insertSql);
+            nativeQuery.setParameter(1, statusListCredential.getId());
+            nativeQuery.setParameter(2, statusListCredential.getCapacity() * 1024L * 8L); // Convert KB to bits
 
-                int rowsInserted = nativeQuery.executeUpdate();
-
-                log.info("Successfully initialized {} available indices for status list: {}", rowsInserted, statusListCredential.getId());
-
-            } catch (Exception e) {
-                if (entityManager.getTransaction().isActive()) {
-                    entityManager.getTransaction().rollback();
-                }
-                throw e;
-            } finally {
-                entityManager.close();
-            }
-
+            int rowsInserted = nativeQuery.executeUpdate();
+            log.info("Successfully initialized {} available indices for status list: {}", rowsInserted, statusListCredential.getId());
         } catch (Exception e) {
             log.error("Error initializing available indices for status list: {}", statusListCredential.getId(), e);
-            throw new CertifyException("STATUS_LIST_INDEX_INITIALIZATION_FAILED");
+            throw new CertifyException(ErrorConstants.STATUS_LIST_INDEX_INITIALIZATION_FAILED);
         }
     }
 
@@ -278,17 +241,11 @@ public class StatusListCredentialService {
         log.info("Finding or creating status list for purpose: {}", statusPurpose);
 
         // Try to find an existing suitable status list
-        Optional<StatusListCredential> existingStatusList = findSuitableStatusList(statusPurpose, StatusListCredential.CredentialStatus.AVAILABLE);
-
-        if (existingStatusList.isPresent()) {
-            log.info("suitable status list found, returning the existing one");
-            return existingStatusList.get();
-        }
-
-        // No suitable status list found, generate a new one
-        log.info("No suitable status list found, generating a new one");
-        StatusListCredential statusListCredential = generateStatusListCredential(statusPurpose);
-        return statusListCredential;
+        return findSuitableStatusList(statusPurpose, StatusListCredential.CredentialStatus.AVAILABLE)
+                .orElseGet(() -> {
+                    log.info("No suitable status list found, generating a new one");
+                    return generateStatusListCredential(statusPurpose);
+                });
     }
 
     /**
@@ -315,36 +272,108 @@ public class StatusListCredentialService {
         log.info("Re-signing status list credential");
 
         try {
-            // Prepare signer settings
-            Map<String, String> signerSettings = new HashMap<>();
-            signerSettings.put(Constants.APPLICATION_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignAlgorithm).getFirst());
-            signerSettings.put(Constants.REFERENCE_ID, CertifyIssuanceServiceImpl.keyChooser.get(vcSignAlgorithm).getLast());
-
             // Remove existing proof if present before re-signing
             JSONObject vcDocument = new JSONObject(vcDocumentJson);
             if (vcDocument.has("proof")) {
                 vcDocument.remove("proof");
             }
 
-            // Update validFrom timestamp to current time
-            vcDocument.put("validFrom", new Date().toInstant().toString());
-
-            // Sign the updated VC
-            VCResult<?> vcResult = vcSigner.attachSignature(vcDocument.toString(), signerSettings);
-
-            if (vcResult.getCredential() == null) {
-                log.error("Failed to re-sign status list VC - vcResult.getCredential() returned null");
-                throw new CertifyException("VC_RESIGNATION_FAILED");
-            }
-
-            String resignedVcDocument = vcResult.getCredential().toString();
-            log.debug("Successfully re-signed status list credential");
-
-            return resignedVcDocument;
-
+            return addProofAndHandleResult(vcDocument, ErrorConstants.VC_RESIGNING_FAILED);
         } catch (Exception e) {
             log.error("Error re-signing status list credential", e);
-            throw new CertifyException("VC_RESIGNATION_FAILED");
+            throw new CertifyException(ErrorConstants.VC_RESIGNING_FAILED);
         }
     }
+
+    @Transactional
+    public void addCredentialStatus(JSONObject jsonObject, String statusPurpose) throws CertifyException {
+        log.info("Adding credential status for status list integration");
+
+        // Assign next available index using database approach
+        StatusListCredential statusList = findOrCreateStatusList(statusPurpose);
+        long assignedIndex = findNextAvailableIndex(statusList.getId());
+
+        if (assignedIndex == -1) {
+            log.info("Current status list is full, creating a new one");
+            statusList = generateStatusListCredential(statusPurpose);
+            assignedIndex = findNextAvailableIndex(statusList.getId());
+
+            if (assignedIndex == -1) {
+                log.error("Failed to get available index even from new status list");
+                throw new CertifyException(ErrorConstants.STATUS_LIST_INDEX_UNAVAILABLE);
+            }
+        }
+
+        JSONObject credentialStatus = new JSONObject();
+            String statusId = domainUrl + "/v1/certify/credentials/status-list/" + statusList.getId();
+        credentialStatus.put("id", statusId + "#" + assignedIndex);
+        credentialStatus.put("type", "BitstringStatusListEntry");
+        credentialStatus.put("statusPurpose", statusPurpose);
+        credentialStatus.put("statusListIndex", String.valueOf(assignedIndex));
+        credentialStatus.put("statusListCredential", statusId);
+        jsonObject.put(VCDM2Constants.CREDENTIAL_STATUS, credentialStatus);
+
+        log.info("Successfully added credential status with index {} in status list {}", assignedIndex, statusList.getId());
+    }
+
+    @Transactional
+    public void storeLedgerEntry(String credentialId, String issuerId, String credentialType, CredentialStatusDetail statusDetails, Map<String, Object> indexedAttributes, LocalDateTime issuanceDate) {
+        try {
+            Ledger ledger = new Ledger();
+            if(credentialId != null) {
+                ledger.setCredentialId(credentialId);
+            }
+            ledger.setIssuerId(issuerId);
+            ledger.setIssuanceDate(issuanceDate);
+            ledger.setCredentialType(credentialType);
+            ledger.setIndexedAttributes(indexedAttributes);
+
+            // Store status details as array
+            List<CredentialStatusDetail> statusDetailsList = new ArrayList<>();
+            if(statusDetails != null) {
+                statusDetailsList.add(statusDetails);
+            }
+            ledger.setCredentialStatusDetails(statusDetailsList);
+
+            ledgerRepository.save(ledger);
+        } catch (Exception e) {
+            log.error("Error storing ledger entry", e);
+            throw new RuntimeException("Failed to store ledger entry", e);
+        }
+    }
+
+    /**
+     * Helper method to add a proof to a VC and handle the result.
+     */
+    private String addProofAndHandleResult(JSONObject vcDocument, String errorConstant) throws CertifyException {
+        List<List<String>> aliases =
+                (keyAliasMapper != null) ? keyAliasMapper.get(signatureCryptoSuite) : null;
+        if (aliases == null || aliases.isEmpty()
+                || aliases.get(0) == null || aliases.get(0).isEmpty()
+                || aliases.get(0).get(0) == null || aliases.get(0).get(0).isBlank()) {
+            log.error("No key alias configured for signature crypto suite: {}", signatureCryptoSuite);
+            throw new CertifyException(ErrorConstants.KEY_ALIAS_NOT_CONFIGURED);
+        }
+        String appId = aliases.get(0).get(0);
+
+        Credential cred = credentialFactory.getCredential(VCFormats.LDP_VC)
+                .orElseThrow(() -> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
+
+        VCResult<?> vcResult = cred.addProof(
+                vcDocument.toString(),
+                "",
+                signatureAlgo,
+                appId,
+                statusListKeyManagerRefId,
+                didUrl,
+                signatureCryptoSuite
+        );
+
+        if (vcResult.getCredential() == null) {
+            log.error("Failed to add proof to VC - vcResult.getCredential() returned null");
+            throw new CertifyException(errorConstant);
+        }
+        return vcResult.getCredential().toString();
+    }
+
 }

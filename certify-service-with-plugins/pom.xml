@@ -9,12 +9,12 @@
     <parent>
         <groupId>io.mosip.certify</groupId>
         <artifactId>certify-parent</artifactId>
-        <version>0.12.0-SNAPSHOT</version>
+        <version>0.13.0-SNAPSHOT</version>
     </parent>
 
     <groupId>io.mosip.certify</groupId>
     <artifactId>certify-service-with-plugins</artifactId>
-    <version>0.12.0-SNAPSHOT</version>
+    <version>0.13.0-SNAPSHOT</version>
     <name>certify-service-with-plugins</name>
     <description>certify vci service</description>
     <url>https://github.com/mosip/inji-certify</url>
@@ -37,13 +37,13 @@
 
     <properties>
         <certify-plugins.location>target</certify-plugins.location>
-        <mock-certify-plugin.version>0.4.0</mock-certify-plugin.version>
+        <mock-certify-plugin.version>0.5.0</mock-certify-plugin.version>
         <mock-certify-plugin.fileName>mock-certify-plugin.jar</mock-certify-plugin.fileName>
-        <mosip-identity-certify-plugin.version>0.4.0</mosip-identity-certify-plugin.version>
+        <mosip-identity-certify-plugin.version>0.5.0</mosip-identity-certify-plugin.version>
         <mosip-identity-certify-plugin.fileName>mosip-identity-certify-plugin.jar</mosip-identity-certify-plugin.fileName>
-        <postgres-dataprovider-plugin.version>0.4.0</postgres-dataprovider-plugin.version>
+        <postgres-dataprovider-plugin.version>0.5.0</postgres-dataprovider-plugin.version>
         <postgres-dataprovider-plugin.fileName>postgres-dataprovider-plugin.jar</postgres-dataprovider-plugin.fileName>
-        <sunbird-rc-certify-integration-plugin.version>0.4.0</sunbird-rc-certify-integration-plugin.version>
+        <sunbird-rc-certify-integration-plugin.version>0.5.0</sunbird-rc-certify-integration-plugin.version>
         <sunbird-rc-certify-integration-plugin.fileName>sunbird-rc-certify-integration-impl.jar</sunbird-rc-certify-integration-plugin.fileName>
     </properties>
     <build>

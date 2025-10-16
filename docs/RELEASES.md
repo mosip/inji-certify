@@ -12,3 +12,11 @@ is_glowroot_env - this field is removed from configure_start.sh to remove depend
 
 ```
 moved client.zip to build time dependency in dockerfile - addition of new hsm-client zip can be done by adding it to volume mount in docker-compose or helm charts with same structure as [client.zip](https://raw.githubusercontent.com/mosip/artifactory-ref-impl/v1.3.0-beta.1/artifacts/src/hsm/client.zip)
+
+---
+
+# Changes in release 0.12.0
+
+## Restructure of credential_template table
+
+Step-by-Step Migration guide for upgrade from 0.11.0 to 0.12.0 is available at [Migration Guide](./Migration-Guide-0.11.0-to-0.12.0.md)

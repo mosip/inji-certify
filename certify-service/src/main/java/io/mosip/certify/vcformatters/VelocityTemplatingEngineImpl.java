@@ -40,7 +40,6 @@ import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.RenderingTemplateException;
 import io.mosip.certify.entity.CredentialConfig;
-import io.mosip.certify.entity.TemplateId; // Ensure this import is present
 import io.mosip.certify.repository.CredentialConfigRepository;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCDM2Constants;
@@ -181,6 +180,21 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     }
 
     /**
+     * Gets the crypto suite used for VC signature or proof generation
+     * @param templateName is the name of the template
+     * @return the crypto suite used for VC signature or proof generation
+     */
+    @Override
+    public String getSignatureCryptoSuite(String templateName) {
+        return getCachedCredentialConfig(templateName).getSignatureCryptoSuite(); // NEW
+    }
+
+    @Override
+    public List<String> getCredentialStatusPurpose(String templateName) {
+        return getCachedCredentialConfig(templateName).getCredentialStatusPurposes();
+    }
+
+    /**
      * performs the templating
      * NOTE: the defaultSettings map should have the "templateName" key set to
      *  "${sort(CREDENTIALTYPE1,CREDENTIALTYPE2,CREDENTIALTYPE3...)}:${sort(VC_CONTEXT1,VC_CONTENXT2,VC_CONTEXT3...)}"
@@ -194,7 +208,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     @Override
     public String format(JSONObject valueMap, Map<String, Object> templateSettings) {
         String templateName = templateSettings.get(TEMPLATE_NAME).toString();
-        String issuer = templateSettings.get(ISSUER_URI).toString();
+        String issuer = templateSettings.get(DID_URL).toString();
         String vcTemplateString = getCachedCredentialConfig(templateName).getVcTemplate(); // NEW
         if (vcTemplateString == null) {
             log.error("Template {} not found (vcTemplate is null)", templateName);
@@ -218,7 +232,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
                 log.error("SVG Template: " + templateSettings.get(Constants.RENDERING_TEMPLATE_ID) + " not available in DB", e);
             }
         }
-        if (!valueMap.has(VCDM2Constants.VALID_UNITL) && StringUtils.isNotEmpty(defaultExpiryDuration)) {
+        if (!valueMap.has(VCDM2Constants.VALID_UNTIL) && StringUtils.isNotEmpty(defaultExpiryDuration)) {
             Duration duration;
             try {
                 duration = Duration.parse(defaultExpiryDuration);
@@ -227,7 +241,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
                 duration = Duration.parse("P730D");
             }
             String expiryTime = ZonedDateTime.now(ZoneOffset.UTC).plusSeconds(duration.getSeconds()).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            finalTemplate.put(VCDM2Constants.VALID_UNITL, expiryTime);
+            finalTemplate.put(VCDM2Constants.VALID_UNTIL, expiryTime);
         }
         if (!valueMap.has(VCDM2Constants.VALID_FROM)) {
             finalTemplate.put(VCDM2Constants.VALID_FROM, ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN)));
@@ -275,26 +289,6 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     }
 
     /**
-     * getTemplate fetches the VelocityTemplate from the DB or Spring Cache
-     * @param key key is a combination of sorted credentialType & sorted
-     *            context separated by a ':'.
-     * @return
-     */
-    @Cacheable(cacheNames = "template", key = "#key")
-    public String getTemplate(String key) {
-        if (!key.contains(DELIMITER)) {
-            return null;
-        }
-        String credentialType = key.split(DELIMITER)[0];
-        String context = key.split(DELIMITER, 2)[1];
-        CredentialConfig template = credentialConfigRepository.findByCredentialTypeAndContext(credentialType, context).orElse(null);
-        if (template != null) {
-            return template.getVcTemplate();
-        } else
-            return null;
-    }
-
-    /**
      * performs the templating
      * NOTE: the defaultSettings map should have the "templateName" key set to
      *  "${sort(CREDENTIALTYPE1,CREDENTIALTYPE2,CREDENTIALTYPE3...)}:${sort(VC_CONTEXT1,VC_CONTENXT2,VC_CONTEXT3...)}"
@@ -307,7 +301,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     public String format(Map<String, Object> templateInput) {
         // TODO: Isn't template name becoming too complex with VC_CONTEXTS & CREDENTIAL_TYPES both?
         String templateName = templateInput.get(TEMPLATE_NAME).toString();
-        String issuer = templateInput.get(ISSUER_URI).toString();
+        String issuer = templateInput.get(DID_URL).toString();
         String vcTemplateString = getCachedCredentialConfig(templateName).getVcTemplate(); // NEW
         vcTemplateString = new String(Base64.decodeBase64(vcTemplateString));
         StringWriter writer = new StringWriter();
@@ -329,30 +323,22 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
                 log.error("Template: " + templateInput.get(Constants.RENDERING_TEMPLATE_ID) + " not available in DB", e);
             }
         }
-        if (!(templateInput.containsKey(VCDM2Constants.VALID_FROM)
-                && templateInput.containsKey(VCDM2Constants.VALID_UNITL))) {
-            String time = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            // hardcoded time
-            String expiryTime = ZonedDateTime.now(ZoneOffset.UTC).plusYears(2).format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-            finalTemplate.put(VCDM2Constants.VALID_FROM, time);
-            finalTemplate.put(VCDM2Constants.VALID_UNITL, expiryTime);
-        }
         VelocityContext context = new VelocityContext(finalTemplate);
         engine.evaluate(context, writer, /*logTag */ templateName, vcTemplateString); // use vcTemplateString
-        if (StringUtils.isNotEmpty(idPrefix)) {
-            JSONObject j = new JSONObject(writer.toString());
-            j.put(VCDMConstants.ID, idPrefix + UUID.randomUUID());
-            return j.toString();
+        JSONObject jsonObject = new JSONObject(writer.toString());
+        if (templateInput.containsKey(VCDMConstants.CREDENTIAL_ID)) {
+            jsonObject.put(VCDMConstants.ID, templateInput.get(VCDMConstants.CREDENTIAL_ID));
         }
-        if( templateInput.containsKey("_vct") && templateInput.containsKey("_cnf")
-                && templateInput.containsKey("_iss")) {
-            JSONObject j = new JSONObject(writer.toString());
-            j.put("vct", templateInput.get("_vct"));
-            j.put("cnf", templateInput.get("_cnf"));
-            j.put("iss", templateInput.get("_iss"));
-            return j.toString();
+        if(templateInput.containsKey(VCDM2Constants.CREDENTIAL_STATUS) && templateName.contains(VCDM2Constants.URL)) {
+            jsonObject.put(VCDM2Constants.CREDENTIAL_STATUS, templateInput.get(VCDM2Constants.CREDENTIAL_STATUS));
+        }
+        if( templateInput.containsKey(VCTYPE) && templateInput.containsKey(CONFIRMATION)
+                && templateInput.containsKey(ISSUER)) {
+            jsonObject.put(VCTYPE, templateInput.get(VCTYPE));
+            jsonObject.put(CONFIRMATION, templateInput.get(CONFIRMATION));
+            jsonObject.put(ISSUER, templateInput.get(ISSUER));
         }
 
-        return writer.toString();
+        return jsonObject.toString();
     }
 }

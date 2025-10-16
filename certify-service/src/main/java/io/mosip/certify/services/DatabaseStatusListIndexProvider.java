@@ -31,8 +31,8 @@ public class DatabaseStatusListIndexProvider implements StatusListIndexProvider 
     @Autowired
     private EntityManager entityManager;
 
-    @Value("${mosip.certify.statuslist.usable-capacity:50}")
-    private int usableCapacity;
+    @Value("${mosip.certify.statuslist.usable-capacity-percentage:50}")
+    private int usableCapacityPercentage;
 
     @Override
     public String getProviderName() {
@@ -42,7 +42,7 @@ public class DatabaseStatusListIndexProvider implements StatusListIndexProvider 
     @Override
     @Transactional
     public Optional<Long> acquireIndex(String listId, Map<String, Object> options) {
-        log.info("Attempting to acquire index for status list: {}", listId);
+        log.debug("Attempting to acquire index for status list: {}", listId);
 
         try {
             // 1. Get status list and its capacity
@@ -53,10 +53,10 @@ public class DatabaseStatusListIndexProvider implements StatusListIndexProvider 
             }
 
             StatusListCredential statusList = statusListOpt.get();
-            long physicalCapacity = statusList.getCapacity();
+            long physicalCapacity = statusList.getCapacity()*1024L*8L; // Convert KB to bits
 
             // 2. Calculate effective threshold based on usable capacity
-            long effectiveThresholdCount = (long) Math.floor(physicalCapacity * (usableCapacity / 100.0));
+            long effectiveThresholdCount = (long) Math.floor(physicalCapacity * (usableCapacityPercentage / 100.0));
 
             // 3. Check current assigned count
             long currentAssignedCount = statusListAvailableIndicesRepository
