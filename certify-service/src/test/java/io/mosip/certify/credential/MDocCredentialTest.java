@@ -13,6 +13,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.*;
 
@@ -49,6 +50,9 @@ public class MDocCredentialTest {
     @Before
     public void setUp() {
         mDocCredential = new MDocCredential(vcFormatter, signatureService);
+        // Inject the mocked dependencies using ReflectionTestUtils
+        ReflectionTestUtils.setField(mDocCredential, "objectMapper", objectMapper);
+        ReflectionTestUtils.setField(mDocCredential, "mDocProcessor", mDocProcessor);
     }
 
     // ==================== Format Handling Tests ====================
