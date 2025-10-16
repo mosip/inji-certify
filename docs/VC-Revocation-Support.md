@@ -347,10 +347,11 @@ sequenceDiagram
 
 
 ## Configuration Properties
-`mosip.certify.status-list.signature-crypto-suite=Ed25519Signature2020`
-`mosip.certify.status-list.signature-algo=EdDSA`
-`mosip.certify.statuslist.size-in-kb=16`
-`mosip.certify.data-provider-plugin.credential-status.allowed-status-purposes={'revocation'}`
+| Property Name                                                       | Description                                                            | Example Value                                                                            |
+|---------------------------------------------------------------------|------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
+| `mosip.certify.status-list.signature-crypto-suite` | Signature Crypto Suite for signing Status List VCs                     | `Ed25519Signature2020`                                                                   |
+| `mosip.certify.status-list.signature-algo` | Supported signing algorithms for signature crypto suite defined above. | `EdDSA`                                                                                  |
+| `mosip.certify.statuslist.size-in-kb`                | Supported proof types for credentials.                                 | `16`                                                                                     |
 
 ## Enabling the Feature
 1. Database Setup: Make sure the following tables exist:
