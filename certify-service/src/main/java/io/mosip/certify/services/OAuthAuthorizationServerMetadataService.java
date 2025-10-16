@@ -26,17 +26,14 @@ public class OAuthAuthorizationServerMetadataService {
     @Value("${mosip.certify.oauth.token-endpoint}")
     private String tokenEndpoint;
 
-    @Value("${mosip.certify.oauth.jwks-uri}")
-    private String jwksUri;
-
     @Value("${mosip.certify.oauth.grant-types-supported}")
     private String grantTypesSupported;
 
     @Value("${mosip.certify.oauth.response-types-supported}")
     private String responseTypesSupported;
 
-    @Value("${mosip.certify.oauth.token-endpoint-auth-methods-supported}")
-    private String tokenEndpointAuthMethodsSupported;
+    @Value("${mosip.certify.oauth.code-challenge-methods-supported}")
+    private String codeChallengeMethodsSupported;
 
     @Value("${mosip.certify.oauth.interactive-authorization-endpoint}")
     private String interactiveAuthorizationEndpoint;
@@ -52,10 +49,9 @@ public class OAuthAuthorizationServerMetadataService {
         
         metadata.setIssuer(issuer);
         metadata.setTokenEndpoint(tokenEndpoint);
-        metadata.setJwksUri(jwksUri);
         metadata.setGrantTypesSupported(parseCommaSeparatedValues(grantTypesSupported));
         metadata.setResponseTypesSupported(parseCommaSeparatedValues(responseTypesSupported));
-        metadata.setTokenEndpointAuthMethodsSupported(parseCommaSeparatedValues(tokenEndpointAuthMethodsSupported));
+        metadata.setCodeChallengeMethodsSupported(parseCommaSeparatedValues(codeChallengeMethodsSupported));
         metadata.setInteractiveAuthorizationEndpoint(interactiveAuthorizationEndpoint);
 
         log.debug("OAuth Authorization Server metadata built successfully for issuer: {}", issuer);
