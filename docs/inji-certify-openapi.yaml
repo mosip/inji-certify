@@ -1844,7 +1844,7 @@ components:
           description: Identifier for the application the certificate is for.
         referenceId:
           type: string
-          description: Optional reference for tracking or versioning.
+          description: Optional reference for tracking or versioning. For EC (Elliptic Curve) and ED (Edwards Curve) keys, the refId must be provided during CSR generation. (Eg. EC_SECP256R1_SIGN, EC_SECP256K1_SIGN, ED25519_SIGN). For RSA keys, CSR generation works without a refId (i.e., an empty string is acceptable).
         commonName:
           type: string
           description: Common Name (CN) for the certificate subject.
