@@ -66,7 +66,7 @@ public class StatusListCredentialServiceTest {
         ReflectionTestUtils.setField(service, "signatureAlgo", "EdDSA");
         ReflectionTestUtils.setField(service, "statusListKeyManagerRefId", "ED25519_SIGN");
         Map<String, List<List<String>>> keyAliasMapper = new HashMap<>();
-        keyAliasMapper.put("Ed25519Signature2020", Arrays.asList(Arrays.asList("appId")));
+        keyAliasMapper.put("EdDSA", Arrays.asList(Arrays.asList("appId")));
         ReflectionTestUtils.setField(service, "keyAliasMapper", keyAliasMapper);
     }
 

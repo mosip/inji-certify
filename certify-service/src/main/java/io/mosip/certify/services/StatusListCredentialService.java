@@ -347,7 +347,7 @@ public class StatusListCredentialService {
      */
     private String addProofAndHandleResult(JSONObject vcDocument, String errorConstant) throws CertifyException {
         List<List<String>> aliases =
-                (keyAliasMapper != null) ? keyAliasMapper.get(signatureCryptoSuite) : null;
+                (keyAliasMapper != null) ? keyAliasMapper.get(signatureAlgo) : null;
         if (aliases == null || aliases.isEmpty()
                 || aliases.get(0) == null || aliases.get(0).isEmpty()
                 || aliases.get(0).get(0) == null || aliases.get(0).get(0).isBlank()) {
