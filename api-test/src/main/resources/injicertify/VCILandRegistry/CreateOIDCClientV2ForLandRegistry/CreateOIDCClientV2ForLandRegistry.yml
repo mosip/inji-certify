@@ -1,7 +1,7 @@
 CreateOIDCClientV2VCIForLandRegistry:
    InjiCertify_ESignet_CreateOIDCClientV2_ForLandRegistry_all_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/client-mgmt/oauth-client
-      uniqueIdentifier: TC_esignetDependent_CreateOidc
+      uniqueIdentifier: TC_esignetDependent_CreateOidc_03
       description: Create OIDC client
       role: partner
       restMethod: post
@@ -31,7 +31,7 @@ CreateOIDCClientV2VCIForLandRegistry:
 }'
    InjiCertify_ESignet_CreateOIDCClientV2_For_LandRegistry2_all_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/client-mgmt/oauth-client
-      uniqueIdentifier: TC_esignetDependent_CreateOidc_For_EccR1
+      uniqueIdentifier: TC_esignetDependent_CreateOidc_For_EccR1_04
       description: Create OIDC client
       role: partner
       restMethod: post

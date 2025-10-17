@@ -1,7 +1,7 @@
 AuthenticateUserForLandRegistry:
    InjiCertify_ESignet_AuthenticateUserVCI_ForLandRegistry_uin_Otp_Pos_For_NegFlow:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUser
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_16
       description: Authenticate User for mock ida
       role: resident
       restMethod: post
@@ -35,7 +35,7 @@ AuthenticateUserForLandRegistry:
 
    InjiCertify_ESignet_AuthenticateUserVCI_ForLandRegistry_Cred_2_uin_Otp_For_NegFlow:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUser
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_17
       description: Authenticate User for mock ida
       role: resident
       restMethod: post
@@ -69,7 +69,7 @@ AuthenticateUserForLandRegistry:
 
    InjiCertify_ESignet_AuthenticateUserVCI_ForLandRegistry_uin_Otp_Pos_Without_DB_Insertion_For_NegFlow:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUser
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_18
       description: Authenticate User for mock ida without inserting data in DB
       role: resident
       restMethod: post

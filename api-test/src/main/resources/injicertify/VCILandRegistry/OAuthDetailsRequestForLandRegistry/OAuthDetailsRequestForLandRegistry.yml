@@ -1,7 +1,7 @@
 OAuthDetailsRequestForLandRegistry:
    InjiCertify_ESignet_OAuthDetailsRequest_ForLandRegistry_uin_all_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
-      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_13
       description: OAuth details request for Mock
       role: resident
       restMethod: post
@@ -29,7 +29,7 @@ OAuthDetailsRequestForLandRegistry:
 
    InjiCertify_ESignet_OAuthDetailsRequest_ForLandRegistry_Cred_2_uin_all_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
-      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_14
       description: OAuth details request for Mock
       role: resident
       restMethod: post

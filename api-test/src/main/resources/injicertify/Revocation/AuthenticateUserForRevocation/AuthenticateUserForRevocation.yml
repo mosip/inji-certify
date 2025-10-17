@@ -1,7 +1,7 @@
 AuthenticateUserForRevocation:
    InjiCertify_ESignet_AuthenticateUserVCI_For_landregistry_Cred1_uin_Otp_Valid_Smoke_For_Revocation:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUser
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_05
       description: Authenticate User for revocation for cred1
       role: noauth
       restMethod: post
@@ -33,7 +33,7 @@ AuthenticateUserForRevocation:
 }'
    InjiCertify_ESignet_AuthenticateUserVCI_For_landregistry_Cred2_uin_Otp_Valid_Smoke_For_Revocation:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUser
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_06
       description: Authenticate User for revocation for cred2
       role: noauth
       restMethod: post

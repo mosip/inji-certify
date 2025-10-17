@@ -1,7 +1,7 @@
 AuthenticateUserVCIFormDocMDL:
    InjiCertify_ESignet_AuthenticateUserVCI_FormDocMDL_uin_Otp_Valid_Smoke:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUser      
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_04    
       description: Authenticate User for mDocMDL      
       role: resident
       restMethod: post

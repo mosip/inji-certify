@@ -5,6 +5,7 @@ CreatePolicySunBirdR:
       description: Creating new sunbird policy with valid parameters
       role: resident
       restMethod: post
+      additionalDependencies: TC_SunbirdDependent_deletepolicy
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
       inputTemplate: injicertify/SunBirdR/CreatePolicySunBirdR/CreatePolicySunBirdR

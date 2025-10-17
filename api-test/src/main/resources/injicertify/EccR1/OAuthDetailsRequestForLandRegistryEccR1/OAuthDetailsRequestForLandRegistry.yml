@@ -1,7 +1,7 @@
 OAuthDetailsRequestForEccR1:
    InjiCertify_ESignet_OAuthDetailsRequest_For_LandRegistry_EccR1_uin_all_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
-      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_03
       description: OAuth details request for Mock
       role: resident
       restMethod: post

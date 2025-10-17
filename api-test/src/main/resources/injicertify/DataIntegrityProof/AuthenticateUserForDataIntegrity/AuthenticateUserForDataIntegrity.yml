@@ -1,7 +1,7 @@
 AuthenticateUserForDataIntegrity:
    InjiCertify_ESignet_AuthenticateUserVCI_For_landregistry_Cred1_dataIntegrity_uin_Otp_Valid_Smoke:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUser
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_01
       description: Authenticate User for data integrity proof for cred1
       role: noauth
       restMethod: post
@@ -36,7 +36,7 @@ AuthenticateUserForDataIntegrity:
 }'
    InjiCertify_ESignet_AuthenticateUserVCI_For_landregistry_Cred2_dataIntegrity_uin_Otp_Valid_Smoke:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUser
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_02
       description: Authenticate User for data integrity proof for cred2
       role: noauth
       restMethod: post

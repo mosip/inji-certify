@@ -1,7 +1,7 @@
 GenerateTokenForLandRegistry:
    InjiCertify_ESignet_GenerateToken_ForLandRegistry_EccR1_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/oauth/v2/token
-      uniqueIdentifier: TC_esignetDependent_GenerateToken
+      uniqueIdentifier: TC_esignetDependent_GenerateToken_03
       description: Generate Token for mock ida
       role: resident
       restMethod: post

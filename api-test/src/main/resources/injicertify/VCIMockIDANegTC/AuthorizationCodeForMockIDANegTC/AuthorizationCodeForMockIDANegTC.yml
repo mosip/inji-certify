@@ -1,10 +1,11 @@
 AuthorizationCodeForMockIDANegTC:
    InjiCertify_ESignet_AuthorizationCode_ForMockIDA_All_Valid_sid_For_Neg_Flow:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
-      uniqueIdentifier: TC_esignetDependent_AuthorizationCodeNeg      
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCodeNeg_26      
       description: Authorization Code for mock ida for negative     
       role: resident
       restMethod: post
+      additionalDependencies: TC_esignetDependent_AuthenticateUser_Neg_25
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
       inputTemplate: injicertify/VCIMockIDANegTC/AuthorizationCodeForMockIDANegTC/AuthorizationCodeForMockIDANegTC

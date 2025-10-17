@@ -1,10 +1,11 @@
 AuthenticateUserSunBirdCNeg:
    InjiCertify_ESignet_AuthenticateUserSunBirdC_Valid_For_Neg_flow:
       endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUserNeg      
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUserNeg_12      
       description: Authenticate User      
       role: resident
       restMethod: post
+      additionalDependencies: TC_SunbirdDependent_createpolicy,TC_SunbirdDependent_Getpolicy,TC_SunbirdDependent_searchpolicy
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
       inputTemplate: injicertify/SunBirdCNegative/AuthenticateUserSunBirdCNeg/AuthenticateUserSunBirdCNeg
@@ -23,10 +24,11 @@ AuthenticateUserSunBirdCNeg:
 
    InjiCertify_ESignet_AuthenticateUserSunBirdC_Diff_Scope_Valid_For_Neg_flow:
       endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUserNeg      
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUserNeg_13      
       description: Authenticate User      
       role: resident
       restMethod: post
+      additionalDependencies: TC_SunbirdDependent_createpolicy,TC_SunbirdDependent_Getpolicy,TC_SunbirdDependent_searchpolicy
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
       inputTemplate: injicertify/SunBirdCNegative/AuthenticateUserSunBirdCNeg/AuthenticateUserSunBirdCNeg

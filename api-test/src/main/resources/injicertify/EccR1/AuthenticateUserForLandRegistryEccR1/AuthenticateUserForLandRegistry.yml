@@ -1,7 +1,7 @@
 AuthenticateUserForLandRegistryEccR1:
    InjiCertify_ESignet_AuthenticateUserVCI_For_LandRegistry_EccR1_uin_Otp_Valid_Smoke:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUser
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_03
       description: Authenticate User for mock ida
       role: resident
       restMethod: post
