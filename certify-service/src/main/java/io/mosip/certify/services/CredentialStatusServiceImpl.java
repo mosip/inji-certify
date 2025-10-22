@@ -8,6 +8,7 @@ import io.mosip.certify.core.spi.CredentialStatusService;
 import io.mosip.certify.entity.CredentialStatusTransaction;
 import io.mosip.certify.entity.Ledger;
 import io.mosip.certify.core.dto.CredentialStatusDetail;
+import io.mosip.certify.entity.StatusListCredential;
 import io.mosip.certify.repository.CredentialStatusTransactionRepository;
 import io.mosip.certify.repository.LedgerRepository;
 import io.mosip.certify.repository.StatusListCredentialRepository;
@@ -72,9 +73,6 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
 
     @Override
     public CredentialStatusResponse updateCredentialStatusV2(UpdateCredentialStatusRequestV2 request) {
-        if (request.getCredentialStatus().getStatusPurpose() != null) {
-            throw new CertifyException("Invalid credential status purpose. Status purpose should not be null or empty");
-        }
         String statusListCredentialId = request.getCredentialStatus().getStatusListCredential();
         Long statusListIndex = request.getCredentialStatus().getStatusListIndex();
         String id = request.getCredentialStatus().getId();
@@ -82,13 +80,15 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
         if(id != null && !id.equals(statusListCredentialId)) {
             throw new CertifyException("Mismatch between credential status id and status list credential.");
         }
-
-        if (!statusListCredentialRepository.existsById(statusListCredentialId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "StatusListCredential not found with id: " + statusListCredentialId);
-        }
+        StatusListCredential statusListCredential = statusListCredentialRepository.findById(statusListCredentialId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "StatusListCredential not found with id: " + statusListCredentialId));
 
         CredentialStatusTransaction transaction = new CredentialStatusTransaction();
-        transaction.setStatusPurpose(request.getCredentialStatus().getStatusPurpose());
+        if(request.getCredentialStatus().getStatusPurpose() == null) {
+            transaction.setStatusPurpose(statusListCredential.getStatusPurpose());
+        } else {
+            transaction.setStatusPurpose(request.getCredentialStatus().getStatusPurpose());
+        }
         transaction.setStatusValue(request.getStatus());
         transaction.setStatusListCredentialId(statusListCredentialId);
         transaction.setStatusListIndex(statusListIndex);
@@ -99,6 +99,9 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
         dto.setStatusListIndex(transaction.getStatusListIndex());
         dto.setStatusPurpose(transaction.getStatusPurpose());
         dto.setStatusTimestamp(savedTransaction.getCreatedDtimes());
+        if(request.getCredentialStatus().getType() != null) {
+            dto.setCredentialType(request.getCredentialStatus().getType());
+        }
         return dto;
     }
 }

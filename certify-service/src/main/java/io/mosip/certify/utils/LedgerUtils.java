@@ -138,6 +138,7 @@ public class LedgerUtils {
             statusListCredentialId = statusListCredentialUrl.substring(lastSlash + 1);
         }
         credentialStatusDetail.setStatusListCredentialId(statusListCredentialId);
+        credentialStatusDetail.setCreatedTimes(System.currentTimeMillis());
 
         return credentialStatusDetail;
     }

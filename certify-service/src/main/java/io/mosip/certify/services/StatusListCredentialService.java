@@ -168,7 +168,7 @@ public class StatusListCredentialService {
             statusListCredential.setVcDocument(vcDocS);
             statusListCredential.setCredentialType("BitstringStatusListCredential");
             statusListCredential.setStatusPurpose(statusPurpose);
-            statusListCredential.setCapacity(statusListSizeInKB);
+            statusListCredential.setCapacityInKB(statusListSizeInKB);
             statusListCredential.setCredentialStatus(StatusListCredential.CredentialStatus.AVAILABLE);
             statusListCredential.setCreatedDtimes(LocalDateTime.now());
 
