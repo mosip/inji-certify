@@ -57,10 +57,7 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
         response.setCredentialType(record.getCredentialType());
         List<CredentialStatusDetail> statusDetails = record.getCredentialStatusDetails();
         if (statusDetails != null && !statusDetails.isEmpty()) {
-            CredentialStatusDetail latestStatus = statusDetails.stream()
-                                       .filter(s -> s.getCreatedTimes() != null)
-                                        .max(Comparator.comparingLong(CredentialStatusDetail::getCreatedTimes))
-                                       .orElse(statusDetails.getFirst());
+            CredentialStatusDetail latestStatus = statusDetails.getFirst();
 
             String statusListCredentialId = latestStatus.getStatusListCredentialId();
             Long statusListIndex = latestStatus.getStatusListIndex();
