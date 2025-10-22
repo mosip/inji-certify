@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -35,38 +36,39 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
             }
 
             return records.stream()
-                    .map(record -> {
-                        CredentialStatusResponse response = mapToSearchResponse(record);
-                        response.setIssuanceDate(null); // Set issuanceDate as null
-                        return response;
+                    .flatMap(record -> {
+                        List<CredentialStatusDetail> details = record.getCredentialStatusDetails();
+                        if (details == null || details.isEmpty()) {
+                            // Optionally, return a response with no status details
+                            CredentialStatusResponse credentialStatusResponse = mapToSearchResponse(record, null);
+                            credentialStatusResponse.setIssuanceDate(null);
+                            return Stream.of(credentialStatusResponse);
+                        }
+                        return details.stream().map(detail -> {
+                            CredentialStatusResponse response = mapToSearchResponse(record, detail);
+                            response.setIssuanceDate(null); // Set issuanceDate as null
+                            return response;
+                        });
                     })
                     .collect(Collectors.toList());
-
         } catch (Exception e) {
             throw new CertifyException("SEARCH_CREDENTIALS_FAILED");
         }
     }
 
-    private CredentialStatusResponse mapToSearchResponse(Ledger record) {
+    private CredentialStatusResponse mapToSearchResponse(Ledger record, CredentialStatusDetail statusDetail) {
         CredentialStatusResponse response = new CredentialStatusResponse();
         response.setCredentialId(record.getCredentialId());
         response.setIssuerId(record.getIssuerId());
         response.setIssueDate(record.getIssuanceDate());
         response.setIssuanceDate(record.getIssuanceDate());
-        response.setExpirationDate(record.getExpirationDate() != null ? record.getExpirationDate() : null);
+        response.setExpirationDate(record.getExpirationDate());
         response.setCredentialType(record.getCredentialType());
-        List<CredentialStatusDetail> statusDetails = record.getCredentialStatusDetails();
-        if (statusDetails != null && !statusDetails.isEmpty()) {
-            CredentialStatusDetail latestStatus = statusDetails.getFirst();
-
-            String statusListCredentialId = latestStatus.getStatusListCredentialId();
-            Long statusListIndex = latestStatus.getStatusListIndex();
-            String statusPurpose = latestStatus.getStatusPurpose();
-            Long createdDtimes = latestStatus.getCreatedTimes();
-
-            response.setStatusListCredentialUrl(statusListCredentialId);
-            response.setStatusListIndex(statusListIndex);
-            response.setStatusPurpose(statusPurpose);
+        if (statusDetail != null) {
+            response.setStatusListCredentialUrl(statusDetail.getStatusListCredentialId());
+            response.setStatusListIndex(statusDetail.getStatusListIndex());
+            response.setStatusPurpose(statusDetail.getStatusPurpose());
+            Long createdDtimes = statusDetail.getCreatedTimes();
             if (createdDtimes != null) {
                 LocalDateTime ts = LocalDateTime.ofInstant(
                         Instant.ofEpochMilli(createdDtimes),
@@ -101,10 +103,19 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
             }
 
             return records.stream()
-                    .map(record -> {
-                        CredentialStatusResponse response = mapToSearchResponse(record);
-                        response.setIssueDate(null); // Set issueDate as null
-                        return response;
+                    .flatMap(record -> {
+                        List<CredentialStatusDetail> details = record.getCredentialStatusDetails();
+                        if (details == null || details.isEmpty()) {
+                            // Optionally, return a response with no status details
+                            CredentialStatusResponse credentialStatusResponse = mapToSearchResponse(record, null);
+                            credentialStatusResponse.setIssueDate(null);
+                            return Stream.of(credentialStatusResponse);
+                        }
+                        return details.stream().map(detail -> {
+                            CredentialStatusResponse response = mapToSearchResponse(record, detail);
+                            response.setIssueDate(null); // Set issueDate as null
+                            return response;
+                        });
                     })
                     .collect(Collectors.toList());
 
