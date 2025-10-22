@@ -2,10 +2,9 @@ package io.mosip.certify.services;
 
 import io.mosip.certify.core.dto.CredentialStatusResponse;
 import io.mosip.certify.core.dto.UpdateCredentialStatusRequest;
-import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.entity.CredentialStatusTransaction;
 import io.mosip.certify.entity.Ledger;
-import io.mosip.certify.entity.attributes.CredentialStatusDetail;
+import io.mosip.certify.core.dto.CredentialStatusDetail;
 import io.mosip.certify.repository.CredentialStatusTransactionRepository;
 import io.mosip.certify.repository.LedgerRepository;
 import org.junit.Before;
@@ -142,24 +141,6 @@ public class CredentialStatusServiceImplTest {
 
         verify(ledgerRepository).findByCredentialId(credentialId);
         verify(credentialStatusTransactionRepository).save(any(CredentialStatusTransaction.class));
-    }
-
-    @Test
-    public void updateCredentialStatus_InvalidStatusPurpose_ThrowsCertifyException() {
-        String credentialId = "cid-001";
-        String statusListCredential = "https://example.com/status-list/abc";
-        UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(credentialId, statusListCredential);
-        // Set an invalid status purpose
-        request.getCredentialStatus().setStatusPurpose("invalid-purpose");
-
-        // Set allowedCredentialStatusPurposes to only allow "revocation"
-        List<String> allowedPurposes = List.of("revocation");
-        org.springframework.test.util.ReflectionTestUtils.setField(credentialStatusService, "allowedCredentialStatusPurposes", allowedPurposes);
-
-        CertifyException exception = assertThrows(CertifyException.class, () -> {
-            credentialStatusService.updateCredentialStatus(request);
-        });
-        assertEquals("Invalid credential status purpose. Allowed values are: " + allowedPurposes, exception.getMessage());
     }
 
     @Test

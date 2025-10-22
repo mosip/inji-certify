@@ -5,20 +5,17 @@ import io.mosip.certify.core.dto.CredentialStatusResponse;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.CredentialLedgerService;
 import io.mosip.certify.entity.Ledger;
-import io.mosip.certify.entity.attributes.CredentialStatusDetail;
+import io.mosip.certify.core.dto.CredentialStatusDetail;
 import io.mosip.certify.repository.LedgerRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -116,6 +113,33 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
 
         } catch (Exception e) {
             throw new CertifyException("SEARCH_CREDENTIALS_FAILED");
+        }
+    }
+
+    @Transactional
+    @Override
+    public void storeLedgerEntry(String credentialId, String issuerId, String credentialType, CredentialStatusDetail statusDetails, Map<String, Object> indexedAttributes, LocalDateTime issuanceDate) {
+        try {
+            Ledger ledger = new Ledger();
+            if(credentialId != null) {
+                ledger.setCredentialId(credentialId);
+            }
+            ledger.setIssuerId(issuerId);
+            ledger.setIssuanceDate(issuanceDate);
+            ledger.setCredentialType(credentialType);
+            ledger.setIndexedAttributes(indexedAttributes);
+
+            // Store status details as array
+            List<CredentialStatusDetail> statusDetailsList = new ArrayList<>();
+            if(statusDetails != null) {
+                statusDetailsList.add(statusDetails);
+            }
+            ledger.setCredentialStatusDetails(statusDetailsList);
+
+            ledgerRepository.save(ledger);
+        } catch (Exception e) {
+            log.error("Error storing ledger entry", e);
+            throw new RuntimeException("Failed to store ledger entry", e);
         }
     }
 }

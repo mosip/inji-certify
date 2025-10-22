@@ -9,9 +9,8 @@ import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.credential.Credential;
 import io.mosip.certify.credential.CredentialFactory;
 import io.mosip.certify.credential.W3CJsonLD;
-import io.mosip.certify.entity.Ledger;
 import io.mosip.certify.entity.StatusListCredential;
-import io.mosip.certify.entity.attributes.CredentialStatusDetail;
+import io.mosip.certify.core.dto.CredentialStatusDetail;
 import io.mosip.certify.repository.LedgerRepository;
 import io.mosip.certify.repository.StatusListAvailableIndicesRepository;
 import io.mosip.certify.repository.StatusListCredentialRepository;
@@ -25,7 +24,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.Assert.*;
@@ -42,10 +40,6 @@ public class StatusListCredentialServiceTest {
     @Mock
     private CredentialFactory credentialFactory;
     @Mock
-    private LedgerRepository ledgerRepository;
-    @Mock
-    private StatusListAvailableIndicesRepository statusListAvailableIndicesRepository;
-    @Mock
     private DatabaseStatusListIndexProvider indexProvider;
     @Mock
     private EntityManager entityManager;
@@ -56,7 +50,6 @@ public class StatusListCredentialServiceTest {
     public void setUp() {
         ReflectionTestUtils.setField(service, "statusListCredentialRepository", statusListCredentialRepository);
         ReflectionTestUtils.setField(service, "credentialFactory", credentialFactory);
-        ReflectionTestUtils.setField(service, "ledgerRepository", ledgerRepository);
         ReflectionTestUtils.setField(service, "indexProvider", indexProvider);
         ReflectionTestUtils.setField(service, "entityManager", entityManager);
         ReflectionTestUtils.setField(service, "didUrl", "did:example:issuer");
@@ -332,25 +325,6 @@ public class StatusListCredentialServiceTest {
             service.addCredentialStatus(json, "revocation");
             fail("Expected CertifyException");
         } catch (CertifyException ex) {
-            // expected
-        }
-    }
-
-    @Test
-    public void storeLedgerEntry_Success() {
-        CredentialStatusDetail detail = new CredentialStatusDetail();
-        Map<String, Object> attrs = Collections.singletonMap("foo", "bar");
-        service.storeLedgerEntry("cid", "issuer", "ctype", detail, attrs, LocalDateTime.now());
-        verify(ledgerRepository).save(any(Ledger.class));
-    }
-
-    @Test
-    public void storeLedgerEntry_Error_Throws() {
-        doThrow(new RuntimeException("fail")).when(ledgerRepository).save(any());
-        try {
-            service.storeLedgerEntry("cid", "issuer", "ctype", new CredentialStatusDetail(), Collections.emptyMap(), LocalDateTime.now());
-            fail("Expected RuntimeException");
-        } catch (RuntimeException ex) {
             // expected
         }
     }

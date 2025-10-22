@@ -1,6 +1,7 @@
 package io.mosip.certify.services;
 
 import io.mosip.certify.core.dto.CredentialLedgerSearchRequest;
+import io.mosip.certify.core.dto.CredentialStatusDetail;
 import io.mosip.certify.core.dto.CredentialStatusResponse;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.entity.Ledger;
@@ -21,9 +22,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CredentialLedgerServiceTestImpl {
@@ -102,6 +103,25 @@ public class CredentialLedgerServiceTestImpl {
 
         CertifyException ex = assertThrows(CertifyException.class, () -> ledgerService.searchCredentialLedger(request));
         Assert.assertEquals("SEARCH_CREDENTIALS_FAILED", ex.getErrorCode());
+    }
+
+    @Test
+    public void storeLedgerEntry_Success() {
+        CredentialStatusDetail detail = new CredentialStatusDetail();
+        Map<String, Object> attrs = Collections.singletonMap("foo", "bar");
+        ledgerService.storeLedgerEntry("cid", "issuer", "ctype", detail, attrs, LocalDateTime.now());
+        verify(ledgerRepository).save(any(Ledger.class));
+    }
+
+    @Test
+    public void storeLedgerEntry_Error_Throws() {
+        doThrow(new RuntimeException("fail")).when(ledgerRepository).save(any());
+        try {
+            ledgerService.storeLedgerEntry("cid", "issuer", "ctype", new CredentialStatusDetail(), Collections.emptyMap(), LocalDateTime.now());
+            fail("Expected RuntimeException");
+        } catch (RuntimeException ex) {
+            // expected
+        }
     }
 
     private Ledger createLedger(String credentialId) {

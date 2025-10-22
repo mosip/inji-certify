@@ -1397,6 +1397,7 @@ paths:
                     type: BitstringStatusListEntry
                     statusListCredential: 'http://localhost:8090/v1/certify/status-list/7bf52e81-f3bb-40ec-a0f9-a714847fd067'
                   status: false
+                  indexAllocator: test
       responses:
         '200':
           description: Credential status successfully updated. Returns the updated status record.
@@ -2265,6 +2266,10 @@ components:
         status:
           type: boolean
           description: 'The new status value (true typically means ''status asserted'', e.g., revoked/suspended; false means ''status not asserted''). Interpretation depends on statusPurpose and system policy.'
+        indexAllocator:
+          type: string
+          nullable: true
+          description: Optional hint or identifier for index allocation strategy or service component. Usage is implementation-defined.
       required:
         - credentialId
         - credentialStatus
