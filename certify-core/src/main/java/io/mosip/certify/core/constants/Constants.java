@@ -39,4 +39,9 @@ public class Constants {
     public  static final String CONFIRMATION = "cnf";
     public  static final String ISSUER = "iss";
     public static final String TYPE = "type";
+    public static final String CREDENTIAL_CONFIGURATIONS_SUPPORTED = "credential_configurations_supported";
+    public static final String CLAIMS = "claims";
+    public static final String MANDATORY = "mandatory";
+    public static final String PRE_AUTH_CODE_PREFIX = "pre_auth_code:";
+    public static final String CREDENTIAL_OFFER_PREFIX = "credential_offer:";
 }
