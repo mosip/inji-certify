@@ -78,6 +78,28 @@ public class PreAuthorizedCodeService {
         return offerUri;
     }
 
+    public CredentialOfferResponse getCredentialOffer(String offerId) {
+        if (!isValidUUID(offerId)) {
+            throw new InvalidRequestException("Invalid offer_id format");
+        }
+        CredentialOfferResponse offer = cacheService.getCredentialOffer(offerId);
+        if (offer == null) {
+            log.error("Credential offer not found or expired for ID: {}", offerId);
+            throw new InvalidRequestException(ErrorConstants.CREDENTIAL_OFFER_NOT_FOUND);
+        }
+
+        return offer;
+    }
+
+    private boolean isValidUUID(String str) {
+        try {
+            UUID.fromString(str);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
     private void validateCredentialConfiguration(String configId) {
         Map<String, Object> metadata = vciCacheService.getIssuerMetadata();
         Map<String, Object> supportedConfigs = (Map<String, Object>) metadata.get(Constants.CREDENTIAL_CONFIGURATIONS_SUPPORTED);
@@ -120,20 +142,26 @@ public class PreAuthorizedCodeService {
     }
 
     private CredentialOfferResponse buildCredentialOffer(String configId, String preAuthCode, String txnCode) {
-        Grant.PreAuthorizedCodeGrant grant = Grant.PreAuthorizedCodeGrant.builder()
-                .preAuthorizedCode(preAuthCode)
-                .txCode(StringUtils.hasText(txnCode) ? buildTxCodeInfo(txnCode) : null).build();
+        CredentialOfferResponse response = new CredentialOfferResponse();
+        response.setCredentialIssuer(issuerIdentifier);
+        response.setCredentialConfigurationIds(Collections.singletonList(configId));
 
-        Grant grants = Grant.builder().preAuthorizedCode(grant).build();
+        Grant grants = new Grant();
+        Grant.PreAuthorizedCodeGrant grant = new Grant.PreAuthorizedCodeGrant();
+        grant.setPreAuthorizedCode(preAuthCode);
+        grant.setTxCode(StringUtils.hasText(txnCode) ? buildTxCodeInfo(txnCode) : null);
 
-        return CredentialOfferResponse.builder()
-                .credentialIssuer(issuerIdentifier)
-                .credentialConfigurationIds(Collections.singletonList(configId))
-                .grants(grants).build();
+        response.setGrants(grants);
+
+        return response;
     }
 
     private TxCode buildTxCodeInfo(String txnCode) {
-        return TxCode.builder().length(txnCode.length()).inputMode("text").description("Please enter the transaction code provided to you").build();
+        TxCode txCode = new TxCode();
+        txCode.setLength(txnCode.length());
+        txCode.setInputMode(txnCode.matches("\\d+") ? "numeric" : "text");
+        txCode.setDescription("Enter the code sent to your device");
+        return txCode;
     }
 
     private String buildCredentialOfferUri(String offerId) {
