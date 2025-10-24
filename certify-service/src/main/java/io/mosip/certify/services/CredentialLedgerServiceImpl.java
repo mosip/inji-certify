@@ -29,28 +29,7 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
     public List<CredentialStatusResponse> searchCredentialLedger(CredentialLedgerSearchRequest request) {
         validateSearchRequest(request);
         try {
-            List<Ledger> records = ledgerRepository.findBySearchRequest(request);
-
-            if (records.isEmpty()) {
-                return Collections.emptyList();
-            }
-
-            return records.stream()
-                    .flatMap(record -> {
-                        List<CredentialStatusDetail> details = record.getCredentialStatusDetails();
-                        if (details == null || details.isEmpty()) {
-                            // Optionally, return a response with no status details
-                            CredentialStatusResponse credentialStatusResponse = mapToSearchResponse(record, null);
-                            credentialStatusResponse.setIssuanceDate(null);
-                            return Stream.of(credentialStatusResponse);
-                        }
-                        return details.stream().map(detail -> {
-                            CredentialStatusResponse response = mapToSearchResponse(record, detail);
-                            response.setIssuanceDate(null); // Set issuanceDate as null
-                            return response;
-                        });
-                    })
-                    .collect(Collectors.toList());
+            return mapRecordsToResponses(request, false);
         } catch (Exception e) {
             throw new CertifyException("SEARCH_CREDENTIALS_FAILED");
         }
@@ -96,28 +75,7 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
     public List<CredentialStatusResponse> searchCredentialLedgerV2(CredentialLedgerSearchRequest request) {
         validateSearchRequest(request);
         try {
-            List<Ledger> records = ledgerRepository.findBySearchRequest(request);
-
-            if (records.isEmpty()) {
-                return Collections.emptyList();
-            }
-
-            return records.stream()
-                    .flatMap(record -> {
-                        List<CredentialStatusDetail> details = record.getCredentialStatusDetails();
-                        if (details == null || details.isEmpty()) {
-                            // Optionally, return a response with no status details
-                            CredentialStatusResponse credentialStatusResponse = mapToSearchResponse(record, null);
-                            credentialStatusResponse.setIssueDate(null);
-                            return Stream.of(credentialStatusResponse);
-                        }
-                        return details.stream().map(detail -> {
-                            CredentialStatusResponse response = mapToSearchResponse(record, detail);
-                            response.setIssueDate(null); // Set issueDate as null
-                            return response;
-                        });
-                    })
-                    .collect(Collectors.toList());
+            return mapRecordsToResponses(request, true);
 
         } catch (Exception e) {
             throw new CertifyException("SEARCH_CREDENTIALS_FAILED");
@@ -150,4 +108,38 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
             throw new RuntimeException("Failed to store ledger entry", e);
         }
     }
+
+    private List<CredentialStatusResponse> mapRecordsToResponses(CredentialLedgerSearchRequest request, boolean isV2) {
+        List<Ledger> records = ledgerRepository.findBySearchRequest(request);
+
+        if (records.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return records.stream()
+                .flatMap(record -> {
+                    List<CredentialStatusDetail> details = record.getCredentialStatusDetails();
+                    return Optional.ofNullable(details)
+                            .filter(list -> !list.isEmpty())
+                            .map(list -> list.stream().map(detail -> {
+                                CredentialStatusResponse response = mapToSearchResponse(record, detail);
+                                if (isV2) {
+                                    response.setIssueDate(null);
+                                } else {
+                                    response.setIssuanceDate(null);
+                                }
+                                return response;
+                            }))
+                            .orElseGet(() -> {
+                                CredentialStatusResponse response = mapToSearchResponse(record, null);
+                                if (isV2) {
+                                    response.setIssueDate(null);
+                                } else {
+                                    response.setIssuanceDate(null);
+                                }
+                                return Stream.of(response);
+                            });
+                })
+                .collect(Collectors.toList());
+    }
+
 }
