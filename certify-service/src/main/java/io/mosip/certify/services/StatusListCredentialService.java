@@ -7,10 +7,7 @@ import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.credential.Credential;
 import io.mosip.certify.credential.CredentialFactory;
-import io.mosip.certify.entity.Ledger;
 import io.mosip.certify.entity.StatusListCredential;
-import io.mosip.certify.entity.attributes.CredentialStatusDetail;
-import io.mosip.certify.repository.LedgerRepository;
 import io.mosip.certify.repository.StatusListCredentialRepository;
 import io.mosip.certify.utils.BitStringStatusListUtils;
 import io.mosip.certify.vcformatters.VCFormatter;
@@ -27,7 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -49,9 +45,6 @@ public class StatusListCredentialService {
 
     @Autowired
     private DatabaseStatusListIndexProvider indexProvider;
-
-    @Autowired
-    private LedgerRepository ledgerRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -175,7 +168,7 @@ public class StatusListCredentialService {
             statusListCredential.setVcDocument(vcDocS);
             statusListCredential.setCredentialType("BitstringStatusListCredential");
             statusListCredential.setStatusPurpose(statusPurpose);
-            statusListCredential.setCapacity(statusListSizeInKB);
+            statusListCredential.setCapacityInKB(statusListSizeInKB);
             statusListCredential.setCredentialStatus(StatusListCredential.CredentialStatus.AVAILABLE);
             statusListCredential.setCreatedDtimes(LocalDateTime.now());
 
@@ -219,7 +212,7 @@ public class StatusListCredentialService {
 
             Query nativeQuery = entityManager.createNativeQuery(insertSql);
             nativeQuery.setParameter(1, statusListCredential.getId());
-            nativeQuery.setParameter(2, statusListCredential.getCapacity() * 1024L * 8L); // Convert KB to bits
+            nativeQuery.setParameter(2, statusListCredential.getCapacityInKB() * 1024L * 8L); // Convert KB to bits
 
             int rowsInserted = nativeQuery.executeUpdate();
             log.info("Successfully initialized {} available indices for status list: {}", rowsInserted, statusListCredential.getId());
@@ -314,32 +307,6 @@ public class StatusListCredentialService {
         jsonObject.put(VCDM2Constants.CREDENTIAL_STATUS, credentialStatus);
 
         log.info("Successfully added credential status with index {} in status list {}", assignedIndex, statusList.getId());
-    }
-
-    @Transactional
-    public void storeLedgerEntry(String credentialId, String issuerId, String credentialType, CredentialStatusDetail statusDetails, Map<String, Object> indexedAttributes, LocalDateTime issuanceDate) {
-        try {
-            Ledger ledger = new Ledger();
-            if(credentialId != null) {
-                ledger.setCredentialId(credentialId);
-            }
-            ledger.setIssuerId(issuerId);
-            ledger.setIssuanceDate(issuanceDate);
-            ledger.setCredentialType(credentialType);
-            ledger.setIndexedAttributes(indexedAttributes);
-
-            // Store status details as array
-            List<CredentialStatusDetail> statusDetailsList = new ArrayList<>();
-            if(statusDetails != null) {
-                statusDetailsList.add(statusDetails);
-            }
-            ledger.setCredentialStatusDetails(statusDetailsList);
-
-            ledgerRepository.save(ledger);
-        } catch (Exception e) {
-            log.error("Error storing ledger entry", e);
-            throw new RuntimeException("Failed to store ledger entry", e);
-        }
     }
 
     /**

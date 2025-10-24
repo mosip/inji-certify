@@ -49,3 +49,5 @@ DROP INDEX IF EXISTS idx_cst_status_list_credential_id;
 DROP INDEX IF EXISTS idx_cst_status_list_index;
 DROP INDEX IF EXISTS idx_cst_cr_dtimes;
 DROP INDEX IF EXISTS idx_cst_status_value;
+
+ALTER TABLE status_list_credential RENAME COLUMN capacity TO capacity_in_kb;

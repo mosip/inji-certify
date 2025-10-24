@@ -136,7 +136,7 @@ public class StatusListUpdateBatchJob {
             JSONObject vcDocument = new JSONObject(statusListCredential.getVcDocument());
 
             // Generate new encoded list
-            String newEncodedList = BitStringStatusListUtils.updateEncodedList(vcDocument.getJSONObject("credentialSubject").getString("encodedList"),updatedStatuses, statusListCredential.getCapacity());
+            String newEncodedList = BitStringStatusListUtils.updateEncodedList(vcDocument.getJSONObject("credentialSubject").getString("encodedList"),updatedStatuses, statusListCredential.getCapacityInKB());
 
             // Update the status list credential with new encoded list
             updateStatusListCredential(statusListCredential, newEncodedList);
