@@ -49,4 +49,7 @@ public class ErrorConstants {
     public static final String STATUS_LIST_INDEX_UNAVAILABLE = "status_list_index_unavailable";
     public static final String STATUS_LIST_CAPACITY_MISCONFIGURED = "status_list_capacity_misconfigured";
     public static final String INVALID_ENCODED_LIST = "invalid_encoded_list";
+    public static final String INVALID_CREDENTIAL_CONFIGURATION_ID = "invalid_credential_configuration_id";
+    public static final String MISSING_MANDATORY_CLAIM = "missing_mandatory_claim: %s";
+    public static final String CREDENTIAL_OFFER_NOT_FOUND = "credential_offer_not_found";
 }
