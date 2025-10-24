@@ -5,10 +5,6 @@
  */
 package io.mosip.certify.services;
 
-import com.jayway.jsonpath.Configuration;
-import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.Option;
-import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.api.dto.VCRequestDto;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.api.exception.DataProviderExchangeException;
@@ -17,7 +13,6 @@ import io.mosip.certify.api.spi.DataProviderPlugin;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
 import io.mosip.certify.api.util.AuditHelper;
-import io.mosip.certify.config.IndexedAttributesConfig;
 import io.mosip.certify.core.constants.*;
 import io.mosip.certify.core.dto.CredentialMetadata;
 import io.mosip.certify.core.dto.CredentialRequest;
@@ -27,26 +22,20 @@ import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
+import io.mosip.certify.core.spi.CredentialLedgerService;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import io.mosip.certify.core.util.SecurityHelperService;
 import io.mosip.certify.credential.Credential;
 import io.mosip.certify.credential.CredentialFactory;
-import io.mosip.certify.entity.Ledger;
-import io.mosip.certify.entity.StatusListCredential;
-import io.mosip.certify.entity.attributes.CredentialStatusDetail;
-import io.mosip.certify.enums.CredentialFormat;
+import io.mosip.certify.core.dto.CredentialStatusDetail;
 import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
-import io.mosip.certify.repository.CredentialStatusTransactionRepository;
-import io.mosip.certify.repository.LedgerRepository;
-import io.mosip.certify.repository.StatusListCredentialRepository;
 import io.mosip.certify.utils.CredentialUtils;
 import io.mosip.certify.utils.DIDDocumentUtil;
 import io.mosip.certify.utils.LedgerUtils;
 import io.mosip.certify.utils.VCIssuanceUtil;
 import io.mosip.certify.validators.CredentialRequestValidator;
 import io.mosip.certify.vcformatters.VCFormatter;
-import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
@@ -121,6 +110,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
     @Autowired
     private LedgerUtils ledgerUtils;
+
+    @Autowired
+    private CredentialLedgerService credentialLedgerService;
 
     @Value("#{${mosip.certify.issuer.ledger-enabled:true}}")
     private boolean isLedgerEnabled;
@@ -262,7 +254,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 }
                 CredentialStatusDetail credentialStatusDetail = ledgerUtils.extractCredentialStatusDetails(jsonObject);
                 LocalDateTime issuanceDate = LocalDateTime.parse(time, DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-                statusListCredentialService.storeLedgerEntry(credentialId, didUrl, credentialType, credentialStatusDetail, indexedAttributes, issuanceDate);
+                credentialLedgerService.storeLedgerEntry(credentialId, didUrl, credentialType, credentialStatusDetail, indexedAttributes, issuanceDate);
                 log.info("Successfully stored the credential issuance data in ledger with credentialType: {}", credentialType);
             }
             VCResult<?> result = cred.addProof(unsignedCredential, "", vcFormatter.getProofAlgorithm(templateName), vcFormatter.getAppID(templateName), vcFormatter.getRefID(templateName), vcFormatter.getDidUrl(templateName), vcFormatter.getSignatureCryptoSuite(templateName));

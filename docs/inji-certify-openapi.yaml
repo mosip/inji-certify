@@ -1397,6 +1397,7 @@ paths:
                     type: BitstringStatusListEntry
                     statusListCredential: 'http://localhost:8090/v1/certify/status-list/7bf52e81-f3bb-40ec-a0f9-a714847fd067'
                   status: false
+                  indexAllocator: test
       responses:
         '200':
           description: Credential status successfully updated. Returns the updated status record.
@@ -1843,7 +1844,7 @@ components:
           description: Identifier for the application the certificate is for.
         referenceId:
           type: string
-          description: Optional reference for tracking or versioning.
+          description: Optional reference for tracking or versioning. For EC (Elliptic Curve) and ED (Edwards Curve) keys, the refId must be provided during CSR generation. (Eg. EC_SECP256R1_SIGN, EC_SECP256K1_SIGN, ED25519_SIGN). For RSA keys, CSR generation works without a refId (i.e., an empty string is acceptable).
         commonName:
           type: string
           description: Common Name (CN) for the certificate subject.
@@ -2265,6 +2266,10 @@ components:
         status:
           type: boolean
           description: 'The new status value (true typically means ''status asserted'', e.g., revoked/suspended; false means ''status not asserted''). Interpretation depends on statusPurpose and system policy.'
+        indexAllocator:
+          type: string
+          nullable: true
+          description: Optional hint or identifier for index allocation strategy or service component. Usage is implementation-defined.
       required:
         - credentialId
         - credentialStatus

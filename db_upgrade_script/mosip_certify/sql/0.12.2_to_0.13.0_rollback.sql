@@ -52,3 +52,5 @@ CREATE INDEX IF NOT EXISTS idx_cst_status_list_credential_id ON certify.credenti
 
 ALTER TABLE certify.credential_status_transaction
 ADD COLUMN IF NOT EXISTS upd_dtimes TIMESTAMP;
+
+ALTER TABLE status_list_credential RENAME COLUMN capacity_in_kb TO capacity;

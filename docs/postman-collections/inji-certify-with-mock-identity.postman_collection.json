@@ -2594,7 +2594,106 @@
 					"response": []
 				}
 			]
-		}
+		},
+        {
+          "name": "System Info",
+          "item": [
+            {
+              "name": "Generate CSR",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"id\": \"req-12345\",\r\n  \"version\": \"1.0\",\r\n  \"requesttime\": \"2025-08-07T10:49:54.980Z\",\r\n  \"metadata\": {\r\n    \"source\": \"web-portal\",\r\n    \"ip\": \"192.168.1.10\"\r\n  },\r\n  \"request\": {\r\n    \"applicationId\": \"APP001\",\r\n    \"referenceId\": \"REF20250807\",\r\n    \"commonName\": \"CERT-AUTH\",\r\n    \"organization\": \"CERT AUTH ORG\",\r\n    \"organizationUnit\": \"IT\",\r\n    \"country\": \"US\",\r\n    \"state\": \"California\",\r\n    \"location\": \"Nevada\"\r\n  }\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{certifyurl}}/system-info/generate-csr",
+                  "host": [
+                    "{{certifyurl}}"
+                  ],
+                  "path": [
+                    "system-info",
+                    "generate-csr"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "upload certificate",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"request\": {\r\n    \"applicationId\": \"APP001\",\r\n    \"referenceId\": \"REF20250807\",\r\n    \"certificateData\": \"-----BEGIN CERTIFICATE-----\\r\\nMIIEZTCCAk0CFEVg98SWnD5UIC5BGJEelo2ENtG1MA0GCSqGSIb3DQEBCwUAMG8x\\r\\nCzAJBgNVBAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMRIwEAYDVQQHDAlCYW5n\\r\\nYWxvcmUxFjAUBgNVBAoMDUNFUlQgQVVUSCBPUkcxCzAJBgNVBAsMAklUMRIwEAYD\\r\\nVQQDDAlDRVJULUFVVEgwHhcNMjUxMDE2MDczNDQyWhcNMjcxMDE2MDczNDQyWjBv\\r\\nMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTESMBAGA1UEBxMJQmFu\\r\\nZ2Fsb3JlMRYwFAYDVQQKEw1DRVJUIEFVVEggT1JHMQswCQYDVQQLEwJJVDESMBAG\\r\\nA1UEAxMJQ0VSVC1BVVRIMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA\\r\\nmI18bU5vn9s0sXfHt6YJM36\\/X1eiq0ZGc8fByN8AN1dEU5VbTjJmYXmgYGNE5bN6\\r\\ncEkYb04ZRLoZ0oo4j5egU6KS1i1f6VPxa+QwsOY+rbd+\\/eVtg2ucSGnuzx55CkgF\\r\\nYmaIj5\\/0qtOKABLVyqoa17M108mWs4hmyHV50ndbq+rUasVElyLkKoJzufb4ZaDb\\r\\np1nUKlcz7jl5HnTy3NMeEFpDG4UasE+6RTaul21lifRDLqbcGa2lXcXJ4kAsAsk7\\r\\nY3ZbExsJoD\\/VqajKx13AvC3HCNdrm8gG+41n1yTy7QA0hvAb3Hs7WvRdxEGSw7us\\r\\nEckcN6w+xmu5SP9ufmMqnQIDAQABMA0GCSqGSIb3DQEBCwUAA4ICAQBmAcN2kDzb\\r\\nlJ\\/sUfbfh1vClu9XsfltgLuew6o3rbzeHs6p9wCNgRkiE+rmhxYK5Cgr2MKhLJW+\\r\\nhMq4EeoV3X0HXzAIVZ3mLbPm6dOAD\\/uSGU8JCuoTJ+pusVjUxCKtklMSimhDF4Qk\\r\\nYg2cDEUx\\/fyaU2DWxuMQIHX5F\\/K0QvTSSUxmiwUZF7k6XEAs055ed2aTtpNZ+mrz\\r\\n2rNjhybvVfwITV301uFUqxGfuI4cgSlcQb3u7DoHaiqXfL+77WReCj2uVVOrZ6En\\r\\ngb\\/mb2HzhqthQ+TMOp86Dbnxf9mNAS6sJPbLIrMsxgIOfiy2Mds9gIGISVNMDKPP\\r\\nh\\/QayMBX1X6bstp4iLSoyFlBmRwzvEzMB9vP2XVfHrlkCBZvZsKMz1XuzJ9W6qqW\\r\\nUQZ2mGLPMSZgHh8Z\\/1IdK6RM+J6\\/4E8dIxjS+Ry4WbgrpDlkTJBLp5lZgaR1EyDa\\r\\n3KgyXyvMrT+P+SUMewHiLBMJfUkIBbdiiiWYzHgoirDf0ao7+q0f\\/NzLdGotqQAj\\r\\nx3is9gODDaamFYADCD4NkZ8iW1aYNKicnK8W91Ds4HlzjtwyPnUtTwFys98upGWc\\r\\nKEwT+Y06iQZvFmW6KcMm9aJeUGar5ZRRtOwmmmsDOQqoJUIQ20uXcraYMoVS4M9U\\r\\nh\\/nqRdeSYcwCxdAEGczwgVdnwUGxGvtMAA==\\r\\n-----END CERTIFICATE-----\\r\\n\"\r\n  }\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{certifyurl}}/system-info/uploadCertificate",
+                  "host": [
+                    "{{certifyurl}}"
+                  ],
+                  "path": [
+                    "system-info",
+                    "uploadCertificate"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "fetch certificate",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{certifyurl}}/system-info/certificate?applicationId=CERTIFY_MOCK_ED25519&referenceId=ED25519_SIGN",
+                  "host": [
+                    "{{certifyurl}}"
+                  ],
+                  "path": [
+                    "system-info",
+                    "certificate"
+                  ],
+                  "query": [
+                    {
+                      "key": "applicationId",
+                      "value": "CERTIFY_MOCK_ED25519"
+                    },
+                    {
+                      "key": "referenceId",
+                      "value": "ED25519_SIGN"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
 	],
 	"event": [
 		{
