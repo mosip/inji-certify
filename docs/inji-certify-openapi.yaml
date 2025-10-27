@@ -394,6 +394,57 @@ paths:
       servers:
         - url: 'http://localhost:8090/v1/certify'
           description: Generated server url
+  /system-info/upload-ca-certificate:
+    post:
+      tags:
+        - System Information
+      summary: Upload CA certificate
+      description: This endpoint allows clients to upload a CA certificate for a partner domain. The request must include the certificate details wrapped in a request object. On success, returns the upload status and details.
+      operationId: uploadCACertificate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestWrapperCACertificateRequestDto'
+            examples:
+              Example 1:
+                value:
+                  id: req-12345
+                  version: '1.0'
+                  requesttime: '2025-08-07T10:49:54.980Z'
+                  metadata:
+                    source: web-portal
+                    ip: 192.168.1.10
+                  request:
+                    partnerDomain: partner.example.com
+                    caCertificateData: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAn...
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseWrapperCACertificateResponseDto'
+                examples:
+                    Example 1:
+                        value:
+                        responseTime: '2025-08-14T04:36:23.066Z'
+                        response:
+                            status: Upload Success
+                            timestamp:
+                            - 2025
+                            - 8
+                            - 14
+                            - 4
+                            - 36
+                            - 23
+                            - 54873000
+                        errors: []
+      servers:
+        - url: 'http://localhost:8090/v1/certify'
+          description: Generated server url
+
   /issuance/vd12/credential:
     post:
       tags:
@@ -1865,6 +1916,60 @@ components:
           description: Country (C) for the certificate subject.
       required:
         - applicationId
+    RequestWrapperCACertificateRequestDto:
+      type: object
+      properties:
+        id:
+          type: string
+        version:
+          type: string
+        requesttime:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+        request:
+          $ref: '#/components/schemas/CACertificateRequestDto'
+      required:
+        - request
+    CACertificateRequestDto:
+      type: object
+      properties:
+        partnerDomain:
+          type: string
+          description: Domain of the partner for which CA certificate is uploaded.
+        certificateData:
+          type: string
+          description: CA certificate in PEM or DER format.
+      required:
+        - partnerDomain
+        - certificateData
+    ResponseWrapperCACertificateResponseDto:
+      type: object
+      properties:
+        responseTime:
+          type: string
+        response:
+          $ref: '#/components/schemas/CACertificateResponseDto'
+        errors:
+          type: array
+          items:
+            type: object
+      required:
+        - responseTime
+    CACertificateResponseDto:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Status of the upload (e.g., SUCCESS, FAILURE).
+        timestamp:
+          type: string
+          format: date-time
+          description: UTC timestamp when upload operation was completed.
+      required:
+        - status
+        - timestamp
     CredentialRequest:
       type: object
       x-examples: {}
