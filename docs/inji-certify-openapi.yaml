@@ -1921,13 +1921,17 @@ components:
       properties:
         id:
           type: string
+          description: Unique identifier for the request.
         version:
           type: string
+          description: API version of the request. Used to indicate the version of the contract or schema being used.
         requesttime:
           type: string
           format: date-time
+          description: UTC timestamp when the request was sent.
         metadata:
           type: object
+          description: 'Optional field for additional request-related information or custom attributes. Can be used to pass extra data needed for processing, auditing, or tracking the request.'
         request:
           $ref: '#/components/schemas/CACertificateRequestDto'
       required:
@@ -1949,10 +1953,12 @@ components:
       properties:
         responseTime:
           type: string
+          description: UTC timestamp when the response was generated.
         response:
           $ref: '#/components/schemas/CACertificateResponseDto'
         errors:
           type: array
+          description: Technical details of error generated incase of error.
           items:
             type: object
       required:
@@ -2398,7 +2404,7 @@ components:
             statusPurpose:
               type: string
               nullable: true
-              description: 'Indicates the purpose of the status (e.g., ''revocation'', ''suspension''). Determines interpretation of the ''status'' bit. Should align with system policy/list purpose.'
+              description: 'Indicates the purpose of the status (e.g., ''revocation'', ''suspension''). Determines interpretation of the ''status'' bit. Should align with system policy/list purpose. If not provided, system may use a default value stored in the status_list_credential table for the provided statusListCredentialId.'
             statusListIndex:
               type: integer
               nullable: true
