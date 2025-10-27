@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.mosip.certify.api.dto.RenderingTemplateDTO;
+import io.mosip.certify.core.dto.RenderingTemplateDTO;
 import io.mosip.certify.core.exception.RenderingTemplateException;
 import io.mosip.certify.core.spi.RenderingTemplateService;
 import lombok.extern.slf4j.Slf4j;
