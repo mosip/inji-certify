@@ -4,13 +4,9 @@ import io.mosip.certify.core.dto.CredentialOfferResponse;
 import io.mosip.certify.core.dto.PreAuthorizedRequest;
 import io.mosip.certify.core.dto.PreAuthorizedResponse;
 import io.mosip.certify.services.PreAuthorizedCodeService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -32,7 +28,7 @@ public class PreAuthorizedCodeController {
         return preAuthorizedResponse;
     }
 
-    @GetMapping("/credential-offer-data/{offerId}")
+    @GetMapping(value = "/credential-offer-data/{offer_id:.+}", produces = "application/json")
     public CredentialOfferResponse getCredentialOffer(@PathVariable("offer_id") String offerId) {
         return preAuthorizedCodeService.getCredentialOffer(offerId);
     }
