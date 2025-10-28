@@ -104,7 +104,7 @@ public class SystemInfoController {
         try {
             responseWrapper.setResponse(partnerCertificateManagerService.uploadCACertificate(caCertificateRequestDto));
         } catch (CertifyException ex) {
-            log.error("Error during CSR generation: {}", ex.getMessage(), ex);
+            log.error("Error during CA certificate upload: {}", ex.getMessage(), ex);
             throw ex;
         }
 
