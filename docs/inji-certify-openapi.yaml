@@ -429,18 +429,18 @@ paths:
               examples:
                 Example 1:
                   value:
-                  responseTime: '2025-08-14T04:36:23.066Z'
-                  response:
-                    status: Upload Success
-                    timestamp:
-                      - 2025
-                      - 8
-                      - 14
-                      - 4
-                      - 36
-                      - 23
-                      - 54873000
-                  errors: []
+                    responseTime: '2025-08-14T04:36:23.066Z'
+                    response:
+                      status: Upload Success
+                      timestamp:
+                        - 2025
+                        - 8
+                        - 14
+                        - 4
+                        - 36
+                        - 23
+                        - 54873000
+                    errors: []
       servers:
         - url: 'http://localhost:8090/v1/certify'
           description: Generated server url
