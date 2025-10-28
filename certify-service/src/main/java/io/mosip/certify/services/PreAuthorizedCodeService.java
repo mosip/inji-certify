@@ -20,9 +20,6 @@ import java.util.*;
 public class PreAuthorizedCodeService {
 
     @Autowired
-    private VCICacheService cacheService;
-
-    @Autowired
     private VCICacheService vciCacheService;
 
     @Value("${mosip.certify.issuer.identifier:local}")
@@ -63,13 +60,13 @@ public class PreAuthorizedCodeService {
                 .expiresAt(currentTime + (expirySeconds * 1000L)).build();
 
         // Cache the pre-auth code data
-        cacheService.setPreAuthCodeData(preAuthCode, codeData, expirySeconds);
+        vciCacheService.setPreAuthCodeData(preAuthCode, codeData, expirySeconds);
 
         // Create credential offer
         CredentialOfferResponse offerResponse = buildCredentialOffer(request.getCredentialConfigurationId(), preAuthCode, request.getTxCode());
 
         // Cache the credential offer
-        cacheService.setCredentialOffer(offerId, offerResponse, expirySeconds);
+        vciCacheService.setCredentialOffer(offerId, offerResponse, expirySeconds);
 
         // Build and return the URI
         String offerUri = buildCredentialOfferUri(offerId);
@@ -92,10 +89,12 @@ public class PreAuthorizedCodeService {
         Map<String, Object> metadata = vciCacheService.getIssuerMetadata();
 
         Map<String, Object> supportedConfigs = (Map<String, Object>) metadata.get(Constants.CREDENTIAL_CONFIGURATIONS_SUPPORTED);
-
+        
         Map<String, Object> config = (Map<String, Object>) supportedConfigs.get(configId);
         Map<String, Object> requiredClaims = (Map<String, Object>) config.get(Constants.CLAIMS);
-
+        if (providedClaims == null) {
+            providedClaims = Collections.emptyMap();
+        }
         if (requiredClaims != null) {
             for (Map.Entry<String, Object> entry : requiredClaims.entrySet()) {
                 Map<String, Object> claimAttrs = (Map<String, Object>) entry.getValue();
