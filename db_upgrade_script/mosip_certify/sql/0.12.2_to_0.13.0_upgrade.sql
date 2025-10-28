@@ -51,3 +51,13 @@ DROP INDEX IF EXISTS idx_cst_cr_dtimes;
 DROP INDEX IF EXISTS idx_cst_status_value;
 
 ALTER TABLE status_list_credential RENAME COLUMN capacity TO capacity_in_kb;
+
+-- Removing status_value from credential_status_detail array of ledger table
+UPDATE ledger
+SET credential_status_details = (
+  SELECT COALESCE(
+    jsonb_agg(elem - 'status_value'),
+    '[]'::jsonb
+  )
+  FROM jsonb_array_elements(COALESCE(credential_status_details, '[]'::jsonb)) elem
+);

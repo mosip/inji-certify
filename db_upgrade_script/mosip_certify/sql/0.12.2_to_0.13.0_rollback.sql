@@ -54,3 +54,13 @@ ALTER TABLE certify.credential_status_transaction
 ADD COLUMN IF NOT EXISTS upd_dtimes TIMESTAMP;
 
 ALTER TABLE status_list_credential RENAME COLUMN capacity_in_kb TO capacity;
+
+-- Restoring status_value in credential_status_details array of ledger table
+UPDATE ledger
+SET credential_status_details = (
+  SELECT COALESCE(
+    jsonb_agg(elem || '{"status_value": false}'),
+    '[]'::jsonb
+  )
+  FROM jsonb_array_elements(COALESCE(credential_status_details, '[]'::jsonb)) elem
+);
