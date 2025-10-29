@@ -50,10 +50,10 @@ DROP INDEX IF EXISTS idx_cst_status_list_index;
 DROP INDEX IF EXISTS idx_cst_cr_dtimes;
 DROP INDEX IF EXISTS idx_cst_status_value;
 
-ALTER TABLE status_list_credential RENAME COLUMN capacity TO capacity_in_kb;
+ALTER TABLE certify.status_list_credential RENAME COLUMN capacity TO capacity_in_kb;
 
--- Removing status_value from credential_status_detail array of ledger table
-UPDATE ledger
+-- Removing status_value from credential_status_details array of ledger table
+UPDATE certify.ledger
 SET credential_status_details = (
   SELECT COALESCE(
     jsonb_agg(elem - 'status_value'),

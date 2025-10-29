@@ -53,10 +53,10 @@ CREATE INDEX IF NOT EXISTS idx_cst_status_list_credential_id ON certify.credenti
 ALTER TABLE certify.credential_status_transaction
 ADD COLUMN IF NOT EXISTS upd_dtimes TIMESTAMP;
 
-ALTER TABLE status_list_credential RENAME COLUMN capacity_in_kb TO capacity;
+ALTER TABLE certify.status_list_credential RENAME COLUMN capacity_in_kb TO capacity;
 
 -- Restoring status_value in credential_status_details array of ledger table
-UPDATE ledger
+UPDATE certify.ledger
 SET credential_status_details = (
   SELECT COALESCE(
     jsonb_agg(elem || '{"status_value": false}'),
