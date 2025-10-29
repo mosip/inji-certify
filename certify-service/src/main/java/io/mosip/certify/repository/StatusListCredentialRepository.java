@@ -7,7 +7,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -19,10 +18,10 @@ public interface StatusListCredentialRepository extends JpaRepository<StatusList
      * @param statusPurpose The purpose of the status list (e.g., "revocation", "suspension")
      * @return An optional containing the first available status list credential, or empty if none found
      */
-    @Query("SELECT s FROM StatusListCredential s WHERE s.statusPurpose = :statusPurpose " +
-            "AND s.credentialStatus = :status " +
-            "ORDER BY s.createdDtimes DESC")
-    Optional<StatusListCredential> findSuitableStatusList(@Param("statusPurpose") String statusPurpose, StatusListCredential.CredentialStatus status);
+    Optional<StatusListCredential> findFirstByStatusPurposeAndCredentialStatusOrderByCreatedDtimesDesc(
+            String statusPurpose,
+            StatusListCredential.CredentialStatus credentialStatus
+    );
 
     /**
      * Find capacity of status list by ID

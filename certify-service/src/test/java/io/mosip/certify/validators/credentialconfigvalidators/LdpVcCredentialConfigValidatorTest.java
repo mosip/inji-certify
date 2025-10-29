@@ -37,6 +37,7 @@ class LdpVcCredentialConfigValidatorTest {
         config.setContextURLs(List.of("https://example.org/context"));
         config.setCredentialTypes(List.of("VerifiableCredential", "TestVerifiableCredential"));
         config.setSignatureCryptoSuite("Ed25519Signature2020");
+        config.setSignatureAlgo("EdDSA");
         config.setDocType(null);
         config.setSdJwtVct(null);
         config.setMsoMdocClaims(null);

@@ -16,6 +16,12 @@
 -- Step 1: Rename issuance_date to issue_date in ledger table.
 ALTER TABLE certify.ledger RENAME COLUMN issuance_date TO issue_date;
 
+-- Update NULL credential_id values with random UUIDs in ledger table
+UPDATE certify.ledger
+SET credential_id = gen_random_uuid()
+WHERE credential_id IS NULL;
+
+-- Now set the column to NOT NULL
 ALTER TABLE certify.ledger
     ALTER COLUMN credential_id SET NOT NULL;
 
@@ -24,24 +30,25 @@ ALTER TABLE certify.ledger
     ALTER COLUMN issue_date TYPE TIMESTAMPTZ USING issue_date AT TIME ZONE 'UTC',
     ALTER COLUMN expiration_date TYPE TIMESTAMPTZ USING expiration_date AT TIME ZONE 'UTC';
 
+-- Update NULL credential_id values with random UUIDs
+UPDATE certify.credential_status_transaction
+SET credential_id = gen_random_uuid()
+WHERE credential_id IS NULL;
+
+-- Now set the column to NOT NULL
 ALTER TABLE certify.credential_status_transaction
     ALTER COLUMN credential_id SET NOT NULL;
 
--- Recreate foreign key to ledger table
 ALTER TABLE certify.credential_status_transaction
-    ADD CONSTRAINT fk_credential_status_transaction_ledger
-    FOREIGN KEY (credential_id)
-    REFERENCES certify.ledger(credential_id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE;
+DROP COLUMN IF EXISTS processed_dtimes;
 
--- Recreate foreign key to status_list_credential table
 ALTER TABLE certify.credential_status_transaction
-    ADD CONSTRAINT fk_credential_status_transaction_status_list
-    FOREIGN KEY (status_list_credential_id)
-    REFERENCES certify.status_list_credential(id)
-    ON DELETE SET NULL
-    ON UPDATE CASCADE;
+DROP COLUMN IF EXISTS is_processed;
 
--- Step 2: Drop shedlock table
-DROP TABLE IF EXISTS certify.shedlock;
+DROP INDEX IF EXISTS certify.idx_cst_is_processed_created;
+
+CREATE INDEX IF NOT EXISTS idx_cst_cr_dtimes ON certify.credential_status_transaction(cr_dtimes);
+CREATE INDEX IF NOT EXISTS idx_cst_status_list_credential_id ON certify.credential_status_transaction(status_list_credential_id);
+
+ALTER TABLE certify.credential_status_transaction
+ADD COLUMN IF NOT EXISTS upd_dtimes TIMESTAMP;

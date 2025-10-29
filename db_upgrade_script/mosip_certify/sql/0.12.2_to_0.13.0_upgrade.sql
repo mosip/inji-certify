@@ -28,19 +28,24 @@ ALTER TABLE certify.ledger
 ALTER TABLE certify.credential_status_transaction
     ALTER COLUMN credential_id DROP NOT NULL;
 
--- Drop foreign key to ledger table
 ALTER TABLE certify.credential_status_transaction
-    DROP CONSTRAINT IF EXISTS fk_credential_status_transaction_ledger;
+ADD COLUMN processed_dtimes TIMESTAMP NULL;
 
--- Drop foreign key to status_list_credential table
 ALTER TABLE certify.credential_status_transaction
-    DROP CONSTRAINT IF EXISTS fk_credential_status_transaction_status_list;
+ADD COLUMN is_processed BOOLEAN NOT NULL DEFAULT FALSE;
 
--- Step 2: Create shedlock table for distributed locking
-CREATE TABLE IF NOT EXISTS certify.shedlock (
-  name VARCHAR(64),
-  lock_until TIMESTAMPTZ(3) NOT NULL,
-  locked_at TIMESTAMPTZ(3) NOT NULL,
-  locked_by VARCHAR(255) NOT NULL,
-  PRIMARY KEY (name)
-);
+COMMENT ON COLUMN credential_status_transaction.processed_dtimes IS 'Timestamp when this transaction was processed by status list batch job.';
+COMMENT ON COLUMN credential_status_transaction.is_processed IS 'Indicates if the transaction has been processed by the status list batch job.';
+
+CREATE INDEX IF NOT EXISTS idx_cst_is_processed_created
+ON certify.credential_status_transaction (is_processed, cr_dtimes);
+
+ALTER TABLE certify.credential_status_transaction
+DROP COLUMN IF EXISTS upd_dtimes;
+
+DROP INDEX IF EXISTS idx_cst_credential_id;
+DROP INDEX IF EXISTS idx_cst_status_purpose;
+DROP INDEX IF EXISTS idx_cst_status_list_credential_id;
+DROP INDEX IF EXISTS idx_cst_status_list_index;
+DROP INDEX IF EXISTS idx_cst_cr_dtimes;
+DROP INDEX IF EXISTS idx_cst_status_value;

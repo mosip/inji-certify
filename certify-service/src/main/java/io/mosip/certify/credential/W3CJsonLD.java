@@ -17,6 +17,8 @@ import java.util.*;
 import com.danubetech.dataintegrity.DataIntegrityProof;
 import com.danubetech.dataintegrity.signer.LdSigner;
 import com.danubetech.dataintegrity.signer.LdSignerRegistry;
+import com.danubetech.dataintegrity.suites.DataIntegrityProofDataIntegritySuite;
+import com.danubetech.dataintegrity.suites.DataIntegritySuites;
 import io.mosip.certify.core.constants.*;
 import io.mosip.certify.core.dto.CertificateResponseDTO;
 import io.mosip.certify.proofgenerators.ProofGeneratorFactory;
@@ -50,7 +52,7 @@ public class W3CJsonLD extends Credential{
     @Autowired
     DIDDocumentUtil didDocumentUtil;
 
-    @Value("#{${mosip.certify.signature-cryptosuite.key-alias-mapper}}")
+    @Value("#{${mosip.certify.signature-algo.key-alias-mapper}}")
     private Map<String, List<List<String>>> keyAliasMapper;
 
 
@@ -108,7 +110,9 @@ public class W3CJsonLD extends Credential{
 
         CertificateResponseDTO certificateResponseDTO = didDocumentUtil.getCertificateDataResponseDto(appID, refID);
         String kid = certificateResponseDTO.getKeyId();
-        if (keyAliasMapper.containsKey(signatureCryptoSuite)) {
+        DataIntegrityProofDataIntegritySuite dataIntegrityProofDataIntegritySuite = DataIntegritySuites.DATA_INTEGRITY_SUITE_DATAINTEGRITYPROOF;
+        List<String> supportedCryptoSuites = dataIntegrityProofDataIntegritySuite.findCryptosuitesForJwsAlgorithm(signAlgorithm);
+        if (supportedCryptoSuites == null || !supportedCryptoSuites.contains(signatureCryptoSuite)) {
             // legacy signature algos such as Ed25519Signature{2018,2020}
             ProofGenerator proofGenerator = proofGeneratorFactory.getProofGenerator(signatureCryptoSuite)
                     .orElseThrow(() ->

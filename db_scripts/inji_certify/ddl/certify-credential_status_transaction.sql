@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS credential_status_transaction (
     status_list_credential_id VARCHAR(255),       -- The ID of the status list credential involved, if any
     status_list_index BIGINT,                     -- The index on the status list, if any
     cr_dtimes TIMESTAMP NOT NULL DEFAULT NOW(),   -- Creation timestamp
-    upd_dtimes TIMESTAMP                          -- Update timestamp
+    processed_dtimes TIMESTAMP,                     -- Timestamp when processed by status list batch job
+    is_processed BOOLEAN NOT NULL DEFAULT FALSE   -- Indicates if processed by status list batch job
 );
 
 -- Add comments for documentation
@@ -32,12 +33,8 @@ COMMENT ON COLUMN credential_status_transaction.status_value IS 'The status valu
 COMMENT ON COLUMN credential_status_transaction.status_list_credential_id IS 'The ID of the status list credential involved, if any.';
 COMMENT ON COLUMN credential_status_transaction.status_list_index IS 'The index on the status list, if any.';
 COMMENT ON COLUMN credential_status_transaction.cr_dtimes IS 'Timestamp when this transaction was created.';
-COMMENT ON COLUMN credential_status_transaction.upd_dtimes IS 'Timestamp when this transaction was last updated.';
+COMMENT ON COLUMN credential_status_transaction.processed_dtimes IS 'Timestamp when this transaction was processed by status list batch job.';
+COMMENT ON COLUMN credential_status_transaction.is_processed IS 'Indicates if the transaction has been processed by the status list batch job.';
 
 -- Create indexes for credential_status_transaction
-CREATE INDEX IF NOT EXISTS idx_cst_credential_id ON credential_status_transaction(credential_id);
-CREATE INDEX IF NOT EXISTS idx_cst_status_purpose ON credential_status_transaction(status_purpose);
-CREATE INDEX IF NOT EXISTS idx_cst_status_list_credential_id ON credential_status_transaction(status_list_credential_id);
-CREATE INDEX IF NOT EXISTS idx_cst_status_list_index ON credential_status_transaction(status_list_index);
-CREATE INDEX IF NOT EXISTS idx_cst_cr_dtimes ON credential_status_transaction(cr_dtimes);
-CREATE INDEX IF NOT EXISTS idx_cst_status_value ON credential_status_transaction(status_value);
+CREATE INDEX IF NOT EXISTS idx_cst_is_processed_created ON certify.credential_status_transaction (is_processed, cr_dtimes);

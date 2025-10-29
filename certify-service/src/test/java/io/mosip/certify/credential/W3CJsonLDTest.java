@@ -84,7 +84,6 @@ public class W3CJsonLDTest {
     @Test
     public void testAddProofGeneratesCorrectVCResult() throws Exception {
         String vcJson = "{\"@context\":[],\"issuanceDate\":\"2023-01-01T00:00:00.000Z\"}";
-        JsonLDObject jsonLDObject = JsonLDObject.fromJson(vcJson);
 
         Canonicalizer canonicalizer = mock(Canonicalizer.class);
         when(proofGenerator.getCanonicalizer()).thenReturn(canonicalizer);
@@ -111,7 +110,6 @@ public class W3CJsonLDTest {
     @Test
     public void testAddProofGeneratesCorrectVCResult_ValidFrom() throws Exception {
         String vcJson = "{\"@context\":[],\"validFrom\":\"2023-01-01T00:00:00.000Z\"}";
-        JsonLDObject jsonLDObject = JsonLDObject.fromJson(vcJson);
 
         Canonicalizer canonicalizer = mock(Canonicalizer.class);
         when(proofGenerator.getCanonicalizer()).thenReturn(canonicalizer);
@@ -138,8 +136,6 @@ public class W3CJsonLDTest {
     @Test
     public void testAddProof_UsesCurrentTimeWhenNoDateProvided() throws Exception {
         String vcJson = "{\"@context\":[],\"id\":\"some-vc\"}"; // no issuanceDate or validFrom
-
-        JsonLDObject jsonLDObject = JsonLDObject.fromJson(vcJson);
 
         Canonicalizer canonicalizer = mock(Canonicalizer.class);
         when(proofGenerator.getCanonicalizer()).thenReturn(canonicalizer);
@@ -168,8 +164,6 @@ public class W3CJsonLDTest {
     public void testAddProof_WhenCanonicalizerFails_ThrowsCertifyException() throws Exception {
         String vcJson = "{\"@context\":[],\"issuanceDate\":\"2023-01-01T00:00:00.000Z\"}";
 
-        JsonLDObject jsonLDObject = JsonLDObject.fromJson(vcJson);
-
         Canonicalizer canonicalizer = mock(Canonicalizer.class);
         when(proofGenerator.getCanonicalizer()).thenReturn(canonicalizer);
         when(proofGenerator.getName()).thenReturn("TestProof");
@@ -185,7 +179,6 @@ public class W3CJsonLDTest {
     public void testAddProof_DataIntegrityCryptoSuitePath() throws Exception {
         // Mock LdSignerRegistry and dependencies
         LdSigner signer = mock(LdSigner.class);
-        KeymanagerByteSigner keymanagerByteSigner = mock(KeymanagerByteSigner.class);
         com.danubetech.dataintegrity.canonicalizer.Canonicalizer canonicalizer = mock(com.danubetech.dataintegrity.canonicalizer.Canonicalizer.class);
 
         // Mock static method
@@ -202,7 +195,7 @@ public class W3CJsonLDTest {
             when(didDocumentUtil.getCertificateDataResponseDto(anyString(), anyString())).thenReturn(new CertificateResponseDTO());
 
             String vcJson = "{\"@context\":[],\"issuanceDate\":\"2023-01-01T00:00:00.000Z\"}";
-            VCResult<?> result = w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "testSignatureSuite");
+            VCResult<?> result = w3cJsonLd.addProof(vcJson, null, "EdDSA", "appID", "refID", "https://example.com/key", "eddsa-rdfc-2022");
 
             assertNotNull(result);
             assertEquals("ldp_vc", result.getFormat());
@@ -251,7 +244,7 @@ public class W3CJsonLDTest {
             when(didDocumentUtil.getCertificateDataResponseDto(anyString(), anyString())).thenReturn(new CertificateResponseDTO());
 
             String vcJson = "{\"@context\":[],\"issuanceDate\":\"2023-01-01T00:00:00.000Z\"}";
-            w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "testSignatureSuite");
+            w3cJsonLd.addProof(vcJson, null, "EdDSA", "appID", "refID", "https://example.com/key", "eddsa-rdfc-2022");
         }
     }
 
@@ -270,7 +263,7 @@ public class W3CJsonLDTest {
 
 
             String vcJson = "{\"@context\":[],\"issuanceDate\":\"2023-01-01T00:00:00.000Z\"}";
-            w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "testSignatureSuite");
+            w3cJsonLd.addProof(vcJson, null, "EdDSA", "appID", "refID", "https://example.com/key", "eddsa-rdfc-2022");
         }
     }
 
@@ -291,7 +284,7 @@ public class W3CJsonLDTest {
             when(didDocumentUtil.getCertificateDataResponseDto(anyString(), anyString())).thenReturn(new CertificateResponseDTO());
 
             String vcJson = "{\"@context\":[],\"issuanceDate\":\"2023-01-01T00:00:00.000Z\"}";
-            w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "testSignatureSuite");
+            w3cJsonLd.addProof(vcJson, null, "EdDSA", "appID", "refID", "https://example.com/key", "eddsa-rdfc-2022");
         }
     }
 
@@ -312,7 +305,7 @@ public class W3CJsonLDTest {
             when(didDocumentUtil.getCertificateDataResponseDto(anyString(), anyString())).thenReturn(new CertificateResponseDTO());
 
             String vcJson = "{\"@context\":[],\"issuanceDate\":\"2023-01-01T00:00:00.000Z\"}";
-            w3cJsonLd.addProof(vcJson, null, "RS256", "appID", "refID", "https://example.com/key", "testSignatureSuite");
+            w3cJsonLd.addProof(vcJson, null, "EdDSA", "appID", "refID", "https://example.com/key", "eddsa-rdfc-2022");
         }
     }
 }

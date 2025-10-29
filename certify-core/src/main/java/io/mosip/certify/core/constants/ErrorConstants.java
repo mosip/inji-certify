@@ -36,5 +36,17 @@ public class ErrorConstants {
     public static final String STATUS_RETRIEVAL_ERROR = "error_parsing_status_list_credential_document";
     public static final String INDEX_OUT_OF_BOUNDS = "requested_index_is_out_of_bounds_for_status_list_capacity";
     public static final String INVALID_FRAGMENT = "invalid_fragment_format_must_be_a_valid_number";
-    public static final String VC_RESIGNATION_FAILED = "VC_RESIGNATION_FAILED";
+    public static final String VC_RESIGNING_FAILED = "vc_resigning_failed";
+    public static final String BATCH_JOB_EXECUTION_FAILED = "batch_job_execution_failed";
+    public static final String KEY_ALIAS_NOT_CONFIGURED = "key_alias_not_configured";
+    public static final String STATUS_LIST_GENERATION_JSON_ERROR = "status_list_generation_json_error";
+    public static final String STATUS_LIST_GENERATION_FAILED = "status_list_generation_failed";
+    public static final String STATUS_LIST_UPDATE_FAILED = "status_list_update_failed";
+    public static final String TRANSACTION_FETCH_FAILED = "transaction_fetch_failed";
+    public static final String ENCODED_LIST_UPDATE_FAILED = "encoded_list_update_failed";
+    public static final String STATUS_LIST_CREDENTIAL_UPDATE_FAILED = "status_list_credential_update_failed";
+    public static final String STATUS_LIST_INDEX_INITIALIZATION_FAILED = "status_list_index_initialization_failed";
+    public static final String STATUS_LIST_INDEX_UNAVAILABLE = "status_list_index_unavailable";
+    public static final String STATUS_LIST_CAPACITY_MISCONFIGURED = "status_list_capacity_misconfigured";
+    public static final String INVALID_ENCODED_LIST = "invalid_encoded_list";
 }
