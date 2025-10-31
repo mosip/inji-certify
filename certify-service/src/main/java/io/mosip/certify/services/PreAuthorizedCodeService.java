@@ -3,7 +3,6 @@ package io.mosip.certify.services;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.*;
-import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +18,6 @@ import java.util.*;
 @Service
 @Slf4j
 public class PreAuthorizedCodeService {
-
-    @Autowired
-    private VCICacheService cacheService;
 
     @Autowired
     private VCICacheService vciCacheService;
@@ -61,11 +57,10 @@ public class PreAuthorizedCodeService {
                 .claims(request.getClaims())
                 .txnCode(request.getTxCode())
                 .createdAt(currentTime)
-                .expiresAt(currentTime + (expirySeconds * 1000L))
-                .build();
+                .expiresAt(currentTime + (expirySeconds * 1000L)).build();
 
         // Cache the pre-auth code data
-        cacheService.setPreAuthCodeData(preAuthCode, codeData, expirySeconds);
+        vciCacheService.setPreAuthCodeData(preAuthCode, codeData, expirySeconds);
 
         // Create credential offer
         CredentialOfferResponse offerResponse = buildCredentialOffer(
@@ -75,7 +70,7 @@ public class PreAuthorizedCodeService {
         );
 
         // Cache the credential offer
-        cacheService.setCredentialOffer(offerId, offerResponse, expirySeconds);
+        vciCacheService.setCredentialOffer(offerId, offerResponse, expirySeconds);
 
         // Build and return the URI
         String offerUri = buildCredentialOfferUri(offerId);
@@ -92,7 +87,7 @@ public class PreAuthorizedCodeService {
             throw new InvalidRequestException("Invalid offer_id format");
         }
 
-        CredentialOfferResponse offer = cacheService.getCredentialOffer(offerId);
+        CredentialOfferResponse offer = vciCacheService.getCredentialOffer(offerId);
 
         if (offer == null) {
             log.error("Credential offer not found or expired for ID: {}", offerId);
@@ -130,12 +125,15 @@ public class PreAuthorizedCodeService {
 
     private void validateClaims(String configId, Map<String, Object> providedClaims) {
         Map<String, Object> metadata = vciCacheService.getIssuerMetadata();
+
         Map<String, Object> supportedConfigs = (Map<String, Object>) metadata.get(Constants.CREDENTIAL_CONFIGURATIONS_SUPPORTED);
+
         Map<String, Object> config = (Map<String, Object>) supportedConfigs.get(configId);
         Map<String, Object> requiredClaims = (Map<String, Object>) config.get(Constants.CLAIMS);
-
+        if (providedClaims == null) {
+            providedClaims = Collections.emptyMap();
+        }
         if (requiredClaims != null) {
-            // Check for mandatory claims
             for (Map.Entry<String, Object> entry : requiredClaims.entrySet()) {
                 Map<String, Object> claimAttrs = (Map<String, Object>) entry.getValue();
                 Boolean mandatory = (Boolean) claimAttrs.get(Constants.MANDATORY);
@@ -148,13 +146,13 @@ public class PreAuthorizedCodeService {
                 }
             }
 
-            // Check for unknown claims
             for (String providedClaim : providedClaims.keySet()) {
                 if (!requiredClaims.containsKey(providedClaim)) {
                     log.error("Unknown claim provided: {}", providedClaim);
                     throw new InvalidRequestException(String.format("Unknown claim: %s", providedClaim));
                 }
             }
+
         }
     }
 

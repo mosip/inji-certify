@@ -11,6 +11,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.stereotype.Service;
+import io.mosip.certify.services.CredentialConfigurationServiceImpl;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -87,14 +88,12 @@ public class VCICacheService {
                 // Store in cache
                 cacheManager.getCache("issuerMetadataCache").put(METADATA_KEY, metadataMap);
 
-                log.info("Successfully loaded and cached issuer metadata with {} configurations",
-                        credentialConfigsMap.size());
+                log.info("Successfully loaded and cached issuer metadata with {} configurations", credentialConfigsMap.size());
 
                 return metadataMap;
             } catch (Exception e) {
                 log.error("Failed to load issuer metadata", e);
-                // TODO: Throw Error
-                return new HashMap<>();
+                throw new IllegalStateException("Failed to load issuer metadata", e);
             }
         }
         return (Map<String, Object>) wrapper.get();
