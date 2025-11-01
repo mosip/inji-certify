@@ -43,20 +43,12 @@ public class VCICacheService {
         log.info("Cache type configured: {}", cacheType);
 
         if ("simple".equalsIgnoreCase(cacheType)) {
-            log.warn("╔═══════════════════════════════════════════════════════════════════════════════════╗");
-            log.warn("║                              ⚠️  CRITICAL WARNING ⚠️                               ║");
-            log.warn("╠═══════════════════════════════════════════════════════════════════════════════════╣");
-            log.warn("║ You have configured 'simple' cache as the cache mechanism.                       ║");
-            log.warn("║ If you are running more than one pod as part of the setup,                       ║");
-            log.warn("║ the system MAY BREAK FUNCTIONALLY.                                               ║");
-            log.warn("║                                                                                   ║");
-            log.warn("║ Current configuration:                                                            ║");
-            log.warn("║   - Cache Type: simple (in-memory)                                                ║");
-            log.warn("║                                                                                   ║");
-            log.warn("║ RECOMMENDATION:                                                                   ║");
-            log.warn("║   Please use Redis cache for multi-pod deployments.                              ║");
-            log.warn("║   Set: spring.cache.type=redis                                                    ║");
-            log.warn("╚═══════════════════════════════════════════════════════════════════════════════════╝");
+            log.warn("================== WARNING: Simple cache configured ======================");
+            log.warn("CRITICAL WARNING: Simple cache configured for production deployment " +
+                    "'simple' cache uses in-memory storage isolated to each pod, " +
+                    "Multi-pod deployments will experience cache inconsistencies and MAY BREAK FUNCTIONALLY, " +
+                    "Current configuration: spring.cache.type=simple (in-memory, non-distributed), " +
+                    "Switch to Redis cache for multi-pod deployments, Set spring.cache.type=redis in your configuration ");
         } else if ("redis".equalsIgnoreCase(cacheType)) {
             log.info("Redis cache is configured - suitable for multi-pod deployment");
         } else {
