@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.dto.CredentialOfferResponse;
 import io.mosip.certify.core.dto.PreAuthCodeData;
+import io.mosip.certify.core.dto.Transaction;
 import io.mosip.certify.core.dto.VCIssuanceTransaction;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,8 +88,7 @@ public class VCICacheService {
                 // Store in cache
                 cacheManager.getCache("issuerMetadataCache").put(METADATA_KEY, metadataMap);
 
-                log.info("Successfully loaded and cached issuer metadata with {} configurations",
-                        credentialConfigsMap.size());
+                log.info("Successfully loaded and cached issuer metadata with {} configurations", credentialConfigsMap.size());
 
                 return metadataMap;
             } catch (Exception e) {
@@ -98,5 +98,44 @@ public class VCICacheService {
             }
         }
         return (Map<String, Object>) wrapper.get();
+    }
+
+    public boolean isCodeBlacklisted(String code) {
+        String key = "blacklist:" + code;
+        Cache.ValueWrapper wrapper = cacheManager.getCache("preAuthCodeCache").get(key);
+        return wrapper != null && Boolean.TRUE.equals(wrapper.get());
+    }
+
+    /**
+     * Blacklist a used pre-authorized code
+     */
+    public void blacklistPreAuthCode(String code) {
+        String key = "blacklist:" + code;
+        // Store in cache with same TTL as pre-auth code
+        cacheManager.getCache("preAuthCodeCache").put(key, true);
+
+        // Also remove the pre-auth code data
+        String codeKey = Constants.PRE_AUTH_CODE_PREFIX + code;
+        cacheManager.getCache("preAuthCodeCache").evict(codeKey);
+
+        log.info("Pre-authorized code blacklisted: {}", code);
+    }
+
+    /**
+     * Store VCI transaction using access token as key
+     * Override existing method to accept String key
+     */
+    @CachePut(value = VCISSUANCE_CACHE, key = "#accessToken")
+    public Transaction setTransaction(String accessToken, Transaction vcIssuanceTransaction) {
+        log.info("Caching VCI transaction for access token");
+        return vcIssuanceTransaction;
+    }
+
+    /**
+     * Get VCI transaction by access token
+     * For use in credential endpoint
+     */
+    public Transaction getTransactionByToken(String accessToken) {
+        return cacheManager.getCache(VCISSUANCE_CACHE).get(accessToken, Transaction.class);
     }
 }
