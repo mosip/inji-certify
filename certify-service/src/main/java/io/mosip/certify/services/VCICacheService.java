@@ -5,8 +5,10 @@ import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.dto.CredentialOfferResponse;
 import io.mosip.certify.core.dto.PreAuthCodeData;
 import io.mosip.certify.core.dto.VCIssuanceTransaction;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachePut;
@@ -29,8 +31,39 @@ public class VCICacheService {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Value("${spring.cache.type:simple}")
+    private String cacheType;
+
+
     private static final String VCISSUANCE_CACHE = "vcissuance";
     private static final String METADATA_KEY = "metadata";
+
+    @PostConstruct
+    public void validateCacheConfiguration() {
+        log.info("Cache type configured: {}", cacheType);
+
+        if ("simple".equalsIgnoreCase(cacheType)) {
+            log.warn("╔═══════════════════════════════════════════════════════════════════════════════════╗");
+            log.warn("║                              ⚠️  CRITICAL WARNING ⚠️                               ║");
+            log.warn("╠═══════════════════════════════════════════════════════════════════════════════════╣");
+            log.warn("║ You have configured 'simple' cache as the cache mechanism.                       ║");
+            log.warn("║ If you are running more than one pod as part of the setup,                       ║");
+            log.warn("║ the system MAY BREAK FUNCTIONALLY.                                               ║");
+            log.warn("║                                                                                   ║");
+            log.warn("║ Current configuration:                                                            ║");
+            log.warn("║   - Cache Type: simple (in-memory)                                                ║");
+            log.warn("║                                                                                   ║");
+            log.warn("║ RECOMMENDATION:                                                                   ║");
+            log.warn("║   Please use Redis cache for multi-pod deployments.                              ║");
+            log.warn("║   Set: spring.cache.type=redis                                                    ║");
+            log.warn("╚═══════════════════════════════════════════════════════════════════════════════════╝");
+        } else if ("redis".equalsIgnoreCase(cacheType)) {
+            log.info("Redis cache is configured - suitable for multi-pod deployment");
+        } else {
+            log.warn("Unknown cache type configured: {}. Please verify configuration.", cacheType);
+        }
+    }
+
 
     @CachePut(value = VCISSUANCE_CACHE, key = "#accessTokenHash")
     public VCIssuanceTransaction setVCITransaction(String accessTokenHash, VCIssuanceTransaction vcIssuanceTransaction) {
