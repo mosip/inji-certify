@@ -82,12 +82,6 @@ public class VCICacheService {
         cacheManager.getCache("credentialOfferCache").put(key, offer);
     }
 
-    public CredentialOfferResponse getCredentialOffer(String offerId) {
-        String key = Constants.CREDENTIAL_OFFER_PREFIX + offerId;
-        Cache.ValueWrapper wrapper = cacheManager.getCache("credentialOfferCache").get(key);
-        return wrapper != null ? (CredentialOfferResponse) wrapper.get() : null;
-    }
-
     /**
      * Get issuer metadata from cache. If not present, load from database.
      */
