@@ -37,20 +37,14 @@ public class PreAuthorizedCodeService {
     public String generatePreAuthorizedCode(PreAuthorizedRequest request) {
         log.info("Generating pre-authorized code for credential configuration: {}", request.getCredentialConfigurationId());
 
-        // Validate credential configuration exists
         validateCredentialConfiguration(request.getCredentialConfigurationId());
-
-        // Validate claims against metadata
         validateClaims(request.getCredentialConfigurationId(), request.getClaims());
 
-        // Determine expiry
         int expirySeconds = request.getExpiresIn() != null ? request.getExpiresIn() : defaultExpirySeconds;
 
-        // Generate unique IDs
         String offerId = UUID.randomUUID().toString();
-        String preAuthCode = generateSecureCode(32);
+        String preAuthCode = generateUniquePreAuthCode();
 
-        // Store data in cache
         long currentTime = System.currentTimeMillis();
         PreAuthCodeData codeData = PreAuthCodeData.builder()
                 .credentialConfigurationId(request.getCredentialConfigurationId())
@@ -59,16 +53,11 @@ public class PreAuthorizedCodeService {
                 .createdAt(currentTime)
                 .expiresAt(currentTime + (expirySeconds * 1000L)).build();
 
-        // Cache the pre-auth code data
         vciCacheService.setPreAuthCodeData(preAuthCode, codeData, expirySeconds);
 
-        // Create credential offer
         CredentialOfferResponse offerResponse = buildCredentialOffer(request.getCredentialConfigurationId(), preAuthCode, request.getTxCode());
-
-        // Cache the credential offer
         vciCacheService.setCredentialOffer(offerId, offerResponse, expirySeconds);
 
-        // Build and return the URI
         String offerUri = buildCredentialOfferUri(offerId);
         log.info("Successfully generated pre-authorized code with offer ID: {}", offerId);
 
@@ -89,33 +78,55 @@ public class PreAuthorizedCodeService {
         Map<String, Object> metadata = vciCacheService.getIssuerMetadata();
 
         Map<String, Object> supportedConfigs = (Map<String, Object>) metadata.get(Constants.CREDENTIAL_CONFIGURATIONS_SUPPORTED);
-        
+
         Map<String, Object> config = (Map<String, Object>) supportedConfigs.get(configId);
         Map<String, Object> requiredClaims = (Map<String, Object>) config.get(Constants.CLAIMS);
+
+        if (requiredClaims == null || requiredClaims.isEmpty()) {
+            return; // No claim validation needed
+        }
         if (providedClaims == null) {
             providedClaims = Collections.emptyMap();
         }
-        if (requiredClaims != null) {
-            for (Map.Entry<String, Object> entry : requiredClaims.entrySet()) {
-                Map<String, Object> claimAttrs = (Map<String, Object>) entry.getValue();
-                Boolean mandatory = (Boolean) claimAttrs.get(Constants.MANDATORY);
 
-                if (Boolean.TRUE.equals(mandatory)) {
-                    if (!providedClaims.containsKey(entry.getKey()) || providedClaims.get(entry.getKey()) == null) {
-                        log.error("Missing mandatory claim: {}", entry.getKey());
-                        throw new InvalidRequestException(String.format(ErrorConstants.MISSING_MANDATORY_CLAIM, entry.getKey()));
-                    }
+        for (Map.Entry<String, Object> entry : requiredClaims.entrySet()) {
+            Map<String, Object> claimAttrs = (Map<String, Object>) entry.getValue();
+            Boolean mandatory = (Boolean) claimAttrs.get(Constants.MANDATORY);
+
+            if (Boolean.TRUE.equals(mandatory)) {
+                if (!providedClaims.containsKey(entry.getKey()) || providedClaims.get(entry.getKey()) == null) {
+                    log.error("Missing mandatory claim: {}", entry.getKey());
+                    throw new InvalidRequestException(String.format(ErrorConstants.MISSING_MANDATORY_CLAIM, entry.getKey()));
                 }
             }
-
-            for (String providedClaim : providedClaims.keySet()) {
-                if (!requiredClaims.containsKey(providedClaim)) {
-                    log.error("Unknown claim provided: {}", providedClaim);
-                    throw new InvalidRequestException(String.format("Unknown claim: %s", providedClaim));
-                }
-            }
-
         }
+
+        for (String providedClaim : providedClaims.keySet()) {
+            if (!requiredClaims.containsKey(providedClaim)) {
+                log.error("Unknown claim provided: {}", providedClaim);
+                throw new InvalidRequestException(String.format("Unknown claim: %s", providedClaim));
+            }
+        }
+
+    }
+
+    private String generateUniquePreAuthCode() {
+        String preAuthCode;
+        int attempts = 0;
+        final int MAX_ATTEMPTS = 3;
+
+        do {
+            preAuthCode = generateSecureCode(32);
+            attempts++;
+        } while (vciCacheService.getPreAuthCodeData(preAuthCode) != null
+                && attempts < MAX_ATTEMPTS);
+
+        if (vciCacheService.getPreAuthCodeData(preAuthCode) != null) {
+            throw new IllegalStateException(
+                    "Failed to generate unique pre-authorized code after " + MAX_ATTEMPTS + " attempts");
+        }
+
+        return preAuthCode;
     }
 
     private CredentialOfferResponse buildCredentialOffer(String configId, String preAuthCode, String txnCode) {
@@ -132,7 +143,11 @@ public class PreAuthorizedCodeService {
     }
 
     private TxCode buildTxCodeInfo(String txnCode) {
-        return TxCode.builder().length(txnCode.length()).inputMode("text").description("Please enter the transaction code provided to you").build();
+        return TxCode.builder()
+                .length(txnCode.length())
+                .inputMode(txnCode.matches("\\d+") ? "numeric" : "text")
+                .description("Please enter the transaction code provided to you")
+                .build();
     }
 
     private String buildCredentialOfferUri(String offerId) {
