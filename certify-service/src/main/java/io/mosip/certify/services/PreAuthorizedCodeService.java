@@ -28,6 +28,12 @@ public class PreAuthorizedCodeService {
     @Value("${mosip.certify.pre-auth.default-expiry-seconds:600}")
     private int defaultExpirySeconds;
 
+    @Value("${mosip.certify.pre-auth.min-expiry-seconds:60}")
+    private int minExpirySeconds;
+
+    @Value("${mosip.certify.pre-auth.max-expiry-seconds:86400}")
+    private int maxExpirySeconds;
+
     @Value("${mosip.certify.pre-auth.base-url:http://localhost:8090}")
     private String baseUrl;
 
@@ -41,6 +47,11 @@ public class PreAuthorizedCodeService {
         validateClaims(request.getCredentialConfigurationId(), request.getClaims());
 
         int expirySeconds = request.getExpiresIn() != null ? request.getExpiresIn() : defaultExpirySeconds;
+
+        if (expirySeconds < minExpirySeconds || expirySeconds > maxExpirySeconds) {
+            log.error("expires_in {} out of bounds [{}, {}]", expirySeconds, minExpirySeconds, maxExpirySeconds);
+            throw new InvalidRequestException(String.format("expires_in must be between %d and %d seconds", minExpirySeconds, maxExpirySeconds));
+        }
 
         String offerId = UUID.randomUUID().toString();
         String preAuthCode = generateUniquePreAuthCode();
