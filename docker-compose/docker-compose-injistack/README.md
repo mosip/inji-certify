@@ -128,6 +128,7 @@ Ensure all configuration files are properly updated in the config directory if y
 
 Following files are optional and can be used to configure the Inji Web application for your usecase, if you are not using web application, you can skip these files:
 
+- mimoto-bootstrap.properties
 - mimoto-default.properties
 - mimoto-issuers-config.json
 - mimoto-trusted-verifiers.json
@@ -203,7 +204,10 @@ The digest multibase can be hardcoded or if the template has been stored with Ce
 
 - change the value of the `mosipbox_public_url` to point to the public URL in ./docker-compose.yaml where Certify service will be accessible, when using locally with ngrok create an HTTP tunnel for the port `8090`, which is the port for Certify and access the Inji Web at http://localhost:3001, to access Inji Web you may have to create another client with the Authorization service and more configuration should be required at Mimoto side
 
-3. To configure your own Google Auth Credentials:
+3. While downloading credentials with `inji-web`, there are 2 modes supported. 
+- First is `Continue as guest` which does not require any auth setup and works out of the box. This is the recommended option for quick testing.
+- Second is `Sign in with Google` which requires Google OAuth credentials to be setup.
+## To configure your own Google Auth Credentials:
 - Refer to the steps documented in the `mimoto` for the same. [GOOGLE_AUTH_SETUP](https://github.com/mosip/mimoto/blob/master/docker-compose/README.md#how-to-create-google-client-credentials)
 - Replace the placeholders under the `mimoto-service` in the `docker-compose.yml` file with the generated credentials:
 
@@ -211,6 +215,7 @@ The digest multibase can be hardcoded or if the template has been stored with Ce
        environment:
          - GOOGLE_OAUTH_CLIENT_ID=<your-client-id>
          - GOOGLE_OAUTH_CLIENT_SECRET=<your-client-secret>
+    ```
 
 ## Troubleshooting
 
