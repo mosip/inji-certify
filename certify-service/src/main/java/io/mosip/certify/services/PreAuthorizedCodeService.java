@@ -118,8 +118,7 @@ public class PreAuthorizedCodeService {
         do {
             preAuthCode = generateSecureCode(32);
             attempts++;
-        } while (vciCacheService.getPreAuthCodeData(preAuthCode) != null
-                && attempts < MAX_ATTEMPTS);
+        } while (vciCacheService.getPreAuthCodeData(preAuthCode) != null && attempts < MAX_ATTEMPTS);
 
         if (vciCacheService.getPreAuthCodeData(preAuthCode) != null) {
             throw new IllegalStateException(

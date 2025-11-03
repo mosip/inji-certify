@@ -12,9 +12,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachePut;
+import org.springframework.data.redis.cache.RedisCache;
 import org.springframework.stereotype.Service;
 import io.mosip.certify.services.CredentialConfigurationServiceImpl;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -77,9 +79,34 @@ public class VCICacheService {
         return wrapper != null ? (PreAuthCodeData) wrapper.get() : null;
     }
 
+    public CredentialOfferResponse getCredentialOffer(String offerId) {
+        String key = Constants.CREDENTIAL_OFFER_PREFIX + offerId;
+        Cache cache = cacheManager.getCache("credentialOfferCache");
+
+        if (cache == null) {
+            return null;
+        }
+
+        Cache.ValueWrapper wrapper = cache.get(key);
+        return wrapper != null ? (CredentialOfferResponse) wrapper.get() : null;
+    }
+
     public void setCredentialOffer(String offerId, CredentialOfferResponse offer, int expirySeconds) {
         String key = Constants.CREDENTIAL_OFFER_PREFIX + offerId;
-        cacheManager.getCache("credentialOfferCache").put(key, offer);
+        Cache cache = cacheManager.getCache("credentialOfferCache");
+
+        if (cache == null) {
+            throw new IllegalStateException("credentialOfferCache not available");
+        }
+
+        // For Redis, use RedisCache.put with Duration
+        if (cache instanceof RedisCache) {
+            ((RedisCache) cache).put(key, offer);
+        } else {
+            // For simple cache, log warning and use basic put
+            log.warn("TTL not supported for cache type: {}. Entry may not expire.", cacheType);
+            cache.put(key, offer);
+        }
     }
 
     /**
