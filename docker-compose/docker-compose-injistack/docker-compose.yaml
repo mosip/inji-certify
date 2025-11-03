@@ -73,6 +73,9 @@ services:
       - SPRING_CONFIG_LOCATION=/home/mosip/
       - SPRING_CLOUD_BOOTSTRAP_LOCATION=/home/mosip/mimoto-bootstrap.properties
       - oidc_p12_password=dummypassword
+      - WEBSUB_EVENT_SECRET=dummywebsubsecret
+      - IDP_PARTNER_ENCRYPTION_KEY=dummyidppartnerencryptionkey
+      - WALLET_BINDING_PARTNER_API_KEY=dummywalletbindingpartnerapikey
       - SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/inji_mimoto
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
