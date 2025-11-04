@@ -36,6 +36,9 @@ public class IarSession {
     @Column(name = "client_id", length = 128)
     private String clientId;
 
+    @Column(name = "scope", length = 128)
+    private String scope;
+
     @Column(name = "authorization_code", length = 128)
     private String authorizationCode;
 

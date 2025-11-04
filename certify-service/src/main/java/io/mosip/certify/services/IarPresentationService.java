@@ -258,6 +258,18 @@ public class IarPresentationService {
      * Generate and store authorization code
      */
     private String generateAndStoreAuthorizationCode(IarSession session) throws CertifyException {
+        // Idempotency guard: if an authorization code already exists for this session
+        if (StringUtils.hasText(session.getAuthorizationCode())) {
+            // Check if the existing code has already been used - if so, this is an error
+            if (Boolean.TRUE.equals(session.getIsCodeUsed())) {
+                log.error("Authorization code already used for auth_session: {}, cannot reuse", session.getAuthSession());
+                throw new CertifyException("invalid_request", 
+                    "Authorization code for this session has already been used. Please start a new authorization flow.");
+            }
+            log.info("Authorization code already exists for auth_session: {}, returning existing code", session.getAuthSession());
+            return session.getAuthorizationCode();
+        }
+
         // Validate minimum length requirement
         if (authorizationCodeLength < 24) {
             throw new CertifyException("invalid_configuration", 

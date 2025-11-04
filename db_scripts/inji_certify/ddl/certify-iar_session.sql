@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS iar_session (
     verify_nonce VARCHAR(64),
     expires_at TIMESTAMP,
     client_id VARCHAR(128),
+    scope VARCHAR(128),
     authorization_code VARCHAR(128),
     response_uri VARCHAR(512),
     code_challenge VARCHAR(128),
@@ -24,6 +25,7 @@ COMMENT ON COLUMN iar_session.request_id IS 'Request identifier for tracking and
 COMMENT ON COLUMN iar_session.verify_nonce IS 'Nonce value from verify service for VP request security';
 COMMENT ON COLUMN iar_session.expires_at IS 'Session expiration timestamp, after which the session becomes invalid';
 COMMENT ON COLUMN iar_session.client_id IS 'OAuth client identifier, optional for public clients';
+COMMENT ON COLUMN iar_session.scope IS 'OAuth scope extracted from credential configuration';
 COMMENT ON COLUMN iar_session.authorization_code IS 'OAuth authorization code generated for token exchange';
 COMMENT ON COLUMN iar_session.response_uri IS 'URI where VP presentation response should be sent';
 COMMENT ON COLUMN iar_session.code_challenge IS 'PKCE code challenge for OAuth security';
@@ -39,3 +41,4 @@ CREATE INDEX IF NOT EXISTS idx_iar_session_authorization_code ON iar_session(aut
 CREATE INDEX IF NOT EXISTS idx_iar_session_request_id ON iar_session(request_id);
 CREATE INDEX IF NOT EXISTS idx_iar_session_expires_at ON iar_session(expires_at);
 CREATE INDEX IF NOT EXISTS idx_iar_session_authorization_code_used ON iar_session(authorization_code, is_code_used) WHERE authorization_code IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_iar_session_scope ON iar_session(scope);

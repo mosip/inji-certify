@@ -67,8 +67,13 @@ public class IarVpRequestService {
 
     /**
      * Create VP request with verify service
+     * 
+     * @param iarRequest The interactive authorization request
+     * @param transactionId Optional transaction ID from CSV. If provided, verify service will use this instead of generating one.
+     * @return VerifyVpResponse from verify service
+     * @throws CertifyException if request fails
      */
-    public VerifyVpResponse createVpRequest(InteractiveAuthorizationRequest iarRequest) throws CertifyException {
+    public VerifyVpResponse createVpRequest(InteractiveAuthorizationRequest iarRequest, String transactionId) throws CertifyException {
         log.info("Calling verify service for VP request generation for wallet client_id: {} using verifier client_id: {}", 
                  iarRequest.getClientId(), verifierClientId);
 
@@ -82,6 +87,14 @@ public class IarVpRequestService {
                 "direct-post.jwt"
             ));
             verifyRequest.setEncryptionRequired(true);
+
+            // Set transaction ID if provided (CSV ID)
+            if (StringUtils.hasText(transactionId)) {
+                verifyRequest.setTransactionId(transactionId);
+                log.info("Using provided CSV transaction ID: {} for verify service request", transactionId);
+            } else {
+                log.debug("No transaction ID provided - verify service will generate one");
+            }
 
             if (iarRequest.getAuthorizationDetails() != null 
                 && !iarRequest.getAuthorizationDetails().isEmpty()) {

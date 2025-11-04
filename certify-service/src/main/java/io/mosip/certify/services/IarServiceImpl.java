@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Optional;
 import io.mosip.certify.entity.IarSession;
 import io.mosip.certify.repository.IarSessionRepository;
+import io.mosip.certify.utils.AccessTokenJwtUtil;
 
 /**
  * Interactive Authorization Request (IAR) Service Implementation
@@ -48,6 +49,12 @@ public class IarServiceImpl implements IarService {
     @Autowired
     private IarVpRequestService iarVpRequestService;
 
+    @Autowired
+    private AccessTokenJwtUtil accessTokenJwtUtil;
+
+    @Autowired
+    private CsvIdUtil csvIdUtil;
+
     @Value("${mosip.certify.iar.session-timeout-seconds:1800}")
     private int sessionTimeoutSeconds;
 
@@ -66,9 +73,14 @@ public class IarServiceImpl implements IarService {
     @Value("${mosip.certify.oauth.token.type:Bearer}")
     private String tokenType;
 
+    @Value("${mosip.certify.oauth.access-token.issuer}")
+    private String accessTokenIssuer;
+
+    @Value("${mosip.certify.oauth.access-token.audience}")
+    private String accessTokenAudience;
+
     private static final String AUTH_CODE_PREFIX = "iar_auth_";
-    private static final String ACCESS_TOKEN_PREFIX = "iar_token_";
-    private static final int CNONCE_LENGTH = 16;
+
 
     public IarResponse processAuthorizationRequest(InteractiveAuthorizationRequest iarRequest) throws CertifyException {
         log.info("Processing IAR for client_id: {}, response_type: {}", 
@@ -131,6 +143,42 @@ public class IarServiceImpl implements IarService {
                  hasAuthSession, hasVp);
         throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
     }
+
+    /**
+     * Extract c_nonce from JWT access token payload
+     * 
+     * @param jwtToken The JWT access token
+     * @return The c_nonce value or null if not found
+     */
+    private String extractCNonceFromJwt(String jwtToken) {
+        try {
+            // Split JWT into parts
+            String[] parts = jwtToken.split("\\.");
+            if (parts.length != 3) {
+                log.warn("Invalid JWT format - expected 3 parts, got {}", parts.length);
+                return null;
+            }
+            
+            // Decode the payload (second part)
+            String payload = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
+            
+            // Parse JSON payload
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.JsonNode jsonNode = mapper.readTree(payload);
+            
+            // Extract c_nonce
+            if (jsonNode.has("c_nonce")) {
+                return jsonNode.get("c_nonce").asText();
+            }
+            
+            log.warn("c_nonce not found in JWT payload");
+            return null;
+            
+        } catch (Exception e) {
+            log.error("Failed to extract c_nonce from JWT", e);
+            return null;
+        }
+    }
     
     @Override
     public OAuthTokenResponse processTokenRequest(OAuthTokenRequest tokenRequest) throws CertifyException {
@@ -145,14 +193,27 @@ public class IarServiceImpl implements IarService {
             }
 
             // Validate authorization code and atomically mark as used to prevent race conditions
-            validateAndMarkAuthorizationCodeUsed(tokenRequest);
+            IarSession session = validateAndMarkAuthorizationCodeUsed(tokenRequest);
 
             OAuthTokenResponse response = new OAuthTokenResponse();
-            response.setAccessToken(generateAccessToken());
+            response.setAccessToken(generateAccessToken(session));
             response.setTokenType(tokenType);
             response.setExpiresIn(tokenExpiresInSeconds);
-            response.setCNonce(generateCNonce());
-            response.setCNonceExpiresIn(cNonceExpiresInSeconds);
+            
+            // Set scope from the session
+            if (session.getScope() != null && !session.getScope().isEmpty()) {
+                response.setScope(session.getScope());
+            }
+            
+            // Extract c_nonce from the JWT access token and set in OAuth response
+            String cNonce = extractCNonceFromJwt(response.getAccessToken());
+            if (cNonce != null) {
+                response.setCNonce(cNonce);
+                response.setCNonceExpiresIn(cNonceExpiresInSeconds);
+            }
+            
+            // Note: refresh_token and authorization_details are optional and not implemented yet
+            // They can be added based on specific requirements
             
             log.info("Token generated successfully");
             return response;
@@ -216,22 +277,34 @@ public class IarServiceImpl implements IarService {
             response.setType(InteractionType.OPENID4VP_PRESENTATION);
             response.setAuthSession(authSession);
 
-            // Call verify service to get VP request and transaction ID
-            VerifyVpResponse verifyResponse = iarVpRequestService.createVpRequest(iarRequest);
+            // Get CSV ID to use as transaction ID
+            String csvTransactionId = csvIdUtil.getCsvId();
+            log.info("Using CSV ID as transaction ID: {} for auth_session: {}", csvTransactionId, authSession);
+
+            // Call verify service with CSV transaction ID
+            VerifyVpResponse verifyResponse = iarVpRequestService.createVpRequest(iarRequest, csvTransactionId);
+            
+            // Use CSV transaction ID instead of verify service response
+            // Override verify response transaction ID if verify service returned different one
+            String transactionId = csvTransactionId;
+            if (verifyResponse.getTransactionId() != null && !csvTransactionId.equals(verifyResponse.getTransactionId())) {
+                log.info("Overriding verify service transactionId {} with CSV ID {}", 
+                        verifyResponse.getTransactionId(), csvTransactionId);
+                verifyResponse.setTransactionId(csvTransactionId);
+            }
             
             // Validate transaction ID before proceeding
-            String transactionId = verifyResponse.getTransactionId();
             if (!StringUtils.hasText(transactionId)) {
-                log.error("No transaction ID provided by verify service - this is required for VP verification");
+                log.error("Transaction ID is empty - this is required for VP verification");
                 throw new CertifyException(ErrorConstants.UNKNOWN_ERROR, 
-                    "Verify service did not provide transaction ID");
+                    "Transaction ID is required for VP verification");
             }
             
             // Convert verify response to Object (pass-through from Verify service)
             Object openId4VpRequest = iarVpRequestService.convertToOpenId4VpRequest(verifyResponse, iarRequest);
             response.setOpenid4vpRequest(openId4VpRequest);
             
-            log.info("Using transaction_id from verify service: {} for auth_session: {}", transactionId, authSession);
+            log.info("Using CSV transaction_id: {} for auth_session: {}", transactionId, authSession);
             
             IarSession iarSession = iarSessionService.createIarSession(iarRequest, verifyResponse, authSession, transactionId);
             
@@ -363,21 +436,27 @@ public class IarServiceImpl implements IarService {
         log.debug("Public client secret validation passed");
     }
 
-    private String generateAccessToken() {
-        // Generate cryptographically secure random token with 32 bytes (256 bits) of entropy
-        byte[] randomBytes = new byte[32];
-        new java.security.SecureRandom().nextBytes(randomBytes);
-        String accessToken = ACCESS_TOKEN_PREFIX + java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
-        log.debug("Generated secure access token (length: {})", accessToken.length());
-        return accessToken;
+    /**
+     * Generate a signed JWT access token using the provided session data
+     * 
+     * @param session The IAR session containing client and transaction information
+     * @return Signed JWT access token string
+     */
+    private String generateAccessToken(IarSession session) {
+        try {
+            String jwtToken = accessTokenJwtUtil.generateSignedJwt(
+                session, 
+                accessTokenIssuer, 
+                accessTokenAudience, 
+                tokenExpiresInSeconds
+            );
+            log.debug("Generated JWT access token for client_id: {}, transaction_id: {}", 
+                     session.getClientId(), session.getTransactionId());
+            return jwtToken;
+        } catch (Exception e) {
+            log.error("Failed to generate JWT access token for session: {}", session.getAuthSession(), e);
+            throw new RuntimeException("JWT access token generation failed", e);
+        }
     }
 
-    private String generateCNonce() {
-        // Generate cryptographically secure random c_nonce with 16 bytes (128 bits) of entropy
-        byte[] randomBytes = new byte[CNONCE_LENGTH];
-        new java.security.SecureRandom().nextBytes(randomBytes);
-        String cNonce = "iar_nonce_" + java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
-        log.debug("Generated secure c_nonce (length: {})", cNonce.length());
-        return cNonce;
-    }
 }

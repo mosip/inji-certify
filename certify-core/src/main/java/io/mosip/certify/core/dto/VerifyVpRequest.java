@@ -48,5 +48,13 @@ public class VerifyVpRequest {
      */
     @JsonProperty("encryptionRequired")
     private Boolean encryptionRequired;
+
+    /**
+     * Optional transaction ID to use instead of generating one.
+     * If provided, verify service will use this transaction ID.
+     * This allows using a CSV user ID as transaction ID for identity lookup.
+     */
+    @JsonProperty("transactionId")
+    private String transactionId;
 }
 
