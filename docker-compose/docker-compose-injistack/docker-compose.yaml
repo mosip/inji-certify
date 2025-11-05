@@ -71,9 +71,7 @@ services:
       - active_profile_env=default
       - SPRING_CONFIG_NAME=mimoto
       - SPRING_CONFIG_LOCATION=/home/mosip/
-      - SPRING_CLOUD_BOOTSTRAP_LOCATION=/home/mosip/mimoto-bootstrap.properties
       - oidc_p12_password=dummypassword
-      - WEBSUB_EVENT_SECRET=dummywebsubsecret
       - IDP_PARTNER_ENCRYPTION_KEY=dummyidppartnerencryptionkey
       - WALLET_BINDING_PARTNER_API_KEY=dummywalletbindingpartnerapikey
       - SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/inji_mimoto
@@ -87,7 +85,6 @@ services:
       - network
     volumes:
       - ./config/mimoto-default.properties:/home/mosip/mimoto-default.properties
-      - ./config/mimoto-bootstrap.properties:/home/mosip/mimoto-bootstrap.properties
       - ./config/mimoto-issuers-config.json:/home/mosip/mimoto-issuers-config.json
       - ./config/mimoto-trusted-verifiers.json:/home/mosip/mimoto-trusted-verifiers.json
       - ./certs/oidckeystore.p12:/home/mosip/certs/oidckeystore.p12

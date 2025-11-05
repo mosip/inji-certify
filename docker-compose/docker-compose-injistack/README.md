@@ -91,7 +91,6 @@ public interface VCIssuancePlugin {
 - Update `oidc_p12_password` env variable under `mimoto-service` in the [docker-compose.yaml](./docker-compose.yaml) to the password of the `oidckeystore.p12` file.
 
 ## Other `mimoto` and `inji-web` related configurations
-- Update `WEBSUB_EVENT_SECRET` env variable under `mimoto-service` in the [docker-compose.yaml](./docker-compose.yaml) to the correct secret key. This is used to validate WebSub notifications to Mimoto.
 - Update `IDP_PARTNER_ENCRYPTION_KEY` env variable under `mimoto-service` in the [docker-compose.yaml](./docker-compose.yaml) to the correct encryption key. This is used to decrypt data received from the Identity Provider.
 - Update `WALLET_BINDING_PARTNER_API_KEY` env variable under `mimoto-service` in the [docker-compose.yaml](./docker-compose.yaml) to the correct API key. This is used to authenticate requests from Inji Web to Mimoto.
 
