@@ -880,12 +880,6 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		
 		currentTestCaseName = testCaseName;
 		
-		// Handle extra workflow dependencies
-		if (testCaseDTO != null && testCaseDTO.getAdditionalDependencies() != null
-				&& AdminTestUtil.generateDependency == true) {
-			    addAdditionalDependencies(testCaseDTO);
-		}
-		
 		//When the captcha is enabled we cannot execute the test case as we can not generate the captcha token
 		if (isCaptchaEnabled() == true) {
 			GlobalMethods.reportCaptchaStatus(GlobalConstants.CAPTCHA_ENABLED, true);
@@ -938,8 +932,14 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		}
 		if (currentUseCase.toLowerCase().equals("svgtemplate") && testCaseName.toLowerCase().contains("svgtemplate") == false) {
 			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
-		}		
+		}
 		
+		// Handle extra workflow dependencies
+		if (testCaseDTO != null && testCaseDTO.getAdditionalDependencies() != null
+				&& AdminTestUtil.generateDependency == true) {
+			addAdditionalDependencies(testCaseDTO);
+		}
+
 		return testCaseDTO;
 	}
 	
