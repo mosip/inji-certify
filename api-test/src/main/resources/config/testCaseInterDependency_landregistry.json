@@ -171,10 +171,7 @@
         "TC_esignetDependent_AuthenticateUser_20"
     ],
     "TC_esignetDependent_AuthorizationCode_23": ["TC_esignetDependent_AuthenticateUser_22"],
-    "TC_esignetDependent_AuthorizationCode_22": [
-        "TC_esignetDependent_AuthenticateUser_021",
-        "TC_esignetDependent_OAuthdetailsRequest_21"
-    ],
+    "TC_esignetDependent_AuthorizationCode_22": ["TC_esignetDependent_OAuthdetailsRequest_21"],
     "TC_esignetDependent_AuthorizationCode_27": ["TC_esignetDependent_AuthenticateUser_26"],
     "TC_esignetDependent_AuthorizationCode_07": [
         "TC_esignetDependent_OAuthdetailsRequest_07",
@@ -187,7 +184,7 @@
         "TC_esignetDependent_CreateOidc_For_EccR1_04"
     ],
     "TC_InjiCertify_dataIntegrity_proof_02": ["TC_InjiCertify_DeleteCredentialConfig_11"],
-    "TC_InjiCertify_Delete_Credential_Config_Revocation_01": ["TC_InjiCertify_revocation_01"],
+    "TC_InjiCertify_Delete_Credential_Config_Revocation_01": [],
     "TC_InjiCertify_GetCredentialFor_Sd_jwt_06": [
         "TC_InjiCertify_Sd_jwt_Signature_01",
         "TC_esignetDependent_GenerateToken_07",
@@ -284,8 +281,11 @@
         "TC_esignetDependent_OAuthdetailsRequest_14",
         "TC_esignetDependent_AuthenticateUser_15"
     ],
-    "TC_esignetDependent_AuthorizationCodeNeg_2": ["TC_esignetDependent_AuthenticateUserNeg_2"],
     "TC_esignetDependent_AuthenticateUser_27": ["TC_IDRepo_CreateVID_01"],
+    "TC_esignetDependent_AuthenticateUser_32": [
+        "TC_mock_identity_dependency_02",
+        "TC_esignetDependent_OAuthdetailsRequest_21"
+    ],
     "TC_InjiCertify_GetCredentialFor_Sd_jwt_01": [
         "TC_InjiCertify_Sd_jwt_Signature_01",
         "TC_esignetDependent_GenerateToken_07",
@@ -546,7 +546,7 @@
         "TC_esignetDependent_GenerateToken_02",
         "TC_esignetDependent_CreateOidc_For_EccR1_04"
     ],
-    "TC_InjiCertify_Update_Credential_Status_05": [],
+    "TC_InjiCertify_Update_Credential_Status_05": ["TC_DBDependent_Get_Data_From_Ledger_Table_01"],
     "TC_InjiCertify_GetCredentialForDatantegrity_13": [
         "TC_InjiCertify_dataIntegrity_proof_02",
         "TC_DBDependent_InsertQuery_01",
@@ -578,6 +578,7 @@
     "TC_InjiCertify_Update_Credential_Status_03": [],
     "TC_esignetDependent_AuthorizationCode_vd11_24": ["TC_esignetDependent_AuthenticateUser_vd11_23"],
     "TC_injicertify_credentialissuance_Vd11_06": ["TC_InjiCertify_WellKnownEndpoint_Sunbird_02"],
+    "TC_esignetDependent_AuthorizationCode_vd11_29": ["TC_esignetDependent_AuthenticateUser_vd11_28"],
     "TC_injicertify_credentialissuance_Vd11_07": ["TC_InjiCertify_WellKnownEndpoint_Sunbird_02"],
     "TC_esignetDependent_GenerateToken_22": [
         "TC_esignetDependent_AuthorizationCode_22",
@@ -671,6 +672,8 @@
         "TC_DBDependent_InsertQuery_02",
         "TC_esignetDependent_CreateOidc_03"
     ],
+    "TC_InjiCertify_Update_Credential_Status_V2_11": [],
+    "TC_InjiCertify_Update_Credential_Status_V2_10": [],
     "TC_InjiCertify_GetCredentialForLandRegistry_19": [
         "TC_esignetDependent_GenerateToken_17",
         "TC_DBDependent_InsertQuery_02",
@@ -714,15 +717,24 @@
         "TC_DBDependent_InsertQuery_02",
         "TC_esignetDependent_CreateOidc_03"
     ],
+    "TC_InjiCertify_Update_Credential_Status_V2_08": [],
+    "TC_InjiCertify_Update_Credential_Status_V2_07": [],
     "TC_InjiCertify_GetCredentialForLandRegistry_21": [
         "TC_esignetDependent_GenerateToken_18",
         "TC_esignetDependent_CreateOidc_03"
     ],
+    "TC_InjiCertify_Update_Credential_Status_V2_06": [],
     "TC_InjiCertify_GetCredentialForLandRegistry_20": [
         "TC_esignetDependent_GenerateToken_17",
         "TC_DBDependent_InsertQuery_02",
         "TC_esignetDependent_CreateOidc_03"
     ],
+    "TC_InjiCertify_Update_Credential_Status_V2_05": [],
+    "TC_InjiCertify_Update_Credential_Status_V2_09": [],
+    "TC_InjiCertify_Update_Credential_Status_V2_04": [],
+    "TC_InjiCertify_Update_Credential_Status_V2_03": [],
+    "TC_InjiCertify_Update_Credential_Status_V2_02": [],
+    "TC_InjiCertify_Update_Credential_Status_V2_01": [],
     "TC_esignetDependent_AuthorizationCode_vd12_30": ["TC_esignetDependent_AuthenticateUser_vd12_29"],
     "TC_esignetDependent_AuthorizationCode_vd12_25": ["TC_esignetDependent_AuthenticateUser_vd12_24"],
     "TC_InjiCertify_GetCredentialFor_dataintegrity_22": [
@@ -738,7 +750,6 @@
         "TC_esignetDependent_CreateOidc_For_EccR1_04"
     ],
     "TC_injicertify_credentialissuance_Vd12_09": ["TC_InjiCertify_WellKnownEndpoint_Sunbird_03"],
-    "TC_esignetDependent_AuthorizationCode_vd12_29": ["TC_esignetDependent_AuthenticateUser_vd11_28"],
     "TC_injicertify_credentialissuance_Vd12_08": ["TC_InjiCertify_WellKnownEndpoint_Sunbird_03"],
     "TC_esignetDependent_OAuthdetailsRequest_02": ["TC_esignetDependent_CreateOidc_For_EccR1_04"],
     "TC_esignetDependent_OAuthdetailsRequest_03": ["TC_esignetDependent_CreateOidc_For_EccR1_04"],
@@ -854,10 +865,6 @@
         "TC_DBDependent_InsertQuery_01",
         "TC_esignetDependent_GenerateToken_02",
         "TC_esignetDependent_CreateOidc_For_EccR1_04"
-    ],
-    "TC_esignetDependent_AuthenticateUser_021": [
-        "TC_mock_identity_dependency_02",
-        "TC_esignetDependent_OAuthdetailsRequest_21"
     ],
     "TC_InjiCertify_GetCredentialFor_dataintegrity_08": [
         "TC_InjiCertify_dataIntegrity_proof_02",

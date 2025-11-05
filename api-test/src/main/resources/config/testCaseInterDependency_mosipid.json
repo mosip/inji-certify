@@ -14,7 +14,7 @@
     ],
     "TC_esignetDependent_GenerateToken_vd11_29": [
         "TC_pms_dependency_01",
-        "TC_esignetDependent_AuthorizationCode_vd12_29"
+        "TC_esignetDependent_AuthorizationCode_vd11_29"
     ],
     "TC_InjiCertify_GetCredential_For_Revocation_02": [
         "TC_InjiCertify_revocation_02",
@@ -142,7 +142,7 @@
     "TC_esignetDependent_AuthorizationCode_15": ["TC_esignetDependent_AuthenticateUser_15"],
     "TC_esignetDependent_AuthorizationCodeNeg_2": [
         "TC_esignetDependent_OAuthdetailsRequestNeg_2_31",
-        "TC_esignetDependent_AuthenticateUserNeg_2"
+        "TC_esignetDependent_AuthenticateUserNeg_31"
     ],
     "TC_esignetDependent_AuthenticateUser_vd12_29": [
         "TC_idrepo_dependency_01",
@@ -312,7 +312,7 @@
     "TC_InjiCertify_GetCredentialForLandRegistry_02": ["TC_DBDependent_InsertQuery_02"],
     "TC_InjiCertify_Sd_jwt_Signature_07": ["TC_InjiCertify_DeleteCredentialConfig_21"],
     "TC_InjiCertify_GetCredentialForLandRegistry_10": ["TC_DBDependent_InsertQuery_02"],
-    "TC_esignetDependent_AuthenticateUserNeg_2": [
+    "TC_esignetDependent_AuthenticateUserNeg_31": [
         "TC_esignetDependent_OAuthdetailsRequestNeg_2_31",
         "TC_idrepo_dependency_01"
     ],
@@ -370,7 +370,7 @@
     ],
     "TC_esignetDependent_AuthorizationCode_vd12_25": ["TC_esignetDependent_AuthenticateUser_vd12_24"],
     "TC_injicertify_credentialissuance_Vd12_09": ["TC_InjiCertify_WellKnownEndpoint_Sunbird_03"],
-    "TC_esignetDependent_AuthorizationCode_vd12_29": [
+    "TC_esignetDependent_AuthorizationCode_vd11_29": [
         "TC_esignetDependent_AuthenticateUser_vd11_28",
         "TC_esignetDependent_OAuthdetailsRequest_vd11_28"
     ],
