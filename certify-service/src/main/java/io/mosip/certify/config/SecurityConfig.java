@@ -62,7 +62,7 @@ public class SecurityConfig {
     @Value("${mosip.certify.security.ignore-csrf-urls}")
     private String[] ignoreCsrfCheckUrls;
 
-    @Value("${mosip.certify.security.cors-enabled-urls}")
+    @Value("${mosip.certify.security.cors-enabled-urls:}")
     private String corsEnabledUrls;
 
     @Bean
@@ -111,8 +111,13 @@ public class SecurityConfig {
         publicPathConfig.setAllowCredentials(false);
 
         // Register this configuration only for the urls enabled for CORS
-        for (String pattern : corsEnabledUrls.split(",")) {
-            source.registerCorsConfiguration(pattern.trim(), publicPathConfig);
+        if(!corsEnabledUrls.trim().isEmpty()) {
+            for (String pattern : corsEnabledUrls.split(",")) {
+                String trimmedPattern = pattern.trim();
+                if(!trimmedPattern.isEmpty()) {
+                    source.registerCorsConfiguration(trimmedPattern, publicPathConfig);
+                }
+            }
         }
 
         return source;
