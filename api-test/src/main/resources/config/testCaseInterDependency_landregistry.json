@@ -163,7 +163,10 @@
         "TC_esignetDependent_OAuthdetailsRequest_19",
         "TC_esignetDependent_AuthenticateUser_20"
     ],
-    "TC_esignetDependent_AuthorizationCode_22": ["TC_esignetDependent_OAuthdetailsRequest_21"],
+    "TC_esignetDependent_AuthorizationCode_22": [
+        "TC_esignetDependent_AuthenticateUser_32",
+        "TC_esignetDependent_OAuthdetailsRequest_21"
+    ],
     "TC_esignetDependent_AuthorizationCode_07": [
         "TC_esignetDependent_OAuthdetailsRequest_07",
         "TC_esignetDependent_AuthenticateUser_07"
@@ -315,7 +318,7 @@
         "TC_esignetDependent_GenerateToken_14",
         "TC_esignetDependent_CreateOidc_03"
     ],
-    "TC_InjiCertify_UpdateConfiguration_01": ["TC_InjiCertify_addCredentialtype_01"],
+    "TC_InjiCertify_UpdateConfiguration_01": [],
     "TC_InjiCertify_GetCredentialForLandRegistry_23": [
         "TC_DBDependent_InsertQuery_02",
         "TC_esignetDependent_GenerateToken_14",
@@ -797,7 +800,7 @@
         "TC_InjiCertify_addCredentialtype_02",
         "TC_InjiCertify_EccR1_Signature_05"
     ],
-    "TC_InjiCertify_DeleteCredentialConfig_01": ["TC_InjiCertify_addCredentialtype_01"],
+    "TC_InjiCertify_DeleteCredentialConfig_01": [],
     "TC_InjiCertify_GetCredentialFor_dataintegrity_09": [
         "TC_InjiCertify_dataIntegrity_proof_02",
         "TC_DBDependent_InsertQuery_01",

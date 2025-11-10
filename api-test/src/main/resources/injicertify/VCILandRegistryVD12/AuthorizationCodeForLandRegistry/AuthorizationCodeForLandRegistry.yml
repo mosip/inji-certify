@@ -24,7 +24,7 @@ AuthorizationCodeForLandRegistry:
       description: Authorization Code for mock ida
       role: resident
       restMethod: post
-      additionalDependencies: TC_esignetDependent_AuthenticateUser_021
+      additionalDependencies: TC_esignetDependent_AuthenticateUser_32
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
       inputTemplate: injicertify/VCILandRegistryVD12/AuthorizationCodeForLandRegistry/AuthorizationCodeForLandRegistry
