@@ -70,17 +70,17 @@ class DIDDocumentUtilTest {
         Map<String, Object> verificationMethod = (Map<String, Object>) ReflectionTestUtils.invokeMethod(
                 didDocumentUtil, "generateVerificationMethod", signatureCryptoSuite, certificateString, didUrl, kid);
 
-        Map<String,String> publicKeyJwk = (Map<String,String>)verificationMethod.get("publicKeyJwk");
-        assertNotNull(publicKeyJwk);
-        assertEquals("RSA", publicKeyJwk.get("kty"));
-        assertEquals("AQAB", publicKeyJwk.get("e"));
-        assertEquals("lkO3CPWJ6Jqu9hzm4Eew7EJSbYCX7YGBxYAjRHcLuVgsttyRWUZ3DiRYEoN7bG_jCh7E0Gvv4M5ux4VSw3RJlM-9TfjeDUkHdZQ0g5A_r69uyy7-zE8MIM2fXcgwEgIZabm_Zb6-T_K6mSsdPQAHnBe1zXoqgTuyTT6pVsHbR0-5ULkhN3BuJyhJ7zw8vC1aiFYA2b05nU7H1Rn-axes8-v80mQSGR9iJTrGeYtvz8a-gRhvXmK-h8nhUAJaPHJBacCRMErKvgddWkWBtknJZQmnX0RN2IC5-egbE8thCVg8BGBcxOoUBHjHYmus0CZNbTMJQIObL62p7caJHnYtHw", publicKeyJwk.get("n"));
+        String publicKeyPem = (String) verificationMethod.get("publicKeyPem");
+        assertNotNull(publicKeyPem);
+        assertTrue(publicKeyPem.startsWith("-----BEGIN PUBLIC KEY-----"));
+        assertTrue(publicKeyPem.endsWith("-----END PUBLIC KEY-----"));
 
         assertEquals(didUrl, verificationMethod.get("controller"));
         assertEquals(issuerPublicKeyURI, verificationMethod.get("id"));
-        assertEquals("JsonWebKey2020", verificationMethod.get("type"));
-        assertEquals("https://w3id.org/security/suites/jws-2020/v1", verificationMethod.get("@context"));
+        assertEquals("RsaVerificationKey2018", verificationMethod.get("type"));
+        assertEquals("https://w3id.org/security/v1", verificationMethod.get("@context"));
     }
+
     @Test
     @SuppressWarnings("unchecked")
     void testGenerateVerificationMethodECK1Signature2019ViaReflection() {
