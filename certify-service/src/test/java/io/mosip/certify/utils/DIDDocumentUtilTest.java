@@ -78,7 +78,7 @@ class DIDDocumentUtilTest {
         assertEquals(didUrl, verificationMethod.get("controller"));
         assertEquals(issuerPublicKeyURI, verificationMethod.get("id"));
         assertEquals("RsaVerificationKey2018", verificationMethod.get("type"));
-        assertEquals("https://w3id.org/security/suites/jws-2020/v1", verificationMethod.get("@context"));
+        assertEquals("https://w3id.org/security/v1", verificationMethod.get("@context"));
     }
 
     @Test
