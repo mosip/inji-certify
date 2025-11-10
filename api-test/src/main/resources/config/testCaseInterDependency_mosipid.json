@@ -16,8 +16,12 @@
         "TC_esignetDependent_OAuthdetailsRequest_vd11_28"
     ],
     "TC_esignetDependent_AuthenticateUserNeg_31": [
-        "TC_esignetDependent_OAuthdetailsRequestNeg_2_31",
-        "TC_idrepo_dependency_01"
+        "TC_idrepo_dependency_01",
+        "TC_esignetDependent_OAuthdetailsRequestNeg_31"
+    ],
+    "TC_esignetDependent_AuthorizationCodeNeg_32": [
+        "TC_esignetDependent_AuthenticateUserNeg_31",
+        "TC_esignetDependent_OAuthdetailsRequestNeg_31"
     ],
     "TC_esignetDependent_AuthenticateUserNeg_30": [
         "TC_esignetDependent_OAuthdetailsRequestNeg_30",
@@ -72,10 +76,6 @@
         "TC_esignetDependent_GenerateToken_vd12_30"
     ],
     "TC_IDRepo_CreateVID_01": ["TC_idrepo_dependency_01"],
-    "TC_esignetDependent_GenerateTokenNeg_32": [
-        "TC_pms_dependency_01",
-        "TC_esignetDependent_AuthorizationCodeNeg_32"
-    ],
     "TC_pms_dependency_10": ["TC_pms_dependency_03"],
     "TC_esignetDependent_OAuthdetailsRequest_vd12_29": ["TC_pms_dependency_01"],
     "TC_injicertify_Mosipidcredentialissuance_02": [
@@ -141,7 +141,6 @@
     ],
     "TC_esignetDependent_OAuthdetailsRequestNeg_30": ["TC_pms_dependency_01"],
     "TC_pms_dependency_02": ["TC_pms_dependency_07"],
-    "TC_esignetDependent_OAuthdetailsRequestNeg_2_31": ["TC_pms_dependency_01"],
     "TC_pms_dependency_01": [
         "TC_pms_dependency_04",
         "TC_pms_dependency_03",
@@ -150,6 +149,10 @@
         "TC_pms_dependency_09",
         "TC_pms_dependency_08",
         "TC_pms_dependency_07"
+    ],
+    "TC_esignetDependent_GenerateTokenNeg_32": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_AuthorizationCodeNeg_32"
     ],
     "TC_esignetDependent_GenerateTokenNeg_31": [
         "TC_pms_dependency_01",
@@ -184,11 +187,11 @@
         "TC_pms_dependency_01",
         "TC_esignetDependent_GenerateTokenNeg_31"
     ],
+    "TC_esignetDependent_OAuthdetailsRequestNeg_31": ["TC_pms_dependency_01"],
     "TC_injicertify_Mosipidcredentialissuance_38": [
         "TC_pms_dependency_01",
         "TC_esignetDependent_GenerateTokenNeg_31"
     ],
-    "TC_esignetDependent_AuthorizationCodeNeg_32": ["TC_esignetDependent_OAuthdetailsRequestNeg_2_31"],
     "TC_esignetDependent_AuthenticateUser_vd12_29": [
         "TC_idrepo_dependency_01",
         "TC_esignetDependent_OAuthdetailsRequest_vd12_29"
