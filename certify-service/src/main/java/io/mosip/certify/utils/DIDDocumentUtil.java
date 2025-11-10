@@ -200,7 +200,7 @@ public class DIDDocumentUtil {
 
         Map<String, Object> verificationMethod = new HashMap<>();
         verificationMethod.put("type", "RsaVerificationKey2018");
-        verificationMethod.put("@context", "https://w3id.org/security/suites/jws-2020/v1");
+        verificationMethod.put("@context", "https://w3id.org/security/v1");
         verificationMethod.put("controller", didUrl);
         verificationMethod.put("publicKeyPem", pemBuilder.toString());
         return verificationMethod;
