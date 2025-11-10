@@ -6,13 +6,58 @@ This document explains the integration of Credential rendering templates in Inji
 
 ```json
   "renderMethod": [{
-    "id": "https://yourdomain.certify.io/v1/certify/rendering-template/national-id",
-    "type": "SvgRenderingTemplate",
-    "name": "Portrait Mode",
-    "css3MediaQuery": "@media (orientation: portrait)",
-    "digestMultibase": "zQmAPdhyxzznFCwYxAp2dRerWC85Wg6wFl9G270iEu5h6JqW"
+    "type": "TemplateRenderMethod",
+    "renderSuite": "svg-mustache",
+    "template": {
+        "id": "https://yourdomain.certify.io/v1/certify/rendering-template/national-id",
+        "mediaType": "image/svg+xml",
+        "digestMultibase": "zQmAPdhyxzznFCwYxAp2dRerWC85Wg6wFl9G270iEu5h6JqW"
+    }
   }]
 ```
+
+## ⚙️ Configuration
+To enable the SVG rendering template feature, add the following property to your `application.properties` or `application.yml` file:
+
+```properties
+mosip.certify.data-provider-plugin.rendering-template-id=<TEMPLATE_ID_IN_DB>
+```
+
+# Note: The table where the templates are stored is `rendering_template`. The `<TEMPLATE_ID_IN_DB>` should match the `id` column in that table.
+
+## Adding the `renderMethod` key in the Velocity Template
+In the Velocity template used for credential issuance, include the `renderMethod` key as shown below. Ensure to replace the `id` and `digestMultibase` values with those corresponding to your template.
+
+```json
+    {
+      "@context": [
+        "https://www.w3.org/ns/credentials/v2",
+        "https://mosip.github.io/inji-config/contexts/farmer-context.json"
+      ],
+      "issuer": "${_issuer}",
+      "type": [
+        "VerifiableCredential",
+        "FarmerCredential"
+      ],
+      "validFrom": "${validFrom}",
+      "validUntil": "${validUntil}",
+      "credentialSubject": {
+        "farmerId": "${farmerId}",
+        "idType": "${idType}",
+        "phoneNumber": "${phoneNumber}"
+      },
+      "renderMethod": [{
+        "type": "TemplateRenderMethod",
+        "renderSuite": "svg-mustache",
+        "template": {
+            "digestMultibase": "${_renderMethodSVGdigest}",
+            "id": "http://localhost:8090/v1/certify/rendering-template/<TEMPLATE_ID_IN_DB>",
+            "mediaType": "image/svg+xml"
+            }
+        }]
+    }
+```
+# Note: This template is converted into base64 encoded string and then stored as `vcTemplate` column in the `credential_config` table.
 
 ```mermaid
 sequenceDiagram

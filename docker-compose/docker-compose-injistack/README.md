@@ -194,11 +194,13 @@ Refer to [API documentation](https://mosip.stoplight.io/docs/inji-certify) for d
 
 ```json
   "renderMethod": [{
-    "id": "https://yourdomain.certify.io/v1/certify/rendering-template/national-id",
-    "type": "SvgRenderingTemplate",
-    "name": "Portrait Mode",
-    "css3MediaQuery": "@media (orientation: portrait)",
-    "digestMultibase": "zQmAPdhyxzznFCwYxAp2dRerWC85Wg6wFl9G270iEu5h6JqW"
+    "type": "TemplateRenderMethod",
+    "renderSuite": "svg-mustache",
+    "template": {
+        "id": "https://yourdomain.certify.io/v1/certify/rendering-template/national-id",
+        "mediaType": "image/svg+xml",
+        "digestMultibase": "zQmAPdhyxzznFCwYxAp2dRerWC85Wg6wFl9G270iEu5h6JqW"
+    }
   }]
 ```
 
