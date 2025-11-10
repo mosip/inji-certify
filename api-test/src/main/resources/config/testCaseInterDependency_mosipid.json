@@ -72,9 +72,9 @@
         "TC_esignetDependent_GenerateToken_vd12_30"
     ],
     "TC_IDRepo_CreateVID_01": ["TC_idrepo_dependency_01"],
-    "TC_esignetDependent_GenerateTokenNeg_2": [
+    "TC_esignetDependent_GenerateTokenNeg_32": [
         "TC_pms_dependency_01",
-        "TC_esignetDependent_AuthorizationCodeNeg_2"
+        "TC_esignetDependent_AuthorizationCodeNeg_32"
     ],
     "TC_pms_dependency_10": ["TC_pms_dependency_03"],
     "TC_esignetDependent_OAuthdetailsRequest_vd12_29": ["TC_pms_dependency_01"],
@@ -188,7 +188,7 @@
         "TC_pms_dependency_01",
         "TC_esignetDependent_GenerateTokenNeg_31"
     ],
-    "TC_esignetDependent_AuthorizationCodeNeg_2": ["TC_esignetDependent_OAuthdetailsRequestNeg_2_31"],
+    "TC_esignetDependent_AuthorizationCodeNeg_32": ["TC_esignetDependent_OAuthdetailsRequestNeg_2_31"],
     "TC_esignetDependent_AuthenticateUser_vd12_29": [
         "TC_idrepo_dependency_01",
         "TC_esignetDependent_OAuthdetailsRequest_vd12_29"

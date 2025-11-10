@@ -20,7 +20,7 @@ AuthorizationCodeVCINeg:
 
    InjiCertify_ESignet_AuthorizationCode_VCI_MOSIPID_uin_Diff_Scope_All_Valid_Smoke_sid_For_Neg_flow:
       endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/auth-code
-      uniqueIdentifier: TC_esignetDependent_AuthorizationCodeNeg_2
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCodeNeg_32
       description: Authorization Code with diff scope
       role: resident
       restMethod: post
