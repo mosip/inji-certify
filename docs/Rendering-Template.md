@@ -23,7 +23,17 @@ To enable the SVG rendering template feature, add the following property to your
 mosip.certify.data-provider-plugin.rendering-template-id=<TEMPLATE_ID_IN_DB>
 ```
 
+## Property Details:
+ - **Purpose**: References the ID of the rendering template stored in the rendering_template table.
+ - **Required**: Optional. If not set, templates must include a hardcoded digestMultibase value in the renderMethod.
+ - **Behavior**: When set, enables dynamic evaluation of ${_renderMethodSVGdigest} in Velocity templates, allowing Certify to substitute the digest value from the specified template.
+ - **Default**: None (not configured).
+
 # Note: The table where the templates are stored is `rendering_template`. The `<TEMPLATE_ID_IN_DB>` should match the `id` column in that table.
+
+**Data Model:**
+- `rendering_template` table: Stores the raw SVG template and its digest, referenced by the `renderMethod` key.
+- `credential_config` table: Stores the Velocity template as a base64-encoded `vc_template` column, which processes the credential structure.
 
 ## Adding the `renderMethod` key in the Velocity Template
 In the Velocity template used for credential issuance, include the `renderMethod` key as shown below. Ensure to replace the `id` and `digestMultibase` values with those corresponding to your template.
@@ -57,7 +67,10 @@ In the Velocity template used for credential issuance, include the `renderMethod
         }]
     }
 ```
-# Note: This template is converted into base64 encoded string and then stored as `vcTemplate` column in the `credential_config` table.
+
+**IMPORTANT:** ${_renderMethodSVGdigest} is a system variable populated by Certify when mosip.certify.data-provider-plugin.rendering-template-id is configured. If this property is not set, replace with the hardcoded digest of your template. (see https://w3c-ccg.github.io/vc-render-method/ for digest generation)
+
+**Note**: This template is converted into base64 encoded string and then stored as `vcTemplate` column in the `credential_config` table.
 
 ```mermaid
 sequenceDiagram
