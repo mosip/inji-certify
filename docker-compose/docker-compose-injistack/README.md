@@ -118,6 +118,14 @@ mosip.certify.data-provider-plugin.did-url=did:web:someuser.github.io:somerepo:s
     - A did with the ID `did:web:someuser.github.io:somerepo:somedirectory` will have be accessible at `https://someuser.github.io/somerepo/somedirectory/did.json`, i.e. if GitHub Pages is used to host the file, the contents should go in https://github.com/someuser/somerepo/blob/gh-pages/somedirectory/did.json assuming `gh-pages` is the branch for publishing GitHub Pages as per repository settings.
     - To verify if everything is working you can try to resolve the DID via public DID resolvers such as [Uniresolver](https://dev.uniresolver.io/).
 
+**Important**: Difference between `didUrl` in `credential_config` and `mosip.certify.data-provider-plugin.did-url`
+- The `didUrl` in the `credential_config` table identifies the DID to be associated with a specific Verifiable Credential (VC) type. Different credential types can have different `didUrl` values as needed.
+- The `mosip.certify.data-provider-plugin.did-url` property specifies the issuer's DID. The DID document for this issuer is available at the endpoint: [http://localhost:8090/v1/certify/.well-known/did.json](http://localhost:8090/v1/certify/.well-known/did.json).
+- For simplicity, it is recommended to use the same DID for both the issuer and the credential type unless there is a specific need for separate DIDs.
+- If different DIDs are used, ensure that the DID document from the endpoint is copied and hosted at the location specified by the `didUrl` in the `credential_config` table for each credential type.
+- **Note**: For updating the default vc type in this setup, please refer to the insert query present in the [certify_init.sql](./certify_init.sql) file for `credential_config`.
+
+
 - (required if Mobile driving license configured) Onboard issuer key and certificate data into property `mosip.certify.mock.mdoc.issuer-key-cert` using the creation script, please read the [plugin README](https://github.com/mosip/digital-credential-plugins/tree/release-0.5.x/mock-certify-plugin) for the same.
 
 
