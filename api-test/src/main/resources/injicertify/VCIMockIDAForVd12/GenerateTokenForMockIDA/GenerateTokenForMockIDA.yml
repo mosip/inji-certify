@@ -1,7 +1,7 @@
 GenerateTokenForMockIDA:
    InjiCertify_ESignet_GenerateToken_ForMockIDA_Vd12_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/oauth/v2/token
-      uniqueIdentifier: TC_esignetDependent_GenerateToken_vd12      
+      uniqueIdentifier: TC_esignetDependent_GenerateToken_vd12_25      
       description: Generate Token for mock ida vd12      
       role: resident
       restMethod: post

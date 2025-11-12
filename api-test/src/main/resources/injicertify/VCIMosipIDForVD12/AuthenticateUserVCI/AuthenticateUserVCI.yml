@@ -1,7 +1,7 @@
 AuthenticateUserVCI:
    InjiCertify_ESignet_AuthenticateUserVCI_ForVD12_MOSIPID_uin_Otp_Valid_Smoke:
       endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_vd12     
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_vd12_29     
       description: Authenticate User       
       role: resident
       restMethod: post

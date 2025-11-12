@@ -1,10 +1,11 @@
 AuthorizationCodeForSd_Jwt:
    InjiCertify_ESignet_AuthorizationCode_For_LandRegistry_Cred1_Sd_Jwt_All_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
-      uniqueIdentifier: TC_esignetDependent_AuthorizationCode
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCode_07
       description: Authorization Code for sd_jwt for cred1
       role: resident
       restMethod: post
+      additionalDependencies: TC_esignetDependent_AuthenticateUser_07
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
       inputTemplate: injicertify/Sd_Jwt/AuthorizationCodeForSd_Jwt/AuthorizationCodeForSd_Jwt
@@ -18,10 +19,11 @@ AuthorizationCodeForSd_Jwt:
 }'
    InjiCertify_ESignet_AuthorizationCode_For_LandRegistry_Cred2_Sd_Jwt_All_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
-      uniqueIdentifier: TC_esignetDependent_AuthorizationCode
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCode_08
       description: Authorization Code for sd_jwt for cred2
       role: resident
       restMethod: post
+      additionalDependencies: TC_esignetDependent_AuthenticateUser_08
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
       inputTemplate: injicertify/Sd_Jwt/AuthorizationCodeForSd_Jwt/AuthorizationCodeForSd_Jwt

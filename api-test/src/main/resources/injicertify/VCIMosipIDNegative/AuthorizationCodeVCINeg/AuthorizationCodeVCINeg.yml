@@ -1,10 +1,11 @@
 AuthorizationCodeVCINeg:
    InjiCertify_ESignet_AuthorizationCode_VCI_MOSIPID_uin_All_Valid_Smoke_sid_For_Neg_flow:
       endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/auth-code
-      uniqueIdentifier: TC_esignetDependent_AuthorizationCodeNeg      
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCodeNeg_31      
       description: Authorization Code      
       role: resident
       restMethod: post
+      additionalDependencies: TC_esignetDependent_AuthenticateUserNeg_30
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
       inputTemplate: injicertify/VCIMosipIDNegative/AuthorizationCodeVCINeg/AuthorizationCodeVCINeg
@@ -19,10 +20,11 @@ AuthorizationCodeVCINeg:
 
    InjiCertify_ESignet_AuthorizationCode_VCI_MOSIPID_uin_Diff_Scope_All_Valid_Smoke_sid_For_Neg_flow:
       endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/auth-code
-      uniqueIdentifier: TC_esignetDependent_AuthorizationCodeNeg_2
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCodeNeg_32
       description: Authorization Code with diff scope
       role: resident
       restMethod: post
+      additionalDependencies: TC_esignetDependent_AuthenticateUserNeg_31
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
       inputTemplate: injicertify/VCIMosipIDNegative/AuthorizationCodeVCINeg/AuthorizationCodeVCINeg
