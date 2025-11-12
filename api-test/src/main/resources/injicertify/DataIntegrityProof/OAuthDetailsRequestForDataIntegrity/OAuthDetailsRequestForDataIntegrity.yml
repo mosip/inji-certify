@@ -1,7 +1,7 @@
 OAuthDetailsRequestForDataIntegrity:
    InjiCertify_ESignet_OAuthDetailsRequest_For_landregistry_Cred1_dataIntegrity_uin_all_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
-      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_01
       description: OAuth details request for data integrity for Cred1
       role: resident
       restMethod: post
@@ -28,7 +28,7 @@ OAuthDetailsRequestForDataIntegrity:
 }'
    InjiCertify_ESignet_OAuthDetailsRequest_For_landregistry_Cred2_dataIntegrity_uin_all_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
-      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_02
       description: OAuth details request for data integrity for Cred1
       role: resident
       restMethod: post

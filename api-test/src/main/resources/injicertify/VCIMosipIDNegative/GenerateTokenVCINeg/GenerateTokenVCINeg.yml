@@ -1,7 +1,7 @@
 GenerateTokenVCINeg:
    InjiCertify_ESignet_GenerateTokenVCIMOSIPID_uin_Valid_Smoke_sid_For_Neg_flow:
       endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/oauth/v2/token
-      uniqueIdentifier: TC_esignetDependent_GenerateTokenNeg      
+      uniqueIdentifier: TC_esignetDependent_GenerateTokenNeg_31      
       description: Generate Token      
       role: resident
       restMethod: post
@@ -23,7 +23,7 @@ GenerateTokenVCINeg:
 
    InjiCertify_ESignet_GenerateTokenVCIMOSIPID_uin_Diff_Scope_Valid_Smoke_sid_Pos:
       endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/oauth/v2/token
-      uniqueIdentifier: TC_esignetDependent_GenerateTokenNeg_2
+      uniqueIdentifier: TC_esignetDependent_GenerateTokenNeg_32
       description: Generate Token with diff scope
       role: resident
       restMethod: post
