@@ -58,7 +58,7 @@ docker-compose-injistack/
 - Supported versions: 0.5.0 and above
 - Download the latest JAR from:
   ```
-  https://oss.sonatype.org/content/repositories/snapshots/io/mosip/certify/mock-certify-plugin/
+  https://repo1.maven.org/maven2/io/mosip/certify/mock-certify-plugin/0.5.0/
   ```
 - Place the downloaded JAR in `loader_path/certify/`
 
