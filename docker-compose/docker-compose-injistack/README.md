@@ -262,6 +262,81 @@ The digest multibase can be hardcoded or if the template has been stored with Ce
     - As of now, Mimoto/Inji Web only supports downloads for Ed25519Signature2020 signed VerifiableCredential due to a limitation of the integrated VC-Verification module.
 
 
+# Explanation of NGINX Directives
+
+## listen 80 
+*This tells NGINX to listen for incoming HTTP requests on port 80, the default port for unencrypted web traffic.*
+- If you're using HTTPS, you'd also configure listen 443 ssl;.
+- You can bind to specific IPs or interfaces if needed: listen 127.0.0.1:80;
+
+## location /v1/certify/ 
+*This block matches all requests starting with /v1/certify/ and proxies them to your backend service.*
+- proxy_pass http://certify:8090/v1/certify/; forwards the request to the backend.
+- CORS headers are added to allow cross-origin requests.
+- OPTIONS requests are handled with a 204 No Content response to support browser preflight checks.
+
+
+## location /.well-known/did.json 
+*This block handles requests to the DID document endpoint, which is part of decentralized identity standards.*
+- It proxies the request to http://certify:8090/v1/certify/issuance/.well-known/did.json.
+- CORS headers and preflight handling are included.
+
+
+## location /.well-known/openid-credential-issuer 
+* This serves the OpenID4VCI issuer metadata, used in credential issuance flows.*
+- It proxies to http://certify:8090/v1/certify/.well-known/openid-credential-issuer.
+- Same CORS and preflight logic applies.
+
+
+## error_page 500 502 503 504 /50x.html 
+*This directive tells NGINX to serve a custom error page (50x.html) when the backend returns server errors.*
+- Useful for user-friendly error handling.
+- You can customize the HTML file at /usr/share/nginx/html/50x.html.
+
+
+## location /50x.html { root /usr/share/nginx/html; } 
+*This serves the static error page defined above.*
+- root specifies the directory where the file is located.
+
+
+# Steps to add your own configuration:
+1. Create Your NGINX Config File. *Eg*: `default.conf`
+2. **Customize for Your Setup**
+    - Replace certify:8090 with your actual backend service name and port.
+    - If you're using Docker, ensure the backend and NGINX are on the same network.
+    - For HTTPS, add SSL configuration (`listen 443 ssl;`, `ssl_certificate`, etc.).
+3. **Integrate with Docker Compose**: Update your docker-compose.yml:
+```yaml
+    services:
+        nginx:
+            image: nginx:alpine
+            ports:
+            - "80:80"
+            volumes:
+            - ./nginx/certify.conf:/etc/nginx/conf.d/default.conf:ro
+            depends_on:
+            - certify
+            networks:
+            - appnet
+
+        certify:
+            image: your-org/certify:latest
+            expose:
+            - "8090"
+            networks:
+            - appnet
+
+        networks:
+          appnet:
+            driver: bridge
+```
+
+## Test Endpoints:
+1. curl http://localhost/v1/certify/actuator/health (if actuator is enabled)
+2. curl http://localhost/.well-known/did.json
+3. curl http://localhost/.well-known/openid-credential-issuer
+
+
 ### Health Checks
 
 Monitor service health:
