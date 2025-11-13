@@ -332,7 +332,7 @@ The digest multibase can be hardcoded or if the template has been stored with Ce
 ```
 
 ## Test Endpoints:
-1. curl http://localhost/v1/certify/actuator/health (if actuator is enabled)
+1. curl http://localhost/v1/certify/actuator/health
 2. curl http://localhost/.well-known/did.json
 3. curl http://localhost/.well-known/openid-credential-issuer
 
