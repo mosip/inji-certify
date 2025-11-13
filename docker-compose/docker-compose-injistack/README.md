@@ -300,7 +300,7 @@ The digest multibase can be hardcoded or if the template has been stored with Ce
 
 
 # Steps to add your own configuration:
-1. Create Your NGINX Config File. *Eg*: `default.conf`
+1. Create Your NGINX Config File. *Eg*: `certify.conf`
 2. **Customize for Your Setup**
     - Replace certify:8090 with your actual backend service name and port.
     - If you're using Docker, ensure the backend and NGINX are on the same network.
