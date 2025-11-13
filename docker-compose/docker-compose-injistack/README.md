@@ -58,7 +58,7 @@ docker-compose-injistack/
 - Supported versions: 0.5.0 and above
 - Download the latest JAR from:
   ```
-  https://oss.sonatype.org/content/repositories/snapshots/io/mosip/certify/mock-certify-plugin/
+  https://repo1.maven.org/maven2/io/mosip/certify/mock-certify-plugin/0.5.0/
   ```
 - Place the downloaded JAR in `loader_path/certify/`
 
@@ -117,6 +117,14 @@ mosip.certify.data-provider-plugin.did-url=did:web:someuser.github.io:somerepo:s
 - (required for Farmer setup) Certify will automatically generate the DID document for your usecase at [this endpoint](http://localhost:8090/v1/certify/.well-known/did.json), please copy the contents of the HTTP response and host it appropriately in the same location.
     - A did with the ID `did:web:someuser.github.io:somerepo:somedirectory` will have be accessible at `https://someuser.github.io/somerepo/somedirectory/did.json`, i.e. if GitHub Pages is used to host the file, the contents should go in https://github.com/someuser/somerepo/blob/gh-pages/somedirectory/did.json assuming `gh-pages` is the branch for publishing GitHub Pages as per repository settings.
     - To verify if everything is working you can try to resolve the DID via public DID resolvers such as [Uniresolver](https://dev.uniresolver.io/).
+
+**Important**: Difference between `didUrl` in `credential_config` and `mosip.certify.data-provider-plugin.did-url`
+- The `didUrl` in the `credential_config` table identifies the DID to be associated with a specific Verifiable Credential (VC) type. Different credential types can have different `didUrl` values as needed.
+- The `mosip.certify.data-provider-plugin.did-url` property specifies the issuer's DID. The DID document for this issuer is available at the endpoint: [http://localhost:8090/v1/certify/.well-known/did.json](http://localhost:8090/v1/certify/.well-known/did.json).
+- For simplicity, it is recommended to use the same DID for both the issuer and the credential type unless there is a specific need for separate DIDs.
+- If different DIDs are used, ensure that the DID document from the endpoint is copied and hosted at the location specified by the `didUrl` in the `credential_config` table for each credential type.
+- **Note**: For updating the default vc type in this setup, please refer to the insert query present in the [certify_init.sql](./certify_init.sql) file for `credential_config`.
+
 
 - (required if Mobile driving license configured) Onboard issuer key and certificate data into property `mosip.certify.mock.mdoc.issuer-key-cert` using the creation script, please read the [plugin README](https://github.com/mosip/digital-credential-plugins/tree/release-0.5.x/mock-certify-plugin) for the same.
 
@@ -194,11 +202,13 @@ Refer to [API documentation](https://mosip.stoplight.io/docs/inji-certify) for d
 
 ```json
   "renderMethod": [{
-    "id": "https://yourdomain.certify.io/v1/certify/rendering-template/national-id",
-    "type": "SvgRenderingTemplate",
-    "name": "Portrait Mode",
-    "css3MediaQuery": "@media (orientation: portrait)",
-    "digestMultibase": "zQmAPdhyxzznFCwYxAp2dRerWC85Wg6wFl9G270iEu5h6JqW"
+    "type": "TemplateRenderMethod",
+    "renderSuite": "svg-mustache",
+    "template": {
+        "id": "https://yourdomain.certify.io/v1/certify/rendering-template/national-id",
+        "mediaType": "image/svg+xml",
+        "digestMultibase": "zQmAPdhyxzznFCwYxAp2dRerWC85Wg6wFl9G270iEu5h6JqW"
+    }
   }]
 ```
 
@@ -250,6 +260,81 @@ The digest multibase can be hardcoded or if the template has been stored with Ce
     - Check if the DID is updated & resolvable. The Multibase hash changes on each restart, please update it whenever a newer instance of Certify is setup.
     - Check if the hosted DID matches with the [DID endpoint](http://localhost:8090/v1/certify/.well-known/did.json)
     - As of now, Mimoto/Inji Web only supports downloads for Ed25519Signature2020 signed VerifiableCredential due to a limitation of the integrated VC-Verification module.
+
+
+# Explanation of NGINX Directives
+
+## listen 80 
+*This tells NGINX to listen for incoming HTTP requests on port 80, the default port for unencrypted web traffic.*
+- If you're using HTTPS, you'd also configure listen 443 ssl;.
+- You can bind to specific IPs or interfaces if needed: listen 127.0.0.1:80;
+
+## location /v1/certify/ 
+*This block matches all requests starting with /v1/certify/ and proxies them to your backend service.*
+- proxy_pass http://certify:8090/v1/certify/; forwards the request to the backend.
+- CORS headers are added to allow cross-origin requests.
+- OPTIONS requests are handled with a 204 No Content response to support browser preflight checks.
+
+
+## location /.well-known/did.json 
+*This block handles requests to the DID document endpoint, which is part of decentralized identity standards.*
+- It proxies the request to http://certify:8090/v1/certify/issuance/.well-known/did.json.
+- CORS headers and preflight handling are included.
+
+
+## location /.well-known/openid-credential-issuer 
+* This serves the OpenID4VCI issuer metadata, used in credential issuance flows.*
+- It proxies to http://certify:8090/v1/certify/.well-known/openid-credential-issuer.
+- Same CORS and preflight logic applies.
+
+
+## error_page 500 502 503 504 /50x.html 
+*This directive tells NGINX to serve a custom error page (50x.html) when the backend returns server errors.*
+- Useful for user-friendly error handling.
+- You can customize the HTML file at /usr/share/nginx/html/50x.html.
+
+
+## location /50x.html { root /usr/share/nginx/html; } 
+*This serves the static error page defined above.*
+- root specifies the directory where the file is located.
+
+
+# Steps to add your own configuration:
+1. Create Your NGINX Config File. *Eg*: `certify.conf`
+2. **Customize for Your Setup**
+    - Replace certify:8090 with your actual backend service name and port.
+    - If you're using Docker, ensure the backend and NGINX are on the same network.
+    - For HTTPS, add SSL configuration (`listen 443 ssl;`, `ssl_certificate`, etc.).
+3. **Integrate with Docker Compose**: Update your docker-compose.yml:
+```yaml
+    services:
+        nginx:
+            image: nginx:alpine
+            ports:
+            - "80:80"
+            volumes:
+            - ./nginx/certify.conf:/etc/nginx/conf.d/default.conf:ro
+            depends_on:
+            - certify
+            networks:
+            - appnet
+
+        certify:
+            image: your-org/certify:latest
+            expose:
+            - "8090"
+            networks:
+            - appnet
+
+        networks:
+          appnet:
+            driver: bridge
+```
+
+## Test Endpoints:
+1. curl http://localhost/v1/certify/actuator/health
+2. curl http://localhost/.well-known/did.json
+3. curl http://localhost/.well-known/openid-credential-issuer
 
 
 ### Health Checks
