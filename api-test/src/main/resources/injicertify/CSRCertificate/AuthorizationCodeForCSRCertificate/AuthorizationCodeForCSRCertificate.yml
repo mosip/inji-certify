@@ -1,4 +1,4 @@
-AuthorizationCodeForRevocation:
+AuthorizationCodeForCSRCertificate::
    InjiCertify_ESignet_AuthorizationCode_For_landregistry_Cred1_All_Valid_Smoke_For_CSRCertificate_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
       uniqueIdentifier: TC_esignetDependent_AuthorizationCode_csrcertificate_01

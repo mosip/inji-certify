@@ -1,4 +1,4 @@
-AuthenticateUserForCSRCertificae:
+AuthenticateUserForCSRCertificate:
    InjiCertify_ESignet_AuthenticateUserVCI_For_landregistry_Cred1_uin_Otp_Valid_Smoke_For_CSRCertificate:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
       uniqueIdentifier: TC_esignetDependent_AuthenticateUser_csrcertificate_01

@@ -75,7 +75,7 @@ UploadCACertificate:
       output: '{
 }'
 
-   InjiCertify_UploadCertificate_ForLandRegistry_without_partnerDomain_neg:
+   InjiCertify_UploadCACertificate_ForLandRegistry_without_partnerDomain_neg:
       endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/upload-ca-certificate
       uniqueIdentifier: TC_InjiCertify_UploadCACertificate_05
       description: Upload CA Certificate without partnerDomain value
@@ -99,7 +99,7 @@ UploadCACertificate:
        ]  
     }'
 
-   InjiCertify_UploadCertificate_ForLandRegistry_invalid_partnerDomain_value_neg:
+   InjiCertify_UploadCACertificate_ForLandRegistry_invalid_partnerDomain_value_neg:
       endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/upload-ca-certificate
       uniqueIdentifier: TC_InjiCertify_UploadCACertificate_06
       description: Upload Certificate invalid partnerDomain value
@@ -123,7 +123,7 @@ UploadCACertificate:
        ]  
     }'
 
-   InjiCertify_UploadCertificate_ForLandRegistry_without_certificateData_neg:
+   InjiCertify_UploadCACertificate_ForLandRegistry_without_certificateData_neg:
       endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/upload-ca-certificate
       uniqueIdentifier: TC_InjiCertify_UploadCACertificate_07
       description: Upload CA Certificate without certificateData
@@ -147,21 +147,21 @@ UploadCACertificate:
        ]  
     }'
 
-   InjiCertify_UploadCertificate_ForLandRegistry_invalid_certificateData_neg:
-      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/uploadCertificate
+   InjiCertify_UploadCACertificate_ForLandRegistry_invalid_certificateData_neg:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/upload-ca-certificate
       uniqueIdentifier: TC_InjiCertify_UploadCACertificate_08
       description: Upload CA Certificate invalid certificateData
       role: noauth
       checkErrorsOnlyInResponse: true
       restMethod: post
-      inputTemplate: injicertify/CSRCertificate/UploadCertificate/UploadCertificate
+      inputTemplate: injicertify/CSRCertificate/UploadCACertificate/UploadCACertificate
       outputTemplate: injicertify/error
       input: '{
       "partnerDomain": "TRUST_CA",
       "certificateData": "invalid_certificate_data",
-      "csrCert": "$ID:GenerateCSR_ForLandRegistry_all_Valid_Smoke_Ed25519Sign_sid_certSignRequest$",
-      "algorithm": "ED25519",
-      "cafilename": "ED25519CA"
+      "csrCert": "$REMOVE$",
+      "algorithm": "$REMOVE$",
+      "cafilename": "$REMOVE$"
 }'
       output: '{
       "errors": [
