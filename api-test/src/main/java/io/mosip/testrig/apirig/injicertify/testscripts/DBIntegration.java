@@ -84,7 +84,7 @@ public class DBIntegration extends InjiCertifyUtil implements ITest {
 
 		String inputJson = getJsonFromTemplate(testCaseDTO.getInput(), testCaseDTO.getInputTemplate());
 
-		inputJson = InjiCertifyUtil.inputStringKeyWordHandeler(inputJson, testCaseName);
+		inputJson = inputStringKeyWordHandeler(inputJson, testCaseName);
 
 		JSONObject jsonObject = new JSONObject(inputJson);
 		String sqlQuery = jsonObject.getString("db_query");
