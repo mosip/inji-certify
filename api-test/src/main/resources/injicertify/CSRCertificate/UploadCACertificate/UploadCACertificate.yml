@@ -10,7 +10,7 @@ UploadCACertificate:
       outputTemplate: injicertify/CSRCertificate/UploadCACertificate/UploadCACertificateResult
       input: '{
         "partnerDomain": "TRUST_CA",
-        "certificateData": "$SIGNED_CSR_CERT$",
+        "certificateData": "$CA_CERT$",
         "csrCert": "$ID:GenerateCSR_ForLandRegistry_all_Valid_Smoke_RSASign_sid_certSignRequest$",
         "algorithm": "RSA",
         "cafilename": "RSACA"
@@ -29,7 +29,7 @@ UploadCACertificate:
       outputTemplate: injicertify/CSRCertificate/UploadCACertificate/UploadCACertificateResult
       input: '{
         "partnerDomain": "TRUST_CA",
-        "certificateData": "$SIGNED_CSR_CERT$",
+        "certificateData": "$CA_CERT$",
         "csrCert": "$ID:GenerateCSR_ForLandRegistry_all_Valid_Smoke_ECCR1Sign_sid_certSignRequest$",
         "algorithm": "SECP256R1",
         "cafilename": "ECCR1CA"
@@ -48,7 +48,7 @@ UploadCACertificate:
       outputTemplate: injicertify/CSRCertificate/UploadCACertificate/UploadCACertificateResult
       input: '{
         "partnerDomain": "TRUST_CA",
-        "certificateData": "$SIGNED_CSR_CERT$",
+        "certificateData": "$CA_CERT$",
         "csrCert": "$ID:GenerateCSR_ForLandRegistry_all_Valid_Smoke_ECCK1Sign_sid_certSignRequest$",
         "algorithm": "SECP256K1",
         "cafilename": "ECCK1CA"
@@ -67,7 +67,7 @@ UploadCACertificate:
       outputTemplate: injicertify/CSRCertificate/UploadCACertificate/UploadCACertificateResult
       input: '{
         "partnerDomain": "TRUST_CA",
-        "certificateData": "$SIGNED_CSR_CERT$",
+        "certificateData": "$CA_CERT$",
         "csrCert": "$ID:GenerateCSR_ForLandRegistry_all_Valid_Smoke_Ed25519Sign_sid_certSignRequest$",
         "algorithm": "ED25519",
         "cafilename": "ED25519CA"
@@ -86,7 +86,7 @@ UploadCACertificate:
       outputTemplate: injicertify/error
       input: '{
         "partnerDomain": "$REMOVE$",
-        "certificateData": "$SIGNED_CSR_CERT$",
+        "certificateData": "$CA_CERT$",
         "csrCert": "$ID:GenerateCSR_ForLandRegistry_all_Valid_Smoke_RSASign_sid_certSignRequest$",
         "algorithm": "RSA",
         "cafilename": "RSACA"
@@ -110,7 +110,7 @@ UploadCACertificate:
       outputTemplate: injicertify/error
       input: '{
         "partnerDomain": "123455",
-        "certificateData": "$SIGNED_CSR_CERT$",
+        "certificateData": "$CA_CERT$",
         "csrCert": "$ID:GenerateCSR_ForLandRegistry_all_Valid_Smoke_RSASign_sid_certSignRequest$",
         "algorithm": "RSA",
         "cafilename": "RSACA"

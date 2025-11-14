@@ -256,7 +256,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	protected static final String BINDINGJWK1 = "bindingJWK1";
 
 	public String inputStringKeyWordHandeler(String jsonString, String testCaseName) {
-		if (jsonString.contains("$SIGNED_CSR_CERT$")) {
+		if (jsonString.contains("$CA_CERT$")) {
 			JSONObject request = new JSONObject(jsonString);
 			String csrCert = "";
 			String signedCert = "";
@@ -282,7 +282,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			} catch (Exception e) {
 
 			}
-			jsonString = replaceKeywordValue(jsonString, "$SIGNED_CSR_CERT$", signedCert);
+			jsonString = replaceKeywordValue(jsonString, "$CA_CERT$", signedCert);
 		}
 		
 		if (jsonString.contains("$ID:")) {
