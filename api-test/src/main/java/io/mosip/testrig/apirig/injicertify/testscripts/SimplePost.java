@@ -121,7 +121,7 @@ public class SimplePost extends InjiCertifyUtil implements ITest {
 		}
 
 		else {
-			inputJson = InjiCertifyUtil.inputStringKeyWordHandeler(inputJson, testCaseName);
+			inputJson = inputStringKeyWordHandeler(inputJson, testCaseName);
 			String tempUrl = InjiCertifyConfigManager.getEsignetBaseUrl();
 			if (testCaseName.contains("ESignet_") || testCaseName.contains("InjiCertify")) {
 
@@ -167,6 +167,8 @@ public class SimplePost extends InjiCertifyUtil implements ITest {
 			}
 
 		}
+
+	
 
 	/**
 	 * The method ser current test name to result

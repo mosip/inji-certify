@@ -1,0 +1,33 @@
+AuthorizationCodeForCSRCertificate::
+   InjiCertify_ESignet_AuthorizationCode_For_landregistry_Cred1_All_Valid_Smoke_For_CSRCertificate_sid:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCode_csrcertificate_01
+      description: Authorization Code for cred1 csrcertificate
+      role: noauth
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      inputTemplate: injicertify/CSRCertificate/AuthorizationCodeForCSRCertificate/AuthorizationCodeForCSRCertificate
+      outputTemplate: injicertify/CSRCertificate/AuthorizationCodeForCSRCertificate/AuthorizationCodeForCSRCertificateResult
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred1_uin_all_Valid_Smoke_For_csrcertificate_sid_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred1_uin_all_Valid_Smoke_For_csrcertificate_sid_transactionId$"
+}'
+      output: '{
+}'
+   InjiCertify_ESignet_AuthorizationCode_For_landregistry_Cred2_All_Valid_Smoke_For_CSRCertificate_sid:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCode_csrcertificate_02
+      description: Authorization Code for cred2 csrcertificate
+      role: noauth
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      inputTemplate: injicertify/CSRCertificate/AuthorizationCodeForCSRCertificate/AuthorizationCodeForCSRCertificate
+      outputTemplate: injicertify/CSRCertificate/AuthorizationCodeForCSRCertificate/AuthorizationCodeForCSRCertificateResult
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred2_uin_all_Valid_Smoke_For_csrcertificate_sid_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred2_uin_all_Valid_Smoke_For_csrcertificate_sid_transactionId$"
+}'
+      output: '{
+}'

@@ -153,7 +153,7 @@ public class SimplePostForAutoGenId extends InjiCertifyUtil implements ITest {
 					throw new AdminTestException("Failed at output validation");
 			}
 		} else {
-			inputJson = InjiCertifyUtil.inputStringKeyWordHandeler(inputJson, testCaseName);
+			inputJson = inputStringKeyWordHandeler(inputJson, testCaseName);
 			if (testCaseName.contains("ESignet_")) {
 				if (InjiCertifyConfigManager.isInServiceNotDeployedList(GlobalConstants.ESIGNET)) {
 					throw new SkipException("esignet is not deployed hence skipping the testcase");

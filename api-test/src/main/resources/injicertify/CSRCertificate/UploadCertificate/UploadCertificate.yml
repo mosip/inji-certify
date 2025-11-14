@@ -1,0 +1,213 @@
+UploadCertificate:
+   InjiCertify_UploadCertificateCSRSigned_ForLandRegistry_all_Valid_Smoke_RSASign:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/uploadCertificate
+      uniqueIdentifier: TC_InjiCertify_UploadCertificate_01
+      description: Upload Certificate for Land Registry for RSA Sign
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/UploadCertificate/UploadCertificate
+      outputTemplate: injicertify/CSRCertificate/UploadCertificate/UploadCertificateResult
+      input: '{
+        "requesttime": "$TIMESTAMP$",
+        "applicationId": "CERTIFY_VC_SIGN_RSA",
+        "referenceId": "",
+        "certificateData": "$ID:UploadCACertificate_ForLandRegistry_all_Valid_Smoke_RSASign_sid_SignedCert$"
+}'
+      output: '{
+}'
+
+   InjiCertify_UploadCertificate_ForLandRegistry_for_all_Valid_Smoke_ECCR1Sign:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/uploadCertificate
+      uniqueIdentifier: TC_InjiCertify_UploadCertificate_02
+      description: Upload Certificate for Land Registry for ECC R1 Sign
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/UploadCertificate/UploadCertificate
+      outputTemplate: injicertify/CSRCertificate/UploadCertificate/UploadCertificateResult
+      input: '{
+        "requesttime": "$TIMESTAMP$",
+        "applicationId": "CERTIFY_VC_SIGN_EC_R1",
+        "referenceId": "EC_SECP256R1_SIGN",
+        "certificateData": "$ID:UploadCACertificate_ForLandRegistry_for_all_Valid_Smoke_ECCR1Sign_sid_SignedCert$"
+}'
+      output: '{
+}'
+
+   InjiCertify_UploadCertificate_ForLandRegistry_for_all_Valid_Smoke_ECCK1Sign:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/uploadCertificate
+      uniqueIdentifier: TC_InjiCertify_UploadCertificate_03
+      description: Upload Certificate for Land Registry for ECC K1 Sign
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/UploadCertificate/UploadCertificate
+      outputTemplate: injicertify/CSRCertificate/UploadCertificate/UploadCertificateResult
+      input: '{
+        "requesttime": "$TIMESTAMP$",
+        "applicationId": "CERTIFY_VC_SIGN_EC_K1",
+        "referenceId": "EC_SECP256K1_SIGN",
+        "certificateData": "$ID:UploadCACertificate_ForLandRegistry_for_all_Valid_Smoke_ECCK1Sign_sid_SignedCert$"
+        
+}'
+      output: '{
+}'
+
+   InjiCertify_UploadCertificate_ForLandRegistry_for_all_Valid_Smoke_Ed25519Sign:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/uploadCertificate
+      uniqueIdentifier: TC_InjiCertify_UploadCertificate_04
+      description: Upload Certificate for Land Registry for Ed25519 Sign
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/UploadCertificate/UploadCertificate
+      outputTemplate: injicertify/CSRCertificate/UploadCertificate/UploadCertificateResult
+      input: '{
+        "requesttime": "$TIMESTAMP$",
+        "applicationId": "CERTIFY_VC_SIGN_ED25519",
+        "referenceId": "ED25519_SIGN",
+        "certificateData": "$ID:UploadCACertificate_ForLandRegistry_for_all_Valid_Smoke_Ed25519Sign_sid_SignedCert$"
+}'
+      output: '{
+}'
+
+   InjiCertify_UploadCertificate_ForLandRegistry_without_applicationId_neg:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/uploadCertificate
+      uniqueIdentifier: TC_InjiCertify_UploadCertificate_05
+      description: Upload Certificate without applicationId
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/UploadCertificate/UploadCertificate
+      outputTemplate: injicertify/error
+      input: '{
+        "requesttime": "$TIMESTAMP$",
+        "applicationId": "$REMOVE$",
+        "referenceId": "ED25519_SIGN",
+        "certificateData": "$ID:UploadCACertificate_ForLandRegistry_for_all_Valid_Smoke_Ed25519Sign_sid_SignedCert$"
+}'
+      output: '{
+      "errors": [
+      {
+       "errorCode": "should not be null or empty"
+       }
+       ]  
+    }'
+
+   InjiCertify_UploadCertificate_ForLandRegistry_without_referenceId_value_neg:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/uploadCertificate
+      uniqueIdentifier: TC_InjiCertify_UploadCertificate_06
+      description: Upload Certificate without referenceId value
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/UploadCertificate/UploadCertificate
+      outputTemplate: injicertify/error
+      input: '{
+        "requesttime": "$TIMESTAMP$",
+        "applicationId": "CERTIFY_VC_SIGN_ED25519",
+        "referenceId": "$REMOVE$",
+        "certificateData": "$ID:UploadCACertificate_ForLandRegistry_for_all_Valid_Smoke_Ed25519Sign_sid_SignedCert$"
+}'
+      output: '{
+      "errors": [
+      {
+       "errorCode": "unknown_error"
+       }
+       ]  
+    }'
+
+   InjiCertify_UploadCertificate_ForLandRegistry_without_certificateData_neg:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/uploadCertificate
+      uniqueIdentifier: TC_InjiCertify_UploadCertificate_07
+      description: Upload Certificate without certificateData
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/UploadCertificate/UploadCertificate
+      outputTemplate: injicertify/error
+      input: '{
+        "requesttime": "$TIMESTAMP$",
+        "applicationId": "CERTIFY_VC_SIGN_EC_R1",
+        "referenceId": "EC_SECP256R1_SIGN",
+        "certificateData": "$REMOVE$"
+}'
+      output: '{
+      "errors": [
+      {
+       "errorCode": "should not be null or empty"
+       }
+       ]  
+    }'
+
+   InjiCertify_UploadCertificate_ForLandRegistry_invalid_certificateData_neg:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/uploadCertificate
+      uniqueIdentifier: TC_InjiCertify_UploadCertificate_08
+      description: Upload Certificate invalid certificateData
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/UploadCertificate/UploadCertificate
+      outputTemplate: injicertify/error
+      input: '{
+        "requesttime": "$TIMESTAMP$",
+        "applicationId": "CERTIFY_VC_SIGN_EC_R1",
+        "referenceId": "EC_SECP256R1_SIGN",
+        "certificateData": "invalid_certificate_data"
+        
+}'
+      output: '{
+      "errors": [
+      {
+       "errorCode": "unknown_error"
+       }
+       ]  
+    }'
+
+   InjiCertify_UploadCertificate_ForLandRegistry_invalid_application_neg:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/uploadCertificate
+      uniqueIdentifier: TC_InjiCertify_UploadCertificate_09
+      description: Upload Certificate invalid applicationId
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/UploadCertificate/UploadCertificate
+      outputTemplate: injicertify/error
+      input: '{
+        "requesttime": "$TIMESTAMP$",
+        "applicationId": "Invalid_Application_ID",
+        "referenceId": "EC_SECP256R1_SIGN",
+        "certificateData": "$ID:UploadCACertificate_ForLandRegistry_for_all_Valid_Smoke_ECCR1Sign_sid_SignedCert$"
+}'
+      output: '{
+      "errors": [
+      {
+       "errorCode": "unknown_error"
+       }
+       ]  
+    }'
+
+   InjiCertify_UploadCertificate_ForLandRegistry_invalid_referenceId_neg:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/uploadCertificate
+      uniqueIdentifier: TC_InjiCertify_UploadCertificate_10
+      description: Upload Certificate invalid referenceId
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/UploadCertificate/UploadCertificate
+      outputTemplate: injicertify/error
+      input: '{
+        "requesttime": "$TIMESTAMP$",
+        "applicationId": "CERTIFY_VC_SIGN_ED25519",
+        "referenceId": "Invalid_Reference_ID",
+        "certificateData": "$ID:UploadCACertificate_ForLandRegistry_for_all_Valid_Smoke_Ed25519Sign_sid_SignedCert$"
+        
+}'
+      output: '{
+      "errors": [
+      {
+       "errorCode": "unknown_error"
+       }
+       ]  
+    }'
