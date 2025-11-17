@@ -2653,6 +2653,33 @@
               "response": []
             },
             {
+              "name": "Upload CA Certificate",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"request\": {\r\n    \"partnerDomain\": \"PARTNER.EXAMPLE.COM\",\r\n    \"certificateData\": \"-----BEGIN CERTIFICATE-----\\r\\nMIICGzCCAcKgAwIBAgIUXHQkDQN5KqqEJlnYCkuKovsunewwCgYIKoZIzj0EAwIw\\r\\nZTELMAkGA1UEBhMCSU4xCzAJBgNVBAgMAlVQMRAwDgYDVQQHDAdMdWNrbm93MQ0w\\r\\nCwYDVQQKDARBS1RVMRkwFwYDVQQLDBBBS1RVLVRFQ0gtQ0VOVEVSMQ0wCwYDVQQD\\r\\nDARBS1RVMB4XDTI1MTExNDA3MTM0NFoXDTM1MTExMjA3MTM0NFowZTELMAkGA1UE\\r\\nBhMCSU4xCzAJBgNVBAgMAlVQMRAwDgYDVQQHDAdMdWNrbm93MQ0wCwYDVQQKDARB\\r\\nS1RVMRkwFwYDVQQLDBBBS1RVLVRFQ0gtQ0VOVEVSMQ0wCwYDVQQDDARBS1RVMFYw\\r\\nEAYHKoZIzj0CAQYFK4EEAAoDQgAE1eilPVdRddVUfddMyeg3zhrUWL7whGnkUslA\\r\\n+6am9N7Gipxkczll\\/Z8Rj0IcASEfEQLVtdLvz33iFXQnSYskGaNTMFEwHQYDVR0O\\r\\nBBYEFKSZPU+iz0dbRWb7xc4NFX50yxd6MB8GA1UdIwQYMBaAFKSZPU+iz0dbRWb7\\r\\nxc4NFX50yxd6MA8GA1UdEwEB\\/wQFMAMBAf8wCgYIKoZIzj0EAwIDRwAwRAIgBLgy\\r\\nqI9DahV3v5LEQ6ubAP8peHPWOr13TkV+v17kwIMCICXyzmj5TVRWNOvzE4ji\\/pSR\\r\\nWmJjl\\/CDcMt\\/ZmlnzG8n\\r\\n-----END CERTIFICATE-----\"\r\n  }\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{certifyurl}}/system-info/upload-ca-certificate",
+                  "host": [
+                    "{{certifyurl}}"
+                  ],
+                  "path": [
+                    "system-info",
+                    "upload-ca-certificate"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
               "name": "fetch certificate",
               "protocolProfileBehavior": {
                 "disableBodyPruning": true
