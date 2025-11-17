@@ -1,6 +1,6 @@
 package io.mosip.certify.entity;
 
-import io.mosip.certify.entity.attributes.CredentialStatusDetail;
+import io.mosip.certify.core.dto.CredentialStatusDetail;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,7 +9,6 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 
