@@ -1,7 +1,7 @@
 OAuthDetailsRequestForRevocation:
    InjiCertify_ESignet_OAuthDetailsRequest_For_landregistry_Cred1_uin_all_Valid_Smoke_For_Revocation_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
-      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_01
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_05
       description: OAuth details request for revocation for Cred1
       role: resident
       restMethod: post
@@ -28,7 +28,7 @@ OAuthDetailsRequestForRevocation:
 }'
    InjiCertify_ESignet_OAuthDetailsRequest_For_landregistry_Cred2_uin_all_Valid_Smoke_For_Revocation_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
-      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_02
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_06
       description: OAuth details request for revocation for Cred2
       role: resident
       restMethod: post

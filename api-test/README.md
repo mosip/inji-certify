@@ -153,7 +153,7 @@ To execute the tests using Jar, use the following steps:
 
 2. Run the automation test suite JAR file:
    ```
-   java -jar -Dmodules=injicertify -Denv.user=api-internal.<env_name> -Denv.endpoint=<base_env> -Denv.testLevel=smokeAndRegression -jar apitest-injicertify-0.10.0-jar-with-dependencies.jar
+   java -jar -Dmodules=injicertify -Denv.user=api-internal.<env_name> -Denv.endpoint=<base_env> -Denv.testLevel=smokeAndRegression -jar apitest-injicertify-0.13.0-jar-with-dependencies.jar
    ```
    
 # Using Eclipse IDE

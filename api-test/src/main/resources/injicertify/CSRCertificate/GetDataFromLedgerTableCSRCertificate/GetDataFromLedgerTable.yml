@@ -1,0 +1,27 @@
+GetDataFromLedgerTableCSRCertificate:
+   InjiCertify_GetDataFromLedgerTable_For_LandRegistry_CSR_Valid_smoke_Pos_sid:
+      endPoint: no endpoint
+      uniqueIdentifier: TC_DBDependent_Get_Data_From_Ledger_Table_CSR_01
+      description: Getting values from ledger table using credential_type
+      role: noauth
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/GetDataFromLedgerTableCSRCertificate/SelectQueryFromLedgerTable
+      outputTemplate: injicertify/CSRCertificate/GetDataFromLedgerTableCSRCertificate/InsertDBDataResult
+      input: '{
+	  "credential_type": "VerifiableCredential,landregistry_revocation"
+}'
+      output: '{
+}'
+   InjiCertify_GetDataFromLedgerTable_For_LandRegistry_cred2_CSR_Valid_smoke_Pos_sid:
+      endPoint: no endpoint
+      uniqueIdentifier: TC_DBDependent_Get_Data_From_Ledger_Table_CSR_02
+      description: Getting values from ledger table using credential_type2
+      role: noauth
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/GetDataFromLedgerTableCSRCertificate/SelectQueryFromLedgerTable
+      outputTemplate: injicertify/CSRCertificate/GetDataFromLedgerTableCSRCertificate/InsertDBDataResult
+      input: '{
+	  "credential_type": "VerifiableCredential,landstatement_revocation"
+}'
+      output: '{
+}'

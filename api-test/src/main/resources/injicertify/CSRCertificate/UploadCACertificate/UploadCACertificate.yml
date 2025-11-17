@@ -1,0 +1,172 @@
+UploadCACertificate:
+   InjiCertify_UploadCACertificate_ForLandRegistry_all_Valid_Smoke_RSASign_sid:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/upload-ca-certificate
+      uniqueIdentifier: TC_InjiCertify_UploadCACertificate_01
+      description: Upload CA Certificate for Land Registry for RSA Sign
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/UploadCACertificate/UploadCACertificate
+      outputTemplate: injicertify/CSRCertificate/UploadCACertificate/UploadCACertificateResult
+      input: '{
+        "partnerDomain": "TRUST_CA",
+        "certificateData": "$CA_CERT$",
+        "csrCert": "$ID:GenerateCSR_ForLandRegistry_all_Valid_Smoke_RSASign_sid_certSignRequest$",
+        "algorithm": "RSA",
+        "cafilename": "RSACA"
+}'
+      output: '{
+}'
+
+   InjiCertify_UploadCACertificate_ForLandRegistry_for_all_Valid_Smoke_ECCR1Sign_sid:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/upload-ca-certificate
+      uniqueIdentifier: TC_InjiCertify_UploadCACertificate_02
+      description: Upload CA Certificate for Land Registry for ECC R1 Sign
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/UploadCACertificate/UploadCACertificate
+      outputTemplate: injicertify/CSRCertificate/UploadCACertificate/UploadCACertificateResult
+      input: '{
+        "partnerDomain": "TRUST_CA",
+        "certificateData": "$CA_CERT$",
+        "csrCert": "$ID:GenerateCSR_ForLandRegistry_all_Valid_Smoke_ECCR1Sign_sid_certSignRequest$",
+        "algorithm": "SECP256R1",
+        "cafilename": "ECCR1CA"
+}'
+      output: '{
+}'
+
+   InjiCertify_UploadCACertificate_ForLandRegistry_for_all_Valid_Smoke_ECCK1Sign_sid:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/upload-ca-certificate
+      uniqueIdentifier: TC_InjiCertify_UploadCACertificate_03
+      description: Upload CA Certificate for Land Registry for ECC K1 Sign
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/UploadCACertificate/UploadCACertificate
+      outputTemplate: injicertify/CSRCertificate/UploadCACertificate/UploadCACertificateResult
+      input: '{
+        "partnerDomain": "TRUST_CA",
+        "certificateData": "$CA_CERT$",
+        "csrCert": "$ID:GenerateCSR_ForLandRegistry_all_Valid_Smoke_ECCK1Sign_sid_certSignRequest$",
+        "algorithm": "SECP256K1",
+        "cafilename": "ECCK1CA"
+}'
+      output: '{
+}'
+
+   InjiCertify_UploadCACertificate_ForLandRegistry_for_all_Valid_Smoke_Ed25519Sign_sid:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/upload-ca-certificate
+      uniqueIdentifier: TC_InjiCertify_UploadCACertificate_04
+      description: Upload CA Certificate for Land Registry for Ed25519 Sign
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/UploadCACertificate/UploadCACertificate
+      outputTemplate: injicertify/CSRCertificate/UploadCACertificate/UploadCACertificateResult
+      input: '{
+        "partnerDomain": "TRUST_CA",
+        "certificateData": "$CA_CERT$",
+        "csrCert": "$ID:GenerateCSR_ForLandRegistry_all_Valid_Smoke_Ed25519Sign_sid_certSignRequest$",
+        "algorithm": "ED25519",
+        "cafilename": "ED25519CA"
+}'
+      output: '{
+}'
+
+   InjiCertify_UploadCACertificate_ForLandRegistry_without_partnerDomain_neg:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/upload-ca-certificate
+      uniqueIdentifier: TC_InjiCertify_UploadCACertificate_05
+      description: Upload CA Certificate without partnerDomain value
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/UploadCACertificate/UploadCACertificate
+      outputTemplate: injicertify/error
+      input: '{
+        "partnerDomain": "$REMOVE$",
+        "certificateData": "$CA_CERT$",
+        "csrCert": "$ID:GenerateCSR_ForLandRegistry_all_Valid_Smoke_RSASign_sid_certSignRequest$",
+        "algorithm": "RSA",
+        "cafilename": "RSACA"
+}'
+      output: '{
+      "errors": [
+      {
+       "errorCode": "should not be null or empty"
+       }
+       ]  
+    }'
+
+   InjiCertify_UploadCACertificate_ForLandRegistry_invalid_partnerDomain_value_neg:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/upload-ca-certificate
+      uniqueIdentifier: TC_InjiCertify_UploadCACertificate_06
+      description: Upload Certificate invalid partnerDomain value
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/UploadCACertificate/UploadCACertificate
+      outputTemplate: injicertify/error
+      input: '{
+        "partnerDomain": "123455",
+        "certificateData": "$CA_CERT$",
+        "csrCert": "$ID:GenerateCSR_ForLandRegistry_all_Valid_Smoke_RSASign_sid_certSignRequest$",
+        "algorithm": "RSA",
+        "cafilename": "RSACA"
+}'
+      output: '{
+      "errors": [
+      {
+       "errorCode": "unknown_error"
+       }
+       ]  
+    }'
+
+   InjiCertify_UploadCACertificate_ForLandRegistry_without_certificateData_neg:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/upload-ca-certificate
+      uniqueIdentifier: TC_InjiCertify_UploadCACertificate_07
+      description: Upload CA Certificate without certificateData
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/UploadCACertificate/UploadCACertificate
+      outputTemplate: injicertify/error
+      input: '{
+        "partnerDomain": "TRUST_CA",
+        "certificateData": "$REMOVE$",
+        "csrCert": "$REMOVE$",
+        "algorithm": "$REMOVE$",
+        "cafilename": "$REMOVE$"
+}'
+      output: '{
+      "errors": [
+      {
+       "errorCode": "should not be null or empty"
+       }
+       ]  
+    }'
+
+   InjiCertify_UploadCACertificate_ForLandRegistry_invalid_certificateData_neg:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/upload-ca-certificate
+      uniqueIdentifier: TC_InjiCertify_UploadCACertificate_08
+      description: Upload CA Certificate invalid certificateData
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/UploadCACertificate/UploadCACertificate
+      outputTemplate: injicertify/error
+      input: '{
+      "partnerDomain": "TRUST_CA",
+      "certificateData": "invalid_certificate_data",
+      "csrCert": "$REMOVE$",
+      "algorithm": "$REMOVE$",
+      "cafilename": "$REMOVE$"
+}'
+      output: '{
+      "errors": [
+      {
+       "errorCode": "unknown_error"
+       }
+       ]  
+    }'

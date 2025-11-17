@@ -1,10 +1,11 @@
 AuthorizationCodeForLandRegistry:
    InjiCertify_ESignet_AuthorizationCode_For_LandRegistry_EccR1_All_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
-      uniqueIdentifier: TC_esignetDependent_AuthorizationCode
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCode_03
       description: Authorization Code for mock ida
       role: resident
       restMethod: post
+      additionalDependencies: TC_esignetDependent_AuthenticateUser_03
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
       inputTemplate: injicertify/EccR1/AuthorizationCodeForLandRegistryEccR1/AuthorizationCodeForLandRegistry

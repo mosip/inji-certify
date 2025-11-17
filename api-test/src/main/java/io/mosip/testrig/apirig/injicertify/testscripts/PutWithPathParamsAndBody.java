@@ -99,7 +99,7 @@ public class PutWithPathParamsAndBody extends InjiCertifyUtil implements ITest {
 		}
 		testCaseDTO = AdminTestUtil.filterHbs(testCaseDTO);
 		String inputJson = filterInputHbs(testCaseDTO);
-		inputJson = InjiCertifyUtil.inputStringKeyWordHandeler(inputJson, testCaseName);
+		inputJson = inputStringKeyWordHandeler(inputJson, testCaseName);
 
 		JSONObject requestJson = new JSONObject(inputJson);
 		// Check and encode vcTemplate

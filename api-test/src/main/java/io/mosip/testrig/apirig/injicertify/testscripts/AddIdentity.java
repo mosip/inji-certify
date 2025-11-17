@@ -102,7 +102,7 @@ public class AddIdentity extends InjiCertifyUtil implements ITest {
 
 			String inputJson = getJsonFromTemplate(testCaseDTO.getInput(), testCaseDTO.getInputTemplate());
 
-			inputJson = InjiCertifyUtil.inputStringKeyWordHandeler(inputJson, testCaseName);
+			inputJson = inputStringKeyWordHandeler(inputJson, testCaseName);
 
 			if (inputJson.contains("$RANDOMINDIVIDUALIDFORMOCKIDENTITY$")) {
 				inputJson = replaceKeywordWithValue(inputJson, "$RANDOMINDIVIDUALIDFORMOCKIDENTITY$", individualIDStr);
@@ -160,7 +160,7 @@ public class AddIdentity extends InjiCertifyUtil implements ITest {
 				inputJson = replaceKeywordWithValue(inputJson, "$EMAILVALUE$", email);
 			}
 			
-			inputJson = InjiCertifyUtil.inputStringKeyWordHandeler(inputJson, testCaseName);
+			inputJson = inputStringKeyWordHandeler(inputJson, testCaseName);
 
 			response = postWithBodyAndCookie(ApplnURI + testCaseDTO.getEndPoint(), inputJson, COOKIENAME,
 					testCaseDTO.getRole(), testCaseDTO.getTestCaseName());

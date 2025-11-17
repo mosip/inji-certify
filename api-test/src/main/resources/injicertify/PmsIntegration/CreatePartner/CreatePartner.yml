@@ -5,6 +5,7 @@ createPartnerSelfRegistration:
       description: Create partner      
       role: partner
       restMethod: post
+      additionalDependencies: TC_pms_dependency_06
       inputTemplate: injicertify/PmsIntegration/CreatePartner/createPartner
       outputTemplate: injicertify/PmsIntegration/CreatePartner/createPartnerResult
       input: '{

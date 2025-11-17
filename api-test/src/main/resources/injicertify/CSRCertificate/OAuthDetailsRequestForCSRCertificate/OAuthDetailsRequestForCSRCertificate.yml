@@ -1,0 +1,55 @@
+OAuthDetailsRequestForCsrcertificate:
+   InjiCertify_ESignet_OAuthDetailsRequest_For_landregistry_Cred2_uin_all_Valid_Smoke_For_csrcertificate_sid:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_CsrCertifiacte_01
+      description: OAuth details request for csrcertificate for Cred2
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      inputTemplate: injicertify/CSRCertificate/OAuthDetailsRequestForCSRCertificate/OAuthDetailsRequestForCSRCertificate
+      outputTemplate: injicertify/CSRCertificate/OAuthDetailsRequestForCSRCertificate/OAuthDetailsRequestForCSRCertificateResult
+      input: '{
+      	"requestTime": "$TIMESTAMP$",
+      	"clientId": "$ID:ESignet_CreateOIDCClientV2_For_LandRegistry2_all_Valid_Smoke_sid_clientId$",
+      	"scope": "land_statement_vc_ldp",
+      	"responseType": "code",
+      	"redirectUri": "$IDPREDIRECTURI$",
+      	"display": "popup",
+	    "prompt": "login",
+	    "acrValues": "mosip:idp:acr:generated-code",
+	    "nonce": "$UNIQUENONCEVALUE$",
+	    "state": "eree2311",
+	    "claimsLocales": "en",
+	    "codeChallenge": "$CODECHALLENGE$",
+        "codeChallengeMethod": "S256"
+}'
+      output: '{
+       
+}'
+   InjiCertify_ESignet_OAuthDetailsRequest_For_landregistry_Cred1_uin_all_Valid_Smoke_For_csrcertificate_sid:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_CsrCertifiacte_02
+      description: OAuth details request for csrcertificate for Cred1
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      inputTemplate: injicertify/CSRCertificate/OAuthDetailsRequestForCSRCertificate/OAuthDetailsRequestForCSRCertificate
+      outputTemplate: injicertify/CSRCertificate/OAuthDetailsRequestForCSRCertificate/OAuthDetailsRequestForCSRCertificateResult
+      input: '{
+      	"requestTime": "$TIMESTAMP$",
+      	"clientId": "$ID:ESignet_CreateOIDCClientV2_For_LandRegistry2_all_Valid_Smoke_sid_clientId$",
+      	"scope": "land_registry_vc_ldp",
+      	"responseType": "code",
+      	"redirectUri": "$IDPREDIRECTURI$",
+      	"display": "popup",
+	    "prompt": "login",
+	    "acrValues": "mosip:idp:acr:generated-code",
+	    "nonce": "$UNIQUENONCEVALUE$",
+	    "state": "eree2311",
+	    "claimsLocales": "en",
+	    "codeChallenge": "$CODECHALLENGE$",
+        "codeChallengeMethod": "S256"
+}'
+      output: '{
+       
+}'
