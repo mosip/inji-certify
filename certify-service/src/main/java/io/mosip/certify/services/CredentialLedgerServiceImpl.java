@@ -31,7 +31,7 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
         try {
             return mapRecordsToResponses(request, false);
         } catch (Exception e) {
-            throw new CertifyException("SEARCH_CREDENTIALS_FAILED");
+            throw new CertifyException("SEARCH_CREDENTIALS_FAILED", "Failed to search credentials.");
         }
     }
 
@@ -67,7 +67,7 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
                                 && e.getValue() != null && !e.getValue().isBlank());
 
         if (!hasValid) {
-            throw new CertifyException("INVALID_SEARCH_CRITERIA");
+            throw new CertifyException("INVALID_SEARCH_CRITERIA", "Invalid search criteria provided.");
         }
     }
 
@@ -78,7 +78,7 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
             return mapRecordsToResponses(request, true);
 
         } catch (Exception e) {
-            throw new CertifyException("SEARCH_CREDENTIALS_FAILED");
+            throw new CertifyException("SEARCH_CREDENTIALS_FAILED", "Failed to search credentials.");
         }
     }
 
@@ -104,8 +104,8 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
 
             ledgerRepository.save(ledger);
         } catch (Exception e) {
-            log.error("Error storing ledger entry", e);
-            throw new RuntimeException("Failed to store ledger entry", e);
+            log.error("Failed to record ledger entry.", e);
+            throw new CertifyException("LEDGER_ENTRY_FAILED", "Failed to record ledger entry.");
         }
     }
 

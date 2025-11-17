@@ -8,13 +8,11 @@ import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.kernel.signature.dto.JWSSignatureRequestDtoV2;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
-import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
 import io.mosip.kernel.signature.service.SignatureService;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -91,7 +89,7 @@ public class SDJWTTest {
         });
 
         assertEquals("JSON_PROCESSING_ERROR", exception.getErrorCode());
-        assertTrue(exception.getMessage().contains("Error processing JSON for SDJWT creation"));
+        assertTrue(exception.getMessage().contains("Failed to process JSON during SD-JWT creation."));
     }
 
     @Test

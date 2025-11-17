@@ -89,11 +89,11 @@ public class SDJWT extends Credential{
             return sdJwt.toString();
         } catch (JsonProcessingException ex) {
             log.error("JSON processing error", ex);
-            throw new CertifyException("JSON_PROCESSING_ERROR", "Error processing JSON for SDJWT creation");
+            throw new CertifyException("JSON_PROCESSING_ERROR", "Failed to process JSON during SD-JWT creation.");
         }
         catch (ParseException ex) {
             log.error("Final SDClaims un parseable. Mostly a bug in the code and has to be reported ", ex);
-            throw new CertifyException("SD_CLAIMS_PARSE_ERROR", "Error parsing final SDClaims for SDJWT creation");
+            throw new CertifyException("SD_CLAIMS_PARSE_ERROR", "Failed to parse SD-Claims while creating SD-JWT.");
         }
     }
 

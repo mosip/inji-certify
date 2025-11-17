@@ -78,6 +78,7 @@ public class CredentialLedgerServiceTestImpl {
 
         CertifyException ex = assertThrows(CertifyException.class, () -> ledgerService.searchCredentialLedger(request));
         Assert.assertEquals("INVALID_SEARCH_CRITERIA", ex.getErrorCode());
+        Assert.assertEquals("Invalid search criteria provided.", ex.getMessage());
     }
 
     @Test
@@ -89,6 +90,7 @@ public class CredentialLedgerServiceTestImpl {
 
         CertifyException ex = assertThrows(CertifyException.class, () -> ledgerService.searchCredentialLedger(request));
         Assert.assertEquals("INVALID_SEARCH_CRITERIA", ex.getErrorCode());
+        Assert.assertEquals("Invalid search criteria provided.", ex.getMessage());
     }
 
     @Test
@@ -102,6 +104,7 @@ public class CredentialLedgerServiceTestImpl {
 
         CertifyException ex = assertThrows(CertifyException.class, () -> ledgerService.searchCredentialLedger(request));
         Assert.assertEquals("SEARCH_CREDENTIALS_FAILED", ex.getErrorCode());
+        Assert.assertEquals("Failed to search credentials.", ex.getMessage());
     }
 
     @Test
@@ -134,6 +137,7 @@ public class CredentialLedgerServiceTestImpl {
 
         CertifyException ex = assertThrows(CertifyException.class, () -> ledgerService.searchCredentialLedger(request));
         assertEquals("SEARCH_CREDENTIALS_FAILED", ex.getErrorCode());
+        Assert.assertEquals("Failed to search credentials.", ex.getMessage());
     }
 
 

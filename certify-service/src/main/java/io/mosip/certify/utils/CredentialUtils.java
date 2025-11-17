@@ -55,8 +55,8 @@ public class CredentialUtils {
         try {
             vcHashBytes = canonicalizer.canonicalize(vcLdProof, j);
         } catch (IOException | GeneralSecurityException | JsonLDException e) {
-            log.error("Error during canonicalization", e.getMessage());
-            throw new CertifyException("Error during canonicalization");
+            log.error("Error occurred during canonicalization.", e.getMessage());
+            throw new CertifyException("CANONICALIZATION_ERROR", "Error occurred during canonicalization.");
         }
         String vcEncodedHash = Base64.getUrlEncoder().encodeToString(vcHashBytes);
         LdProof ldProofWithJWS = proofGenerator.generateProof(vcLdProof, vcEncodedHash, keyReferenceDetails);
@@ -72,7 +72,7 @@ public class CredentialUtils {
             signer.initialize(ldProofBuilder);
         } catch (GeneralSecurityException e) {
             log.error("Error during cryptosuite initialization", e.getMessage());
-            throw new CertifyException("Error during cryptosuite initialization");
+            throw new CertifyException("CRYPTOSUITE_INITIALIZATION_ERROR", "Error occurred during crypto suite initialization.");
         }
 
         DataIntegrityProof ldProofOptions = DataIntegrityProof.fromJson(dataIntegrityProof.toJson());
@@ -86,15 +86,15 @@ public class CredentialUtils {
         try {
             canonicalizationResult = canonicalizer.canonicalize(ldProofOptions, jsonLDObject);
         } catch (IOException | GeneralSecurityException | JsonLDException e) {
-            log.error("Error during canonicalization", e.getMessage());
-            throw new CertifyException("Error during canonicalization");
+            log.error("Error occurred during canonicalization.", e.getMessage());
+            throw new CertifyException("CANONICALIZATION_ERROR", "Error occurred during canonicalization.");
         }
 
         try {
             signer.sign(ldProofBuilder, canonicalizationResult);
         } catch (GeneralSecurityException e) {
-            log.error("Error during signing the VC", e.getMessage());
-            throw new CertifyException("Error during signing the VC");
+            log.error("Error occurred while signing the Verifiable Credential.", e.getMessage());
+            throw new CertifyException("VC_SIGNING_ERROR", "Error occurred while signing the Verifiable Credential.");
         }
 
         dataIntegrityProof = ldProofBuilder.build();

@@ -42,7 +42,7 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Credential not found: " + request.getCredentialId()));
 
         if(ledger.getCredentialStatusDetails() == null || ledger.getCredentialStatusDetails().isEmpty()) {
-            throw new CertifyException("CredentialStatus details are not present in the issued credential.");
+            throw new CertifyException("MISSING_CREDENTIAL_STATUS_DETAILS", "CredentialStatus details are missing in the issued credential.");
         }
 
         CredentialStatusDetail credentialStatusDetail = ledger.getCredentialStatusDetails().getFirst();
@@ -78,10 +78,10 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
         String id = request.getCredentialStatus().getId();
 
         if(id != null && !id.equals(statusListCredentialId)) {
-            throw new CertifyException("Mismatch between credential status id and status list credential.");
+            throw new CertifyException("STATUS_ID_MISMATCH", "Mismatch between credential status ID and Status List Credential.");
         }
         StatusListCredential statusListCredential = statusListCredentialRepository.findById(statusListCredentialId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "StatusListCredential not found with id: " + statusListCredentialId));
+                .orElseThrow(() -> new CertifyException("STATUS_LIST_NOT_FOUND", "Status List Credential not found for ID: " + statusListCredentialId));
 
         CredentialStatusTransaction transaction = new CredentialStatusTransaction();
         if(request.getCredentialStatus().getStatusPurpose() == null) {
