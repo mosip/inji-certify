@@ -318,8 +318,8 @@ public class StatusListCredentialService {
         if (aliases == null || aliases.isEmpty()
                 || aliases.get(0) == null || aliases.get(0).isEmpty()
                 || aliases.get(0).get(0) == null || aliases.get(0).get(0).isBlank()) {
-            log.error("No key alias configured for signature crypto suite: {}", signatureCryptoSuite);
-            throw new CertifyException(ErrorConstants.KEY_ALIAS_NOT_CONFIGURED);
+            log.error("No key chooser configuration found for the signature crypto suite: {}", signatureCryptoSuite);
+            throw new CertifyException(ErrorConstants.KEY_ALIAS_NOT_CONFIGURED, "No key chooser configuration found for the signature crypto suite: " + signatureCryptoSuite);
         }
         String appId = aliases.get(0).get(0);
 

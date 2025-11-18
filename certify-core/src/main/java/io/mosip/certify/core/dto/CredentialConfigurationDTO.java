@@ -22,7 +22,7 @@ public class CredentialConfigurationDTO {
 
     private List<String> credentialTypes;
 
-    @NotNull(message = ErrorConstants.INVALID_REQUEST)
+    @NotNull(message = ErrorConstants.INVALID_VC_FORMAT)
     private String credentialFormat;
 
     private String didUrl;
@@ -38,12 +38,12 @@ public class CredentialConfigurationDTO {
     private String sdClaim;
 
     @Valid
-    @NotNull(message = ErrorConstants.INVALID_REQUEST)
+    @NotNull(message = ErrorConstants.INVALID_METADATA_DISPLAY)
     private List<MetaDataDisplayDTO> metaDataDisplay;
 
     private List<String> displayOrder;
 
-    @NotNull(message = ErrorConstants.INVALID_REQUEST)
+    @NotNull(message = ErrorConstants.INVALID_SCOPE)
     private String scope;
 
     @JsonProperty("credentialSubjectDefinition")

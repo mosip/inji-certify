@@ -88,7 +88,7 @@ public class JwtProofValidator implements ProofValidator {
                 }
             } catch (ParseException e) {
                 // check iff specific error exists for invalid holderKey
-                throw new CertifyException(ErrorConstants.INVALID_PROOF, "error parsing proof jwt");
+                throw new CertifyException(ErrorConstants.INVALID_PROOF, "Error encountered during proof jwt parsing.");
             }
         } else {
             throw new InvalidNonceException(cNonce, cNonceExpireSeconds);

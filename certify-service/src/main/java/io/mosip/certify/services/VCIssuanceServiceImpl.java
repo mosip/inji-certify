@@ -99,7 +99,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         String validCNonce = VCIssuanceUtil.getValidClientNonce(vciCacheService, parsedAccessToken, cNonceExpireSeconds, securityHelperService, log);
         if(!proofValidator.validate((String)parsedAccessToken.getClaims().get(Constants.CLIENT_ID), validCNonce,
                 credentialRequest.getProof(), credentialMetadata.getProofTypesSupported())) {
-            throw new CertifyException(ErrorConstants.INVALID_PROOF);
+            throw new CertifyException(ErrorConstants.INVALID_PROOF, "Error encountered during proof jwt parsing.");
         }
 
         //Get VC from configured plugin implementation
@@ -151,7 +151,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
                             parsedAccessToken.getClaims());
                     break;
                 default:
-                    throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
+                    throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT, "Invalid or unsupported VC format requested.");
             }
         } catch (VCIExchangeException e) {
             throw new CertifyException(e.getErrorCode());

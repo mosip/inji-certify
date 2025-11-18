@@ -155,7 +155,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         proofValidator.validateCNonce(validCNonce, cNonceExpireSeconds, parsedAccessToken, credentialRequest);
         if(!proofValidator.validate((String)parsedAccessToken.getClaims().get(Constants.CLIENT_ID), validCNonce,
                 credentialRequest.getProof(), credentialMetadata.getProofTypesSupported())) {
-            throw new CertifyException(ErrorConstants.INVALID_PROOF);
+            throw new CertifyException(ErrorConstants.INVALID_PROOF, "Error encountered during proof jwt parsing.");
         }
 
         // 4. Get VC from configured plugin implementation
@@ -215,7 +215,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     break;
 
                 default:
-                    throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
+                    throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT, "Invalid or unsupported VC format requested.");
             }
 
             // Common logic for all formats
@@ -266,7 +266,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             throw new CertifyException(e.getErrorCode());
         } catch (JSONException e) {
             log.error(e.getMessage(), e);
-            throw new CertifyException(ErrorConstants.UNKNOWN_ERROR);
+            throw new CertifyException("JSON_PROCESSING_ERROR", "Invalid JSON data encountered during credential generation. Please check the data provider response and template configurations.");
         }
     }
 }

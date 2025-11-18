@@ -27,7 +27,7 @@ public class ProofValidatorFactory {
         if(result.isPresent())
             return result.get();
 
-        throw new CertifyException(ErrorConstants.UNSUPPORTED_PROOF_TYPE);
+        throw new CertifyException(ErrorConstants.UNSUPPORTED_PROOF_TYPE, "The proof type " + proofType + " is not supported.");
     }
 
 }
