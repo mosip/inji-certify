@@ -21,6 +21,7 @@ import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
+import io.mosip.certify.core.spi.CredentialLedgerService;
 import io.mosip.certify.core.util.SecurityHelperService;
 import io.mosip.certify.credential.CredentialFactory;
 import io.mosip.certify.credential.SDJWT;
@@ -74,13 +75,13 @@ public class CertifyIssuanceServiceImplTest {
     @Mock
     private CredentialFactory credentialFactory;
     @Mock
-    private KeymanagerService keymanagerService;
-    @Mock
     private CredentialConfigurationService credentialConfigurationService;
     @Mock
     private LedgerUtils ledgerUtils;
     @Mock
     private StatusListCredentialService statusListCredentialService;
+    @Mock
+    private CredentialLedgerService credentialLedgerService;
 
     @InjectMocks
     private CertifyIssuanceServiceImpl issuanceService;
@@ -120,6 +121,7 @@ public class CertifyIssuanceServiceImplTest {
         ReflectionTestUtils.setField(issuanceService, "didUrl", "https://test.issuer.com");
         ReflectionTestUtils.setField(issuanceService, "ledgerUtils", ledgerUtils);
         ReflectionTestUtils.setField(issuanceService, "statusListCredentialService", statusListCredentialService);
+        ReflectionTestUtils.setField(issuanceService, "credentialLedgerService", credentialLedgerService);
         ReflectionTestUtils.setField(issuanceService, "defaultExpiryDuration", "P730D");
 
         when(parsedAccessToken.getAccessTokenHash()).thenReturn(TEST_ACCESS_TOKEN_HASH);
@@ -563,5 +565,8 @@ public class CertifyIssuanceServiceImplTest {
 
         // Act
         issuanceService.getCredential(request);
+        verify(credentialLedgerService, atLeastOnce()).storeLedgerEntry(
+                isNull(), anyString(), anyString(), isNull(), anyMap(), any(LocalDateTime.class)
+        );
     }
 }

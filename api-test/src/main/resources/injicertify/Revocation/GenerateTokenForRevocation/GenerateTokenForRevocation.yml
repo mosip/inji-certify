@@ -1,7 +1,7 @@
 GenerateTokenForRevocation:
    InjiCertify_ESignet_GenerateToken_ForLandRegistry_Cred1_Valid_Smoke_For_Revocation_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/oauth/v2/token
-      uniqueIdentifier: TC_esignetDependent_GenerateToken_01
+      uniqueIdentifier: TC_esignetDependent_GenerateToken_05
       description: Generate Token for revocation for cred1
       role: noauth
       restMethod: post
@@ -21,7 +21,7 @@ GenerateTokenForRevocation:
 }'
    InjiCertify_ESignet_GenerateToken_ForLandRegistry_Cred2_Valid_Smoke_For_Revocation_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/oauth/v2/token
-      uniqueIdentifier: TC_esignetDependent_GenerateToken_02
+      uniqueIdentifier: TC_esignetDependent_GenerateToken_06
       description: Generate Token for revocation for cred2
       role: noauth
       restMethod: post

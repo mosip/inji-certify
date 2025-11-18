@@ -1,7 +1,7 @@
 GenerateTokenSunBirdCForVd12:
    InjiCertify_ESignet_GenerateTokenSunBirdCForVd12_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/oauth/v2/token
-      uniqueIdentifier: TC_esignetDependent_GenerateToken_vd12      
+      uniqueIdentifier: TC_esignetDependent_GenerateToken_vd12_11      
       description: Generate Token      
       role: resident
       restMethod: post

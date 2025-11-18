@@ -11,7 +11,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import io.mosip.certify.api.dto.RenderingTemplateDTO;
+import io.mosip.certify.core.dto.RenderingTemplateDTO;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.RenderingTemplateException;
 import io.mosip.certify.entity.RenderingTemplate;

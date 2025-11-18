@@ -1,0 +1,179 @@
+GenerateCSRAPI:
+   InjiCertify_GenerateCSR_ForLandRegistry_all_Valid_Smoke_RSASign_sid:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/generate-csr
+      uniqueIdentifier: TC_InjiCertify_GenerateCSR_01
+      description: Generate CSR for Land Registry for RSA Sign
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/GenerateCSR/GenerateCSR
+      outputTemplate: injicertify/CSRCertificate/GenerateCSR/GenerateCSRResult
+      input: '{
+      	"applicationId": "CERTIFY_VC_SIGN_RSA",
+        "referenceId": "",
+        "commonName": "RSA",
+      	"organization": "RSA Organization",
+      	"organizationUnit": "IT",
+      	"country": "US",
+      	"state": "California",
+      	"location": "SanFrancisco"
+}'
+      output: '{
+}'
+
+   InjiCertify_GenerateCSR_ForLandRegistry_all_Valid_Smoke_ECCR1Sign_sid:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/generate-csr
+      uniqueIdentifier: TC_InjiCertify_GenerateCSR_02
+      description: Generate CSR for Land Registry for ECC R1 Sign
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/GenerateCSR/GenerateCSR
+      outputTemplate: injicertify/CSRCertificate/GenerateCSR/GenerateCSRResult
+      input: '{
+      	"applicationId": "CERTIFY_VC_SIGN_EC_R1",
+        "referenceId": "EC_SECP256R1_SIGN",
+        "commonName": "ECCR1",
+      	"organization": "ECCR1 Organization",
+      	"organizationalUnit": "ECCR1 Unit",
+      	"country": "US",
+      	"state": "California",
+      	"locality": "San Francisco"
+}'
+      output: '{
+}'
+
+   InjiCertify_GenerateCSR_ForLandRegistry_all_Valid_Smoke_ECCK1Sign_sid:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/generate-csr
+      uniqueIdentifier: TC_InjiCertify_GenerateCSR_03
+      description: Generate CSR for Land Registry for ECC K1 Sign
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/GenerateCSR/GenerateCSR
+      outputTemplate: injicertify/CSRCertificate/GenerateCSR/GenerateCSRResult
+      input: '{
+      	"applicationId": "CERTIFY_VC_SIGN_EC_K1",
+        "referenceId": "EC_SECP256K1_SIGN",
+        "commonName": "ECCK1",
+      	"organization": "ECCK1 Organization",
+      	"organizationalUnit": "ECCK1 Unit",
+      	"country": "US",
+      	"state": "California",
+      	"locality": "San Francisco"
+}'
+      output: '{
+}'
+
+   InjiCertify_GenerateCSR_ForLandRegistry_all_Valid_Smoke_Ed25519Sign_sid:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/generate-csr
+      uniqueIdentifier: TC_InjiCertify_GenerateCSR_04
+      description: Generate CSR for Land Registry for Ed25519 Sign
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/GenerateCSR/GenerateCSR
+      outputTemplate: injicertify/CSRCertificate/GenerateCSR/GenerateCSRResult
+      input: '{
+      	"applicationId": "CERTIFY_VC_SIGN_ED25519",
+        "referenceId": "ED25519_SIGN",
+        "commonName": "Ed25519",
+      	"organization": "Ed25519 Organization",
+      	"organizationalUnit": "Ed25519 Unit",
+      	"country": "US",
+      	"state": "California",
+      	"locality": "San Francisco"
+}'
+      output: '{
+}'
+
+   InjiCertify_GenerateCSR_ForLandRegistry_Without_applicationId_neg:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/generate-csr
+      uniqueIdentifier: TC_InjiCertify_GenerateCSR_05
+      description: Generate CSR without applicationid
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/GenerateCSR/GenerateCSR
+      outputTemplate: injicertify/error
+      input: '{
+      	"applicationId": "$REMOVE$",
+        "referenceId": "EC_SECP256R1_SIGN",
+        "commonName": "ECCR1",
+      	"organization": "ECCR1 Organization",
+      	"organizationalUnit": "ECCR1 Unit",
+      	"country": "US",
+      	"state": "California",
+      	"locality": "San Francisco"
+}'
+      output: '{
+      "errors": [
+      {
+       "errorCode": "should not be null or empty"
+       }
+       ]  
+    }'
+
+   InjiCertify_GenerateCSR_ForLandRegistry_Without_referenceId_For_ECCR1_neg:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/generate-csr
+      uniqueIdentifier: TC_InjiCertify_GenerateCSR_06
+      description: Generate CSR without referenceId for ECCR1 Sign
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/GenerateCSR/GenerateCSR
+      outputTemplate: injicertify/error
+      input: '{
+      	"applicationId": "CERTIFY_VC_SIGN_EC_K1",
+        "referenceId": "$REMOVE$",
+        "commonName": "ECCR1",
+      	"organization": "ECCR1 Organization",
+      	"organizationalUnit": "ECCR1 Unit",
+      	"country": "US",
+      	"state": "California",
+      	"locality": "San Francisco"
+}'
+      output: '{
+      "errors": [
+      {
+       "errorCode": "unknown_error"
+       }
+       ]  
+    }'
+    
+   InjiCertify_GenerateCSR_ForLandRegistry_Without_optional_fields:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/generate-csr
+      uniqueIdentifier: TC_InjiCertify_GenerateCSR_07
+      description: Generate CSR without optional fields
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/GenerateCSR/GenerateCSR
+      outputTemplate: injicertify/CSRCertificate/GenerateCSR/GenerateCSRResult
+      input: '{
+      	"applicationId": "CERTIFY_VC_SIGN_ED25519",
+        "referenceId": "ED25519_SIGN"       
+}'
+      output: '{
+}'
+
+   InjiCertify_GenerateCSR_ForLandRegistry_invalid_applicationId_neg:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/generate-csr
+      uniqueIdentifier: TC_InjiCertify_GenerateCSR_08
+      description: Generate CSR with invalid applicationId
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/GenerateCSR/GenerateCSR
+      outputTemplate: injicertify/error
+      input: '{
+      	"applicationId": "abcdefg12345",
+        "referenceId": "ED25519_SIGN"       
+}'
+      output: '{
+      "errors": [
+      {
+       "errorCode": "unknown_error"
+       }
+       ]  
+    }'   

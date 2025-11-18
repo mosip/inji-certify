@@ -62,7 +62,7 @@ services:
 
   mimoto-service:
     container_name: 'Mimoto-Service'
-    image: mosipid/mimoto:0.18.1
+    image: mosipid/mimoto:0.19.2
     user: root
     ports:
       - '8099:8099'
@@ -72,9 +72,13 @@ services:
       - SPRING_CONFIG_NAME=mimoto
       - SPRING_CONFIG_LOCATION=/home/mosip/
       - oidc_p12_password=dummypassword
+      - IDP_PARTNER_ENCRYPTION_KEY=dummyidppartnerencryptionkey
+      - WALLET_BINDING_PARTNER_API_KEY=dummywalletbindingpartnerapikey
       - SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/inji_mimoto
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
       - GOOGLE_OAUTH_CLIENT_ID=clientId
       - GOOGLE_OAUTH_CLIENT_SECRET=clientSecret
     networks:
@@ -90,7 +94,7 @@ services:
 
   inji-web:
     container_name: 'inji-web'
-    image: mosipid/inji-web:0.13.1
+    image: mosipid/inji-web:0.14.1
     ports:
       - '3001:3004'
     environment:

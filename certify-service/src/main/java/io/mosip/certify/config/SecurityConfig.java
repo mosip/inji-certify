@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -19,8 +21,13 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -55,11 +62,16 @@ public class SecurityConfig {
     @Value("${mosip.certify.security.ignore-csrf-urls}")
     private String[] ignoreCsrfCheckUrls;
 
+    @Value("${mosip.certify.security.cors-enabled-get-method-urls:}")
+    private String corsEnabledGetMethodUrls;
+
     @Bean
     public SecurityFilterChain web(HttpSecurity http) throws Exception {
 
         http.csrf(httpEntry -> httpEntry.ignoringRequestMatchers(ignoreCsrfCheckUrls)
                 .csrfTokenRepository(this.getCsrfTokenRepository()));
+
+        http.cors(Customizer.withDefaults());
 
         http.authorizeHttpRequests(authorizeRequests -> authorizeRequests
                 .requestMatchers(ignoreAuthUrls).permitAll()
@@ -78,6 +90,37 @@ public class SecurityConfig {
         CookieCsrfTokenRepository cookieCsrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
         cookieCsrfTokenRepository.setCookiePath("/");
         return cookieCsrfTokenRepository;
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+
+        CorsConfiguration publicPathConfig = new CorsConfiguration();
+
+        // Allow all origins (*)
+        publicPathConfig.setAllowedOrigins(Collections.singletonList("*"));
+
+        // Allow ONLY GET requests (and the mandatory OPTIONS pre-flight request)
+        publicPathConfig.setAllowedMethods(Arrays.asList(HttpMethod.GET.name(), HttpMethod.OPTIONS.name()));
+
+        // Allows all headers
+        publicPathConfig.setAllowedHeaders(Collections.singletonList("*"));
+
+        // Credentials set to false as we are allowing all origins
+        publicPathConfig.setAllowCredentials(false);
+
+        // Register this configuration only for the urls enabled for CORS
+        if(!corsEnabledGetMethodUrls.trim().isEmpty()) {
+            for (String pattern : corsEnabledGetMethodUrls.split(",")) {
+                String trimmedPattern = pattern.trim();
+                if(!trimmedPattern.isEmpty()) {
+                    source.registerCorsConfiguration(trimmedPattern, publicPathConfig);
+                }
+            }
+        }
+
+        return source;
     }
 
 }

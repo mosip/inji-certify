@@ -121,7 +121,7 @@ public class PostWithAutogenIdWithOtpGenerate extends InjiCertifyUtil implements
 		int maxLoopCount = Integer.parseInt(properties.getProperty("uinGenMaxLoopCount"));
 		int currLoopCount = 0;
 		while (currLoopCount < maxLoopCount) {
-			input = InjiCertifyUtil.inputStringKeyWordHandeler(input, testCaseName);
+			input = inputStringKeyWordHandeler(input, testCaseName);
 			if (testCaseName.contains(GlobalConstants.ESIGNET_)) {
 				if (InjiCertifyConfigManager.isInServiceNotDeployedList(GlobalConstants.ESIGNET)) {
 					throw new SkipException("esignet is not deployed hence skipping the testcase");
@@ -188,7 +188,7 @@ public class PostWithAutogenIdWithOtpGenerate extends InjiCertifyUtil implements
 		}
 		
 		String reqJson = getJsonFromTemplate(testCaseDTO.getInput(), testCaseDTO.getInputTemplate());
-		reqJson = InjiCertifyUtil.inputStringKeyWordHandeler(reqJson, testCaseName);
+		reqJson = inputStringKeyWordHandeler(reqJson, testCaseName);
 		reqJson = inputJsonKeyWordHandeler(reqJson, testCaseName);
 		reqJson = InjiCertifyUtil.smtpOtpHandler(reqJson, testCaseDTO);
 

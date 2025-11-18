@@ -1,7 +1,7 @@
 AuthenticateUserVCIForMockIDA:
    InjiCertify_ESignet_AuthenticateUserVCI_ForMockIDA_Vd11_uin_Otp_Valid_Smoke:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_vd11      
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_vd11_23      
       description: Authenticate User for mock ida vd11      
       role: resident
       restMethod: post
