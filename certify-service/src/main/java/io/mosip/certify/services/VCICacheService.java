@@ -5,14 +5,18 @@ import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.dto.CredentialOfferResponse;
 import io.mosip.certify.core.dto.PreAuthCodeData;
 import io.mosip.certify.core.dto.VCIssuanceTransaction;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachePut;
+import org.springframework.data.redis.cache.RedisCache;
 import org.springframework.stereotype.Service;
 import io.mosip.certify.services.CredentialConfigurationServiceImpl;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,8 +33,31 @@ public class VCICacheService {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Value("${spring.cache.type:simple}")
+    private String cacheType;
+
+
     private static final String VCISSUANCE_CACHE = "vcissuance";
     private static final String METADATA_KEY = "metadata";
+
+    @PostConstruct
+    public void validateCacheConfiguration() {
+        log.info("Cache type configured: {}", cacheType);
+
+        if ("simple".equalsIgnoreCase(cacheType)) {
+            log.warn("================== WARNING: Simple cache configured ======================");
+            log.warn("CRITICAL WARNING: Simple cache configured for production deployment " +
+                    "'simple' cache uses in-memory storage isolated to each pod, " +
+                    "Multi-pod deployments will experience cache inconsistencies and MAY BREAK FUNCTIONALLY, " +
+                    "Current configuration: spring.cache.type=simple (in-memory, non-distributed), " +
+                    "Switch to Redis cache for multi-pod deployments, Set spring.cache.type=redis in your configuration ");
+        } else if ("redis".equalsIgnoreCase(cacheType)) {
+            log.info("Redis cache is configured - suitable for multi-pod deployment");
+        } else {
+            log.warn("Unknown cache type configured: {}. Please verify configuration.", cacheType);
+        }
+    }
+
 
     @CachePut(value = VCISSUANCE_CACHE, key = "#accessTokenHash")
     public VCIssuanceTransaction setVCITransaction(String accessTokenHash, VCIssuanceTransaction vcIssuanceTransaction) {
@@ -52,15 +79,34 @@ public class VCICacheService {
         return wrapper != null ? (PreAuthCodeData) wrapper.get() : null;
     }
 
-    public void setCredentialOffer(String offerId, CredentialOfferResponse offer, int expirySeconds) {
-        String key = Constants.CREDENTIAL_OFFER_PREFIX + offerId;
-        cacheManager.getCache("credentialOfferCache").put(key, offer);
-    }
-
     public CredentialOfferResponse getCredentialOffer(String offerId) {
         String key = Constants.CREDENTIAL_OFFER_PREFIX + offerId;
-        Cache.ValueWrapper wrapper = cacheManager.getCache("credentialOfferCache").get(key);
+        Cache cache = cacheManager.getCache("credentialOfferCache");
+
+        if (cache == null) {
+            return null;
+        }
+
+        Cache.ValueWrapper wrapper = cache.get(key);
         return wrapper != null ? (CredentialOfferResponse) wrapper.get() : null;
+    }
+
+    public void setCredentialOffer(String offerId, CredentialOfferResponse offer, int expirySeconds) {
+        String key = Constants.CREDENTIAL_OFFER_PREFIX + offerId;
+        Cache cache = cacheManager.getCache("credentialOfferCache");
+
+        if (cache == null) {
+            throw new IllegalStateException("credentialOfferCache not available");
+        }
+
+        // For Redis, use RedisCache.put with Duration
+        if (cache instanceof RedisCache) {
+            ((RedisCache) cache).put(key, offer);
+        } else {
+            // For simple cache, log warning and use basic put
+            log.warn("TTL not supported for cache type: {}. Entry may not expire.", cacheType);
+            cache.put(key, offer);
+        }
     }
 
     /**
