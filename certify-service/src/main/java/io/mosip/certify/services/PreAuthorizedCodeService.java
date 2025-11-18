@@ -3,6 +3,7 @@ package io.mosip.certify.services;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.*;
+import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,12 @@ public class PreAuthorizedCodeService {
     @Value("${mosip.certify.pre-auth.default-expiry-seconds:600}")
     private int defaultExpirySeconds;
 
+    @Value("${mosip.certify.pre-auth.min-expiry-seconds:60}")
+    private int minExpirySeconds;
+
+    @Value("${mosip.certify.pre-auth.max-expiry-seconds:86400}")
+    private int maxExpirySeconds;
+
     @Value("${mosip.certify.pre-auth.base-url:http://localhost:8090}")
     private String baseUrl;
 
@@ -37,18 +44,18 @@ public class PreAuthorizedCodeService {
     public String generatePreAuthorizedCode(PreAuthorizedRequest request) {
         log.info("Generating pre-authorized code for credential configuration: {}", request.getCredentialConfigurationId());
 
-        // Validate credential configuration exists
         validateCredentialConfiguration(request.getCredentialConfigurationId());
-
-        // Validate claims against metadata
         validateClaims(request.getCredentialConfigurationId(), request.getClaims());
 
-        // Determine expiry
         int expirySeconds = request.getExpiresIn() != null ? request.getExpiresIn() : defaultExpirySeconds;
 
-        // Generate unique IDs
+        if (expirySeconds < minExpirySeconds || expirySeconds > maxExpirySeconds) {
+            log.error("expires_in {} out of bounds [{}, {}]", expirySeconds, minExpirySeconds, maxExpirySeconds);
+            throw new InvalidRequestException(String.format("expires_in must be between %d and %d seconds", minExpirySeconds, maxExpirySeconds));
+        }
+
         String offerId = UUID.randomUUID().toString();
-        String preAuthCode = generateSecureCode(32);
+        String preAuthCode = generateUniquePreAuthCode();
 
         // Store data in cache
         long currentTime = System.currentTimeMillis();
@@ -59,7 +66,6 @@ public class PreAuthorizedCodeService {
                 .createdAt(currentTime)
                 .expiresAt(currentTime + (expirySeconds * 1000L)).build();
 
-        // Cache the pre-auth code data
         vciCacheService.setPreAuthCodeData(preAuthCode, codeData, expirySeconds);
 
         // Create credential offer
@@ -72,7 +78,6 @@ public class PreAuthorizedCodeService {
         // Cache the credential offer
         vciCacheService.setCredentialOffer(offerId, offerResponse, expirySeconds);
 
-        // Build and return the URI
         String offerUri = buildCredentialOfferUri(offerId);
         log.info("Successfully generated pre-authorized code with offer ID: {}", offerId);
 
@@ -130,67 +135,72 @@ public class PreAuthorizedCodeService {
 
         Map<String, Object> config = (Map<String, Object>) supportedConfigs.get(configId);
         Map<String, Object> requiredClaims = (Map<String, Object>) config.get(Constants.CLAIMS);
+
+        if (requiredClaims == null || requiredClaims.isEmpty()) {
+            return; // No claim validation needed
+        }
         if (providedClaims == null) {
             providedClaims = Collections.emptyMap();
         }
-        if (requiredClaims != null) {
-            for (Map.Entry<String, Object> entry : requiredClaims.entrySet()) {
-                Map<String, Object> claimAttrs = (Map<String, Object>) entry.getValue();
-                Boolean mandatory = (Boolean) claimAttrs.get(Constants.MANDATORY);
 
-                if (Boolean.TRUE.equals(mandatory)) {
-                    if (!providedClaims.containsKey(entry.getKey()) || providedClaims.get(entry.getKey()) == null) {
-                        log.error("Missing mandatory claim: {}", entry.getKey());
-                        throw new InvalidRequestException(String.format(ErrorConstants.MISSING_MANDATORY_CLAIM, entry.getKey()));
-                    }
+        for (Map.Entry<String, Object> entry : requiredClaims.entrySet()) {
+            Map<String, Object> claimAttrs = (Map<String, Object>) entry.getValue();
+            Boolean mandatory = (Boolean) claimAttrs.get(Constants.MANDATORY);
+
+            if (Boolean.TRUE.equals(mandatory)) {
+                if (!providedClaims.containsKey(entry.getKey()) || providedClaims.get(entry.getKey()) == null) {
+                    log.error("Missing mandatory claim: {}", entry.getKey());
+                    throw new InvalidRequestException(String.format(ErrorConstants.MISSING_MANDATORY_CLAIM, entry.getKey()));
                 }
             }
-
-            for (String providedClaim : providedClaims.keySet()) {
-                if (!requiredClaims.containsKey(providedClaim)) {
-                    log.error("Unknown claim provided: {}", providedClaim);
-                    throw new InvalidRequestException(String.format("Unknown claim: %s", providedClaim));
-                }
-            }
-
         }
+
+        for (String providedClaim : providedClaims.keySet()) {
+            if (!requiredClaims.containsKey(providedClaim)) {
+                log.error("Unknown claim provided: {}", providedClaim);
+                throw new InvalidRequestException(String.format("Unknown claim: %s", providedClaim));
+            }
+        }
+
     }
 
-    /**
-     * FIXED: This method now properly sets the PreAuthorizedCodeGrant into the Grant object
-     */
-    private CredentialOfferResponse buildCredentialOffer(String configId, String preAuthCode, String txnCode) {
-        CredentialOfferResponse response = new CredentialOfferResponse();
-        response.setCredentialIssuer(issuerIdentifier);
-        response.setCredentialConfigurationIds(Collections.singletonList(configId));
+    private String generateUniquePreAuthCode() {
+        String preAuthCode;
+        int attempts = 0;
+        final int MAX_ATTEMPTS = 3;
 
-        // Create the grant object
-        Grant grants = new Grant();
+        do {
+            preAuthCode = generateSecureCode(32);
+            attempts++;
+        } while (vciCacheService.getPreAuthCodeData(preAuthCode) != null && attempts < MAX_ATTEMPTS);
 
-        // Create the pre-authorized code grant
-        Grant.PreAuthorizedCodeGrant preAuthGrant = new Grant.PreAuthorizedCodeGrant();
-        preAuthGrant.setPreAuthorizedCode(preAuthCode);
-
-        // Add tx_code if present
-        if (StringUtils.hasText(txnCode)) {
-            preAuthGrant.setTxCode(buildTxCodeInfo(txnCode));
+        if (vciCacheService.getPreAuthCodeData(preAuthCode) != null) {
+            throw new IllegalStateException(
+                    "Failed to generate unique pre-authorized code after " + MAX_ATTEMPTS + " attempts");
         }
 
-        // THIS IS THE FIX: Set the pre-auth grant into the grants object
-        grants.setPreAuthorizedCode(preAuthGrant);
+        return preAuthCode;
+    }
 
-        // Set the grants in the response
-        response.setGrants(grants);
+    private CredentialOfferResponse buildCredentialOffer(String configId, String preAuthCode, String txnCode) {
+        Grant.PreAuthorizedCodeGrant grant = Grant.PreAuthorizedCodeGrant.builder()
+                .preAuthorizedCode(preAuthCode)
+                .txCode(StringUtils.hasText(txnCode) ? buildTxCodeInfo(txnCode) : null).build();
 
-        return response;
+        Grant grants = Grant.builder().preAuthorizedCode(grant).build();
+
+        return CredentialOfferResponse.builder()
+                .credentialIssuer(issuerIdentifier)
+                .credentialConfigurationIds(Collections.singletonList(configId))
+                .grants(grants).build();
     }
 
     private TxCode buildTxCodeInfo(String txnCode) {
-        TxCode txCode = new TxCode();
-        txCode.setLength(txnCode.length());
-        txCode.setInputMode(txnCode.matches("\\d+") ? "numeric" : "text");
-        txCode.setDescription("Enter the code sent to your device");
-        return txCode;
+        return TxCode.builder()
+                .length(txnCode.length())
+                .inputMode(txnCode.matches("\\d+") ? "numeric" : "text")
+                .description("Please enter the transaction code provided to you")
+                .build();
     }
 
     private String buildCredentialOfferUri(String offerId) {
