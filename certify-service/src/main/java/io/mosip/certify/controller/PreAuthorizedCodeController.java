@@ -32,7 +32,7 @@ public class PreAuthorizedCodeController {
         return preAuthorizedCodeService.getCredentialOffer(offerId);
     }
 
-    @PostMapping(value = "/token", produces = "application/x-www-form-urlencoded")
+    @PostMapping(value = "/token", produces = "application/json")
     public TokenResponse token(@Valid @RequestBody TokenRequest request) {
         return preAuthorizedCodeService.exchangePreAuthorizedCode(request);
     }
