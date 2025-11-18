@@ -180,11 +180,11 @@ public class StatusListCredentialService {
             return savedCredential;
 
         } catch (JSONException e) {
-            log.error("JSON error while generating status list credential", e);
-            throw new CertifyException(ErrorConstants.STATUS_LIST_GENERATION_JSON_ERROR);
+            log.error("Error occurred while generating status list credential JSON.", e);
+            throw new CertifyException(ErrorConstants.STATUS_LIST_GENERATION_JSON_ERROR, "Error occurred while generating status list credential JSON.");
         } catch (Exception e) {
-            log.error("Error generating status list credential", e);
-            throw new CertifyException(ErrorConstants.STATUS_LIST_GENERATION_FAILED);
+            log.error("Error occurred while generating status list credential.", e);
+            throw new CertifyException(ErrorConstants.STATUS_LIST_GENERATION_FAILED, "Error occurred while generating status list credential.");
         }
     }
 
@@ -217,8 +217,8 @@ public class StatusListCredentialService {
             int rowsInserted = nativeQuery.executeUpdate();
             log.info("Successfully initialized {} available indices for status list: {}", rowsInserted, statusListCredential.getId());
         } catch (Exception e) {
-            log.error("Error initializing available indices for status list: {}", statusListCredential.getId(), e);
-            throw new CertifyException(ErrorConstants.STATUS_LIST_INDEX_INITIALIZATION_FAILED);
+            log.error("Error occurred during initialization of available indices for status list: {}", statusListCredential.getId(), e);
+            throw new CertifyException(ErrorConstants.STATUS_LIST_INDEX_INITIALIZATION_FAILED, "Error occurred during initialization of available indices for status list: " + statusListCredential.getId());
         }
     }
 
@@ -292,8 +292,8 @@ public class StatusListCredentialService {
             assignedIndex = findNextAvailableIndex(statusList.getId());
 
             if (assignedIndex == -1) {
-                log.error("Failed to get available index even from new status list");
-                throw new CertifyException(ErrorConstants.STATUS_LIST_INDEX_UNAVAILABLE);
+                log.error("Error fetching available index from status list");
+                throw new CertifyException(ErrorConstants.STATUS_LIST_INDEX_UNAVAILABLE, "Error fetching available index from status list");
             }
         }
 
