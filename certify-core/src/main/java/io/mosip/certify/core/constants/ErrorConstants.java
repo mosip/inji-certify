@@ -60,4 +60,22 @@ public class ErrorConstants {
     public static final String STATUS_ID_MISMATCH = "STATUS_ID_MISMATCH";
     public static final String JSON_PROCESSING_ERROR = "JSON_PROCESSING_ERROR";
     public static final String SD_CLAIMS_PARSE_ERROR = "SD_CLAIMS_PARSE_ERROR";
+    public static final String MULTIPLE_STATUS_PURPOSES_NOT_SUPPORTED = "MULTIPLE_STATUS_PURPOSES_NOT_SUPPORTED";
+    public static final String INVALID_STATUS_PURPOSE = "INVALID_STATUS_PURPOSE";
+    public static final String CREDENTIAL_TEMPLATE_REQUIRED = "CREDENTIAL_TEMPLATE_REQUIRED";
+    public static final String LDP_VC_MANDATORY_FIELDS_MISSING = "LDP_VC_MANDATORY_FIELDS_MISSING";
+    public static final String LDP_VC_CONFIG_EXISTS = "LDP_VC_CONFIG_EXISTS";
+    public static final String MSO_MDOC_MANDATORY_FIELDS_MISSING = "MSO_MDOC_MANDATORY_FIELDS_MISSING";
+    public static final String MSO_MDOC_CONFIG_EXISTS = "MSO_MDOC_CONFIG_EXISTS";
+    public static final String VC_SD_JWT_MANDATORY_FIELDS_MISSING = "VC_SD_JWT_MANDATORY_FIELDS_MISSING";
+    public static final String VC_SD_JWT_CONFIG_EXISTS = "VC_SD_JWT_CONFIG_EXISTS";
+    public static final String UNSUPPORTED_FORMAT = "UNSUPPORTED_FORMAT";
+    public static final String UNSUPPORTED_CRYPTO_SUITE = "UNSUPPORTED_CRYPTO_SUITE";
+    public static final String UNSUPPORTED_SIGNATURE_ALGO = "UNSUPPORTED_SIGNATURE_ALGO";
+    public static final String KEY_CHOOSER_CONFIG_NOT_FOUND = "KEY_CHOOSER_CONFIG_NOT_FOUND";
+    public static final String KEY_CHOOSER_APP_REF_NOT_FOUND = "KEY_CHOOSER_APP_REF_NOT_FOUND";
+    public static final String CONFIG_NOT_FOUND_BY_ID = "CONFIG_NOT_FOUND_BY_ID";
+    public static final String CONFIG_NOT_ACTIVE = "CONFIG_NOT_ACTIVE";
+    public static final String CONFIG_NOT_FOUND_FOR_UPDATE = "CONFIG_NOT_FOUND_FOR_UPDATE";
+    public static final String CONFIG_NOT_FOUND_FOR_DELETE = "CONFIG_NOT_FOUND_FOR_DELETE";
 }

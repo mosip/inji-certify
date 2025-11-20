@@ -146,7 +146,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
         if(credentialMetadata == null) {
             log.error("No credential mapping found for the provided scope {}", scopeClaim);
-            throw new CertifyException(ErrorConstants.INVALID_SCOPE);
+            throw new CertifyException(ErrorConstants.INVALID_SCOPE, "No credential mapping found for the provided scope.");
         }
 
         // 3. Proof Validation

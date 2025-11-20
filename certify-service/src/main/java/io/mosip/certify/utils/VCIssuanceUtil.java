@@ -276,13 +276,13 @@ public class VCIssuanceUtil {
         switch (format) {
             case VCFormats.LDP_VC:
                 throw new CertifyException(ErrorConstants.INVALID_REQUEST,
-                        "No matching LDP VC credential configuration found for scope: " + scope);
+                        "No matching ldp_vc credential configuration found for scope: " + scope);
             case VCFormats.MSO_MDOC:
                 throw new CertifyException(ErrorConstants.INVALID_REQUEST,
-                        "No matching MSO MDOC credential configuration found for scope: " + scope);
+                        "No matching mso_mdoc credential configuration found for scope: " + scope);
             case VCFormats.VC_SD_JWT:
                 throw new CertifyException(ErrorConstants.INVALID_REQUEST,
-                        "No matching SD-JWT credential configuration found for scope: " + scope);
+                        "No matching vc+sd_jwt credential configuration found for scope: " + scope);
             default:
                 throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT,
                         "No matching credential configuration found for format: " + format);
