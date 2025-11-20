@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.api.dto.VCResult;
+import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.kernel.signature.dto.JWSSignatureRequestDtoV2;
@@ -88,7 +89,7 @@ public class SDJWTTest {
             sdjwt.createCredential(templateParams, mockTemplateName);
         });
 
-        assertEquals("JSON_PROCESSING_ERROR", exception.getErrorCode());
+        assertEquals(ErrorConstants.JSON_PROCESSING_ERROR, exception.getErrorCode());
         assertTrue(exception.getMessage().contains("Failed to process JSON during SD-JWT creation."));
     }
 

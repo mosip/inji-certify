@@ -1,5 +1,6 @@
 package io.mosip.certify.services;
 
+import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.CredentialLedgerSearchRequest;
 import io.mosip.certify.core.dto.CredentialStatusDetail;
 import io.mosip.certify.core.dto.CredentialStatusResponse;
@@ -77,7 +78,7 @@ public class CredentialLedgerServiceTestImpl {
         request.setIndexedAttributesEquals(null);
 
         CertifyException ex = assertThrows(CertifyException.class, () -> ledgerService.searchCredentialLedger(request));
-        Assert.assertEquals("INVALID_SEARCH_CRITERIA", ex.getErrorCode());
+        Assert.assertEquals(ErrorConstants.INVALID_SEARCH_CRITERIA, ex.getErrorCode());
         Assert.assertEquals("Invalid search criteria provided.", ex.getMessage());
     }
 
@@ -89,7 +90,7 @@ public class CredentialLedgerServiceTestImpl {
         request.setIndexedAttributesEquals(Collections.emptyMap());
 
         CertifyException ex = assertThrows(CertifyException.class, () -> ledgerService.searchCredentialLedger(request));
-        Assert.assertEquals("INVALID_SEARCH_CRITERIA", ex.getErrorCode());
+        Assert.assertEquals(ErrorConstants.INVALID_SEARCH_CRITERIA, ex.getErrorCode());
         Assert.assertEquals("Invalid search criteria provided.", ex.getMessage());
     }
 
@@ -103,7 +104,7 @@ public class CredentialLedgerServiceTestImpl {
         when(ledgerRepository.findBySearchRequest(request)).thenThrow(new RuntimeException("DB error"));
 
         CertifyException ex = assertThrows(CertifyException.class, () -> ledgerService.searchCredentialLedger(request));
-        Assert.assertEquals("SEARCH_CREDENTIALS_FAILED", ex.getErrorCode());
+        Assert.assertEquals(ErrorConstants.SEARCH_CREDENTIALS_FAILED, ex.getErrorCode());
         Assert.assertEquals("Failed to search credentials.", ex.getMessage());
     }
 
@@ -136,7 +137,7 @@ public class CredentialLedgerServiceTestImpl {
         when(ledgerRepository.findBySearchRequest(request)).thenReturn(null);
 
         CertifyException ex = assertThrows(CertifyException.class, () -> ledgerService.searchCredentialLedger(request));
-        assertEquals("SEARCH_CREDENTIALS_FAILED", ex.getErrorCode());
+        assertEquals(ErrorConstants.SEARCH_CREDENTIALS_FAILED, ex.getErrorCode());
         Assert.assertEquals("Failed to search credentials.", ex.getMessage());
     }
 

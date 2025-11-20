@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.kernel.signature.dto.JWSSignatureRequestDtoV2;
@@ -89,11 +90,11 @@ public class SDJWT extends Credential{
             return sdJwt.toString();
         } catch (JsonProcessingException ex) {
             log.error("JSON processing error", ex);
-            throw new CertifyException("JSON_PROCESSING_ERROR", "Failed to process JSON during SD-JWT creation.");
+            throw new CertifyException(ErrorConstants.JSON_PROCESSING_ERROR, "Failed to process JSON during SD-JWT creation.");
         }
         catch (ParseException ex) {
             log.error("Final SDClaims un parseable. Mostly a bug in the code and has to be reported ", ex);
-            throw new CertifyException("SD_CLAIMS_PARSE_ERROR", "Failed to parse SD-Claims while creating SD-JWT.");
+            throw new CertifyException(ErrorConstants.SD_CLAIMS_PARSE_ERROR, "Failed to parse SD-Claims while creating SD-JWT.");
         }
     }
 

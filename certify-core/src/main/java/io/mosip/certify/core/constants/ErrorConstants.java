@@ -50,4 +50,14 @@ public class ErrorConstants {
     public static final String STATUS_LIST_INDEX_UNAVAILABLE = "STATUS_LIST_INDEX_UNAVAILABLE";
     public static final String STATUS_LIST_CAPACITY_MISCONFIGURED = "STATUS_LIST_CAPACITY_MISCONFIGURED";
     public static final String INVALID_ENCODED_LIST = "INVALID_ENCODED_LIST";
+    public static final String CANONICALIZATION_ERROR = "CANONICALIZATION_ERROR";
+    public static final String CRYPTOSUITE_INITIALIZATION_ERROR = "CRYPTOSUITE_INITIALIZATION_ERROR";
+    public static final String VC_SIGNING_ERROR = "VC_SIGNING_ERROR";
+    public static final String SEARCH_CREDENTIALS_FAILED = "SEARCH_CREDENTIALS_FAILED";
+    public static final String INVALID_SEARCH_CRITERIA = "INVALID_SEARCH_CRITERIA";
+    public static final String LEDGER_ENTRY_FAILED = "LEDGER_ENTRY_FAILED";
+    public static final String MISSING_CREDENTIAL_STATUS_DETAILS = "MISSING_CREDENTIAL_STATUS_DETAILS";
+    public static final String STATUS_ID_MISMATCH = "STATUS_ID_MISMATCH";
+    public static final String JSON_PROCESSING_ERROR = "JSON_PROCESSING_ERROR";
+    public static final String SD_CLAIMS_PARSE_ERROR = "SD_CLAIMS_PARSE_ERROR";
 }

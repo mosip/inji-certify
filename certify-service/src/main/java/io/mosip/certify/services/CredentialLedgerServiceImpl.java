@@ -1,5 +1,6 @@
 package io.mosip.certify.services;
 
+import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.CredentialLedgerSearchRequest;
 import io.mosip.certify.core.dto.CredentialStatusResponse;
 import io.mosip.certify.core.exception.CertifyException;
@@ -31,7 +32,7 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
         try {
             return mapRecordsToResponses(request, false);
         } catch (Exception e) {
-            throw new CertifyException("SEARCH_CREDENTIALS_FAILED", "Failed to search credentials.");
+            throw new CertifyException(ErrorConstants.SEARCH_CREDENTIALS_FAILED, "Failed to search credentials.");
         }
     }
 
@@ -67,7 +68,7 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
                                 && e.getValue() != null && !e.getValue().isBlank());
 
         if (!hasValid) {
-            throw new CertifyException("INVALID_SEARCH_CRITERIA", "Invalid search criteria provided.");
+            throw new CertifyException(ErrorConstants.INVALID_SEARCH_CRITERIA, "Invalid search criteria provided.");
         }
     }
 
@@ -78,7 +79,7 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
             return mapRecordsToResponses(request, true);
 
         } catch (Exception e) {
-            throw new CertifyException("SEARCH_CREDENTIALS_FAILED", "Failed to search credentials.");
+            throw new CertifyException(ErrorConstants.SEARCH_CREDENTIALS_FAILED, "Failed to search credentials.");
         }
     }
 
@@ -105,7 +106,7 @@ public class CredentialLedgerServiceImpl implements CredentialLedgerService {
             ledgerRepository.save(ledger);
         } catch (Exception e) {
             log.error("Failed to record ledger entry.", e);
-            throw new CertifyException("LEDGER_ENTRY_FAILED", "Failed to record ledger entry.");
+            throw new CertifyException(ErrorConstants.LEDGER_ENTRY_FAILED, "Failed to record ledger entry.");
         }
     }
 
