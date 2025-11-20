@@ -162,13 +162,13 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
             return new ResponseEntity<VCError>(getVCErrorDto(errorCode, getMessage(errorCode)), HttpStatus.UNAUTHORIZED);
         }
         if(ex instanceof InvalidRequestException) {
-            String errorCode = ((CertifyException) ex).getErrorCode();
+            String errorCode = ((InvalidRequestException) ex).getErrorCode();
             return new ResponseEntity<VCError>(getVCErrorDto(errorCode, getMessage(errorCode)), HttpStatus.BAD_REQUEST);
         }
         if(ex instanceof CertifyException) {
             String errorCode = ((CertifyException) ex).getErrorCode();
             String errorMessage = ex.getMessage();
-            return new ResponseEntity<VCError>(getVCErrorDto(errorCode, getMessage(errorMessage)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<VCError>(getVCErrorDto(errorCode, errorMessage), HttpStatus.BAD_REQUEST);
         }
         log.error("Unhandled exception encountered in handler advice", ex);
         return new ResponseEntity<VCError>(getVCErrorDto(UNKNOWN_ERROR, ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);

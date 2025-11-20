@@ -235,7 +235,7 @@ public class VCIssuanceUtil {
 
         // Filter entries by scope
         List<Map.Entry<String, CredentialConfigurationSupportedDTO>> scopeEntries = supportedCredentials.entrySet().stream()
-                .filter(cm -> cm.getValue().getScope().equals(scope))
+                .filter(cm -> Objects.equals(scope, cm.getValue().getScope()))
                 .toList();
 
         if (scopeEntries.isEmpty()) {
@@ -245,7 +245,7 @@ public class VCIssuanceUtil {
         // Check all scope-matched entries for format and validation
         for (Map.Entry<String, CredentialConfigurationSupportedDTO> entry : scopeEntries) {
             CredentialConfigurationSupportedDTO dto = entry.getValue();
-            if (dto.getFormat().equals(format)) {
+            if (Objects.equals(dto.getFormat(), format)) {
                 switch (format) {
                     case VCFormats.LDP_VC:
                         if(!isValidLdpVCRequest(credentialRequest, dto)) continue;
