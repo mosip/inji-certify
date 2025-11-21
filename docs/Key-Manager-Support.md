@@ -17,7 +17,6 @@ Once configured, the Key Manager will generate and manage keys tied to the uploa
     POST `/system-info/generate-csr`
 ```
 
-**Purpose:**
  - Produces a Certificate Signing Request (CSR) data, typically in PEM format.
  - Must be submitted to your CA for signing.
  - CA returns a signed certificate based on this CSR.
@@ -30,7 +29,6 @@ Once configured, the Key Manager will generate and manage keys tied to the uploa
     POST `/system-info/upload-ca-certificate`
 ```
 
-**Purpose**:
  - Registers the CA’s trust anchors.
  - Allows Certify to validate the certificate chain for VC signing.
 
@@ -42,8 +40,6 @@ Once configured, the Key Manager will generate and manage keys tied to the uploa
     POST `/system-info/uploadCertificate`
 ```
 
-
-**Purpose:**
  - Stores the CA-signed certificate as the active signing certificate.
  - Enables the Key Manager to use it for signing VCs.
  - Integrates the certificate into the ongoing key lifecycle.
