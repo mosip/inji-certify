@@ -291,11 +291,12 @@ sequenceDiagram
 
 
 ## Configuration Properties
-| Property Name                                                       | Description                                                            | Example Value                                                                            |
-|---------------------------------------------------------------------|------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
-| `mosip.certify.status-list.signature-crypto-suite` | Signature Crypto Suite for signing Status List VCs                     | `Ed25519Signature2020`                                                                   |
-| `mosip.certify.status-list.signature-algo` | Supported signing algorithms for signature crypto suite defined above. | `EdDSA`                                                                                  |
-| `mosip.certify.statuslist.size-in-kb`                | Supported proof types for credentials.                                 | `16`                                                                                     |
+| Property Name                                                       | Description                                                                                             | Example Value          |
+|---------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------|------------------------|
+| `mosip.certify.status-list.signature-crypto-suite` | Signature Crypto Suite for signing Status List VCs                                                      | `Ed25519Signature2020` |
+| `mosip.certify.status-list.signature-algo` | Supported signing algorithms for signature crypto suite defined above.                                  | `EdDSA`                |
+| `mosip.certify.statuslist.size-in-kb`                | Supported proof types for credentials.                                                                  | `16`                   |
+| `mosip.certify.data-provider-plugin.credential-status.allowed-status-purposes`                                     | Set the default values as list that can be allowed for `credentialStatusPurpose` in `credential_config` | `{'revocation'}`          |
 
 ## Enabling the Feature
 1. Database Setup: Make sure the following tables exist:
@@ -304,7 +305,7 @@ sequenceDiagram
    - ledger
    - credential_status_transaction
 2. Configuration: Set the required properties as shown above.
-3. Credential Configuration: For each credential type that should support revocation, set the credentialStatusPurposes field (e.g., to revocation) in the credential-configuration API using the /credential-configurations endpoint. The value of credentialStatusPurposes must be one of the values configured in mosip.certify.data-provider-plugin.credential-status.allowed-status-purposes. This enables VC Revocation functionality at the credential-type level.
+3. Credential Configuration: For each credential type that should support revocation, set the credentialStatusPurposes field (e.g., to revocation) in the credential-configuration API using the /credential-configurations endpoint. The value of credentialStatusPurposes must be one of the values configured in `mosip.certify.data-provider-plugin.credential-status.allowed-status-purposes`. This enables VC Revocation functionality at the credential-type level.
 
     **Sample request to enable revocation for a credential type**:
     ```json

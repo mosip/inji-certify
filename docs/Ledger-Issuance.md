@@ -1,9 +1,21 @@
 ## Ledger Issuance and Ledger Search
 This document provides an overview of the ledger issuance process and how to perform ledger searches effectively.
 
-### Ledger Issuance
-Ledger issuance refers to the process of creating a new ledger entry while a Verifiable Credential (VC) is being issued. This process ensures that the credential is recorded in a secure and verifiable manner on the ledger.
+## Ledger Issuance
+Ledger issuance refers to the process of creating a new ledger entry while a Verifiable Credential (VC) is being issued. When a VC is issued with ledger issuance enabled, a corresponding ledger entry is created that includes essential details about the issued credential. This ledger entry typically contains the following information:
+ - `credentialId`: Unique identifier of the issued credential.
+ - `issuerId`: Identifier of the issuer who issued the credential.
+ - `credentialType`: Type(s) of the issued credential.
+ - `issuanceDate`: Date and time when the credential was issued.
+ - `indexedAttributes`: Key-value pairs of subject claims that are indexed for efficient searching.
 
+### Credential Status Details in Ledger
+ - The ledger entry also contains credential status details (including status purpose, status list index, and status list credential URL), which allows tracking and managing the status of the issued credentials. 
+ - The availability of credential status is subject to the allowed status purposes set in the credential configuration. The issuer can enable or disable the status purposed based on their business requirements.
+ - To read more about credential status purposes, refer to the [`credentialStatusPurposes` Support](./VC-`credentialStatusPurposes`-Support.md) documentation.
+ - To read about configuring allowed status purposes, refer to the [Credential Configuration](./Credential-Issuer-Configuration.md#configuration-properties) documentation.
+
+## Ledger Issuance Flow
 When a VC is issued, the following steps are typically involved in the ledger issuance process:
 1. **Credential Creation**: The issuer creates the Verifiable Credential containing the necessary claims about the subject.
 2. **Ledger Entry Preparation**: The issuer prepares a ledger entry that includes the credential data like `credentialId`, `issuerId`, `credentialType`, `issuanceDate` etc.
@@ -49,8 +61,8 @@ Ledger issuance can be enabled or disabled based on the following configuration.
 ```
 The following points should be considered when enabling or disabling ledger issuance:
  - This config will enable or disable the ledger entries for issued credentials.
- - When the revocation is not enabled for a vc-type but ledger is enabled, Credential Status Detail field in ledger will be empty.
- - When the revocation is enabled for a vc-type but ledger is disabled, then the user should have their own mechanism to identify the statusListCredentialId and statusListIndex.
+ - When the `credentialStatusPurposes` is not enabled for a vc-type but ledger is enabled, Credential Status Detail field in ledger will be empty.
+ - When the `credentialStatusPurposes` is enabled for a vc-type but ledger is disabled, then the user should have their own mechanism to identify the statusListCredentialId and statusListIndex.
  - Enabling the ledger flag is highly recommended to search for the issued credentials.
 
 ## Ledger Search
@@ -104,6 +116,8 @@ The following points should be considered when enabling or disabling ledger issu
       }
     ]
 ```
+
+**Important:** The v1 `/ledger-search` API uses issueDate for issuance, while v2 `/v2/ledger-search` uses issuanceDate for improved field consistency; both return credential and status details for search queries. Overall the response structure remains the same.
 
 **Ledger Test Scenarios**
 - When `credentialId` is not provided during ledger search, the system returns all credentials matching the other criteria along with their status information.

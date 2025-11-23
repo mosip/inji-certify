@@ -57,4 +57,5 @@ Once all three steps are completed:
  - If the uploaded certificate expires, the Key Manager will fallback to using a self-signed certificate and regenerate the keys accordingly.
  - To avoid unintended fallback behavior and ensure uninterrupted trust alignment, issuers must:
   **Upload a new externally signed certificate before the current certificate expires.**
- - The above step ensures that credential signing continues using the intended CA-signed certificate without disruption.
+
+*The above steps ensure that credential signing continues using the intended CA-signed certificate without disruption.*
