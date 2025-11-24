@@ -158,90 +158,6 @@ sequenceDiagram
         Controller-->>Client: 404 Not Found
     end
 ```
-  - You can fetch the ledger entry for the credential using /ledger-search endpoint to get the status information and other details. Indexed attributes can be used to filter the search results.
-  - Sample request of ledger search :
-```json
-{
-  "credentialId": "afce16e8-02ac-4210-80d9-a0a20132bda3",
-  "issuerId": "did:web:sample.github.io:my-files:sample",
-  "credentialType": "FarmerCredential,VerifiableCredential",
-  "indexedAttributesEquals": {
-    "key1": "Bengaluru",
-    "key2": "Karnataka"
-  }
-}
-```
-Sample response of ledger search :
-  - `/ledger-search`
-```json
-  [
-    {
-      "credentialId": "afce16e8-02ac-4210-80d9-a0a20132bda3",
-      "issuerId": "did:web:sample.github.io:my-files:sample",
-      "statusListCredentialUrl": "7bf52e81-f3bb-40ec-a0f9-a714847fd067",
-      "statusListIndex": 5,
-      "statusPurpose": "revocation",
-      "issueDate": "2025-08-07T11:57:39",
-      "credentialType": "MockVerifiableCredential,VerifiableCredential",
-      "statusTimestamp": "2025-08-07T11:57:39"
-    }
-  ]
-```
-  - `/v2/ledger-search`
-```json
-    [
-      {
-        "credentialId": "afce16e8-02ac-4210-80d9-a0a20132bda3",
-        "issuerId": "did:web:sample.github.io:my-files:sample",
-        "statusListCredentialUrl": "7bf52e81-f3bb-40ec-a0f9-a714847fd067",
-        "statusListIndex": 5,
-        "statusPurpose": "revocation",
-        "issuanceDate": "2025-08-07T11:57:39",
-        "credentialType": "MockVerifiableCredential,VerifiableCredential",
-        "statusTimestamp": "2025-08-07T11:57:39"
-      }
-    ]
-```
-
-**Ledger Test Scenarios**
-  - When `credentialId` is not provided during ledger search, the system returns all credentials matching the other criteria along with their status information.
-  - `credentialId` is same as the `id` of the issued VC. So if the VC does not have id, then `credentialId` in ledger will be null.
-  - If statusList is not enabled, then `credentialStatusDetail` will be empty for such credentials.
-
-**Sequence diagram for Ledger Search** :
-```mermaid
-  sequenceDiagram
-      participant Client as 🌐 Client
-      box Inji Certify #E6F3FF
-      participant Controller as 🔗 CredentialLedgerController
-      participant Service as ⚙️ CredentialLedgerServiceImpl
-      participant Repository as 🗄️ LedgerRepository
-      end
-      participant Database as 💾 Database
-
-      Client->>Controller: POST /ledger-search
-      Note over Client,Controller: CredentialLedgerSearchRequest with indexed attributes
-
-      Controller->>Service: searchCredentialLedger(request)
-
-      Service->>Service: validateSearchRequest(request)
-      Note over Service: Check if indexed attributes are valid and not empty
-
-      Service->>Repository: findBySearchRequest(request)
-      Repository->>Database: Query ledger table with search criteria
-      Database-->>Repository: List<Ledger> records
-      Repository-->>Service: List<Ledger> records
-
-      alt No Records Found
-          Service-->>Controller: Collections.emptyList()
-          Controller-->>Client: 204 No Content
-      else Records Found
-          Service->>Service: mapToSearchResponse(records)
-          Note over Service: Map Ledger entities to CredentialStatusResponse DTOs
-          Service-->>Controller: List<CredentialStatusResponse>
-          Controller-->>Client: 200 OK with credential status list
-      end
-```
 
 3. **Updating Credential Status**
    - To change the status (for example, to revoke a credential), use the API endpoint: /credentials/status
@@ -249,7 +165,35 @@ Sample response of ledger search :
    
     **Provide**:
      - For `/credential/status` - credentialId is mandatory
+     - **Request Body for `/credential/status`**:
+     ```json
+        {
+            "credentialId": "9df9fe77-55ac-42f9-b1f1-f2223674fcf1",
+            "credentialStatus": {
+                "id": "1c6c4caa-47db-47f8-b8e3-12831a384419",
+                "type": "MockVerifiableCredential,VerifiableCredential",
+                "statusPurpose": "revocation",
+                "statusListIndex": 1,
+                "statusListCredential": "09ccbfcf-9edd-4a0a-965d-be3aca7a6baf"
+            },
+            "status": true
+        }
+     ```
      - For `/credentials/v2/status` - The credential status details (statusListCredentialId, statusListIndex) inside credentialStatus is mandatory.
+     - **Request Body for `/credentials/v2/status`**:
+     ```json
+        {
+            "credentialStatus": {
+                "id": "1c6c4caa-47db-47f8-b8e3-12831a384419",
+                "type": "MockVerifiableCredential,VerifiableCredential",
+                "statusPurpose": "revocation",
+                "statusListIndex": 1,
+                "statusListCredential": "09ccbfcf-9edd-4a0a-965d-be3aca7a6baf"
+            },
+            "status": true
+        }
+     ```
+     - The values for request body can be referenced from [Ledger Search Response](./Ledger-Issuance.md).
 - The system records this change for audit and adds the entry in `credential_status_transaction` table.
 - Sequence diagram for updating credential status:
 ```mermaid
@@ -347,11 +291,12 @@ sequenceDiagram
 
 
 ## Configuration Properties
-| Property Name                                                       | Description                                                            | Example Value                                                                            |
-|---------------------------------------------------------------------|------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
-| `mosip.certify.status-list.signature-crypto-suite` | Signature Crypto Suite for signing Status List VCs                     | `Ed25519Signature2020`                                                                   |
-| `mosip.certify.status-list.signature-algo` | Supported signing algorithms for signature crypto suite defined above. | `EdDSA`                                                                                  |
-| `mosip.certify.statuslist.size-in-kb`                | Supported proof types for credentials.                                 | `16`                                                                                     |
+| Property Name                                                       | Description                                                                                             | Example Value          |
+|---------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------|------------------------|
+| `mosip.certify.status-list.signature-crypto-suite` | Signature Crypto Suite for signing Status List VCs                                                      | `Ed25519Signature2020` |
+| `mosip.certify.status-list.signature-algo` | Supported signing algorithms for signature crypto suite defined above.                                  | `EdDSA`                |
+| `mosip.certify.statuslist.size-in-kb`                | Supported proof types for credentials.                                                                  | `16`                   |
+| `mosip.certify.data-provider-plugin.credential-status.allowed-status-purposes`                                     | Set the default values as list that can be allowed for `credentialStatusPurpose` in `credential_config` | `{'revocation'}`          |
 
 ## Enabling the Feature
 1. Database Setup: Make sure the following tables exist:
@@ -360,7 +305,7 @@ sequenceDiagram
    - ledger
    - credential_status_transaction
 2. Configuration: Set the required properties as shown above.
-3. Credential Configuration: For each credential type that should support revocation, set the credentialStatusPurposes field (e.g., to revocation) in the credential-configuration API using the /credential-configurations endpoint. The value of credentialStatusPurposes must be one of the values configured in mosip.certify.data-provider-plugin.credential-status.allowed-status-purposes. This enables VC Revocation functionality at the credential-type level.
+3. Credential Configuration: For each credential type that should support revocation, set the credentialStatusPurposes field (e.g., to revocation) in the credential-configuration API using the /credential-configurations endpoint. The value of credentialStatusPurposes must be one of the values configured in `mosip.certify.data-provider-plugin.credential-status.allowed-status-purposes`. This enables VC Revocation functionality at the credential-type level.
 
     **Sample request to enable revocation for a credential type**:
     ```json
