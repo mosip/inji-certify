@@ -261,6 +261,12 @@ The digest multibase can be hardcoded or if the template has been stored with Ce
     - Check if the hosted DID matches with the [DID endpoint](http://localhost:8090/v1/certify/.well-known/did.json)
     - As of now, Mimoto/Inji Web only supports downloads for Ed25519Signature2020 signed VerifiableCredential due to a limitation of the integrated VC-Verification module.
 
+8. While running `docker compose up -d`, if any error is encountered related to network like `network mosip_network declared as external, but could not be found` and containers are not starting up properly, try to create the network manually using the command:
+   ```bash
+   docker network create mosip_network
+   ```
+   Then re-run `docker compose up -d`.
+
 
 # Explanation of NGINX Directives
 
