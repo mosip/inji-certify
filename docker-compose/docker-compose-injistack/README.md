@@ -231,6 +231,10 @@ The digest multibase can be hardcoded or if the template has been stored with Ce
          - GOOGLE_OAUTH_CLIENT_SECRET=<your-client-secret>
     ```
 
+## Using the Postgres Data Provider plugin
+- If you wish to use the Postgres Data Provider plugin instead of the Mock CSV plugin, please refer to the steps mentioned in [Setup-Postgres-Plugin](./Add-New-Usecase-Using-PostgresPlugin.md) to setup a new usecase using the Postgres Data Provider plugin.
+- Also refer to the postgres-data-provider-plugin implementation documentation.[Postgres-Plugin-Document](https://github.com/mosip/digital-credential-plugins/blob/master/postgres-dataprovider-plugin/README.md)
+
 ## Troubleshooting
 
 ### Common Issues and Solutions
