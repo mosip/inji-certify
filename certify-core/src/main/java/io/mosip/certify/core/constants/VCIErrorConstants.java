@@ -11,7 +11,7 @@ public class VCIErrorConstants {
     public static final String INVALID_REQUEST = "invalid_request";
     public static final String INVALID_SCOPE = "invalid_scope";
     public static final String INVALID_CREDENTIAL_REQUEST = "invalid_credential_request";
-    public static final String UNSUPPORTED_CREDENTIAL_TYPE = "invalid_credential_type";
+    public static final String UNSUPPORTED_CREDENTIAL_TYPE = "unsupported_credential_type";
     public static final String UNSUPPORTED_CREDENTIAL_FORMAT = "unsupported_credential_format";
     public static final String INVALID_PROOF = "invalid_proof";
 }
