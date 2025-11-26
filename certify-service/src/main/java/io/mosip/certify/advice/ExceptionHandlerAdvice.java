@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static io.mosip.certify.core.constants.ErrorConstants.*;
+import static io.mosip.certify.core.constants.VCIErrorConstants.INVALID_REQUEST;
 
 @Slf4j
 @ControllerAdvice

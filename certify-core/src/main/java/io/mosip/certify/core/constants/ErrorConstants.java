@@ -7,17 +7,12 @@ package io.mosip.certify.core.constants;
 
 public class ErrorConstants {
 
-    public static final String INVALID_REQUEST = "INVALID_REQUEST";
-    public static final String INVALID_SCOPE = "INVALID_SCOPE";
     public static final String INVALID_METADATA_DISPLAY = "INVALID_METADATA_DISPLAY";
     public static final String INVALID_AUTH_TOKEN = "INVALID_TOKEN";
     public static final String INVALID_ALGORITHM = "INVALID_ALGORITHM";
     public static final String UNKNOWN_ERROR = "UNKNOWN_ERROR";
-    public static final String UNSUPPORTED_VC_FORMAT = "UNSUPPORTED_CREDENTIAL_FORMAT";
     public static final String INVALID_VC_FORMAT = "INVALID_VC_FORMAT";
-    public static final String INVALID_PROOF = "INVALID_PROOF";
     public static final String UNSUPPORTED_PROOF_TYPE = "UNSUPPORTED_PROOF_TYPE";
-    public static final String UNSUPPORTED_VC_TYPE = "UNSUPPORTED_CREDENTIAL_TYPE";
     public static final String VC_ISSUANCE_FAILED = "VC_ISSUANCE_FAILED";
     public static final String PROOF_HEADER_INVALID_TYP = "PROOF_HEADER_INVALID_TYP";
     public static final String PROOF_HEADER_INVALID_ALG = "PROOF_HEADER_INVALID_ALG";

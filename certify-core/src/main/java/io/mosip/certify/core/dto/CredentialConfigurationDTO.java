@@ -3,6 +3,7 @@ package io.mosip.certify.core.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.mosip.certify.core.constants.ErrorConstants;
+import io.mosip.certify.core.constants.VCIErrorConstants;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -43,7 +44,7 @@ public class CredentialConfigurationDTO {
 
     private List<String> displayOrder;
 
-    @NotNull(message = ErrorConstants.INVALID_SCOPE)
+    @NotNull(message = VCIErrorConstants.INVALID_SCOPE)
     private String scope;
 
     @JsonProperty("credentialSubjectDefinition")

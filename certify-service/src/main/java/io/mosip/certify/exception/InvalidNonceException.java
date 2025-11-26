@@ -6,6 +6,7 @@
 package io.mosip.certify.exception;
 
 import io.mosip.certify.core.constants.ErrorConstants;
+import io.mosip.certify.core.constants.VCIErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
 
 public class InvalidNonceException extends CertifyException {
@@ -15,7 +16,7 @@ public class InvalidNonceException extends CertifyException {
     private int clientNonceExpireSeconds;
 
     public InvalidNonceException(String cNonce, int cNonceExpireSeconds) {
-        super(ErrorConstants.INVALID_PROOF);
+        super(VCIErrorConstants.INVALID_PROOF);
         this.clientNonce = cNonce;
         this.clientNonceExpireSeconds = cNonceExpireSeconds;
     }

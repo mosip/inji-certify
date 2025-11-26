@@ -4,6 +4,7 @@ import foundation.identity.jsonld.JsonLDObject;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
+import io.mosip.certify.core.constants.VCIErrorConstants;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
@@ -221,7 +222,7 @@ public class VCIssuanceUtil {
                 return stringResponse;
 
             default:
-                throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT, " Input format " + format);
+                throw new CertifyException(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT, " Input format " + format);
         }
     }
 
@@ -275,16 +276,16 @@ public class VCIssuanceUtil {
         // If no valid entry found for the format, throw format-specific exception
         switch (format) {
             case VCFormats.LDP_VC:
-                throw new CertifyException(ErrorConstants.INVALID_REQUEST,
+                throw new CertifyException(VCIErrorConstants.INVALID_CREDENTIAL_REQUEST,
                         "No matching ldp_vc credential configuration found for scope: " + scope);
             case VCFormats.MSO_MDOC:
-                throw new CertifyException(ErrorConstants.INVALID_REQUEST,
+                throw new CertifyException(VCIErrorConstants.INVALID_CREDENTIAL_REQUEST,
                         "No matching mso_mdoc credential configuration found for scope: " + scope);
             case VCFormats.VC_SD_JWT:
-                throw new CertifyException(ErrorConstants.INVALID_REQUEST,
+                throw new CertifyException(VCIErrorConstants.INVALID_CREDENTIAL_REQUEST,
                         "No matching vc+sd_jwt credential configuration found for scope: " + scope);
             default:
-                throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT,
+                throw new CertifyException(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT,
                         "No matching credential configuration found for format: " + format);
         }
     }
@@ -314,7 +315,7 @@ public class VCIssuanceUtil {
     public static void validateLdpVcFormatRequest(CredentialRequest credentialRequest,
                                                   CredentialMetadata credentialMetadata) {
         if(!credentialRequest.getCredential_definition().getType().containsAll(credentialMetadata.getTypes()))
-            throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_VC_TYPE);
+            throw new InvalidRequestException(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_TYPE);
 
         //TODO need to validate Credential_definition as JsonLD document, if invalid throw exception
     }

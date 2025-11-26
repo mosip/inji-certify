@@ -4,6 +4,7 @@ import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.constants.VCFormats;
+import io.mosip.certify.core.constants.VCIErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.credential.Credential;
 import io.mosip.certify.credential.CredentialFactory;
@@ -324,7 +325,7 @@ public class StatusListCredentialService {
         String appId = aliases.get(0).get(0);
 
         Credential cred = credentialFactory.getCredential(VCFormats.LDP_VC)
-                .orElseThrow(() -> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
+                .orElseThrow(() -> new CertifyException(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT));
 
         VCResult<?> vcResult = cred.addProof(
                 vcDocument.toString(),

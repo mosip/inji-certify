@@ -128,7 +128,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         // 1. Credential Request validation
         boolean isValidCredentialRequest = CredentialRequestValidator.isValid(credentialRequest);
         if(!isValidCredentialRequest) {
-            throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
+            throw new InvalidRequestException(VCIErrorConstants.INVALID_CREDENTIAL_REQUEST);
         }
 
         if(!parsedAccessToken.isActive())
@@ -146,7 +146,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
         if(credentialMetadata == null) {
             log.error("No credential mapping found for the provided scope {}", scopeClaim);
-            throw new CertifyException(ErrorConstants.INVALID_SCOPE, "No credential mapping found for the provided scope.");
+            throw new CertifyException(VCIErrorConstants.INVALID_SCOPE, "No credential mapping found for the provided scope.");
         }
 
         // 3. Proof Validation
@@ -155,7 +155,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         proofValidator.validateCNonce(validCNonce, cNonceExpireSeconds, parsedAccessToken, credentialRequest);
         if(!proofValidator.validate((String)parsedAccessToken.getClaims().get(Constants.CLIENT_ID), validCNonce,
                 credentialRequest.getProof(), credentialMetadata.getProofTypesSupported())) {
-            throw new CertifyException(ErrorConstants.INVALID_PROOF, "Error encountered during proof jwt parsing.");
+            throw new CertifyException(VCIErrorConstants.INVALID_PROOF, "Error encountered during proof jwt parsing.");
         }
 
         // 4. Get VC from configured plugin implementation
@@ -215,7 +215,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     break;
 
                 default:
-                    throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT, "Invalid or unsupported VC format requested.");
+                    throw new CertifyException(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT, "Invalid or unsupported VC format requested.");
             }
 
             // Common logic for all formats
@@ -243,7 +243,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             templateParams.put(VCDM2Constants.VALID_FROM, time);
             templateParams.put(VCDM2Constants.VALID_UNTIL, expiryTime);
 
-            Credential cred = credentialFactory.getCredential(format).orElseThrow(() -> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
+            Credential cred = credentialFactory.getCredential(format).orElseThrow(() -> new CertifyException(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT));
             String unsignedCredential = cred.createCredential(templateParams, templateName);
             if(isLedgerEnabled) {
                 Map<String, Object> indexedAttributes = ledgerUtils.extractIndexedAttributes(jsonObject);
