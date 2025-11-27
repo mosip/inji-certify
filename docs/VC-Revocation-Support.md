@@ -171,7 +171,7 @@ sequenceDiagram
             "credentialId": "9df9fe77-55ac-42f9-b1f1-f2223674fcf1",
             "credentialStatus": {
                 "id": "1c6c4caa-47db-47f8-b8e3-12831a384419",
-                "type": "MockVerifiableCredential,VerifiableCredential",
+                "type": "BitstringStatusList",
                 "statusPurpose": "revocation",
                 "statusListIndex": 1,
                 "statusListCredential": "09ccbfcf-9edd-4a0a-965d-be3aca7a6baf"
@@ -185,7 +185,7 @@ sequenceDiagram
         {
             "credentialStatus": {
                 "id": "1c6c4caa-47db-47f8-b8e3-12831a384419",
-                "type": "MockVerifiableCredential,VerifiableCredential",
+                "type": "BitstringStatusList",
                 "statusPurpose": "revocation",
                 "statusListIndex": 1,
                 "statusListCredential": "09ccbfcf-9edd-4a0a-965d-be3aca7a6baf"

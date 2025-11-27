@@ -9,6 +9,52 @@ When using an external CA, the system must be configured with:
 
 Once configured, the Key Manager will generate and manage keys tied to the uploaded certificates and use them to sign Verifiable Credentials.
 
+## VC Signing with External CA-Signed Certificates
+Inji Certify supports the use of externally issued, CA-signed certificates for credential signing, enabling issuers to integrate their own `Public Key Infrastructure (PKI)` into the credential issuance workflow.
+
+### Trust Element: Public Key Infrastructure (PKI)
+PKI is the backbone of digital trust in credential issuance. It uses cryptographic keys and certificates to verify the authenticity and integrity of digital credentials.
+ - **Root CA Trust Anchor:** The root certificate authority (CA) acts as the ultimate trust anchor. All certificates in the chain must trace back to this trusted root, which is recognized by relying parties.
+ - **Certificate Chain Validation:** When a credential is signed, its signature can be validated by checking the certificate chain up to the root CA. This ensures the credential was issued by a legitimate authority.
+ - **Revocation and Expiry:** PKI supports certificate revocation and expiry, allowing issuers to invalidate compromised or outdated certificates, maintaining trust over time.
+ - **Interoperability:** Using PKI enables credentials to be trusted across different systems and organizations, as long as they recognize the same CA.
+ - **Security:** PKI ensures that only authorized entities (with access to the private key corresponding to the CA-signed certificate) can issue valid credentials.
+
+### Why it matters:
+By allowing institutions or countries to bring their own CA-signed certificates, Certify ensures seamless alignment with existing national or organizational trust frameworks. This flexibility strengthens trust, simplifies compliance, and makes it easier for adopters to integrate Certify into their broader security ecosystem.
+
+### How it works:
+ - **Bring-Your-Own Certificate** — Administrators can upload a CA-signed certificate into Inji Certify. The system then generates the signing key material using the uploaded certificate.
+ - **Integrated Signing Pipeline** — Once configured, Certify uses the externally signed certificate to sign every Verifiable Credential it issues, ensuring all credentials reflect the issuer’s trusted PKI hierarchy.
+ - **Key Manager Integration** — Certify works in tandem with the Key Manager to store, manage, and apply the uploaded certificate and associated keys securely throughout the issuance process.
+
+## PKI Implementation in SD-JWT VCs issued by Inji Certify
+Importance of PKI in SD-JWT
+1. **Credential Authenticity:** PKI enables issuers to sign SD-JWTs with private keys linked to CA-signed certificates, ensuring credentials are genuine and originate from trusted sources.
+2. **Integrity Protection:** Digital signatures created via PKI guarantee that SD-JWTs have not been tampered with after issuance.
+3. **Trust Anchoring:** The certificate chain allows verifiers to trace the issuer’s identity back to a recognized root CA, establishing a clear trust anchor.
+4. **Revocation and Expiry:** PKI supports mechanisms for certificate revocation and expiry, allowing compromised or outdated credentials to be invalidated.
+5. **Interoperability:** Standard PKI enables SD-JWT credentials to be verified across different systems and organizations that trust the same CA.
+6. **Compliance:** Using PKI helps meet regulatory and industry requirements for secure, auditable digital credential management.
+
+This approach ensures that every SD-JWT VC issued by Inji Certify is cryptographically verifiable and anchored to the issuer’s PKI trust framework.    
+
+### Checking Trust Elements in SD-JWT
+1. **Inspect the x5c Certificate Chain:** Users should extract the x5c field from the SD-JWT header. This field contains the certificate chain (in base64-encoded DER format) used to sign the JWT.
+2. **Validate Certificate Chain:** Verify that each certificate in the x5c array is properly signed by the next certificate up to the root CA. This ensures the chain is unbroken and trusted.
+3. **Check Root CA Trust:** Confirm that the root certificate in the chain matches a trusted CA in the verifier’s trust store.
+4. **Verify Certificate Expiry and Revocation:** Check the validity period of each certificate and consult revocation lists (CRL/OCSP) to ensure none are expired or revoked.
+5. **Confirm Signature:** Use the public key from the leaf certificate (first in x5c) to verify the SD-JWT’s digital signature.
+6. **Match Issuer Identity:** Ensure the certificate subject matches the expected issuer identity for the SD-JWT.
+   
+These steps help users confirm the authenticity, integrity, and trustworthiness of SD-JWT credentials using PKI-backed certificate chains.
+
+### Key Benefits:
+ - **Trust Alignment** — Credentials are signed using the issuer’s own CA-backed certificates, reinforcing alignment with local or institutional PKI policies.
+ - **Greater Adoption Flexibility** — Countries and organizations can adopt Certify without restructuring their existing certificate management models.
+ - **Seamless Compliance** — Using a recognized CA certificate simplifies audits and compliance checks by matching established trust and governance frameworks.
+ - **End-to-End Security** — The signing process remains fully managed through the Key Manager, ensuring secure key handling while maintaining issuer-specific trust anchors.
+
 ## Workflow Steps
 1. **Generate a Certificate Signing Request (CSR):**
    Generate a CSR that must be signed by your external Certificate Authority.
@@ -43,6 +89,28 @@ Once configured, the Key Manager will generate and manage keys tied to the uploa
  - Stores the CA-signed certificate as the active signing certificate.
  - Enables the Key Manager to use it for signing VCs.
  - Integrates the certificate into the ongoing key lifecycle.
+
+## Sequence Diagram for CSR generation and Certificate, Upload 
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Certify System
+    participant KeyManager Service
+    participant External CA
+
+    Client->>Certify System: POST /system-info/generate-csr
+    Certify System->>KeyManager Service: Request CSR generation
+    KeyManager Service-->>Certify System: Returns CSR (PEM format)
+    Certify System-->>Client: Returns CSR (PEM format)
+    Client->>External CA: Submit CSR for signing
+    External CA-->>Client: Returns CA-signed certificate
+    Client->>Certify System: POST /system-info/upload-ca-certificate (CA trust chain)
+    Certify System->>KeyManager Service: Register CA trust anchors
+    KeyManager Service-->>Certify System: Confirmation
+    Client->>Certify System: POST /system-info/uploadCertificate (signed certificate)
+    Certify System->>KeyManager Service: Store signed certificate
+    KeyManager Service-->>Certify System: Confirmation
+```
 
 
 ## System Behavior After Configuration
