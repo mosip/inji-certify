@@ -28,6 +28,7 @@ import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
+import io.mosip.certify.core.constants.VCIErrorConstants;
 import io.mosip.certify.core.dto.CredentialProof;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.ParsedAccessToken;
@@ -88,7 +89,7 @@ public class JwtProofValidator implements ProofValidator {
                 }
             } catch (ParseException e) {
                 // check iff specific error exists for invalid holderKey
-                throw new CertifyException(ErrorConstants.INVALID_PROOF, "error parsing proof jwt");
+                throw new CertifyException(VCIErrorConstants.INVALID_PROOF, "Error encountered during proof jwt parsing.");
             }
         } else {
             throw new InvalidNonceException(cNonce, cNonceExpireSeconds);

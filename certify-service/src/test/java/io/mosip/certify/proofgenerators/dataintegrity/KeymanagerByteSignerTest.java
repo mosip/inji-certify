@@ -53,7 +53,8 @@ public class KeymanagerByteSignerTest {
             signer.sign("abc".getBytes());
             fail("Expected CertifyException");
         } catch (CertifyException ex) {
-            assertEquals(ErrorConstants.MISSING_APPLICATION_OR_REFERENCE_ID, ex.getMessage());
+            assertEquals(ErrorConstants.MISSING_APPLICATION_OR_REFERENCE_ID, ex.getErrorCode());
+            assertEquals("Application ID or Reference ID is required for signing.", ex.getMessage());
         } catch (GeneralSecurityException ex) {
             fail("Expected CertifyException, got GeneralSecurityException");
         }
@@ -66,7 +67,8 @@ public class KeymanagerByteSignerTest {
             signer.sign("abc".getBytes());
             fail("Expected CertifyException");
         } catch (CertifyException ex) {
-            assertEquals(ErrorConstants.MISSING_APPLICATION_OR_REFERENCE_ID, ex.getMessage());
+            assertEquals(ErrorConstants.MISSING_APPLICATION_OR_REFERENCE_ID, ex.getErrorCode());
+            assertEquals("Application ID or Reference ID is required for signing.", ex.getMessage());
         } catch (GeneralSecurityException ex) {
             fail("Expected CertifyException, got GeneralSecurityException");
         }

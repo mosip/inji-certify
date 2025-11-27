@@ -1,6 +1,7 @@
 package io.mosip.certify.validators;
 
 import io.mosip.certify.core.constants.ErrorConstants;
+import io.mosip.certify.core.constants.VCIErrorConstants;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import io.mosip.certify.enums.CredentialFormat;
@@ -14,6 +15,6 @@ public class CredentialRequestValidator {
         } else if (credentialRequest.getFormat().equals(CredentialFormat.VC_DC_SD_JWT.toString()) || credentialRequest.getFormat().equals(CredentialFormat.VC_SD_JWT.toString())) {
             return SdJwtCredentialRequestValidator.isValidCheck(credentialRequest);
         }
-        throw new InvalidRequestException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
+        throw new InvalidRequestException(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT);
     }
 }

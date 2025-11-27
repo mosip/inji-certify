@@ -16,6 +16,7 @@ import io.mosip.certify.api.util.ActionStatus;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
+import io.mosip.certify.core.constants.VCIErrorConstants;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
@@ -293,7 +294,7 @@ public class CertifyIssuanceServiceImplTest {
         when(credentialFactory.getCredential(DEFAULT_FORMAT_LDP)).thenReturn(Optional.empty());
 
         CertifyException ex = assertThrows(CertifyException.class, () -> issuanceService.getCredential(request));
-        assertEquals(ErrorConstants.UNSUPPORTED_VC_FORMAT, ex.getErrorCode());
+        assertEquals(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT, ex.getErrorCode());
     }
 
     @Test
@@ -352,7 +353,7 @@ public class CertifyIssuanceServiceImplTest {
         request = createValidCredentialRequest(DEFAULT_FORMAT_LDP);
         request.setFormat("invalid format with spaces");
         InvalidRequestException ex = assertThrows(InvalidRequestException.class, () -> issuanceService.getCredential(request));
-        assertEquals(ErrorConstants.UNSUPPORTED_VC_FORMAT, ex.getErrorCode());
+        assertEquals(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT, ex.getErrorCode());
     }
 
     @Test
@@ -367,7 +368,7 @@ public class CertifyIssuanceServiceImplTest {
         // So, "unknown-scope" will not be found by VCIssuanceUtil.getScopeCredentialMapping.
 
         CertifyException ex = assertThrows(CertifyException.class, () -> issuanceService.getCredential(request));
-        assertEquals(ErrorConstants.INVALID_SCOPE, ex.getErrorCode());
+        assertEquals(VCIErrorConstants.INVALID_SCOPE, ex.getErrorCode());
     }
 
     @Test
@@ -380,7 +381,7 @@ public class CertifyIssuanceServiceImplTest {
         when(proofValidator.validate(anyString(), anyString(), any(CredentialProof.class),any())).thenReturn(false);
 
         CertifyException ex = assertThrows(CertifyException.class, () -> issuanceService.getCredential(request));
-        assertEquals(ErrorConstants.INVALID_PROOF, ex.getErrorCode());
+        assertEquals(VCIErrorConstants.INVALID_PROOF, ex.getErrorCode());
     }
 
     @Test

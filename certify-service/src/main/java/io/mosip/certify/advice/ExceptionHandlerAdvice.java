@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static io.mosip.certify.core.constants.ErrorConstants.*;
+import static io.mosip.certify.core.constants.VCIErrorConstants.INVALID_REQUEST;
 
 @Slf4j
 @ControllerAdvice
@@ -126,7 +127,8 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
         }
         if(ex instanceof CertifyException) {
             String errorCode = ((CertifyException) ex).getErrorCode();
-            return new ResponseEntity<ResponseWrapper>(getResponseWrapper(errorCode, getMessage(errorCode)), HttpStatus.OK);
+            String errorMessage = ex.getMessage();
+            return new ResponseEntity<ResponseWrapper>(getResponseWrapper(errorCode, errorMessage), HttpStatus.OK);
         }
         if(ex instanceof RenderingTemplateException) {
             return new ResponseEntity<>(getResponseWrapper(INVALID_REQUEST, ex.getMessage()) ,HttpStatus.NOT_FOUND);
@@ -160,9 +162,14 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
             String errorCode = ((CertifyException) ex).getErrorCode();
             return new ResponseEntity<VCError>(getVCErrorDto(errorCode, getMessage(errorCode)), HttpStatus.UNAUTHORIZED);
         }
-        if(ex instanceof InvalidRequestException | ex instanceof CertifyException) {
-            String errorCode = ((CertifyException) ex).getErrorCode();
+        if(ex instanceof InvalidRequestException) {
+            String errorCode = ((InvalidRequestException) ex).getErrorCode();
             return new ResponseEntity<VCError>(getVCErrorDto(errorCode, getMessage(errorCode)), HttpStatus.BAD_REQUEST);
+        }
+        if(ex instanceof CertifyException) {
+            String errorCode = ((CertifyException) ex).getErrorCode();
+            String errorMessage = ex.getMessage();
+            return new ResponseEntity<VCError>(getVCErrorDto(errorCode, errorMessage), HttpStatus.BAD_REQUEST);
         }
         log.error("Unhandled exception encountered in handler advice", ex);
         return new ResponseEntity<VCError>(getVCErrorDto(UNKNOWN_ERROR, ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);

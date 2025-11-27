@@ -8,6 +8,7 @@ package io.mosip.certify.services;
 import com.danubetech.dataintegrity.suites.DataIntegrityProofDataIntegritySuite;
 import com.danubetech.dataintegrity.suites.DataIntegritySuites;
 import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
@@ -97,45 +98,45 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     private void validateCredentialConfiguration(CredentialConfigurationDTO credentialConfig, boolean shouldCheckDuplicate) {
 
         if (credentialConfig.getCredentialStatusPurposes() != null && credentialConfig.getCredentialStatusPurposes().size() > 1){
-            throw new CertifyException("Multiple credential status purposes are not currently supported.");
+            throw new CertifyException(ErrorConstants.MULTIPLE_STATUS_PURPOSES_NOT_SUPPORTED, "Multiple credential status purposes are not supported. Please specify only one.");
         }
 
         if (credentialConfig.getCredentialStatusPurposes() != null && !credentialConfig.getCredentialStatusPurposes().isEmpty() && !allowedCredentialStatusPurposes.contains(credentialConfig.getCredentialStatusPurposes().getFirst())) {
-            throw new CertifyException("Invalid credential status purposes. Allowed values are: " + allowedCredentialStatusPurposes);
+            throw new CertifyException(ErrorConstants.INVALID_STATUS_PURPOSE, "Invalid credential status purpose. Allowed values are: " + allowedCredentialStatusPurposes);
         }
 
         if(pluginMode.equals("DataProvider") && (credentialConfig.getVcTemplate() == null || credentialConfig.getVcTemplate().isEmpty())) {
-            throw new CertifyException("Credential Template is mandatory for the DataProvider plugin issuer.");
+            throw new CertifyException(ErrorConstants.CREDENTIAL_TEMPLATE_REQUIRED, "A Credential Template is required for issuers using the Data Provider plugin.");
         }
 
         switch (credentialConfig.getCredentialFormat()) {
             case VCFormats.LDP_VC:
                 if (!LdpVcCredentialConfigValidator.isValidCheck(credentialConfig)) {
-                    throw new CertifyException("Context, credentialType and signatureCryptoSuite are mandatory for ldp_vc format");
+                    throw new CertifyException(ErrorConstants.LDP_VC_MANDATORY_FIELDS_MISSING, "Fields context, credentialType, and signatureCryptoSuite are mandatory for the ldp_vc format.");
                 }
                 if(shouldCheckDuplicate && LdpVcCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
-                    throw new CertifyException("Configuration already exists for the given context and credentialType");
+                    throw new CertifyException(ErrorConstants.LDP_VC_CONFIG_EXISTS, "Configuration already exists for the specified context and credentialType.");
                 }
                 validateKeyAliasMapperConfiguration(credentialConfig);
                 break;
             case VCFormats.MSO_MDOC:
                 if (!MsoMdocCredentialConfigValidator.isValidCheck(credentialConfig)) {
-                    throw new CertifyException("Doctype and signatureCryptoSuite fields are mandatory for mso_mdoc format");
+                    throw new CertifyException(ErrorConstants.MSO_MDOC_MANDATORY_FIELDS_MISSING, "Fields doctype and signatureCryptoSuite are mandatory for the mso_mdoc format.");
                 }
                 if(shouldCheckDuplicate && MsoMdocCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
-                    throw new CertifyException("Configuration already exists for the given doctype");
+                    throw new CertifyException(ErrorConstants.MSO_MDOC_CONFIG_EXISTS, "Configuration already exists for the specified doctype.");
                 }
                 break;
             case VCFormats.VC_SD_JWT:
                 if (!SdJwtCredentialConfigValidator.isValidCheck(credentialConfig)) {
-                    throw new CertifyException("Vct and signatureAlgo fields are mandatory for vc+sd-jwt format");
+                    throw new CertifyException(ErrorConstants.VC_SD_JWT_MANDATORY_FIELDS_MISSING, "Fields vct and signatureAlgo are mandatory for the vc+sd-jwt format.");
                 }
                 if(shouldCheckDuplicate && SdJwtCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
-                    throw new CertifyException("Configuration already exists for the given vct");
+                    throw new CertifyException(ErrorConstants.VC_SD_JWT_CONFIG_EXISTS, "Configuration already exists for the specified vct.");
                 }
                 break;
             default:
-                throw new CertifyException("Unsupported format: " + credentialConfig.getCredentialFormat());
+                throw new CertifyException(ErrorConstants.UNSUPPORTED_FORMAT, "Unsupported credential format: " + credentialConfig.getCredentialFormat());
         }
     }
 
@@ -148,7 +149,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
         if(signatureCryptoSuite != null) {
             if(!credentialSigningAlgValuesSupportedMap.containsKey(signatureCryptoSuite)) {
-                throw new CertifyException("Unsupported signature crypto suite: " + signatureCryptoSuite);
+                throw new CertifyException(ErrorConstants.UNSUPPORTED_CRYPTO_SUITE, "Unsupported signature crypto suite: " + signatureCryptoSuite);
             }
 
             List<String> signatureAlgos = credentialSigningAlgValuesSupportedMap.get(signatureCryptoSuite);
@@ -156,13 +157,13 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 signatureAlgo = signatureAlgos.getFirst();
                 credentialConfig.setSignatureAlgo(signatureAlgo);
             } else if(!signatureAlgos.contains(signatureAlgo)) {
-                throw new CertifyException("Signature algorithm " + signatureAlgo + " is not supported for the signature crypto suite: " + signatureCryptoSuite);
+                throw new CertifyException(ErrorConstants.UNSUPPORTED_SIGNATURE_ALGO, "Signature algorithm " + signatureAlgo + " is not supported for the crypto suite: " + signatureCryptoSuite);
             }
         }
 
         List<List<String>> keyAliasList = keyAliasMapper.get(credentialConfig.getSignatureAlgo());
         if (keyAliasList == null || keyAliasList.isEmpty()) {
-            throw new CertifyException("No key chooser configuration found for the signatureAlgo: " + credentialConfig.getSignatureCryptoSuite());
+            throw new CertifyException(ErrorConstants.KEY_CHOOSER_CONFIG_NOT_FOUND, "No key chooser configuration found for the signature crypto suite: " + credentialConfig.getSignatureCryptoSuite());
         }
 
         boolean isMatch = keyAliasList.stream()
@@ -173,7 +174,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                         pair.getLast().equals(credentialConfig.getKeyManagerRefId()));
 
         if (!isMatch) {
-            throw new CertifyException("No matching appId and refId found in the key chooser list.");
+            throw new CertifyException(ErrorConstants.KEY_CHOOSER_APP_REF_NOT_FOUND, "No matching appId and refId found in the key chooser configuration.");
         }
     }
 
@@ -182,12 +183,12 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         Optional<CredentialConfig> optional = credentialConfigRepository.findByCredentialConfigKeyId(credentialConfigKeyId);
 
         if(optional.isEmpty()) {
-            throw new CredentialConfigException("Configuration not found with the provided id: " + credentialConfigKeyId);
+            throw new CredentialConfigException(ErrorConstants.CONFIG_NOT_FOUND_BY_ID, "Configuration not found for the provided ID: " + credentialConfigKeyId);
         }
 
         CredentialConfig credentialConfig = optional.get();
         if(!credentialConfig.getStatus().equals(Constants.ACTIVE)) {
-            throw new CertifyException("Configuration not active.");
+            throw new CertifyException(ErrorConstants.CONFIG_NOT_ACTIVE, "Configuration is inactive.");
         }
 
         return credentialConfigMapper.toDto(credentialConfig);
@@ -206,7 +207,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
         if(optional.isEmpty()) {
             log.warn("Configuration not found for update with id: {}", credentialConfigKeyId);
-            throw new CredentialConfigException("Configuration not found with the provided id: " + credentialConfigKeyId);
+            throw new CredentialConfigException(ErrorConstants.CONFIG_NOT_FOUND_FOR_UPDATE, "Configuration not found for update with ID: " + credentialConfigKeyId);
         }
 
         CredentialConfig credentialConfig = optional.get();
@@ -239,7 +240,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
         if(optional.isEmpty()) {
             log.warn("Configuration not found for delete with id: {}", credentialConfigKeyId);
-            throw new CredentialConfigException("Configuration not found with the provided id: " + credentialConfigKeyId);
+            throw new CredentialConfigException(ErrorConstants.CONFIG_NOT_FOUND_FOR_DELETE, "Configuration not found for delete with ID: " + credentialConfigKeyId);
         }
 
         // The object is fetched once here.

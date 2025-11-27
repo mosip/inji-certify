@@ -9,6 +9,7 @@ import io.mosip.certify.api.spi.VCIssuancePlugin;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
+import io.mosip.certify.core.constants.VCIErrorConstants;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
@@ -301,7 +302,7 @@ public class VCIssuanceServiceImplTest {
         request.setFormat("invalid format with spaces"); // Should cause validator to fail
 
         InvalidRequestException ex = assertThrows(InvalidRequestException.class, () -> issuanceService.getCredential(request));
-        assertEquals(ErrorConstants.UNSUPPORTED_VC_FORMAT, ex.getErrorCode());
+        assertEquals(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT, ex.getErrorCode());
     }
 
 
@@ -316,7 +317,7 @@ public class VCIssuanceServiceImplTest {
         // mockGlobalCredentialIssuerMetadataDTO in setUp is for DEFAULT_SCOPE. "unknown-scope" won't match.
 
         CertifyException ex = assertThrows(CertifyException.class, () -> issuanceService.getCredential(request));
-        assertEquals(ErrorConstants.INVALID_SCOPE, ex.getErrorCode());
+        assertEquals(VCIErrorConstants.INVALID_SCOPE, ex.getErrorCode());
     }
 
     @Test
@@ -329,7 +330,7 @@ public class VCIssuanceServiceImplTest {
         when(proofValidator.validate(anyString(), anyString(), any(CredentialProof.class), any())).thenReturn(false); // Proof fails
 
         CertifyException ex = assertThrows(CertifyException.class, () -> issuanceService.getCredential(request));
-        assertEquals(ErrorConstants.INVALID_PROOF, ex.getErrorCode());
+        assertEquals(VCIErrorConstants.INVALID_PROOF, ex.getErrorCode());
     }
 
     @Test
@@ -351,7 +352,7 @@ public class VCIssuanceServiceImplTest {
         invalidRequest.setFormat("invalid_format"); // Invalid format
 
         InvalidRequestException ex = assertThrows(InvalidRequestException.class, () -> issuanceService.getCredential(invalidRequest));
-        assertEquals(ErrorConstants.UNSUPPORTED_VC_FORMAT, ex.getErrorCode());
+        assertEquals(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT, ex.getErrorCode());
     }
 
     @Test
@@ -451,7 +452,7 @@ public class VCIssuanceServiceImplTest {
             )).thenReturn(TEST_CNONCE);
 
             CertifyException ex = assertThrows(CertifyException.class, () -> issuanceService.getCredential(request));
-            assertEquals(ErrorConstants.UNSUPPORTED_VC_FORMAT, ex.getErrorCode());
+            assertEquals(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT, ex.getErrorCode());
         }
     }
 }

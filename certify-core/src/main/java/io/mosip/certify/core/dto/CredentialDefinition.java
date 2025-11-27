@@ -8,6 +8,7 @@ package io.mosip.certify.core.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.mosip.certify.core.constants.ErrorConstants;
+import io.mosip.certify.core.constants.VCIErrorConstants;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
@@ -19,10 +20,10 @@ import java.util.Map;
 public class CredentialDefinition {
 
     @JsonProperty("@context")
-    private List<@NotBlank(message = ErrorConstants.INVALID_REQUEST) String> context;
+    private List<@NotBlank(message = VCIErrorConstants.INVALID_CREDENTIAL_REQUEST) String> context;
 
-    @NotEmpty(message = ErrorConstants.INVALID_REQUEST)
-    private List<@NotBlank(message = ErrorConstants.INVALID_REQUEST) String> type;
+    @NotEmpty(message = VCIErrorConstants.INVALID_CREDENTIAL_REQUEST)
+    private List<@NotBlank(message = VCIErrorConstants.INVALID_CREDENTIAL_REQUEST) String> type;
 
     private Map<String, Object> credentialSubject;
 

@@ -54,7 +54,7 @@ public class KeymanagerByteSigner extends ByteSigner {
     @Override
     public byte[] sign(byte[] bytes) throws GeneralSecurityException {
         if (Strings.isEmpty(appId) || Strings.isEmpty(refId)) {
-            throw new CertifyException(ErrorConstants.MISSING_APPLICATION_OR_REFERENCE_ID);
+            throw new CertifyException(ErrorConstants.MISSING_APPLICATION_OR_REFERENCE_ID, "Application ID or Reference ID is required for signing.");
         }
         // Map the cryptoSuite to the JWA Algorithm
         SignRequestDtoV2 s = new SignRequestDtoV2();

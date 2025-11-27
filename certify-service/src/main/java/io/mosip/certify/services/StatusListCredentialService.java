@@ -4,6 +4,7 @@ import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.constants.VCFormats;
+import io.mosip.certify.core.constants.VCIErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.credential.Credential;
 import io.mosip.certify.credential.CredentialFactory;
@@ -180,11 +181,11 @@ public class StatusListCredentialService {
             return savedCredential;
 
         } catch (JSONException e) {
-            log.error("JSON error while generating status list credential", e);
-            throw new CertifyException(ErrorConstants.STATUS_LIST_GENERATION_JSON_ERROR);
+            log.error("Error occurred while generating status list credential JSON.", e);
+            throw new CertifyException(ErrorConstants.STATUS_LIST_GENERATION_JSON_ERROR, "Error occurred while generating status list credential JSON.");
         } catch (Exception e) {
-            log.error("Error generating status list credential", e);
-            throw new CertifyException(ErrorConstants.STATUS_LIST_GENERATION_FAILED);
+            log.error("Error occurred while generating status list credential.", e);
+            throw new CertifyException(ErrorConstants.STATUS_LIST_GENERATION_FAILED, "Error occurred while generating status list credential.");
         }
     }
 
@@ -217,8 +218,8 @@ public class StatusListCredentialService {
             int rowsInserted = nativeQuery.executeUpdate();
             log.info("Successfully initialized {} available indices for status list: {}", rowsInserted, statusListCredential.getId());
         } catch (Exception e) {
-            log.error("Error initializing available indices for status list: {}", statusListCredential.getId(), e);
-            throw new CertifyException(ErrorConstants.STATUS_LIST_INDEX_INITIALIZATION_FAILED);
+            log.error("Error occurred during initialization of available indices for status list: {}", statusListCredential.getId(), e);
+            throw new CertifyException(ErrorConstants.STATUS_LIST_INDEX_INITIALIZATION_FAILED, "Error occurred during initialization of available indices for status list: " + statusListCredential.getId());
         }
     }
 
@@ -292,8 +293,8 @@ public class StatusListCredentialService {
             assignedIndex = findNextAvailableIndex(statusList.getId());
 
             if (assignedIndex == -1) {
-                log.error("Failed to get available index even from new status list");
-                throw new CertifyException(ErrorConstants.STATUS_LIST_INDEX_UNAVAILABLE);
+                log.error("Error fetching available index from status list");
+                throw new CertifyException(ErrorConstants.STATUS_LIST_INDEX_UNAVAILABLE, "Error fetching available index from status list");
             }
         }
 
@@ -318,13 +319,13 @@ public class StatusListCredentialService {
         if (aliases == null || aliases.isEmpty()
                 || aliases.get(0) == null || aliases.get(0).isEmpty()
                 || aliases.get(0).get(0) == null || aliases.get(0).get(0).isBlank()) {
-            log.error("No key alias configured for signature crypto suite: {}", signatureCryptoSuite);
-            throw new CertifyException(ErrorConstants.KEY_ALIAS_NOT_CONFIGURED);
+            log.error("No key chooser configuration found for the signature crypto suite: {}", signatureCryptoSuite);
+            throw new CertifyException(ErrorConstants.KEY_ALIAS_NOT_CONFIGURED, "No key chooser configuration found for the signature crypto suite: " + signatureCryptoSuite);
         }
         String appId = aliases.get(0).get(0);
 
         Credential cred = credentialFactory.getCredential(VCFormats.LDP_VC)
-                .orElseThrow(() -> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
+                .orElseThrow(() -> new CertifyException(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT));
 
         VCResult<?> vcResult = cred.addProof(
                 vcDocument.toString(),

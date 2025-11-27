@@ -3,6 +3,7 @@ package io.mosip.certify.core.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.mosip.certify.core.constants.ErrorConstants;
+import io.mosip.certify.core.constants.VCIErrorConstants;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -22,7 +23,7 @@ public class CredentialConfigurationDTO {
 
     private List<String> credentialTypes;
 
-    @NotNull(message = ErrorConstants.INVALID_REQUEST)
+    @NotNull(message = ErrorConstants.INVALID_VC_FORMAT)
     private String credentialFormat;
 
     private String didUrl;
@@ -38,12 +39,12 @@ public class CredentialConfigurationDTO {
     private String sdClaim;
 
     @Valid
-    @NotNull(message = ErrorConstants.INVALID_REQUEST)
+    @NotNull(message = ErrorConstants.INVALID_METADATA_DISPLAY)
     private List<MetaDataDisplayDTO> metaDataDisplay;
 
     private List<String> displayOrder;
 
-    @NotNull(message = ErrorConstants.INVALID_REQUEST)
+    @NotNull(message = VCIErrorConstants.INVALID_SCOPE)
     private String scope;
 
     @JsonProperty("credentialSubjectDefinition")
