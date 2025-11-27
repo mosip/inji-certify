@@ -24,9 +24,9 @@ PKI is the backbone of digital trust in credential issuance. It uses cryptograph
 By allowing institutions or countries to bring their own CA-signed certificates, Certify ensures seamless alignment with existing national or organizational trust frameworks. This flexibility strengthens trust, simplifies compliance, and makes it easier for adopters to integrate Certify into their broader security ecosystem.
 
 ### How it works:
- - **Bring-Your-Own Certificate** — Administrators can upload a CA-signed certificate into Inji Certify. The system then generates the signing key material using the uploaded certificate.
- - **Integrated Signing Pipeline** — Once configured, Certify uses the externally signed certificate to sign every Verifiable Credential it issues, ensuring all credentials reflect the issuer’s trusted PKI hierarchy.
- - **Key Manager Integration** — Certify works in tandem with the Key Manager to store, manage, and apply the uploaded certificate and associated keys securely throughout the issuance process.
+ - **Bring-Your-Own Certificate:** Administrators can upload a CA-signed certificate into Inji Certify. The system then generates the signing key material using the uploaded certificate.
+ - **Integrated Signing Pipeline:** Once configured, Certify uses the externally signed certificate to sign every Verifiable Credential it issues, ensuring all credentials reflect the issuer’s trusted PKI hierarchy.
+ - **Key Manager Integration:** Certify works in tandem with the Key Manager to store, manage, and apply the uploaded certificate and associated keys securely throughout the issuance process.
 
 ## PKI Implementation in SD-JWT VCs issued by Inji Certify
 Importance of PKI in SD-JWT
@@ -50,10 +50,10 @@ This approach ensures that every SD-JWT VC issued by Inji Certify is cryptograph
 These steps help users confirm the authenticity, integrity, and trustworthiness of SD-JWT credentials using PKI-backed certificate chains.
 
 ### Key Benefits:
- - **Trust Alignment** — Credentials are signed using the issuer’s own CA-backed certificates, reinforcing alignment with local or institutional PKI policies.
- - **Greater Adoption Flexibility** — Countries and organizations can adopt Certify without restructuring their existing certificate management models.
- - **Seamless Compliance** — Using a recognized CA certificate simplifies audits and compliance checks by matching established trust and governance frameworks.
- - **End-to-End Security** — The signing process remains fully managed through the Key Manager, ensuring secure key handling while maintaining issuer-specific trust anchors.
+ - **Trust Alignment:** Credentials are signed using the issuer’s own CA-backed certificates, reinforcing alignment with local or institutional PKI policies.
+ - **Greater Adoption Flexibility:** Countries and organizations can adopt Certify without restructuring their existing certificate management models.
+ - **Seamless Compliance:** Using a recognized CA certificate simplifies audits and compliance checks by matching established trust and governance frameworks.
+ - **End-to-End Security:** The signing process remains fully managed through the Key Manager, ensuring secure key handling while maintaining issuer-specific trust anchors.
 
 ## Workflow Steps
 1. **Generate a Certificate Signing Request (CSR):**
@@ -90,7 +90,7 @@ These steps help users confirm the authenticity, integrity, and trustworthiness 
  - Enables the Key Manager to use it for signing VCs.
  - Integrates the certificate into the ongoing key lifecycle.
 
-## Sequence Diagram for CSR generation and Certificate, Upload 
+## Sequence Diagram for CSR generation and Certificate Upload 
 ```mermaid
 sequenceDiagram
     participant Client
