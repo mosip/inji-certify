@@ -16,6 +16,7 @@ import io.mosip.certify.api.util.AuditHelper;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
+import io.mosip.certify.core.constants.VCIErrorConstants;
 import io.mosip.certify.core.dto.CredentialMetadata;
 import io.mosip.certify.core.dto.CredentialRequest;
 import io.mosip.certify.core.dto.CredentialResponse;
@@ -74,7 +75,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {
         boolean isValidCredentialRequest = CredentialRequestValidator.isValid(credentialRequest);
         if(!isValidCredentialRequest) {
-            throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
+            throw new InvalidRequestException(VCIErrorConstants.INVALID_CREDENTIAL_REQUEST);
         }
 
         if(!parsedAccessToken.isActive())
@@ -92,14 +93,14 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
         if(credentialMetadata == null) {
             log.error("No credential mapping found for the provided scope {}", scopeClaim);
-            throw new CertifyException(ErrorConstants.INVALID_SCOPE);
+            throw new CertifyException(VCIErrorConstants.INVALID_SCOPE);
         }
 
         ProofValidator proofValidator = proofValidatorFactory.getProofValidator(credentialRequest.getProof().getProof_type());
         String validCNonce = VCIssuanceUtil.getValidClientNonce(vciCacheService, parsedAccessToken, cNonceExpireSeconds, securityHelperService, log);
         if(!proofValidator.validate((String)parsedAccessToken.getClaims().get(Constants.CLIENT_ID), validCNonce,
                 credentialRequest.getProof(), credentialMetadata.getProofTypesSupported())) {
-            throw new CertifyException(ErrorConstants.INVALID_PROOF);
+            throw new CertifyException(VCIErrorConstants.INVALID_PROOF, "Error encountered during proof jwt parsing.");
         }
 
         //Get VC from configured plugin implementation
@@ -151,7 +152,7 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
                             parsedAccessToken.getClaims());
                     break;
                 default:
-                    throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
+                    throw new CertifyException(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT, "Invalid or unsupported VC format requested.");
             }
         } catch (VCIExchangeException e) {
             throw new CertifyException(e.getErrorCode());

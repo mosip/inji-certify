@@ -9,6 +9,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertFalse;
@@ -23,7 +24,10 @@ public class LdpVcCredentialRequestValidatorTest {
     public void checkLdpVcValidatorWithValidCredentialRequest_thenPass() {
         CredentialRequest credentialRequest = new CredentialRequest();
         credentialRequest.setFormat(VCFormats.LDP_VC);
-        credentialRequest.setCredential_definition(new CredentialDefinition());
+        CredentialDefinition credentialDefinition = new CredentialDefinition();
+        credentialDefinition.setContext(List.of("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/university-context.json"));
+        credentialDefinition.setType(List.of("VerifiableCredential", "UniversityDegreeCredential"));
+        credentialRequest.setCredential_definition(credentialDefinition);
         assertTrue(LdpVcCredentialRequestValidator.isValidCheck(credentialRequest));
     }
 

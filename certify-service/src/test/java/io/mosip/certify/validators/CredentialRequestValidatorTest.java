@@ -30,7 +30,10 @@ public class CredentialRequestValidatorTest {
     public void isValid_Ldp_VC() {
         CredentialRequest cr = new CredentialRequest();
         cr.setFormat(VCFormats.LDP_VC);
-        cr.setCredential_definition(new CredentialDefinition());
+        CredentialDefinition credentialDefinition = new CredentialDefinition();
+        credentialDefinition.setContext(List.of("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/university-context.json"));
+        credentialDefinition.setType(List.of("VerifiableCredential", "UniversityDegreeCredential"));
+        cr.setCredential_definition(credentialDefinition);
         assertTrue(CredentialRequestValidator.isValid(cr));
     }
 

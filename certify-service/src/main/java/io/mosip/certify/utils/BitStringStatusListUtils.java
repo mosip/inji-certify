@@ -61,8 +61,8 @@ public final class BitStringStatusListUtils {
             throw exception;
         }
         catch (Exception e) {
-            log.error("Error generating encoded list from status map", e);
-            throw new CertifyException(ErrorConstants.ENCODED_LIST_UPDATE_FAILED, e.getMessage(), e);
+            log.error("Error occurred while updating encoded status list.", e);
+            throw new CertifyException(ErrorConstants.ENCODED_LIST_UPDATE_FAILED, "Error occurred while updating encoded status list.", e);
         }
     }
 
@@ -128,7 +128,7 @@ public final class BitStringStatusListUtils {
      */
     private static BitSet decodeEncodedList(String encodedList, int capacity) throws IOException {
         if (encodedList == null || encodedList.isEmpty()) {
-            throw new CertifyException(ErrorConstants.INVALID_ENCODED_LIST, "Encoded list string is null or empty");
+            throw new CertifyException(ErrorConstants.INVALID_ENCODED_LIST, "Encoded list must not be a null or empty value.");
         }
         String base64Part = encodedList.startsWith("u") ? encodedList.substring(1) : encodedList;
         byte[] compressedBytes = Base64.getUrlDecoder().decode(base64Part);
@@ -175,8 +175,8 @@ public final class BitStringStatusListUtils {
     private static long safeConvertKBToBits(long capacityInKB) {
         // Check for negative input
         if (capacityInKB < 0) {
-            log.error("Negative capacity provided: {}", capacityInKB);
-            throw new CertifyException(ErrorConstants.STATUS_LIST_CAPACITY_MISCONFIGURED,"Capacity cannot be negative: " + capacityInKB);
+            log.error("StatusList capacity must not be a negative value: {}", capacityInKB);
+            throw new CertifyException(ErrorConstants.STATUS_LIST_CAPACITY_MISCONFIGURED,"StatusList capacity must not be a negative value: " + capacityInKB);
         }
 
         try {
@@ -188,15 +188,15 @@ public final class BitStringStatusListUtils {
 
             // Check if the result exceeds Integer.MAX_VALUE for array compatibility
             if (actualCapacity > Integer.MAX_VALUE) {
-                log.error("Capacity exceeds maximum supported size for BitString operations: {}", actualCapacity);
-                throw new CertifyException(ErrorConstants.STATUS_LIST_CAPACITY_MISCONFIGURED,"Capacity exceeds maximum supported size for BitString operations: " + actualCapacity);
+                log.error("StatusList capacity exceeds maximum supported size for BitString operations: {}", actualCapacity);
+                throw new CertifyException(ErrorConstants.STATUS_LIST_CAPACITY_MISCONFIGURED,"StatusList capacity exceeds maximum supported size for BitString operations: " + actualCapacity);
             }
 
             return actualCapacity;
 
         } catch (ArithmeticException e) {
-            log.error("Overflow occurred while converting capacity from KB to bits for capacity: {}", capacityInKB, e);
-            throw new CertifyException(ErrorConstants.STATUS_LIST_CAPACITY_MISCONFIGURED, "Overflow occurred while converting capacity from KB to bits for capacity: " + capacityInKB);
+            log.error("Overflow occurred while converting StatusList capacity from KB to bits: {}", capacityInKB, e);
+            throw new CertifyException(ErrorConstants.STATUS_LIST_CAPACITY_MISCONFIGURED, "Overflow occurred while converting StatusList capacity from KB to bits: " + capacityInKB);
         }
     }
 }
