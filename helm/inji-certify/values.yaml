@@ -52,8 +52,8 @@ service:
 
 image:
   registry: docker.io
-  repository: mosipqa/inji-certify-with-plugins
-  tag: develop
+  repository: mosipid/inji-certify-with-plugins
+  tag: 0.13.0
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
   ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -351,7 +351,7 @@ volumePermissions:
   enabled: false
   image:
     registry: docker.io
-    repository: mosipint/os-shell
+    repository: mosipid/os-shell
     tag: "12-debian-12-r46"
     pullPolicy: Always
     ## Optionally specify an array of imagePullSecrets.
