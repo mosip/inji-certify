@@ -13,7 +13,7 @@ echo "Create $SOFTHSM_NS namespace"
 kubectl create ns $SOFTHSM_NS
 
 NS=inji-certify
-CHART_VERSION=0.0.1-develop
+CHART_VERSION=0.13.0
 
 echo "Create $NS namespace"
 kubectl create ns $NS
