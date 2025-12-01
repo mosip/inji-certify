@@ -8,7 +8,6 @@ fi
 
 NS=inji-certify
 CHART_VERSION=1.3.5
-
 echo Create $NS namespace
 kubectl create ns $NS
 
