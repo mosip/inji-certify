@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-@Profile("local")
+@Profile("!local")
 public class LocalAccessTokenValidationFilter extends OncePerRequestFilter {
 
     @Value("${mosip.certify.authn.issuer-uri}")
