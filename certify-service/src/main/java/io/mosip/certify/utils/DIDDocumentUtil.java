@@ -121,13 +121,13 @@ public class DIDDocumentUtil {
                     break;
                 default:
                     log.error("Unsupported signature algorithm provided :" + signatureAlgo);
-                    throw new CertifyException(ErrorConstants.UNSUPPORTED_ALGORITHM);
+                    throw new CertifyException(ErrorConstants.UNSUPPORTED_ALGORITHM, "Unsupported signature algorithm: " + signatureAlgo);
             }
         } catch(CertifyException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Exception occured while generating verification method for given certificate", e.getMessage(), e);
-            throw new CertifyException(ErrorConstants.VERIFICATION_METHOD_GENERATION_FAILED);
+            log.error("Exception occurred while generating verification method for given signature algorithm: " + signatureAlgo, e.getMessage(), e);
+            throw new CertifyException(ErrorConstants.VERIFICATION_METHOD_GENERATION_FAILED, "Exception occurred while generating verification method for given signature algorithm: " + signatureAlgo);
         }
 
         verificationMethod.put("id", didUrl + "#" + kid);

@@ -50,7 +50,6 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
 
     @Autowired
     CredentialConfigRepository credentialConfigRepository;
-
     @Autowired
     RenderingTemplateService renderingTemplateService;
 
@@ -85,7 +84,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         if (parts.length < 2) {
             log.error("Invalid templateKey format for getCachedCredentialConfig: {}. Expected 3 parts.", templateKey);
             throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "Template key format requires 3 parts: " + templateKey);
-        } else if (parts.length == 2) {
+        } else if(parts.length == 2) {
             String credentialFormat = parts[0];
             if (Objects.equals(credentialFormat, VCFormats.MSO_MDOC)) {
                 String doctype = parts[1];
@@ -124,61 +123,56 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
 
     /**
      * Gets the proof/signature algorithm for this template
-     *
      * @param templateName is the name of the template.
      * @return Signature Algorithm name. This can also be null
      */
     @Override
-    public String getProofAlgorithm(String templateName) {
+    public String getProofAlgorithm(String templateName){
         // return templateCache.get(templateName).get("signatureAlgo"); // OLD
         return getCachedCredentialConfig(templateName).getSignatureAlgo(); // NEW
     }
 
     /**
      * Get the URL of the public key for this template
-     *
      * @param templateName is the name of the template.
      * @return URL of the public key.
      */
     @Override
-    public String getDidUrl(String templateName) {
+    public String getDidUrl(String templateName){
         // return templateCache.get(templateName).get("didUrl"); // OLD
         return getCachedCredentialConfig(templateName).getDidUrl(); // NEW
     }
 
     /**
      * Get the refid of the key stored in keymanager.
-     *
      * @param templateName is the name of the template.
      * @return refid for the keymanager.
      */
     @Override
-    public String getRefID(String templateName) {
+    public String getRefID(String templateName){
         // return templateCache.get(templateName).get("keyManagerRefId"); // OLD
         return getCachedCredentialConfig(templateName).getKeyManagerRefId(); // NEW
     }
 
     /**
      * Get the appid of the key stored in keymanager
-     *
      * @param templateName is the name of the template.
      * @return appid of the keymanager.
      */
     @Override
-    public String getAppID(String templateName) {
+    public String getAppID(String templateName){
 
         return getCachedCredentialConfig(templateName).getKeyManagerAppId(); // NEW
     }
 
     /**
      * Gets the selective disclosure information.
-     *
      * @param templateName is the name of the template
      * @return the list of selective disclosure paths. In case of null
      * it returns an empty list.
      */
     @Override
-    public List<String> getSelectiveDisclosureInfo(String templateName) {
+    public List<String> getSelectiveDisclosureInfo(String templateName){
         String sdClaimValue = getCachedCredentialConfig(templateName).getSdClaim(); // NEW
         return Optional.ofNullable(sdClaimValue)
                 .map(sd -> Arrays.asList(sd.split(",")))
@@ -187,7 +181,6 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
 
     /**
      * Gets the crypto suite used for VC signature or proof generation
-     *
      * @param templateName is the name of the template
      * @return the crypto suite used for VC signature or proof generation
      */
@@ -204,11 +197,11 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     /**
      * performs the templating
      * NOTE: the defaultSettings map should have the "templateName" key set to
-     * "${sort(CREDENTIALTYPE1,CREDENTIALTYPE2,CREDENTIALTYPE3...)}:${sort(VC_CONTEXT1,VC_CONTENXT2,VC_CONTEXT3...)}"
+     *  "${sort(CREDENTIALTYPE1,CREDENTIALTYPE2,CREDENTIALTYPE3...)}:${sort(VC_CONTEXT1,VC_CONTENXT2,VC_CONTEXT3...)}"
      *
-     * @param valueMap         is the input from the DataProvider plugin
+     * @param valueMap is the input from the DataProvider plugin
      * @param templateSettings has some sensible defaults from Certify for
-     *                         internal work such as locating the appropriate template
+     *                        internal work such as locating the appropriate template
      * @return templated VC as a String
      */
     @SneakyThrows
@@ -265,14 +258,13 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
 
     /**
      * jsonify wraps a complex object into it's JSON representation
-     *
      * @param valueMap
      * @return
      */
     protected static Map<String, Object> jsonify(Map<String, Object> valueMap) {
         Map<String, Object> finalTemplate = new HashMap<>();
         Iterator<String> keys = valueMap.keySet().iterator();
-        while (keys.hasNext()) {
+        while(keys.hasNext()) {
             String key = keys.next();
             Object value = valueMap.get(key);
             if (value instanceof List) {
@@ -282,12 +274,13 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
             } else if (value instanceof Integer | value instanceof Float | value instanceof Long | value instanceof Double) {
                 // entities which don't need to be quoted
                 finalTemplate.put(key, value);
-            } else if (value instanceof String) {
+            } else if (value instanceof String){
                 // entities which need to be quoted
                 finalTemplate.put(key, JSONObject.wrap(value));
-            } else if (value instanceof Map<?, ?>) {
-                finalTemplate.put(key, JSONObject.wrap(value));
-            } else {
+            } else if( value instanceof Map<?,?>) {
+                finalTemplate.put(key,JSONObject.wrap(value));
+            }
+            else {
                 // no conversion needed
                 finalTemplate.put(key, value);
             }
@@ -298,7 +291,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     /**
      * performs the templating
      * NOTE: the defaultSettings map should have the "templateName" key set to
-     * "${sort(CREDENTIALTYPE1,CREDENTIALTYPE2,CREDENTIALTYPE3...)}:${sort(VC_CONTEXT1,VC_CONTENXT2,VC_CONTEXT3...)}"
+     *  "${sort(CREDENTIALTYPE1,CREDENTIALTYPE2,CREDENTIALTYPE3...)}:${sort(VC_CONTEXT1,VC_CONTENXT2,VC_CONTEXT3...)}"
      *
      * @param templateInput is the merged input from the DataProvider plugin and all the default settings as one single map
      * @return templated VC as a String
@@ -336,10 +329,10 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         if (templateInput.containsKey(VCDMConstants.CREDENTIAL_ID)) {
             jsonObject.put(VCDMConstants.ID, templateInput.get(VCDMConstants.CREDENTIAL_ID));
         }
-        if (templateInput.containsKey(VCDM2Constants.CREDENTIAL_STATUS) && templateName.contains(VCDM2Constants.URL)) {
+        if(templateInput.containsKey(VCDM2Constants.CREDENTIAL_STATUS) && templateName.contains(VCDM2Constants.URL)) {
             jsonObject.put(VCDM2Constants.CREDENTIAL_STATUS, templateInput.get(VCDM2Constants.CREDENTIAL_STATUS));
         }
-        if (templateInput.containsKey(VCTYPE) && templateInput.containsKey(CONFIRMATION)
+        if( templateInput.containsKey(VCTYPE) && templateInput.containsKey(CONFIRMATION)
                 && templateInput.containsKey(ISSUER)) {
             jsonObject.put(VCTYPE, templateInput.get(VCTYPE));
             jsonObject.put(CONFIRMATION, templateInput.get(CONFIRMATION));

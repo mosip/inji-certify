@@ -198,7 +198,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
                     List<String> credentialStatusPurposeList = vcFormatter.getCredentialStatusPurpose(templateName);
                     if (credentialStatusPurposeList != null && !credentialStatusPurposeList.isEmpty() && credentialRequest.getCredential_definition().getContext().contains(VCDM2Constants.URL)) {
-                        if (!isLedgerEnabled) {
+                        if(!isLedgerEnabled) {
                             log.warn("Ledger feature is currently disabled. Since revocation is enabled, please note that searching for VCs to revoke within Certify is not available.");
                         }
                         statusListCredentialService.addCredentialStatus(jsonObject, credentialStatusPurposeList.getFirst());
@@ -251,7 +251,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             templateParams.put(VCDM2Constants.VALID_UNTIL, expiryTime);
 
             Credential cred = credentialFactory.getCredential(format).orElseThrow(() -> new CertifyException(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT));
-                    String unsignedCredential=cred.createCredential(templateParams, templateName);
+            String unsignedCredential = cred.createCredential(templateParams, templateName);
             if(isLedgerEnabled) {
                 Map<String, Object> indexedAttributes = ledgerUtils.extractIndexedAttributes(jsonObject);
                 String credentialType = LedgerUtils.extractCredentialType(jsonObject);
@@ -269,7 +269,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             jsonObject.remove(VCDM2Constants.CREDENTIAL_STATUS);
             return result;
 
-        } catch(DataProviderExchangeException e) {
+        } catch (DataProviderExchangeException e) {
             throw new CertifyException(e.getErrorCode());
         } catch (JSONException e) {
             log.error(e.getMessage(), e);

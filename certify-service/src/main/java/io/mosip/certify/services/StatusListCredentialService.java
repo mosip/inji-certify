@@ -9,7 +9,6 @@ import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.credential.Credential;
 import io.mosip.certify.credential.CredentialFactory;
 import io.mosip.certify.entity.StatusListCredential;
-import io.mosip.certify.repository.StatusListAvailableIndicesRepository;
 import io.mosip.certify.repository.StatusListCredentialRepository;
 import io.mosip.certify.utils.BitStringStatusListUtils;
 import io.mosip.certify.vcformatters.VCFormatter;
