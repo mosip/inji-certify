@@ -476,7 +476,7 @@ public class MDocProcessor {
 
         } catch (CertifyException e) {
             log.error("Error during COSE signing: {}", e.getMessage(), e);
-            throw new CertifyException("COSE signing failed: " + e.getMessage());
+            throw new CertifyException(ErrorConstants.VC_SIGNING_ERROR, "COSE signing failed: " + e.getMessage());
         }
     }
 
@@ -499,7 +499,10 @@ public class MDocProcessor {
     public static Map<String, Object> createIssuerSignedStructure(Map<String, Object> processedNamespaces, byte[] signedMSO) throws IOException {
         try {
             var di = new CborDecoder(new java.io.ByteArrayInputStream(signedMSO)).decode();
-            DataItem cose = di.isEmpty() ? SimpleValue.NULL : di.get(0);
+            if (di.isEmpty()) {
+                throw new IOException("Failed to decode COSE_Sign1: empty result");
+            }
+            DataItem cose = di.get(0);
             Map<String, Object> out = new HashMap<>();
             out.put(Constants.NAMESPACES, processedNamespaces);
             out.put("issuerAuth", cose);
