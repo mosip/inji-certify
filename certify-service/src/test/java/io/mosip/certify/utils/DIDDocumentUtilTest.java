@@ -135,7 +135,7 @@ class DIDDocumentUtilTest {
             ReflectionTestUtils.invokeMethod(didDocumentUtil, "generateVerificationMethod", signatureCryptoSuite, certificateString, didUrl, kid);
         });
 
-        assertEquals("unsupported_algorithm", exception.getErrorCode());
+        assertEquals(ErrorConstants.UNSUPPORTED_ALGORITHM, exception.getErrorCode());
     }
 
     @Test

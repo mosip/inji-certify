@@ -40,6 +40,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 @Slf4j
+@Component
 public class DIDDocumentUtil {
     @Autowired
     KeymanagerService keymanagerService;
@@ -120,20 +121,20 @@ public class DIDDocumentUtil {
                     break;
                 default:
                     log.error("Unsupported signature algorithm provided :" + signatureAlgo);
-                    throw new CertifyException(ErrorConstants.UNSUPPORTED_ALGORITHM, "Unsupported signature algorithm: " + signatureAlgo);
+                    throw new CertifyException(ErrorConstants.UNSUPPORTED_ALGORITHM);
             }
         } catch(CertifyException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Exception occurred while generating verification method for given signature algorithm: " + signatureAlgo, e.getMessage(), e);
-            throw new CertifyException(ErrorConstants.VERIFICATION_METHOD_GENERATION_FAILED, "Exception occurred while generating verification method for given signature algorithm: " + signatureAlgo);
+            log.error("Exception occured while generating verification method for given certificate", e.getMessage(), e);
+            throw new CertifyException(ErrorConstants.VERIFICATION_METHOD_GENERATION_FAILED);
         }
 
-        didDocument.put("verificationMethod", Collections.singletonList(verificationMethod));
-        return didDocument;
+        verificationMethod.put("id", didUrl + "#" + kid);
+        return verificationMethod;
     }
 
-    private static Map<String, Object> generateECR1VerificationMethod(PublicKey publicKey, String issuerURI, String issuerPublicKeyURI) {
+    private static Map<String, Object> generateECR1VerificationMethod(PublicKey publicKey, String didUrl) {
         ECPublicKey ecPublicKey = (ECPublicKey) publicKey;
         BigInteger yBI = ecPublicKey.getW().getAffineY();
         byte prefixByte = yBI.testBit(0) ? (byte) 0x03 : (byte) 0x02;
@@ -170,7 +171,7 @@ public class DIDDocumentUtil {
         }
     }
 
-     private static Map<String, Object> generateEd25519VerificationMethod(PublicKey publicKey, String didUrl) throws Exception {
+    private static Map<String, Object> generateEd25519VerificationMethod(PublicKey publicKey, String didUrl) throws Exception {
 
         BCEdDSAPublicKey edKey = (BCEdDSAPublicKey) publicKey;
         byte[] rawBytes = edKey.getPointEncoding();
@@ -179,7 +180,7 @@ public class DIDDocumentUtil {
         System.arraycopy(multicodecBytes, 0, finalBytes, 0, multicodecBytes.length);
         System.arraycopy(rawBytes, 0, finalBytes, multicodecBytes.length, rawBytes.length);
         String publicKeyMultibase = Multibase.encode(Multibase.Base.Base58BTC, finalBytes);
-        
+
         Map<String, Object> verificationMethod = new HashMap<>();
         verificationMethod.put("type", "Ed25519VerificationKey2020");
         verificationMethod.put("@context", "https://w3id.org/security/suites/ed25519-2020/v1");

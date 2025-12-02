@@ -125,7 +125,7 @@ public class MDocProcessorTest {
         assertNotNull("ValidityInfo should not be null", validityInfo);
 
         String validFrom = (String) validityInfo.get(VCDM2Constants.VALID_FROM);
-        String validUntil = (String) validityInfo.get(VCDM2Constants.VALID_UNITL);
+        String validUntil = (String) validityInfo.get(VCDM2Constants.VALID_UNTIL);
 
         assertNotNull("ValidFrom should be set", validFrom);
         assertNotNull("ValidUntil should be set", validUntil);
@@ -614,7 +614,7 @@ public class MDocProcessorTest {
 
         Map<String, Object> validityInfo = new HashMap<>();
         validityInfo.put(VCDM2Constants.VALID_FROM, "2024-01-01T00:00:00Z");
-        validityInfo.put(VCDM2Constants.VALID_UNITL, "2025-01-01T00:00:00Z");
+        validityInfo.put(VCDM2Constants.VALID_UNTIL, "2025-01-01T00:00:00Z");
         mDocJson.put("validityInfo", validityInfo);
 
         Map<String, Map<Integer, byte[]>> namespaceDigests = new HashMap<>();
@@ -674,14 +674,14 @@ public class MDocProcessorTest {
         String validUntil = "2025-06-15T10:30:00Z";
         Map<String, Object> validityInfo = new HashMap<>();
         validityInfo.put(VCDM2Constants.VALID_FROM, validFrom);
-        validityInfo.put(VCDM2Constants.VALID_UNITL, validUntil);
+        validityInfo.put(VCDM2Constants.VALID_UNTIL, validUntil);
         mDocJson.put("validityInfo", validityInfo);
 
         Map<String, Object> result = mDocProcessor.createMobileSecurityObject(mDocJson, new HashMap<>());
 
         Map<String, Object> resultValidity = (Map<String, Object>) result.get("validityInfo");
         assertEquals("ValidFrom should match", validFrom, resultValidity.get(VCDM2Constants.VALID_FROM));
-        assertEquals("ValidUntil should match", validUntil, resultValidity.get(VCDM2Constants.VALID_UNITL));
+        assertEquals("ValidUntil should match", validUntil, resultValidity.get(VCDM2Constants.VALID_UNTIL));
     }
 
     // ==================== COSE Signing Tests ====================
@@ -948,7 +948,7 @@ public class MDocProcessorTest {
         Map<String, Object> result = mDocProcessor.processTemplatedJson(template, new HashMap<>());
 
         Map<String, Object> validityInfo = (Map<String, Object>) result.get("validityInfo");
-        String validUntil = (String) validityInfo.get(VCDM2Constants.VALID_UNITL);
+        String validUntil = (String) validityInfo.get(VCDM2Constants.VALID_UNTIL);
 
         assertNotNull("ValidUntil should be set", validUntil);
         // Verify it's approximately 10 years in the future (allowing for execution time)

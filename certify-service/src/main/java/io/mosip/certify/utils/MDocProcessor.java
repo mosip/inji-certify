@@ -73,13 +73,13 @@ public class MDocProcessor {
                         validity.put(VCDM2Constants.VALID_FROM, currentTime);
                     }
                 }
-                if (validity.containsKey(VCDM2Constants.VALID_UNITL)) {
-                    String validUntilValue = (String) validity.get(VCDM2Constants.VALID_UNITL);
+                if (validity.containsKey(VCDM2Constants.VALID_UNTIL)) {
+                    String validUntilValue = (String) validity.get(VCDM2Constants.VALID_UNTIL);
                     if ("${_validUntil}".equals(validUntilValue)) {
                         String futureTime = ZonedDateTime.now(ZoneOffset.UTC)
                                 .plusYears(mDocConfig.getValidityPeriodYears())
                                 .format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-                        validity.put(VCDM2Constants.VALID_UNITL, futureTime);
+                        validity.put(VCDM2Constants.VALID_UNTIL, futureTime);
                     }
                 }
 
@@ -392,7 +392,7 @@ public class MDocProcessor {
         if (mDocJson.containsKey(Constants.VALIDITY_INFO)) {
             Map<String, Object> originalValidity = (Map<String, Object>) mDocJson.get(Constants.VALIDITY_INFO);
             validityInfo.put(VCDM2Constants.VALID_FROM, originalValidity.get(VCDM2Constants.VALID_FROM));
-            validityInfo.put(VCDM2Constants.VALID_UNITL, originalValidity.get(VCDM2Constants.VALID_UNITL));
+            validityInfo.put(VCDM2Constants.VALID_UNTIL, originalValidity.get(VCDM2Constants.VALID_UNTIL));
         }
         mso.put(Constants.VALIDITY_INFO, validityInfo);
 

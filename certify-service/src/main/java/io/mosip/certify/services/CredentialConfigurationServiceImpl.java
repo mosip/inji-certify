@@ -7,7 +7,9 @@ package io.mosip.certify.services;
 
 import com.danubetech.dataintegrity.suites.DataIntegrityProofDataIntegritySuite;
 import com.danubetech.dataintegrity.suites.DataIntegritySuites;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
@@ -178,8 +180,8 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     }
 
     @Override
-    public CredentialConfigurationDTO getCredentialConfigurationById(String id) throws JsonProcessingException {
-        Optional<CredentialConfig> optional = credentialConfigRepository.findById(id);
+    public CredentialConfigurationDTO getCredentialConfigurationById(String credentialConfigKeyId) {
+        Optional<CredentialConfig> optional = credentialConfigRepository.findByCredentialConfigKeyId(credentialConfigKeyId);
 
         if(optional.isEmpty()) {
             throw new CredentialConfigException(ErrorConstants.CONFIG_NOT_FOUND_BY_ID, "Configuration not found for the provided ID: " + credentialConfigKeyId);

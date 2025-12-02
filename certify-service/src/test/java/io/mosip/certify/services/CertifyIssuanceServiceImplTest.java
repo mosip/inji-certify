@@ -591,11 +591,10 @@ public class CertifyIssuanceServiceImplTest {
     public void getCredential_MDOC_Success() throws Exception {
         // Create MDOC request with matching doctype
         request = createValidCredentialRequest(DEFAULT_FORMAT_MDOC);
+        request.setDoctype("org.iso.18013.5.1.mDL");
 
         try (MockedStatic<CredentialRequestValidator> mockedValidator = mockStatic(CredentialRequestValidator.class)) {
             mockedValidator.when(() -> CredentialRequestValidator.isValid(any(CredentialRequest.class))).thenReturn(true);
-            // CRITICAL: Verify the request has the correct doctype
-            assertEquals("org.iso.18013.5.1.mDL", request.getDoctype());
 
             when(parsedAccessToken.isActive()).thenReturn(true);
             when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
