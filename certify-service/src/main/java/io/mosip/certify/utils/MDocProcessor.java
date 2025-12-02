@@ -14,6 +14,7 @@ import java.io.ByteArrayOutputStream;
 
 import io.mosip.certify.config.MDocConfig;
 import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.kernel.signature.dto.CoseSignRequestDto;
@@ -114,7 +115,7 @@ public class MDocProcessor {
 
         } catch (Exception e) {
             log.error("Error processing templated JSON: {}", e.getMessage(), e);
-            return new HashMap<>();
+            throw new CertifyException(ErrorConstants.MDOC_TEMPLATE_PROCESSING_FAILED, "Error processing templated JSON: " + e.getMessage());
         }
     }
 
@@ -315,6 +316,14 @@ public class MDocProcessor {
         if (obj instanceof byte[]) {
             return new ByteString((byte[]) obj);
         }
+        if (obj instanceof java.util.Map && ((java.util.Map<?, ?>) obj).containsKey(Constants.__CBOR_TAG)) {
+            java.util.Map<?, ?> taggedMap = (java.util.Map<?, ?>) obj;
+            int tag = (Integer) taggedMap.get(Constants.__CBOR_TAG);
+            Object value = taggedMap.get(Constants.__CBOR_VALUE);
+            DataItem dataItem = convertToDataItem(value);
+            dataItem.setTag(tag);  // This correctly sets the tag
+            return dataItem;
+        }
         if (obj instanceof java.util.Map) {
             co.nstant.in.cbor.model.Map map = new co.nstant.in.cbor.model.Map();
             for (Object entry : ((java.util.Map<?, ?>) obj).entrySet()) {
@@ -331,14 +340,6 @@ public class MDocProcessor {
                 array.add(convertToDataItem(item));
             }
             return array;
-        }
-        if (obj instanceof java.util.Map && ((java.util.Map<?, ?>) obj).containsKey(Constants.__CBOR_TAG)) {
-            java.util.Map<?, ?> taggedMap = (java.util.Map<?, ?>) obj;
-            int tag = (Integer) taggedMap.get(Constants.__CBOR_TAG);
-            Object value = taggedMap.get(Constants.__CBOR_VALUE);
-            DataItem dataItem = convertToDataItem(value);
-            dataItem.setTag(tag);  // This correctly sets the tag
-            return dataItem;
         }
         // For any other type, convert to string
         return new UnicodeString(obj.toString());
@@ -407,6 +408,9 @@ public class MDocProcessor {
      * Creates device key info structure (placeholder implementation)
      */
     private static Map<String, Object> createDeviceKeyInfo(Object deviceInfo) throws Exception {
+        if(deviceInfo == null) {
+            throw new IllegalArgumentException("Device info (holder ID) is required for mDoc credential");
+        }
         String deviceKeyEncoded = deviceInfo.toString();
         if (deviceKeyEncoded.startsWith(Constants.DID_JWK_PREFIX)) {
             deviceKeyEncoded = deviceKeyEncoded.substring(Constants.DID_JWK_PREFIX.length());
