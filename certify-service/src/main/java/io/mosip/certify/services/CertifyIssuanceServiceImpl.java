@@ -214,10 +214,17 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     jsonObject.put(Constants.TYPE, vcRequestDto.getVct());
                     break;
 
+                case "mso_mdoc":
+                    vcRequestDto.setDoctype(credentialRequest.getDoctype());
+                    templateName = CredentialUtils.getTemplateName(vcRequestDto);
+                    templateParams.put("_doctype", vcRequestDto.getDoctype());
+                    jsonObject.put(Constants.TYPE, vcRequestDto.getDoctype());
+                    break;
+
                 default:
                     throw new CertifyException(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT, "Invalid or unsupported VC format requested.");
-            }
 
+            }
             // Common logic for all formats
             templateParams.put(Constants.TEMPLATE_NAME, templateName);
             templateParams.put(Constants.DID_URL, didUrl);

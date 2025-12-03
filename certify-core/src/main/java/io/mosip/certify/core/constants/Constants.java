@@ -39,4 +39,16 @@ public class Constants {
     public  static final String CONFIRMATION = "cnf";
     public  static final String ISSUER = "iss";
     public static final String TYPE = "type";
+    public static final String DOCTYPE = "docType";
+    public static final String CLAIMS = "claims";
+    public static final String DID_JWK_PREFIX = "did:jwk:";
+    public static final String NAMESPACES = "nameSpaces";
+    public static final String DIGEST_ID = "digestID";
+    public static final String VALIDITY_INFO = "validityInfo";
+    public static final String _HOLDER_ID = "_holderId";
+    public static final String ELEMENT_IDENTIFIER = "elementIdentifier";
+    public static final String ELEMENT_VALUE = "elementValue";
+    public static final String __CBOR_TAG = "__cbor_tag";
+    public static final String __CBOR_VALUE = "__cbor_value";
+
 }

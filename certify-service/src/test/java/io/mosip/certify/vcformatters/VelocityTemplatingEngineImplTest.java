@@ -146,14 +146,6 @@ public class VelocityTemplatingEngineImplTest {
 
         when(credentialConfigRepository.findByCredentialFormatAndCredentialTypeAndContext(vc2Format, vc2Type, vc2Context)).thenReturn(Optional.of(vc2));
 
-//        when(credentialConfigRepository.findByCredentialFormatAndCredentialTypeAndContext(
-//                Mockito.argThat(arg -> !arg.equals(vc2Format)),
-//                Mockito.argThat(arg -> !arg.equals(vc2Type)),
-//                Mockito.argThat(arg -> !arg.equals(vc2Context))
-//        )).thenReturn(Optional.empty());
-
-
-
         formatter.initialize(); // Initializes VelocityEngine
     }
 
