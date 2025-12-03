@@ -2,6 +2,6 @@ modules:
   injicertify:
     enabled: true
     image:
-      repository: mosipid/apitest-inji-certify
-      tag: 0.13.0
+      repository: mosipqa/apitest-inji-certify
+      tag: 0.13.x
       pullPolicy: Always
