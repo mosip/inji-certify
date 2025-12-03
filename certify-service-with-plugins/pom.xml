@@ -9,12 +9,12 @@
     <parent>
         <groupId>io.mosip.certify</groupId>
         <artifactId>certify-parent</artifactId>
-        <version>0.13.0</version>
+        <version>0.13.1-SNAPSHOT</version>
     </parent>
 
     <groupId>io.mosip.certify</groupId>
     <artifactId>certify-service-with-plugins</artifactId>
-    <version>0.13.0</version>
+    <version>0.13.1-SNAPSHOT</version>
     <name>certify-service-with-plugins</name>
     <description>certify vci service</description>
     <url>https://github.com/mosip/inji-certify</url>
