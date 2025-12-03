@@ -10,7 +10,7 @@
     <parent>
         <groupId>io.mosip.certify</groupId>
         <artifactId>certify-parent</artifactId>
-        <version>0.13.0</version>
+        <version>0.13.1-SNAPSHOT</version>
     </parent>
 
     <groupId>io.mosip.certify</groupId>
