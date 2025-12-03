@@ -112,8 +112,11 @@ public class MosipTestRunner {
 				AdminTestUtil.createAndPublishPolicy();
 				AdminTestUtil.createEditAndPublishPolicy();
 				PartnerRegistration.deviceGeneration();
-
+				
+				// Generating biometric details with mock MDS
+				BaseTestCase.domain=".mosip.net";
 				BiometricDataProvider.generateBiometricTestData("Registration");
+				BaseTestCase.domain = System.getProperty("env.endpoint", "localhost").replaceFirst("^https?://", "").replaceAll("/$", "");
 
 				// Used for loading dependency from dependency json, When generating the
 				// dependency json file comment it out
