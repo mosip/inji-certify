@@ -11,15 +11,9 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
+import io.mosip.certify.core.constants.*;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.VelocityContext;
@@ -36,14 +30,10 @@ import org.springframework.cache.annotation.Cacheable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.RenderingTemplateException;
 import io.mosip.certify.entity.CredentialConfig;
 import io.mosip.certify.repository.CredentialConfigRepository;
-import io.mosip.certify.core.constants.Constants;
-import io.mosip.certify.core.constants.VCDM2Constants;
-import io.mosip.certify.core.constants.VCDMConstants;
 import io.mosip.certify.core.spi.RenderingTemplateService;
 import io.mosip.certify.services.CredentialUtils;
 import jakarta.annotation.PostConstruct;
@@ -96,13 +86,23 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
             throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "Template key format requires 3 parts: " + templateKey);
         } else if(parts.length == 2) {
             String credentialFormat = parts[0];
-            String vct = parts[1];
-
-            return credentialConfigRepository.findByCredentialFormatAndSdJwtVct(credentialFormat, vct)
-                    .orElseThrow(() -> {
-                        log.error("CredentialConfig not found in DB for key: {}", templateKey);
-                        return new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "CredentialConfig not found for key: " + templateKey);
-                    });
+            if (Objects.equals(credentialFormat, VCFormats.MSO_MDOC)) {
+                String doctype = parts[1];
+                return credentialConfigRepository.findByCredentialFormatAndDocType(credentialFormat, doctype)
+                        .orElseThrow(() -> {
+                            log.error("CredentialConfig not found in DB for key: {}", templateKey);
+                            return new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "CredentialConfig not found for key: " + templateKey);
+                        });
+            } else if (Objects.equals(credentialFormat, VCFormats.SD_JWT)) {
+                String vct = parts[1];
+                return credentialConfigRepository.findByCredentialFormatAndSdJwtVct(credentialFormat, vct)
+                        .orElseThrow(() -> {
+                            log.error("CredentialConfig not found in DB for key: {}", templateKey);
+                            return new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "CredentialConfig not found for key: " + templateKey);
+                        });
+            } else {
+                throw new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "Undefined VC Format");
+            }
         }
 
         String credentialType = parts[0];

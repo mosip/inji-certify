@@ -171,7 +171,7 @@ public class DIDDocumentUtil {
         }
     }
 
-     private static Map<String, Object> generateEd25519VerificationMethod(PublicKey publicKey, String didUrl) throws Exception {
+    private static Map<String, Object> generateEd25519VerificationMethod(PublicKey publicKey, String didUrl) throws Exception {
 
         BCEdDSAPublicKey edKey = (BCEdDSAPublicKey) publicKey;
         byte[] rawBytes = edKey.getPointEncoding();
@@ -180,7 +180,7 @@ public class DIDDocumentUtil {
         System.arraycopy(multicodecBytes, 0, finalBytes, 0, multicodecBytes.length);
         System.arraycopy(rawBytes, 0, finalBytes, multicodecBytes.length, rawBytes.length);
         String publicKeyMultibase = Multibase.encode(Multibase.Base.Base58BTC, finalBytes);
-        
+
         Map<String, Object> verificationMethod = new HashMap<>();
         verificationMethod.put("type", "Ed25519VerificationKey2020");
         verificationMethod.put("@context", "https://w3id.org/security/suites/ed25519-2020/v1");

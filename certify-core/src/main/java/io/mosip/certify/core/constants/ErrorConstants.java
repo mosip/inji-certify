@@ -73,6 +73,7 @@ public class ErrorConstants {
     public static final String CONFIG_NOT_ACTIVE = "CONFIG_NOT_ACTIVE";
     public static final String CONFIG_NOT_FOUND_FOR_UPDATE = "CONFIG_NOT_FOUND_FOR_UPDATE";
     public static final String CONFIG_NOT_FOUND_FOR_DELETE = "CONFIG_NOT_FOUND_FOR_DELETE";
+    public static final String MDOC_TEMPLATE_PROCESSING_FAILED = "mdoc_template_processing_failed";
     public static final String INVALID_CREDENTIAL_CONFIGURATION_ID = "invalid_credential_configuration_id";
     public static final String MISSING_MANDATORY_CLAIM = "missing_mandatory_claim";
     public static final String CREDENTIAL_OFFER_NOT_FOUND = "credential_offer_not_found";
