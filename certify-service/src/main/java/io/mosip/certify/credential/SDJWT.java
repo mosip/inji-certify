@@ -30,7 +30,6 @@ import com.nimbusds.jwt.PlainJWT;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.utils.SDJsonUtils;
 import io.mosip.certify.vcformatters.VCFormatter;
-import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import io.mosip.kernel.signature.service.SignatureService;
 import lombok.extern.slf4j.Slf4j;
@@ -57,27 +56,28 @@ public class SDJWT extends Credential{
     }
 
 
-        /** 
-     * createCredential method is resposible to convert the given template and 
-     * templateparams into the requested credential format. This not just a 
-     * template replacement but should also have all logics necessary to conver 
-     * this to a proper verifiable credential.Any additional VC level atributes 
-     * or context or etc should be handled by the inherrited class.
-     * upon error it returns an empty JWT.
-     * upon success it returns the unsiged sd-jwt with disclosure
-     * @param templateParams The params map that would be used to replace the 
-     *                       template
-     * @param templateName The actual template
-    */
+        /**
+         * createCredential method is resposible to convert the given template and
+         * templateparams into the requested credential format. This not just a
+         * template replacement but should also have all logics necessary to conver
+         * this to a proper verifiable credential.Any additional VC level atributes
+         * or context or etc should be handled by the inherrited class.
+         * upon error it returns an empty JWT.
+         * upon success it returns the unsiged sd-jwt with disclosure
+         *
+         * @param finalTemplate The params map that would be used to replace the
+         *                       template
+         * @param templateName   The actual template
+         */
     @Override
-    public String createCredential(Map<String, Object> templateParams, String templateName) {
+    public String createCredential(Map<String, Object> finalTemplate, String templateName) {
         SDObjectBuilder sdObjectBuilder = new SDObjectBuilder();
         List<Disclosure> disclosures = new ArrayList<>();
         PlainHeader header = new PlainHeader();
         JsonNode node;
         String currentPath = "$";
 
-        String templatedJSON = super.createCredential(templateParams, templateName);
+        String templatedJSON = super.createCredential(finalTemplate, templateName);
         List<String> sdPaths = super.vcFormatter.getSelectiveDisclosureInfo(templateName);   
         try {
             

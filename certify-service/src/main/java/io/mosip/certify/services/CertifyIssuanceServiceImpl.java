@@ -5,6 +5,8 @@
  */
 package io.mosip.certify.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.api.dto.VCRequestDto;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.api.exception.DataProviderExchangeException;
@@ -38,6 +40,7 @@ import io.mosip.certify.validators.CredentialRequestValidator;
 import io.mosip.certify.vcformatters.VCFormatter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +53,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 
+import static io.mosip.certify.utils.CredentialUtils.jsonify;
 import static io.mosip.certify.utils.VCIssuanceUtil.getScopeCredentialMapping;
 import static io.mosip.certify.utils.VCIssuanceUtil.validateLdpVcFormatRequest;
 
@@ -251,7 +255,14 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             templateParams.put(VCDM2Constants.VALID_UNTIL, expiryTime);
 
             Credential cred = credentialFactory.getCredential(format).orElseThrow(() -> new CertifyException(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT));
-            String unsignedCredential = cred.createCredential(templateParams, templateName);
+            Map<String, Object> finalTemplate = jsonify(templateParams);
+
+            JSONArray qrDataJson = cred.createQRData(finalTemplate, templateName);
+            if(qrDataJson == null) {
+                log.warn("QR code not configured for template: {}. To enable qr code support, update the respective credential configuration.", templateName);
+            }
+            log.info("qrDataString: {}", qrDataJson);
+            String unsignedCredential = cred.createCredential(finalTemplate, templateName);
             if(isLedgerEnabled) {
                 Map<String, Object> indexedAttributes = ledgerUtils.extractIndexedAttributes(jsonObject);
                 String credentialType = LedgerUtils.extractCredentialType(jsonObject);

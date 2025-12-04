@@ -120,7 +120,7 @@ public class CredentialConfig {
     @Type(JsonBinaryType.class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "qr_settings", columnDefinition = "jsonb")
-    private Map<String, Object> qrSettings;
+    private List<Map<String, Object>> qrSettings;
 
     @Column(name = "qr_signature_algo")
     private String qrSignatureAlgo;
