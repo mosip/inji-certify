@@ -2,7 +2,7 @@ apiVersion: v2
 name: inji-certify
 description: A Helm chart for MOSIP inji-certify module
 type: application
-version:
+version: 0.13.1
 appVersion: ""
 dependencies:
   - name: common
