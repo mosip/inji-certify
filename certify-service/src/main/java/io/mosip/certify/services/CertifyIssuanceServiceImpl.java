@@ -258,10 +258,18 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             Map<String, Object> finalTemplate = jsonify(templateParams);
 
             JSONArray qrDataJson = cred.createQRData(finalTemplate, templateName);
-            if(qrDataJson == null) {
+            log.info("qrDataString: {}", qrDataJson);
+
+            if (qrDataJson != null) {
+                List<Object> claim169Values = new ArrayList<>();
+                for (int i = 0; i < qrDataJson.length(); i++) {
+                    claim169Values.add(qrDataJson.get(i));
+                }
+                finalTemplate.put("claim_169_values", claim169Values);
+            } else {
                 log.warn("QR code not configured for template: {}. To enable qr code support, update the respective credential configuration.", templateName);
             }
-            log.info("qrDataString: {}", qrDataJson);
+
             String unsignedCredential = cred.createCredential(finalTemplate, templateName);
             if(isLedgerEnabled) {
                 Map<String, Object> indexedAttributes = ledgerUtils.extractIndexedAttributes(jsonObject);

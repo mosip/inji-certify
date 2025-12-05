@@ -109,6 +109,18 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
             throw new CertifyException(ErrorConstants.CREDENTIAL_TEMPLATE_REQUIRED, "A Credential Template is required for issuers using the Data Provider plugin.");
         }
 
+        if(credentialConfig.getQrSettings() == null || credentialConfig.getQrSettings().isEmpty()) {
+            if(credentialConfig.getQrSignatureAlgo() != null) {
+                throw new CertifyException(ErrorConstants.QR_SIGNATURE_ALGO_NOT_ALLOWED, "QR signature algorithm is not allowed when QR settings are not set.");
+
+            }
+        } else {
+            String qrSignatureAlgo = credentialConfig.getQrSignatureAlgo();
+            if(!keyAliasMapper.containsKey(qrSignatureAlgo)) {
+                throw new CertifyException(ErrorConstants.UNSUPPORTED_ALGORITHM, "Unsupported QR signature algorithm: " + qrSignatureAlgo);
+            }
+        }
+
         switch (credentialConfig.getCredentialFormat()) {
             case VCFormats.LDP_VC:
                 if (!LdpVcCredentialConfigValidator.isValidCheck(credentialConfig)) {

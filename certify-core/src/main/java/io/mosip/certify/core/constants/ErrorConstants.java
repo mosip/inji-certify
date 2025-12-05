@@ -74,4 +74,5 @@ public class ErrorConstants {
     public static final String CONFIG_NOT_FOUND_FOR_UPDATE = "CONFIG_NOT_FOUND_FOR_UPDATE";
     public static final String CONFIG_NOT_FOUND_FOR_DELETE = "CONFIG_NOT_FOUND_FOR_DELETE";
     public static final String MDOC_TEMPLATE_PROCESSING_FAILED = "mdoc_template_processing_failed";
+    public static final String QR_SIGNATURE_ALGO_NOT_ALLOWED = "QR_SIGNATURE_ALGO_NOT_ALLOWED";
 }
