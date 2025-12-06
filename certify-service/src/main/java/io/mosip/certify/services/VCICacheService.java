@@ -67,7 +67,7 @@ public class VCICacheService {
         return cacheManager.getCache(VCISSUANCE_CACHE).get(accessTokenHash, VCIssuanceTransaction.class);
     }
 
-    public void setPreAuthCodeData(String code, PreAuthCodeData data, int expirySeconds) {
+    public void setPreAuthCodeData(String code, PreAuthCodeData data) {
         String key = Constants.PRE_AUTH_CODE_PREFIX + code;
         cacheManager.getCache("preAuthCodeCache").put(key, data);
     }

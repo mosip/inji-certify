@@ -64,7 +64,7 @@ public class PreAuthorizedCodeService {
                 .createdAt(currentTime)
                 .expiresAt(currentTime + (expirySeconds * 1000L)).build();
 
-        vciCacheService.setPreAuthCodeData(preAuthCode, codeData, expirySeconds);
+        vciCacheService.setPreAuthCodeData(preAuthCode, codeData);
 
         CredentialOfferResponse offerResponse = buildCredentialOffer(request.getCredentialConfigurationId(), preAuthCode, request.getTxCode());
         vciCacheService.setCredentialOffer(offerId, offerResponse, expirySeconds);
