@@ -22,7 +22,7 @@ public class PreAuthorizedCodeService {
     @Autowired
     private VCICacheService vciCacheService;
 
-    @Value("${mosip.certify.issuer.identifier:local}")
+    @Value("${mosip.certify.identifier}")
     private String issuerIdentifier;
 
     @Value("${mosip.certify.pre-auth.default-expiry-seconds:600}")
