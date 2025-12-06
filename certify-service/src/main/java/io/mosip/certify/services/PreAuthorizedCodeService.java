@@ -34,8 +34,8 @@ public class PreAuthorizedCodeService {
     @Value("${mosip.certify.pre-auth.max-expiry-seconds:86400}")
     private int maxExpirySeconds;
 
-    @Value("${mosip.certify.pre-auth.base-url:http://localhost:8090}")
-    private String baseUrl;
+    @Value("${mosip.certify.domain.url}")
+    private String domainUrl;
 
     private static final SecureRandom secureRandom = new SecureRandom();
     private static final String ALPHANUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -161,7 +161,7 @@ public class PreAuthorizedCodeService {
     }
 
     private String buildCredentialOfferUri(String offerId) {
-        String offerFetchUrl = baseUrl + "v1/certify/credential-offer-data/" + offerId;
+        String offerFetchUrl = domainUrl + "v1/certify/credential-offer-data/" + offerId;
         String encodedUrl = URLEncoder.encode(offerFetchUrl, StandardCharsets.UTF_8);
         return "openid-credential-offer://?credential_offer_uri=" + encodedUrl;
     }
