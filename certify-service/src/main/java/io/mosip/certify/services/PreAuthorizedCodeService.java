@@ -161,11 +161,11 @@ public class PreAuthorizedCodeService {
     }
 
     private String buildCredentialOfferUri(String offerId) {
-        String baseUrlNormalized = baseUrl.endsWith("/") ? baseUrl : baseUrl + "/";
-        String offerFetchUrl = String.format("%sv1/certify/credential-offer-data/%s", baseUrlNormalized, offerId);
+        String offerFetchUrl = baseUrl + "v1/certify/credential-offer-data/" + offerId;
         String encodedUrl = URLEncoder.encode(offerFetchUrl, StandardCharsets.UTF_8);
         return "openid-credential-offer://?credential_offer_uri=" + encodedUrl;
     }
+
 
     private String generateSecureCode(int length) {
         StringBuilder code = new StringBuilder(length);
