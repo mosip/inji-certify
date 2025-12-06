@@ -98,25 +98,43 @@ public class PreAuthorizedCodeService {
             providedClaims = Collections.emptyMap();
         }
 
+        List<String> missingClaims = new ArrayList<>();
+        List<String> unknownClaims = new ArrayList<>();
+
         for (Map.Entry<String, Object> entry : requiredClaims.entrySet()) {
             Map<String, Object> claimAttrs = (Map<String, Object>) entry.getValue();
             Boolean mandatory = (Boolean) claimAttrs.get(Constants.MANDATORY);
 
             if (Boolean.TRUE.equals(mandatory)) {
-                if (!providedClaims.containsKey(entry.getKey()) || providedClaims.get(entry.getKey()) == null) {
-                    log.error("Missing mandatory claim: {}", entry.getKey());
-                    throw new InvalidRequestException(String.format(ErrorConstants.MISSING_MANDATORY_CLAIM, entry.getKey()));
+                if (!providedClaims.containsKey(entry.getKey()) ||
+                        providedClaims.get(entry.getKey()) == null) {
+
+                    missingClaims.add(entry.getKey());
                 }
             }
         }
 
         for (String providedClaim : providedClaims.keySet()) {
             if (!requiredClaims.containsKey(providedClaim)) {
-                log.error("Unknown claim provided: {}", providedClaim);
-                throw new InvalidRequestException(String.format("Unknown claim: %s", providedClaim));
+                unknownClaims.add(providedClaim);
             }
         }
+
+        if (!missingClaims.isEmpty()) {
+            log.error("Missing mandatory claims: {}", missingClaims);
+            throw new InvalidRequestException(
+                    String.format("Missing mandatory claims: %s", String.join(", ", missingClaims))
+            );
+        }
+
+        if (!unknownClaims.isEmpty()) {
+            log.error("Unknown claims provided: {}", unknownClaims);
+            throw new InvalidRequestException(
+                    String.format("Unknown claims: %s", String.join(", ", unknownClaims))
+            );
+        }
     }
+
 
     private String generateUniquePreAuthCode() {
         String preAuthCode;
