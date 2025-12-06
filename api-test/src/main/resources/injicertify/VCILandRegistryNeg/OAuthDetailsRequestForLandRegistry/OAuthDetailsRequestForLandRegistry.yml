@@ -1,7 +1,7 @@
 OAuthDetailsRequestForLandRegistry:
    InjiCertify_ESignet_OAuthDetailsRequest_ForLandRegistry_uin_Pos_For_NegFlow_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
-      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_15
       description: OAuth details request for Mock
       role: resident
       restMethod: post
@@ -29,7 +29,7 @@ OAuthDetailsRequestForLandRegistry:
 
    InjiCertify_ESignet_OAuthDetailsRequest_ForLandRegistry_Cred_2_uin_Pos_For_NegFlow_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
-      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_16
       description: OAuth details request for Mock
       role: resident
       restMethod: post
@@ -57,7 +57,7 @@ OAuthDetailsRequestForLandRegistry:
 
    InjiCertify_ESignet_OAuthDetailsRequest_ForLandRegistry_uin_Pos_Without_DB_Insertion_For_NegFlow_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
-      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_17
       description: OAuth details request for Mock eithout DB insertion data flow
       role: resident
       restMethod: post

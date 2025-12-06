@@ -1,10 +1,11 @@
 AuthorizationCodeFormDocMDL:
    InjiCertify_ESignet_AuthorizationCode_FormDoc_All_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
-      uniqueIdentifier: TC_esignetDependent_AuthorizationCode      
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCode_04      
       description: Authorization Code for mDoc MDL   
       role: resident
       restMethod: post
+      additionalDependencies: TC_esignetDependent_AuthenticateUser_04
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
       inputTemplate: injicertify/mDocMDL/AuthorizationCodeFormDoc/AuthorizationCodeFormDoc

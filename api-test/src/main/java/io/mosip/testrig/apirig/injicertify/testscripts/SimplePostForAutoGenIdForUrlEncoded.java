@@ -135,7 +135,7 @@ public class SimplePostForAutoGenIdForUrlEncoded extends InjiCertifyUtil impleme
 					throw new AdminTestException("Failed at output validation");
 			}
 		} else {
-			jsonInput = InjiCertifyUtil.inputStringKeyWordHandeler(jsonInput, testCaseName);
+			jsonInput = inputStringKeyWordHandeler(jsonInput, testCaseName);
 
 			if (testCaseName.contains("ESignet_")) {
 				String tempUrl = InjiCertifyConfigManager.getEsignetBaseUrl();

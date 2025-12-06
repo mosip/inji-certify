@@ -45,12 +45,13 @@ When adding or updating a configuration, you need to send a JSON object with det
 
 The Inji Certify uses several configuration properties to control how credential configurations work. These are typically set in your `application.properties` or `application.yml` file.
 
-| Property Name                                                          | Description                                                                              | Example Value                                                                                                                                                                                                                                                                                     |
-|------------------------------------------------------------------------|------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `mosip.certify.data-provider-plugin.credential-status.supported-purposes` | List of supported credential status purposes. Default value 'revocation'.                | `["suspension", "revocation"]`                                                                                                                                                                                                                                                                    |
-| `mosip.certify.credential-config.cryptographic-binding-methods-supported` | Supported cryptographic binding methods per credential format.                           | `{ 'ldp_vc': {'did:jwk','did:key'}, 'mso_mdoc': {'cose_key'},'vc+sd-jwt': {'did:jwk','did:key'} }`                                                                                                                                                                                                |
-| `mosip.certify.credential-config.credential-signing-alg-values-supported` | Supported signing algorithms per crypto suite.                                           | `{ 'RsaSignature2018': {'RS256'}, 'Ed25519Signature2018': {'EdDSA'}, 'Ed25519Signature2020': {'EdDSA'}, 'EcdsaKoblitzSignature2016': {'ES256K'}, 'EcdsaSecp256k1Signature2019': {'ES256K'}, 'EcdsaSecp256r1Signature2019': {'ES256'}, 'ecdsa-rdfc-2019': {'ES256'}, 'ecdsa-jcs-2019': {'ES256'}}` |
-| `mosip.certify.credential-config.proof-types-supported`                | Supported proof types for credentials.                                                   | `{'jwt': {'proof_signing_alg_values_supported': {'RS256', 'PS256', 'ES256', 'EdDSA'}}}`                                                                                                                                                                                                           |
+| Property Name                                                          | Description                                                               | Example Value                                                                                                                                                                                                                                                                                     |
+|------------------------------------------------------------------------|---------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `mosip.certify.data-provider-plugin.credential-status.allowed-status-purposes` | List of supported credential status purposes. Default value 'revocation'. | `["suspension", "revocation"]`                                                                                                                                                                                                                                                                    |
+| `mosip.certify.credential-config.cryptographic-binding-methods-supported` | Supported cryptographic binding methods per credential format.            | `{ 'ldp_vc': {'did:jwk','did:key'}, 'mso_mdoc': {'cose_key'},'vc+sd-jwt': {'did:jwk','did:key'} }`                                                                                                                                                                                                |
+| `mosip.certify.credential-config.credential-signing-alg-values-supported` | Supported signing algorithms per crypto suite.                            | `{ 'RsaSignature2018': {'RS256'}, 'Ed25519Signature2018': {'EdDSA'}, 'Ed25519Signature2020': {'EdDSA'}, 'EcdsaKoblitzSignature2016': {'ES256K'}, 'EcdsaSecp256k1Signature2019': {'ES256K'}, 'EcdsaSecp256r1Signature2019': {'ES256'}, 'ecdsa-rdfc-2019': {'ES256'}, 'ecdsa-jcs-2019': {'ES256'}}` |
+| `mosip.certify.credential-config.proof-types-supported`                | Supported proof types for credentials.                                    | `{'jwt': {'proof_signing_alg_values_supported': {'RS256', 'PS256', 'ES256', 'EdDSA'}}}`                                                                                                                                                                                                           |
+| `mosip.certify.signature-algo.key-alias-mapper`                       | Maps signature algorithms to list of key-aliases in key_alias table.      | `{'EdDSA': {{'CERTIFY_VC_SIGN_ED25519', ''}, {'CERTIFY_VC_SIGN_ED25519', 'ED25519_SIGN'}}`                                                                                                                                                                                                        |
 
 ## Validations and Rules
 
@@ -65,7 +66,17 @@ Inji Certify checks your configuration for required fields and possible duplicat
   - for `ldp_vc` format, combination of context & type should be unique. 
   - for `mso_mdoc` format, docType value should be unique.
   - for `vc+sd-jwt` format, sdJwtVct value should be unique.
-
+- **Validation for `signatureCryptoSuite`, `signatureAlgo`, `keyManagerAppId`, `keyManagerRefId`**.
+  - `signatureCryptoSuite` must be one of the supported suites defined in `mosip.certify.credential-config.credential-signing-alg-values-supported`.
+  - `signatureAlgo` must be one of the supported algorithms for the chosen `signatureCryptoSuite`.
+  - `keyManagerAppId` and `keyManagerRefId` must refer to the correct keys defined in `mosip.certify.signature-algo.key-alias-mapper`.
+- **Purpose of `didUrl` in `credential_config`**:
+  - `didUrl` in `credential_config` can be different from the issuer did url specified by the property `mosip.certify.data-provider-plugin.did-url`.
+  - It is used to point to temporary `didUrl` which is specific to a VC type. The did document fetched from the `./well-known/did.json` endpoint can be copied and hosted on the credentialConfig didUrl.
+  - **Example**: `mosip.certify.data-provider-plugin.did-url=did:mosip:12345`
+  - `credential_config.didUrl=did:mosip:12345:driver_license`
+  - In this case, the did document for `did:mosip:12345:driver_license` can be copied from `did:mosip:12345` and hosted on this url.
+    
 If you miss a required field or try to add a duplicate, Certify will return an error.
 
 ---

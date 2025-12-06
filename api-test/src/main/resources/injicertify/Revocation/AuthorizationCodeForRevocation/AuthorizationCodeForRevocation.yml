@@ -1,10 +1,11 @@
 AuthorizationCodeForRevocation:
    InjiCertify_ESignet_AuthorizationCode_For_landregistry_Cred1_All_Valid_Smoke_For_Revocation_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
-      uniqueIdentifier: TC_esignetDependent_AuthorizationCode
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCode_05
       description: Authorization Code for data integrity proof for cred1
       role: noauth
       restMethod: post
+      additionalDependencies: TC_esignetDependent_AuthenticateUser_05
       checkErrorsOnlyInResponse: true
       inputTemplate: injicertify/Revocation/AuthorizationCodeForRevocation/AuthorizationCodeForRevocation
       outputTemplate: injicertify/Revocation/AuthorizationCodeForRevocation/AuthorizationCodeForRevocationResult
@@ -17,10 +18,11 @@ AuthorizationCodeForRevocation:
 }'
    InjiCertify_ESignet_AuthorizationCode_For_landregistry_Cred2_All_Valid_Smoke_For_Revocation_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
-      uniqueIdentifier: TC_esignetDependent_AuthorizationCode
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCode_06
       description: Authorization Code for data integrity proof for cred2
       role: noauth
       restMethod: post
+      additionalDependencies: TC_esignetDependent_AuthenticateUser_06
       checkErrorsOnlyInResponse: true
       inputTemplate: injicertify/Revocation/AuthorizationCodeForRevocation/AuthorizationCodeForRevocation
       outputTemplate: injicertify/Revocation/AuthorizationCodeForRevocation/AuthorizationCodeForRevocationResult

@@ -1,4 +1,4 @@
-package io.mosip.certify.entity.attributes;
+package io.mosip.certify.core.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -13,8 +13,6 @@ import java.io.Serializable;
 public class CredentialStatusDetail implements Serializable {
     @JsonProperty("status_purpose")
     private String statusPurpose;
-    @JsonProperty("status_value")
-    private Boolean statusValue;
     @JsonProperty("status_list_credential_id")
     private String statusListCredentialId;
     @JsonProperty("status_list_index")

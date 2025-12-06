@@ -3,12 +3,12 @@ package io.mosip.certify.controller;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.services.PreAuthorizedCodeService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 
 @Slf4j
 @RestController

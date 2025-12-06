@@ -1,7 +1,7 @@
 OAuthDetailsRequestVCINeg:
    InjiCertify_ESignet_OAuthDetailsRequest_VCI_MOSIPID_uin_all_Valid_Smoke_sid_For_Neg_Flow:
       endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/v2/oauth-details
-      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequestNeg
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequestNeg_30
       description: OAuth details request      
       role: resident
       restMethod: post
@@ -29,7 +29,7 @@ OAuthDetailsRequestVCINeg:
 
    InjiCertify_ESignet_OAuthDetailsRequest_VCI_MOSIPID_uin_Diff_Scope_all_Valid_Smoke_sid_For_Neg_Flow:
       endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/v2/oauth-details
-      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequestNeg_2
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequestNeg_31
       description: OAuth details request with different scope
       role: resident
       restMethod: post

@@ -1124,7 +1124,6 @@
 			<class name="io.mosip.testrig.apirig.injicertify.testscripts.DeleteWithParam" />
 		</classes>
 	</test>
-	
 	<test name="AddCredentialConfigForRevocation">
 		<parameter name="ymlFile"
 			value="injicertify/Revocation/AddCredentialConfigForRevocation/AddCredentialConfigForRevocation.yml" />
@@ -1198,6 +1197,18 @@
 				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
 		</classes>
 	</test>
+	<test name="LedgerSearchAPIV2">
+		<parameter name="ymlFile"
+			value="injicertify/Revocation/LedgerSearchAPI_V2/LedgerSearchAPIV2.yml" />
+		<parameter name="idKeyName"
+			value="statusListCredentialUrl,statusListIndex,statusPurpose" />
+		<parameter name="isJsonArrayResponse"
+			value="yes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>	
 	<test name="UpdateCredentialStatus">
 		<parameter name="ymlFile"
 			value="injicertify/Revocation/UpdateCredentialStatus/UpdateCredentialStatus.yml" />
@@ -1206,6 +1217,14 @@
 				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
 		</classes>
 	</test>
+	<test name="UpdateCredentialStatusV2">
+		<parameter name="ymlFile"
+			value="injicertify/Revocation/UpdateCredentialStatus_V2/UpdateCredentialStatusV2.yml" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>	
 	<test name="GetStatusListbyID">
 		<parameter name="ymlFile"
 			value="injicertify/Revocation/GetStatusListbyID/GetStatusListbyID.yml" />
@@ -1217,6 +1236,103 @@
 	<test name="DeleteCredentialConfigurationForRevocation">
 		<parameter name="ymlFile"
 			value="injicertify/Revocation/DeleteCredentialConfigurationForRevocation/DeleteCredentialConfigurationForRevocation.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.injicertify.testscripts.DeleteWithParam" />
+		</classes>
+	</test>
+	<test name="GenerateCSR">
+		<parameter name="ymlFile"
+			value="injicertify/CSRCertificate/GenerateCSR/GenerateCSR.yml" />
+			<parameter name="idKeyName" value="certSignRequest" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="UploadCACertificate">
+		<parameter name="ymlFile"
+			value="injicertify/CSRCertificate/UploadCACertificate/UploadCACertificate.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
+		</classes>
+	</test>
+	<test name="UploadSignedCertificate">
+		<parameter name="ymlFile"
+			value="injicertify/CSRCertificate/UploadCertificate/UploadCertificate.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
+		</classes>
+	</test>
+	<test name="AddCredentialConfigForCSRCertificate">
+		<parameter name="ymlFile"
+			value="injicertify/CSRCertificate/AddCredentialConfigCSRCertificate/AddCredentialConfigForCSRCertificate.yml" />
+		<parameter name="idKeyName" value="id" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="OAuthDetailsRequestForCSRCertificate">
+		<parameter name="ymlFile"
+			value="injicertify/CSRCertificate/OAuthDetailsRequestForCSRCertificate/OAuthDetailsRequestForCSRCertificate.yml" />
+		<parameter name="idKeyName" value="transactionId,encodedResp" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="AuthenticateUserForCSRCertificate">
+		<parameter name="ymlFile"
+			value="injicertify/CSRCertificate/AuthenticateUserForCSRCertificate/AuthenticateUserForCSRCertificate.yml" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.PostWithAutogenIdWithOtpGenerate" />
+		</classes>
+	</test>
+	<test name="AuthorizationCodeForCSRCertificate">
+		<parameter name="ymlFile"
+			value="injicertify/CSRCertificate/AuthorizationCodeForCSRCertificate/AuthorizationCodeForCSRCertificate.yml" />
+		<parameter name="idKeyName" value="code" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="GenerateTokenForCSRCertificate">
+		<parameter name="ymlFile"
+			value="injicertify/CSRCertificate/GenerateTokenForCSRCertificate/GenerateTokenForCSRCertificate.yml" />
+		<parameter name="idKeyName" value="access_token" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenIdForUrlEncoded" />
+		</classes>
+	</test>
+	<test name="GetCredentialForCSRCertificate">
+		<parameter name="ymlFile"
+			value="injicertify/CSRCertificate/GetCredentialForCSRCertificate/GetCredentialForCSRCertificate.yml" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.SimplePost" />
+		</classes>
+	</test>
+	<test name="GetDataFromLedgerTableCSRCertificate">
+		<parameter name="ymlFile"
+			value="injicertify/CSRCertificate/GetDataFromLedgerTableCSRCertificate/GetDataFromLedgerTable.yml" />
+		<parameter name="idKeyName" value="credential_id,issuer_id,indexed_attributes" />
+		<classes>
+			<class
+				name="io.mosip.testrig.apirig.injicertify.testscripts.DBIntegration" />
+		</classes>
+	</test>
+	<test name="FetchCertificateUsingCSR">
+		<parameter name="ymlFile"
+			value="injicertify/CSRCertificate/FetchCertificate/FetchCertificate.yml" />
+		<classes>
+			<class name="io.mosip.testrig.apirig.injicertify.testscripts.GetWithParam" />
+		</classes>
+	</test>
+	<test name="DeleteCredentialConfigurationForCSRCertificate">
+		<parameter name="ymlFile"
+			value="injicertify/CSRCertificate/DeleteCredentialConfigurationForCSRCertificate/DeleteCredentialConfigurationForCSRCertificate.yml" />
 		<classes>
 			<class name="io.mosip.testrig.apirig.injicertify.testscripts.DeleteWithParam" />
 		</classes>
