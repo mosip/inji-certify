@@ -1,18 +1,10 @@
 package io.mosip.certify.services;
 
-import com.nimbusds.jose.JOSEObjectType;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.JWSSigner;
-import com.nimbusds.jose.crypto.RSASSASigner;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
-import io.mosip.certify.core.util.SecurityHelperService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,7 +14,6 @@ import org.springframework.util.StringUtils;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
-import java.security.interfaces.RSAPrivateKey;
 import java.util.*;
 
 @Service
@@ -31,9 +22,6 @@ public class PreAuthorizedCodeService {
 
     @Autowired
     private VCICacheService vciCacheService;
-
-    @Autowired
-    private SecurityHelperService securityHelperService;
 
     @Value("${mosip.certify.access-token.expiry-seconds:600}")
     private int accessTokenExpirySeconds;
@@ -60,30 +48,20 @@ public class PreAuthorizedCodeService {
     public String generatePreAuthorizedCode(PreAuthorizedRequest request) {
         log.info("Generating pre-authorized code for credential configuration: {}", request.getCredentialConfigurationId());
 
-        // Validate credential configuration exists
         validateCredentialConfiguration(request.getCredentialConfigurationId());
-
-        // Validate claims against metadata
         validateClaims(request.getCredentialConfigurationId(), request.getClaims());
 
-        // Determine expiry
         int expirySeconds = request.getExpiresIn() != null ? request.getExpiresIn() : defaultExpirySeconds;
 
         // Generate unique IDs
         String offerId = UUID.randomUUID().toString();
         String preAuthCode = generateSecureCode(32);
 
-        // Store data in cache
         long currentTime = System.currentTimeMillis();
         PreAuthCodeData codeData = PreAuthCodeData.builder().credentialConfigurationId(request.getCredentialConfigurationId()).claims(request.getClaims()).txnCode(request.getTxCode()).createdAt(currentTime).expiresAt(currentTime + (expirySeconds * 1000L)).build();
 
-        // Cache the pre-auth code data
         vciCacheService.setPreAuthCodeData(preAuthCode, codeData, expirySeconds);
-
-        // Create credential offer
         CredentialOfferResponse offerResponse = buildCredentialOffer(request.getCredentialConfigurationId(), preAuthCode, request.getTxCode());
-
-        // Cache the credential offer
         vciCacheService.setCredentialOffer(offerId, offerResponse, expirySeconds);
 
         // Build and return the URI
@@ -184,10 +162,7 @@ public class PreAuthorizedCodeService {
             preAuthGrant.setTxCode(buildTxCodeInfo(txnCode));
         }
 
-        // THIS IS THE FIX: Set the pre-auth grant into the grants object
         grants.setPreAuthorizedCode(preAuthGrant);
-
-        // Set the grants in the response
         response.setGrants(grants);
 
         return response;
@@ -216,7 +191,6 @@ public class PreAuthorizedCodeService {
         return code.toString();
     }
 
-
     /**
      * Exchange pre-authorized code for access token
      */
@@ -238,16 +212,26 @@ public class PreAuthorizedCodeService {
         }
         String cNonce = nonce.toString();
 
-        // Cache access token data for credential issuance
-        Transaction transaction = new Transaction();
-        transaction.setCredentialConfigurationId(codeData.getCredentialConfigurationId());
-        transaction.setClaims(codeData.getClaims());
-        transaction.setCNonce(cNonce);
+        long currentTime = System.currentTimeMillis();
+        Transaction transaction = Transaction.builder()
+                .credentialConfigurationId(codeData.getCredentialConfigurationId())
+                .claims(codeData.getClaims())
+                .cNonce(cNonce)
+                .cNonceExpiresAt(currentTime + (cNonceExpirySeconds * 1000L))
+                .createdAt(currentTime)
+                .build();
+
         vciCacheService.setTransaction(accessToken, transaction);
 
         log.info("Successfully exchanged pre-authorized code for access token");
 
-        return TokenResponse.builder().accessToken(accessToken).tokenType("Bearer").expiresIn(accessTokenExpirySeconds).cNonce(cNonce).cNonceExpiresIn(cNonceExpirySeconds).build();
+        return TokenResponse.builder()
+                .accessToken(accessToken)
+                .tokenType("Bearer")
+                .expiresIn(accessTokenExpirySeconds)
+                .cNonce(cNonce)
+                .cNonceExpiresIn(cNonceExpirySeconds)
+                .build();
     }
 
     private void validateTokenRequest(TokenRequest request, PreAuthCodeData codeData) {
@@ -294,31 +278,15 @@ public class PreAuthorizedCodeService {
     }
 
     /**
-     * Generate JWT access token
+     * TEMPORARY WORKAROUND: Generate opaque bearer token
+     * TODO: Replace with proper JWT signing once Presentation during Issuance feature is merged
      */
     private String generateAccessToken(PreAuthCodeData codeData) {
-        try {
-            RSAPrivateKey privateKey = (RSAPrivateKey) securityHelperService.getPrivateKey();
-            JWSSigner signer = new RSASSASigner(privateKey);
+        // Generate a cryptographically secure random token
+        String accessToken = "at_" + generateSecureCode(64);
 
-            // Build JWT claims
-            JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-                    .issuer(issuerIdentifier)
-                    .subject(codeData.getCredentialConfigurationId())
-                    .jwtID(UUID.randomUUID().toString())
-                    .issueTime(new Date()).expirationTime(new Date(System.currentTimeMillis() + (accessTokenExpirySeconds * 1000L)))
-                    .claim("credential_configuration_id", codeData.getCredentialConfigurationId())
-                    .claim("claims", codeData.getClaims()).build();
+        log.warn("WORKAROUND: Generated opaque access token (not JWT). Replace with proper JWT signing.");
 
-            // Sign JWT
-            SignedJWT signedJWT = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.RS256).type(JOSEObjectType.JWT).build(), claimsSet);
-            signedJWT.sign(signer);
-
-            return signedJWT.serialize();
-
-        } catch (Exception e) {
-            log.error("Failed to generate access token", e);
-            throw new RuntimeException("Failed to generate access token", e);
-        }
+        return accessToken;
     }
 }

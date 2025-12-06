@@ -5,6 +5,7 @@ import io.mosip.certify.services.PreAuthorizedCodeService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -32,8 +33,11 @@ public class PreAuthorizedCodeController {
         return preAuthorizedCodeService.getCredentialOffer(offerId);
     }
 
-    @PostMapping(value = "/token", produces = "application/json")
-    public TokenResponse token(@Valid @RequestBody TokenRequest request) {
+    @PostMapping(value = "/token",
+//            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public TokenResponse token(@RequestBody TokenRequest request) {
         return preAuthorizedCodeService.exchangePreAuthorizedCode(request);
     }
 }
