@@ -103,12 +103,13 @@ public class PreAuthorizedCodeService {
 
         for (Map.Entry<String, Object> entry : requiredClaims.entrySet()) {
             Map<String, Object> claimAttrs = (Map<String, Object>) entry.getValue();
-            Boolean mandatory = (Boolean) claimAttrs.get(Constants.MANDATORY);
+            Boolean mandatory = claimAttrs.containsKey(Constants.MANDATORY)
+                    ? (Boolean) claimAttrs.get(Constants.MANDATORY)
+                    : Boolean.FALSE;
 
             if (Boolean.TRUE.equals(mandatory)) {
                 if (!providedClaims.containsKey(entry.getKey()) ||
                         providedClaims.get(entry.getKey()) == null) {
-
                     missingClaims.add(entry.getKey());
                 }
             }
