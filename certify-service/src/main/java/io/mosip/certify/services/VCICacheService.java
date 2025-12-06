@@ -45,7 +45,6 @@ public class VCICacheService {
         log.info("Cache type configured: {}", cacheType);
 
         if ("simple".equalsIgnoreCase(cacheType)) {
-            log.warn("================== WARNING: Simple cache configured ======================");
             log.warn("CRITICAL WARNING: Simple cache configured for production deployment " +
                     "'simple' cache uses in-memory storage isolated to each pod, " +
                     "Multi-pod deployments will experience cache inconsistencies and MAY BREAK FUNCTIONALLY, " +
@@ -68,7 +67,7 @@ public class VCICacheService {
         return cacheManager.getCache(VCISSUANCE_CACHE).get(accessTokenHash, VCIssuanceTransaction.class);
     }
 
-    public void setPreAuthCodeData(String code, PreAuthCodeData data, int expirySeconds) {
+    public void setPreAuthCodeData(String code, PreAuthCodeData data) {
         String key = Constants.PRE_AUTH_CODE_PREFIX + code;
         cacheManager.getCache("preAuthCodeCache").put(key, data);
     }
@@ -91,7 +90,7 @@ public class VCICacheService {
         return wrapper != null ? (CredentialOfferResponse) wrapper.get() : null;
     }
 
-    public void setCredentialOffer(String offerId, CredentialOfferResponse offer, int expirySeconds) {
+    public void setCredentialOffer(String offerId, CredentialOfferResponse offer) {
         String key = Constants.CREDENTIAL_OFFER_PREFIX + offerId;
         Cache cache = cacheManager.getCache("credentialOfferCache");
 

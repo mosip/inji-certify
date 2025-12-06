@@ -1,7 +1,7 @@
 OAuthDetailsRequestFormDocMDL:
    InjiCertify_ESignet_OAuthDetailsRequest_FormDoc_uin_all_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
-      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest      
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_04      
       description: OAuth details request      
       role: resident
       restMethod: post

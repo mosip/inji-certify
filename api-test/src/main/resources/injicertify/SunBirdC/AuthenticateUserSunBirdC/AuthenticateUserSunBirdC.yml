@@ -1,10 +1,11 @@
 AuthenticateUserSunBirdC:
    InjiCertify_ESignet_AuthenticateUserSunBirdC_Valid_Smoke:
       endPoint: $ESIGNETMOCKBASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUser      
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_09     
       description: Authenticate User      
       role: resident
       restMethod: post
+      additionalDependencies: TC_SunbirdDependent_createpolicy,TC_SunbirdDependent_Getpolicy,TC_SunbirdDependent_searchpolicy
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
       inputTemplate: injicertify/SunBirdC/AuthenticateUserSunBirdC/AuthenticateUserSunBirdC

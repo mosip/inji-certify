@@ -26,8 +26,8 @@ public interface StatusListCredentialRepository extends JpaRepository<StatusList
     /**
      * Find capacity of status list by ID
      */
-    @Query("SELECT s.capacity FROM StatusListCredential s WHERE s.id = :id")
-    Optional<Long> findCapacityById(@Param("id") String id);
+    @Query("SELECT s.capacityInKB FROM StatusListCredential s WHERE s.id = :id")
+    Optional<Long> findCapacityInKBById(@Param("id") String id);
 
     /**
      * Find the maximum updated timestamp from all status list credentials

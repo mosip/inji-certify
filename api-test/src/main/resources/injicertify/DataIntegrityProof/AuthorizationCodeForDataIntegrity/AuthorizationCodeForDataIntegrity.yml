@@ -1,10 +1,11 @@
 AuthorizationCodeForDataIntegrity:
    InjiCertify_ESignet_AuthorizationCode_For_landregistry_Cred1_dataIntegrity_All_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
-      uniqueIdentifier: TC_esignetDependent_AuthorizationCode
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCode_01
       description: Authorization Code for data integrity proof for cred1
       role: noauth
       restMethod: post
+      additionalDependencies: TC_esignetDependent_AuthenticateUser_01
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
       inputTemplate: injicertify/DataIntegrityProof/AuthorizationCodeForDataIntegrity/AuthorizationCodeForDataIntegrity
@@ -18,10 +19,11 @@ AuthorizationCodeForDataIntegrity:
 }'
    InjiCertify_ESignet_AuthorizationCode_For_landregistry_Cred2_dataIntegrity_All_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
-      uniqueIdentifier: TC_esignetDependent_AuthorizationCode
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCode_02
       description: Authorization Code for data integrity proof for cred2
       role: noauth
       restMethod: post
+      additionalDependencies: TC_esignetDependent_AuthenticateUser_02
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
       inputTemplate: injicertify/DataIntegrityProof/AuthorizationCodeForDataIntegrity/AuthorizationCodeForDataIntegrity

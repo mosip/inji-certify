@@ -1,12 +1,11 @@
 package io.mosip.certify.utils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
 import io.mosip.certify.config.IndexedAttributesConfig;
 import io.mosip.certify.core.constants.Constants;
-import io.mosip.certify.entity.attributes.CredentialStatusDetail;
+import io.mosip.certify.core.dto.CredentialStatusDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -130,7 +129,6 @@ public class LedgerUtils {
         }
 
         CredentialStatusDetail credentialStatusDetail = new CredentialStatusDetail();
-        credentialStatusDetail.setStatusValue(false);
         credentialStatusDetail.setStatusPurpose((String) credentialStatus.get("statusPurpose"));
         credentialStatusDetail.setStatusListIndex(Long.parseLong((String) credentialStatus.get("statusListIndex")));
         String statusListCredentialUrl = credentialStatus.getString("statusListCredential");
@@ -140,6 +138,7 @@ public class LedgerUtils {
             statusListCredentialId = statusListCredentialUrl.substring(lastSlash + 1);
         }
         credentialStatusDetail.setStatusListCredentialId(statusListCredentialId);
+        credentialStatusDetail.setCreatedTimes(System.currentTimeMillis());
 
         return credentialStatusDetail;
     }

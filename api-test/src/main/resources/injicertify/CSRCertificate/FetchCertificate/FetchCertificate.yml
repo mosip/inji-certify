@@ -1,0 +1,85 @@
+GetCertificate:
+   InjiCertify_GetCertificate_ForLandRegistry_CSRCertificate_Flow_RSA_all_Valid_Smoke:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/certificate?applicationId={applicationId}&referenceId={referenceId}
+      uniqueIdentifier: TC_InjiCertify_Get_Certificate_01
+      description: Getting csr certificate for RSA Sign
+      role: noauth
+      checkErrorsOnlyInResponse: true
+      restMethod: get
+      inputTemplate: injicertify/CSRCertificate/FetchCertificate/FetchCertificate
+      outputTemplate: injicertify/CSRCertificate/FetchCertificate/FetchCertificateResult
+      input: '{
+        "applicationId": "CERTIFY_VC_SIGN_RSA",
+        "referenceId": ""
+}'
+      output: '{
+}'
+
+   InjiCertify_GetCertificate_ForLandRegistry_CSRCertificate_Ed25519_all_Valid_Smoke:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/certificate?applicationId={applicationId}&referenceId={referenceId}
+      uniqueIdentifier: TC_InjiCertify_Get_Certificate_02
+      description: getting csr certificate for Ed25519 Sign
+      role: noauth
+      checkErrorsOnlyInResponse: true      
+      restMethod: get
+      inputTemplate: injicertify/CSRCertificate/FetchCertificate/FetchCertificate
+      outputTemplate: injicertify/CSRCertificate/FetchCertificate/FetchCertificateResult
+      input: '{
+        "applicationId": "CERTIFY_VC_SIGN_ED25519",
+        "referenceId": "ED25519_SIGN"
+}'
+      output: '{
+    }'
+
+   InjiCertify_GetCertificate_ForLandRegistry_CSRCertificate_ECCR1_all_Valid_Smoke:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/certificate?applicationId={applicationId}&referenceId={referenceId}
+      uniqueIdentifier: TC_InjiCertify_Get_Certificate_03
+      description: getting csr certificate for EccR1 Sign
+      role: noauth
+      checkErrorsOnlyInResponse: true      
+      restMethod: get
+      inputTemplate: injicertify/CSRCertificate/FetchCertificate/FetchCertificate
+      outputTemplate: injicertify/CSRCertificate/FetchCertificate/FetchCertificateResult
+      input: '{
+        "applicationId": "CERTIFY_VC_SIGN_EC_R1",
+        "referenceId": "EC_SECP256R1_SIGN"
+}'
+      output: '{
+    }'
+
+   InjiCertify_GetCertificate_ForLandRegistry_CSRCertificate_ECCK1_all_Valid_Smoke:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/certificate?applicationId={applicationId}&referenceId={referenceId}
+      uniqueIdentifier: TC_InjiCertify_Get_Certificate_04
+      description: getting csr certificate for EccK1 Sign
+      role: noauth
+      restMethod: get
+      checkErrorsOnlyInResponse: true      
+      inputTemplate: injicertify/CSRCertificate/FetchCertificate/FetchCertificate
+      outputTemplate: injicertify/CSRCertificate/FetchCertificate/FetchCertificateResult
+      input: '{
+        "applicationId": "CERTIFY_VC_SIGN_EC_K1",
+        "referenceId": "EC_SECP256K1_SIGN"
+}'
+      output: '{
+    }'
+            
+   InjiCertify_GetCertificate_ForLandRegistry_CSRCertificate_inavlid_appId_Neg:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/system-info/certificate?applicationId={applicationId}&referenceId={referenceId}
+      uniqueIdentifier: TC_InjiCertify_Get_Certificate_05
+      description: getting csr certificate without applicationId
+      role: noauth
+      checkErrorsOnlyInResponse: true      
+      restMethod: get
+      inputTemplate: injicertify/CSRCertificate/FetchCertificate/FetchCertificate
+      outputTemplate: injicertify/error
+      input: '{
+        "applicationId": "abcd",
+        "referenceId": "EC_SECP256K1_SIGN"
+}'
+      output: '{
+      "errors": [
+      {
+       "errorCode": "unknown_error"
+       }
+       ]  
+    }'    

@@ -1,10 +1,11 @@
 AuthorizationCodeForMockIDA:
    InjiCertify_ESignet_AuthorizationCode_ForMockIDA_Vd12_All_Valid_Smoke_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
-      uniqueIdentifier: TC_esignetDependent_AuthorizationCode_vd12      
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCode_vd12_25      
       description: Authorization Code for mock ida for vd12     
       role: resident
       restMethod: post
+      additionalDependencies: TC_esignetDependent_AuthenticateUser_vd12_24
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
       inputTemplate: injicertify/VCIMockIDAForVd12/AuthorizationCodeForMockIDA/AuthorizationCodeForMockIDA

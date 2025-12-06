@@ -15,6 +15,11 @@ public class CredentialStatusResponse {
     private Long statusListIndex;
     private String statusPurpose;
 
+    /**
+     * @deprecated Use of version v2 i.e. {@link #issuanceDate} is recommended instead.
+     * This field is deprecated and will be removed in future versions.
+     */
+    @Deprecated
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime issueDate;
 

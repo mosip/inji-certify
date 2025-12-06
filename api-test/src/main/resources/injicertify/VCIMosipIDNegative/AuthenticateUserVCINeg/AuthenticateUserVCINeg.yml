@@ -1,7 +1,7 @@
 AuthenticateUserVCINeg:
    InjiCertify_ESignet_AuthenticateUserVCI_MOSIPID_uin_Otp_Valid_Smoke_For_Neg_flow:
       endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUserNeg      
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUserNeg_30      
       description: Authenticate User      
       role: resident
       restMethod: post
@@ -34,7 +34,7 @@ AuthenticateUserVCINeg:
 
    InjiCertify_ESignet_AuthenticateUserVCI_MOSIPID_uin_Otp_Diff_Scope_Valid_Smoke_For_Neg_flow:
       endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUserNeg_2
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUserNeg_31
       description: Authenticate User with diff scope
       role: resident
       restMethod: post

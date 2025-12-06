@@ -16,6 +16,9 @@ import io.mosip.kernel.keymanagerservice.dto.KeyPairGenerateResponseDto;
 import io.mosip.kernel.keymanagerservice.dto.UploadCertificateRequestDto;
 import io.mosip.kernel.keymanagerservice.dto.UploadCertificateResponseDto;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
+import io.mosip.kernel.partnercertservice.dto.CACertificateRequestDto;
+import io.mosip.kernel.partnercertservice.dto.CACertificateResponseDto;
+import io.mosip.kernel.partnercertservice.service.spi.PartnerCertificateManagerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,6 +38,9 @@ public class SystemInfoController {
 
     @Autowired
     private KeymanagerService keymanagerService;
+
+    @Autowired
+    private PartnerCertificateManagerService partnerCertificateManagerService;
     
     @Autowired
     AuditPlugin auditWrapper;
@@ -81,6 +87,24 @@ public class SystemInfoController {
             responseWrapper.setResponse(keymanagerService.generateCSR(csrGenerateRequestDto));
         } catch (CertifyException ex) {
             log.error("Error during CSR generation: {}", ex.getMessage(), ex);
+            throw ex;
+        }
+
+        responseWrapper.setResponseTime(CommonUtil.getUTCDateTime());
+        return responseWrapper;
+    }
+
+    @PostMapping("/upload-ca-certificate")
+    public ResponseWrapper<CACertificateResponseDto> uploadCACertificate(
+            @Valid @RequestBody RequestWrapper<CACertificateRequestDto> requestWrapper) {
+
+        ResponseWrapper<CACertificateResponseDto> responseWrapper = new ResponseWrapper<>();
+        CACertificateRequestDto caCertificateRequestDto = requestWrapper.getRequest();
+        log.info("Upload CA Certificate request received for partnerDomain: {}", caCertificateRequestDto.getPartnerDomain());
+        try {
+            responseWrapper.setResponse(partnerCertificateManagerService.uploadCACertificate(caCertificateRequestDto));
+        } catch (CertifyException ex) {
+            log.error("Error during CA certificate upload: {}", ex.getMessage(), ex);
             throw ex;
         }
 

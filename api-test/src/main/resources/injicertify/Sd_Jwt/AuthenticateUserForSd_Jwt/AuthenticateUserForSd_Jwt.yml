@@ -1,7 +1,7 @@
 AuthenticateUserForSd_Jwt:
    InjiCertify_ESignet_AuthenticateUserVCI_For_LandRegistry_Sd_Jwt_uin_Otp_Valid_Smoke:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUser
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_07
       description: Authenticate User for Sd_Jwt for cred2
       role: resident
       restMethod: post
@@ -36,7 +36,7 @@ AuthenticateUserForSd_Jwt:
 }'
    InjiCertify_ESignet_AuthenticateUserVCI_For_LandRegistry_Cred2_Sd_Jwt_uin_Otp_Valid_Smoke:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
-      uniqueIdentifier: TC_esignetDependent_AuthenticateUser
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_08
       description: Authenticate User for Sd_Jwt for cred2
       role: resident
       restMethod: post
