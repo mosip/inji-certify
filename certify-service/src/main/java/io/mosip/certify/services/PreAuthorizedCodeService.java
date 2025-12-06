@@ -43,8 +43,7 @@ public class PreAuthorizedCodeService {
     public String generatePreAuthorizedCode(PreAuthorizedRequest request) {
         log.info("Generating pre-authorized code for credential configuration: {}", request.getCredentialConfigurationId());
 
-        validateCredentialConfiguration(request.getCredentialConfigurationId());
-        validateClaims(request.getCredentialConfigurationId(), request.getClaims());
+        validatePreAuthorizedRequest(request);
 
         int expirySeconds = request.getExpiresIn() != null ? request.getExpiresIn() : defaultExpirySeconds;
 
@@ -75,27 +74,26 @@ public class PreAuthorizedCodeService {
         return offerUri;
     }
 
-    private void validateCredentialConfiguration(String configId) {
+    private void validatePreAuthorizedRequest(PreAuthorizedRequest request) {
         Map<String, Object> metadata = vciCacheService.getIssuerMetadata();
         Map<String, Object> supportedConfigs = (Map<String, Object>) metadata.get(Constants.CREDENTIAL_CONFIGURATIONS_SUPPORTED);
 
-        if (supportedConfigs == null || !supportedConfigs.containsKey(configId)) {
-            log.error("Invalid credential configuration ID: {}", configId);
+        if (supportedConfigs == null || !supportedConfigs.containsKey(request.getCredentialConfigurationId())) {
+            log.error("Invalid credential configuration ID: {}", request.getCredentialConfigurationId());
             throw new InvalidRequestException(ErrorConstants.INVALID_CREDENTIAL_CONFIGURATION_ID);
         }
-    }
 
-    private void validateClaims(String configId, Map<String, Object> providedClaims) {
-        Map<String, Object> metadata = vciCacheService.getIssuerMetadata();
-
-        Map<String, Object> supportedConfigs = (Map<String, Object>) metadata.get(Constants.CREDENTIAL_CONFIGURATIONS_SUPPORTED);
-
-        Map<String, Object> config = (Map<String, Object>) supportedConfigs.get(configId);
+        Map<String, Object> config = (Map<String, Object>) supportedConfigs.get(request.getCredentialConfigurationId());
         Map<String, Object> requiredClaims = (Map<String, Object>) config.get(Constants.CLAIMS);
 
+        validateClaims(requiredClaims, request.getClaims());
+    }
+
+    private void validateClaims(Map<String, Object> requiredClaims, Map<String, Object> providedClaims) {
         if (requiredClaims == null || requiredClaims.isEmpty()) {
-            return; // No claim validation needed
+            return;
         }
+
         if (providedClaims == null) {
             providedClaims = Collections.emptyMap();
         }
@@ -118,7 +116,6 @@ public class PreAuthorizedCodeService {
                 throw new InvalidRequestException(String.format("Unknown claim: %s", providedClaim));
             }
         }
-
     }
 
     private String generateUniquePreAuthCode() {
@@ -132,8 +129,7 @@ public class PreAuthorizedCodeService {
         } while (vciCacheService.getPreAuthCodeData(preAuthCode) != null && attempts < MAX_ATTEMPTS);
 
         if (vciCacheService.getPreAuthCodeData(preAuthCode) != null) {
-            throw new IllegalStateException(
-                    "Failed to generate unique pre-authorized code after " + MAX_ATTEMPTS + " attempts");
+            throw new IllegalStateException("Failed to generate unique pre-authorized code after " + MAX_ATTEMPTS + " attempts");
         }
 
         return preAuthCode;
