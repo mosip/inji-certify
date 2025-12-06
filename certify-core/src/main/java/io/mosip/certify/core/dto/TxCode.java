@@ -2,6 +2,7 @@ package io.mosip.certify.core.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +19,10 @@ public class TxCode {
     private Integer length;
 
     @JsonProperty("input_mode")
+    @Pattern(
+            regexp = "numeric|text",
+            message = "input_mode must be either 'numeric' or 'text'"
+    )
     private String inputMode;
 
     @JsonProperty("description")
