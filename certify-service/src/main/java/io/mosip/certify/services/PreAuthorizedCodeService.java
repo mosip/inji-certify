@@ -41,7 +41,8 @@ public class PreAuthorizedCodeService {
     private static final String ALPHANUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     public String generatePreAuthorizedCode(PreAuthorizedRequest request) {
-        log.info("Generating pre-authorized code for credential configuration: {}", request.getCredentialConfigurationId());
+        log.info("Generating pre-authorized code for credential configuration: {}",
+                request.getCredentialConfigurationId());
 
         validatePreAuthorizedRequest(request);
 
@@ -49,7 +50,8 @@ public class PreAuthorizedCodeService {
 
         if (expirySeconds < minExpirySeconds || expirySeconds > maxExpirySeconds) {
             log.error("expires_in {} out of bounds [{}, {}]", expirySeconds, minExpirySeconds, maxExpirySeconds);
-            throw new InvalidRequestException(String.format("expires_in must be between %d and %d seconds", minExpirySeconds, maxExpirySeconds));
+            throw new InvalidRequestException(
+                    String.format("expires_in must be between %d and %d seconds", minExpirySeconds, maxExpirySeconds));
         }
 
         String offerId = UUID.randomUUID().toString();
@@ -65,7 +67,8 @@ public class PreAuthorizedCodeService {
 
         vciCacheService.setPreAuthCodeData(preAuthCode, codeData);
 
-        CredentialOfferResponse offerResponse = buildCredentialOffer(request.getCredentialConfigurationId(), preAuthCode, request.getTxCode());
+        CredentialOfferResponse offerResponse = buildCredentialOffer(request.getCredentialConfigurationId(),
+                preAuthCode, request.getTxCode());
         vciCacheService.setCredentialOffer(offerId, offerResponse);
 
         String offerUri = buildCredentialOfferUri(offerId);
@@ -76,7 +79,8 @@ public class PreAuthorizedCodeService {
 
     private void validatePreAuthorizedRequest(PreAuthorizedRequest request) {
         Map<String, Object> metadata = vciCacheService.getIssuerMetadata();
-        Map<String, Object> supportedConfigs = (Map<String, Object>) metadata.get(Constants.CREDENTIAL_CONFIGURATIONS_SUPPORTED);
+        Map<String, Object> supportedConfigs = (Map<String, Object>) metadata
+                .get(Constants.CREDENTIAL_CONFIGURATIONS_SUPPORTED);
 
         if (supportedConfigs == null || !supportedConfigs.containsKey(request.getCredentialConfigurationId())) {
             log.error("Invalid credential configuration ID: {}", request.getCredentialConfigurationId());
@@ -124,18 +128,15 @@ public class PreAuthorizedCodeService {
         if (!missingClaims.isEmpty()) {
             log.error("Missing mandatory claims: {}", missingClaims);
             throw new InvalidRequestException(
-                    String.format("Missing mandatory claims: %s", String.join(", ", missingClaims))
-            );
+                    String.format("Missing mandatory claims: %s", String.join(", ", missingClaims)));
         }
 
         if (!unknownClaims.isEmpty()) {
             log.error("Unknown claims provided: {}", unknownClaims);
             throw new InvalidRequestException(
-                    String.format("Unknown claims: %s", String.join(", ", unknownClaims))
-            );
+                    String.format("Unknown claims: %s", String.join(", ", unknownClaims)));
         }
     }
-
 
     private String generateUniquePreAuthCode() {
         String preAuthCode;
@@ -145,13 +146,13 @@ public class PreAuthorizedCodeService {
         do {
             preAuthCode = generateSecureCode(32);
             attempts++;
-        } while (vciCacheService.getPreAuthCodeData(preAuthCode) != null && attempts < MAX_ATTEMPTS);
+            if (vciCacheService.getPreAuthCodeData(preAuthCode) == null) {
+                return preAuthCode;
+            }
+        } while (attempts < MAX_ATTEMPTS);
 
-        if (vciCacheService.getPreAuthCodeData(preAuthCode) != null) {
-            throw new IllegalStateException("Failed to generate unique pre-authorized code after " + MAX_ATTEMPTS + " attempts");
-        }
-
-        return preAuthCode;
+        throw new IllegalStateException(
+                "Failed to generate unique pre-authorized code after " + MAX_ATTEMPTS + " attempts");
     }
 
     private CredentialOfferResponse buildCredentialOffer(String configId, String preAuthCode, String txnCode) {
@@ -180,7 +181,6 @@ public class PreAuthorizedCodeService {
         String encodedUrl = URLEncoder.encode(offerFetchUrl, StandardCharsets.UTF_8);
         return "openid-credential-offer://?credential_offer_uri=" + encodedUrl;
     }
-
 
     private String generateSecureCode(int length) {
         StringBuilder code = new StringBuilder(length);

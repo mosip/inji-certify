@@ -31,6 +31,14 @@ public class PreAuthorizedCodeControllerTest {
     @MockBean
     PreAuthorizedCodeService preAuthorizedCodeService;
 
+    // Required by AccessTokenValidationFilter which is loaded in WebMvcTest context
+    @MockBean
+    io.mosip.certify.core.dto.ParsedAccessToken parsedAccessToken;
+
+    // Required by audit aspects/configuration
+    @MockBean
+    AuditPlugin auditWrapper;
+
     ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
