@@ -3,6 +3,7 @@ package io.mosip.certify.core.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,5 +27,9 @@ public class TxCode {
     private String inputMode;
 
     @JsonProperty("description")
+    @Size(
+            max = 300,
+            message = "description must not exceed 300 characters"
+    )
     private String description;
 }
