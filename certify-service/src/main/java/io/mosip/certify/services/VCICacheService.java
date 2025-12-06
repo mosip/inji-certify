@@ -45,7 +45,6 @@ public class VCICacheService {
         log.info("Cache type configured: {}", cacheType);
 
         if ("simple".equalsIgnoreCase(cacheType)) {
-            log.warn("================== WARNING: Simple cache configured ======================");
             log.warn("CRITICAL WARNING: Simple cache configured for production deployment " +
                     "'simple' cache uses in-memory storage isolated to each pod, " +
                     "Multi-pod deployments will experience cache inconsistencies and MAY BREAK FUNCTIONALLY, " +
