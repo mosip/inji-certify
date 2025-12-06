@@ -90,7 +90,7 @@ public class VCICacheService {
         return wrapper != null ? (CredentialOfferResponse) wrapper.get() : null;
     }
 
-    public void setCredentialOffer(String offerId, CredentialOfferResponse offer, int expirySeconds) {
+    public void setCredentialOffer(String offerId, CredentialOfferResponse offer) {
         String key = Constants.CREDENTIAL_OFFER_PREFIX + offerId;
         Cache cache = cacheManager.getCache("credentialOfferCache");
 

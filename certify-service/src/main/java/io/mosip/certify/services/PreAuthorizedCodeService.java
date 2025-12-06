@@ -67,7 +67,7 @@ public class PreAuthorizedCodeService {
         vciCacheService.setPreAuthCodeData(preAuthCode, codeData);
 
         CredentialOfferResponse offerResponse = buildCredentialOffer(request.getCredentialConfigurationId(), preAuthCode, request.getTxCode());
-        vciCacheService.setCredentialOffer(offerId, offerResponse, expirySeconds);
+        vciCacheService.setCredentialOffer(offerId, offerResponse);
 
         String offerUri = buildCredentialOfferUri(offerId);
         log.info("Successfully generated pre-authorized code with offer ID: {}", offerId);
