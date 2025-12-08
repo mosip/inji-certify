@@ -92,6 +92,11 @@ paths:
                       - VerifiableCredential
                       - landstatement_dataIntegrity
                     signatureAlgo: EdDSA
+                    qrSettings:
+                      - Full Name: "${fullName}"
+                        Phone Number: "${mobileNumber}"
+                        Date Of Birth: "${dateOfBirth}"
+                    qrSignatureAlgo: EdDSA
         '404':
           description: Credential configuration not found
           content:
@@ -193,6 +198,11 @@ paths:
                     - VerifiableCredential
                     - landstatement_dataIntegrity
                   signatureAlgo: EdDSA
+                  qrSettings:
+                    - Full Name: "${fullName}"
+                      Phone Number: "${mobileNumber}"
+                      Date Of Birth: "${dateOfBirth}"
+                  qrSignatureAlgo: EdDSA
       responses:
         '200':
           description: OK
@@ -820,6 +830,11 @@ paths:
                     - VerifiableCredential
                     - landstatement_dataIntegrity
                   signatureAlgo: EdDSA
+                  qrSettings:
+                    - Full Name: "${fullName}"
+                      Phone Number: "${mobileNumber}"
+                      Date Of Birth: "${dateOfBirth}"
+                  qrSignatureAlgo: EdDSA
               VCIssuance plugin mso_mdoc example:
                 value:
                   credentialConfigKeyId: DrivingLicenseCredential12
@@ -1712,6 +1727,16 @@ components:
         credentialStatusPurposes:
           type: string
           description: 'List of purposes for which credential status is maintained, comma-separated values are supported here. Currently, the value for this field will be driven by following config - `mosip.certify.data-provider-plugin.credential-status.supported-purposes`. Value sent in the request will be ignored. '
+        qrSettings:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: string
+          description: List of QR settings for credential configuration. Each item is a map of key-value pairs.
+        qrSignatureAlgo:
+          type: string
+          description: Signature algorithm used for QR code signing.
     CredentialConfigResponse:
       type: object
       properties:
