@@ -124,6 +124,8 @@ CREATE TABLE IF NOT EXISTS certify.credential_config (
     mso_mdoc_claims JSONB,
     plugin_configurations JSONB,
     credential_status_purpose TEXT[],
+    qr_settings JSONB,
+    qr_signature_algo TEXT,
     cr_dtimes TIMESTAMP NOT NULL,
     upd_dtimes TIMESTAMP,
     CONSTRAINT pk_config_id PRIMARY KEY (config_id)
@@ -168,6 +170,8 @@ INSERT INTO certify.credential_config (
     mso_mdoc_claims,
     plugin_configurations,
     credential_status_purpose,
+    qr_settings,
+    qr_signature_algo,
     cr_dtimes,
     upd_dtimes
 )
@@ -197,6 +201,8 @@ VALUES (
     NULL,  -- claims (optional)
     '[{"mosip.certify.mock.data-provider.csv.identifier-column": "id", "mosip.certify.mock.data-provider.csv.data-columns": "id,fullName,mobileNumber,dateOfBirth,gender,state,district,villageOrTown,postalCode,landArea,landOwnershipType,primaryCropType,secondaryCropType,face,farmerID", "mosip.certify.mock.data-provider.csv-registry-uri": "/home/mosip/config/farmer_identity_data.csv"}]'::JSONB,  -- plugin_configurations
     ARRAY['revocation'],  -- credential_status_purpose
+    '[{"Full Name": "${fullName}", "Phone Number": "${mobileNumber}","Date Of Birth": "${dateOfBirth}"}]'::JSONB,  -- qr_settings (optional)
+    'EdDSA',  -- qr_signature_algo (optional)
     NOW(),  -- cr_dtimes
     NULL  -- upd_dtimes (optional)
 );
