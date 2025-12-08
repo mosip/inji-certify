@@ -258,7 +258,6 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             Map<String, Object> finalTemplate = jsonify(templateParams);
 
             JSONArray qrDataJson = cred.createQRData(finalTemplate, templateName);
-            log.info("qrDataString: {}", qrDataJson);
 
             if (qrDataJson != null) {
                 List<Object> claim169Values = new ArrayList<>();
