@@ -85,7 +85,7 @@ public class PreAuthorizedCodeServiceTest {
     }
 
     @Test
-    public void generatePreAuthorizedCode_InvalidConfigId() {
+    public void generatePreAuthorizedCode_Failure_If_InvalidConfigId() {
         request.setCredentialConfigurationId("invalid-id");
 
         InvalidRequestException exception = assertThrows(InvalidRequestException.class,

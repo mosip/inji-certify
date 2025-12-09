@@ -61,7 +61,7 @@ public class PreAuthorizedCodeControllerTest {
     }
 
     @Test
-    public void generatePreAuthorizedCode_MissingConfigId_Fail() throws Exception {
+    public void generatePreAuthorizedCode_Failure_If_MissingConfigId() throws Exception {
         PreAuthorizedRequest request = new PreAuthorizedRequest();
         Map<String, Object> claims = new HashMap<>();
         claims.put("name", "John");
@@ -77,7 +77,7 @@ public class PreAuthorizedCodeControllerTest {
     }
 
     @Test
-    public void generatePreAuthorizedCode_MissingClaims_Fail() throws Exception {
+    public void generatePreAuthorizedCode_Failure_If_MissingClaims() throws Exception {
         PreAuthorizedRequest request = new PreAuthorizedRequest();
         request.setCredentialConfigurationId("test-config");
         // Missing claims
