@@ -47,7 +47,20 @@ Current usecases include:
    environment:
      - active_profile_env=default, certify-postgres-landregistry
    ```
-     
+   
+7. **Add scope-to-query mapping in `certify-postgres-landregistry.properties`:**
+   Define the property mosip.certify.data-provider-plugin.postgres.scope-query-mapping to map each credential scope to its corresponding SQL query for fetching data from PostgreSQL tables.
+    ``` 
+        mosip.certify.data-provider-plugin.postgres.scope-query-mapping={\
+            'land_statement_vc_ldp': 'select * from statement_data where statement_id=:id',\
+            'land_registry_vc_ldp': 'select * from registration_receipt_data where registration_id=:id'\
+        }\
+    ```
+ - `Key`: Represents the credential scope (e.g., land_statement_vc_ldp, land_registry_vc_ldp).
+ - `Value`: SQL query to retrieve data for that scope, using :id as a parameter.
+ - `statement_id`: Primary key in the statement_data table.
+ - `registration_id`: Primary key in the registration_receipt_data table.
+ - `id`: A unique identifier used to fetch the specific record from the table. When esignet is the auth provider, this value is obtained from the sub claim in the access token, which typically corresponds to the UIN (Unique Identification Number).
 
 # Add the scripts to create tables and insert data for the usecase specific tables.
 1. In the [certify_init.sql](../../docker-compose/docker-compose-injistack/certify_init.sql) file, add the SQL scripts to create the necessary tables and insert data for the new usecase.

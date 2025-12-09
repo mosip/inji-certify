@@ -231,6 +231,10 @@ The digest multibase can be hardcoded or if the template has been stored with Ce
          - GOOGLE_OAUTH_CLIENT_SECRET=<your-client-secret>
     ```
 
+## Using the Postgres Data Provider plugin
+- If you wish to use the Postgres Data Provider plugin instead of the Mock CSV plugin, please refer to the steps mentioned in [Setup-Postgres-Plugin](./Add-New-Usecase-Using-PostgresPlugin.md) to setup a new usecase using the Postgres Data Provider plugin.
+- Also refer to the postgres-data-provider-plugin implementation documentation.[Postgres-Plugin-Document](https://github.com/mosip/digital-credential-plugins/blob/master/postgres-dataprovider-plugin/README.md)
+
 ## Troubleshooting
 
 ### Common Issues and Solutions
@@ -260,6 +264,12 @@ The digest multibase can be hardcoded or if the template has been stored with Ce
     - Check if the DID is updated & resolvable. The Multibase hash changes on each restart, please update it whenever a newer instance of Certify is setup.
     - Check if the hosted DID matches with the [DID endpoint](http://localhost:8090/v1/certify/.well-known/did.json)
     - As of now, Mimoto/Inji Web only supports downloads for Ed25519Signature2020 signed VerifiableCredential due to a limitation of the integrated VC-Verification module.
+
+8. While running `docker compose up -d`, if any error is encountered related to network like `network mosip_network declared as external, but could not be found` and containers are not starting up properly, try to create the network manually using the command:
+   ```bash
+   docker network create mosip_network
+   ```
+   Then re-run `docker compose up -d`.
 
 
 # Explanation of NGINX Directives
