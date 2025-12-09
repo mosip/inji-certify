@@ -33,7 +33,7 @@ To enable QR code support in your credential configurations, you need to include
   "qr_signature_algo": "ES256"
 }
 ```
-6. The qrCode data will be evaluated by by the merging with the `VelocityTemplatingEngine` where the velocity context map contains the same data provided by the data provider plugin for the credential issuance.
+6. The qrCode data will be evaluated by merging velocity template with the velocity context map containing the same data provided by the data provider plugin for the credential issuance.
 7. The velocity template will look like below for integrating the QR code data with the VC:
 ```json
 {

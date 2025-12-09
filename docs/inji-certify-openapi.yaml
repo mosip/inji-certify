@@ -1729,11 +1729,11 @@ components:
           description: 'List of purposes for which credential status is maintained, comma-separated values are supported here. Currently, the value for this field will be driven by following config - `mosip.certify.data-provider-plugin.credential-status.supported-purposes`. Value sent in the request will be ignored. '
         qrSettings:
           type: array
+          description: List of QR settings for credential configuration. Each item is a map of key-value pairs; values may be primitives or nested objects.
           items:
             type: object
             additionalProperties:
               type: string
-          description: List of QR settings for credential configuration. Each item is a map of key-value pairs.
         qrSignatureAlgo:
           type: string
           description: Signature algorithm used for QR code signing.
