@@ -101,7 +101,7 @@ public class PreAuthorizedCodeServiceTest {
         InvalidRequestException exception = assertThrows(InvalidRequestException.class,
                 () -> preAuthorizedCodeService.generatePreAuthorizedCode(request));
 
-        Assert.assertTrue(exception.getMessage().contains("Missing mandatory claims"));
+        Assert.assertEquals(ErrorConstants.MISSING_MANDATORY_CLAIM, exception.getErrorCode());
     }
 
     @Test
@@ -111,7 +111,7 @@ public class PreAuthorizedCodeServiceTest {
         InvalidRequestException exception = assertThrows(InvalidRequestException.class,
                 () -> preAuthorizedCodeService.generatePreAuthorizedCode(request));
 
-        Assert.assertTrue(exception.getMessage().contains("Unknown claims"));
+        Assert.assertEquals(ErrorConstants.UNKNOWN_CLAIMS, exception.getErrorCode());
     }
 
     @Test
