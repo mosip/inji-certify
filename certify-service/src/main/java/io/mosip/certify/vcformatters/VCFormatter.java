@@ -26,6 +26,11 @@ public interface VCFormatter {
      * @return
      */
     JSONArray formatQRData(Map<String, Object> finalTemplate);
+    /**
+     * returns the proof algorithm associated with the template name. As defined in rfc7518
+     * @param templateName
+     * @return
+     */
     String getProofAlgorithm(String templateName);
     /**
      * returns the DID for the given template

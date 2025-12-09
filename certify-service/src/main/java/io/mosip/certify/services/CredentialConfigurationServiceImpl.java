@@ -117,7 +117,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         } else {
             String qrSignatureAlgo = credentialConfig.getQrSignatureAlgo();
             if(!keyAliasMapper.containsKey(qrSignatureAlgo)) {
-                throw new CertifyException(ErrorConstants.UNSUPPORTED_ALGORITHM, "Unsupported QR signature algorithm: " + qrSignatureAlgo);
+                throw new CertifyException(ErrorConstants.INVALID_QR_SIGNING_ALGORITHM, "The algorithm " + qrSignatureAlgo + " is not supported for QR signing. The supported values are: " + keyAliasMapper.keySet());
             }
         }
 

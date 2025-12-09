@@ -759,7 +759,7 @@ public class CredentialConfigurationServiceImplTest {
         CertifyException ex = assertThrows(CertifyException.class, () ->
                 ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
         );
-        assertEquals("Unsupported QR signature algorithm: UNSUPPORTED_ALGO", ex.getMessage());
+        assertEquals("The algorithm UNSUPPORTED_ALGO is not supported for QR signing. The supported values are: [EdDSA]", ex.getMessage());
     }
 
     @Test

@@ -53,7 +53,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 
-import static io.mosip.certify.utils.CredentialUtils.jsonify;
+import static io.mosip.certify.utils.CredentialUtils.toJsonMap;
 import static io.mosip.certify.utils.VCIssuanceUtil.getScopeCredentialMapping;
 import static io.mosip.certify.utils.VCIssuanceUtil.validateLdpVcFormatRequest;
 
@@ -255,7 +255,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             templateParams.put(VCDM2Constants.VALID_UNTIL, expiryTime);
 
             Credential cred = credentialFactory.getCredential(format).orElseThrow(() -> new CertifyException(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT));
-            Map<String, Object> finalTemplate = jsonify(templateParams);
+            Map<String, Object> finalTemplate = toJsonMap(templateParams);
 
             JSONArray qrDataJson = cred.createQRData(finalTemplate, templateName);
 

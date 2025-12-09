@@ -112,7 +112,7 @@ public class CredentialUtils {
      * @param valueMap
      * @return
      */
-    public static Map<String, Object> jsonify(Map<String, Object> valueMap) {
+    public static Map<String, Object> toJsonMap(Map<String, Object> valueMap) {
         Map<String, Object> finalTemplate = new HashMap<>();
         Iterator<String> keys = valueMap.keySet().iterator();
         while(keys.hasNext()) {
