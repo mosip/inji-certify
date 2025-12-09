@@ -20,6 +20,8 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
+    networks:
+      - network
 
   certify:
     image: mosipid/inji-certify-with-plugins:0.13.1
