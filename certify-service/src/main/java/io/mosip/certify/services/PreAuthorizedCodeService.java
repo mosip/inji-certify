@@ -51,8 +51,7 @@ public class PreAuthorizedCodeService {
 
         if (expirySeconds < minExpirySeconds || expirySeconds > maxExpirySeconds) {
             log.error("expires_in {} out of bounds [{}, {}]", expirySeconds, minExpirySeconds, maxExpirySeconds);
-            throw new InvalidRequestException(
-                    String.format("expires_in must be between %d and %d seconds", minExpirySeconds, maxExpirySeconds));
+            throw new InvalidRequestException(ErrorConstants.INVALID_EXPIRY_RANGE);
         }
 
         String offerId = UUID.randomUUID().toString();
