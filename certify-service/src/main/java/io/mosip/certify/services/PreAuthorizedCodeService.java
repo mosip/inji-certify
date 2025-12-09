@@ -140,7 +140,7 @@ public class PreAuthorizedCodeService {
 
         if (!isValidUUID(offerId)) {
             log.error("Invalid offer_id format: {}", offerId);
-            throw new InvalidRequestException("Invalid offer_id format");
+            throw new InvalidRequestException(ErrorConstants.INVALID_OFFER_ID_FORMAT);
         }
 
         CredentialOfferResponse offer = vciCacheService.getCredentialOffer(offerId);
