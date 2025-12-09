@@ -127,14 +127,12 @@ public class PreAuthorizedCodeService {
 
         if (!missingClaims.isEmpty()) {
             log.error("Missing mandatory claims: {}", missingClaims);
-            throw new InvalidRequestException(
-                    String.format("Missing mandatory claims: %s", String.join(", ", missingClaims)));
+            throw new InvalidRequestException(ErrorConstants.MISSING_MANDATORY_CLAIM);
         }
 
         if (!unknownClaims.isEmpty()) {
             log.error("Unknown claims provided: {}", unknownClaims);
-            throw new InvalidRequestException(
-                    String.format("Unknown claims: %s", String.join(", ", unknownClaims)));
+            throw new InvalidRequestException(ErrorConstants.UNKNOWN_CLAIMS);
         }
     }
 

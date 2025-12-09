@@ -16,20 +16,14 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TxCode {
 
-    @JsonProperty("length")
-    private Integer length;
+        @JsonProperty("length")
+        private Integer length;
 
-    @JsonProperty("input_mode")
-    @Pattern(
-            regexp = "numeric|text",
-            message = "input_mode must be either 'numeric' or 'text'"
-    )
-    private String inputMode;
+        @JsonProperty("input_mode")
+        @Pattern(regexp = "^(numeric|text)$", message = "input_mode must be either 'numeric' or 'text'")
+        private String inputMode;
 
-    @JsonProperty("description")
-    @Size(
-            max = 300,
-            message = "description must not exceed 300 characters"
-    )
-    private String description;
+        @JsonProperty("description")
+        @Size(max = 300, message = "description must not exceed 300 characters")
+        private String description;
 }
