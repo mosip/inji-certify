@@ -5,6 +5,8 @@
  */
 package io.mosip.certify.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.api.dto.VCRequestDto;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.api.exception.DataProviderExchangeException;
@@ -38,6 +40,7 @@ import io.mosip.certify.validators.CredentialRequestValidator;
 import io.mosip.certify.vcformatters.VCFormatter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +53,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 
+import static io.mosip.certify.utils.CredentialUtils.toJsonMap;
 import static io.mosip.certify.utils.VCIssuanceUtil.getScopeCredentialMapping;
 import static io.mosip.certify.utils.VCIssuanceUtil.validateLdpVcFormatRequest;
 
@@ -251,7 +255,21 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             templateParams.put(VCDM2Constants.VALID_UNTIL, expiryTime);
 
             Credential cred = credentialFactory.getCredential(format).orElseThrow(() -> new CertifyException(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT));
-            String unsignedCredential = cred.createCredential(templateParams, templateName);
+            Map<String, Object> updatedTemplateParams = toJsonMap(templateParams);
+
+            JSONArray qrDataJson = cred.createQRData(updatedTemplateParams, templateName);
+
+            if (qrDataJson != null) {
+                List<Object> claim169Values = new ArrayList<>();
+                for (int i = 0; i < qrDataJson.length(); i++) {
+                    claim169Values.add(qrDataJson.get(i));
+                }
+                updatedTemplateParams.put("claim_169_values", claim169Values);
+            } else {
+                log.warn("QR code not configured for template: {}. To enable qr code support, update the respective credential configuration.", templateName);
+            }
+
+            String unsignedCredential = cred.createCredential(updatedTemplateParams, templateName);
             if(isLedgerEnabled) {
                 Map<String, Object> indexedAttributes = ledgerUtils.extractIndexedAttributes(jsonObject);
                 String credentialType = LedgerUtils.extractCredentialType(jsonObject);

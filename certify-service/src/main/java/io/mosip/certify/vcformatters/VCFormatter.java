@@ -3,9 +3,9 @@ package io.mosip.certify.vcformatters;
 import java.util.List;
 import java.util.Map;
 
-import org.json.JSONObject;
-
 import io.mosip.certify.api.spi.DataProviderPlugin;
+import org.json.JSONArray;
+
 /**
  * VCDataModelFormatter is a templating engine which takes @param templateInput and returns a templated VC.
  * Some implementations include
@@ -14,17 +14,18 @@ import io.mosip.certify.api.spi.DataProviderPlugin;
 public interface VCFormatter {
     /**
      * returns a templated VC as per the data in valueMap & some templateSettings
-     * @param valueMap data provided by a {@link DataProviderPlugin} implementation.
-     * @param templateSettings configurable tunables
+     *
+     * @param updatedTemplateParams data provided by a {@link DataProviderPlugin} implementation.
      * @return a templated & unsigned VC
      */
-    String format(JSONObject valueMap, Map<String, Object> templateSettings);
+    String format(Map<String, Object> updatedTemplateParams);
     /**
-     * returns a templated VC as per the data in valueMap & some templateSettings
-     * @param templateInput data provided by a {@link DataProviderPlugin} implementation.
-     * @return a templated & unsigned VC
+     * return the templated QR code json array as per the data in updatedTemplateParams
+     *
+     * @param updatedTemplateParams
+     * @return
      */
-    String format(Map<String, Object> templateInput);
+    JSONArray formatQRData(Map<String, Object> updatedTemplateParams);
     /**
      * returns the proof algorithm associated with the template name. As defined in rfc7518
      * @param templateName
@@ -70,4 +71,18 @@ public interface VCFormatter {
      * @return
      */
     List<String> getCredentialStatusPurpose(String templateName);
+
+    /**
+     * returns the QR settings for the given template.
+     * @param templateName
+     * @return
+     */
+    List<Map<String, Object>> getQRSettings(String templateName);
+
+    /**
+     * returns the QR signature algorithm for the given template.
+     * @param templateName
+     * @return
+     */
+    String getQRSignatureAlgo(String templateName);
 }
