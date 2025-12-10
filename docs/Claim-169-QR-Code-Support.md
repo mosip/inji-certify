@@ -55,7 +55,7 @@ To enable QR code support in your credential configurations, you need to include
       "Face": {
         "Data": "${face}",
         "Data format": "Image",
-        "Data sub format": "JEPG"
+        "Data sub format": "JPEG"
       },
       "Full Name": "${fullName}",
       "Date Of Birth": "${dateOfBirth}"
