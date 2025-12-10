@@ -231,5 +231,243 @@ public class PreAuthorizedCodeServiceTest {
         Assert.assertEquals("offer_not_found", exception.getErrorCode());
         verify(vciCacheService).getCredentialOffer(validUuid);
     }
+
+    @Test
+    public void exchangePreAuthorizedCode_Success() {
+        ReflectionTestUtils.setField(preAuthorizedCodeService, "accessTokenExpirySeconds", 600);
+        ReflectionTestUtils.setField(preAuthorizedCodeService, "cNonceExpirySeconds", 300);
+        ReflectionTestUtils.setField(preAuthorizedCodeService, "singleUsePreAuthCode", true);
+
+        String preAuthCode = "test-pre-auth-code";
+        TokenRequest tokenRequest = new TokenRequest();
+        tokenRequest.setGrantType(Constants.PRE_AUTHORIZED_CODE_GRANT_TYPE);
+        tokenRequest.setPreAuthorizedCode(preAuthCode);
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("name", "John Doe");
+
+        PreAuthCodeData codeData = PreAuthCodeData.builder()
+                .credentialConfigurationId(CONFIG_ID)
+                .claims(claims)
+                .createdAt(System.currentTimeMillis())
+                .expiresAt(System.currentTimeMillis() + 600000) // expires in 10 minutes
+                .build();
+
+        when(vciCacheService.getPreAuthCodeData(preAuthCode)).thenReturn(codeData);
+        when(vciCacheService.isCodeBlacklisted(preAuthCode)).thenReturn(false);
+        when(vciCacheService.setTransaction(anyString(), any(Transaction.class))).thenReturn(null);
+
+        TokenResponse response = preAuthorizedCodeService.exchangePreAuthorizedCode(tokenRequest);
+
+        Assert.assertNotNull(response);
+        Assert.assertNotNull(response.getAccessToken());
+        Assert.assertTrue(response.getAccessToken().startsWith("at_"));
+        Assert.assertEquals("Bearer", response.getTokenType());
+        Assert.assertEquals(Integer.valueOf(600), response.getExpiresIn());
+        Assert.assertNotNull(response.getCNonce());
+        Assert.assertEquals(Integer.valueOf(300), response.getCNonceExpiresIn());
+
+        verify(vciCacheService).getPreAuthCodeData(preAuthCode);
+        verify(vciCacheService).isCodeBlacklisted(preAuthCode);
+        verify(vciCacheService).blacklistPreAuthCode(preAuthCode);
+        verify(vciCacheService).setTransaction(anyString(), any(Transaction.class));
+    }
+
+    @Test
+    public void exchangePreAuthorizedCode_WithTxCode_Success() {
+        ReflectionTestUtils.setField(preAuthorizedCodeService, "accessTokenExpirySeconds", 600);
+        ReflectionTestUtils.setField(preAuthorizedCodeService, "cNonceExpirySeconds", 300);
+        ReflectionTestUtils.setField(preAuthorizedCodeService, "singleUsePreAuthCode", true);
+
+        String preAuthCode = "test-pre-auth-code";
+        String txCode = "1234";
+        TokenRequest tokenRequest = new TokenRequest();
+        tokenRequest.setGrantType(Constants.PRE_AUTHORIZED_CODE_GRANT_TYPE);
+        tokenRequest.setPreAuthorizedCode(preAuthCode);
+        tokenRequest.setTxCode(txCode);
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("name", "John Doe");
+
+        PreAuthCodeData codeData = PreAuthCodeData.builder()
+                .credentialConfigurationId(CONFIG_ID)
+                .claims(claims)
+                .txnCode(txCode)
+                .createdAt(System.currentTimeMillis())
+                .expiresAt(System.currentTimeMillis() + 600000)
+                .build();
+
+        when(vciCacheService.getPreAuthCodeData(preAuthCode)).thenReturn(codeData);
+        when(vciCacheService.isCodeBlacklisted(preAuthCode)).thenReturn(false);
+        when(vciCacheService.setTransaction(anyString(), any(Transaction.class))).thenReturn(null);
+
+        TokenResponse response = preAuthorizedCodeService.exchangePreAuthorizedCode(tokenRequest);
+
+        Assert.assertNotNull(response);
+        Assert.assertNotNull(response.getAccessToken());
+        verify(vciCacheService).blacklistPreAuthCode(preAuthCode);
+    }
+
+    @Test
+    public void exchangePreAuthorizedCode_UnsupportedGrantType_ThrowsCertifyException() {
+        TokenRequest tokenRequest = new TokenRequest();
+        tokenRequest.setGrantType("invalid_grant_type");
+        tokenRequest.setPreAuthorizedCode("test-code");
+
+        PreAuthCodeData codeData = PreAuthCodeData.builder()
+                .credentialConfigurationId(CONFIG_ID)
+                .createdAt(System.currentTimeMillis())
+                .expiresAt(System.currentTimeMillis() + 600000)
+                .build();
+
+        when(vciCacheService.getPreAuthCodeData("test-code")).thenReturn(codeData);
+
+        CertifyException exception = assertThrows(CertifyException.class,
+                () -> preAuthorizedCodeService.exchangePreAuthorizedCode(tokenRequest));
+
+        Assert.assertEquals(ErrorConstants.UNSUPPORTED_GRANT_TYPE, exception.getErrorCode());
+    }
+
+    @Test
+    public void exchangePreAuthorizedCode_InvalidPreAuthCode_ThrowsCertifyException() {
+        TokenRequest tokenRequest = new TokenRequest();
+        tokenRequest.setGrantType(Constants.PRE_AUTHORIZED_CODE_GRANT_TYPE);
+        tokenRequest.setPreAuthorizedCode("invalid-code");
+
+        when(vciCacheService.getPreAuthCodeData("invalid-code")).thenReturn(null);
+
+        CertifyException exception = assertThrows(CertifyException.class,
+                () -> preAuthorizedCodeService.exchangePreAuthorizedCode(tokenRequest));
+
+        Assert.assertEquals(ErrorConstants.INVALID_GRANT, exception.getErrorCode());
+    }
+
+    @Test
+    public void exchangePreAuthorizedCode_ExpiredCode_ThrowsCertifyException() {
+        ReflectionTestUtils.setField(preAuthorizedCodeService, "singleUsePreAuthCode", true);
+
+        String preAuthCode = "expired-code";
+        TokenRequest tokenRequest = new TokenRequest();
+        tokenRequest.setGrantType(Constants.PRE_AUTHORIZED_CODE_GRANT_TYPE);
+        tokenRequest.setPreAuthorizedCode(preAuthCode);
+
+        PreAuthCodeData codeData = PreAuthCodeData.builder()
+                .credentialConfigurationId(CONFIG_ID)
+                .createdAt(System.currentTimeMillis() - 700000)
+                .expiresAt(System.currentTimeMillis() - 100000) // expired
+                .build();
+
+        when(vciCacheService.getPreAuthCodeData(preAuthCode)).thenReturn(codeData);
+        when(vciCacheService.isCodeBlacklisted(preAuthCode)).thenReturn(false);
+
+        CertifyException exception = assertThrows(CertifyException.class,
+                () -> preAuthorizedCodeService.exchangePreAuthorizedCode(tokenRequest));
+
+        Assert.assertEquals("pre_auth_code_expired", exception.getErrorCode());
+    }
+
+    @Test
+    public void exchangePreAuthorizedCode_AlreadyUsedCode_ThrowsCertifyException() {
+        ReflectionTestUtils.setField(preAuthorizedCodeService, "singleUsePreAuthCode", true);
+
+        String preAuthCode = "used-code";
+        TokenRequest tokenRequest = new TokenRequest();
+        tokenRequest.setGrantType(Constants.PRE_AUTHORIZED_CODE_GRANT_TYPE);
+        tokenRequest.setPreAuthorizedCode(preAuthCode);
+
+        PreAuthCodeData codeData = PreAuthCodeData.builder()
+                .credentialConfigurationId(CONFIG_ID)
+                .createdAt(System.currentTimeMillis())
+                .expiresAt(System.currentTimeMillis() + 600000)
+                .build();
+
+        when(vciCacheService.getPreAuthCodeData(preAuthCode)).thenReturn(codeData);
+        when(vciCacheService.isCodeBlacklisted(preAuthCode)).thenReturn(true);
+
+        CertifyException exception = assertThrows(CertifyException.class,
+                () -> preAuthorizedCodeService.exchangePreAuthorizedCode(tokenRequest));
+
+        Assert.assertEquals("pre_auth_code_already_used", exception.getErrorCode());
+    }
+
+    @Test
+    public void exchangePreAuthorizedCode_TxCodeRequired_ThrowsCertifyException() {
+        ReflectionTestUtils.setField(preAuthorizedCodeService, "singleUsePreAuthCode", true);
+
+        String preAuthCode = "test-code";
+        TokenRequest tokenRequest = new TokenRequest();
+        tokenRequest.setGrantType(Constants.PRE_AUTHORIZED_CODE_GRANT_TYPE);
+        tokenRequest.setPreAuthorizedCode(preAuthCode);
+        // txCode not provided
+
+        PreAuthCodeData codeData = PreAuthCodeData.builder()
+                .credentialConfigurationId(CONFIG_ID)
+                .txnCode("1234") // txCode is required
+                .createdAt(System.currentTimeMillis())
+                .expiresAt(System.currentTimeMillis() + 600000)
+                .build();
+
+        when(vciCacheService.getPreAuthCodeData(preAuthCode)).thenReturn(codeData);
+        when(vciCacheService.isCodeBlacklisted(preAuthCode)).thenReturn(false);
+
+        CertifyException exception = assertThrows(CertifyException.class,
+                () -> preAuthorizedCodeService.exchangePreAuthorizedCode(tokenRequest));
+
+        Assert.assertEquals("tx_code_required", exception.getErrorCode());
+    }
+
+    @Test
+    public void exchangePreAuthorizedCode_TxCodeMismatch_ThrowsCertifyException() {
+        ReflectionTestUtils.setField(preAuthorizedCodeService, "singleUsePreAuthCode", true);
+
+        String preAuthCode = "test-code";
+        TokenRequest tokenRequest = new TokenRequest();
+        tokenRequest.setGrantType(Constants.PRE_AUTHORIZED_CODE_GRANT_TYPE);
+        tokenRequest.setPreAuthorizedCode(preAuthCode);
+        tokenRequest.setTxCode("wrong-code");
+
+        PreAuthCodeData codeData = PreAuthCodeData.builder()
+                .credentialConfigurationId(CONFIG_ID)
+                .txnCode("1234") // expected txCode
+                .createdAt(System.currentTimeMillis())
+                .expiresAt(System.currentTimeMillis() + 600000)
+                .build();
+
+        when(vciCacheService.getPreAuthCodeData(preAuthCode)).thenReturn(codeData);
+        when(vciCacheService.isCodeBlacklisted(preAuthCode)).thenReturn(false);
+
+        CertifyException exception = assertThrows(CertifyException.class,
+                () -> preAuthorizedCodeService.exchangePreAuthorizedCode(tokenRequest));
+
+        Assert.assertEquals("tx_code_mismatch", exception.getErrorCode());
+    }
+
+    @Test
+    public void exchangePreAuthorizedCode_SingleUseDisabled_DoesNotBlacklist() {
+        ReflectionTestUtils.setField(preAuthorizedCodeService, "accessTokenExpirySeconds", 600);
+        ReflectionTestUtils.setField(preAuthorizedCodeService, "cNonceExpirySeconds", 300);
+        ReflectionTestUtils.setField(preAuthorizedCodeService, "singleUsePreAuthCode", false);
+
+        String preAuthCode = "test-pre-auth-code";
+        TokenRequest tokenRequest = new TokenRequest();
+        tokenRequest.setGrantType(Constants.PRE_AUTHORIZED_CODE_GRANT_TYPE);
+        tokenRequest.setPreAuthorizedCode(preAuthCode);
+
+        PreAuthCodeData codeData = PreAuthCodeData.builder()
+                .credentialConfigurationId(CONFIG_ID)
+                .claims(new HashMap<>())
+                .createdAt(System.currentTimeMillis())
+                .expiresAt(System.currentTimeMillis() + 600000)
+                .build();
+
+        when(vciCacheService.getPreAuthCodeData(preAuthCode)).thenReturn(codeData);
+        when(vciCacheService.setTransaction(anyString(), any(Transaction.class))).thenReturn(null);
+
+        TokenResponse response = preAuthorizedCodeService.exchangePreAuthorizedCode(tokenRequest);
+
+        Assert.assertNotNull(response);
+        verify(vciCacheService, never()).isCodeBlacklisted(anyString());
+        verify(vciCacheService, never()).blacklistPreAuthCode(anyString());
+    }
 }
 
