@@ -16,6 +16,4 @@ public class VCIssuanceTransaction implements Serializable {
     private String cNonce;
     private long cNonceIssuedEpoch;
     private int cNonceExpireSeconds;
-
-
 }
