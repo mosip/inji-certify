@@ -45,10 +45,10 @@ public class MDocCredential extends Credential {
     }
 
     @Override
-    public String createCredential(Map<String, Object> templateParams, String templateName) {
+    public String createCredential(Map<String, Object> updatedTemplateParams, String templateName) {
         try {
-            String templatedJSON = super.createCredential(templateParams, templateName);
-            Map<String, Object> finalMDoc = mDocProcessor.processTemplatedJson(templatedJSON, templateParams);
+            String templatedJSON = super.createCredential(updatedTemplateParams, templateName);
+            Map<String, Object> finalMDoc = mDocProcessor.processTemplatedJson(templatedJSON, updatedTemplateParams);
             return objectMapper.writeValueAsString(finalMDoc);
 
         } catch (Exception e) {

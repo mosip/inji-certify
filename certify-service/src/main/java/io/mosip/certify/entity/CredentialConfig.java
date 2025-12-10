@@ -117,6 +117,14 @@ public class CredentialConfig {
     @Column(name = "credential_status_purpose", columnDefinition = "TEXT[]")
     private List<String> credentialStatusPurposes;
 
+    @Type(JsonBinaryType.class)
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "qr_settings", columnDefinition = "jsonb")
+    private List<Map<String, Object>> qrSettings;
+
+    @Column(name = "qr_signature_algo")
+    private String qrSignatureAlgo;
+
     @NotNull
     @Column(name = "cr_dtimes")
     private LocalDateTime createdTimes;

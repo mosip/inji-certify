@@ -38,6 +38,8 @@ CREATE TABLE credential_config (
     sd_jwt_claims JSONB,
     plugin_configurations JSONB,
     credential_status_purpose TEXT[],
+    qr_settings JSONB,
+    qr_signature_algo TEXT,
     cr_dtimes TIMESTAMP NOT NULL,
     upd_dtimes TIMESTAMP,
     CONSTRAINT pk_config_id PRIMARY KEY (config_id)

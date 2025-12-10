@@ -717,4 +717,67 @@ public class CredentialConfigurationServiceImplTest {
         );
         assertEquals("No matching appId and refId found in the key chooser configuration.", exception.getMessage());
     }
+
+    // Java
+    @Test
+    public void validateCredentialConfiguration_QrSettingsNull_QrSignatureAlgoSet_ThrowsException() {
+        CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
+        dto.setCredentialFormat("ldp_vc");
+        dto.setVcTemplate("test_template");
+        dto.setQrSettings(null);
+        dto.setQrSignatureAlgo("EdDSA");
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "DataProvider");
+        CertifyException ex = assertThrows(CertifyException.class, () ->
+                ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
+        );
+        assertEquals("QR signature algorithm is not allowed when QR settings are not set.", ex.getMessage());
+    }
+
+    @Test
+    public void validateCredentialConfiguration_QrSettingsEmpty_QrSignatureAlgoSet_ThrowsException() {
+        CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
+        dto.setCredentialFormat("ldp_vc");
+        dto.setVcTemplate("test_template");
+        dto.setQrSettings(Collections.emptyList());
+        dto.setQrSignatureAlgo("EdDSA");
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "DataProvider");
+        CertifyException ex = assertThrows(CertifyException.class, () ->
+                ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
+        );
+        assertEquals("QR signature algorithm is not allowed when QR settings are not set.", ex.getMessage());
+    }
+
+    @Test
+    public void validateCredentialConfiguration_QrSettingsPresent_UnsupportedQrSignatureAlgo_ThrowsException() {
+        CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
+        dto.setCredentialFormat("ldp_vc");
+        dto.setVcTemplate("test_template");
+        dto.setQrSettings(List.of(Map.of("key", "value")));
+        dto.setQrSignatureAlgo("UNSUPPORTED_ALGO");
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "DataProvider");
+        ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper", Map.of("EdDSA", List.of(List.of("TEST2019", "TEST2019-REF"))));
+        CertifyException ex = assertThrows(CertifyException.class, () ->
+                ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
+        );
+        assertEquals("The algorithm UNSUPPORTED_ALGO is not supported for QR signing. The supported values are: [EdDSA]", ex.getMessage());
+    }
+
+    @Test
+    public void validateCredentialConfiguration_QrSettingsPresent_SupportedQrSignatureAlgo_AllowsConfig() {
+        CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
+        dto.setCredentialFormat("ldp_vc");
+        dto.setVcTemplate("test_template");
+        dto.setQrSettings(List.of(Map.of("key", "value")));
+        dto.setSignatureAlgo("EdDSA");
+        dto.setQrSignatureAlgo("EdDSA");
+        dto.setKeyManagerAppId("TEST2019");
+        dto.setKeyManagerRefId("TEST2019-REF");
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "DataProvider");
+        ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper", Map.of("EdDSA", List.of(List.of("TEST2019", "TEST2019-REF"))));
+        try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
+            ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true);
+        }
+    }
+
 }

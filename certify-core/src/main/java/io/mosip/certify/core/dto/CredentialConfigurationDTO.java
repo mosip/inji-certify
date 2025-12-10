@@ -65,4 +65,8 @@ public class CredentialConfigurationDTO {
     private List<Map<String, String>> pluginConfigurations;
 
     private List<String> credentialStatusPurposes;
+
+    private List<Map<String, Object>> qrSettings;
+
+    private String qrSignatureAlgo;
 }
