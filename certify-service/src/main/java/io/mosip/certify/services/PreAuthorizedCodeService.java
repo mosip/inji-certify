@@ -3,6 +3,7 @@ package io.mosip.certify.services;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.*;
+import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,8 +51,7 @@ public class PreAuthorizedCodeService {
 
         if (expirySeconds < minExpirySeconds || expirySeconds > maxExpirySeconds) {
             log.error("expires_in {} out of bounds [{}, {}]", expirySeconds, minExpirySeconds, maxExpirySeconds);
-            throw new InvalidRequestException(
-                    String.format("expires_in must be between %d and %d seconds", minExpirySeconds, maxExpirySeconds));
+            throw new InvalidRequestException(ErrorConstants.INVALID_EXPIRY_RANGE);
         }
 
         String offerId = UUID.randomUUID().toString();
@@ -67,8 +67,7 @@ public class PreAuthorizedCodeService {
 
         vciCacheService.setPreAuthCodeData(preAuthCode, codeData);
 
-        CredentialOfferResponse offerResponse = buildCredentialOffer(request.getCredentialConfigurationId(),
-                preAuthCode, request.getTxCode());
+        CredentialOfferResponse offerResponse = buildCredentialOffer(request.getCredentialConfigurationId(), preAuthCode, request.getTxCode());
         vciCacheService.setCredentialOffer(offerId, offerResponse);
 
         String offerUri = buildCredentialOfferUri(offerId);
@@ -133,6 +132,40 @@ public class PreAuthorizedCodeService {
         if (!unknownClaims.isEmpty()) {
             log.error("Unknown claims provided: {}", unknownClaims);
             throw new InvalidRequestException(ErrorConstants.UNKNOWN_CLAIMS);
+        }
+    }
+
+    public CredentialOfferResponse getCredentialOffer(String offerId) {
+        log.info("Retrieving credential offer for ID: {}", offerId);
+
+        if (!isValidUUID(offerId)) {
+            log.error("Invalid offer_id format: {}", offerId);
+            throw new InvalidRequestException(ErrorConstants.INVALID_OFFER_ID_FORMAT);
+        }
+
+        CredentialOfferResponse offer = vciCacheService.getCredentialOffer(offerId);
+
+        if (offer == null) {
+            log.error("Credential offer not found or expired for ID: {}", offerId);
+            throw new CertifyException(
+                    "offer_not_found",
+                    "Credential offer not found or expired"
+            );
+        }
+
+        log.info("Successfully retrieved credential offer for ID: {}", offerId);
+        return offer;
+    }
+
+    private boolean isValidUUID(String str) {
+        if (str == null || str.trim().isEmpty()) {
+            return false;
+        }
+        try {
+            UUID.fromString(str.trim());
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
         }
     }
 

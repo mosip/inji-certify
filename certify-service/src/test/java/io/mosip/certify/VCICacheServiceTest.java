@@ -174,4 +174,49 @@ public class VCICacheServiceTest {
 
         verify(redisCache).put(eq(Constants.CREDENTIAL_OFFER_PREFIX + offerId), eq(offer));
     }
+
+    // Tests for cache null handling
+
+    @Test
+    public void getVCITransaction_WhenCacheIsNull_ReturnsNull() {
+        when(cacheManager.getCache(VCISSUANCE_CACHE)).thenReturn(null);
+
+        VCIssuanceTransaction result = vciCacheService.getVCITransaction(TEST_ACCESS_TOKEN_HASH);
+
+        assertEquals(null, result);
+        verify(cacheManager).getCache(VCISSUANCE_CACHE);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void getCredentialOffer_WhenCacheIsNull_ThrowsIllegalStateException() {
+        when(cacheManager.getCache(CREDENTIAL_OFFER_CACHE)).thenReturn(null);
+
+        vciCacheService.getCredentialOffer("test-offer-id");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void setCredentialOffer_WhenCacheIsNull_ThrowsIllegalStateException() {
+        when(cacheManager.getCache(CREDENTIAL_OFFER_CACHE)).thenReturn(null);
+
+        vciCacheService.setCredentialOffer("test-offer-id", new CredentialOfferResponse());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void getIssuerMetadata_WhenCacheIsNull_ThrowsIllegalStateException() {
+        when(cacheManager.getCache("issuerMetadataCache")).thenReturn(null);
+
+        vciCacheService.getIssuerMetadata();
+    }
+
+    @Test
+    public void getCredentialOffer_WhenNotFound_ReturnsNull() {
+        String offerId = "test-offer-id";
+        when(cacheManager.getCache(CREDENTIAL_OFFER_CACHE)).thenReturn(cache);
+        when(cache.get(Constants.CREDENTIAL_OFFER_PREFIX + offerId)).thenReturn(null);
+
+        CredentialOfferResponse result = vciCacheService.getCredentialOffer(offerId);
+
+        assertEquals(null, result);
+    }
 }
+
