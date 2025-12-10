@@ -3,6 +3,7 @@ package io.mosip.certify.services;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.*;
+import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import org.junit.Assert;
 import org.junit.Before;
@@ -121,7 +122,7 @@ public class PreAuthorizedCodeServiceTest {
         InvalidRequestException exception = assertThrows(InvalidRequestException.class,
                 () -> preAuthorizedCodeService.generatePreAuthorizedCode(request));
 
-        Assert.assertTrue(exception.getMessage().contains("expires_in must be between"));
+        Assert.assertEquals(ErrorConstants.INVALID_EXPIRY_RANGE, exception.getErrorCode());
     }
 
     @Test
@@ -131,7 +132,7 @@ public class PreAuthorizedCodeServiceTest {
         InvalidRequestException exception = assertThrows(InvalidRequestException.class,
                 () -> preAuthorizedCodeService.generatePreAuthorizedCode(request));
 
-        Assert.assertTrue(exception.getMessage().contains("expires_in must be between"));
+        Assert.assertEquals(ErrorConstants.INVALID_EXPIRY_RANGE, exception.getErrorCode());
     }
 
     @Test
@@ -161,4 +162,74 @@ public class PreAuthorizedCodeServiceTest {
         // Should have tried MAX_ATTEMPTS (3)
         verify(vciCacheService, times(3)).getPreAuthCodeData(anyString());
     }
+
+    // Tests for getCredentialOffer method
+
+    @Test
+    public void getCredentialOffer_Success() {
+        String validUuid = "550e8400-e29b-41d4-a716-446655440000";
+        CredentialOfferResponse expectedOffer = CredentialOfferResponse.builder()
+                .credentialIssuer("https://issuer.com")
+                .build();
+
+        when(vciCacheService.getCredentialOffer(validUuid)).thenReturn(expectedOffer);
+
+        CredentialOfferResponse result = preAuthorizedCodeService.getCredentialOffer(validUuid);
+
+        Assert.assertNotNull(result);
+        Assert.assertEquals(expectedOffer, result);
+        verify(vciCacheService).getCredentialOffer(validUuid);
+    }
+
+    @Test
+    public void getCredentialOffer_InvalidUuidFormat_ThrowsInvalidRequestException() {
+        String invalidUuid = "not-a-valid-uuid";
+
+        InvalidRequestException exception = assertThrows(InvalidRequestException.class,
+                () -> preAuthorizedCodeService.getCredentialOffer(invalidUuid));
+
+        Assert.assertEquals(ErrorConstants.INVALID_OFFER_ID_FORMAT, exception.getErrorCode());
+        verify(vciCacheService, never()).getCredentialOffer(anyString());
+    }
+
+    @Test
+    public void getCredentialOffer_NullOfferId_ThrowsInvalidRequestException() {
+        InvalidRequestException exception = assertThrows(InvalidRequestException.class,
+                () -> preAuthorizedCodeService.getCredentialOffer(null));
+
+        Assert.assertEquals(ErrorConstants.INVALID_OFFER_ID_FORMAT, exception.getErrorCode());
+        verify(vciCacheService, never()).getCredentialOffer(anyString());
+    }
+
+    @Test
+    public void getCredentialOffer_EmptyOfferId_ThrowsInvalidRequestException() {
+        InvalidRequestException exception = assertThrows(InvalidRequestException.class,
+                () -> preAuthorizedCodeService.getCredentialOffer(""));
+
+        Assert.assertEquals(ErrorConstants.INVALID_OFFER_ID_FORMAT, exception.getErrorCode());
+        verify(vciCacheService, never()).getCredentialOffer(anyString());
+    }
+
+    @Test
+    public void getCredentialOffer_WhitespaceOfferId_ThrowsInvalidRequestException() {
+        InvalidRequestException exception = assertThrows(InvalidRequestException.class,
+                () -> preAuthorizedCodeService.getCredentialOffer("   "));
+
+        Assert.assertEquals(ErrorConstants.INVALID_OFFER_ID_FORMAT, exception.getErrorCode());
+        verify(vciCacheService, never()).getCredentialOffer(anyString());
+    }
+
+    @Test
+    public void getCredentialOffer_NotFound_ThrowsCertifyException() {
+        String validUuid = "550e8400-e29b-41d4-a716-446655440000";
+
+        when(vciCacheService.getCredentialOffer(validUuid)).thenReturn(null);
+
+        CertifyException exception = assertThrows(CertifyException.class,
+                () -> preAuthorizedCodeService.getCredentialOffer(validUuid));
+
+        Assert.assertEquals("offer_not_found", exception.getErrorCode());
+        verify(vciCacheService).getCredentialOffer(validUuid);
+    }
 }
+
