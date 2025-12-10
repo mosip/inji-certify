@@ -64,7 +64,12 @@ public class VCICacheService {
     }
 
     public VCIssuanceTransaction getVCITransaction(String accessTokenHash) {
-        return cacheManager.getCache(VCISSUANCE_CACHE).get(accessTokenHash, VCIssuanceTransaction.class);
+        Cache cache = cacheManager.getCache(VCISSUANCE_CACHE);
+        if (cache == null) {
+            log.error("Cache {} not available. Please verify cache configuration.", VCISSUANCE_CACHE);
+            return null;
+        }
+        return cache.get(accessTokenHash, VCIssuanceTransaction.class);
     }
 
     public void setPreAuthCodeData(String code, PreAuthCodeData data) {
