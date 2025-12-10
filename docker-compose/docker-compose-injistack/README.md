@@ -58,7 +58,7 @@ docker-compose-injistack/
 - Supported versions: 0.5.0 and above
 - Download the latest JAR from:
   ```
-  https://oss.sonatype.org/content/repositories/snapshots/io/mosip/certify/mock-certify-plugin/
+  https://repo1.maven.org/maven2/io/mosip/certify/mock-certify-plugin/0.5.0/
   ```
 - Place the downloaded JAR in `loader_path/certify/`
 
@@ -90,6 +90,10 @@ public interface VCIssuancePlugin {
 - Place your PKCS12 keystore file in the `certs` directory as `oidckeystore.p12`. This is required for the Inji Web application and other applications which rely on Mimoto as a BFF and it can be configured as per these [docs](https://docs.inji.io/inji-wallet/inji-mobile/technical-overview/customization-overview/credential_providers#onboarding-mimoto-as-oidc-client-for-a-new-issuer) after the file is downloaded in the `certs` directory as shown in the directory tree.
 - Update `oidc_p12_password` env variable under `mimoto-service` in the [docker-compose.yaml](./docker-compose.yaml) to the password of the `oidckeystore.p12` file.
 
+## Other `mimoto` and `inji-web` related configurations
+- Update `IDP_PARTNER_ENCRYPTION_KEY` env variable under `mimoto-service` in the [docker-compose.yaml](./docker-compose.yaml) to the correct encryption key. This is used to decrypt data received from the Identity Provider.
+- Update `WALLET_BINDING_PARTNER_API_KEY` env variable under `mimoto-service` in the [docker-compose.yaml](./docker-compose.yaml) to the correct API key. This is used to authenticate requests from Inji Web to Mimoto.
+
 
 ## Configuration Setup
 
@@ -114,6 +118,14 @@ mosip.certify.data-provider-plugin.did-url=did:web:someuser.github.io:somerepo:s
     - A did with the ID `did:web:someuser.github.io:somerepo:somedirectory` will have be accessible at `https://someuser.github.io/somerepo/somedirectory/did.json`, i.e. if GitHub Pages is used to host the file, the contents should go in https://github.com/someuser/somerepo/blob/gh-pages/somedirectory/did.json assuming `gh-pages` is the branch for publishing GitHub Pages as per repository settings.
     - To verify if everything is working you can try to resolve the DID via public DID resolvers such as [Uniresolver](https://dev.uniresolver.io/).
 
+**Important**: Difference between `didUrl` in `credential_config` and `mosip.certify.data-provider-plugin.did-url`
+- The `didUrl` in the `credential_config` table identifies the DID to be associated with a specific Verifiable Credential (VC) type. Different credential types can have different `didUrl` values as needed.
+- The `mosip.certify.data-provider-plugin.did-url` property specifies the issuer's DID. The DID document for this issuer is available at the endpoint: [http://localhost:8090/v1/certify/.well-known/did.json](http://localhost:8090/v1/certify/.well-known/did.json).
+- For simplicity, it is recommended to use the same DID for both the issuer and the credential type unless there is a specific need for separate DIDs.
+- If different DIDs are used, ensure that the DID document from the endpoint is copied and hosted at the location specified by the `didUrl` in the `credential_config` table for each credential type.
+- **Note**: For updating the default vc type in this setup, please refer to the insert query present in the [certify_init.sql](./certify_init.sql) file for `credential_config`.
+
+
 - (required if Mobile driving license configured) Onboard issuer key and certificate data into property `mosip.certify.mock.mdoc.issuer-key-cert` using the creation script, please read the [plugin README](https://github.com/mosip/digital-credential-plugins/tree/release-0.5.x/mock-certify-plugin) for the same.
 
 
@@ -128,6 +140,7 @@ Ensure all configuration files are properly updated in the config directory if y
 
 Following files are optional and can be used to configure the Inji Web application for your usecase, if you are not using web application, you can skip these files:
 
+- mimoto-bootstrap.properties
 - mimoto-default.properties
 - mimoto-issuers-config.json
 - mimoto-trusted-verifiers.json
@@ -189,11 +202,13 @@ Refer to [API documentation](https://mosip.stoplight.io/docs/inji-certify) for d
 
 ```json
   "renderMethod": [{
-    "id": "https://yourdomain.certify.io/v1/certify/rendering-template/national-id",
-    "type": "SvgRenderingTemplate",
-    "name": "Portrait Mode",
-    "css3MediaQuery": "@media (orientation: portrait)",
-    "digestMultibase": "zQmAPdhyxzznFCwYxAp2dRerWC85Wg6wFl9G270iEu5h6JqW"
+    "type": "TemplateRenderMethod",
+    "renderSuite": "svg-mustache",
+    "template": {
+        "id": "https://yourdomain.certify.io/v1/certify/rendering-template/national-id",
+        "mediaType": "image/svg+xml",
+        "digestMultibase": "zQmAPdhyxzznFCwYxAp2dRerWC85Wg6wFl9G270iEu5h6JqW"
+    }
   }]
 ```
 
@@ -203,7 +218,10 @@ The digest multibase can be hardcoded or if the template has been stored with Ce
 
 - change the value of the `mosipbox_public_url` to point to the public URL in ./docker-compose.yaml where Certify service will be accessible, when using locally with ngrok create an HTTP tunnel for the port `8090`, which is the port for Certify and access the Inji Web at http://localhost:3001, to access Inji Web you may have to create another client with the Authorization service and more configuration should be required at Mimoto side
 
-3. To configure your own Google Auth Credentials:
+3. While downloading credentials with `inji-web`, there are 2 modes supported. 
+- First is `Continue as guest` which does not require any auth setup and works out of the box. This is the recommended option for quick testing.
+- Second is `Sign in with Google` which requires Google OAuth credentials to be setup.
+## To configure your own Google Auth Credentials:
 - Refer to the steps documented in the `mimoto` for the same. [GOOGLE_AUTH_SETUP](https://github.com/mosip/mimoto/blob/master/docker-compose/README.md#how-to-create-google-client-credentials)
 - Replace the placeholders under the `mimoto-service` in the `docker-compose.yml` file with the generated credentials:
 
@@ -211,6 +229,11 @@ The digest multibase can be hardcoded or if the template has been stored with Ce
        environment:
          - GOOGLE_OAUTH_CLIENT_ID=<your-client-id>
          - GOOGLE_OAUTH_CLIENT_SECRET=<your-client-secret>
+    ```
+
+## Using the Postgres Data Provider plugin
+- If you wish to use the Postgres Data Provider plugin instead of the Mock CSV plugin, please refer to the steps mentioned in [Setup-Postgres-Plugin](./Add-New-Usecase-Using-PostgresPlugin.md) to setup a new usecase using the Postgres Data Provider plugin.
+- Also refer to the postgres-data-provider-plugin implementation documentation.[Postgres-Plugin-Document](https://github.com/mosip/digital-credential-plugins/blob/master/postgres-dataprovider-plugin/README.md)
 
 ## Troubleshooting
 
@@ -241,6 +264,87 @@ The digest multibase can be hardcoded or if the template has been stored with Ce
     - Check if the DID is updated & resolvable. The Multibase hash changes on each restart, please update it whenever a newer instance of Certify is setup.
     - Check if the hosted DID matches with the [DID endpoint](http://localhost:8090/v1/certify/.well-known/did.json)
     - As of now, Mimoto/Inji Web only supports downloads for Ed25519Signature2020 signed VerifiableCredential due to a limitation of the integrated VC-Verification module.
+
+8. While running `docker compose up -d`, if any error is encountered related to network like `network mosip_network declared as external, but could not be found` and containers are not starting up properly, try to create the network manually using the command:
+   ```bash
+   docker network create mosip_network
+   ```
+   Then re-run `docker compose up -d`.
+
+
+# Explanation of NGINX Directives
+
+## listen 80 
+*This tells NGINX to listen for incoming HTTP requests on port 80, the default port for unencrypted web traffic.*
+- If you're using HTTPS, you'd also configure listen 443 ssl;.
+- You can bind to specific IPs or interfaces if needed: listen 127.0.0.1:80;
+
+## location /v1/certify/ 
+*This block matches all requests starting with /v1/certify/ and proxies them to your backend service.*
+- proxy_pass http://certify:8090/v1/certify/; forwards the request to the backend.
+- CORS headers are added to allow cross-origin requests.
+- OPTIONS requests are handled with a 204 No Content response to support browser preflight checks.
+
+
+## location /.well-known/did.json 
+*This block handles requests to the DID document endpoint, which is part of decentralized identity standards.*
+- It proxies the request to http://certify:8090/v1/certify/issuance/.well-known/did.json.
+- CORS headers and preflight handling are included.
+
+
+## location /.well-known/openid-credential-issuer 
+* This serves the OpenID4VCI issuer metadata, used in credential issuance flows.*
+- It proxies to http://certify:8090/v1/certify/.well-known/openid-credential-issuer.
+- Same CORS and preflight logic applies.
+
+
+## error_page 500 502 503 504 /50x.html 
+*This directive tells NGINX to serve a custom error page (50x.html) when the backend returns server errors.*
+- Useful for user-friendly error handling.
+- You can customize the HTML file at /usr/share/nginx/html/50x.html.
+
+
+## location /50x.html { root /usr/share/nginx/html; } 
+*This serves the static error page defined above.*
+- root specifies the directory where the file is located.
+
+
+# Steps to add your own configuration:
+1. Create Your NGINX Config File. *Eg*: `certify.conf`
+2. **Customize for Your Setup**
+    - Replace certify:8090 with your actual backend service name and port.
+    - If you're using Docker, ensure the backend and NGINX are on the same network.
+    - For HTTPS, add SSL configuration (`listen 443 ssl;`, `ssl_certificate`, etc.).
+3. **Integrate with Docker Compose**: Update your docker-compose.yml:
+```yaml
+    services:
+        nginx:
+            image: nginx:alpine
+            ports:
+            - "80:80"
+            volumes:
+            - ./nginx/certify.conf:/etc/nginx/conf.d/default.conf:ro
+            depends_on:
+            - certify
+            networks:
+            - appnet
+
+        certify:
+            image: your-org/certify:latest
+            expose:
+            - "8090"
+            networks:
+            - appnet
+
+        networks:
+          appnet:
+            driver: bridge
+```
+
+## Test Endpoints:
+1. curl http://localhost/v1/certify/actuator/health
+2. curl http://localhost/.well-known/did.json
+3. curl http://localhost/.well-known/openid-credential-issuer
 
 
 ### Health Checks

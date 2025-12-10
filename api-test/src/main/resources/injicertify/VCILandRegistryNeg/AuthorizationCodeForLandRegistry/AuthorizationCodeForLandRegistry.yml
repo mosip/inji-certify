@@ -1,10 +1,11 @@
 AuthorizationCodeForLandRegistry:
    InjiCertify_ESignet_AuthorizationCode_ForLandRegistry_Pos_For_NegFlow_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
-      uniqueIdentifier: TC_esignetDependent_AuthorizationCode
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCode_16
       description: Authorization Code for mock ida
       role: resident
       restMethod: post
+      additionalDependencies: TC_esignetDependent_AuthenticateUser_16
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
       inputTemplate: injicertify/VCILandRegistryNeg/AuthorizationCodeForLandRegistry/AuthorizationCodeForLandRegistry
@@ -19,10 +20,11 @@ AuthorizationCodeForLandRegistry:
 
    InjiCertify_ESignet_AuthorizationCode_ForLandRegistry_Cred_2_Pos_For_NegFlow_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
-      uniqueIdentifier: TC_esignetDependent_AuthorizationCode
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCode_17
       description: Authorization Code for mock ida
       role: resident
       restMethod: post
+      additionalDependencies: TC_esignetDependent_AuthenticateUser_17,TC_esignetDependent_AuthenticateUser_16,TC_esignetDependent_AuthenticateUser_18
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
       inputTemplate: injicertify/VCILandRegistryNeg/AuthorizationCodeForLandRegistry/AuthorizationCodeForLandRegistry
@@ -37,10 +39,11 @@ AuthorizationCodeForLandRegistry:
 
    InjiCertify_ESignet_AuthorizationCode_ForLandRegistry_Pos_Without_DB_Insertion_For_NegFlow_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
-      uniqueIdentifier: TC_esignetDependent_AuthorizationCode
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCode_18
       description: Authorization Code for mock ida
       role: resident
       restMethod: post
+      additionalDependencies: TC_esignetDependent_AuthenticateUser_18
       checkErrorsOnlyInResponse: true
       validityCheckRequired: true
       inputTemplate: injicertify/VCILandRegistryNeg/AuthorizationCodeForLandRegistry/AuthorizationCodeForLandRegistry

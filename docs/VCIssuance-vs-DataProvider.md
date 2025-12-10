@@ -12,41 +12,45 @@ While they are two types of Issuing Plugins, both types are issuing VCs by conne
 sequenceDiagram
     participant Client as 🌐 Client
     box Inji Certify #E6F3FF
-    participant credential_endpoint as 🔗 Credential API
-    participant VelocityEngine as ⚙️ Template Engine
-    participant VCSigner as 🔏 VC Signer
-    participant TemplateDB as 💾 Template Store
+    participant CredentialAPI as 🔗 Credential API
+    participant CredentialConfiguration as ⚙️ Credential Configuration
+    participant VelocityTemplatingEngine as ⚙️ Velocity Templating Engine
+    participant CredentialFactory as 🏭 Credential Factory
+    participant ProofGeneratorFactory as 🏭 Proof Generator Factory
     end
     participant VCIssuancePlugin as 🔌 VC Issuance Plugin
     participant DataProviderPlugin as 🔌 Data Provider Plugin
     
     Note over VCIssuancePlugin: External Plugin
     Note over DataProviderPlugin: External Plugin
-    
-    Client->>credential_endpoint: Request VC Issuance (OIDC4VCI)
+
+    Client->>CredentialAPI: Request VC Issuance (OIDC4VCI)
+    CredentialAPI->>CredentialConfiguration: Validate request & get config (includes credential format)
+    CredentialConfiguration-->>CredentialAPI: Return config (with signatureCryptoSuite, credentialFormat)
+
     alt Using VCIssuancePlugin
-        credential_endpoint->>VCIssuancePlugin: Forward Request
-        Note right of VCIssuancePlugin: Internal Process:<br/>1. Get Data<br/>2. Create VC<br/>3. Sign VC
-        VCIssuancePlugin-->>credential_endpoint: Return Complete Signed VC
-        
+        CredentialAPI->>VCIssuancePlugin: Forward Request with config
+        Note right of VCIssuancePlugin: Internal Process:<br/>1. Get Data<br/>2. Create VC<br/>3. Sign VC (plugin may use its own format/signing)
+        VCIssuancePlugin-->>CredentialAPI: Return Complete Signed VC
+
     else Using DataProviderPlugin
-        credential_endpoint->>DataProviderPlugin: Request Data
-        Note right of DataProviderPlugin: Internal Process:<br/>Get Data
-        DataProviderPlugin-->>credential_endpoint: Return Raw Data
-        
-        credential_endpoint->>TemplateDB: Fetch Credential Template
-        TemplateDB-->>credential_endpoint: Return Template
-        
-        credential_endpoint->>VelocityEngine: Process Template with Raw Data
-        VelocityEngine-->>credential_endpoint: Return unsigned Credential Data
-        
-        credential_endpoint->>VCSigner: Sign Credential
-        Note right of VCSigner: Sign VC
-        VCSigner-->>credential_endpoint: Return Signed VC 
-        
-        
+        CredentialAPI->>DataProviderPlugin: Request Data
+        DataProviderPlugin-->>CredentialAPI: Return Raw Data
+
+        CredentialAPI->>VelocityTemplatingEngine: Format raw data with template
+        VelocityTemplatingEngine-->>CredentialAPI: Return unsigned credential data
+
+        CredentialAPI->>CredentialFactory: Get credential instance (based on credentialFormat)
+        CredentialFactory-->>CredentialAPI: Return credential concrete class
+
+        CredentialAPI->>ProofGeneratorFactory: Select proof generator (based on credentialFormat & signatureCryptoSuite)
+        ProofGeneratorFactory-->>CredentialAPI: Return appropriate proof generator
+
+        CredentialAPI->>CredentialFactory: addProof(using selected proof generator)
+        CredentialFactory-->>CredentialAPI: Return signed VC
+
     end
-    credential_endpoint-->>Client: Return Final VC (OIDC4VCI)
+    CredentialAPI-->>Client: Return Final VC (OIDC4VCI)
 ```
 
 ## How to choose to implement either one?

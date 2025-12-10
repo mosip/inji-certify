@@ -1,0 +1,65 @@
+AuthenticateUserForCSRCertificate:
+   InjiCertify_ESignet_AuthenticateUserVCI_For_landregistry_Cred1_uin_Otp_Valid_Smoke_For_CSRCertificate:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_csrcertificate_01
+      description: Authenticate User for csr certificate for cred1
+      role: noauth
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      inputTemplate: injicertify/CSRCertificate/AuthenticateUserForCSRCertificate/AuthenticateUserForCSRCertificate
+      outputTemplate: injicertify/CSRCertificate/AuthenticateUserForCSRCertificate/AuthenticateUserForRevocationCSRCertificateResult
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred1_uin_all_Valid_Smoke_For_csrcertificate_sid_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred1_uin_all_Valid_Smoke_For_csrcertificate_sid_transactionId$",
+      	"individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
+      	"authFactorType" : "OTP",
+      	"challenge" : "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_EMAIL$",
+        "format": "alpha-numeric",
+        "sendOtp":{
+    "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred1_uin_all_Valid_Smoke_For_csrcertificate_sid_encodedResp$",
+    "requestTime": "$TIMESTAMP$",
+    "transactionId": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred1_uin_all_Valid_Smoke_For_csrcertificate_sid_transactionId$",
+	"individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
+    "otpChannels": [{channel: "email"},{channel: "phone"}],
+    "sendOtpReqTemplate": "injicertify/SendOtp/SendOtp",
+    "sendOtpEndPoint": "$ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/send-otp"
+    }
+    }'
+      output: '{
+  "sendOtpResp":{
+        "sendOtpResTemplate":"injicertify/SendOtp/SendOtpResult"
+    }
+}'
+   InjiCertify_ESignet_AuthenticateUserVCI_For_landregistry_Cred2_uin_Otp_Valid_Smoke_For_Revocation:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/authenticate
+      uniqueIdentifier: TC_esignetDependent_AuthenticateUser_csrcertificate_02
+      description: Authenticate User for csrcertificate for cred2
+      role: noauth
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      inputTemplate: injicertify/CSRCertificate/AuthenticateUserForCSRCertificate/AuthenticateUserForCSRCertificate
+      outputTemplate: injicertify/CSRCertificate/AuthenticateUserForCSRCertificate/AuthenticateUserForCSRCertificateResult
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred2_uin_all_Valid_Smoke_For_csrcertificate_sid_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred2_uin_all_Valid_Smoke_For_csrcertificate_sid_transactionId$",
+      	"individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
+      	"authFactorType" : "OTP",
+      	"challenge" : "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_EMAIL$",
+        "format": "alpha-numeric",
+        "sendOtp":{
+    "encodedHash": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred2_uin_all_Valid_Smoke_For_csrcertificate_sid_encodedResp$",
+    "requestTime": "$TIMESTAMP$",
+    "transactionId": "$ID:ESignet_OAuthDetailsRequest_For_landregistry_Cred2_uin_all_Valid_Smoke_For_csrcertificate_sid_transactionId$",
+	"individualId": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
+    "otpChannels": [{channel: "email"},{channel: "phone"}],
+    "sendOtpReqTemplate": "injicertify/SendOtp/SendOtp",
+    "sendOtpEndPoint": "$ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/send-otp"
+    }
+    }'
+      output: '{
+  "sendOtpResp":{
+        "sendOtpResTemplate":"injicertify/SendOtp/SendOtpResult"
+    }
+}'

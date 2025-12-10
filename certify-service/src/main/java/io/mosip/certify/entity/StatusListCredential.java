@@ -32,8 +32,8 @@ public class StatusListCredential {
     @Column(name = "status_purpose", length = 100)
     private String statusPurpose;
 
-    @Column(name = "capacity")
-    private Long capacity;
+    @Column(name = "capacity_in_kb")
+    private Long capacityInKB;
 
     @Column(name = "credential_status")
     @Enumerated(EnumType.STRING)

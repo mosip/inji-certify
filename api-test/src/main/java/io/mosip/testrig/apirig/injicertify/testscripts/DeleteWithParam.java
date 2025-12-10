@@ -108,7 +108,7 @@ public class DeleteWithParam extends InjiCertifyUtil implements ITest {
 
 		else {
 			String inputJson = getJsonFromTemplate(testCaseDTO.getInput(), testCaseDTO.getInputTemplate());
-			inputJson = InjiCertifyUtil.inputStringKeyWordHandeler(inputJson, testCaseName);
+			inputJson = inputStringKeyWordHandeler(inputJson, testCaseName);
 			if (testCaseName.contains("ESignet_")) {
 				if (InjiCertifyConfigManager.isInServiceNotDeployedList(GlobalConstants.ESIGNET)) {
 					throw new SkipException("esignet is not deployed hence skipping the testcase");

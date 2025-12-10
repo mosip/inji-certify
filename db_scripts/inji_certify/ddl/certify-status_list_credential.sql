@@ -19,7 +19,7 @@ CREATE TABLE status_list_credential (
     vc_document VARCHAR NOT NULL,           -- Stores the entire Verifiable Credential JSON document.
     credential_type VARCHAR(100) NOT NULL, -- Type of the status list (e.g., 'StatusList2021Credential')
     status_purpose VARCHAR(100),             -- Intended purpose of this list within the system (e.g., 'revocation', 'suspension', 'general'). NULLABLE.
-    capacity BIGINT,                        --- length of status list
+    capacity_in_kb BIGINT,                        --- length of status list
     credential_status credential_status_enum, -- Use the created ENUM type here
     cr_dtimes timestamp NOT NULL default now(),
     upd_dtimes timestamp                    -- When this VC record was last updated in the system

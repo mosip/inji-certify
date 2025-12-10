@@ -6,13 +6,18 @@ import io.mosip.certify.core.dto.CredentialOfferResponse;
 import io.mosip.certify.core.dto.PreAuthCodeData;
 import io.mosip.certify.core.dto.Transaction;
 import io.mosip.certify.core.dto.VCIssuanceTransaction;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachePut;
+import org.springframework.data.redis.cache.RedisCache;
 import org.springframework.stereotype.Service;
+import io.mosip.certify.services.CredentialConfigurationServiceImpl;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,8 +34,30 @@ public class VCICacheService {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Value("${spring.cache.type:simple}")
+    private String cacheType;
+
+
     private static final String VCISSUANCE_CACHE = "vcissuance";
     private static final String METADATA_KEY = "metadata";
+
+    @PostConstruct
+    public void validateCacheConfiguration() {
+        log.info("Cache type configured: {}", cacheType);
+
+        if ("simple".equalsIgnoreCase(cacheType)) {
+            log.warn("CRITICAL WARNING: Simple cache configured for production deployment " +
+                    "'simple' cache uses in-memory storage isolated to each pod, " +
+                    "Multi-pod deployments will experience cache inconsistencies and MAY BREAK FUNCTIONALLY, " +
+                    "Current configuration: spring.cache.type=simple (in-memory, non-distributed), " +
+                    "Switch to Redis cache for multi-pod deployments, Set spring.cache.type=redis in your configuration ");
+        } else if ("redis".equalsIgnoreCase(cacheType)) {
+            log.info("Redis cache is configured - suitable for multi-pod deployment");
+        } else {
+            log.warn("Unknown cache type configured: {}. Please verify configuration.", cacheType);
+        }
+    }
+
 
     @CachePut(value = VCISSUANCE_CACHE, key = "#accessTokenHash")
     public VCIssuanceTransaction setVCITransaction(String accessTokenHash, VCIssuanceTransaction vcIssuanceTransaction) {
@@ -38,10 +65,15 @@ public class VCICacheService {
     }
 
     public VCIssuanceTransaction getVCITransaction(String accessTokenHash) {
-        return cacheManager.getCache(VCISSUANCE_CACHE).get(accessTokenHash, VCIssuanceTransaction.class);
+        Cache cache = cacheManager.getCache(VCISSUANCE_CACHE);
+        if (cache == null) {
+            log.error("Cache {} not available. Please verify cache configuration.", VCISSUANCE_CACHE);
+            return null;
+        }
+        return cache.get(accessTokenHash, VCIssuanceTransaction.class);
     }
 
-    public void setPreAuthCodeData(String code, PreAuthCodeData data, int expirySeconds) {
+    public void setPreAuthCodeData(String code, PreAuthCodeData data) {
         String key = Constants.PRE_AUTH_CODE_PREFIX + code;
         cacheManager.getCache("preAuthCodeCache").put(key, data);
     }
@@ -52,22 +84,45 @@ public class VCICacheService {
         return wrapper != null ? (PreAuthCodeData) wrapper.get() : null;
     }
 
-    public void setCredentialOffer(String offerId, CredentialOfferResponse offer, int expirySeconds) {
-        String key = Constants.CREDENTIAL_OFFER_PREFIX + offerId;
-        cacheManager.getCache("credentialOfferCache").put(key, offer);
-    }
-
     public CredentialOfferResponse getCredentialOffer(String offerId) {
         String key = Constants.CREDENTIAL_OFFER_PREFIX + offerId;
-        Cache.ValueWrapper wrapper = cacheManager.getCache("credentialOfferCache").get(key);
+        Cache cache = cacheManager.getCache("credentialOfferCache");
+
+        if (cache == null) {
+            throw new IllegalStateException("credentialOfferCache not available");
+        }
+
+        Cache.ValueWrapper wrapper = cache.get(key);
         return wrapper != null ? (CredentialOfferResponse) wrapper.get() : null;
+    }
+
+    public void setCredentialOffer(String offerId, CredentialOfferResponse offer) {
+        String key = Constants.CREDENTIAL_OFFER_PREFIX + offerId;
+        Cache cache = cacheManager.getCache("credentialOfferCache");
+
+        if (cache == null) {
+            throw new IllegalStateException("credentialOfferCache not available");
+        }
+
+        // For Redis, use RedisCache.put with Duration
+        if (cache instanceof RedisCache) {
+            ((RedisCache) cache).put(key, offer);
+        } else {
+            // For simple cache, log warning and use basic put
+            log.warn("TTL not supported for cache type: {}. Entry may not expire.", cacheType);
+            cache.put(key, offer);
+        }
     }
 
     /**
      * Get issuer metadata from cache. If not present, load from database.
      */
     public Map<String, Object> getIssuerMetadata() {
-        Cache.ValueWrapper wrapper = cacheManager.getCache("issuerMetadataCache").get(METADATA_KEY);
+        Cache cache = cacheManager.getCache("issuerMetadataCache");
+        if (cache == null) {
+            throw new IllegalStateException("issuerMetadataCache not available");
+        }
+        Cache.ValueWrapper wrapper = cache.get(METADATA_KEY);
 
         if (wrapper == null) {
             log.info("Issuer metadata not found in cache, loading from database...");
@@ -86,15 +141,14 @@ public class VCICacheService {
                 metadataMap.put(Constants.CREDENTIAL_CONFIGURATIONS_SUPPORTED, credentialConfigsMap);
 
                 // Store in cache
-                cacheManager.getCache("issuerMetadataCache").put(METADATA_KEY, metadataMap);
+                cache.put(METADATA_KEY, metadataMap);
 
                 log.info("Successfully loaded and cached issuer metadata with {} configurations", credentialConfigsMap.size());
 
                 return metadataMap;
             } catch (Exception e) {
                 log.error("Failed to load issuer metadata", e);
-                // TODO: Throw Error
-                return new HashMap<>();
+                throw new IllegalStateException("Failed to load issuer metadata", e);
             }
         }
         return (Map<String, Object>) wrapper.get();

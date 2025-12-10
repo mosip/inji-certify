@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
-import io.mosip.certify.api.dto.RenderingTemplateDTO;
+import io.mosip.certify.core.dto.RenderingTemplateDTO;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.RenderingTemplateException;
 import io.mosip.certify.core.spi.RenderingTemplateService;

@@ -1,0 +1,41 @@
+GenerateTokenForCSRCertificate:
+   InjiCertify_ESignet_GenerateToken_ForLandRegistry_Cred1_Valid_Smoke_For_CSRCertificate_sid:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/oauth/v2/token
+      uniqueIdentifier: TC_esignetDependent_GenerateToken_csrcertificate_01
+      description: Generate Token for CSRCertificate for cred1
+      role: noauth
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/GenerateTokenForCSRCertificate/GenerateTokenForCSRCertificate
+      outputTemplate: injicertify/CSRCertificate/GenerateTokenForCSRCertificate/GenerateTokenForCSRCertificateResult
+      input: '{
+		  "grant_type": "authorization_code",
+		  "code": "$ID:ESignet_AuthorizationCode_For_landregistry_Cred1_All_Valid_Smoke_For_CSRCertificate_sid_code$",
+		  "client_id": "$ID:ESignet_CreateOIDCClientV2_For_LandRegistry2_all_Valid_Smoke_sid_clientId$",
+		  "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+		  "client_assertion": "$CLIENT_ASSERTION_JWT$",
+		  "redirect_uri": "$IDPREDIRECTURI$",
+  		  "code_verifier": "$CODEVERIFIER$"
+}'
+      output: '{
+   		"token_type": "Bearer"
+}'
+   InjiCertify_ESignet_GenerateToken_ForLandRegistry_Cred2_Valid_Smoke_For_CSRCertificate_sid:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/oauth/v2/token
+      uniqueIdentifier: TC_esignetDependent_GenerateToken_csrcertificate_02
+      description: Generate Token for CSRCertificate for cred2
+      role: noauth
+      restMethod: post
+      inputTemplate: injicertify/CSRCertificate/GenerateTokenForCSRCertificate/GenerateTokenForCSRCertificate
+      outputTemplate: injicertify/CSRCertificate/GenerateTokenForCSRCertificate/GenerateTokenForCSRCertificateResult
+      input: '{
+		  "grant_type": "authorization_code",
+		  "code": "$ID:ESignet_AuthorizationCode_For_landregistry_Cred2_All_Valid_Smoke_For_CSRCertificate_sid_code$",
+		  "client_id": "$ID:ESignet_CreateOIDCClientV2_For_LandRegistry2_all_Valid_Smoke_sid_clientId$",
+		  "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+		  "client_assertion": "$CLIENT_ASSERTION_JWT$",
+		  "redirect_uri": "$IDPREDIRECTURI$",
+  		  "code_verifier": "$CODEVERIFIER$"
+}'
+      output: '{
+   		"token_type": "Bearer"
+}'
