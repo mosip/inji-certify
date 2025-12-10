@@ -5,14 +5,36 @@ Inji Certify now includes support for generating and embedding QR codes in Verif
 ## Key Features
 - **QR Code Generation:** Inji Certify can generate QR codes that encapsulate the essential data of a Verifiable Credential.
 - **Embedding in Credentials:** The generated QR codes can be embedded directly into the visual representation of the credential, making it easy for users to present and share their credentials.
-- **Customizable QRs:** Administrators can customize the appearance and data encoded in the QR codes to meet specific requirements.
+- **Customizable QRs:** Administrators can configure the data encoded in the QR codes to meet specific requirements.
 
 ## How to Use QR Code Support
-1. **Enable QR Code Feature:** Ensure that the QR code generation feature is enabled in your Inji Certify configuration settings.
-2. **Issue Credentials with QR Codes:** When issuing a Verifiable Credential, specify that a QR code should be generated and embedded.
-3. **Scan and Verify:** Users can scan the QR code using compatible devices to quickly access and verify the credential information.
+1. **Enable QR Code Feature:** To enable QR code support, ensure that while adding the credential configuration, proper QR code template should be added in the `qr_settings` column of `credential_config` table.
+*Eg:*
+    ```json
+    [
+      {
+        "Full Name": "${fullName}",
+        "Phone Number": "${mobileNumber}",
+        "Date Of Birth": "${dateOfBirth}"
+      }
+    ]
+    ```
+2. **Issue Credentials with QR Codes:** When issuing a Verifiable Credential, ensure that the VC template should have placeholders for the QR code with proper labels.
+*Eg:*
+    ```json
+    {
+      "credentialSubject": {
+        "id": "${_holderId}",
+        "fullName": "${fullName}",
+        "mobileNumber": "${mobileNumber}",
+        "dateOfBirth": "${dateOfBirth}",
+        "identityQRCode": $claim_169_values[0]
+      }
+    }
+    ```
+3. **Scan and Verify:** Users can scan the QR code using compatible devices to quickly access and verify the QR code and extract the identity data.
 
-## Adding qr-settings to Credential Configuration
+## Enabling QR Code Feature
 To enable QR code support in your credential configurations, you need to include the `qrSettings` object in your credential configuration JSON.
 
 1. `credential_config` has a column named `qr_settings` of type `jsonb`. It is an optional field. It accepts a list of objects as a value such that each object corresponds to a single QR-code data.
@@ -28,13 +50,22 @@ To enable QR code support in your credential configurations, you need to include
       "Full Name": "${fullName}",
       "Phone Number": "${mobileNumber}",
       "Date Of Birth": "${dateOfBirth}"
+    },
+    {
+      "Face": {
+        "Data": "${face}",
+        "Data format": "Image",
+        "Data sub format": "JEPG"
+      },
+      "Full Name": "${fullName}",
+      "Date Of Birth": "${dateOfBirth}"
     }
   ],
   "qr_signature_algo": "ES256"
 }
 ```
 6. The qrCode data will be evaluated by merging velocity template with the velocity context map containing the same data provided by the data provider plugin for the credential issuance.
-7. The velocity template will look like below for integrating the QR code data with the VC:
+7. The velocity template will look like below for integrating the QR code data with the VC (This is with reference to the above `qrSettings` example):
 ```json
 {
         "@context": [
