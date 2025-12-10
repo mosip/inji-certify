@@ -88,7 +88,7 @@ public class VCICacheService {
         Cache cache = cacheManager.getCache("credentialOfferCache");
 
         if (cache == null) {
-            return null;
+            throw new IllegalStateException("credentialOfferCache not available");
         }
 
         Cache.ValueWrapper wrapper = cache.get(key);
@@ -117,7 +117,11 @@ public class VCICacheService {
      * Get issuer metadata from cache. If not present, load from database.
      */
     public Map<String, Object> getIssuerMetadata() {
-        Cache.ValueWrapper wrapper = cacheManager.getCache("issuerMetadataCache").get(METADATA_KEY);
+        Cache cache = cacheManager.getCache("issuerMetadataCache");
+        if (cache == null) {
+            throw new IllegalStateException("issuerMetadataCache not available");
+        }
+        Cache.ValueWrapper wrapper = cache.get(METADATA_KEY);
 
         if (wrapper == null) {
             log.info("Issuer metadata not found in cache, loading from database...");
@@ -136,7 +140,7 @@ public class VCICacheService {
                 metadataMap.put(Constants.CREDENTIAL_CONFIGURATIONS_SUPPORTED, credentialConfigsMap);
 
                 // Store in cache
-                cacheManager.getCache("issuerMetadataCache").put(METADATA_KEY, metadataMap);
+                cache.put(METADATA_KEY, metadataMap);
 
                 log.info("Successfully loaded and cached issuer metadata with {} configurations", credentialConfigsMap.size());
 
