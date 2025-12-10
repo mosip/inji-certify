@@ -208,48 +208,48 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
      * NOTE: the defaultSettings map should have the "templateName" key set to
      * "${sort(CREDENTIALTYPE1,CREDENTIALTYPE2,CREDENTIALTYPE3...)}:${sort(VC_CONTEXT1,VC_CONTENXT2,VC_CONTEXT3...)}"
      *
-     * @param finalTemplate is the merged input from the DataProvider plugin and all the default settings as one single map
+     * @param updatedTemplateParams is the merged input from the DataProvider plugin and all the default settings as one single map
      * @return templated VC as a String
      */
     @SneakyThrows
     @Override
-    public String format(Map<String, Object> finalTemplate) {
+    public String format(Map<String, Object> updatedTemplateParams) {
         // TODO: Isn't template name becoming too complex with VC_CONTEXTS & CREDENTIAL_TYPES both?
-        String templateName = finalTemplate.get(TEMPLATE_NAME).toString();
-        String issuer = finalTemplate.get(DID_URL).toString();
+        String templateName = updatedTemplateParams.get(TEMPLATE_NAME).toString();
+        String issuer = updatedTemplateParams.get(DID_URL).toString();
         String vcTemplateString = getCachedCredentialConfig(templateName).getVcTemplate(); // NEW
         vcTemplateString = new String(Base64.decodeBase64(vcTemplateString));
         StringWriter writer = new StringWriter();
         // TODO: Eventually, the credentialSubject from the plugin will be templated as-is
         // Date: https://velocity.apache.org/tools/3.1/apidocs/org/apache/velocity/tools/generic/DateTool.html
-        finalTemplate.put("_dateTool", new DateTool());
+        updatedTemplateParams.put("_dateTool", new DateTool());
         // Escape: https://velocity.apache.org/tools/3.1/apidocs/org/apache/velocity/tools/generic/EscapeTool.html
-        finalTemplate.put("_esc", new EscapeTool());
+        updatedTemplateParams.put("_esc", new EscapeTool());
         // add the issuer value
-        finalTemplate.put("_issuer", issuer);
-        if (finalTemplate.containsKey(Constants.RENDERING_TEMPLATE_ID) && templateName.contains(VCDM2Constants.URL)) {
+        updatedTemplateParams.put("_issuer", issuer);
+        if (updatedTemplateParams.containsKey(Constants.RENDERING_TEMPLATE_ID) && templateName.contains(VCDM2Constants.URL)) {
             try {
-                finalTemplate.put("_renderMethodSVGdigest",
+                updatedTemplateParams.put("_renderMethodSVGdigest",
                         CredentialUtils.getDigestMultibase(renderingTemplateService.getTemplate(
-                                (String) finalTemplate.get(Constants.RENDERING_TEMPLATE_ID)).getTemplate()));
+                                (String) updatedTemplateParams.get(Constants.RENDERING_TEMPLATE_ID)).getTemplate()));
             } catch (RenderingTemplateException e) {
-                log.error("Template: " + finalTemplate.get(Constants.RENDERING_TEMPLATE_ID) + " not available in DB", e);
+                log.error("Template: " + updatedTemplateParams.get(Constants.RENDERING_TEMPLATE_ID) + " not available in DB", e);
             }
         }
-        VelocityContext context = new VelocityContext(finalTemplate);
+        VelocityContext context = new VelocityContext(updatedTemplateParams);
         engine.evaluate(context, writer, /*logTag */ templateName, vcTemplateString); // use vcTemplateString
         JSONObject jsonObject = new JSONObject(writer.toString());
-        if (finalTemplate.containsKey(VCDMConstants.CREDENTIAL_ID)) {
-            jsonObject.put(VCDMConstants.ID, finalTemplate.get(VCDMConstants.CREDENTIAL_ID));
+        if (updatedTemplateParams.containsKey(VCDMConstants.CREDENTIAL_ID)) {
+            jsonObject.put(VCDMConstants.ID, updatedTemplateParams.get(VCDMConstants.CREDENTIAL_ID));
         }
-        if(finalTemplate.containsKey(VCDM2Constants.CREDENTIAL_STATUS) && templateName.contains(VCDM2Constants.URL)) {
-            jsonObject.put(VCDM2Constants.CREDENTIAL_STATUS, finalTemplate.get(VCDM2Constants.CREDENTIAL_STATUS));
+        if(updatedTemplateParams.containsKey(VCDM2Constants.CREDENTIAL_STATUS) && templateName.contains(VCDM2Constants.URL)) {
+            jsonObject.put(VCDM2Constants.CREDENTIAL_STATUS, updatedTemplateParams.get(VCDM2Constants.CREDENTIAL_STATUS));
         }
-        if( finalTemplate.containsKey(VCTYPE) && finalTemplate.containsKey(CONFIRMATION)
-                && finalTemplate.containsKey(ISSUER)) {
-            jsonObject.put(VCTYPE, finalTemplate.get(VCTYPE));
-            jsonObject.put(CONFIRMATION, finalTemplate.get(CONFIRMATION));
-            jsonObject.put(ISSUER, finalTemplate.get(ISSUER));
+        if( updatedTemplateParams.containsKey(VCTYPE) && updatedTemplateParams.containsKey(CONFIRMATION)
+                && updatedTemplateParams.containsKey(ISSUER)) {
+            jsonObject.put(VCTYPE, updatedTemplateParams.get(VCTYPE));
+            jsonObject.put(CONFIRMATION, updatedTemplateParams.get(CONFIRMATION));
+            jsonObject.put(ISSUER, updatedTemplateParams.get(ISSUER));
         }
 
         return jsonObject.toString();
@@ -258,12 +258,12 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     /**
      * performs the QR data templating
      *
-     * @param finalTemplate is the merged input from the DataProvider plugin and all the default settings as one single map
+     * @param updatedTemplateParams is the merged input from the DataProvider plugin and all the default settings as one single map
      * @return templated QR data as a JSONArray
      */
     @Override
-    public JSONArray formatQRData(Map<String, Object> finalTemplate) {
-        String templateName = finalTemplate.get(TEMPLATE_NAME).toString();
+    public JSONArray formatQRData(Map<String, Object> updatedTemplateParams) {
+        String templateName = updatedTemplateParams.get(TEMPLATE_NAME).toString();
         List<Map<String, Object>> qrSettings = getCachedCredentialConfig(templateName).getQrSettings();
         if(qrSettings == null || qrSettings.isEmpty()) {
             return null;
@@ -276,8 +276,8 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
             throw new CertifyException(ErrorConstants.JSON_PROCESSING_ERROR, "Error processing JSON data for QR code generation.");
         }
         StringWriter writer = new StringWriter();
-        finalTemplate.put("_esc", new EscapeTool());
-        VelocityContext context = new VelocityContext(finalTemplate);
+        updatedTemplateParams.put("_esc", new EscapeTool());
+        VelocityContext context = new VelocityContext(updatedTemplateParams);
         engine.evaluate(context, writer, /*logTag */ templateName, qrTemplateString); // use qrTemplateString
         return new JSONArray(writer.toString());
     }

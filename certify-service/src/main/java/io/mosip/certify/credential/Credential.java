@@ -48,26 +48,26 @@ public abstract class Credential{
      * this to a proper verifiable credential.Any additional VC level atributes
      * or context or etc should be handled by the inherrited class.
      *
-     * @param finalTemplate The params map that would be used to replace the
+     * @param updatedTemplateParams The params map that would be used to replace the
      *                       template
      * @param templateName   The actual template
      */
-    public String createCredential(Map<String, Object> finalTemplate, String templateName) {
-        
-        finalTemplate.put(Constants.TEMPLATE_NAME, templateName);
-        return vcFormatter.format(finalTemplate);
+    public String createCredential(Map<String, Object> updatedTemplateParams, String templateName) {
+
+        updatedTemplateParams.put(Constants.TEMPLATE_NAME, templateName);
+        return vcFormatter.format(updatedTemplateParams);
     }
 
     /**
      * Creates the QR data(JSON Array) based on the final template and template name
-     * @param finalTemplate The params map that would be used to replace the
+     * @param updatedTemplateParams The params map that would be used to replace the
      *                       template
      * @param templateName   The actual template
      * @return JSON Array representing the QR data
      */
-    public JSONArray createQRData(Map<String, Object> finalTemplate, String templateName) {
-        finalTemplate.put(Constants.TEMPLATE_NAME, templateName);
-        return vcFormatter.formatQRData(finalTemplate);
+    public JSONArray createQRData(Map<String, Object> updatedTemplateParams, String templateName) {
+        updatedTemplateParams.put(Constants.TEMPLATE_NAME, templateName);
+        return vcFormatter.formatQRData(updatedTemplateParams);
     }
 
     /**

@@ -65,19 +65,19 @@ public class SDJWT extends Credential{
          * upon error it returns an empty JWT.
          * upon success it returns the unsiged sd-jwt with disclosure
          *
-         * @param finalTemplate The params map that would be used to replace the
+         * @param updatedTemplateParams The params map that would be used to replace the
          *                       template
          * @param templateName   The actual template
          */
     @Override
-    public String createCredential(Map<String, Object> finalTemplate, String templateName) {
+    public String createCredential(Map<String, Object> updatedTemplateParams, String templateName) {
         SDObjectBuilder sdObjectBuilder = new SDObjectBuilder();
         List<Disclosure> disclosures = new ArrayList<>();
         PlainHeader header = new PlainHeader();
         JsonNode node;
         String currentPath = "$";
 
-        String templatedJSON = super.createCredential(finalTemplate, templateName);
+        String templatedJSON = super.createCredential(updatedTemplateParams, templateName);
         List<String> sdPaths = super.vcFormatter.getSelectiveDisclosureInfo(templateName);   
         try {
             

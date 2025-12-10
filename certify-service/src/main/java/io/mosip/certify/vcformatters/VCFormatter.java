@@ -15,17 +15,17 @@ public interface VCFormatter {
     /**
      * returns a templated VC as per the data in valueMap & some templateSettings
      *
-     * @param finalTemplate data provided by a {@link DataProviderPlugin} implementation.
+     * @param updatedTemplateParams data provided by a {@link DataProviderPlugin} implementation.
      * @return a templated & unsigned VC
      */
-    String format(Map<String, Object> finalTemplate);
+    String format(Map<String, Object> updatedTemplateParams);
     /**
-     * returns the proof algorithm associated with the template name. As defined in rfc7518
+     * return the templated QR code json array as per the data in updatedTemplateParams
      *
-     * @param finalTemplate
+     * @param updatedTemplateParams
      * @return
      */
-    JSONArray formatQRData(Map<String, Object> finalTemplate);
+    JSONArray formatQRData(Map<String, Object> updatedTemplateParams);
     /**
      * returns the proof algorithm associated with the template name. As defined in rfc7518
      * @param templateName
