@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
-
 @Slf4j
 @RestController
 @Tag(name = "Pre-Authorized Code API", description = "Endpoints for Pre-Authorized Code Flow")
@@ -17,7 +16,6 @@ public class PreAuthorizedCodeController {
 
     @Autowired
     private PreAuthorizedCodeService preAuthorizedCodeService;
-
 
     @PostMapping(value = "/pre-authorized-data", produces = "application/json")
     public PreAuthorizedResponse generatePreAuthorizedCode(@Valid @RequestBody PreAuthorizedRequest request) {

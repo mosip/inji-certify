@@ -23,15 +23,6 @@ public class PreAuthorizedCodeService {
     @Autowired
     private VCICacheService vciCacheService;
 
-    @Value("${mosip.certify.access-token.expiry-seconds:600}")
-    private int accessTokenExpirySeconds;
-
-    @Value("${mosip.certify.c-nonce.expiry-seconds:300}")
-    private int cNonceExpirySeconds;
-
-    @Value("${mosip.certify.pre-auth-code.single-use:true}")
-    private boolean singleUsePreAuthCode;
-
     @Value("${mosip.certify.identifier}")
     private String issuerIdentifier;
 
@@ -47,12 +38,20 @@ public class PreAuthorizedCodeService {
     @Value("${mosip.certify.domain.url}")
     private String domainUrl;
 
+    @Value("${mosip.certify.access-token.expiry-seconds:600}")
+    private int accessTokenExpirySeconds;
+
+    @Value("${mosip.certify.c-nonce.expiry-seconds:300}")
+    private int cNonceExpirySeconds;
+
+    @Value("${mosip.certify.pre-auth-code.single-use:true}")
+    private boolean singleUsePreAuthCode;
+
     private static final SecureRandom secureRandom = new SecureRandom();
     private static final String ALPHANUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     public String generatePreAuthorizedCode(PreAuthorizedRequest request) {
-        log.info("Generating pre-authorized code for credential configuration: {}",
-                request.getCredentialConfigurationId());
+        log.info("Generating pre-authorized code for credential configuration: {}", request.getCredentialConfigurationId());
 
         validatePreAuthorizedRequest(request);
 
@@ -60,14 +59,12 @@ public class PreAuthorizedCodeService {
 
         if (expirySeconds < minExpirySeconds || expirySeconds > maxExpirySeconds) {
             log.error("expires_in {} out of bounds [{}, {}]", expirySeconds, minExpirySeconds, maxExpirySeconds);
-            throw new InvalidRequestException(
-                    String.format("expires_in must be between %d and %d seconds", minExpirySeconds, maxExpirySeconds));
+            throw new InvalidRequestException(ErrorConstants.INVALID_EXPIRY_RANGE);
         }
 
         String offerId = UUID.randomUUID().toString();
         String preAuthCode = generateUniquePreAuthCode();
 
-        // Store data in cache
         long currentTime = System.currentTimeMillis();
         PreAuthCodeData codeData = PreAuthCodeData.builder()
                 .credentialConfigurationId(request.getCredentialConfigurationId())
@@ -137,14 +134,12 @@ public class PreAuthorizedCodeService {
 
         if (!missingClaims.isEmpty()) {
             log.error("Missing mandatory claims: {}", missingClaims);
-            throw new InvalidRequestException(
-                    String.format("Missing mandatory claims: %s", String.join(", ", missingClaims)));
+            throw new InvalidRequestException(ErrorConstants.MISSING_MANDATORY_CLAIM);
         }
 
         if (!unknownClaims.isEmpty()) {
             log.error("Unknown claims provided: {}", unknownClaims);
-            throw new InvalidRequestException(
-                    String.format("Unknown claims: %s", String.join(", ", unknownClaims)));
+            throw new InvalidRequestException(ErrorConstants.UNKNOWN_CLAIMS);
         }
     }
 
@@ -153,7 +148,7 @@ public class PreAuthorizedCodeService {
 
         if (!isValidUUID(offerId)) {
             log.error("Invalid offer_id format: {}", offerId);
-            throw new InvalidRequestException("Invalid offer_id format");
+            throw new InvalidRequestException(ErrorConstants.INVALID_OFFER_ID_FORMAT);
         }
 
         CredentialOfferResponse offer = vciCacheService.getCredentialOffer(offerId);
@@ -197,34 +192,24 @@ public class PreAuthorizedCodeService {
     }
 
     private CredentialOfferResponse buildCredentialOffer(String configId, String preAuthCode, String txnCode) {
-        CredentialOfferResponse response = new CredentialOfferResponse();
-        response.setCredentialIssuer(issuerIdentifier);
-        response.setCredentialConfigurationIds(Collections.singletonList(configId));
+        Grant.PreAuthorizedCodeGrant grant = Grant.PreAuthorizedCodeGrant.builder()
+                .preAuthorizedCode(preAuthCode)
+                .txCode(StringUtils.hasText(txnCode) ? buildTxCodeInfo(txnCode) : null).build();
 
-        // Create the grant object
-        Grant grants = new Grant();
+        Grant grants = Grant.builder().preAuthorizedCode(grant).build();
 
-        // Create the pre-authorized code grant
-        Grant.PreAuthorizedCodeGrant preAuthGrant = new Grant.PreAuthorizedCodeGrant();
-        preAuthGrant.setPreAuthorizedCode(preAuthCode);
-
-        // Add tx_code if present
-        if (StringUtils.hasText(txnCode)) {
-            preAuthGrant.setTxCode(buildTxCodeInfo(txnCode));
-        }
-
-        grants.setPreAuthorizedCode(preAuthGrant);
-        response.setGrants(grants);
-
-        return response;
+        return CredentialOfferResponse.builder()
+                .credentialIssuer(issuerIdentifier)
+                .credentialConfigurationIds(Collections.singletonList(configId))
+                .grants(grants).build();
     }
 
     private TxCode buildTxCodeInfo(String txnCode) {
-        TxCode txCode = new TxCode();
-        txCode.setLength(txnCode.length());
-        txCode.setInputMode(txnCode.matches("\\d+") ? "numeric" : "text");
-        txCode.setDescription("Enter the code sent to your device");
-        return txCode;
+        return TxCode.builder()
+                .length(txnCode.length())
+                .inputMode(txnCode.matches("\\d+") ? "numeric" : "text")
+                .description("Please enter the transaction code provided to you")
+                .build();
     }
 
     private String buildCredentialOfferUri(String offerId) {
