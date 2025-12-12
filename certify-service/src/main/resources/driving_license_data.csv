@@ -1,0 +1,2 @@
+id,givenName,familyName,birthDate,documentNumber,portrait,drivingPrivileges
+user@inji.io,John,Doe,1990-08-25,DL1234567890,"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAFCAYAAABW1IzHAAAAHklEQVQokWNgGPaAkZHxPyMj439sYrSQo51PBgsAALa0ECF30JSdAAAAAElFTkSuQmCC","[{""vehicleCategoryCode"": ""A"", ""issueDate"": ""2023-01-15""}, {""vehicleCategoryCode"": ""B"", ""issueDate"": ""2023-01-15""}]"

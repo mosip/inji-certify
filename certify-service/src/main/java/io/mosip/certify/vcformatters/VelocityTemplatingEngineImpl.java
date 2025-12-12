@@ -92,7 +92,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
                             log.error("CredentialConfig not found in DB for key: {}", templateKey);
                             return new CertifyException(ErrorConstants.EXPECTED_TEMPLATE_NOT_FOUND, "CredentialConfig not found for key: " + templateKey);
                         });
-            } else if (Objects.equals(credentialFormat, VCFormats.SD_JWT)) {
+            } else if (Objects.equals(credentialFormat, VCFormats.VC_SD_JWT)) {
                 String vct = parts[1];
                 return credentialConfigRepository.findByCredentialFormatAndSdJwtVct(credentialFormat, vct)
                         .orElseThrow(() -> {
