@@ -31,11 +31,8 @@ public class PreAuthorizedCodeController {
         return preAuthorizedCodeService.getCredentialOffer(offerId);
     }
 
-    @PostMapping(value = "/token",
-//            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public TokenResponse token(@RequestBody TokenRequest request) {
+    @PostMapping(value = "/token", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public TokenResponse token(@ModelAttribute TokenRequest request) {
         return preAuthorizedCodeService.exchangePreAuthorizedCode(request);
     }
 }

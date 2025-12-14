@@ -5,6 +5,7 @@ import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidRequestException;
+import io.mosip.certify.core.spi.CredentialConfigurationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +23,12 @@ public class PreAuthorizedCodeService {
 
     @Autowired
     private VCICacheService vciCacheService;
+
+    @Autowired
+    private CredentialConfigurationService credentialConfigurationService;
+
+    @Autowired
+    private AuthorizationServerService authServerService;
 
     @Value("${mosip.certify.identifier}")
     private String issuerIdentifier;
@@ -51,12 +58,8 @@ public class PreAuthorizedCodeService {
     private static final String ALPHANUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     public String generatePreAuthorizedCode(PreAuthorizedRequest request) {
-        log.info("Generating pre-authorized code for credential configuration: {}", request.getCredentialConfigurationId());
-
         validatePreAuthorizedRequest(request);
-
         int expirySeconds = request.getExpiresIn() != null ? request.getExpiresIn() : defaultExpirySeconds;
-
         if (expirySeconds < minExpirySeconds || expirySeconds > maxExpirySeconds) {
             log.error("expires_in {} out of bounds [{}, {}]", expirySeconds, minExpirySeconds, maxExpirySeconds);
             throw new InvalidRequestException(ErrorConstants.INVALID_EXPIRY_RANGE);
@@ -78,24 +81,24 @@ public class PreAuthorizedCodeService {
         CredentialOfferResponse offerResponse = buildCredentialOffer(request.getCredentialConfigurationId(), preAuthCode, request.getTxCode());
         vciCacheService.setCredentialOffer(offerId, offerResponse);
 
-        String offerUri = buildCredentialOfferUri(offerId);
-        log.info("Successfully generated pre-authorized code with offer ID: {}", offerId);
-
-        return offerUri;
+        return buildCredentialOfferUri(offerId);
     }
 
     private void validatePreAuthorizedRequest(PreAuthorizedRequest request) {
-        Map<String, Object> metadata = vciCacheService.getIssuerMetadata();
-        Map<String, Object> supportedConfigs = (Map<String, Object>) metadata
-                .get(Constants.CREDENTIAL_CONFIGURATIONS_SUPPORTED);
+        // Map<String, Object> metadata = vciCacheService.getIssuerMetadata();
+        CredentialIssuerMetadataDTO metadata = credentialConfigurationService.fetchCredentialIssuerMetadata("latest");
+        // Map<String, Object> supportedConfigs = (Map<String, Object>)
+        // metadata.get(Constants.CREDENTIAL_CONFIGURATIONS_SUPPORTED);
+        Map<String, CredentialConfigurationSupportedDTO> supportedConfigs = metadata
+                .getCredentialConfigurationSupportedDTO();
 
         if (supportedConfigs == null || !supportedConfigs.containsKey(request.getCredentialConfigurationId())) {
             log.error("Invalid credential configuration ID: {}", request.getCredentialConfigurationId());
             throw new InvalidRequestException(ErrorConstants.INVALID_CREDENTIAL_CONFIGURATION_ID);
         }
 
-        Map<String, Object> config = (Map<String, Object>) supportedConfigs.get(request.getCredentialConfigurationId());
-        Map<String, Object> requiredClaims = (Map<String, Object>) config.get(Constants.CLAIMS);
+        CredentialConfigurationSupportedDTO config = supportedConfigs.get(request.getCredentialConfigurationId());
+        Map<String, Object> requiredClaims = config.getClaims();
 
         validateClaims(requiredClaims, request.getClaims());
     }
@@ -192,16 +195,19 @@ public class PreAuthorizedCodeService {
     }
 
     private CredentialOfferResponse buildCredentialOffer(String configId, String preAuthCode, String txnCode) {
-        Grant.PreAuthorizedCodeGrant grant = Grant.PreAuthorizedCodeGrant.builder()
+        Grant.PreAuthorizedCodeGrantType grant = Grant.PreAuthorizedCodeGrantType.builder()
                 .preAuthorizedCode(preAuthCode)
                 .txCode(StringUtils.hasText(txnCode) ? buildTxCodeInfo(txnCode) : null).build();
+        String authorizationServer = authServerService.getAuthorizationServerForCredentialConfig(configId);
 
         Grant grants = Grant.builder().preAuthorizedCode(grant).build();
 
         return CredentialOfferResponse.builder()
                 .credentialIssuer(issuerIdentifier)
                 .credentialConfigurationIds(Collections.singletonList(configId))
-                .grants(grants).build();
+                .grants(grants)
+                .authorizationServer(authorizationServer)
+                .build();
     }
 
     private TxCode buildTxCodeInfo(String txnCode) {
