@@ -82,7 +82,7 @@ public class IarServiceImpl implements IarService {
     private static final String AUTH_CODE_PREFIX = "iar_auth_";
 
 
-    public IarResponse processAuthorizationRequest(InteractiveAuthorizationRequest iarRequest) throws CertifyException {
+    private IarResponse processAuthorizationRequest(InteractiveAuthorizationRequest iarRequest) throws CertifyException {
         log.info("Processing IAR for client_id: {}, response_type: {}", 
                  iarRequest.getClientId(), iarRequest.getResponseType());
 
@@ -107,10 +107,6 @@ public class IarServiceImpl implements IarService {
         }
     }
 
-    public IarAuthorizationResponse processVpPresentation(IarAuthorizationRequest presentationRequest) throws CertifyException {
-        return iarPresentationService.processVpPresentation(presentationRequest);
-    }
-
     @Override
     public Object handleIarRequest(IarRequest unifiedRequest) throws CertifyException {
         log.info("Handling unified IAR request");
@@ -123,7 +119,7 @@ public class IarServiceImpl implements IarService {
             IarAuthorizationRequest presentationRequest = new IarAuthorizationRequest();
             presentationRequest.setAuthSession(unifiedRequest.getAuthSession());
             presentationRequest.setOpenid4vpPresentation(unifiedRequest.getOpenid4vpPresentation());
-            return processVpPresentation(presentationRequest);
+            return iarPresentationService.processVpPresentation(presentationRequest);
         }
 
         if (!hasAuthSession && !hasVp) {
@@ -206,7 +202,7 @@ public class IarServiceImpl implements IarService {
             }
             
             // Extract c_nonce from the JWT access token and set in OAuth response
-            String cNonce = extractCNonceFromJwt(response.getAccessToken());
+            String cNonce = java.util.UUID.randomUUID().toString();
             if (cNonce != null) {
                 response.setCNonce(cNonce);
                 response.setCNonceExpiresIn(cNonceExpiresInSeconds);

@@ -54,7 +54,7 @@ public class AccessTokenJwtUtil {
             // Build JWT payload as JSON
             Map<String, Object> payload = new HashMap<>();
             payload.put("iss", issuer);
-            payload.put("sub", session.getTransactionId());
+            payload.put("sub", session.getIdentity());
             payload.put("aud", audience);
             payload.put("iat", issuedAt);
             payload.put("exp", expiresAt);
@@ -69,12 +69,6 @@ public class AccessTokenJwtUtil {
             }
             payload.put("scope", scope);
             log.debug("Added scope '{}' to JWT for transaction_id: {}", scope, session.getTransactionId());
-
-            // Generate c_nonce and add to JWT
-            String cNonce = generateCNonce();
-            payload.put("c_nonce", cNonce);
-            payload.put("c_nonce_expires_in", 300); 
-            log.debug("Added c_nonce '{}' to JWT for transaction_id: {}", cNonce, session.getTransactionId());
 
             // Convert payload to JSON string
             String payloadJson = objectMapper.writeValueAsString(payload);
@@ -105,16 +99,5 @@ public class AccessTokenJwtUtil {
             log.error("Failed to generate signed JWT for session: {}", session.getAuthSession(), e);
             throw new RuntimeException("JWT generation failed", e);
         }
-    }
-
-    /**
-     * Generate a cryptographically secure c_nonce following eSignet pattern
-     * 
-     * @return Generated c_nonce string
-     */
-    private String generateCNonce() {
-        String cNonce = java.util.UUID.randomUUID().toString();
-        log.debug("Generated c_nonce following eSignet pattern (length: {})", cNonce.length());
-        return cNonce;
     }
 }

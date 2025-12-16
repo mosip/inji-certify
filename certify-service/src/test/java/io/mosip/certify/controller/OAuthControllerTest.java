@@ -32,13 +32,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Unit tests for OAuthAuthorizationController
+ * Unit tests for OAuthController
  * Tests the Interactive Authorization Request (IAR) endpoint functionality
  */
-@WebMvcTest(value = OAuthAuthorizationController.class, 
+@WebMvcTest(value = OAuthController.class,
              excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, 
                                                   classes = {AccessTokenValidationFilter.class}))
-class OAuthAuthorizationControllerTest {
+class OAuthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;

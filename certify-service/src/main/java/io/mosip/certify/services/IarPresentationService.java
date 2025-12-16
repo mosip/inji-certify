@@ -5,6 +5,7 @@
  */
 package io.mosip.certify.services;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.mosip.certify.core.constants.IarStatus;
 import io.mosip.certify.core.dto.IarAuthorizationRequest;
 import io.mosip.certify.core.dto.IarAuthorizationResponse;
@@ -30,8 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Service for handling VP Presentation processing
@@ -58,6 +58,9 @@ public class IarPresentationService {
 
     @Value("${mosip.certify.iar.authorization-code.length:24}")
     private int authorizationCodeLength;
+
+    @Value("#{'${mosip.certify.iar.identity:uin,vid,UIN,UID}'.split(',')}")
+    private Set<String> identityKeys;
 
     /**
      * Validate required configuration properties at startup
@@ -96,6 +99,14 @@ public class IarPresentationService {
 
             IarAuthorizationResponse response = new IarAuthorizationResponse();
             if (IarStatus.OK.getValue().equals(verificationResponse.getStatus())) {
+                String identity = extractIdentity(verificationResponse);
+
+                if (identity == null || identity.isEmpty()) {
+                    throw new CertifyException("invalid_vp", "VP does not contain identity attributes (UIN/VID)");
+                }
+
+                session.setIdentity(identity);
+                iarSessionRepository.save(session);
                 String authorizationCode = generateAndStoreAuthorizationCode(session);
                 response.setStatus(IarStatus.OK);
                 response.setAuthorizationCode(authorizationCode);
@@ -301,4 +312,63 @@ public class IarPresentationService {
         
         return authCode;
     }
+
+    private String extractIdentity(VpVerificationResponse verificationResponse) {
+
+        Object detailsObj = verificationResponse.getVerificationDetails();
+        if (!(detailsObj instanceof Map)) {
+            return null;
+        }
+
+        Map<String, Object> details = (Map<String, Object>) detailsObj;
+
+        Object vcResultsObj = details.get("vcResults");
+        if (!(vcResultsObj instanceof List)) {
+            return null;
+        }
+
+        List<Map<String, Object>> vcResults = (List<Map<String, Object>>) vcResultsObj;
+
+        for (Map<String, Object> vcEntry : vcResults) {
+
+            Object vcStringObj = vcEntry.get("vc");
+            if (!(vcStringObj instanceof String)) {
+                continue;
+            }
+
+            String vcJson = (String) vcStringObj;
+            String extracted = extractIdentityFromVc(vcJson);
+
+            if (extracted != null && !extracted.isEmpty()) {
+                return extracted;
+            }
+        }
+        return null;
+    }
+
+
+    private String extractIdentityFromVc(String vcJson) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(vcJson);
+
+            JsonNode cs = root.path("credentialSubject");
+            if (cs.isMissingNode()) {
+                return null;
+            }
+
+            Iterator<Map.Entry<String, JsonNode>> fields = cs.fields();
+            while (fields.hasNext()) {
+                Map.Entry<String, JsonNode> entry = fields.next();
+
+                if (identityKeys.contains(entry.getKey())) {
+                    return entry.getValue().asText();
+                }
+            }
+
+        } catch (Exception ignored) {}
+
+        return null;
+    }
+
 }

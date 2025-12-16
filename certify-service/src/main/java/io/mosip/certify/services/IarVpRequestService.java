@@ -5,7 +5,11 @@
  */
 package io.mosip.certify.services;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.mosip.certify.config.VerifyServiceConfig;
 import io.mosip.certify.core.dto.InteractiveAuthorizationRequest;
+import io.mosip.certify.core.dto.PresentationDefinition;
 import io.mosip.certify.core.dto.VerifyVpRequest;
 import io.mosip.certify.core.dto.VerifyVpResponse;
 import io.mosip.certify.core.exception.CertifyException;
@@ -35,6 +39,9 @@ public class IarVpRequestService {
 
     @Autowired
     private RestTemplate restTemplate;
+
+    @Autowired
+    private VerifyServiceConfig verifyServiceConfig;
 
     @Value("${mosip.certify.verify.service.vp-request-endpoint}")
     private String verifyServiceVpRequestEndpoint;
@@ -96,15 +103,16 @@ public class IarVpRequestService {
                 log.debug("No transaction ID provided - verify service will generate one");
             }
 
-            if (iarRequest.getAuthorizationDetails() != null 
-                && !iarRequest.getAuthorizationDetails().isEmpty()) {
-                var authDetail = iarRequest.getAuthorizationDetails().get(0);
-                
-                // Use credential_configuration_id as presentation definition ID
-                if (authDetail.getCredentialConfigurationId() != null) {
-                    verifyRequest.setPresentationDefinitionId(authDetail.getCredentialConfigurationId());
-                }
-            }
+//            if (iarRequest.getAuthorizationDetails() != null
+//                && !iarRequest.getAuthorizationDetails().isEmpty()) {
+//                var authDetail = iarRequest.getAuthorizationDetails().get(0);
+//
+////                // Use credential_configuration_id as presentation definition ID
+////                if (authDetail.getCredentialConfigurationId() != null) {
+////                    verifyRequest.setPresentationDefinitionId(authDetail.getCredentialConfigurationId());
+////                }
+//            }
+            verifyRequest.setPresentationDefinition(verifyServiceConfig.getPresentationDefinition());
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);

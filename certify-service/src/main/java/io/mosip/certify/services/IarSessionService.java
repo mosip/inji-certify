@@ -90,7 +90,6 @@ public class IarSessionService {
         // Extract and set scope from authorization_details
         String scope = extractScopeFromAuthorizationDetails(iarRequest);
         iarSession.setScope(scope);
-        log.info("Extracted scope from authorization_details: {}", scope);
         
         return iarSession;
     }

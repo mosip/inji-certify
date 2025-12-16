@@ -14,13 +14,30 @@ import io.mosip.certify.core.dto.OAuthTokenError;
 import io.mosip.certify.core.dto.IarRequest;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.IarService;
+import io.mosip.certify.core.spi.JwksService;
+import io.mosip.certify.services.KeyManagerConstants;
+import io.mosip.kernel.keymanagerservice.dto.AllCertificatesDataResponseDto;
+import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+
+import java.io.ByteArrayInputStream;
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPublicKey;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
 
 /**
  * OAuth Authorization Controller
@@ -29,10 +46,13 @@ import jakarta.validation.Valid;
 @Slf4j
 @RestController
 @RequestMapping("/oauth")
-public class OAuthAuthorizationController {
+public class OAuthController {
 
     @Autowired
     private IarService iarService;
+
+    @Autowired
+    private JwksService jwksService;
 
     /**
      * Interactive Authorization Request (IAR) endpoint
@@ -71,7 +91,6 @@ public class OAuthAuthorizationController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error");
         }
     }
-
 
     /**
      * OAuth Token endpoint (Step 19-20)
@@ -116,4 +135,48 @@ public class OAuthAuthorizationController {
         }
     }
 
+    /**
+     * Get JWK set endpoint for OAuth access token verification
+     * 
+     * Cached for 5 minutes to improve performance and reduce load on keymanager service.
+     * Returns empty keys array if no valid certificates are found (standard OAuth behavior).
+     * Only successful responses (200 OK) are cached - errors are not cached to allow retries.
+     * 
+     * @return ResponseEntity with JWK set containing public keys
+     */
+    @GetMapping("/.well-known/jwks.json")
+    public ResponseEntity<Map<String, Object>> getJwks() {
+        log.info("Fetching JWK set for CERTIFY_SERVICE_APP_ID");
+        
+        try {
+            Map<String, Object> response = jwksService.getJwks();
+            
+            if (response != null && response.containsKey("keys")) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> jwkList = (List<Map<String, Object>>) response.get("keys");
+                if (jwkList != null && !jwkList.isEmpty()) {
+                    log.info("JWK set retrieved successfully with {} keys", jwkList.size());
+                    return ResponseEntity.ok(response);
+                } else {
+                    log.warn("JWK set is empty - no valid certificates available. This may cause token validation failures.");
+                    // Return empty keys array per OAuth 2.0 spec
+                    return ResponseEntity.ok(response);
+                }
+            } else {
+                log.error("Invalid response structure from getJwksInternal");
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("keys", Collections.emptyList());
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(errorResponse);
+            }
+            
+        } catch (Exception e) {
+            log.error("Failed to retrieve JWK set from keymanager service", e);
+            // Return empty keys array per OAuth 2.0 spec - clients should handle this gracefully
+            // Do NOT cache error responses - allow retries
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("keys", Collections.emptyList());
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(errorResponse);
+        }
+    }
 }
+
