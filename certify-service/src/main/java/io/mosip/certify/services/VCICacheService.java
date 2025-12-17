@@ -177,27 +177,4 @@ public class VCICacheService {
         Cache.ValueWrapper wrapper = cache.get(key);
         return wrapper != null ? (AuthorizationServerMetadata) wrapper.get() : null;
     }
-
-    /**
-     * Evict cached AS metadata for a specific server
-     */
-    public void evictASMetadata(String serverUrl) {
-        String key = Constants.AS_METADATA_PREFIX + serverUrl;
-        Cache cache = cacheManager.getCache("asMetadataCache");
-        if (cache != null) {
-            cache.evict(key);
-            log.info("Evicted AS metadata cache for: {}", serverUrl);
-        }
-    }
-
-    /**
-     * Clear all AS metadata cache
-     */
-    public void clearASMetadataCache() {
-        Cache cache = cacheManager.getCache("asMetadataCache");
-        if (cache != null) {
-            cache.clear();
-            log.info("Cleared all AS metadata cache");
-        }
-    }
 }
