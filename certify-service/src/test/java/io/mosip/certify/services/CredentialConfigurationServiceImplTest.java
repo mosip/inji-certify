@@ -53,7 +53,8 @@ public class CredentialConfigurationServiceImplTest {
     @Before
     public void setup() {
         Map<String, List<List<String>>> keyAliasMapper = new HashMap<>();
-        keyAliasMapper.put("EdDSA", List.of(List.of("TEST2019", "TEST2019-REF")));
+        keyAliasMapper.put("EdDSA", List.of(
+                List.of("TEST2019", "TEST2019-REF")));
 //        keyAliasMapper.put("RS256", List.of());
 
         MockitoAnnotations.openMocks(this);
@@ -302,6 +303,7 @@ public class CredentialConfigurationServiceImplTest {
         dto.setCredentialFormat("ldp_vc");
         when(credentialConfigMapper.toDto(config)).thenReturn(dto);
 
+
         CredentialIssuerMetadataDTO result = credentialConfigurationService.fetchCredentialIssuerMetadata("latest");
 
         Assert.assertNotNull(result);
@@ -325,7 +327,6 @@ public class CredentialConfigurationServiceImplTest {
         CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
         dto.setCredentialFormat("vc+sd-jwt");
         when(credentialConfigMapper.toDto(config)).thenReturn(dto);
-
 
         CredentialIssuerMetadataDTO result = credentialConfigurationService.fetchCredentialIssuerMetadata("latest");
 
