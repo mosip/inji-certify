@@ -8,7 +8,8 @@ InsertDBData:
       inputTemplate: injicertify/InsertDBData/InsertRegistrationReceiptDBData
       outputTemplate: injicertify/InsertDBData/InsertDBDataResult
       input: '{
-	  "registration_id": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$"
+	  "registration_id": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
+	  "municipality": "$RUNCONTEXT$test automation"
 }'
       output: '{
 }'
@@ -22,7 +23,8 @@ InsertDBData:
       inputTemplate: injicertify/InsertDBData/InsertCertifyStatementData
       outputTemplate: injicertify/InsertDBData/InsertDBDataResult
       input: '{
-	  "registration_id": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$"
+	  "registration_id": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
+	  "municipality": "$RUNCONTEXT$test automation"
 }'
       output: '{
 }'

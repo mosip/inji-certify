@@ -79,6 +79,7 @@ public class MosipTestRunner {
 			AdminTestUtil.init();
 			InjiCertifyConfigManager.init();
 			suiteSetup(getRunType());
+			BaseTestCase.initializePMSDetails();
 			SkipTestCaseHandler.loadTestcaseToBeSkippedList("testCaseSkippedList.txt");
 			GlobalMethods.setModuleNameAndReCompilePattern(InjiCertifyConfigManager.getproperty("moduleNamePattern"));
 			GlobalMethods.reportCaptchaStatus(GlobalConstants.CAPTCHA_ENABLED, false);
@@ -109,8 +110,6 @@ public class MosipTestRunner {
 
 				// Generate device certificates to be consumed by Mock-MDS
 				PartnerRegistration.deleteCertificates();
-				AdminTestUtil.createAndPublishPolicy();
-				AdminTestUtil.createEditAndPublishPolicy();
 				PartnerRegistration.deviceGeneration();
 
 				BiometricDataProvider.generateBiometricTestData("Registration");
@@ -161,7 +160,7 @@ public class MosipTestRunner {
 		}
 
 		if (useCaseToExecute.equalsIgnoreCase("landregistry")) {
-			InjiCertifyUtil.landRegistryDBCleanup();
+//			InjiCertifyUtil.landRegistryDBCleanup();
 		}
 
 		KeycloakUserManager.removeUser();
@@ -186,8 +185,8 @@ public class MosipTestRunner {
 		if (!runType.equalsIgnoreCase("JAR")) {
 			AuthTestsUtil.removeOldMosipTempTestResource();
 		}
-		BaseTestCase.currentModule = GlobalConstants.INJICERTIFY;
-		BaseTestCase.certsForModule = GlobalConstants.INJICERTIFY;
+		BaseTestCase.currentModule = BaseTestCase.runContext + GlobalConstants.INJICERTIFY;
+		BaseTestCase.certsForModule = BaseTestCase.runContext + GlobalConstants.INJICERTIFY;
 		AdminTestUtil.copymoduleSpecificAndConfigFile(GlobalConstants.INJICERTIFY);
 		BaseTestCase.otpListener = new OTPListener();
 		BaseTestCase.otpListener.run();
