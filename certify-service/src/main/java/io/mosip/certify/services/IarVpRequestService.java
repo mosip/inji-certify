@@ -5,11 +5,8 @@
  */
 package io.mosip.certify.services;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.config.VerifyServiceConfig;
 import io.mosip.certify.core.dto.InteractiveAuthorizationRequest;
-import io.mosip.certify.core.dto.PresentationDefinition;
 import io.mosip.certify.core.dto.VerifyVpRequest;
 import io.mosip.certify.core.dto.VerifyVpResponse;
 import io.mosip.certify.core.exception.CertifyException;
