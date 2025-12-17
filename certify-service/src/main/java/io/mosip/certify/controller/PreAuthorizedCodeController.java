@@ -1,5 +1,6 @@
 package io.mosip.certify.controller;
 
+import io.mosip.certify.core.dto.CredentialOfferResponse;
 import io.mosip.certify.core.dto.PreAuthorizedRequest;
 import io.mosip.certify.core.dto.PreAuthorizedResponse;
 import io.mosip.certify.services.PreAuthorizedCodeService;
@@ -27,4 +28,8 @@ public class PreAuthorizedCodeController {
         return preAuthorizedResponse;
     }
 
+    @GetMapping(value = "/credential-offer-data/{offer_id:.+}", produces = "application/json")
+    public CredentialOfferResponse getCredentialOffer(@PathVariable("offer_id") String offerId) {
+        return preAuthorizedCodeService.getCredentialOffer(offerId);
+    }
 }
