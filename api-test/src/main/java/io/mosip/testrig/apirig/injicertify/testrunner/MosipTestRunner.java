@@ -160,7 +160,7 @@ public class MosipTestRunner {
 		}
 
 		if (useCaseToExecute.equalsIgnoreCase("landregistry")) {
-//			InjiCertifyUtil.landRegistryDBCleanup();
+			InjiCertifyUtil.landRegistryDBCleanup();
 		}
 
 		KeycloakUserManager.removeUser();
