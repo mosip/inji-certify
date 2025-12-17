@@ -34,64 +34,62 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(value = PreAuthorizedCodeController.class)
 public class PreAuthorizedCodeControllerTest {
 
-        @Autowired
-        MockMvc mockMvc;
+    @Autowired
+    MockMvc mockMvc;
 
-        @MockBean
-        PreAuthorizedCodeService preAuthorizedCodeService;
+    @MockBean
+    PreAuthorizedCodeService preAuthorizedCodeService;
 
-        // Required by AccessTokenValidationFilter which is loaded in WebMvcTest context
-        @MockBean
-        io.mosip.certify.core.dto.ParsedAccessToken parsedAccessToken;
+    // Required by AccessTokenValidationFilter which is loaded in WebMvcTest context
+    @MockBean
+    io.mosip.certify.core.dto.ParsedAccessToken parsedAccessToken;
 
-        // Required by audit aspects/configuration
-        @MockBean
-        AuditPlugin auditWrapper;
+    // Required by audit aspects/configuration
+    @MockBean
+    AuditPlugin auditWrapper;
 
-        ObjectMapper objectMapper = new ObjectMapper();
+    ObjectMapper objectMapper = new ObjectMapper();
 
-        @Test
-        public void generatePreAuthorizedCode_Success() throws Exception {
-                PreAuthorizedRequest request = new PreAuthorizedRequest();
-                request.setCredentialConfigurationId("test-config");
-                Map<String, Object> claims = new HashMap<>();
-                claims.put("name", "John");
-                request.setClaims(claims);
+    @Test
+    public void generatePreAuthorizedCode_Success() throws Exception {
+        PreAuthorizedRequest request = new PreAuthorizedRequest();
+        request.setCredentialConfigurationId("test-config");
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("name", "John");
+        request.setClaims(claims);
 
-                String expectedUri = "openid-credential-offer://?credential_offer_uri=test";
-                Mockito.when(preAuthorizedCodeService
-                                .generatePreAuthorizedCode(Mockito.any(PreAuthorizedRequest.class)))
-                                .thenReturn(expectedUri);
+        String expectedUri = "openid-credential-offer://?credential_offer_uri=test";
+        Mockito.when(preAuthorizedCodeService.generatePreAuthorizedCode(Mockito.any(PreAuthorizedRequest.class)))
+                .thenReturn(expectedUri);
 
-                mockMvc.perform(post("/pre-authorized-data")
-                                .content(objectMapper.writeValueAsBytes(request))
-                                .contentType(MediaType.APPLICATION_JSON))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.credential_offer_uri").value(expectedUri));
-        }
+        mockMvc.perform(post("/pre-authorized-data")
+                .content(objectMapper.writeValueAsBytes(request))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.credential_offer_uri").value(expectedUri));
+    }
 
-        @Test
-        public void generatePreAuthorizedCode_Failure_If_MissingConfigId() throws Exception {
-                PreAuthorizedRequest request = new PreAuthorizedRequest();
-                Map<String, Object> claims = new HashMap<>();
-                claims.put("name", "John");
-                request.setClaims(claims);
-                // Missing credentialConfigurationId
+    @Test
+    public void generatePreAuthorizedCode_Failure_If_MissingConfigId() throws Exception {
+        PreAuthorizedRequest request = new PreAuthorizedRequest();
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("name", "John");
+        request.setClaims(claims);
+        // Missing credentialConfigurationId
 
-                mockMvc.perform(post("/pre-authorized-data")
-                                .content(objectMapper.writeValueAsBytes(request))
-                                .contentType(MediaType.APPLICATION_JSON))
-                                .andExpect(status().isOk()) // ExceptionHandler returns 200 OK with errors
-                                .andExpect(jsonPath("$.errors").isArray())
-                                .andExpect(jsonPath("$.errors[0].errorCode")
-                                                .value("Credential configuration ID is required"));
-        }
+        mockMvc.perform(post("/pre-authorized-data")
+                .content(objectMapper.writeValueAsBytes(request))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()) // ExceptionHandler returns 200 OK with errors
+                .andExpect(jsonPath("$.errors").isArray())
+                .andExpect(jsonPath("$.errors[0].errorCode").value("Credential configuration ID is required"));
+    }
 
-        @Test
-        public void generatePreAuthorizedCode_Failure_If_MissingClaims() throws Exception {
-                PreAuthorizedRequest request = new PreAuthorizedRequest();
-                request.setCredentialConfigurationId("test-config");
-                // Missing claims
+    @Test
+    public void generatePreAuthorizedCode_Failure_If_MissingClaims() throws Exception {
+        PreAuthorizedRequest request = new PreAuthorizedRequest();
+        request.setCredentialConfigurationId("test-config");
+        // Missing claims
 
                 mockMvc.perform(post("/pre-authorized-data")
                                 .content(objectMapper.writeValueAsBytes(request))

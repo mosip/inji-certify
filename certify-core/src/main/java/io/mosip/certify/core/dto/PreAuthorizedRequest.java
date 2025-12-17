@@ -26,7 +26,7 @@ public class PreAuthorizedRequest {
     @JsonProperty("expires_in")
     private Integer expiresIn;
 
-    @Pattern(regexp = "^[0-9]{4,8}$", message = "Transaction code must be 4-8 digits")
+    @Pattern(regexp = "^[A-Za-z0-9]{4,8}$", message = "Transaction code must be 4-8 alphanumeric characters")
     @JsonProperty("tx_code")
     private String txCode;
 }
