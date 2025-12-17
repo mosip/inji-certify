@@ -8,6 +8,7 @@ import io.mosip.certify.core.dto.IarAuthorizationResponse;
 import io.mosip.certify.core.dto.PresentationDefinition;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.IarService;
+import io.mosip.certify.core.spi.JwksService;
 import io.mosip.certify.filter.AccessTokenValidationFilter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -29,6 +31,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -48,6 +51,9 @@ class OAuthControllerTest {
 
     @MockBean
     private MessageSource messageSource;
+
+    @MockBean
+    private JwksService jwksService;
 
     @BeforeEach
     void setUp() {
@@ -639,6 +645,81 @@ class OAuthControllerTest {
         
         return response;
     }
+
+    @Test
+    void getJwks_success_withKeys() throws Exception {
+        // Arrange
+        Map<String, Object> jwk = new HashMap<>();
+        jwk.put("kty", "RSA");
+        jwk.put("kid", "test-key-1");
+
+        Map<String, Object> jwksResponse = new HashMap<>();
+        jwksResponse.put("keys", List.of(jwk));
+
+        when(jwksService.getJwks()).thenReturn(jwksResponse);
+
+        // Act & Assert
+        mockMvc.perform(get("/oauth/.well-known/jwks.json"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.keys").isArray())
+                .andExpect(jsonPath("$.keys[0].kty").value("RSA"))
+                .andExpect(jsonPath("$.keys[0].kid").value("test-key-1"));
+
+        verify(jwksService, times(1)).getJwks();
+    }
+
+    @Test
+    void getJwks_success_emptyKeys() throws Exception {
+        // Arrange
+        Map<String, Object> jwksResponse = new HashMap<>();
+        jwksResponse.put("keys", List.of());
+
+        when(jwksService.getJwks()).thenReturn(jwksResponse);
+
+        // Act & Assert
+        mockMvc.perform(get("/oauth/.well-known/jwks.json"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.keys").isArray())
+                .andExpect(jsonPath("$.keys").isEmpty());
+
+        verify(jwksService, times(1)).getJwks();
+    }
+
+    @Test
+    void getJwks_invalidResponseStructure_returnsServiceUnavailable() throws Exception {
+        // Arrange
+        Map<String, Object> invalidResponse = new HashMap<>();
+        invalidResponse.put("invalid", "data");
+
+        when(jwksService.getJwks()).thenReturn(invalidResponse);
+
+        // Act & Assert
+        mockMvc.perform(get("/oauth/.well-known/jwks.json"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.keys").isArray())
+                .andExpect(jsonPath("$.keys").isEmpty());
+
+        verify(jwksService, times(1)).getJwks();
+    }
+
+    @Test
+    void getJwks_exceptionThrown_returnsServiceUnavailable() throws Exception {
+        // Arrange
+        when(jwksService.getJwks()).thenThrow(new RuntimeException("Keymanager down"));
+
+        // Act & Assert
+        mockMvc.perform(get("/oauth/.well-known/jwks.json"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.keys").isArray())
+                .andExpect(jsonPath("$.keys").isEmpty());
+
+        verify(jwksService, times(1)).getJwks();
+    }
+
 
     /**
      * Helper method to create a mock IAR authorization response for VP presentation
