@@ -119,32 +119,6 @@ public class VCICacheServiceTest {
     }
 
     @Test
-    public void getIssuerMetadata_CacheHit() {
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put("key", "value");
-        Cache.ValueWrapper wrapper = mock(Cache.ValueWrapper.class);
-        when(wrapper.get()).thenReturn(metadata);
-        when(cache.get("metadata")).thenReturn(wrapper);
-
-        Map<String, Object> result = vciCacheService.getIssuerMetadata();
-        assertEquals(metadata, result);
-        verify(credentialConfigurationService, never()).fetchCredentialIssuerMetadata(anyString());
-    }
-
-    @Test
-    public void getIssuerMetadata_CacheMiss() {
-        when(cache.get("metadata")).thenReturn(null);
-        CredentialIssuerMetadataVD13DTO metadataDTO = new CredentialIssuerMetadataVD13DTO();
-        metadataDTO.setCredentialConfigurationSupportedDTO(new HashMap<>());
-        when(credentialConfigurationService.fetchCredentialIssuerMetadata("latest")).thenReturn(metadataDTO);
-
-        Map<String, Object> result = vciCacheService.getIssuerMetadata();
-        assertNotNull(result);
-        verify(credentialConfigurationService).fetchCredentialIssuerMetadata("latest");
-        verify(cache).put(eq("metadata"), anyMap());
-    }
-
-    @Test
     public void validateCacheConfiguration_Simple() {
         ReflectionTestUtils.setField(vciCacheService, "cacheType", "simple");
         vciCacheService.validateCacheConfiguration();
@@ -199,13 +173,6 @@ public class VCICacheServiceTest {
         when(cacheManager.getCache(CREDENTIAL_OFFER_CACHE)).thenReturn(null);
 
         vciCacheService.setCredentialOffer("test-offer-id", new CredentialOfferResponse());
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void getIssuerMetadata_WhenCacheIsNull_ThrowsIllegalStateException() {
-        when(cacheManager.getCache("issuerMetadataCache")).thenReturn(null);
-
-        vciCacheService.getIssuerMetadata();
     }
 
     @Test
