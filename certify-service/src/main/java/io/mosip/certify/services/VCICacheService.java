@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.dto.CredentialOfferResponse;
 import io.mosip.certify.core.dto.PreAuthCodeData;
+import io.mosip.certify.core.dto.Transaction;
 import io.mosip.certify.core.dto.VCIssuanceTransaction;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +37,6 @@ public class VCICacheService {
     @Value("${spring.cache.type:simple}")
     private String cacheType;
 
-
     private static final String VCISSUANCE_CACHE = "vcissuance";
     private static final String METADATA_KEY = "metadata";
 
@@ -56,7 +56,6 @@ public class VCICacheService {
             log.warn("Unknown cache type configured: {}. Please verify configuration.", cacheType);
         }
     }
-
 
     @CachePut(value = VCISSUANCE_CACHE, key = "#accessTokenHash")
     public VCIssuanceTransaction setVCITransaction(String accessTokenHash, VCIssuanceTransaction vcIssuanceTransaction) {
@@ -151,5 +150,49 @@ public class VCICacheService {
             }
         }
         return (Map<String, Object>) wrapper.get();
+    }
+
+    public boolean isCodeBlacklisted(String code) {
+        String key = "blacklist:" + code;
+        Cache.ValueWrapper wrapper = cacheManager.getCache("preAuthCodeCache").get(key);
+        return wrapper != null && Boolean.TRUE.equals(wrapper.get());
+    }
+
+    /**
+     * Blacklist a used pre-authorized code
+     */
+    public void blacklistPreAuthCode(String code) {
+        String key = "blacklist:" + code;
+        // Store in cache with same TTL as pre-auth code
+        cacheManager.getCache("preAuthCodeCache").put(key, true);
+
+        // Also remove the pre-auth code data
+        String codeKey = Constants.PRE_AUTH_CODE_PREFIX + code;
+        cacheManager.getCache("preAuthCodeCache").evict(codeKey);
+
+        log.info("Pre-authorized code blacklisted: {}", code);
+    }
+
+    /**
+     * Store VCI transaction using access token as key
+     * Override existing method to accept String key
+     */
+    @CachePut(value = VCISSUANCE_CACHE, key = "#accessToken")
+    public Transaction setTransaction(String accessToken, Transaction vcIssuanceTransaction) {
+        log.info("Caching VCI transaction for access token");
+        return vcIssuanceTransaction;
+    }
+
+    /**
+     * Get VCI transaction by access token
+     * For use in credential endpoint
+     */
+    public Transaction getTransactionByToken(String accessToken) {
+        Cache cache = cacheManager.getCache(VCISSUANCE_CACHE);
+        if (cache == null) {
+            log.error("Cache {} not available. Please verify cache configuration.", VCISSUANCE_CACHE);
+            return null;
+        }
+        return cache.get(accessToken, Transaction.class);
     }
 }

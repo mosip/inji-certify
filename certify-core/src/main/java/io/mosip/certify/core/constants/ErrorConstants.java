@@ -52,6 +52,8 @@ public class ErrorConstants {
     public static final String INVALID_CREDENTIAL_CONFIGURATION_ID = "invalid_credential_configuration_id";
     public static final String MISSING_MANDATORY_CLAIM = "missing_mandatory_claim";
     public static final String CREDENTIAL_OFFER_NOT_FOUND = "credential_offer_not_found";
+    public static final String INVALID_GRANT = "invalid_grant";
+    public static final String UNSUPPORTED_GRANT_TYPE = "unsupported_grant_type";
     public static final String UNKNOWN_CLAIMS = "unknown_claims";
     public static final String INVALID_EXPIRY_RANGE = "invalid_expiry_range";
     public static final String INVALID_OFFER_ID_FORMAT = "invalid_offer_id_format";
