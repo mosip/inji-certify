@@ -32,7 +32,6 @@ public class VCICacheService {
     @Value("${spring.cache.type:simple}")
     private String cacheType;
 
-
     private static final String VCISSUANCE_CACHE = "vcissuance";
     private static final String METADATA_KEY = "metadata";
 
@@ -52,7 +51,6 @@ public class VCICacheService {
             log.warn("Unknown cache type configured: {}. Please verify configuration.", cacheType);
         }
     }
-
 
     @CachePut(value = VCISSUANCE_CACHE, key = "#accessTokenHash")
     public VCIssuanceTransaction setVCITransaction(String accessTokenHash, VCIssuanceTransaction vcIssuanceTransaction) {
@@ -145,7 +143,12 @@ public class VCICacheService {
      * For use in credential endpoint
      */
     public Transaction getTransactionByToken(String accessToken) {
-        return cacheManager.getCache(VCISSUANCE_CACHE).get(accessToken, Transaction.class);
+        Cache cache = cacheManager.getCache(VCISSUANCE_CACHE);
+        if (cache == null) {
+            log.error("Cache {} not available. Please verify cache configuration.", VCISSUANCE_CACHE);
+            return null;
+        }
+        return cache.get(accessToken, Transaction.class);
     }
 
     /**

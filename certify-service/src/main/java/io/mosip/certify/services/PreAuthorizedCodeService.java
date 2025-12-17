@@ -158,7 +158,7 @@ public class PreAuthorizedCodeService {
 
         if (offer == null) {
             log.error("Credential offer not found or expired for ID: {}", offerId);
-            throw new CertifyException("offer_not_found", "Credential offer not found or expired");
+            throw new CertifyException(ErrorConstants.CREDENTIAL_OFFER_NOT_FOUND, "Credential offer not found or expired");
         }
 
         log.info("Successfully retrieved credential offer for ID: {}", offerId);
@@ -247,11 +247,7 @@ public class PreAuthorizedCodeService {
         String accessToken = generateAccessToken(codeData);
 
         // Generate c_nonce
-        StringBuilder nonce = new StringBuilder(32);
-        for (int i = 0; i < 32; i++) {
-            nonce.append(ALPHANUMERIC.charAt(secureRandom.nextInt(ALPHANUMERIC.length())));
-        }
-        String cNonce = nonce.toString();
+        String cNonce = generateSecureCode(32);
 
         long currentTime = System.currentTimeMillis();
         Transaction transaction = Transaction.builder()
@@ -284,14 +280,14 @@ public class PreAuthorizedCodeService {
         }
 
         if (codeData == null) {
-            log.error("Pre-authorized code not found: {}", request.getPreAuthorizedCode());
+            log.error("Pre-authorized code not found");
             throw new CertifyException(ErrorConstants.INVALID_GRANT, "Pre-authorized code not found");
         }
 
         // Check if already used (blacklisted)
         if (singleUsePreAuthCode && vciCacheService.isCodeBlacklisted(request.getPreAuthorizedCode())) {
-            log.error("Pre-authorized code already used: {}", request.getPreAuthorizedCode());
-            throw new CertifyException("pre_auth_code_already_used", "Pre-authorized code has already been used");
+            log.error("Pre-authorized code already used");
+            throw new CertifyException(ErrorConstants.INVALID_GRANT, "Pre-authorized code has already been used");
         }
 
         // Check expiry
@@ -314,7 +310,7 @@ public class PreAuthorizedCodeService {
         // Mark code as used if single-use
         if (singleUsePreAuthCode) {
             vciCacheService.blacklistPreAuthCode(request.getPreAuthorizedCode());
-            log.info("Pre-authorized code) marked as used: {}", request.getPreAuthorizedCode());
+            log.info("Pre-authorized code marked as used");
         }
     }
 

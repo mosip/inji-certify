@@ -116,7 +116,7 @@ public class PreAuthorizedCodeServiceTest {
                 when(metadataDTO.getCredentialConfigurationSupportedDTO()).thenReturn(emptyMap);
 
                 InvalidRequestException exception = assertThrows(InvalidRequestException.class,
-                        () -> preAuthorizedCodeService.generatePreAuthorizedCode(request));
+                                () -> preAuthorizedCodeService.generatePreAuthorizedCode(request));
 
                 Assert.assertEquals(ErrorConstants.INVALID_CREDENTIAL_CONFIGURATION_ID, exception.getMessage());
         }
@@ -126,7 +126,7 @@ public class PreAuthorizedCodeServiceTest {
                 request.getClaims().remove("name");
 
                 InvalidRequestException exception = assertThrows(InvalidRequestException.class,
-                        () -> preAuthorizedCodeService.generatePreAuthorizedCode(request));
+                                () -> preAuthorizedCodeService.generatePreAuthorizedCode(request));
 
                 Assert.assertEquals(ErrorConstants.MISSING_MANDATORY_CLAIM, exception.getErrorCode());
         }
@@ -136,7 +136,7 @@ public class PreAuthorizedCodeServiceTest {
                 request.getClaims().put("unknown", "value");
 
                 InvalidRequestException exception = assertThrows(InvalidRequestException.class,
-                        () -> preAuthorizedCodeService.generatePreAuthorizedCode(request));
+                                () -> preAuthorizedCodeService.generatePreAuthorizedCode(request));
 
                 Assert.assertEquals(ErrorConstants.UNKNOWN_CLAIMS, exception.getErrorCode());
         }
@@ -146,7 +146,7 @@ public class PreAuthorizedCodeServiceTest {
                 request.setExpiresIn(10);
 
                 InvalidRequestException exception = assertThrows(InvalidRequestException.class,
-                        () -> preAuthorizedCodeService.generatePreAuthorizedCode(request));
+                                () -> preAuthorizedCodeService.generatePreAuthorizedCode(request));
 
                 Assert.assertEquals(ErrorConstants.INVALID_EXPIRY_RANGE, exception.getErrorCode());
         }
@@ -156,17 +156,18 @@ public class PreAuthorizedCodeServiceTest {
                 request.setExpiresIn(100000);
 
                 InvalidRequestException exception = assertThrows(InvalidRequestException.class,
-                        () -> preAuthorizedCodeService.generatePreAuthorizedCode(request));
+                                () -> preAuthorizedCodeService.generatePreAuthorizedCode(request));
 
                 Assert.assertEquals(ErrorConstants.INVALID_EXPIRY_RANGE, exception.getErrorCode());
         }
 
         @Test
         public void generatePreAuthorizedCode_RetryOnCollision_Success() {
-                // First attempt returns existing data (collision), second returns null (success)
+                // First attempt returns existing data (collision), second returns null
+                // (success)
                 when(vciCacheService.getPreAuthCodeData(anyString()))
-                        .thenReturn(new PreAuthCodeData())
-                        .thenReturn(null);
+                                .thenReturn(new PreAuthCodeData())
+                                .thenReturn(null);
 
                 String result = preAuthorizedCodeService.generatePreAuthorizedCode(request);
 
@@ -181,7 +182,7 @@ public class PreAuthorizedCodeServiceTest {
                 when(vciCacheService.getPreAuthCodeData(anyString())).thenReturn(new PreAuthCodeData());
 
                 IllegalStateException exception = assertThrows(IllegalStateException.class,
-                        () -> preAuthorizedCodeService.generatePreAuthorizedCode(request));
+                                () -> preAuthorizedCodeService.generatePreAuthorizedCode(request));
 
                 Assert.assertTrue(exception.getMessage().contains("Failed to generate unique pre-authorized code"));
                 // Should have tried MAX_ATTEMPTS (3)
@@ -194,8 +195,8 @@ public class PreAuthorizedCodeServiceTest {
         public void getCredentialOffer_Success() {
                 String validUuid = "550e8400-e29b-41d4-a716-446655440000";
                 CredentialOfferResponse expectedOffer = CredentialOfferResponse.builder()
-                        .credentialIssuer("https://issuer.com")
-                        .build();
+                                .credentialIssuer("https://issuer.com")
+                                .build();
 
                 when(vciCacheService.getCredentialOffer(validUuid)).thenReturn(expectedOffer);
 
@@ -211,7 +212,7 @@ public class PreAuthorizedCodeServiceTest {
                 String invalidUuid = "not-a-valid-uuid";
 
                 InvalidRequestException exception = assertThrows(InvalidRequestException.class,
-                        () -> preAuthorizedCodeService.getCredentialOffer(invalidUuid));
+                                () -> preAuthorizedCodeService.getCredentialOffer(invalidUuid));
 
                 Assert.assertEquals(ErrorConstants.INVALID_OFFER_ID_FORMAT, exception.getErrorCode());
                 verify(vciCacheService, never()).getCredentialOffer(anyString());
@@ -220,7 +221,7 @@ public class PreAuthorizedCodeServiceTest {
         @Test
         public void getCredentialOffer_NullOfferId_ThrowsInvalidRequestException() {
                 InvalidRequestException exception = assertThrows(InvalidRequestException.class,
-                        () -> preAuthorizedCodeService.getCredentialOffer(null));
+                                () -> preAuthorizedCodeService.getCredentialOffer(null));
 
                 Assert.assertEquals(ErrorConstants.INVALID_OFFER_ID_FORMAT, exception.getErrorCode());
                 verify(vciCacheService, never()).getCredentialOffer(anyString());
@@ -229,7 +230,7 @@ public class PreAuthorizedCodeServiceTest {
         @Test
         public void getCredentialOffer_EmptyOfferId_ThrowsInvalidRequestException() {
                 InvalidRequestException exception = assertThrows(InvalidRequestException.class,
-                        () -> preAuthorizedCodeService.getCredentialOffer(""));
+                                () -> preAuthorizedCodeService.getCredentialOffer(""));
 
                 Assert.assertEquals(ErrorConstants.INVALID_OFFER_ID_FORMAT, exception.getErrorCode());
                 verify(vciCacheService, never()).getCredentialOffer(anyString());
@@ -238,7 +239,7 @@ public class PreAuthorizedCodeServiceTest {
         @Test
         public void getCredentialOffer_WhitespaceOfferId_ThrowsInvalidRequestException() {
                 InvalidRequestException exception = assertThrows(InvalidRequestException.class,
-                        () -> preAuthorizedCodeService.getCredentialOffer("   "));
+                                () -> preAuthorizedCodeService.getCredentialOffer("   "));
 
                 Assert.assertEquals(ErrorConstants.INVALID_OFFER_ID_FORMAT, exception.getErrorCode());
                 verify(vciCacheService, never()).getCredentialOffer(anyString());
@@ -251,9 +252,9 @@ public class PreAuthorizedCodeServiceTest {
                 when(vciCacheService.getCredentialOffer(validUuid)).thenReturn(null);
 
                 CertifyException exception = assertThrows(CertifyException.class,
-                        () -> preAuthorizedCodeService.getCredentialOffer(validUuid));
+                                () -> preAuthorizedCodeService.getCredentialOffer(validUuid));
 
-                Assert.assertEquals("offer_not_found", exception.getErrorCode());
+                Assert.assertEquals(ErrorConstants.CREDENTIAL_OFFER_NOT_FOUND, exception.getErrorCode());
                 verify(vciCacheService).getCredentialOffer(validUuid);
         }
 
@@ -272,11 +273,11 @@ public class PreAuthorizedCodeServiceTest {
                 claims.put("name", "John Doe");
 
                 PreAuthCodeData codeData = PreAuthCodeData.builder()
-                        .credentialConfigurationId(CONFIG_ID)
-                        .claims(claims)
-                        .createdAt(System.currentTimeMillis())
-                        .expiresAt(System.currentTimeMillis() + 600000) // expires in 10 minutes
-                        .build();
+                                .credentialConfigurationId(CONFIG_ID)
+                                .claims(claims)
+                                .createdAt(System.currentTimeMillis())
+                                .expiresAt(System.currentTimeMillis() + 600000) // expires in 10 minutes
+                                .build();
 
                 when(vciCacheService.getPreAuthCodeData(preAuthCode)).thenReturn(codeData);
                 when(vciCacheService.isCodeBlacklisted(preAuthCode)).thenReturn(false);
@@ -315,12 +316,12 @@ public class PreAuthorizedCodeServiceTest {
                 claims.put("name", "John Doe");
 
                 PreAuthCodeData codeData = PreAuthCodeData.builder()
-                        .credentialConfigurationId(CONFIG_ID)
-                        .claims(claims)
-                        .txnCode(txCode)
-                        .createdAt(System.currentTimeMillis())
-                        .expiresAt(System.currentTimeMillis() + 600000)
-                        .build();
+                                .credentialConfigurationId(CONFIG_ID)
+                                .claims(claims)
+                                .txnCode(txCode)
+                                .createdAt(System.currentTimeMillis())
+                                .expiresAt(System.currentTimeMillis() + 600000)
+                                .build();
 
                 when(vciCacheService.getPreAuthCodeData(preAuthCode)).thenReturn(codeData);
                 when(vciCacheService.isCodeBlacklisted(preAuthCode)).thenReturn(false);
@@ -340,15 +341,15 @@ public class PreAuthorizedCodeServiceTest {
                 tokenRequest.setPreAuthorizedCode("test-code");
 
                 PreAuthCodeData codeData = PreAuthCodeData.builder()
-                        .credentialConfigurationId(CONFIG_ID)
-                        .createdAt(System.currentTimeMillis())
-                        .expiresAt(System.currentTimeMillis() + 600000)
-                        .build();
+                                .credentialConfigurationId(CONFIG_ID)
+                                .createdAt(System.currentTimeMillis())
+                                .expiresAt(System.currentTimeMillis() + 600000)
+                                .build();
 
                 when(vciCacheService.getPreAuthCodeData("test-code")).thenReturn(codeData);
 
                 CertifyException exception = assertThrows(CertifyException.class,
-                        () -> preAuthorizedCodeService.exchangePreAuthorizedCode(tokenRequest));
+                                () -> preAuthorizedCodeService.exchangePreAuthorizedCode(tokenRequest));
 
                 Assert.assertEquals(ErrorConstants.UNSUPPORTED_GRANT_TYPE, exception.getErrorCode());
         }
@@ -362,7 +363,7 @@ public class PreAuthorizedCodeServiceTest {
                 when(vciCacheService.getPreAuthCodeData("invalid-code")).thenReturn(null);
 
                 CertifyException exception = assertThrows(CertifyException.class,
-                        () -> preAuthorizedCodeService.exchangePreAuthorizedCode(tokenRequest));
+                                () -> preAuthorizedCodeService.exchangePreAuthorizedCode(tokenRequest));
 
                 Assert.assertEquals(ErrorConstants.INVALID_GRANT, exception.getErrorCode());
         }
@@ -377,16 +378,16 @@ public class PreAuthorizedCodeServiceTest {
                 tokenRequest.setPreAuthorizedCode(preAuthCode);
 
                 PreAuthCodeData codeData = PreAuthCodeData.builder()
-                        .credentialConfigurationId(CONFIG_ID)
-                        .createdAt(System.currentTimeMillis() - 700000)
-                        .expiresAt(System.currentTimeMillis() - 100000) // expired
-                        .build();
+                                .credentialConfigurationId(CONFIG_ID)
+                                .createdAt(System.currentTimeMillis() - 700000)
+                                .expiresAt(System.currentTimeMillis() - 100000) // expired
+                                .build();
 
                 when(vciCacheService.getPreAuthCodeData(preAuthCode)).thenReturn(codeData);
                 when(vciCacheService.isCodeBlacklisted(preAuthCode)).thenReturn(false);
 
                 CertifyException exception = assertThrows(CertifyException.class,
-                        () -> preAuthorizedCodeService.exchangePreAuthorizedCode(tokenRequest));
+                                () -> preAuthorizedCodeService.exchangePreAuthorizedCode(tokenRequest));
 
                 Assert.assertEquals("pre_auth_code_expired", exception.getErrorCode());
         }
@@ -401,18 +402,18 @@ public class PreAuthorizedCodeServiceTest {
                 tokenRequest.setPreAuthorizedCode(preAuthCode);
 
                 PreAuthCodeData codeData = PreAuthCodeData.builder()
-                        .credentialConfigurationId(CONFIG_ID)
-                        .createdAt(System.currentTimeMillis())
-                        .expiresAt(System.currentTimeMillis() + 600000)
-                        .build();
+                                .credentialConfigurationId(CONFIG_ID)
+                                .createdAt(System.currentTimeMillis())
+                                .expiresAt(System.currentTimeMillis() + 600000)
+                                .build();
 
                 when(vciCacheService.getPreAuthCodeData(preAuthCode)).thenReturn(codeData);
                 when(vciCacheService.isCodeBlacklisted(preAuthCode)).thenReturn(true);
 
                 CertifyException exception = assertThrows(CertifyException.class,
-                        () -> preAuthorizedCodeService.exchangePreAuthorizedCode(tokenRequest));
+                                () -> preAuthorizedCodeService.exchangePreAuthorizedCode(tokenRequest));
 
-                Assert.assertEquals("pre_auth_code_already_used", exception.getErrorCode());
+                Assert.assertEquals(ErrorConstants.INVALID_GRANT, exception.getErrorCode());
         }
 
         @Test
@@ -426,17 +427,17 @@ public class PreAuthorizedCodeServiceTest {
                 // txCode not provided
 
                 PreAuthCodeData codeData = PreAuthCodeData.builder()
-                        .credentialConfigurationId(CONFIG_ID)
-                        .txnCode("1234") // txCode is required
-                        .createdAt(System.currentTimeMillis())
-                        .expiresAt(System.currentTimeMillis() + 600000)
-                        .build();
+                                .credentialConfigurationId(CONFIG_ID)
+                                .txnCode("1234") // txCode is required
+                                .createdAt(System.currentTimeMillis())
+                                .expiresAt(System.currentTimeMillis() + 600000)
+                                .build();
 
                 when(vciCacheService.getPreAuthCodeData(preAuthCode)).thenReturn(codeData);
                 when(vciCacheService.isCodeBlacklisted(preAuthCode)).thenReturn(false);
 
                 CertifyException exception = assertThrows(CertifyException.class,
-                        () -> preAuthorizedCodeService.exchangePreAuthorizedCode(tokenRequest));
+                                () -> preAuthorizedCodeService.exchangePreAuthorizedCode(tokenRequest));
 
                 Assert.assertEquals("tx_code_required", exception.getErrorCode());
         }
@@ -452,17 +453,17 @@ public class PreAuthorizedCodeServiceTest {
                 tokenRequest.setTxCode("wrong-code");
 
                 PreAuthCodeData codeData = PreAuthCodeData.builder()
-                        .credentialConfigurationId(CONFIG_ID)
-                        .txnCode("1234") // expected txCode
-                        .createdAt(System.currentTimeMillis())
-                        .expiresAt(System.currentTimeMillis() + 600000)
-                        .build();
+                                .credentialConfigurationId(CONFIG_ID)
+                                .txnCode("1234") // expected txCode
+                                .createdAt(System.currentTimeMillis())
+                                .expiresAt(System.currentTimeMillis() + 600000)
+                                .build();
 
                 when(vciCacheService.getPreAuthCodeData(preAuthCode)).thenReturn(codeData);
                 when(vciCacheService.isCodeBlacklisted(preAuthCode)).thenReturn(false);
 
                 CertifyException exception = assertThrows(CertifyException.class,
-                        () -> preAuthorizedCodeService.exchangePreAuthorizedCode(tokenRequest));
+                                () -> preAuthorizedCodeService.exchangePreAuthorizedCode(tokenRequest));
 
                 Assert.assertEquals("tx_code_mismatch", exception.getErrorCode());
         }
@@ -479,11 +480,11 @@ public class PreAuthorizedCodeServiceTest {
                 tokenRequest.setPreAuthorizedCode(preAuthCode);
 
                 PreAuthCodeData codeData = PreAuthCodeData.builder()
-                        .credentialConfigurationId(CONFIG_ID)
-                        .claims(new HashMap<>())
-                        .createdAt(System.currentTimeMillis())
-                        .expiresAt(System.currentTimeMillis() + 600000)
-                        .build();
+                                .credentialConfigurationId(CONFIG_ID)
+                                .claims(new HashMap<>())
+                                .createdAt(System.currentTimeMillis())
+                                .expiresAt(System.currentTimeMillis() + 600000)
+                                .build();
 
                 when(vciCacheService.getPreAuthCodeData(preAuthCode)).thenReturn(codeData);
                 when(vciCacheService.setTransaction(anyString(), any(Transaction.class))).thenReturn(null);

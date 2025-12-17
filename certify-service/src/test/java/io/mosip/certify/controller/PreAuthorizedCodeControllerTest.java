@@ -139,14 +139,15 @@ public class PreAuthorizedCodeControllerTest {
                 String validUuid = "550e8400-e29b-41d4-a716-446655440000";
 
                 Mockito.when(preAuthorizedCodeService.getCredentialOffer(validUuid))
-                                .thenThrow(new CertifyException("offer_not_found",
+                                .thenThrow(new CertifyException(ErrorConstants.CREDENTIAL_OFFER_NOT_FOUND,
                                                 "Credential offer not found or expired"));
 
                 mockMvc.perform(get("/credential-offer-data/{offer_id}", validUuid)
                                 .accept(MediaType.APPLICATION_JSON))
                                 .andExpect(status().isOk()) // ExceptionHandler returns 200 OK with errors
                                 .andExpect(jsonPath("$.errors").isArray())
-                                .andExpect(jsonPath("$.errors[0].errorCode").value("offer_not_found"));
+                                .andExpect(jsonPath("$.errors[0].errorCode")
+                                                .value(ErrorConstants.CREDENTIAL_OFFER_NOT_FOUND));
         }
 
         // Tests for /token endpoint
