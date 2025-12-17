@@ -1,5 +1,5 @@
 #####  DB queries to be executed to tear down the data used and generated during the test rig run
 
-DELETE FROM inji_certify_landregistry.certify.statement_data WHERE municipality = '${currentModule}test automation';
-DELETE FROM inji_certify_landregistry.certify.registration_receipt_data WHERE municipality = '${currentModule}test automation';
+DELETE FROM inji_certify_landregistry.certify.statement_data WHERE municipality = '${currentModule}_test automation';
+DELETE FROM inji_certify_landregistry.certify.registration_receipt_data WHERE municipality = '${currentModule}_test automation';
 DELETE FROM inji_certify_landregistry.certify.ca_cert_store WHERE cert_subject LIKE '%O=RSA Organization Automation%';

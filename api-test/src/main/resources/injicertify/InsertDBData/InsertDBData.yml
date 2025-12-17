@@ -9,7 +9,7 @@ InsertDBData:
       outputTemplate: injicertify/InsertDBData/InsertDBDataResult
       input: '{
 	  "registration_id": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
-	  "municipality": "$RUNCONTEXT$test automation"
+	  "municipality": "$RUNCONTEXT$injicertify_test automation"
 }'
       output: '{
 }'
@@ -24,7 +24,7 @@ InsertDBData:
       outputTemplate: injicertify/InsertDBData/InsertDBDataResult
       input: '{
 	  "registration_id": "$ID:AddIdentity_For_LandRegistry_Valid_smoke_Pos_UIN$",
-	  "municipality": "$RUNCONTEXT$test automation"
+	  "municipality": "$RUNCONTEXT$injicertify_test automation"
 }'
       output: '{
 }'
