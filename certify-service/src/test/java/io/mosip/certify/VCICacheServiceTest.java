@@ -2,6 +2,7 @@ package io.mosip.certify;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.dto.AuthorizationServerMetadata;
 import io.mosip.certify.core.dto.CredentialIssuerMetadataVD13DTO;
 import io.mosip.certify.core.dto.CredentialOfferResponse;
 import io.mosip.certify.core.dto.PreAuthCodeData;
@@ -119,32 +120,6 @@ public class VCICacheServiceTest {
     }
 
     @Test
-    public void getIssuerMetadata_CacheHit() {
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put("key", "value");
-        Cache.ValueWrapper wrapper = mock(Cache.ValueWrapper.class);
-        when(wrapper.get()).thenReturn(metadata);
-        when(cache.get("metadata")).thenReturn(wrapper);
-
-        Map<String, Object> result = vciCacheService.getIssuerMetadata();
-        assertEquals(metadata, result);
-        verify(credentialConfigurationService, never()).fetchCredentialIssuerMetadata(anyString());
-    }
-
-    @Test
-    public void getIssuerMetadata_CacheMiss() {
-        when(cache.get("metadata")).thenReturn(null);
-        CredentialIssuerMetadataVD13DTO metadataDTO = new CredentialIssuerMetadataVD13DTO();
-        metadataDTO.setCredentialConfigurationSupportedDTO(new HashMap<>());
-        when(credentialConfigurationService.fetchCredentialIssuerMetadata("latest")).thenReturn(metadataDTO);
-
-        Map<String, Object> result = vciCacheService.getIssuerMetadata();
-        assertNotNull(result);
-        verify(credentialConfigurationService).fetchCredentialIssuerMetadata("latest");
-        verify(cache).put(eq("metadata"), anyMap());
-    }
-
-    @Test
     public void validateCacheConfiguration_Simple() {
         ReflectionTestUtils.setField(vciCacheService, "cacheType", "simple");
         vciCacheService.validateCacheConfiguration();
@@ -201,13 +176,6 @@ public class VCICacheServiceTest {
         vciCacheService.setCredentialOffer("test-offer-id", new CredentialOfferResponse());
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void getIssuerMetadata_WhenCacheIsNull_ThrowsIllegalStateException() {
-        when(cacheManager.getCache("issuerMetadataCache")).thenReturn(null);
-
-        vciCacheService.getIssuerMetadata();
-    }
-
     @Test
     public void getCredentialOffer_WhenNotFound_ReturnsNull() {
         String offerId = "test-offer-id";
@@ -218,5 +186,176 @@ public class VCICacheServiceTest {
 
         assertEquals(null, result);
     }
-}
 
+    // Tests for isCodeBlacklisted
+
+    @Test
+    public void isCodeBlacklisted_WhenBlacklisted_ReturnsTrue() {
+        String code = "blacklisted-code";
+        String key = "blacklist:" + code;
+        Cache.ValueWrapper wrapper = mock(Cache.ValueWrapper.class);
+        when(wrapper.get()).thenReturn(Boolean.TRUE);
+        when(cacheManager.getCache(PRE_AUTH_CODE_CACHE)).thenReturn(cache);
+        when(cache.get(key)).thenReturn(wrapper);
+
+        boolean result = vciCacheService.isCodeBlacklisted(code);
+
+        assertEquals(true, result);
+        verify(cache).get(key);
+    }
+
+    @Test
+    public void isCodeBlacklisted_WhenNotBlacklisted_ReturnsFalse() {
+        String code = "valid-code";
+        String key = "blacklist:" + code;
+        when(cacheManager.getCache(PRE_AUTH_CODE_CACHE)).thenReturn(cache);
+        when(cache.get(key)).thenReturn(null);
+
+        boolean result = vciCacheService.isCodeBlacklisted(code);
+
+        assertEquals(false, result);
+        verify(cache).get(key);
+    }
+
+    @Test
+    public void isCodeBlacklisted_WhenWrapperReturnsFalse_ReturnsFalse() {
+        String code = "code";
+        String key = "blacklist:" + code;
+        Cache.ValueWrapper wrapper = mock(Cache.ValueWrapper.class);
+        when(wrapper.get()).thenReturn(Boolean.FALSE);
+        when(cacheManager.getCache(PRE_AUTH_CODE_CACHE)).thenReturn(cache);
+        when(cache.get(key)).thenReturn(wrapper);
+
+        boolean result = vciCacheService.isCodeBlacklisted(code);
+
+        assertEquals(false, result);
+    }
+
+    // Tests for blacklistPreAuthCode
+
+    @Test
+    public void blacklistPreAuthCode_Success() {
+        String code = "code-to-blacklist";
+        String blacklistKey = "blacklist:" + code;
+        String codeKey = Constants.PRE_AUTH_CODE_PREFIX + code;
+        when(cacheManager.getCache(PRE_AUTH_CODE_CACHE)).thenReturn(cache);
+
+        vciCacheService.blacklistPreAuthCode(code);
+
+        verify(cache).put(eq(blacklistKey), eq(true));
+        verify(cache).evict(eq(codeKey));
+    }
+
+    // Tests for setTransaction
+
+    @Test
+    public void setTransaction_ShouldReturnSameTransaction() {
+        String accessToken = "test-access-token";
+        io.mosip.certify.core.dto.Transaction transaction = io.mosip.certify.core.dto.Transaction.builder()
+                .credentialConfigurationId("test-config")
+                .cNonce("test-nonce")
+                .build();
+
+        io.mosip.certify.core.dto.Transaction result = vciCacheService.setTransaction(accessToken, transaction);
+
+        assertNotNull(result);
+        assertEquals(transaction, result);
+    }
+
+    // Tests for getTransactionByToken
+
+    @Test
+    public void getTransactionByToken_WhenTransactionExists_ReturnsTransaction() {
+        String accessToken = "test-access-token";
+        io.mosip.certify.core.dto.Transaction transaction = io.mosip.certify.core.dto.Transaction.builder()
+                .credentialConfigurationId("test-config")
+                .cNonce("test-nonce")
+                .build();
+        when(cacheManager.getCache(VCISSUANCE_CACHE)).thenReturn(cache);
+        when(cache.get(accessToken, io.mosip.certify.core.dto.Transaction.class)).thenReturn(transaction);
+
+        io.mosip.certify.core.dto.Transaction result = vciCacheService.getTransactionByToken(accessToken);
+
+        assertEquals(transaction, result);
+        verify(cache).get(eq(accessToken), eq(io.mosip.certify.core.dto.Transaction.class));
+    }
+
+    @Test
+    public void getTransactionByToken_WhenNotFound_ReturnsNull() {
+        String accessToken = "non-existent-token";
+        when(cacheManager.getCache(VCISSUANCE_CACHE)).thenReturn(cache);
+        when(cache.get(accessToken, io.mosip.certify.core.dto.Transaction.class)).thenReturn(null);
+
+        io.mosip.certify.core.dto.Transaction result = vciCacheService.getTransactionByToken(accessToken);
+
+        assertEquals(null, result);
+    }
+
+    // Tests for setASMetadata and getASMetadata
+
+    private static final String AS_METADATA_CACHE = "asMetadataCache";
+
+    @Test
+    public void setASMetadata_Success() {
+        String serverUrl = "https://auth.example.com";
+        AuthorizationServerMetadata metadata = AuthorizationServerMetadata.builder()
+                .issuer(serverUrl)
+                .tokenEndpoint(serverUrl + "/token")
+                .build();
+
+        when(cacheManager.getCache(AS_METADATA_CACHE)).thenReturn(cache);
+
+        vciCacheService.setASMetadata(serverUrl, metadata);
+
+        verify(cacheManager).getCache(AS_METADATA_CACHE);
+        verify(cache).put(eq(Constants.AS_METADATA_PREFIX + serverUrl), eq(metadata));
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void setASMetadata_WhenCacheIsNull_ThrowsIllegalStateException() {
+        when(cacheManager.getCache(AS_METADATA_CACHE)).thenReturn(null);
+
+        vciCacheService.setASMetadata("https://auth.example.com",
+                AuthorizationServerMetadata.builder().build());
+    }
+
+    @Test
+    public void getASMetadata_CacheHit_ReturnsMetadata() {
+        String serverUrl = "https://auth.example.com";
+        AuthorizationServerMetadata metadata = AuthorizationServerMetadata.builder()
+                .issuer(serverUrl)
+                .tokenEndpoint(serverUrl + "/token")
+                .build();
+
+        Cache.ValueWrapper wrapper = mock(Cache.ValueWrapper.class);
+        when(wrapper.get()).thenReturn(metadata);
+        when(cacheManager.getCache(AS_METADATA_CACHE)).thenReturn(cache);
+        when(cache.get(Constants.AS_METADATA_PREFIX + serverUrl)).thenReturn(wrapper);
+
+        AuthorizationServerMetadata result = vciCacheService.getASMetadata(serverUrl);
+
+        assertEquals(metadata, result);
+        verify(cache).get(Constants.AS_METADATA_PREFIX + serverUrl);
+    }
+
+    @Test
+    public void getASMetadata_CacheMiss_ReturnsNull() {
+        String serverUrl = "https://auth.example.com";
+
+        when(cacheManager.getCache(AS_METADATA_CACHE)).thenReturn(cache);
+        when(cache.get(Constants.AS_METADATA_PREFIX + serverUrl)).thenReturn(null);
+
+        AuthorizationServerMetadata result = vciCacheService.getASMetadata(serverUrl);
+
+        assertEquals(null, result);
+    }
+
+    @Test
+    public void getASMetadata_WhenCacheIsNull_ReturnsNull() {
+        when(cacheManager.getCache(AS_METADATA_CACHE)).thenReturn(null);
+
+        AuthorizationServerMetadata result = vciCacheService.getASMetadata("https://auth.example.com");
+
+        assertEquals(null, result);
+    }
+}

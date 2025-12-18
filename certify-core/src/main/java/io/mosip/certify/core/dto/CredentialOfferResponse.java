@@ -22,4 +22,7 @@ public class CredentialOfferResponse {
 
     @JsonProperty("grants")
     private Grant grants;
+
+    @JsonProperty("authorization_server")
+    private String authorizationServer;
 }

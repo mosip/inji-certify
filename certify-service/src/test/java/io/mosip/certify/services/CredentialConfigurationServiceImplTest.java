@@ -38,6 +38,9 @@ public class CredentialConfigurationServiceImplTest {
     @Mock
     private CredentialConfigMapper credentialConfigMapper;
 
+    @Mock
+    private AuthorizationServerService authServerService;
+
     @InjectMocks
     private CredentialConfigurationServiceImpl credentialConfigurationService;
 
@@ -98,6 +101,8 @@ public class CredentialConfigurationServiceImplTest {
         ReflectionTestUtils.setField(credentialConfigurationService, "credentialSigningAlgValuesSupportedMap", credentialSigningMap);
         ReflectionTestUtils.setField(credentialConfigurationService, "proofTypesSupported", new LinkedHashMap<>());
         ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper", keyAliasMapper);
+
+        when(authServerService.getAllAuthorizationServerUrls()).thenReturn(List.of("http://auth.com"));
     }
 
     @Test

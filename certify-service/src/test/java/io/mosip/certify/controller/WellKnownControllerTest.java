@@ -36,6 +36,12 @@ class WellKnownControllerTest {
     @MockBean
     private ParsedAccessToken parsedAccessToken;
 
+    @MockBean
+    private io.mosip.certify.api.spi.AuditPlugin auditWrapper;
+
+    @MockBean
+    private io.mosip.certify.services.AuthorizationServerService authorizationServerService;
+
     @InjectMocks
     private WellKnownController wellKnownController;
 
@@ -64,9 +70,10 @@ class WellKnownControllerTest {
 
     @Test
     void getCredentialIssuerMetadata_unsupportedVersion_returnsError() throws Exception {
-        when(credentialConfigurationService.fetchCredentialIssuerMetadata("unsupported")).thenThrow( new CertifyException("UNSUPPORTED_VERSION", "Unsupported version"));
+        when(credentialConfigurationService.fetchCredentialIssuerMetadata("unsupported"))
+                .thenThrow(new CertifyException("UNSUPPORTED_VERSION", "Unsupported version"));
         mockMvc.perform(get("/.well-known/openid-credential-issuer?version=unsupported"))
-                .andExpect(status().is2xxSuccessful())
+                .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[0].errorCode").value("UNSUPPORTED_VERSION"));
     }
 
@@ -89,9 +96,68 @@ class WellKnownControllerTest {
 
     @Test
     void getDIDDocument_serviceThrowsException_returnsError() throws Exception {
-        when(vcIssuanceService.getDIDDocument()).thenThrow(new InvalidRequestException("unsupported_in_current_plugin_mode"));
+        when(vcIssuanceService.getDIDDocument())
+                .thenThrow(new InvalidRequestException("unsupported_in_current_plugin_mode"));
         mockMvc.perform(get("/.well-known/did.json"))
-                .andExpect(status().is2xxSuccessful())
+                .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[0].errorCode").value("unsupported_in_current_plugin_mode"));
+    }
+
+    @Test
+    void getAuthorizationServerMetadata_success() throws Exception {
+        io.mosip.certify.core.dto.AuthorizationServerMetadata mockMetadata =
+                io.mosip.certify.core.dto.AuthorizationServerMetadata.builder()
+                        .issuer("https://auth.example.com")
+                        .tokenEndpoint("https://auth.example.com/token")
+                        .authorizationEndpoint("https://auth.example.com/authorize")
+                        .jwksUri("https://auth.example.com/jwks.json")
+                        .build();
+
+        when(authorizationServerService.getInternalAuthServerMetadata()).thenReturn(mockMetadata);
+
+        mockMvc.perform(get("/.well-known/oauth-authorization-server"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.issuer").value("https://auth.example.com"))
+                .andExpect(jsonPath("$.token_endpoint").value("https://auth.example.com/token"))
+                .andExpect(jsonPath("$.authorization_endpoint").value("https://auth.example.com/authorize"))
+                .andExpect(jsonPath("$.jwks_uri").value("https://auth.example.com/jwks.json"));
+
+        verify(authorizationServerService, times(1)).getInternalAuthServerMetadata();
+    }
+
+    @Test
+    void getOpenIDConfiguration_success() throws Exception {
+        io.mosip.certify.core.dto.AuthorizationServerMetadata mockMetadata =
+                io.mosip.certify.core.dto.AuthorizationServerMetadata.builder()
+                        .issuer("https://auth.example.com")
+                        .tokenEndpoint("https://auth.example.com/token")
+                        .build();
+
+        when(authorizationServerService.getInternalAuthServerMetadata()).thenReturn(mockMetadata);
+
+        mockMvc.perform(get("/.well-known/openid-configuration"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.issuer").value("https://auth.example.com"))
+                .andExpect(jsonPath("$.token_endpoint").value("https://auth.example.com/token"));
+
+        verify(authorizationServerService, times(1)).getInternalAuthServerMetadata();
+    }
+
+    @Test
+    void getAuthorizationServerMetadata_returnsNullFields_success() throws Exception {
+        io.mosip.certify.core.dto.AuthorizationServerMetadata mockMetadata =
+                io.mosip.certify.core.dto.AuthorizationServerMetadata.builder()
+                        .issuer("https://auth.example.com")
+                        .tokenEndpoint("https://auth.example.com/token")
+                        .build();
+
+        when(authorizationServerService.getInternalAuthServerMetadata()).thenReturn(mockMetadata);
+
+        mockMvc.perform(get("/.well-known/oauth-authorization-server"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.issuer").value("https://auth.example.com"))
+                .andExpect(jsonPath("$.token_endpoint").value("https://auth.example.com/token"))
+                .andExpect(jsonPath("$.authorization_endpoint").doesNotExist())
+                .andExpect(jsonPath("$.jwks_uri").doesNotExist());
     }
 }

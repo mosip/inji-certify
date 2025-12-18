@@ -118,15 +118,16 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
         }
         if(ex instanceof MissingServletRequestParameterException) {
             return new ResponseEntity<ResponseWrapper>(getResponseWrapper(INVALID_REQUEST, ex.getMessage()),
-                    HttpStatus.OK);
+                    HttpStatus.BAD_REQUEST);
         }
         if(ex instanceof HttpMediaTypeNotAcceptableException) {
             return new ResponseEntity<ResponseWrapper>(getResponseWrapper(INVALID_REQUEST, ex.getMessage()),
-                    HttpStatus.OK);
+                    HttpStatus.NOT_ACCEPTABLE);
         }
         if(ex instanceof CertifyException) {
             String errorCode = ((CertifyException) ex).getErrorCode();
-            return new ResponseEntity<ResponseWrapper>(getResponseWrapper(errorCode, getMessage(errorCode)), HttpStatus.OK);
+            return new ResponseEntity<ResponseWrapper>(getResponseWrapper(errorCode, getMessage(errorCode)),
+                    HttpStatus.BAD_REQUEST);
         }
         if(ex instanceof RenderingTemplateException) {
             return new ResponseEntity<>(getResponseWrapper(INVALID_REQUEST, ex.getMessage()) ,HttpStatus.NOT_FOUND);
@@ -142,7 +143,8 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
             return new ResponseEntity<ResponseWrapper>(getResponseWrapper(HttpStatus.FORBIDDEN.name(),
                     HttpStatus.FORBIDDEN.getReasonPhrase()), HttpStatus.FORBIDDEN);
         }
-        return new ResponseEntity<ResponseWrapper>(getResponseWrapper(UNKNOWN_ERROR, ex.getMessage()), HttpStatus.OK);
+        return new ResponseEntity<ResponseWrapper>(getResponseWrapper(UNKNOWN_ERROR, ex.getMessage()),
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     public ResponseEntity<VCError> handleVCIControllerExceptions(Exception ex) {
