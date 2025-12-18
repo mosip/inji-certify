@@ -98,20 +98,47 @@ public class PreAuthorizedCodeService {
         }
 
         CredentialConfigurationSupportedDTO config = supportedConfigs.get(request.getCredentialConfigurationId());
-        Map<String, Object> requiredClaims = config.getClaims();
-
-        validateClaims(requiredClaims, request.getClaims());
+        validateClaims(config, request.getClaims());
     }
 
-    private void validateClaims(Map<String, Object> requiredClaims, Map<String, Object> providedClaims) {
-        if (requiredClaims == null || requiredClaims.isEmpty()) {
-            return;
-        }
-
+    private void validateClaims(CredentialConfigurationSupportedDTO config, Map<String, Object> providedClaims) {
         if (providedClaims == null) {
             providedClaims = Collections.emptyMap();
         }
 
+        String format = config.getFormat();
+        Set<String> allowedClaimKeys;
+
+        if ("ldp_vc".equals(format)) {
+            // For ldp_vc: claims are defined in credential_definition.credentialSubject
+            CredentialDefinition credDef = config.getCredentialDefinition();
+            if (credDef != null && credDef.getCredentialSubject() != null) {
+                allowedClaimKeys = credDef.getCredentialSubject().keySet();
+            } else {
+                return; // No claims defined, allow any
+            }
+            // For ldp_vc, just validate unknown claims (mandatory not supported in this structure)
+            List<String> unknownClaims = new ArrayList<>();
+            for (String providedClaim : providedClaims.keySet()) {
+                if (!allowedClaimKeys.contains(providedClaim)) {
+                    unknownClaims.add(providedClaim);
+                }
+            }
+            if (!unknownClaims.isEmpty()) {
+                log.error("Unknown claims provided: {}", unknownClaims);
+                throw new InvalidRequestException(ErrorConstants.UNKNOWN_CLAIMS);
+            }
+        } else {
+            // For mso_mdoc, vc+sd-jwt: use top-level claims with mandatory checking
+            Map<String, Object> requiredClaims = config.getClaims();
+            if (requiredClaims == null || requiredClaims.isEmpty()) {
+                return;
+            }
+            validateClaimsWithMandatory(requiredClaims, providedClaims);
+        }
+    }
+
+    private void validateClaimsWithMandatory(Map<String, Object> requiredClaims, Map<String, Object> providedClaims) {
         List<String> missingClaims = new ArrayList<>();
         List<String> unknownClaims = new ArrayList<>();
 
