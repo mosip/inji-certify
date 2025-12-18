@@ -2,6 +2,7 @@ package io.mosip.certify;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.dto.AuthorizationServerMetadata;
 import io.mosip.certify.core.dto.CredentialIssuerMetadataVD13DTO;
 import io.mosip.certify.core.dto.CredentialOfferResponse;
 import io.mosip.certify.core.dto.PreAuthCodeData;
@@ -286,6 +287,74 @@ public class VCICacheServiceTest {
         when(cache.get(accessToken, io.mosip.certify.core.dto.Transaction.class)).thenReturn(null);
 
         io.mosip.certify.core.dto.Transaction result = vciCacheService.getTransactionByToken(accessToken);
+
+        assertEquals(null, result);
+    }
+
+    // Tests for setASMetadata and getASMetadata
+
+    private static final String AS_METADATA_CACHE = "asMetadataCache";
+
+    @Test
+    public void setASMetadata_Success() {
+        String serverUrl = "https://auth.example.com";
+        AuthorizationServerMetadata metadata = AuthorizationServerMetadata.builder()
+                .issuer(serverUrl)
+                .tokenEndpoint(serverUrl + "/token")
+                .build();
+
+        when(cacheManager.getCache(AS_METADATA_CACHE)).thenReturn(cache);
+
+        vciCacheService.setASMetadata(serverUrl, metadata);
+
+        verify(cacheManager).getCache(AS_METADATA_CACHE);
+        verify(cache).put(eq(Constants.AS_METADATA_PREFIX + serverUrl), eq(metadata));
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void setASMetadata_WhenCacheIsNull_ThrowsIllegalStateException() {
+        when(cacheManager.getCache(AS_METADATA_CACHE)).thenReturn(null);
+
+        vciCacheService.setASMetadata("https://auth.example.com",
+                AuthorizationServerMetadata.builder().build());
+    }
+
+    @Test
+    public void getASMetadata_CacheHit_ReturnsMetadata() {
+        String serverUrl = "https://auth.example.com";
+        AuthorizationServerMetadata metadata = AuthorizationServerMetadata.builder()
+                .issuer(serverUrl)
+                .tokenEndpoint(serverUrl + "/token")
+                .build();
+
+        Cache.ValueWrapper wrapper = mock(Cache.ValueWrapper.class);
+        when(wrapper.get()).thenReturn(metadata);
+        when(cacheManager.getCache(AS_METADATA_CACHE)).thenReturn(cache);
+        when(cache.get(Constants.AS_METADATA_PREFIX + serverUrl)).thenReturn(wrapper);
+
+        AuthorizationServerMetadata result = vciCacheService.getASMetadata(serverUrl);
+
+        assertEquals(metadata, result);
+        verify(cache).get(Constants.AS_METADATA_PREFIX + serverUrl);
+    }
+
+    @Test
+    public void getASMetadata_CacheMiss_ReturnsNull() {
+        String serverUrl = "https://auth.example.com";
+
+        when(cacheManager.getCache(AS_METADATA_CACHE)).thenReturn(cache);
+        when(cache.get(Constants.AS_METADATA_PREFIX + serverUrl)).thenReturn(null);
+
+        AuthorizationServerMetadata result = vciCacheService.getASMetadata(serverUrl);
+
+        assertEquals(null, result);
+    }
+
+    @Test
+    public void getASMetadata_WhenCacheIsNull_ReturnsNull() {
+        when(cacheManager.getCache(AS_METADATA_CACHE)).thenReturn(null);
+
+        AuthorizationServerMetadata result = vciCacheService.getASMetadata("https://auth.example.com");
 
         assertEquals(null, result);
     }
