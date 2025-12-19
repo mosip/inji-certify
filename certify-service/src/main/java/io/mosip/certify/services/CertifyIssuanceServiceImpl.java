@@ -69,7 +69,7 @@ import static io.mosip.certify.utils.VCIssuanceUtil.validateLdpVcFormatRequest;
 @ConditionalOnProperty(value = "mosip.certify.plugin-mode", havingValue = "DataProvider")
 public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
-    @Value("${mosip.certify.cnonce-expire-seconds:20000}")
+    @Value("${mosip.certify.cnonce-expire-seconds:300}")
     private int cNonceExpireSeconds;
 
     @Autowired
