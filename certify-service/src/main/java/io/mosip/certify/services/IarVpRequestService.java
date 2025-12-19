@@ -5,6 +5,7 @@
  */
 package io.mosip.certify.services;
 
+import io.mosip.certify.config.VerifyServiceConfig;
 import io.mosip.certify.core.dto.InteractiveAuthorizationRequest;
 import io.mosip.certify.core.dto.VerifyVpRequest;
 import io.mosip.certify.core.dto.VerifyVpResponse;
@@ -36,10 +37,13 @@ public class IarVpRequestService {
     @Autowired
     private RestTemplate restTemplate;
 
-    @Value("${mosip.certify.verify.service.vp-request-endpoint}")
+    @Autowired
+    private VerifyServiceConfig verifyServiceConfig;
+
+    @Value("${mosip.certify.verify.service.vp-request-endpoint:http://localhost/mock-vp}")
     private String verifyServiceVpRequestEndpoint;
 
-    @Value("${mosip.certify.verify.service.verifier-client-id}")
+    @Value("${mosip.certify.verify.service.verifier-client-id:test-verifier}")
     private String verifierClientId;
 
     @Value("${mosip.certify.iar.response-mode.iar-post:iar-post}")
@@ -96,15 +100,16 @@ public class IarVpRequestService {
                 log.debug("No transaction ID provided - verify service will generate one");
             }
 
-            if (iarRequest.getAuthorizationDetails() != null 
-                && !iarRequest.getAuthorizationDetails().isEmpty()) {
-                var authDetail = iarRequest.getAuthorizationDetails().get(0);
-                
-                // Use credential_configuration_id as presentation definition ID
-                if (authDetail.getCredentialConfigurationId() != null) {
-                    verifyRequest.setPresentationDefinitionId(authDetail.getCredentialConfigurationId());
-                }
-            }
+//            if (iarRequest.getAuthorizationDetails() != null
+//                && !iarRequest.getAuthorizationDetails().isEmpty()) {
+//                var authDetail = iarRequest.getAuthorizationDetails().get(0);
+//
+////                // Use credential_configuration_id as presentation definition ID
+////                if (authDetail.getCredentialConfigurationId() != null) {
+////                    verifyRequest.setPresentationDefinitionId(authDetail.getCredentialConfigurationId());
+////                }
+//            }
+            verifyRequest.setPresentationDefinition(verifyServiceConfig.getPresentationDefinition());
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);

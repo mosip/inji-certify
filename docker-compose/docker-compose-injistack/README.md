@@ -182,7 +182,6 @@ The following services will be available:
 
 Refer to [API documentation](https://mosip.stoplight.io/docs/inji-certify) for detailed usage instructions and examples.
 
-
 ## Advanced Configurations
 
 1. To use the Verifiable Credential Data Model 2.0 optional features one can configure them in the Velocity Template present in [this file](./certify_init.sql)as per [this draft spec](https://w3c-ccg.github.io/vc-render-method/). The Render Template has to be routable by all the clients and should be cached appropriately. The template is not expected to be updated as the consuming clients are expected to verify the integrity with the provided `digestMultibase`. For detailed information please go through the draft spec.
@@ -277,3 +276,9 @@ docker-compose down -v
 
 ## Additional Resources
 - [Inji Documentation](https://docs.inji.io/)
+
+
+### Verify Service
+
+The verify-service is commented out by default in the `docker-compose.yml`.  
+If you want to explore the Presentation During Issuance feature and test the end-to-end issuance + verification flow**, uncomment the `verify-service` and restart the stack.

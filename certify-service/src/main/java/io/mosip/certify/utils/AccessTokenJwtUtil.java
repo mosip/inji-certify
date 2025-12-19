@@ -13,6 +13,7 @@ import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import io.mosip.kernel.signature.service.SignatureService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -35,6 +36,9 @@ public class AccessTokenJwtUtil {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Value("${mosip.certify.cnonce-expire-seconds:300}")
+    private int cNonceExpireSeconds;
+
     /**
      * Generate a signed JWT access token using keymanager service
      * 
@@ -54,7 +58,7 @@ public class AccessTokenJwtUtil {
             // Build JWT payload as JSON
             Map<String, Object> payload = new HashMap<>();
             payload.put("iss", issuer);
-            payload.put("sub", session.getTransactionId());
+            payload.put("sub", session.getIdentityData());
             payload.put("aud", audience);
             payload.put("iat", issuedAt);
             payload.put("exp", expiresAt);
@@ -73,7 +77,7 @@ public class AccessTokenJwtUtil {
             // Generate c_nonce and add to JWT
             String cNonce = generateCNonce();
             payload.put("c_nonce", cNonce);
-            payload.put("c_nonce_expires_in", 300); 
+            payload.put("c_nonce_expires_in", cNonceExpireSeconds);
             log.debug("Added c_nonce '{}' to JWT for transaction_id: {}", cNonce, session.getTransactionId());
 
             // Convert payload to JSON string
@@ -109,7 +113,7 @@ public class AccessTokenJwtUtil {
 
     /**
      * Generate a cryptographically secure c_nonce following eSignet pattern
-     * 
+     *
      * @return Generated c_nonce string
      */
     private String generateCNonce() {

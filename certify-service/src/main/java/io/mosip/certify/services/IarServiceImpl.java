@@ -73,16 +73,16 @@ public class IarServiceImpl implements IarService {
     @Value("${mosip.certify.oauth.token.type:Bearer}")
     private String tokenType;
 
-    @Value("${mosip.certify.oauth.access-token.issuer}")
+    @Value("${mosip.certify.oauth.access-token.issuer:http://localhost/8090}")
     private String accessTokenIssuer;
 
-    @Value("${mosip.certify.oauth.access-token.audience}")
+    @Value("${mosip.certify.oauth.access-token.audience:http://localhost/8090/v1/certify/issuance/credential}")
     private String accessTokenAudience;
 
     private static final String AUTH_CODE_PREFIX = "iar_auth_";
 
 
-    public IarResponse processAuthorizationRequest(InteractiveAuthorizationRequest iarRequest) throws CertifyException {
+    private IarResponse processAuthorizationRequest(InteractiveAuthorizationRequest iarRequest) throws CertifyException {
         log.info("Processing IAR for client_id: {}, response_type: {}", 
                  iarRequest.getClientId(), iarRequest.getResponseType());
 
@@ -107,10 +107,6 @@ public class IarServiceImpl implements IarService {
         }
     }
 
-    public IarAuthorizationResponse processVpPresentation(IarAuthorizationRequest presentationRequest) throws CertifyException {
-        return iarPresentationService.processVpPresentation(presentationRequest);
-    }
-
     @Override
     public Object handleIarRequest(IarRequest unifiedRequest) throws CertifyException {
         log.info("Handling unified IAR request");
@@ -123,7 +119,7 @@ public class IarServiceImpl implements IarService {
             IarAuthorizationRequest presentationRequest = new IarAuthorizationRequest();
             presentationRequest.setAuthSession(unifiedRequest.getAuthSession());
             presentationRequest.setOpenid4vpPresentation(unifiedRequest.getOpenid4vpPresentation());
-            return processVpPresentation(presentationRequest);
+            return iarPresentationService.processVpPresentation(presentationRequest);
         }
 
         if (!hasAuthSession && !hasVp) {
