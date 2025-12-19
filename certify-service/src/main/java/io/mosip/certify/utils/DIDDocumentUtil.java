@@ -197,15 +197,8 @@ public class DIDDocumentUtil {
         pemBuilder.append(Base64.getMimeEncoder(64, "\n".getBytes())
                 .encodeToString(rsaPublicKey.getEncoded()));
         pemBuilder.append("\n-----END PUBLIC KEY-----");
-    private static Map<String, Object> generateRSAVerificationMethod(PublicKey publicKey, String didUrl) throws Exception {
-        RSAKey rsaKey = new RSAKey.Builder((RSAPublicKey) publicKey).build();
-        Map<String,Object> publicKeyJwk = rsaKey.toJSONObject();
 
         Map<String, Object> verificationMethod = new HashMap<>();
-        verificationMethod.put("type", "JsonWebKey2020");
-        verificationMethod.put("@context", "https://w3id.org/security/suites/jws-2020/v1");
-        verificationMethod.put("controller", didUrl);
-        verificationMethod.put("publicKeyJwk", publicKeyJwk);
         verificationMethod.put("type", "RsaVerificationKey2018");
         verificationMethod.put("@context", "https://w3id.org/security/v1");
         verificationMethod.put("controller", didUrl);
@@ -213,7 +206,7 @@ public class DIDDocumentUtil {
         return verificationMethod;
     }
 
-    private static Map<String, Object> generateECK12019VerificationMethod(PublicKey publicKey, String issuerURI, String issuerPublicKeyURI) {
+    private static Map<String, Object> generateECK1VerificationMethod(PublicKey publicKey, String didUrl) {
         // TODO: can validate the key or directly assume the curve here and
         //  go ahead or use P_256 only if `nimbusCurve` is having same value.
         ECKey nimbusKey = new ECKey.Builder(Curve.SECP256K1, (ECPublicKey) publicKey)
