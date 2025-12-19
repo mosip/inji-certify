@@ -197,7 +197,7 @@ public class CertifyIssuanceServiceImplTest {
     private CredentialRequest createValidCredentialRequest(String format) {
         CredentialRequest req = new CredentialRequest();
         req.setFormat(format);
-        req.setSdJwtVct("test_vct");
+        req.setVct("test_vct");
 
         // This is io.mosip.certify.core.dto.CredentialDefinition for the request object
         io.mosip.certify.core.dto.CredentialDefinition requestCredDef = new io.mosip.certify.core.dto.CredentialDefinition();

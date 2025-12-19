@@ -72,12 +72,7 @@ public class AppConfig implements ApplicationRunner {
                         .setMaxConnPerRoute(defaultMaxConnectionPerRoute)
                         .setMaxConnTotal(defaultTotalMaxConnection)
                         .build())
-                .disableCookieManagement()
-                .setDefaultRequestConfig(org.apache.hc.client5.http.config.RequestConfig.custom()
-                        .setConnectionRequestTimeout(5000, java.util.concurrent.TimeUnit.MILLISECONDS)
-                        .setConnectTimeout(5000, java.util.concurrent.TimeUnit.MILLISECONDS)
-                        .setResponseTimeout(30000, java.util.concurrent.TimeUnit.MILLISECONDS)
-                        .build());
+                .disableCookieManagement();
         HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
         requestFactory.setHttpClient(httpClientBuilder.build());
         
