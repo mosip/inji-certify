@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS iar_session (
     is_code_used BOOLEAN NOT NULL DEFAULT FALSE,
     code_used_at TIMESTAMP,
     cr_dtimes TIMESTAMP NOT NULL DEFAULT NOW(),
-    identity VARCHAR(64)
+    identity_data VARCHAR(64)
 );
 
 -- Column comments
@@ -35,7 +35,7 @@ COMMENT ON COLUMN iar_session.code_issued_at IS 'Timestamp when authorization co
 COMMENT ON COLUMN iar_session.is_code_used IS 'Flag indicating if authorization code has been used for token exchange';
 COMMENT ON COLUMN iar_session.code_used_at IS 'Timestamp when authorization code was used for token exchange';
 COMMENT ON COLUMN iar_session.cr_dtimes IS 'Record creation timestamp';
-COMMENT ON COLUMN iar_session.identity IS 'Stores identity attributes (e.g., uin, vid, uid) dynamically as JSON map';
+COMMENT ON COLUMN iar_session.identity_data IS 'Stores identity attributes (e.g., uin, vid, uid) dynamically as JSON map';
 
 COMMENT ON TABLE iar_session IS 'Maps IAR auth_session to transaction_id and stores OAuth flow state including verify service details for presentation during issuance flow.';
 CREATE INDEX IF NOT EXISTS idx_iar_session_auth_session ON iar_session(auth_session);

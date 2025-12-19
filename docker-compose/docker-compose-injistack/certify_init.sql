@@ -327,7 +327,7 @@ CREATE TABLE IF NOT EXISTS iar_session (
     is_code_used BOOLEAN NOT NULL DEFAULT FALSE,
     code_used_at TIMESTAMP,
     cr_dtimes TIMESTAMP NOT NULL DEFAULT NOW(),
-    identity VARCHAR(64)
+    identity_data VARCHAR(64)
     );
 
 

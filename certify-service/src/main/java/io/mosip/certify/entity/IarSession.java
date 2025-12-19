@@ -63,8 +63,8 @@ public class IarSession {
     @Column(name = "cr_dtimes", nullable = false, updatable = false)
     private LocalDateTime createdDtimes;
 
-    @Column(name = "identity")
-    private String identity;
+    @Column(name = "identity_data")
+    private String identityData;
 
     @PrePersist
     protected void onCreate() {

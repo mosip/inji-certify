@@ -13,6 +13,7 @@ import io.mosip.certify.core.dto.VpVerificationResponse;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.entity.IarSession;
 import io.mosip.certify.repository.IarSessionRepository;
+import io.mosip.certify.utils.SDJsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +33,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.time.LocalDateTime;
 import java.util.*;
+
+import static io.mosip.certify.utils.SDJsonUtils.buildObjectMap;
 
 /**
  * Service for handling VP Presentation processing
@@ -59,7 +62,7 @@ public class IarPresentationService {
     @Value("${mosip.certify.iar.authorization-code.length:24}")
     private int authorizationCodeLength;
 
-    @Value("#{'${mosip.certify.iar.identity:uin,vid,UIN,UID}'.split(',')}")
+    @Value("#{'${mosip.certify.iar.identity-data:uin,vid,UIN,UID}'.split(',')}")
     private Set<String> identityKeys;
 
     /**
@@ -349,8 +352,7 @@ public class IarPresentationService {
 
     private String extractIdentityFromVc(String vcJson) {
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(vcJson);
+            JsonNode root = objectMapper.readTree(vcJson);
 
             JsonNode cs = root.path("credentialSubject");
             if (cs.isMissingNode()) {
