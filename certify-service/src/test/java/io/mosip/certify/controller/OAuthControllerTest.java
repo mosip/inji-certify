@@ -10,7 +10,6 @@ import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.IarService;
 import io.mosip.certify.core.spi.JwksService;
 import io.mosip.certify.filter.AccessTokenValidationFilter;
-import io.mosip.certify.services.IarPresentationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

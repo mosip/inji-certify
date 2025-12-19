@@ -148,7 +148,7 @@ public class VCIssuanceUtil {
 
     public static String getValidClientNonce(VCICacheService vciCacheService, ParsedAccessToken parsedAccessToken,
                                              int configuredCNonceExpireSeconds, SecurityHelperService securityHelperService, Logger log) {
-         VCIssuanceTransaction transaction = vciCacheService.getVCITransaction(parsedAccessToken.getAccessTokenHash());
+        VCIssuanceTransaction transaction = vciCacheService.getVCITransaction(parsedAccessToken.getAccessTokenHash());
         String cNonce = (transaction == null) ?
                 (String) parsedAccessToken.getClaims().get(Constants.C_NONCE) :
                 transaction.getCNonce();

@@ -96,7 +96,7 @@ public class JwtProofValidator implements ProofValidator {
     }
 
     @Override
-    public boolean validate(String clientId, CredentialProof credentialProof, Map<String, Object> proofConfiguration) {
+    public boolean validate(String clientId, String cNonce, CredentialProof credentialProof, Map<String, Object> proofConfiguration) {
         if(credentialProof.getJwt() == null || credentialProof.getJwt().isBlank()) {
             log.error("Found invalid jwt in the credential proof");
             return false;
@@ -121,7 +121,8 @@ public class JwtProofValidator implements ProofValidator {
             }
 
             JWTClaimsSet.Builder proofJwtClaimsBuilder = new JWTClaimsSet.Builder()
-                    .audience(credentialIdentifier);
+                    .audience(credentialIdentifier)
+                    .claim("nonce", cNonce);
 
             // if the proof contains issuer claim, then it should match with the client id ref: https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0-ID1.html#section-7.2.1.1-2.2.2.1
             // https://github.com/openid/OpenID4VCI/issues/349
