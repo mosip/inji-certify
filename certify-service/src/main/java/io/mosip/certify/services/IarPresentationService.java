@@ -13,7 +13,6 @@ import io.mosip.certify.core.dto.VpVerificationResponse;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.entity.IarSession;
 import io.mosip.certify.repository.IarSessionRepository;
-import io.mosip.certify.utils.SDJsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,8 +32,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.time.LocalDateTime;
 import java.util.*;
-
-import static io.mosip.certify.utils.SDJsonUtils.buildObjectMap;
 
 /**
  * Service for handling VP Presentation processing
@@ -108,7 +105,7 @@ public class IarPresentationService {
                     throw new CertifyException("invalid_vp", "VP does not contain identity attributes (UIN/VID)");
                 }
 
-                session.setIdentity(identity);
+                session.setIdentityData(identity);
                 iarSessionRepository.save(session);
                 String authorizationCode = generateAndStoreAuthorizationCode(session);
                 response.setStatus(IarStatus.OK);
