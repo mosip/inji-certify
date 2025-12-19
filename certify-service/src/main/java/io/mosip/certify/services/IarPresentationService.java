@@ -50,7 +50,7 @@ public class IarPresentationService {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Value("${mosip.certify.verify.service.vp-result-endpoint}")
+    @Value("${mosip.certify.verify.service.vp-result-endpoint:http://localhost:8080}")
     private String verifyServiceVpResultEndpoint;
 
     @Value("${mosip.certify.iar.verification.success-status:SUCCESS}")

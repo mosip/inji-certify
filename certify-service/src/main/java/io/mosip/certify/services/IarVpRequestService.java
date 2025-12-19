@@ -40,10 +40,10 @@ public class IarVpRequestService {
     @Autowired
     private VerifyServiceConfig verifyServiceConfig;
 
-    @Value("${mosip.certify.verify.service.vp-request-endpoint}")
+    @Value("${mosip.certify.verify.service.vp-request-endpoint:http://localhost/mock-vp}")
     private String verifyServiceVpRequestEndpoint;
 
-    @Value("${mosip.certify.verify.service.verifier-client-id}")
+    @Value("${mosip.certify.verify.service.verifier-client-id:test-verifier}")
     private String verifierClientId;
 
     @Value("${mosip.certify.iar.response-mode.iar-post:iar-post}")

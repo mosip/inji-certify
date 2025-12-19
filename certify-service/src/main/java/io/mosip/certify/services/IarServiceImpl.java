@@ -73,10 +73,10 @@ public class IarServiceImpl implements IarService {
     @Value("${mosip.certify.oauth.token.type:Bearer}")
     private String tokenType;
 
-    @Value("${mosip.certify.oauth.access-token.issuer}")
+    @Value("${mosip.certify.oauth.access-token.issuer:http://localhost/8090}")
     private String accessTokenIssuer;
 
-    @Value("${mosip.certify.oauth.access-token.audience}")
+    @Value("${mosip.certify.oauth.access-token.audience:http://localhost/8090/v1/certify/issuance/credential}")
     private String accessTokenAudience;
 
     private static final String AUTH_CODE_PREFIX = "iar_auth_";
@@ -202,7 +202,7 @@ public class IarServiceImpl implements IarService {
             }
             
             // Extract c_nonce from the JWT access token and set in OAuth response
-            String cNonce = java.util.UUID.randomUUID().toString();
+            String cNonce = extractCNonceFromJwt(response.getAccessToken());
             if (cNonce != null) {
                 response.setCNonce(cNonce);
                 response.setCNonceExpiresIn(cNonceExpiresInSeconds);
