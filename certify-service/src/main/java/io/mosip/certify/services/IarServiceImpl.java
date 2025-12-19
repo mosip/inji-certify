@@ -73,11 +73,11 @@ public class IarServiceImpl implements IarService {
     @Value("${mosip.certify.oauth.token.type:Bearer}")
     private String tokenType;
 
-    @Value("${mosip.certify.oauth.access-token.issuer:http://localhost/8090}")
-    private String accessTokenIssuer;
+    @Value("${mosip.certify.oauth.issuer.issuer:http://localhost/8090}")
+    private String issuer;
 
     @Value("${mosip.certify.oauth.access-token.audience:http://localhost/8090/v1/certify/issuance/credential}")
-    private String accessTokenAudience;
+    private String audience;
 
     private static final String AUTH_CODE_PREFIX = "iar_auth_";
 
@@ -442,8 +442,8 @@ public class IarServiceImpl implements IarService {
         try {
             String jwtToken = accessTokenJwtUtil.generateSignedJwt(
                 session, 
-                accessTokenIssuer, 
-                accessTokenAudience, 
+                issuer,
+                audience,
                 tokenExpiresInSeconds
             );
             log.debug("Generated JWT access token for client_id: {}, transaction_id: {}", 
