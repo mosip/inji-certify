@@ -33,7 +33,6 @@ public class IarConstants {
     public static final String CONTENT_TYPE_JSON = "application/json";
 
     // Error codes
-    public static final String INVALID_REQUEST = "invalid_request";
     public static final String UNSUPPORTED_RESPONSE_TYPE = "unsupported_response_type";
     public static final String UNSUPPORTED_INTERACTION_TYPE = "unsupported_interaction_type";
     public static final String INVALID_CLIENT = "invalid_client";
