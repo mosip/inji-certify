@@ -64,7 +64,7 @@ public class IarServiceImpl implements IarService {
     @Value("${mosip.certify.oauth.token.type:Bearer}")
     private String tokenType;
 
-    @Value("${mosip.certify.oauth.issuer.issuer:http://localhost/8090}")
+    @Value("${mosip.certify.oauth.issuer:http://localhost/8090}")
     private String issuer;
 
     @Value("${mosip.certify.oauth.access-token.audience:http://localhost/8090/v1/certify/issuance/credential}")

@@ -9,6 +9,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * Input Descriptor DTO for Presentation Definition
  * Describes credential requirements and constraints
@@ -35,9 +38,12 @@ public class InputDescriptor {
     @JsonProperty("purpose")
     private String purpose;
 
+    @JsonProperty("format")
+    private Map<String, Map<String, List<String>>> format;
     /**
      * Constraints that must be satisfied for this input
      */
     @JsonProperty("constraints")
     private InputConstraints constraints;
+
 }
