@@ -205,6 +205,11 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
             OAuthTokenError oauthError = new OAuthTokenError("invalid_request", ex.getMessage());
             return new ResponseEntity<Object>(oauthError, HttpStatus.BAD_REQUEST);
         }
+        if(ex instanceof NotAuthenticatedException) {
+            String errorCode = ((CertifyException) ex).getErrorCode();
+            OAuthTokenError oauthError = new OAuthTokenError("invalid_client", getMessage(errorCode));
+            return new ResponseEntity<Object>(oauthError, HttpStatus.UNAUTHORIZED);
+        }
         if(ex instanceof CertifyException) {
             String errorCode = ((CertifyException) ex).getErrorCode();
             // Map CertifyException error codes to OAuth 2.0 error codes
@@ -212,11 +217,6 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
             OAuthTokenError oauthError = new OAuthTokenError(oauthErrorCode, getMessage(errorCode));
             HttpStatus status = getOAuthErrorStatus(oauthErrorCode);
             return new ResponseEntity<Object>(oauthError, status);
-        }
-        if(ex instanceof NotAuthenticatedException) {
-            String errorCode = ((CertifyException) ex).getErrorCode();
-            OAuthTokenError oauthError = new OAuthTokenError("invalid_client", getMessage(errorCode));
-            return new ResponseEntity<Object>(oauthError, HttpStatus.UNAUTHORIZED);
         }
         if(ex instanceof AccessDeniedException) {
             OAuthTokenError oauthError = new OAuthTokenError("access_denied", "Access denied");
@@ -278,7 +278,6 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
                 return certifyErrorCode.toLowerCase();
             case "invalid_auth_session":
             case "session_not_found":
-                return "invalid_grant";
             case "invalid_authorization_code":
             case "authorization_code_not_found":
             case "authorization_code_expired":
@@ -286,13 +285,11 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
                 return "invalid_grant";
             case "client_id_mismatch":
                 return "invalid_client";
-            case "invalid_redirect_uri":
-                return "invalid_request";
-            case "pkce_validation_failed":
-            case "invalid_code_verifier":
-                return "invalid_request";
             case "interaction_required":
                 return "interaction_required";
+            case "invalid_redirect_uri":
+            case "pkce_validation_failed":
+            case "invalid_code_verifier":
             default:
                 return "invalid_request";
         }

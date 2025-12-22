@@ -119,7 +119,7 @@ services:
 #      - "8080:8080"
 #    environment:
 #      - active_profile_env=default
-#      - DATABASE_HOST=postgres
+#      - DATABASE_HOST=database
 #      - DATABASE_PORT=5432
 #      - DATABASE_NAME=inji_verify
 #      - DATABASE_SCHEMA=verify
@@ -132,7 +132,7 @@ services:
 #      - INJI_KEYSTORE_FILE_PASS=mosip
 #      - INJI_VERIFY_REDIRECT_URI=https://VERIFY_SERVICE_PROXY_FOR_LOCALHOST
 #    depends_on:
-#      - postgres
+#      - database
 
 networks:
   network:

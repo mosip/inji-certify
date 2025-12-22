@@ -25,7 +25,7 @@ COMMENT ON COLUMN credential_config.qr_signature_algo IS 'Signature algorithm us
 -- IAR Session Table Upgrade Script
 -- This script creates the iar_session table for Interactive Authorization Request functionality
 
-CREATE TABLE IF NOT EXISTS iar_session (
+CREATE TABLE IF NOT EXISTS certify.iar_session (
                                            id SERIAL PRIMARY KEY,
                                            auth_session VARCHAR(128) NOT NULL UNIQUE,
     transaction_id VARCHAR(64) NOT NULL,
@@ -33,14 +33,16 @@ CREATE TABLE IF NOT EXISTS iar_session (
     verify_nonce VARCHAR(64),
     expires_at TIMESTAMP NOT NULL,
     client_id VARCHAR(128),
-    authorization_code VARCHAR(128),
+    scope VARCHAR(128),
+    authorization_code VARCHAR(128) UNIQUE,
     response_uri VARCHAR(512),
     code_challenge VARCHAR(128),
     code_challenge_method VARCHAR(10),
     code_issued_at TIMESTAMP,
     is_code_used BOOLEAN NOT NULL DEFAULT FALSE,
     code_used_at TIMESTAMP,
-    cr_dtimes TIMESTAMP NOT NULL DEFAULT NOW()
+    cr_dtimes TIMESTAMP NOT NULL DEFAULT NOW(),
+    identity_data TEXT
     );
 
 -- Column comments
@@ -59,13 +61,17 @@ COMMENT ON COLUMN iar_session.code_issued_at IS 'Timestamp when authorization co
 COMMENT ON COLUMN iar_session.is_code_used IS 'Flag indicating if authorization code has been used for token exchange';
 COMMENT ON COLUMN iar_session.code_used_at IS 'Timestamp when authorization code was used for token exchange';
 COMMENT ON COLUMN iar_session.cr_dtimes IS 'Record creation timestamp';
+COMMENT ON COLUMN iar_session.identity_data IS 'Stores identity attributes (e.g., uin, vid, uid) dynamically as JSON map';
+
 
 -- Table comment
 COMMENT ON TABLE iar_session IS 'Maps IAR auth_session to transaction_id and stores OAuth flow state including verify service details for presentation during issuance flow.';
 
 -- Indexes for performance
-CREATE INDEX IF NOT EXISTS idx_iar_session_auth_session ON iar_session(auth_session);
-CREATE INDEX IF NOT EXISTS idx_iar_session_authorization_code ON iar_session(authorization_code);
-CREATE INDEX IF NOT EXISTS idx_iar_session_request_id ON iar_session(request_id);
-CREATE INDEX IF NOT EXISTS idx_iar_session_expires_at ON iar_session(expires_at);
-CREATE INDEX IF NOT EXISTS idx_iar_session_authorization_code_used ON iar_session(authorization_code, is_code_used) WHERE authorization_code IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_iar_session_auth_session ON certify.iar_session(auth_session);
+CREATE INDEX IF NOT EXISTS idx_iar_session_authorization_code ON certify.iar_session(authorization_code);
+CREATE INDEX IF NOT EXISTS idx_iar_session_request_id ON certify.iar_session(request_id);
+CREATE INDEX IF NOT EXISTS idx_iar_session_expires_at ON certify.iar_session(expires_at);
+CREATE INDEX IF NOT EXISTS idx_iar_session_authorization_code_used ON certify.iar_session(authorization_code, is_code_used) WHERE authorization_code IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_iar_session_scope ON certify.iar_session(scope);
+CREATE INDEX IF NOT EXISTS idx_iar_session_transaction_id ON certify.iar_session(transaction_id);

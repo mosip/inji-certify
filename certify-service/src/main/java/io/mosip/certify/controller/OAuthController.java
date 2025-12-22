@@ -6,38 +6,22 @@
 package io.mosip.certify.controller;
 
 import io.mosip.certify.core.constants.IarStatus;
-import io.mosip.certify.core.dto.IarResponse;
-import io.mosip.certify.core.dto.IarAuthorizationResponse;
-import io.mosip.certify.core.dto.OAuthTokenRequest;
-import io.mosip.certify.core.dto.OAuthTokenResponse;
-import io.mosip.certify.core.dto.OAuthTokenError;
-import io.mosip.certify.core.dto.IarRequest;
+import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.IarService;
 import io.mosip.certify.core.spi.JwksService;
-import io.mosip.certify.services.KeyManagerConstants;
-import io.mosip.kernel.keymanagerservice.dto.AllCertificatesDataResponseDto;
-import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
 
-import java.io.ByteArrayInputStream;
-import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPublicKey;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * OAuth Authorization Controller
@@ -121,16 +105,16 @@ public class OAuthController {
         } catch (CertifyException e) {
             log.error("Failed to process token request, error: {}",
                       e.getMessage(), e);
-            
+
             // Return OAuth error response
             OAuthTokenError errorResponse = new OAuthTokenError(e.getErrorCode(), e.getMessage());
-            
+
             return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {
             log.error("Unexpected error processing token request", e);
-            
+
             OAuthTokenError errorResponse = new OAuthTokenError("server_error", "Internal server error");
-            
+
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }

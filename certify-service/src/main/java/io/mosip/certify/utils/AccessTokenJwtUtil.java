@@ -6,6 +6,8 @@
 package io.mosip.certify.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.mosip.certify.core.constants.ErrorConstants;
+import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.entity.IarSession;
 import io.mosip.certify.services.KeyManagerConstants;
 import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
@@ -58,7 +60,13 @@ public class AccessTokenJwtUtil {
             // Build JWT payload as JSON
             Map<String, Object> payload = new HashMap<>();
             payload.put("iss", issuer);
-            payload.put("sub", session.getIdentityData());
+           String identityData = session.getIdentityData();
+           if (!StringUtils.hasText(identityData)) {
+               log.warn("Identity data is null or empty for session: {}, transaction_id: {}",
+                               session.getAuthSession(), session.getTransactionId());
+               throw new CertifyException(ErrorConstants.INVALID_REQUEST, "Identity data is required but not found in session");
+           }
+           payload.put("sub", identityData);
             payload.put("aud", audience);
             payload.put("iat", issuedAt);
             payload.put("exp", expiresAt);
@@ -69,7 +77,7 @@ public class AccessTokenJwtUtil {
             if (!StringUtils.hasText(scope)) {
                 log.warn("Scope is null or empty for session: {}, transaction_id: {}", 
                     session.getAuthSession(), session.getTransactionId());
-                throw new RuntimeException("Scope is required but not found in session");
+                throw new CertifyException(ErrorConstants.INVALID_REQUEST, "Scope is required but not found in session");
             }
             payload.put("scope", scope);
             log.debug("Added scope '{}' to JWT for transaction_id: {}", scope, session.getTransactionId());
@@ -107,7 +115,7 @@ public class AccessTokenJwtUtil {
 
         } catch (Exception e) {
             log.error("Failed to generate signed JWT for session: {}", session.getAuthSession(), e);
-            throw new RuntimeException("JWT generation failed", e);
+            throw new CertifyException(ErrorConstants.UNKNOWN_ERROR,"JWT generation failed", e);
         }
     }
 

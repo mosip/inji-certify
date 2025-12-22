@@ -52,12 +52,6 @@ public class IarServiceImpl implements IarService {
     @Autowired
     private AccessTokenJwtUtil accessTokenJwtUtil;
 
-    @Autowired
-    private CsvIdUtil csvIdUtil;
-
-    @Value("${mosip.certify.iar.session-timeout-seconds:1800}")
-    private int sessionTimeoutSeconds;
-
     @Value("${mosip.certify.oauth.token.expires-in-seconds:3600}")
     private int tokenExpiresInSeconds;
 
@@ -66,9 +60,6 @@ public class IarServiceImpl implements IarService {
 
     @Value("${mosip.certify.iar.authorization-code.expires-minutes:10}")
     private int authorizationCodeExpiresMinutes;
-
-    @Value("${mosip.certify.iar.authorization-code.length:24}")
-    private int authorizationCodeLength;
 
     @Value("${mosip.certify.oauth.token.type:Bearer}")
     private String tokenType;
@@ -273,36 +264,14 @@ public class IarServiceImpl implements IarService {
             response.setType(InteractionType.OPENID4VP_PRESENTATION);
             response.setAuthSession(authSession);
 
-            // Get CSV ID to use as transaction ID
-            String csvTransactionId = csvIdUtil.getCsvId();
-            log.info("Using CSV ID as transaction ID: {} for auth_session: {}", csvTransactionId, authSession);
-
             // Call verify service with CSV transaction ID
-            VerifyVpResponse verifyResponse = iarVpRequestService.createVpRequest(iarRequest, csvTransactionId);
-            
-            // Use CSV transaction ID instead of verify service response
-            // Override verify response transaction ID if verify service returned different one
-            String transactionId = csvTransactionId;
-            if (verifyResponse.getTransactionId() != null && !csvTransactionId.equals(verifyResponse.getTransactionId())) {
-                log.info("Overriding verify service transactionId {} with CSV ID {}", 
-                        verifyResponse.getTransactionId(), csvTransactionId);
-                verifyResponse.setTransactionId(csvTransactionId);
-            }
-            
-            // Validate transaction ID before proceeding
-            if (!StringUtils.hasText(transactionId)) {
-                log.error("Transaction ID is empty - this is required for VP verification");
-                throw new CertifyException(ErrorConstants.UNKNOWN_ERROR, 
-                    "Transaction ID is required for VP verification");
-            }
-            
+            VerifyVpResponse verifyResponse = iarVpRequestService.createVpRequest(iarRequest);
+
             // Convert verify response to Object (pass-through from Verify service)
             Object openId4VpRequest = iarVpRequestService.convertToOpenId4VpRequest(verifyResponse, iarRequest);
             response.setOpenid4vpRequest(openId4VpRequest);
             
-            log.info("Using CSV transaction_id: {} for auth_session: {}", transactionId, authSession);
-            
-            IarSession iarSession = iarSessionService.createIarSession(iarRequest, verifyResponse, authSession, transactionId);
+            IarSession iarSession = iarSessionService.createIarSession(iarRequest, verifyResponse, authSession, verifyResponse.getTransactionId());
             
             iarSessionRepository.save(iarSession);
             return response;
@@ -373,7 +342,10 @@ public class IarServiceImpl implements IarService {
             log.debug("Authorization code atomically marked as used");
             return session;
             
-        } catch (Exception e) {
+        } catch (CertifyException e) {
+            throw e;
+        }
+        catch (Exception e) {
             log.error("Failed to atomically mark authorization code as used", e);
             throw new CertifyException("server_error", "Failed to process authorization code", e);
         }
@@ -451,7 +423,7 @@ public class IarServiceImpl implements IarService {
             return jwtToken;
         } catch (Exception e) {
             log.error("Failed to generate JWT access token for session: {}", session.getAuthSession(), e);
-            throw new RuntimeException("JWT access token generation failed", e);
+            throw new CertifyException(ErrorConstants.UNKNOWN_ERROR, "JWT access token generation failed", e);
         }
     }
 

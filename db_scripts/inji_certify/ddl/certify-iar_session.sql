@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS iar_session (
     expires_at TIMESTAMP,
     client_id VARCHAR(128),
     scope VARCHAR(128),
-    authorization_code VARCHAR(128),
+    authorization_code VARCHAR(128) UNIQUE,
     response_uri VARCHAR(512),
     code_challenge VARCHAR(128),
     code_challenge_method VARCHAR(10),
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS iar_session (
     is_code_used BOOLEAN NOT NULL DEFAULT FALSE,
     code_used_at TIMESTAMP,
     cr_dtimes TIMESTAMP NOT NULL DEFAULT NOW(),
-    identity_data VARCHAR(64)
+    identity_data TEXT
 );
 
 -- Column comments
@@ -44,3 +44,4 @@ CREATE INDEX IF NOT EXISTS idx_iar_session_request_id ON iar_session(request_id)
 CREATE INDEX IF NOT EXISTS idx_iar_session_expires_at ON iar_session(expires_at);
 CREATE INDEX IF NOT EXISTS idx_iar_session_authorization_code_used ON iar_session(authorization_code, is_code_used) WHERE authorization_code IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_iar_session_scope ON iar_session(scope);
+CREATE INDEX IF NOT EXISTS idx_iar_session_transaction_id ON certify.iar_session(transaction_id);

@@ -180,8 +180,7 @@ public class IarPresentationService {
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
             
             HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(formData, headers);
-            
-            RestTemplate restTemplate = new RestTemplate();
+
             var response = restTemplate.exchange(
                 responseUri,
                 HttpMethod.POST,
@@ -190,8 +189,8 @@ public class IarPresentationService {
             );
             
             if (response.getStatusCode().is2xxSuccessful()) {
-                log.info("Successfully submitted VP presentation to verify service, response status: {}, body: {}", 
-                        response.getStatusCode(), response.getBody());
+                log.info("Successfully submitted VP presentation to verify service, response status: {}",
+                        response.getStatusCode());
             } else {
                 log.warn("VP submission returned non-success status: {}, body: {}", 
                         response.getStatusCode(), response.getBody());
@@ -223,7 +222,7 @@ public class IarPresentationService {
             );
             
             Map<String, Object> verificationResult = resultResponse.getBody();
-            log.info("VP verification result received for transaction_id: {}, result: {}", transactionId, verificationResult);
+            log.info("VP verification result received for transaction_id: {}", transactionId);
             
             VpVerificationResponse response = new VpVerificationResponse();
             response.setRequestId(transactionId);
