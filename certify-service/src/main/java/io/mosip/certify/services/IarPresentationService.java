@@ -53,9 +53,6 @@ public class IarPresentationService {
     @Value("${mosip.certify.verify.service.vp-result-endpoint:http://localhost:8080}")
     private String verifyServiceVpResultEndpoint;
 
-    @Value("${mosip.certify.iar.verification.success-status:SUCCESS}")
-    private String verificationSuccessStatus;
-
     @Value("${mosip.certify.iar.authorization-code.length:24}")
     private int authorizationCodeLength;
 
@@ -69,9 +66,6 @@ public class IarPresentationService {
     public void validateConfiguration() {
         if (!StringUtils.hasText(verifyServiceVpResultEndpoint)) {
             throw new IllegalStateException("mosip.certify.verify.service.vp-result-endpoint must be configured");
-        }
-        if (!StringUtils.hasText(verificationSuccessStatus)) {
-            throw new IllegalStateException("mosip.certify.iar.verification.success-status must be configured");
         }
         log.info("IarPresentationService configuration validation successful");
     }
@@ -229,9 +223,9 @@ public class IarPresentationService {
             
             if (verificationResult != null) {
                 String vpResultStatus = (String) verificationResult.get("vpResultStatus");
-                log.debug("Verify service vpResultStatus: {}, expected success value: {}", vpResultStatus, verificationSuccessStatus);
-                
-                if (verificationSuccessStatus.equals(vpResultStatus)) {
+                log.debug("Verify service vpResultStatus: {}", vpResultStatus);
+
+                if ("SUCCESS".equals(vpResultStatus)) {
                     response.setStatus(IarStatus.OK.getValue());
                     response.setVerificationDetails(verificationResult);
                     log.info("VP cryptographic verification successful for transaction_id: {}, vpResultStatus: {}", transactionId, vpResultStatus);
