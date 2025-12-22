@@ -3,7 +3,6 @@ package io.mosip.certify.core.spi;
 import io.mosip.certify.core.dto.CredentialLedgerSearchRequest;
 import io.mosip.certify.core.dto.CredentialStatusDetail;
 import io.mosip.certify.core.dto.CredentialStatusResponse;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;

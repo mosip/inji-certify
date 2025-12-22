@@ -7,6 +7,7 @@ package io.mosip.certify.core.constants;
 
 public class ErrorConstants {
 
+    public static final String INVALID_REQUEST = "invalid_request";
     public static final String INVALID_METADATA_DISPLAY = "invalid_metadata_display";
     public static final String INVALID_AUTH_TOKEN = "invalid_token";
     public static final String INVALID_ALGORITHM = "invalid_algorithm";
