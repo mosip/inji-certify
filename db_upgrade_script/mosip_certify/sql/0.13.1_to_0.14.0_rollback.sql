@@ -17,3 +17,19 @@
 ALTER TABLE certify.credential_config
     DROP COLUMN IF EXISTS qr_settings,
     DROP COLUMN IF EXISTS qr_signature_algo;
+
+-- IAR Session Table Rollback Script
+-- This script removes the iar_session table and all associated objects
+
+-- Drop indexes first
+DROP INDEX IF EXISTS certify.idx_iar_session_authorization_code_used;
+DROP INDEX IF EXISTS certify.idx_iar_session_expires_at;
+DROP INDEX IF EXISTS certify.idx_iar_session_request_id;
+DROP INDEX IF EXISTS certify.idx_iar_session_authorization_code;
+DROP INDEX IF EXISTS certify.idx_iar_session_auth_session;
+DROP INDEX IF EXISTS certify.idx_iar_session_scope;
+DROP INDEX IF EXISTS certify.idx_iar_session_transaction_id;
+
+-- Drop the table
+DROP TABLE IF EXISTS certify.iar_session;
+

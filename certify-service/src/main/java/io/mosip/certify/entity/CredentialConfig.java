@@ -131,4 +131,5 @@ public class CredentialConfig {
 
     @Column(name = "upd_dtimes")
     private LocalDateTime updatedTimes;
+
 }

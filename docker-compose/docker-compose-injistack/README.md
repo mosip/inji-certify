@@ -381,3 +381,9 @@ docker-compose down -v
 
 ## Additional Resources
 - [Inji Documentation](https://docs.inji.io/)
+
+
+### Verify Service
+
+The verify-service is commented out by default in the `docker-compose.yml`.  
+If you want to explore the Presentation During Issuance feature and test the end-to-end issuance + verification flow**, uncomment the `verify-service` and restart the stack.
