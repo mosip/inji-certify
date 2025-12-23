@@ -457,7 +457,7 @@ class OAuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value("ok"))
-                .andExpect(jsonPath("$.authorization_code").value("iar_auth_test123456789"));
+                .andExpect(jsonPath("$.code").value("iar_auth_test123456789"));
 
         verify(iarService, times(1)).handleIarRequest(any(IarRequest.class));
     }
@@ -476,7 +476,7 @@ class OAuthControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value("error"))
-                .andExpect(jsonPath("$.authorization_code").doesNotExist());
+                .andExpect(jsonPath("$.code").doesNotExist());
 
         verify(iarService, times(1)).handleIarRequest(any(IarRequest.class));
     }
@@ -540,7 +540,7 @@ class OAuthControllerTest {
                 .param("openid4vpPresentation", "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJ3YWxsZXQiLCJhdWQiOiJ2ZXJpZmllciIsInN1YiI6InRlc3QtdXNlciJ9.signature"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ok"))
-                .andExpect(jsonPath("$.authorization_code").value("iar_auth_jwt123456789"));
+                .andExpect(jsonPath("$.code").value("iar_auth_jwt123456789"));
 
         verify(iarService, times(1)).handleIarRequest(any(IarRequest.class));
     }
@@ -559,7 +559,7 @@ class OAuthControllerTest {
                 .param("openid4vpPresentation", jsonVpPresentation))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ok"))
-                .andExpect(jsonPath("$.authorization_code").value("iar_auth_json123456789"));
+                .andExpect(jsonPath("$.code").value("iar_auth_json123456789"));
 
         verify(iarService, times(1)).handleIarRequest(any(IarRequest.class));
     }
@@ -727,7 +727,7 @@ class OAuthControllerTest {
     private IarAuthorizationResponse createMockIarAuthorizationResponse(IarStatus status, String authorizationCode) {
         IarAuthorizationResponse response = new IarAuthorizationResponse();
         response.setStatus(status);
-        response.setAuthorizationCode(authorizationCode);
+        response.setCode(authorizationCode);
         return response;
     }
 }

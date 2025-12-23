@@ -29,7 +29,7 @@ public class IarAuthorizationResponse {
     /**
      * OAuth 2.0 authorization code (if status is "ok")
      */
-    @JsonProperty("authorization_code")
-    private String authorizationCode;
+    @JsonProperty("code")
+    private String code;
 
 }

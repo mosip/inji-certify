@@ -249,8 +249,8 @@ public class IarServiceImpl implements IarService {
                 .filter(interactionType -> 
                     InteractionType.OPENID4VP_PRESENTATION.getValue().equals(interactionType))
                 .findFirst()
-                .orElseThrow(() -> new CertifyException(IarConstants.UNSUPPORTED_INTERACTION_TYPE, 
-                    "openid4vp_presentation interaction type is required"));
+                .orElseThrow(() -> new CertifyException(IarConstants.MISSING_INTERACTION_TYPE,
+                    "interaction_types_supported in the request is missing the required interaction type 'openid4vp_presentation'"));
 
         log.debug("Interaction types validation successful: {}", interactionTypesSupported);
     }
