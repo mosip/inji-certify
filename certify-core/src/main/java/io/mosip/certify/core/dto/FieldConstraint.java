@@ -29,7 +29,7 @@ public class FieldConstraint {
      * Optional filter to constrain field values
      */
     @JsonProperty("filter")
-    private Object filter;
+    private FilterDTO filter;
 
     /**
      * Whether this field is required or optional
