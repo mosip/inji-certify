@@ -6,6 +6,7 @@
 package io.mosip.certify.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.IarStatus;
 import io.mosip.certify.core.dto.IarAuthorizationRequest;
 import io.mosip.certify.core.dto.IarAuthorizationResponse;
@@ -80,7 +81,7 @@ public class IarPresentationService {
             Optional<IarSession> sessionOpt = iarSessionRepository.findByAuthSession(presentationRequest.getAuthSession());
             if (sessionOpt.isEmpty()) {
                 log.warn("Invalid auth_session: {}", presentationRequest.getAuthSession());
-                throw new CertifyException("invalid_request", "Invalid auth_session");
+                throw new CertifyException(ErrorConstants.INVALID_REQUEST, "Invalid auth_session");
             }
             IarSession session = sessionOpt.get();
 
@@ -103,7 +104,7 @@ public class IarPresentationService {
                 iarSessionRepository.save(session);
                 String authorizationCode = generateAndStoreAuthorizationCode(session);
                 response.setStatus(IarStatus.OK);
-                response.setAuthorizationCode(authorizationCode);
+                response.setCode(authorizationCode);
                 log.info("Authorization code generated after successful VP cryptographic verification for auth_session: {}, request_id: {}", 
                          presentationRequest.getAuthSession(), session.getRequestId());
             } else {

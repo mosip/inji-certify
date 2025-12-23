@@ -34,7 +34,7 @@ public class IarConstants {
 
     // Error codes
     public static final String UNSUPPORTED_RESPONSE_TYPE = "unsupported_response_type";
-    public static final String UNSUPPORTED_INTERACTION_TYPE = "unsupported_interaction_type";
+    public static final String MISSING_INTERACTION_TYPE = "missing_interaction_type";
     public static final String INVALID_CLIENT = "invalid_client";
     public static final String INTERACTION_REQUIRED = "interaction_required";
     public static final String INVALID_AUTH_SESSION = "invalid_auth_session";
