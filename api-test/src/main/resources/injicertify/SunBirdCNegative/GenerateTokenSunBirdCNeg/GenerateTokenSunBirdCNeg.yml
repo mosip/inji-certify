@@ -29,7 +29,7 @@ GenerateTokenSunBirdCNeg:
       restMethod: post
       validityCheckRequired: true
       inputTemplate: injicertify/SunBirdCNegative/GenerateTokenSunBirdCNeg/GenerateTokenSunBirdCNeg
-      outputTemplate: injicertify/error2
+      outputTemplate: injicertify/SunBirdCNegative/GenerateTokenSunBirdCNeg/GenerateTokenSunBirdCResultNeg
       input: '{
 		  "grant_type": "authorization_code",
 		  "code": "$ID:ESignet_AuthorizationCode_SunBirdC_Diff_Scope_All_Valid_sid_For_Neg_flow_code$",
@@ -40,5 +40,5 @@ GenerateTokenSunBirdCNeg:
   		  "code_verifier": "$CODEVERIFIER$"
 }'
       output: '{
-       "error": "not_implemented"
+   		"token_type": "Bearer"
 }'
