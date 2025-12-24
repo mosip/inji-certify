@@ -127,7 +127,7 @@ LedgerSearchAPI:
       output: '{
       "errors": [
       {
-       "errorCode": "INVALID_SEARCH_CRITERIA"
+       "errorCode": "invalid_search_criteria"
        }
        ]  
     }'
