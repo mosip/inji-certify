@@ -43,7 +43,7 @@ public class OAuthController {
      * POST /oauth/iar
      * 
      * Handles both initial authorization requests and VP presentation responses.
-     * Determines the request type based on the presence of auth_session and openid4vp_presentation.
+     * Determines the request type based on the presence of auth_session and openid4vp_response.
      * 
      * For initial requests: Returns IarResponse containing status, auth_session, and openid4vp_request if interaction required
      * For VP presentations: Returns IarAuthorizationResponse containing authorization code or error
@@ -92,7 +92,7 @@ public class OAuthController {
                  produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> processTokenRequest(@Valid OAuthTokenRequest tokenRequest)
             throws CertifyException {
-        log.info("Processing OAuth token request for grant_type: {}", tokenRequest.getGrantType());
+        log.info("Processing OAuth token request for grant_type: {}", tokenRequest.getGrant_type());
 
         try {
             // Process the token request
