@@ -24,28 +24,8 @@ public class AuthorizationDetail {
     private String type;
 
     /**
-     * Locations where the credential can be obtained
-     */
-    @JsonProperty("locations")
-    private String[] locations;
-
-    /**
      * Credential configuration identifier
      */
     @JsonProperty("credential_configuration_id")
     private String credentialConfigurationId;
-
-    /**
-     * Format of the credential (e.g., "jwt_vc", "ldp_vc", "vc+sd-jwt")
-     */
-    @JsonProperty("format")
-    private String format;
-
-    /**
-     * Verifiable Credential Type (VCT) - required when format is present
-     * Used for VC+SD-JWT format to specify the credential type
-     */
-    @JsonProperty("vct")
-    private String vct;
-
 }

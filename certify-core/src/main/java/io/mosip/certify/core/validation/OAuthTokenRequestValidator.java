@@ -22,7 +22,7 @@ public class OAuthTokenRequestValidator implements ConstraintValidator<ValidOAut
         }
 
         // Validate grant_type
-        if (!StringUtils.hasText(value.getGrantType())) {
+        if (!StringUtils.hasText(value.getGrant_type())) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate("grant_type is required")
                    .addPropertyNode("grantType")
@@ -31,39 +31,37 @@ public class OAuthTokenRequestValidator implements ConstraintValidator<ValidOAut
         }
 
         // Only support authorization_code grant type for now
-        if (!"authorization_code".equals(value.getGrantType())) {
+        if (!"authorization_code".equals(value.getGrant_type())) {
             context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate("Unsupported grant_type: " + value.getGrantType() + ". Only 'authorization_code' is supported")
+            context.buildConstraintViolationWithTemplate("Unsupported grant_type: " + value.getGrant_type() + ". Only 'authorization_code' is supported")
                    .addPropertyNode("grantType")
                    .addConstraintViolation();
             return false;
         }
 
         // For authorization_code grant, validate required fields
-        if ("authorization_code".equals(value.getGrantType())) {
-            boolean hasCode = StringUtils.hasText(value.getCode());
-            boolean hasCodeVerifier = StringUtils.hasText(value.getCodeVerifier());
+        boolean hasCode = StringUtils.hasText(value.getCode());
+        boolean hasCodeVerifier = StringUtils.hasText(value.getCode_verifier());
 
-            if (!hasCode) {
-                context.disableDefaultConstraintViolation();
-                context.buildConstraintViolationWithTemplate("code is required for authorization_code grant")
-                       .addPropertyNode("code")
-                       .addConstraintViolation();
-                return false;
-            }
-
-            if (!hasCodeVerifier) {
-                context.disableDefaultConstraintViolation();
-                context.buildConstraintViolationWithTemplate("code_verifier is required for PKCE")
-                       .addPropertyNode("codeVerifier")
-                       .addConstraintViolation();
-                return false;
-            }
-            
-            // redirect_uri is optional since we don't support redirect_to_web
-            // client_id is optional for public clients per RFC 7636 Section 3.2
-            // No validation needed for client_id or redirect_uri presence
+        if (!hasCode) {
+            context.disableDefaultConstraintViolation();
+            context.buildConstraintViolationWithTemplate("code is required for authorization_code grant")
+                   .addPropertyNode("code")
+                   .addConstraintViolation();
+            return false;
         }
+
+        if (!hasCodeVerifier) {
+            context.disableDefaultConstraintViolation();
+            context.buildConstraintViolationWithTemplate("code_verifier is required for PKCE")
+                   .addPropertyNode("codeVerifier")
+                   .addConstraintViolation();
+            return false;
+        }
+
+        // redirect_uri is optional since we don't support redirect_to_web
+        // client_id is optional for public clients per RFC 7636 Section 3.2
+        // No validation needed for client_id or redirect_uri presence
 
         return true;
     }

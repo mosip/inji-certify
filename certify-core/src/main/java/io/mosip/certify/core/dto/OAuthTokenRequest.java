@@ -5,7 +5,6 @@
  */
 package io.mosip.certify.core.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import jakarta.validation.constraints.NotBlank;
 import io.mosip.certify.core.validation.ValidOAuthTokenRequest;
@@ -24,26 +23,22 @@ public class OAuthTokenRequest {
      * REQUIRED. Value MUST be set to "authorization_code", "urn:ietf:params:oauth:grant-type:pre-authorized_code", or "refresh_token"
      */
     @NotBlank(message = "grant_type is required")
-    @JsonProperty("grant_type")
-    private String grantType;
+    private String grant_type;
 
     /**
      * REQUIRED (for authorization_code grant). The authorization code received from the authorization server.
      */
-    @JsonProperty("code")
     private String code;
 
 
     /**
      * REQUIRED (for PKCE). Code verifier used in the Proof Key for Code Exchange (PKCE) extension.
      */
-    @JsonProperty("code_verifier")
-    private String codeVerifier;
+    private String code_verifier;
 
     /**
      * REQUIRED (for refresh_token grant). The refresh token issued to the client.
      */
-    @JsonProperty("refresh_token")
-    private String refreshToken;
+    private String refresh_token;
 
 }

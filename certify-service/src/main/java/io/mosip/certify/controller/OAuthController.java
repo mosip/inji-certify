@@ -92,7 +92,7 @@ public class OAuthController {
                  produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> processTokenRequest(@Valid OAuthTokenRequest tokenRequest)
             throws CertifyException {
-        log.info("Processing OAuth token request for grant_type: {}", tokenRequest.getGrantType());
+        log.info("Processing OAuth token request for grant_type: {}", tokenRequest.getGrant_type());
 
         try {
             // Process the token request
