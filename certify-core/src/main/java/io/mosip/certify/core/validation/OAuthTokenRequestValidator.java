@@ -25,7 +25,7 @@ public class OAuthTokenRequestValidator implements ConstraintValidator<ValidOAut
         if (!StringUtils.hasText(value.getGrant_type())) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate("grant_type is required")
-                   .addPropertyNode("grantType")
+                   .addPropertyNode("grant_type")
                    .addConstraintViolation();
             return false;
         }
@@ -34,7 +34,7 @@ public class OAuthTokenRequestValidator implements ConstraintValidator<ValidOAut
         if (!"authorization_code".equals(value.getGrant_type())) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate("Unsupported grant_type: " + value.getGrant_type() + ". Only 'authorization_code' is supported")
-                   .addPropertyNode("grantType")
+                   .addPropertyNode("grant_type")
                    .addConstraintViolation();
             return false;
         }
@@ -54,7 +54,7 @@ public class OAuthTokenRequestValidator implements ConstraintValidator<ValidOAut
         if (!hasCodeVerifier) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate("code_verifier is required for PKCE")
-                   .addPropertyNode("codeVerifier")
+                   .addPropertyNode("code_verifier")
                    .addConstraintViolation();
             return false;
         }

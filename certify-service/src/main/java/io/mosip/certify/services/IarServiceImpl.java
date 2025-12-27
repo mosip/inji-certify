@@ -100,7 +100,7 @@ public class IarServiceImpl implements IarService {
 
     @Override
     public Object handleIarRequest(IarRequest iarRequest) throws CertifyException {
-        log.info("Handling unified IAR request");
+        log.info("Handling IAR request");
 
         boolean hasAuthSession = iarRequest.getAuth_session() != null && !iarRequest.getAuth_session().trim().isEmpty();
         boolean hasVp = iarRequest.getOpenid4vp_response() != null && !iarRequest.getOpenid4vp_response().trim().isEmpty();
