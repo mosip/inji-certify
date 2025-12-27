@@ -119,7 +119,7 @@ public class IarServiceImpl implements IarService {
             return processAuthorizationRequest(iarInitialRequest);
         }
         
-        // Invalid state: only one of auth_session or openid4vp_presentation is present
+        // Invalid state: only one of auth_session or openid4vp_response is present
         log.error("Invalid IAR request - only one of auth_session or openid4vp_response is present. auth_session: {}, hasVp: {}",
                  hasAuthSession, hasVp);
         throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);

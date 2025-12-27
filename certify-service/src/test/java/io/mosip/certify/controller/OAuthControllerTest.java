@@ -495,7 +495,7 @@ class OAuthControllerTest {
 
     @Test
     void processVpPresentation_missingVpPresentation_returnsBadRequest() throws Exception {
-        // Act & Assert - Missing openid4vp_presentation should cause validation failure
+        // Act & Assert - Missing openid4vp_response should cause validation failure
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .param("auth_session", "test-session-123"))
@@ -598,7 +598,7 @@ class OAuthControllerTest {
 
     @Test
     void processVpPresentation_emptyVpPresentation_returnsBadRequest() throws Exception {
-        // Act & Assert - Empty openid4vp_presentation should cause validation failure
+        // Act & Assert - Empty openid4vp_response should cause validation failure
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .param("auth_session", "test-session-123")
