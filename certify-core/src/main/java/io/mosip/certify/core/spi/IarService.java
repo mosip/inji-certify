@@ -22,11 +22,11 @@ public interface IarService {
      * Determines whether this is an initial authorization request or VP presentation response
      * and routes to the appropriate processing method
      * 
-     * @param unifiedRequest The unified request containing either authorization or presentation data
+     * @param iarRequest The interactive authorization request containing either authorization or presentation data
      * @return Object containing either IarResponse or IarAuthorizationResponse
      * @throws CertifyException if request processing fails
      */
-    Object handleIarRequest(IarRequest unifiedRequest) throws CertifyException;
+    Object handleIarRequest(IarRequest iarRequest) throws CertifyException;
 
     /**
      * Process OAuth Token Request (Step 19-20)

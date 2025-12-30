@@ -99,36 +99,41 @@ public class IarServiceImpl implements IarService {
     }
 
     @Override
-    public Object handleIarRequest(IarRequest unifiedRequest) throws CertifyException {
-        log.info("Handling unified IAR request");
+    public Object handleIarRequest(IarRequest iarRequest) throws CertifyException {
+        log.info("Handling IAR request");
 
-        boolean hasAuthSession = unifiedRequest.getAuthSession() != null && !unifiedRequest.getAuthSession().trim().isEmpty();
-        boolean hasVp = unifiedRequest.getOpenid4vpPresentation() != null && !unifiedRequest.getOpenid4vpPresentation().trim().isEmpty();
+        boolean hasAuthSession = iarRequest.getAuth_session() != null && !iarRequest.getAuth_session().trim().isEmpty();
+        boolean hasVp = iarRequest.getOpenid4vp_response() != null && !iarRequest.getOpenid4vp_response().trim().isEmpty();
 
         if (hasAuthSession && hasVp) {
-            log.info("Processing VP presentation response for auth_session: {}", unifiedRequest.getAuthSession());
+            log.info("Processing VP presentation response for auth_session: {}", iarRequest.getAuth_session());
             IarAuthorizationRequest presentationRequest = new IarAuthorizationRequest();
-            presentationRequest.setAuthSession(unifiedRequest.getAuthSession());
-            presentationRequest.setOpenid4vpPresentation(unifiedRequest.getOpenid4vpPresentation());
+            presentationRequest.setAuthSession(iarRequest.getAuth_session());
+            presentationRequest.setOpenid4vpPresentation(iarRequest.getOpenid4vp_response());
             return iarPresentationService.processVpPresentation(presentationRequest);
         }
 
         if (!hasAuthSession && !hasVp) {
-            log.info("Processing initial authorization request for client_id: {}", unifiedRequest.getClientId());
-            InteractiveAuthorizationRequest iarRequest = new InteractiveAuthorizationRequest();
-            iarRequest.setResponseType(unifiedRequest.getResponseType());
-            iarRequest.setClientId(unifiedRequest.getClientId());
-            iarRequest.setCodeChallenge(unifiedRequest.getCodeChallenge());
-            iarRequest.setCodeChallengeMethod(unifiedRequest.getCodeChallengeMethod());
-            iarRequest.setInteractionTypesSupported(unifiedRequest.getInteractionTypesSupported());
-            iarRequest.setAuthorizationDetails(unifiedRequest.getAuthorizationDetails());
-            return processAuthorizationRequest(iarRequest);
+            log.info("Processing initial authorization request for client_id: {}", iarRequest.getClient_id());
+            InteractiveAuthorizationRequest iarInitialRequest = createInteractiveAuthorizationRequest(iarRequest);
+            return processAuthorizationRequest(iarInitialRequest);
         }
         
-        // Invalid state: only one of auth_session or openid4vp_presentation is present
-        log.error("Invalid unified IAR request - only one of auth_session or openid4vp_presentation is present. auth_session: {}, hasVp: {}", 
+        // Invalid state: only one of auth_session or openid4vp_response is present
+        log.error("Invalid IAR request - only one of auth_session or openid4vp_response is present. auth_session: {}, hasVp: {}",
                  hasAuthSession, hasVp);
         throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
+    }
+
+    private static InteractiveAuthorizationRequest createInteractiveAuthorizationRequest(IarRequest iarRequest) {
+        InteractiveAuthorizationRequest iarInitialRequest = new InteractiveAuthorizationRequest();
+        iarInitialRequest.setResponseType(iarRequest.getResponse_type());
+        iarInitialRequest.setClientId(iarRequest.getClient_id());
+        iarInitialRequest.setCodeChallenge(iarRequest.getCode_challenge());
+        iarInitialRequest.setCodeChallengeMethod(iarRequest.getCode_challenge_method());
+        iarInitialRequest.setInteractionTypesSupported(iarRequest.getInteraction_types_supported());
+        iarInitialRequest.setAuthorizationDetails(iarRequest.getAuthorization_details());
+        return iarInitialRequest;
     }
 
     /**
@@ -170,11 +175,11 @@ public class IarServiceImpl implements IarService {
     @Override
     public OAuthTokenResponse processTokenRequest(OAuthTokenRequest tokenRequest) throws CertifyException {
         log.info("Processing OAuth token request for grant_type: {}", 
-                 tokenRequest.getGrantType());
+                 tokenRequest.getGrant_type());
 
         try {
             // Validate grant type
-            if (!IarConstants.GRANT_TYPE_AUTHORIZATION_CODE.equals(tokenRequest.getGrantType())) {
+            if (!IarConstants.GRANT_TYPE_AUTHORIZATION_CODE.equals(tokenRequest.getGrant_type())) {
                 throw new CertifyException("unsupported_grant_type", 
                                          "Only authorization_code grant type is supported");
             }
@@ -352,7 +357,7 @@ public class IarServiceImpl implements IarService {
     }
 
     private void validatePkceCodeVerifier(OAuthTokenRequest tokenRequest, IarSession session) throws CertifyException {
-        String codeVerifier = tokenRequest.getCodeVerifier();
+        String codeVerifier = tokenRequest.getCode_verifier();
         String codeChallenge = session.getCodeChallenge();
         String codeChallengeMethod = session.getCodeChallengeMethod();
         
