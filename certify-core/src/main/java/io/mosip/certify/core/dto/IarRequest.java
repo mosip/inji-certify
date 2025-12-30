@@ -5,7 +5,6 @@
  */
 package io.mosip.certify.core.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.mosip.certify.core.validation.ValidIar;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -27,59 +26,50 @@ public class IarRequest {
     /**
      * OAuth 2.0 Response Type - typically "code"
      */
-    @JsonProperty("response_type")
-    private String responseType;
+    private String response_type;
 
     /**
      * OAuth 2.0 Client Identifier
      */
-    @JsonProperty("client_id")
-    private String clientId;
+    private String client_id;
 
     /**
      * PKCE Code Challenge
      */
-    @JsonProperty("code_challenge")
-    private String codeChallenge;
+    private String code_challenge;
 
     /**
      * PKCE Code Challenge Method - typically "S256"
      */
-    @JsonProperty("code_challenge_method")
-    private String codeChallengeMethod;
+    private String code_challenge_method;
 
     /**
      * OAuth 2.0 Redirect URI
      */
-    @JsonProperty("redirect_uri")
-    private String redirectUri;
+    private String redirect_uri;
 
     /**
      * Supported interaction types - e.g., "openid4vp_presentation"
      */
-    @JsonProperty("interaction_types_supported")
-    private String interactionTypesSupported;
+    private String interaction_types_supported;
 
 
     /**
      * Authorization details as per OpenID4VCI specification
      * Specifies the credential types being requested
      */
-    @JsonProperty("authorization_details")
-    private List<AuthorizationDetail> authorizationDetails;
+    private List<AuthorizationDetail> authorization_details;
 
     // Fields from IarAuthorizationRequest (for VP presentation responses)
     
     /**
      * Authorization session identifier from initial IAR response
      */
-    @JsonProperty("auth_session")
-    private String authSession;
+    private String auth_session;
 
     /**
      * OpenID4VP presentation response (unencrypted or encrypted JWT)
      */
-    @JsonProperty("openid4vp_presentation")
-    private String openid4vpPresentation;
+    private String openid4vp_response;
 
 }

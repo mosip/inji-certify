@@ -20,13 +20,13 @@ public class IarValidator implements ConstraintValidator<ValidIar, IarRequest> {
 			return false;
 		}
 
-		boolean hasAuthSession = StringUtils.hasText(value.getAuthSession());
-		boolean hasVp = StringUtils.hasText(value.getOpenid4vpPresentation());
+		boolean hasAuthSession = StringUtils.hasText(value.getAuth_session());
+		boolean hasVp = StringUtils.hasText(value.getOpenid4vp_response());
 
 		boolean hasInitial =
-			StringUtils.hasText(value.getResponseType()) &&
-			StringUtils.hasText(value.getCodeChallenge()) &&
-			StringUtils.hasText(value.getCodeChallengeMethod());
+			StringUtils.hasText(value.getResponse_type()) &&
+			StringUtils.hasText(value.getCode_challenge()) &&
+			StringUtils.hasText(value.getCode_challenge_method());
 
 		// Exactly one of the flows must be present
 		boolean isPresentationFlow = hasAuthSession && hasVp;
@@ -38,7 +38,7 @@ public class IarValidator implements ConstraintValidator<ValidIar, IarRequest> {
 
 		context.disableDefaultConstraintViolation();
 		context.buildConstraintViolationWithTemplate(
-			"Invalid IAR request: either provide auth_session and openid4vp_presentation, or the initial authorization parameters"
+			"Invalid IAR request: either provide auth_session and openid4vp_response, or the initial authorization parameters"
 		).addConstraintViolation();
 		return false;
 	}

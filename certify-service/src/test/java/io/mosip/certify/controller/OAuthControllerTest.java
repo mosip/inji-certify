@@ -75,12 +75,12 @@ class OAuthControllerTest {
         // Act & Assert
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("responseType", "code")
-                .param("clientId", "test-client")
-                .param("codeChallenge", "test-challenge")
-                .param("codeChallengeMethod", "S256")
-                .param("redirectUri", "https://test.com/callback")
-                .param("interactionTypesSupported", "openid4vp_presentation"))
+                .param("response_type", "code")
+                .param("client_id", "test-client")
+                .param("code_challenge", "test-challenge")
+                .param("code_challenge_method", "S256")
+                .param("redirect_uri", "https://test.com/callback")
+                .param("interaction_types_supported", "openid4vp_presentation"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value("require_interaction"))
@@ -104,11 +104,11 @@ class OAuthControllerTest {
         // Act & Assert
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("responseType", "code")
-                .param("clientId", "test-client")
-                .param("codeChallenge", "test-challenge")
-                .param("codeChallengeMethod", "S256")
-                .param("redirectUri", "https://test.com/callback"))
+                .param("response_type", "code")
+                .param("client_id", "test-client")
+                .param("code_challenge", "test-challenge")
+                .param("code_challenge_method", "S256")
+                .param("redirect_uri", "https://test.com/callback"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ok"))
                 .andExpect(jsonPath("$.type").doesNotExist())
@@ -126,11 +126,11 @@ class OAuthControllerTest {
         // Act & Assert - Only required parameters
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("responseType", "code")
-                .param("clientId", "test-client")
-                .param("codeChallenge", "test-challenge")
-                .param("codeChallengeMethod", "S256")
-                .param("redirectUri", "https://test.com/callback"))
+                .param("response_type", "code")
+                .param("client_id", "test-client")
+                .param("code_challenge", "test-challenge")
+                .param("code_challenge_method", "S256")
+                .param("redirect_uri", "https://test.com/callback"))
                 .andExpect(status().isOk());
 
         verify(iarService, times(1)).handleIarRequest(any(IarRequest.class));
@@ -145,12 +145,12 @@ class OAuthControllerTest {
         // Act & Assert - All parameters including optional ones
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("responseType", "code")
-                .param("clientId", "test-client")
-                .param("codeChallenge", "test-challenge")
-                .param("codeChallengeMethod", "S256")
-                .param("redirectUri", "https://test.com/callback")
-                .param("interactionTypesSupported", "openid4vp_presentation"))
+                .param("response_type", "code")
+                .param("client_id", "test-client")
+                .param("code_challenge", "test-challenge")
+                .param("code_challenge_method", "S256")
+                .param("redirect_uri", "https://test.com/callback")
+                .param("interaction_types_supported", "openid4vp_presentation"))
                 .andExpect(status().isOk());
 
         verify(iarService, times(1)).handleIarRequest(any(IarRequest.class));
@@ -161,12 +161,12 @@ class OAuthControllerTest {
         // Arrange - Test with missing required parameters to trigger validation failure
         // This test should trigger @ValidIar validation failure at Spring level
 
-        // Act & Assert - Missing codeChallenge should cause validation to fail
+        // Act & Assert - Missing code_challenge should cause validation to fail
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("responseType", "code")
-                .param("codeChallengeMethod", "S256")
-                .param("redirectUri", "https://test.com/callback"))
+                .param("response_type", "code")
+                .param("code_challenge_method", "S256")
+                .param("redirect_uri", "https://test.com/callback"))
                 .andExpect(status().isBadRequest()); // Validation failure should return 400 Bad Request
 
         // The service should not be called if validation fails
@@ -182,11 +182,11 @@ class OAuthControllerTest {
         // Act & Assert
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("responseType", "code")
-                .param("clientId", "test-client")
-                .param("codeChallenge", "test-challenge")
-                .param("codeChallengeMethod", "S256")
-                .param("redirectUri", "https://test.com/callback"))
+                .param("response_type", "code")
+                .param("client_id", "test-client")
+                .param("code_challenge", "test-challenge")
+                .param("code_challenge_method", "S256")
+                .param("redirect_uri", "https://test.com/callback"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.error").value("interaction_required"))
@@ -204,11 +204,11 @@ class OAuthControllerTest {
         // Act & Assert
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("responseType", "code")
-                .param("clientId", "test-client")
-                .param("codeChallenge", "test-challenge")
-                .param("codeChallengeMethod", "S256")
-                .param("redirectUri", "https://test.com/callback"))
+                .param("response_type", "code")
+                .param("client_id", "test-client")
+                .param("code_challenge", "test-challenge")
+                .param("code_challenge_method", "S256")
+                .param("redirect_uri", "https://test.com/callback"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.error").value("server_error"))
@@ -218,7 +218,7 @@ class OAuthControllerTest {
     }
 
     @Test
-    void processInteractiveAuthorizationRequest_differentCodeChallengeMethods() throws Exception {
+    void processInteractiveAuthorizationRequest_differentcode_challenge_methods() throws Exception {
         // Arrange
         IarResponse mockResponse = createMockIarResponse(IarStatus.REQUIRE_INTERACTION);
         when(iarService.handleIarRequest(any(IarRequest.class))).thenReturn(mockResponse);
@@ -226,21 +226,21 @@ class OAuthControllerTest {
         // Test S256 method
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("responseType", "code")
-                .param("clientId", "test-client")
-                .param("codeChallenge", "test-challenge-s256")
-                .param("codeChallengeMethod", "S256")
-                .param("redirectUri", "https://test.com/callback"))
+                .param("response_type", "code")
+                .param("client_id", "test-client")
+                .param("code_challenge", "test-challenge-s256")
+                .param("code_challenge_method", "S256")
+                .param("redirect_uri", "https://test.com/callback"))
                 .andExpect(status().isOk());
 
         // Test S256 method again (plain method removed for security)
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("responseType", "code")
-                .param("clientId", "test-client")
-                .param("codeChallenge", "test-challenge-s256-2")
-                .param("codeChallengeMethod", "S256")
-                .param("redirectUri", "https://test.com/callback"))
+                .param("response_type", "code")
+                .param("client_id", "test-client")
+                .param("code_challenge", "test-challenge-s256-2")
+                .param("code_challenge_method", "S256")
+                .param("redirect_uri", "https://test.com/callback"))
                 .andExpect(status().isOk());
 
         verify(iarService, times(2)).handleIarRequest(any(IarRequest.class));
@@ -255,21 +255,21 @@ class OAuthControllerTest {
         // Test with code response type
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("responseType", "code")
-                .param("clientId", "test-client")
-                .param("codeChallenge", "test-challenge")
-                .param("codeChallengeMethod", "S256")
-                .param("redirectUri", "https://test.com/callback"))
+                .param("response_type", "code")
+                .param("client_id", "test-client")
+                .param("code_challenge", "test-challenge")
+                .param("code_challenge_method", "S256")
+                .param("redirect_uri", "https://test.com/callback"))
                 .andExpect(status().isOk());
 
         // Test with vp_token response type
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("responseType", "vp_token")
-                .param("clientId", "test-client")
-                .param("codeChallenge", "test-challenge")
-                .param("codeChallengeMethod", "S256")
-                .param("redirectUri", "https://test.com/callback"))
+                .param("response_type", "vp_token")
+                .param("client_id", "test-client")
+                .param("code_challenge", "test-challenge")
+                .param("code_challenge_method", "S256")
+                .param("redirect_uri", "https://test.com/callback"))
                 .andExpect(status().isOk());
 
         verify(iarService, times(2)).handleIarRequest(any(IarRequest.class));
@@ -284,11 +284,11 @@ class OAuthControllerTest {
         // Act & Assert - Should accept form-urlencoded content type
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("responseType", "code")
-                .param("clientId", "test-client")
-                .param("codeChallenge", "test-challenge")
-                .param("codeChallengeMethod", "S256")
-                .param("redirectUri", "https://test.com/callback"))
+                .param("response_type", "code")
+                .param("client_id", "test-client")
+                .param("code_challenge", "test-challenge")
+                .param("code_challenge_method", "S256")
+                .param("redirect_uri", "https://test.com/callback"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
@@ -309,12 +309,12 @@ class OAuthControllerTest {
         // Act & Assert - Test with authorization details
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("responseType", "code")
-                .param("clientId", "test-client")
-                .param("codeChallenge", "test-challenge")
-                .param("codeChallengeMethod", "S256")
-                .param("redirectUri", "https://test.com/callback")
-                .param("interactionTypesSupported", "openid4vp_presentation"))
+                .param("response_type", "code")
+                .param("client_id", "test-client")
+                .param("code_challenge", "test-challenge")
+                .param("code_challenge_method", "S256")
+                .param("redirect_uri", "https://test.com/callback")
+                .param("interaction_types_supported", "openid4vp_presentation"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value("require_interaction"))
@@ -325,7 +325,7 @@ class OAuthControllerTest {
     }
 
     @Test
-    void processInteractiveAuthorizationRequest_emptyClientId_success() throws Exception {
+    void processInteractiveAuthorizationRequest_emptyclient_id_success() throws Exception {
         // Arrange
         IarResponse mockResponse = createMockIarResponse(IarStatus.REQUIRE_INTERACTION);
         when(iarService.handleIarRequest(any(IarRequest.class))).thenReturn(mockResponse);
@@ -333,11 +333,11 @@ class OAuthControllerTest {
         // Act & Assert - Test with empty client_id (public client)
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("responseType", "code")
-                .param("clientId", "") // Empty client ID
-                .param("codeChallenge", "test-challenge")
-                .param("codeChallengeMethod", "S256")
-                .param("redirectUri", "https://test.com/callback"))
+                .param("response_type", "code")
+                .param("client_id", "") // Empty client ID
+                .param("code_challenge", "test-challenge")
+                .param("code_challenge_method", "S256")
+                .param("redirect_uri", "https://test.com/callback"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
@@ -345,7 +345,7 @@ class OAuthControllerTest {
     }
 
     @Test
-    void processInteractiveAuthorizationRequest_missingRedirectUri_success() throws Exception {
+    void processInteractiveAuthorizationRequest_missingredirect_uri_success() throws Exception {
         // Arrange
         IarResponse mockResponse = createMockIarResponse(IarStatus.REQUIRE_INTERACTION);
         when(iarService.handleIarRequest(any(IarRequest.class))).thenReturn(mockResponse);
@@ -353,10 +353,10 @@ class OAuthControllerTest {
         // Act & Assert - Test without redirect_uri (optional parameter)
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("responseType", "code")
-                .param("clientId", "test-client")
-                .param("codeChallenge", "test-challenge")
-                .param("codeChallengeMethod", "S256"))
+                .param("response_type", "code")
+                .param("client_id", "test-client")
+                .param("code_challenge", "test-challenge")
+                .param("code_challenge_method", "S256"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value("require_interaction"));
@@ -365,7 +365,7 @@ class OAuthControllerTest {
     }
 
     @Test
-    void processInteractiveAuthorizationRequest_missingInteractionTypesSupported_success() throws Exception {
+    void processInteractiveAuthorizationRequest_missinginteraction_types_supported_success() throws Exception {
         // Arrange
         IarResponse mockResponse = createMockIarResponse(IarStatus.REQUIRE_INTERACTION);
         when(iarService.handleIarRequest(any(IarRequest.class))).thenReturn(mockResponse);
@@ -373,11 +373,11 @@ class OAuthControllerTest {
         // Act & Assert - Test without interaction_types_supported (optional parameter)
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("responseType", "code")
-                .param("clientId", "test-client")
-                .param("codeChallenge", "test-challenge")
-                .param("codeChallengeMethod", "S256")
-                .param("redirectUri", "https://test.com/callback"))
+                .param("response_type", "code")
+                .param("client_id", "test-client")
+                .param("code_challenge", "test-challenge")
+                .param("code_challenge_method", "S256")
+                .param("redirect_uri", "https://test.com/callback"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value("require_interaction"));
@@ -394,11 +394,11 @@ class OAuthControllerTest {
         // Act & Assert
         mockMvc.perform(post("/oauth/token")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("grantType", "authorization_code")
+                .param("grant_type", "authorization_code")
                 .param("code", "invalid-code")
-                .param("redirectUri", "https://test.com/callback")
-                .param("clientId", "test-client")
-                .param("codeVerifier", "test-verifier"))
+                .param("redirect_uri", "https://test.com/callback")
+                .param("client_id", "test-client")
+                .param("code_verifier", "test-verifier"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.error").value("invalid_grant"))
@@ -416,11 +416,11 @@ class OAuthControllerTest {
         // Act & Assert
         mockMvc.perform(post("/oauth/token")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("grantType", "authorization_code")
+                .param("grant_type", "authorization_code")
                 .param("code", "test-code")
-                .param("redirectUri", "https://test.com/callback")
-                .param("clientId", "invalid-client")
-                .param("codeVerifier", "test-verifier"))
+                .param("redirect_uri", "https://test.com/callback")
+                .param("client_id", "invalid-client")
+                .param("code_verifier", "test-verifier"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.error").value("invalid_client"))
@@ -434,7 +434,7 @@ class OAuthControllerTest {
         // Act & Assert - Missing required parameters should return 400 with OAuth error format
         mockMvc.perform(post("/oauth/token")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("grantType", "authorization_code"))
+                .param("grant_type", "authorization_code"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.error").value("invalid_request"))
@@ -452,8 +452,8 @@ class OAuthControllerTest {
         // Act & Assert
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("authSession", "test-session-123")
-                .param("openid4vpPresentation", "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."))
+                .param("auth_session", "test-session-123")
+                .param("openid4vp_response", "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value("ok"))
@@ -471,8 +471,8 @@ class OAuthControllerTest {
         // Act & Assert
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("authSession", "test-session-123")
-                .param("openid4vpPresentation", "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."))
+                .param("auth_session", "test-session-123")
+                .param("openid4vp_response", "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value("error"))
@@ -482,11 +482,11 @@ class OAuthControllerTest {
     }
 
     @Test
-    void processVpPresentation_missingAuthSession_returnsBadRequest() throws Exception {
+    void processVpPresentation_missingauth_session_returnsBadRequest() throws Exception {
         // Act & Assert - Missing auth_session should cause validation failure
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("openid4vpPresentation", "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."))
+                .param("openid4vp_response", "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."))
                 .andExpect(status().isBadRequest());
 
         // The service should not be called if validation fails
@@ -495,10 +495,10 @@ class OAuthControllerTest {
 
     @Test
     void processVpPresentation_missingVpPresentation_returnsBadRequest() throws Exception {
-        // Act & Assert - Missing openid4vp_presentation should cause validation failure
+        // Act & Assert - Missing openid4vp_response should cause validation failure
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("authSession", "test-session-123"))
+                .param("auth_session", "test-session-123"))
                 .andExpect(status().isBadRequest());
 
         // The service should not be called if validation fails
@@ -517,8 +517,8 @@ class OAuthControllerTest {
         // Act & Assert
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("authSession", "test-session-123")
-                .param("openid4vpPresentation", "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."))
+                .param("auth_session", "test-session-123")
+                .param("openid4vp_response", "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.error").value("server_error"))
@@ -536,8 +536,8 @@ class OAuthControllerTest {
         // Act & Assert - Test with JWT VP token
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("authSession", "test-session-jwt")
-                .param("openid4vpPresentation", "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJ3YWxsZXQiLCJhdWQiOiJ2ZXJpZmllciIsInN1YiI6InRlc3QtdXNlciJ9.signature"))
+                .param("auth_session", "test-session-jwt")
+                .param("openid4vp_response", "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJ3YWxsZXQiLCJhdWQiOiJ2ZXJpZmllciIsInN1YiI6InRlc3QtdXNlciJ9.signature"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ok"))
                 .andExpect(jsonPath("$.code").value("iar_auth_jwt123456789"));
@@ -555,8 +555,8 @@ class OAuthControllerTest {
         String jsonVpPresentation = "{\"vp_token\":{\"type\":\"VerifiablePresentation\",\"verifiableCredential\":[]},\"presentation_submission\":{\"id\":\"test-submission\"}}";
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("authSession", "test-session-json")
-                .param("openid4vpPresentation", jsonVpPresentation))
+                .param("auth_session", "test-session-json")
+                .param("openid4vp_response", jsonVpPresentation))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ok"))
                 .andExpect(jsonPath("$.code").value("iar_auth_json123456789"));
@@ -576,8 +576,8 @@ class OAuthControllerTest {
         // Act & Assert - Should accept form-urlencoded content type for VP presentation
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("authSession", "test-session-123")
-                .param("openid4vpPresentation", "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."))
+                .param("auth_session", "test-session-123")
+                .param("openid4vp_response", "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
@@ -585,12 +585,12 @@ class OAuthControllerTest {
     }
 
     @Test
-    void processVpPresentation_emptyAuthSession_returnsBadRequest() throws Exception {
+    void processVpPresentation_emptyauth_session_returnsBadRequest() throws Exception {
         // Act & Assert - Empty auth_session should cause validation failure
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("authSession", "")
-                .param("openid4vpPresentation", "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."))
+                .param("auth_session", "")
+                .param("openid4vp_response", "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."))
                 .andExpect(status().isBadRequest());
 
         verify(iarService, never()).handleIarRequest(any(IarRequest.class));
@@ -598,11 +598,11 @@ class OAuthControllerTest {
 
     @Test
     void processVpPresentation_emptyVpPresentation_returnsBadRequest() throws Exception {
-        // Act & Assert - Empty openid4vp_presentation should cause validation failure
+        // Act & Assert - Empty openid4vp_response should cause validation failure
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("authSession", "test-session-123")
-                .param("openid4vpPresentation", ""))
+                .param("auth_session", "test-session-123")
+                .param("openid4vp_response", ""))
                 .andExpect(status().isBadRequest());
 
         verify(iarService, never()).handleIarRequest(any(IarRequest.class));
@@ -613,8 +613,8 @@ class OAuthControllerTest {
         // Act & Assert - Whitespace-only parameters should cause validation failure
         mockMvc.perform(post("/oauth/iar")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("authSession", "   ")
-                .param("openid4vpPresentation", "   "))
+                .param("auth_session", "   ")
+                .param("openid4vp_response", "   "))
                 .andExpect(status().isBadRequest());
 
         verify(iarService, never()).handleIarRequest(any(IarRequest.class));
