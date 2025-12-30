@@ -20,7 +20,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Constraint(validatedBy = IarValidator.class)
 @Documented
 public @interface ValidIar {
-	String message() default "Invalid IAR request: provide either (auth_session and openid4vp_presentation) or initial authorization parameters";
+	String message() default "Invalid IAR request: provide either (auth_session and openid4vp_response) or initial authorization parameters";
 
 	Class<?>[] groups() default {};
 
