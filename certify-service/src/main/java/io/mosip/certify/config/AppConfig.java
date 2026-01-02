@@ -75,6 +75,7 @@ public class AppConfig implements ApplicationRunner {
                 .disableCookieManagement();
         HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
         requestFactory.setHttpClient(httpClientBuilder.build());
+        
         return new RestTemplate(requestFactory);
     }
 

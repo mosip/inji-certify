@@ -7,6 +7,7 @@ package io.mosip.certify.controller;
 
 import io.mosip.certify.api.spi.AuditPlugin;
 import io.mosip.certify.core.constants.ErrorConstants;
+import io.mosip.certify.core.constants.VCIErrorConstants;
 import io.mosip.certify.core.dto.ResponseWrapper;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.util.CommonUtil;
@@ -50,7 +51,7 @@ public class SystemInfoController {
 
     @GetMapping(value = "/certificate")
     public ResponseWrapper<KeyPairGenerateResponseDto> getCertificate(
-            @Valid @NotBlank(message = ErrorConstants.INVALID_REQUEST) @RequestParam("applicationId") String applicationId,
+            @Valid @NotBlank(message = VCIErrorConstants.INVALID_REQUEST) @RequestParam("applicationId") String applicationId,
             @RequestParam("referenceId") Optional<String> referenceId) {
         ResponseWrapper<KeyPairGenerateResponseDto> responseWrapper = new ResponseWrapper<>();
         try {

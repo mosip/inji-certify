@@ -111,6 +111,29 @@ services:
     networks:
       - network
 
+#  verify-service:
+#    container_name: verify-service
+#    image: mosipqa/inji-verify-service:0.16.x
+#    user: root
+#    ports:
+#      - "8080:8080"
+#    environment:
+#      - active_profile_env=default
+#      - DATABASE_HOST=database
+#      - DATABASE_PORT=5432
+#      - DATABASE_NAME=inji_verify
+#      - DATABASE_SCHEMA=verify
+#      - DATABASE_USERNAME=postgres
+#      - DATABASE_PASSWORD=postgres
+#      - INJI_VP_REQUEST_LONG_POLLING_TIMEOUT=55000
+#      - INJI_VP_SUBMISSION_BASE_URL=https://VERIFY_SERVICE_PROXY_FOR_LOCALHOST/v1/verify
+#      - INJI_DID_VERIFY_URI=did:web:VERIFY_SERVICE_PROXY_FOR_LOCALHOST:v1:verify
+#      - INJI_DID_VERIFY_PUBLIC_KEY_URI=did:web:VERIFY_SERVICE_PROXY_FOR_LOCALHOST:verify#key-0
+#      - INJI_KEYSTORE_FILE_PASS=mosip
+#      - INJI_VERIFY_REDIRECT_URI=https://VERIFY_SERVICE_PROXY_FOR_LOCALHOST
+#    depends_on:
+#      - database
+
 networks:
   network:
     name: mosip_network

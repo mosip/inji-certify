@@ -5,6 +5,8 @@
  */
 package io.mosip.certify.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.api.dto.VCRequestDto;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.api.exception.DataProviderExchangeException;
@@ -38,6 +40,7 @@ import io.mosip.certify.validators.CredentialRequestValidator;
 import io.mosip.certify.vcformatters.VCFormatter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +53,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 
+import static io.mosip.certify.utils.CredentialUtils.toJsonMap;
 import static io.mosip.certify.utils.VCIssuanceUtil.getScopeCredentialMapping;
 import static io.mosip.certify.utils.VCIssuanceUtil.validateLdpVcFormatRequest;
 
@@ -128,7 +132,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         // 1. Credential Request validation
         boolean isValidCredentialRequest = CredentialRequestValidator.isValid(credentialRequest);
         if(!isValidCredentialRequest) {
-            throw new InvalidRequestException(ErrorConstants.INVALID_REQUEST);
+            throw new InvalidRequestException(VCIErrorConstants.INVALID_CREDENTIAL_REQUEST);
         }
 
         if(!parsedAccessToken.isActive())
@@ -146,7 +150,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
         if(credentialMetadata == null) {
             log.error("No credential mapping found for the provided scope {}", scopeClaim);
-            throw new CertifyException(ErrorConstants.INVALID_SCOPE);
+            throw new CertifyException(VCIErrorConstants.INVALID_SCOPE, "No credential mapping found for the provided scope.");
         }
 
         // 3. Proof Validation
@@ -155,7 +159,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         proofValidator.validateCNonce(validCNonce, cNonceExpireSeconds, parsedAccessToken, credentialRequest);
         if(!proofValidator.validate((String)parsedAccessToken.getClaims().get(Constants.CLIENT_ID), validCNonce,
                 credentialRequest.getProof(), credentialMetadata.getProofTypesSupported())) {
-            throw new CertifyException(ErrorConstants.INVALID_PROOF);
+            throw new CertifyException(VCIErrorConstants.INVALID_PROOF, "Error encountered during proof jwt parsing.");
         }
 
         // 4. Get VC from configured plugin implementation
@@ -214,10 +218,17 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     jsonObject.put(Constants.TYPE, vcRequestDto.getVct());
                     break;
 
-                default:
-                    throw new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT);
-            }
+                case "mso_mdoc":
+                    vcRequestDto.setDoctype(credentialRequest.getDoctype());
+                    templateName = CredentialUtils.getTemplateName(vcRequestDto);
+                    templateParams.put("_doctype", vcRequestDto.getDoctype());
+                    jsonObject.put(Constants.TYPE, vcRequestDto.getDoctype());
+                    break;
 
+                default:
+                    throw new CertifyException(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT, "Invalid or unsupported VC format requested.");
+
+            }
             // Common logic for all formats
             templateParams.put(Constants.TEMPLATE_NAME, templateName);
             templateParams.put(Constants.DID_URL, didUrl);
@@ -243,8 +254,22 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             templateParams.put(VCDM2Constants.VALID_FROM, time);
             templateParams.put(VCDM2Constants.VALID_UNTIL, expiryTime);
 
-            Credential cred = credentialFactory.getCredential(format).orElseThrow(() -> new CertifyException(ErrorConstants.UNSUPPORTED_VC_FORMAT));
-            String unsignedCredential = cred.createCredential(templateParams, templateName);
+            Credential cred = credentialFactory.getCredential(format).orElseThrow(() -> new CertifyException(VCIErrorConstants.UNSUPPORTED_CREDENTIAL_FORMAT));
+            Map<String, Object> updatedTemplateParams = toJsonMap(templateParams);
+
+            JSONArray qrDataJson = cred.createQRData(updatedTemplateParams, templateName);
+
+            if (qrDataJson != null) {
+                List<Object> claim169Values = new ArrayList<>();
+                for (int i = 0; i < qrDataJson.length(); i++) {
+                    claim169Values.add(qrDataJson.get(i));
+                }
+                updatedTemplateParams.put("claim_169_values", claim169Values);
+            } else {
+                log.warn("QR code not configured for template: {}. To enable qr code support, update the respective credential configuration.", templateName);
+            }
+
+            String unsignedCredential = cred.createCredential(updatedTemplateParams, templateName);
             if(isLedgerEnabled) {
                 Map<String, Object> indexedAttributes = ledgerUtils.extractIndexedAttributes(jsonObject);
                 String credentialType = LedgerUtils.extractCredentialType(jsonObject);
@@ -266,7 +291,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             throw new CertifyException(e.getErrorCode());
         } catch (JSONException e) {
             log.error(e.getMessage(), e);
-            throw new CertifyException(ErrorConstants.UNKNOWN_ERROR);
+            throw new CertifyException(ErrorConstants.JSON_PROCESSING_ERROR, "Invalid JSON data encountered during credential generation. Please check the data provider response and template configurations.");
         }
     }
 }

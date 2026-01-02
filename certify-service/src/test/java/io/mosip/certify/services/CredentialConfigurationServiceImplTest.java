@@ -129,7 +129,7 @@ public class CredentialConfigurationServiceImplTest {
         CertifyException exception = assertThrows(CertifyException.class, () ->
                 credentialConfigurationService.addCredentialConfiguration(dto)
         );
-        org.junit.Assert.assertEquals("Credential Template is mandatory for the DataProvider plugin issuer.", exception.getMessage());
+        org.junit.Assert.assertEquals("A Credential Template is required for issuers using the Data Provider plugin.", exception.getMessage());
     }
 
     @Test
@@ -158,7 +158,7 @@ public class CredentialConfigurationServiceImplTest {
         CredentialConfigException exception = assertThrows(CredentialConfigException.class, () ->
                 credentialConfigurationService.getCredentialConfigurationById("12345678"));
 
-        assertEquals("Configuration not found with the provided id: " + "12345678", exception.getMessage());
+        assertEquals("Configuration not found for the provided ID: 12345678", exception.getMessage());
     }
 
     @Test
@@ -169,7 +169,7 @@ public class CredentialConfigurationServiceImplTest {
         CertifyException exception = assertThrows(CertifyException.class, () ->
                 credentialConfigurationService.getCredentialConfigurationById("test-id")
         );
-        assertEquals("Configuration not active.", exception.getMessage());
+        assertEquals("Configuration is inactive.", exception.getMessage());
     }
 
     @Test
@@ -231,7 +231,7 @@ public class CredentialConfigurationServiceImplTest {
         CredentialConfigException exception = assertThrows(CredentialConfigException.class, () ->
                 credentialConfigurationService.updateCredentialConfiguration("12345678", new CredentialConfigurationDTO()));
 
-        assertEquals("Configuration not found with the provided id: " + "12345678", exception.getMessage());
+        assertEquals("Configuration not found for update with ID: 12345678", exception.getMessage());
     }
 
     @Test
@@ -253,7 +253,7 @@ public class CredentialConfigurationServiceImplTest {
         CredentialConfigException exception = assertThrows(CredentialConfigException.class, () ->
                 credentialConfigurationService.deleteCredentialConfigurationById("12345678"));
 
-        assertEquals("Configuration not found with the provided id: 12345678", exception.getMessage());
+        assertEquals("Configuration not found for delete with ID: 12345678", exception.getMessage());
     }
 
     @Test
@@ -505,7 +505,7 @@ public class CredentialConfigurationServiceImplTest {
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
             );
-            assertEquals("Context, credentialType and signatureCryptoSuite are mandatory for ldp_vc format", ex.getMessage());
+            assertEquals("Fields context, credentialType, and signatureCryptoSuite are mandatory for the ldp_vc format.", ex.getMessage());
         }
     }
 
@@ -520,7 +520,7 @@ public class CredentialConfigurationServiceImplTest {
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
             );
-            assertEquals("Configuration already exists for the given context and credentialType", ex.getMessage());
+            assertEquals("Configuration already exists for the specified context and credentialType.", ex.getMessage());
         }
     }
 
@@ -534,7 +534,7 @@ public class CredentialConfigurationServiceImplTest {
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
             );
-            assertEquals("Doctype and signatureCryptoSuite fields are mandatory for mso_mdoc format", ex.getMessage());
+            assertEquals("Fields doctype and signatureCryptoSuite are mandatory for the mso_mdoc format.", ex.getMessage());
         }
     }
 
@@ -549,7 +549,7 @@ public class CredentialConfigurationServiceImplTest {
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
             );
-            assertEquals("Configuration already exists for the given doctype", ex.getMessage());
+            assertEquals("Configuration already exists for the specified doctype.", ex.getMessage());
         }
     }
 
@@ -563,7 +563,7 @@ public class CredentialConfigurationServiceImplTest {
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
             );
-            assertEquals("Vct and signatureAlgo fields are mandatory for vc+sd-jwt format", ex.getMessage());
+            assertEquals("Fields vct and signatureAlgo are mandatory for the vc+sd-jwt format.", ex.getMessage());
         }
     }
 
@@ -578,7 +578,7 @@ public class CredentialConfigurationServiceImplTest {
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
             );
-            assertEquals("Configuration already exists for the given vct", ex.getMessage());
+            assertEquals("Configuration already exists for the specified vct.", ex.getMessage());
         }
     }
 
@@ -609,7 +609,7 @@ public class CredentialConfigurationServiceImplTest {
         CertifyException ex = assertThrows(CertifyException.class, () ->
                 ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
         );
-        assertEquals("Multiple credential status purposes are not currently supported.", ex.getMessage());
+        assertEquals("Multiple credential status purposes are not supported. Please specify only one.", ex.getMessage());
     }
 
     @Test
@@ -622,7 +622,7 @@ public class CredentialConfigurationServiceImplTest {
         CertifyException ex = assertThrows(CertifyException.class, () ->
                 ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
         );
-        assertEquals("Invalid credential status purposes. Allowed values are: [purpose1, purpose2]", ex.getMessage());
+        assertEquals("Invalid credential status purpose. Allowed values are: [purpose1, purpose2]", ex.getMessage());
     }
 
     @Test
@@ -696,7 +696,7 @@ public class CredentialConfigurationServiceImplTest {
         CertifyException exception = assertThrows(CertifyException.class, () ->
                 credentialConfigurationService.addCredentialConfiguration(dto)
         );
-        assertEquals("No key chooser configuration found for the signatureAlgo: RsaSignature2018", exception.getMessage());
+        assertEquals("No key chooser configuration found for the signature crypto suite: RsaSignature2018", exception.getMessage());
     }
 
     @Test
@@ -715,6 +715,69 @@ public class CredentialConfigurationServiceImplTest {
         CertifyException exception = assertThrows(CertifyException.class, () ->
                 credentialConfigurationService.addCredentialConfiguration(dto)
         );
-        assertEquals("No matching appId and refId found in the key chooser list.", exception.getMessage());
+        assertEquals("No matching appId and refId found in the key chooser configuration.", exception.getMessage());
     }
+
+    // Java
+    @Test
+    public void validateCredentialConfiguration_QrSettingsNull_QrSignatureAlgoSet_ThrowsException() {
+        CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
+        dto.setCredentialFormat("ldp_vc");
+        dto.setVcTemplate("test_template");
+        dto.setQrSettings(null);
+        dto.setQrSignatureAlgo("EdDSA");
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "DataProvider");
+        CertifyException ex = assertThrows(CertifyException.class, () ->
+                ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
+        );
+        assertEquals("QR signature algorithm is not allowed when QR settings are not set.", ex.getMessage());
+    }
+
+    @Test
+    public void validateCredentialConfiguration_QrSettingsEmpty_QrSignatureAlgoSet_ThrowsException() {
+        CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
+        dto.setCredentialFormat("ldp_vc");
+        dto.setVcTemplate("test_template");
+        dto.setQrSettings(Collections.emptyList());
+        dto.setQrSignatureAlgo("EdDSA");
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "DataProvider");
+        CertifyException ex = assertThrows(CertifyException.class, () ->
+                ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
+        );
+        assertEquals("QR signature algorithm is not allowed when QR settings are not set.", ex.getMessage());
+    }
+
+    @Test
+    public void validateCredentialConfiguration_QrSettingsPresent_UnsupportedQrSignatureAlgo_ThrowsException() {
+        CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
+        dto.setCredentialFormat("ldp_vc");
+        dto.setVcTemplate("test_template");
+        dto.setQrSettings(List.of(Map.of("key", "value")));
+        dto.setQrSignatureAlgo("UNSUPPORTED_ALGO");
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "DataProvider");
+        ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper", Map.of("EdDSA", List.of(List.of("TEST2019", "TEST2019-REF"))));
+        CertifyException ex = assertThrows(CertifyException.class, () ->
+                ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
+        );
+        assertEquals("The algorithm UNSUPPORTED_ALGO is not supported for QR signing. The supported values are: [EdDSA]", ex.getMessage());
+    }
+
+    @Test
+    public void validateCredentialConfiguration_QrSettingsPresent_SupportedQrSignatureAlgo_AllowsConfig() {
+        CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
+        dto.setCredentialFormat("ldp_vc");
+        dto.setVcTemplate("test_template");
+        dto.setQrSettings(List.of(Map.of("key", "value")));
+        dto.setSignatureAlgo("EdDSA");
+        dto.setQrSignatureAlgo("EdDSA");
+        dto.setKeyManagerAppId("TEST2019");
+        dto.setKeyManagerRefId("TEST2019-REF");
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "DataProvider");
+        ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper", Map.of("EdDSA", List.of(List.of("TEST2019", "TEST2019-REF"))));
+        try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
+            ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true);
+        }
+    }
+
 }

@@ -6,6 +6,7 @@
 package io.mosip.certify.core.dto;
 
 import io.mosip.certify.core.constants.ErrorConstants;
+import io.mosip.certify.core.constants.VCIErrorConstants;
 import jakarta.validation.Valid;
 import lombok.Data;
 import java.util.List;
@@ -29,7 +30,7 @@ public class CredentialRequest {
      * JSON object containing proof of possession of the key material the issued Credential shall be bound to.
      */
     @Valid
-    @NotNull(message = ErrorConstants.INVALID_PROOF)
+    @NotNull(message = VCIErrorConstants.INVALID_PROOF)
     private CredentialProof proof;
 
     /**

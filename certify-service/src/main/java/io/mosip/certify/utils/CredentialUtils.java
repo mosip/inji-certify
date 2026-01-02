@@ -14,10 +14,13 @@ import info.weboftrust.ldsignatures.LdProof;
 import info.weboftrust.ldsignatures.canonicalizer.Canonicalizer;
 import io.mosip.certify.api.dto.VCRequestDto;
 import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.proofgenerators.ProofGenerator;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 @Slf4j
 public class CredentialUtils {
@@ -37,6 +40,9 @@ public class CredentialUtils {
         if(vcRequestDto.getFormat().equals(VCFormats.VC_SD_JWT)) {
             return String.join(Constants.DELIMITER, vcRequestDto.getFormat(), vcRequestDto.getVct());
         }
+        if(vcRequestDto.getFormat().equals(VCFormats.MSO_MDOC)) {
+            return String.join(Constants.DELIMITER, vcRequestDto.getFormat(), vcRequestDto.getDoctype());
+        }
         List<String> c = new ArrayList<>(vcRequestDto.getContext());
         List<String> t = new ArrayList<>(vcRequestDto.getType());
         Collections.sort(c);
@@ -55,8 +61,8 @@ public class CredentialUtils {
         try {
             vcHashBytes = canonicalizer.canonicalize(vcLdProof, j);
         } catch (IOException | GeneralSecurityException | JsonLDException e) {
-            log.error("Error during canonicalization", e.getMessage());
-            throw new CertifyException("Error during canonicalization");
+            log.error("Error occurred during canonicalization.", e);
+            throw new CertifyException(ErrorConstants.CANONICALIZATION_ERROR, "Error occurred during canonicalization.");
         }
         String vcEncodedHash = Base64.getUrlEncoder().encodeToString(vcHashBytes);
         LdProof ldProofWithJWS = proofGenerator.generateProof(vcLdProof, vcEncodedHash, keyReferenceDetails);
@@ -71,8 +77,8 @@ public class CredentialUtils {
         try {
             signer.initialize(ldProofBuilder);
         } catch (GeneralSecurityException e) {
-            log.error("Error during cryptosuite initialization", e.getMessage());
-            throw new CertifyException("Error during cryptosuite initialization");
+            log.error("Error during cryptosuite initialization", e);
+            throw new CertifyException(ErrorConstants.CRYPTOSUITE_INITIALIZATION_ERROR, "Error occurred during crypto suite initialization.");
         }
 
         DataIntegrityProof ldProofOptions = DataIntegrityProof.fromJson(dataIntegrityProof.toJson());
@@ -86,18 +92,53 @@ public class CredentialUtils {
         try {
             canonicalizationResult = canonicalizer.canonicalize(ldProofOptions, jsonLDObject);
         } catch (IOException | GeneralSecurityException | JsonLDException e) {
-            log.error("Error during canonicalization", e.getMessage());
-            throw new CertifyException("Error during canonicalization");
+            log.error("Error occurred during canonicalization.", e);
+            throw new CertifyException(ErrorConstants.CANONICALIZATION_ERROR, "Error occurred during canonicalization.");
         }
 
         try {
             signer.sign(ldProofBuilder, canonicalizationResult);
         } catch (GeneralSecurityException e) {
-            log.error("Error during signing the VC", e.getMessage());
-            throw new CertifyException("Error during signing the VC");
+            log.error("Error occurred while signing the Verifiable Credential.", e);
+            throw new CertifyException(ErrorConstants.VC_SIGNING_ERROR, "Error occurred while signing the Verifiable Credential.");
         }
 
         dataIntegrityProof = ldProofBuilder.build();
         return dataIntegrityProof;
+    }
+
+    /**
+     * jsonify wraps a complex object into it's JSON representation
+     * @param valueMap
+     * @return
+     */
+    public static Map<String, Object> toJsonMap(Map<String, Object> valueMap) {
+        Map<String, Object> finalTemplate = new HashMap<>();
+        Iterator<String> keys = valueMap.keySet().iterator();
+        while(keys.hasNext()) {
+            String key = keys.next();
+            Object value = valueMap.get(key);
+            if(key == null || value == null) {
+                continue;
+            }
+            if (value instanceof List) {
+                finalTemplate.put(key, new JSONArray((List<Object>) value));
+            } else if (value.getClass().isArray()) {
+                finalTemplate.put(key, new JSONArray(List.of(value)));
+            } else if (value instanceof Integer | value instanceof Float | value instanceof Long | value instanceof Double) {
+                // entities which don't need to be quoted
+                finalTemplate.put(key, value);
+            } else if (value instanceof String){
+                // entities which need to be quoted
+                finalTemplate.put(key, JSONObject.wrap(value));
+            } else if( value instanceof Map<?,?>) {
+                finalTemplate.put(key,JSONObject.wrap(value));
+            }
+            else {
+                // no conversion needed
+                finalTemplate.put(key, value);
+            }
+        }
+        return finalTemplate;
     }
 }

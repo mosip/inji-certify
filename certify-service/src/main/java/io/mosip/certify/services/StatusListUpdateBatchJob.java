@@ -152,8 +152,8 @@ public class StatusListUpdateBatchJob {
             log.info("Successfully updated status list credential: {}", statusListId);
 
         } catch (Exception e) {
-            log.error("Error updating status list: {}", statusListId, e);
-            throw new CertifyException(ErrorConstants.STATUS_LIST_UPDATE_FAILED);
+            log.error("Error occurred while updating status list with ID: {}", statusListId, e);
+            throw new CertifyException(ErrorConstants.STATUS_LIST_UPDATE_FAILED, "Error occurred while updating status list with ID: " + statusListId);
         }
     }
 
@@ -207,8 +207,8 @@ public class StatusListUpdateBatchJob {
             log.info("Successfully updated and saved StatusListCredential ID: {}", statusListCredential.getId());
 
         } catch (Exception e) {
-            log.error("Error updating StatusListCredential ID: {}", statusListCredential.getId(), e);
-            throw new CertifyException(ErrorConstants.STATUS_LIST_CREDENTIAL_UPDATE_FAILED);
+            log.error("Error occurred while updating StatusListCredential with ID: {}", statusListCredential.getId(), e);
+            throw new CertifyException(ErrorConstants.STATUS_LIST_CREDENTIAL_UPDATE_FAILED, "Error occurred while updating StatusListCredential with ID: " + statusListCredential.getId());
         }
     }
 }
