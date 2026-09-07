@@ -191,7 +191,6 @@ The following services will be available:
 - Certify Nginx: `localhost:8091`
 - Mimoto Service: `localhost:8099`
 - Inji Web: `localhost:3004`
-- Inji Verify: `localhost:8095`
 
 ## Using the Application
 
@@ -401,7 +400,7 @@ docker-compose down -v
 - [Inji Documentation](https://docs.inji.io/)
 
 
-### Verify Service
+### Presentation During Issuance (PDI)
 
-The verify-service is commented out by default in the `docker-compose.yml`.  
-If you want to explore the Presentation During Issuance feature and test the end-to-end issuance + verification flow**, uncomment the `verify-service` and restart the stack.
+Certify supports the **Presentation During Issuance** flow using the embedded **verify-core** library (bundled in-process within the `inji-certify-with-plugins` image) — there is no separate `verify-service` container to run.
+

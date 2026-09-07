@@ -8,7 +8,7 @@
 1. Clone the repo, usually the active development happens on the `develop` branch but one can check out a tagged version as well.
 2. Run the DB init scripts present in `db_scripts/inji_certify` , running `./deploy.sh deploy.properties` is a good way to init the DB.
 3. Decide on the issuance mode of Certify. Some plugins enable Certify to operate as a Proxy and others enable it to work as an Issuer, configure `mosip.certify.plugin-mode` appropriately as `DataProvider` or `VCIssuance`.
-    * [Recommended] Set it to `DataProvider` if you want a quickest possible working setup, and configure `mosip.certify.data-provider-plugin.issuer-uri` and `mosip.certify.data-provider-plugin.issuer-public-key-uri` appropriately.
+    * [Recommended] Set it to `DataProvider` if you want a quickest possible working setup, and configure `mosip.certify.data-provider-plugin.issuer-public-key-uri` appropriately.
     * If you have another Issuance module such as Sunbird, MOSIP Stack, you may want to set it up in `VCIssuance` mode.
 4. Decide on the VCI plugin for use locally and configure it, while running locally from an IDE such as Eclipse or IntelliJ one needs to add configuration to the `application-local.properties` and add the VCI plugin dependency JAR to the certify-service project which implements one of `DataProviderPlugin` or `VCIssuancePlugin` interfaces.
 5. Get a compatible eSignet setup running configured with the appropriate Authenticator plugin implementation matching the VCI plugin.
@@ -172,11 +172,11 @@ mosip.certify.oauth.code-challenge-methods-supported=S256
 mosip.certify.oauth.interactive-authorization-endpoint=${mosip.certify.authorization.url}${server.servlet.path}/oauth/iae
 ```
 2. **Local VP Request Configuration:** `application-local.properties` points `mosip.certify.vp-request.config-file-url` to `vp_request_config-local.json`. This file contains hardcoded `clientId` and `nonce` values that match the sample DCQL VP token used by the Postman collection, so the embedded Inji Verify library's signature / domain / challenge checks pass without regenerating a VP for every run. Deployment configurations should continue to use `vp_request_config.json` (no hardcoded `clientId` / `nonce`).
-3. Refer to the collections in [Presentation During Issuance](./postman-collections/Presentation-During-Issuance.postman_collection.json) and the respective env to test the flow.
-4. Use `Discovery Endpoints Copy` to get the issuer and oauth metadata endpoints.
-5. Use `IAR Request` to get the IAR code.
-6. Use the code to get the access token with `OAuth Token Exchange`.
-7. Use the access token to request VC issuance with `Get Credential` request inside the `Credential Download` folder.
+3. Import the **Inji Certify - Presentation During Issuance VCI** collection and the [presentation-during-issuance environment](./postman-collections/Inji-certify-presentation-during-issuance.postman_environment.json) from [docs/postman-collections](./postman-collections/) to test the flow, running the requests in order:
+4. Use the `1. Discovery Endpoints Copy` folder to fetch the issuer and OAuth authorization-server metadata endpoints.
+5. Use `2.1 Auth request` to send the Interactive Authorization Request (IAR) and receive the `openid4vp_request` carrying the DCQL query.
+6. Use `3.1 Auth Request with VP (iae_post)` to submit the `vp_token` and obtain the authorization code.
+7. Use `4.1 Successful Token Exchange` to exchange the code for an access token, `5.1 Get Nonce` to fetch the `c_nonce`, and finally `6.1 Get Credential` to request the VC.
 
 ## Locally setting up CSV Plugin
 
