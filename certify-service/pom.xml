@@ -248,8 +248,8 @@
         </dependency>
         <dependency>
             <groupId>io.inji.verify</groupId>
-            <artifactId>verify-service</artifactId>
-            <version>0.18.2</version>
+            <artifactId>verify-core</artifactId>
+            <version>1.0.0-beta.1-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <groupId>io.inji</groupId>

@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.inji.verify.dto.result.CredentialResultsDto;
 import io.inji.verify.dto.result.VPVerificationResultDto;
 import io.inji.verify.dto.result.VerificationRequestDto;
-import io.inji.verify.services.VerifiablePresentationRequestService;
 import io.inji.verify.services.VerifiablePresentationSubmissionService;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.IarStatus;
@@ -22,7 +21,6 @@ import io.mosip.certify.repository.IarSessionRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -45,8 +43,6 @@ public class IarPresentationService {
 
     private final VerifiablePresentationSubmissionService vpSubmissionService;
 
-    private final VerifiablePresentationRequestService vpRequestService;
-
     @Value("${mosip.certify.iar.authorization-code.length:24}")
     private int authorizationCodeLength;
 
@@ -56,12 +52,10 @@ public class IarPresentationService {
     @Autowired
     public IarPresentationService(IarSessionRepository iarSessionRepository,
                                    ObjectMapper objectMapper,
-                                   VerifiablePresentationSubmissionService vpSubmissionService,
-                                   VerifiablePresentationRequestService vpRequestService) {
+                                   VerifiablePresentationSubmissionService vpSubmissionService) {
         this.iarSessionRepository = iarSessionRepository;
         this.objectMapper = objectMapper;
         this.vpSubmissionService = vpSubmissionService;
-        this.vpRequestService = vpRequestService;
     }
 
     /**
@@ -121,7 +115,8 @@ public class IarPresentationService {
     }
 
     /**
-     * Submit VP presentation to the embedded inji-verify library.
+     * Submit VP presentation to the embedded inji-verify library using DCQL format.
+     * In DCQL mode, only vp_token and state are required — no presentation_submission.
      * responseUri is retained in the signature for session compatibility but is not used for HTTP.
      */
     private void submitVpToVerifier(String responseUri, String vpPresentationJson, String requestId, String transactionId) throws CertifyException {
@@ -137,12 +132,6 @@ public class IarPresentationService {
                 throw new CertifyException("vp_submission_failed", "Missing vp_token in VP presentation");
             }
 
-            Object presentationSubmissionObj = vpPresentationData.get("presentation_submission");
-            if (presentationSubmissionObj == null) {
-                log.error("Missing presentation_submission in wallet's VP presentation");
-                throw new CertifyException("vp_submission_failed", "Missing presentation_submission in VP presentation");
-            }
-
             String vpTokenJson;
             if (vpTokenObj instanceof String vpTokenString) {
                 vpTokenJson = vpTokenString;
@@ -152,24 +141,13 @@ public class IarPresentationService {
                 log.debug("vp_token serialized to JSON, length: {}", vpTokenJson.length());
             }
 
-            String presentationSubmissionJson;
-            if (presentationSubmissionObj instanceof String presentationSubmissionString) {
-                presentationSubmissionJson = presentationSubmissionString;
-            } else {
-                presentationSubmissionJson = objectMapper.writeValueAsString(presentationSubmissionObj);
-                log.debug("presentation_submission serialized to JSON, length: {}", presentationSubmissionJson.length());
-            }
+            log.debug("Calling vpSubmissionService.submitVerifiablePresentation with state(requestId): {}", requestId);
+            // Positional args (verify-core signature): vpToken, state, error, errorDescription, submissionOrigin.
+            // error/errorDescription are null — this is a success submission, not a wallet-side failure report.
+            // submissionOrigin is Optional.empty() because Certify uses direct_post, not DC API.
+            vpSubmissionService.submitVerifiablePresentation(vpTokenJson, requestId, null, null, Optional.empty());
 
-            log.debug("Calling vpSubmissionService.submit with state(requestId): {}", requestId);
-            ResponseEntity<?> submissionResponse = vpSubmissionService.submit(vpTokenJson, presentationSubmissionJson, requestId, null, null);
-
-            if (submissionResponse.getStatusCode().is2xxSuccessful()) {
-                log.info("VP submission accepted, status: {}", submissionResponse.getStatusCode());
-            } else {
-                log.warn("VP submission returned non-success status: {}", submissionResponse.getStatusCode());
-                throw new CertifyException("vp_submission_failed",
-                    "VP submission failed with status: " + submissionResponse.getStatusCode());
-            }
+            log.info("VP submission accepted for requestId: {}", requestId);
 
         } catch (CertifyException e) {
             throw e;
@@ -183,15 +161,15 @@ public class IarPresentationService {
 
     /**
      * Get VP verification result from the embedded inji-verify library.
+     * In verify-core, requestIds are resolved internally — only transactionId is needed.
      */
     private VpVerificationResponse getVpVerificationResult(String transactionId) throws CertifyException {
         try {
-            List<String> requestIds = vpRequestService.getLatestRequestIdFor(transactionId);
-            log.info("Fetching VP result for transactionId: {}, requestIds: {}", transactionId, requestIds);
+            log.info("Fetching VP result for transactionId: {}", transactionId);
 
             VerificationRequestDto verificationRequest = new VerificationRequestDto();
             verificationRequest.setIncludeClaims(true);
-            VPVerificationResultDto vpResult = vpSubmissionService.getVPResultV2(verificationRequest, requestIds, transactionId);
+            VPVerificationResultDto vpResult = vpSubmissionService.getVPResultV2(verificationRequest, transactionId);
             if (vpResult != null) {
                 log.info("VP check - allChecksOk: {}", vpResult.isAllChecksSuccessful());
                 List<CredentialResultsDto> credentialResults = vpResult.getCredentialResults();

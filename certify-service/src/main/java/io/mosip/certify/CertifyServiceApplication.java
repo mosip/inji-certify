@@ -40,6 +40,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
         "io.inji.verify.services," +
         "io.inji.verify.key.impl," +
         "io.inji.verify.repository," +
+        "io.inji.verify.validator," +
         "${mosip.certify.integration.scan-base-package}")
 public class CertifyServiceApplication {
     public static void main(String[] args) {

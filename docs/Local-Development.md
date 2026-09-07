@@ -171,11 +171,12 @@ mosip.certify.oauth.response-types-supported=code
 mosip.certify.oauth.code-challenge-methods-supported=S256
 mosip.certify.oauth.interactive-authorization-endpoint=${mosip.certify.authorization.url}${server.servlet.path}/oauth/iae
 ```
-2. Refer to the collections in [Presentation During Issuance](./postman-collections/Presentation-During-Issuance.postman_collection.json) and the respective env to test the flow.
-3. Use `Discovery Endpoints Copy` to get the issuer and oauth metadata endpoints.
-4. Use `IAR Request` to get the IAR code.
-5. Use the code to get the access token with `OAuth Token Exchange`.
-6. Use the access token to request VC issuance with `Get Credential` request inside the `Credential Download` folder.
+2. **Local VP Request Configuration:** `application-local.properties` points `mosip.certify.vp-request.config-file-url` to `vp_request_config-local.json`. This file contains hardcoded `clientId` and `nonce` values that match the sample DCQL VP token used by the Postman collection, so the embedded Inji Verify library's signature / domain / challenge checks pass without regenerating a VP for every run. Deployment configurations should continue to use `vp_request_config.json` (no hardcoded `clientId` / `nonce`).
+3. Refer to the collections in [Presentation During Issuance](./postman-collections/Presentation-During-Issuance.postman_collection.json) and the respective env to test the flow.
+4. Use `Discovery Endpoints Copy` to get the issuer and oauth metadata endpoints.
+5. Use `IAR Request` to get the IAR code.
+6. Use the code to get the access token with `OAuth Token Exchange`.
+7. Use the access token to request VC issuance with `Get Credential` request inside the `Credential Download` folder.
 
 ## Locally setting up CSV Plugin
 

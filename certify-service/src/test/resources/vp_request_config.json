@@ -1,27 +1,26 @@
 {
-  "presentation_definition": {
-    "id": "MOSIPVerifiableCredential",
-    "name": "MOSIP ID",
-    "purpose": "Relying party is requesting your digital ID for the purpose of Self-Authentication",
-    "input_descriptors": [
+  "dcqlQuery": {
+    "credentials": [
       {
-        "id": "id card credential",
-        "format": {
-          "ldp_vc": {
-            "proof_type": ["RsaSignature2018"]
-          }
-        },
-        "constraints": {
-          "fields": [
-            {
-              "path": ["$.type"],
-              "filter": {
-                "type": "object",
-                "pattern": "MOSIPVerifiableCredential"
-              }
-            }
+        "id": "mosip_verifiable_credential_id",
+        "format": "ldp_vc",
+        "meta": {
+          "type_values": [
+            [
+              "https://www.w3.org/2018/credentials#VerifiableCredential",
+              "https://example.org/credentials#MOSIPVerifiableCredential"
+            ]
           ]
         }
+      }
+    ],
+    "credential_sets": [
+      {
+        "options": [
+          [
+            "mosip_verifiable_credential_id"
+          ]
+        ]
       }
     ]
   }

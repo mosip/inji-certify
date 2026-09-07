@@ -698,7 +698,7 @@ class OAuthControllerTest {
         when(iarService.handleIarRequest(any(IarRequest.class))).thenReturn(mockResponse);
 
         // Act & Assert - Test with JSON VP token
-        String jsonVpPresentation = "{\"vp_token\":{\"type\":\"VerifiablePresentation\",\"verifiableCredential\":[]},\"presentation_submission\":{\"id\":\"test-submission\"}}";
+        String jsonVpPresentation = "{\"vp_token\":{\"type\":\"VerifiablePresentation\",\"verifiableCredential\":[]}}";
         mockMvc.perform(post("/oauth/iae")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .param("auth_session", "test-session-json")
@@ -782,9 +782,12 @@ class OAuthControllerTest {
             openId4VpRequest.put("response_mode", "iae_post.jwt");
             openId4VpRequest.put("client_id", "test-client");
             
-            PresentationDefinition presentationDefinition = new PresentationDefinition();
-            presentationDefinition.setId("test-presentation");
-            openId4VpRequest.put("presentation_definition", presentationDefinition);
+            Map<String, Object> dcqlQuery = new HashMap<>();
+            dcqlQuery.put("credentials", List.of(Map.of(
+                    "id", "mosip_verifiable_credential_id",
+                    "format", "ldp_vc"
+            )));
+            openId4VpRequest.put("dcql_query", dcqlQuery);
             
             response.setOpenid4vpRequest(openId4VpRequest);
         }
