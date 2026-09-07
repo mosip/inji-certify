@@ -215,6 +215,7 @@ future release.
   [Overview | Inji](https://docs.inji.io/inji-certify/overview)
 * Inji Certify is part of Inji Stack, to know more about Inji Stack you can refer to our stack document: [Inji |
   Inji](https://docs.inji.io/)
+* W3C VC API issuance (server-to-server, feature-flagged): [W3C VC API Support](./docs/W3C-VC-API-Support.md)
 
 ## Contribution & Community
 

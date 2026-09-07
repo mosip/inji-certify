@@ -1231,6 +1231,71 @@ paths:
       servers:
         - url: 'http://localhost:8090/v1/certify'
           description: Generated server url
+  /vc-api/credentials/issue:
+    post:
+      tags:
+        - W3C VC API
+      summary: Issue signed verifiable credential
+      description: |
+        W3C VC API issue endpoint. Caller sends a full unsigned VCDM 2.0 credential.
+        Certify loads the onboarded credential configuration from
+        `X-Credential-Configuration-Id`, validates `@context`, `type`, `issuer` and
+        `credentialSubject` keys against that config/`vcTemplate`, then signs with Key Manager.
+        `options` may be omitted or empty; non-blank proof hints are hard-rejected
+        with `400` (`UNKNOWN_OPTION_PROVIDED`), not silently ignored.
+        Requires `X-API-Key` and `mosip.certify.vc-api.enabled=true`. Supports `ldp_vc` only.
+        A successful `201` response is the signed credential itself (not wrapped in `verifiableCredential`).
+        Error responses use RFC 9457 Problem Details (`application/problem+json`), not OpenID4VCI `VCError`.
+      operationId: vcApiIssueCredential
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: X-API-Key
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Static API key from mosip.certify.vc-api.api-keys. Also available via Authorize.
+        - name: X-Credential-Configuration-Id
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Active credential configuration key id (credentialConfigKeyId)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VCApiIssueRequest'
+      responses:
+        '201':
+          description: Signed verifiable credential (top-level credential object, not wrapped)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VCApiIssuedCredential'
+        '400':
+          description: Invalid request, configuration mismatch, unknown credential configuration id, or unsupported options
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Missing or invalid API key
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Credential issuance failed (signing, Key Manager, or status-list error)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+      servers:
+        - url: 'http://localhost:8090/v1/certify'
+          description: Generated server url
   /credentials/status:
     post:
       tags:
@@ -1493,6 +1558,11 @@ tags:
 
 components:
   securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Static API key configured in mosip.certify.vc-api.api-keys
     bearerAuth:
       type: http
       scheme: bearer
@@ -1968,6 +2038,35 @@ components:
         c_nonce_expires_in:
           type: integer
           format: int32
+    ProblemDetails:
+      type: object
+      description: |
+        RFC 9457 Problem Details used by W3C VC API (`/vc-api/**`) error responses.
+        `type` is a URL. VCDM 2.0 types are used for credential-document problems;
+        VCALM `UNKNOWN_OPTION_PROVIDED` is used for unsupported issue options;
+        HTTP-layer failures (401/500) use `about:blank`.
+        OpenID4VCI `/issuance/` continues to use `VCError`.
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URL identifying the problem type
+          example: https://www.w3.org/TR/vc-data-model-2.0#MALFORMED_VALUE_ERROR
+        title:
+          type: string
+          description: Short human-readable summary of the problem type
+        detail:
+          type: string
+          description: Occurrence-specific explanation
+        status:
+          type: integer
+          format: int32
+          description: HTTP status code for this occurrence
+        instance:
+          type: string
+          description: URI identifying this occurrence of the problem
     ResponseWrapperKeyPairGenerateResponseDto:
       type: object
       properties:
@@ -2778,3 +2877,73 @@ components:
           example: "abc123xyz"
       required:
         - c_nonce
+    VCApiIssueOptions:
+      type: object
+      description: |
+        Optional W3C issue options object for request-shape compatibility.
+        Must be omitted or empty in this release. Non-blank proof hints
+        (type, verificationMethod, proofPurpose, created, challenge, domain)
+        are hard-rejected with 400 (`UNKNOWN_OPTION_PROVIDED` ProblemDetails);
+        they are not silently ignored.
+        Config id is not taken from options — use X-Credential-Configuration-Id.
+      properties:
+        type:
+          type: string
+          description: Unsupported; non-blank values are rejected
+        verificationMethod:
+          type: string
+          description: Unsupported; non-blank values are rejected
+        proofPurpose:
+          type: string
+          description: Unsupported; non-blank values are rejected
+        created:
+          type: string
+          description: Unsupported; non-blank values are rejected
+        challenge:
+          type: string
+          description: Unsupported; non-blank values are rejected
+        domain:
+          type: string
+          description: Unsupported; non-blank values are rejected
+    VCApiIssueRequest:
+      type: object
+      required:
+        - credential
+      properties:
+        credential:
+          type: object
+          additionalProperties: true
+          description: |
+            Full unsigned VCDM 2.0 Verifiable Credential (must not include proof).
+            `validFrom` and `validUntil` are optional. If omitted, Certify sets
+            `validFrom` to now and `validUntil` to validFrom plus
+            `mosip.certify.data-provider-plugin.vc-expiry-duration` (default P730D).
+            If `validUntil` is sent, `validFrom` is required (or defaulted) and
+            `validUntil` must be later than `validFrom`.
+        options:
+          $ref: '#/components/schemas/VCApiIssueOptions'
+    VCApiIssuedCredential:
+      type: object
+      additionalProperties: true
+      description: Signed LDP VC including proof. Returned as the top-level HTTP response body.
+      properties:
+        '@context':
+          type: array
+          items:
+            type: string
+        type:
+          type: array
+          items:
+            type: string
+        issuer:
+          description: Issuer DID string or object with id
+        validFrom:
+          type: string
+        validUntil:
+          type: string
+        credentialSubject:
+          type: object
+        credentialStatus:
+          type: object
+        proof:
+          type: object

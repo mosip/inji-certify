@@ -7,7 +7,7 @@ public interface CredentialConfigurationService {
 
     CredentialConfigResponse addCredentialConfiguration(CredentialConfigurationDTO credentialConfigurationDTO) throws JsonProcessingException;
 
-    CredentialConfigurationDTO getCredentialConfigurationById(String id) throws JsonProcessingException;
+    CredentialConfigurationDTO getCredentialConfigurationById(String id);
 
     CredentialConfigResponse updateCredentialConfiguration(String id, CredentialConfigurationDTO credentialConfigurationDTO) throws JsonProcessingException;
 

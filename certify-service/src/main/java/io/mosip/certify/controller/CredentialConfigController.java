@@ -27,7 +27,7 @@ public class CredentialConfigController {
     }
 
     @GetMapping(value = "/{credentialConfigKeyId}", produces = "application/json")
-    public ResponseEntity<CredentialConfigurationDTO> getCredentialConfigurationById(@PathVariable String credentialConfigKeyId) throws JsonProcessingException {
+    public ResponseEntity<CredentialConfigurationDTO> getCredentialConfigurationById(@PathVariable String credentialConfigKeyId) {
 
         CredentialConfigurationDTO credentialConfigurationDTO = credentialConfigurationService.getCredentialConfigurationById(credentialConfigKeyId);
         return new ResponseEntity<>(credentialConfigurationDTO, HttpStatus.OK);

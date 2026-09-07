@@ -88,6 +88,7 @@ public class ErrorConstants {
     public static final String UNSUPPORTED_GRANT_TYPE = "unsupported_grant_type";
     public static final String UNKNOWN_CLAIMS = "unknown_claims";
     public static final String INVALID_EXPIRY_RANGE = "invalid_expiry_range";
+    public static final String UNKNOWN_OPTION_PROVIDED = "unknown_option_provided";
     public static final String INVALID_OFFER_ID_FORMAT = "invalid_offer_id_format";
     public static final String AUTHORIZATION_SERVER_DISCOVERY_FAILED = "authorization_server_discovery_failed";
     public static final String INVALID_AUTHORIZATION_SERVER = "invalid_authorization_server";

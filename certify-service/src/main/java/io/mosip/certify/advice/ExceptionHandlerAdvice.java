@@ -6,12 +6,15 @@
 package io.mosip.certify.advice;
 
 import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.constants.ProblemDetailsTypes;
 import io.mosip.certify.core.dto.Error;
+import io.mosip.certify.core.dto.ProblemDetails;
 import io.mosip.certify.core.dto.ResponseWrapper;
 import io.mosip.certify.core.dto.VCError;
 import io.mosip.certify.core.dto.OAuthTokenError;
 import io.mosip.certify.core.exception.*;
 import io.mosip.certify.core.util.CommonUtil;
+import io.mosip.certify.core.util.ProblemDetailsBuilder;
 import io.mosip.certify.dpop.DpopProofValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.TypeMismatchException;
@@ -21,6 +24,7 @@ import org.springframework.context.NoSuchMessageException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -117,13 +121,15 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
         if (path != null && path.contains("/oauth/")) {
             return handleOAuthControllerExceptions(ex);
         }
+        if (path != null && path.contains("/vc-api/")) {
+            return handleVCApiProblemDetails(ex, servletRequest);
+        }
         if (path != null && path.contains("/issuance/")) {
             return handleVCIControllerExceptions(ex, servletRequest);
         }
 
         return handleInternalControllerException(ex);
     }
-
 
     private ResponseEntity<ResponseWrapper> handleInternalControllerException(Exception ex) {
         if(ex instanceof MethodArgumentNotValidException) {
@@ -171,6 +177,70 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
         return new ResponseEntity<ResponseWrapper>(getResponseWrapper(UNKNOWN_ERROR, ex.getMessage()), HttpStatus.OK);
     }
 
+    public ResponseEntity<ProblemDetails> handleVCApiProblemDetails(Exception ex, HttpServletRequest request) {
+        String instance = request != null ? request.getRequestURI() : null;
+        if (ex instanceof MethodArgumentNotValidException) {
+            FieldError fieldError = ((MethodArgumentNotValidException) ex).getBindingResult().getFieldError();
+            String message = fieldError != null ? fieldError.getDefaultMessage() : ex.getMessage();
+            return problemDetails(HttpStatus.BAD_REQUEST, ProblemDetailsTypes.MALFORMED_VALUE_ERROR, message, instance);
+        }
+        if (ex instanceof javax.validation.ConstraintViolationException) {
+            Set<ConstraintViolation<?>> violations = ((ConstraintViolationException) ex).getConstraintViolations();
+            String message = !violations.isEmpty() ? violations.stream().findFirst().get().getMessage() : ex.getMessage();
+            return problemDetails(HttpStatus.BAD_REQUEST, ProblemDetailsTypes.MALFORMED_VALUE_ERROR, message, instance);
+        }
+        if (ex instanceof MissingRequestHeaderException) {
+            return problemDetails(HttpStatus.BAD_REQUEST, ProblemDetailsTypes.MALFORMED_VALUE_ERROR, ex.getMessage(), instance);
+        }
+        if (ex instanceof HttpMessageNotReadableException) {
+            return problemDetails(HttpStatus.BAD_REQUEST, ProblemDetailsTypes.PARSING_ERROR,
+                    "Malformed JSON request body", instance);
+        }
+        if (ex instanceof InvalidRequestException) {
+            String errorCode = ((InvalidRequestException) ex).getErrorCode();
+            return problemDetails(HttpStatus.BAD_REQUEST, problemTypeFor(errorCode),
+                    getMessage(errorCode, errorCode), instance);
+        }
+        if (ex instanceof CertifyException) {
+            String errorCode = ((CertifyException) ex).getErrorCode();
+            String errorMessage = ex.getMessage();
+            HttpStatus status = isVcApiServerError(errorCode)
+                    ? HttpStatus.INTERNAL_SERVER_ERROR : HttpStatus.BAD_REQUEST;
+            return problemDetails(status, problemTypeFor(errorCode), errorMessage, instance);
+        }
+        log.error("Unhandled exception in VC API handler", ex);
+        return problemDetails(HttpStatus.INTERNAL_SERVER_ERROR, ProblemDetailsTypes.ABOUT_BLANK,
+                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), instance);
+    }
+
+    private ResponseEntity<ProblemDetails> problemDetails(HttpStatus status, String type, String detail, String instance) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PROBLEM_JSON);
+        return new ResponseEntity<>(ProblemDetailsBuilder.create(status, type, detail, instance), headers, status);
+    }
+
+    private String problemTypeFor(String errorCode) {
+        if (JSON_PROCESSING_ERROR.equals(errorCode)) {
+            return ProblemDetailsTypes.PARSING_ERROR;
+        }
+        if (INVALID_EXPIRY_RANGE.equals(errorCode)) {
+            return ProblemDetailsTypes.RANGE_ERROR;
+        }
+        if (UNKNOWN_OPTION_PROVIDED.equals(errorCode)) {
+            return ProblemDetailsTypes.UNKNOWN_OPTION_PROVIDED;
+        }
+        if (isVcApiServerError(errorCode)) {
+            return ProblemDetailsTypes.ABOUT_BLANK;
+        }
+        return ProblemDetailsTypes.MALFORMED_VALUE_ERROR;
+    }
+
+    private boolean isVcApiServerError(String errorCode) {
+        return UNKNOWN_ERROR.equals(errorCode)
+                || VC_ISSUANCE_FAILED.equals(errorCode)
+                || STATUS_LIST_INDEX_UNAVAILABLE.equals(errorCode);
+    }
+
     public ResponseEntity<VCError> handleVCIControllerExceptions(Exception ex, HttpServletRequest request) {
         if(ex instanceof HttpMessageNotReadableException) {
             String message = "Invalid JSON request body";
@@ -206,6 +276,9 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
             Set<ConstraintViolation<?>> violations = ((ConstraintViolationException) ex).getConstraintViolations();
             String message = !violations.isEmpty() ? violations.stream().findFirst().get().getMessage() : ex.getMessage();
             return new ResponseEntity<>(getVCErrorDto(message, message), HttpStatus.BAD_REQUEST);
+        }
+        if(ex instanceof MissingRequestHeaderException) {
+            return new ResponseEntity<>(getVCErrorDto(INVALID_REQUEST, ex.getMessage()), HttpStatus.BAD_REQUEST);
         }
         if(ex instanceof NotAuthenticatedException) {
             Object reason = request.getAttribute(Constants.AUTH_ERROR_ATTRIBUTE);

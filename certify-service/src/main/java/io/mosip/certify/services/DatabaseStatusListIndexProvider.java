@@ -1,7 +1,5 @@
 package io.mosip.certify.services;
 
-import io.mosip.certify.core.exception.CertifyException;
-import io.mosip.certify.entity.StatusListAvailableIndices;
 import io.mosip.certify.entity.StatusListCredential;
 import io.mosip.certify.repository.StatusListAvailableIndicesRepository;
 import io.mosip.certify.repository.StatusListCredentialRepository;
@@ -14,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import java.math.BigInteger;
-import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 

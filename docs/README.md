@@ -6,6 +6,7 @@
 - [SD-JWT VC Support](./SD-JWT-Support.md)
 - [Data Integrity Proof Support](./Data-Integrity-Proof-Support.md)
 - [VC Revocation Support](./VC-Revocation-Support.md)
+- [W3C VC API Support](./W3C-VC-API-Support.md)
 
 # Integrator READMEs
 

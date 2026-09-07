@@ -139,6 +139,22 @@ mosip.certify.data-provider-plugin.did-url=did:web:<your-public-hostname>
 - If different DIDs are used, ensure that the DID document from the endpoint is copied and hosted at the location specified by the `didUrl` in the `credential_config` table for each credential type.
 - **Note**: For updating the default vc type in this setup, please refer to the insert query present in the [certify_init.sql](./certify_init.sql) file for `credential_config`.
 
+### W3C VC API
+
+The docker-compose stack enables W3C VC API issuance (`POST /v1/certify/vc-api/credentials/issue`)
+in [certify-default.properties](config/certify-default.properties):
+
+```properties
+mosip.certify.vc-api.enabled=true
+mosip.certify.vc-api.api-keys=local-dev-secret
+```
+
+Use the `X-API-Key` header with the configured key, and
+`X-Credential-Configuration-Id` with the onboarded VCDM 2.0 `ldp_vc` config id.
+Omitting either header causes the request to fail. The config must match request
+`@context`, `type`, and `issuer` (`didUrl`).
+The seeded `FarmerCredential` row is VCDM 1.1 for OpenID4VCI; onboard a VCDM 2.0 config
+(or use the Postman "W3C VC API" folder) before calling this endpoint.
 
 - (required if Mobile driving license configured) Onboard issuer key and certificate data into property `mosip.certify.mock.mdoc.issuer-key-cert` using the creation script, please read the [plugin README](https://github.com/inji/digital-credential-plugins/tree/release-1.0.x/mock-certify-plugin) for the same.
 
