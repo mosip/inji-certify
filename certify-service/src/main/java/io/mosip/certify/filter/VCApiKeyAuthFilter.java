@@ -3,7 +3,7 @@ package io.mosip.certify.filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.core.constants.ProblemDetailsTypes;
 import io.mosip.certify.core.dto.ProblemDetails;
-import io.mosip.certify.core.util.ProblemDetailsFactory;
+import io.mosip.certify.core.util.ProblemDetailsBuilder;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -82,7 +82,7 @@ public class VCApiKeyAuthFilter extends OncePerRequestFilter {
     }
 
     private void writeUnauthorizedProblem(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        ProblemDetails body = ProblemDetailsFactory.create(
+        ProblemDetails body = ProblemDetailsBuilder.create(
                 HttpStatus.UNAUTHORIZED,
                 ProblemDetailsTypes.ABOUT_BLANK,
                 "Invalid or missing API key",

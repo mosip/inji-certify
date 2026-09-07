@@ -8,9 +8,9 @@ import org.springframework.http.HttpStatus;
  * Shared builder for RFC 9457 / VCALM {@link ProblemDetails} bodies used by the
  * VC API filter and exception advice.
  */
-public final class ProblemDetailsFactory {
+public final class ProblemDetailsBuilder {
 
-    private ProblemDetailsFactory() {
+    private ProblemDetailsBuilder() {
     }
 
     public static ProblemDetails create(HttpStatus status, String type, String detail, String instance) {
