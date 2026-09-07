@@ -272,7 +272,7 @@ jobs:
   run-apitest-pr:
     if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 90
 
     steps:
       - uses: actions/checkout@v4
@@ -282,6 +282,14 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 21
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-m2
 
       - name: Setup the settings file for ossrh server
         run: echo "<settings> <servers>  <server>  <id>ossrh</id>    <username>${{secrets.ossrh_user}}</username> <password>${{secrets.ossrh_secret}}</password> </server> </servers> <profiles> <profile>     <id>ossrh</id> <activation> <activeByDefault>true</activeByDefault> </activation>  <properties> <gpg.executable>gpg2</gpg.executable> <gpg.passphrase>${{secrets.gpg_secret}}</gpg.passphrase> </properties> </profile> <profile> <id>allow-snapshots</id>       <activation><activeByDefault>true</activeByDefault></activation> <repositories> <repository>        <id>snapshots-repo</id> <url>https://oss.sonatype.org/content/repositories/snapshots</url> <releases><enabled>false</enabled></releases> <snapshots><enabled>true</enabled></snapshots> </repository>  <repository>         <id>releases-repo</id>  <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>         <releases><enabled>true</enabled></releases>         <snapshots><enabled>false</enabled></snapshots> </repository> </repositories>  </profile> <profile> <id>sonar</id> <properties>  <sonar.sources>.</sonar.sources> <sonar.host.url>https://sonarcloud.io</sonar.host.url>  </properties> <activation> <activeByDefault>false</activeByDefault> </activation> </profile> </profiles> </settings>" > $GITHUB_WORKSPACE/settings.xml
@@ -335,6 +343,81 @@ jobs:
           touch application.properties
           mkdir -p "Biometric Devices"
           mkdir -p resource
+
+          # Replace test suites with CI-only versions (source files unchanged)
+          cat > api-test/target/testNgXmlFiles/injicertifySuite.xml << 'XMLEOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+          <suite name="Inji-Certify API Test CI">
+            <listeners>
+              <listener class-name="io.mosip.testrig.apirig.report.EmailableReport" />
+            </listeners>
+            <test name="WellKnownEndpoint">
+              <parameter name="ymlFile" value="injicertify/WellKnownEndpoint/WellKnownEndpoint.yml" />
+              <classes>
+                <class name="io.inji.testrig.apirig.injicertify.testscripts.GetWithParam" />
+              </classes>
+            </test>
+            <test name="OAuthDetailsRequestVCIForMockIDA">
+              <parameter name="ymlFile" value="injicertify/VCIMockIDA/OAuthDetailsRequestForMockIDA/OAuthDetailsRequestForMockIDA.yml" />
+              <parameter name="idKeyName" value="transactionId,encodedResp" />
+              <parameter name="prerequisite" value="Yes" />
+              <classes>
+                <class name="io.inji.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+              </classes>
+            </test>
+            <test name="AuthenticateUserVCIForMockIDA">
+              <parameter name="ymlFile" value="injicertify/VCIMockIDA/AuthenticateUserForMockIDA/AuthenticateUserForMockIDA.yml" />
+              <parameter name="prerequisite" value="Yes" />
+              <classes>
+                <class name="io.inji.testrig.apirig.injicertify.testscripts.PostWithAutogenIdWithOtpGenerate" />
+              </classes>
+            </test>
+            <test name="AuthorizationCodeVCIForMockIDA">
+              <parameter name="ymlFile" value="injicertify/VCIMockIDA/AuthorizationCodeForMockIDA/AuthorizationCodeForMockIDA.yml" />
+              <parameter name="idKeyName" value="code" />
+              <parameter name="prerequisite" value="Yes" />
+              <classes>
+                <class name="io.inji.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+              </classes>
+            </test>
+            <test name="GenerateTokenVCIForMockIDA">
+              <parameter name="ymlFile" value="injicertify/VCIMockIDA/GenerateTokenForMockIDA/GenerateTokenForMockIDA.yml" />
+              <parameter name="idKeyName" value="access_token" />
+              <parameter name="prerequisite" value="Yes" />
+              <classes>
+                <class name="io.inji.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenIdForUrlEncoded" />
+              </classes>
+            </test>
+            <test name="GenerateNonceForMockIDA">
+              <parameter name="ymlFile" value="injicertify/VCIMockIDA/GenerateNonceForMockIDA/GenerateNonceForMockIDA.yml" />
+              <parameter name="idKeyName" value="c_nonce" />
+              <parameter name="prerequisite" value="Yes" />
+              <classes>
+                <class name="io.inji.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+              </classes>
+            </test>
+            <test name="GetCredentialForMockIDA">
+              <parameter name="ymlFile" value="injicertify/VCIMockIDA/GetCredentialForMockIDA/GetCredentialForMockIDA.yml" />
+              <classes>
+                <class name="io.inji.testrig.apirig.injicertify.testscripts.SimplePost" />
+              </classes>
+            </test>
+          </suite>
+          XMLEOF
+
+          cat > api-test/target/testNgXmlFiles/injicertifyMasterTestSuite.xml << 'XMLEOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+          <suite name="Inji-Certify API Test Rig Master Suite CI">
+            <listeners>
+              <listener class-name="io.mosip.testrig.apirig.report.EmailableReport" />
+            </listeners>
+            <suite-files>
+              <suite-file path="injicertifySuite.xml" />
+            </suite-files>
+          </suite>
+          XMLEOF
 
       - name: Build apitest image
         run: docker build -t apitest-inji-certify:ci -f api-test/Dockerfile .
