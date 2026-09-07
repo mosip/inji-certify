@@ -118,6 +118,9 @@ public class InjiTestRunner {
 				}
 			}
 
+			// Needed for every use case, not just mosipid, else eSignet returns 403 Forbidden
+			AdminTestUtil.fetchAndStoreCsrfToken();
+			
 			if (useCaseToExecute.equalsIgnoreCase("mosipid")) {
 
 				InjiCertifyUtil.dBCleanup();
