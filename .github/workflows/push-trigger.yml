@@ -272,6 +272,7 @@ jobs:
   run-apitest-pr:
     if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
       - uses: actions/checkout@v4
@@ -287,6 +288,15 @@ jobs:
 
       - name: Build certify-service jar
         run: mvn clean package -DskipTests -s $GITHUB_WORKSPACE/settings.xml
+
+      - name: Patch apitest config for CI
+        run: |
+          PROPS=api-test/src/main/resources/config/injiCertify.properties
+          sed -i 's|useCaseToExecute=.*|useCaseToExecute=mock|' "$PROPS"
+          sed -i 's|injiCertifyBaseURL=.*|injiCertifyBaseURL=http://certify:8090|' "$PROPS"
+          sed -i 's|eSignetbaseurl=.*|eSignetbaseurl=https://esignet-mock.released.mosip.net|' "$PROPS"
+          sed -i 's|db-server=.*|db-server=database|' "$PROPS"
+          sed -i 's|db-port=.*|db-port=5432|' "$PROPS"
 
       - name: Build apitest jar
         run: |
