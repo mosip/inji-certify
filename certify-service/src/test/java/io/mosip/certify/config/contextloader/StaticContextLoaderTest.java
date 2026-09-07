@@ -323,7 +323,9 @@ class StaticContextLoaderTest {
     void maxEntries_full_expiredEntriesPurged_allowsNewInsert() throws Exception {
         JsonLdContextLoaderProperties props = baseProps();
         props.getCache().setMaxEntries(1);
-        props.getCache().setTtl(Duration.ofMillis(1));
+        // 1ms TTL is too short under CI load: the second iri2 load can miss the cache
+        // after expiry and reload the resource. Use a short but CI-safe window.
+        props.getCache().setTtl(Duration.ofMillis(200));
 
         String iri1 = "https://example.org/a";
         String iri2 = "https://example.org/b";
@@ -341,7 +343,7 @@ class StaticContextLoaderTest {
         loader.loadDocument(URI.create(iri1), new DocumentLoaderOptions());
 
         // wait for iri1 to expire
-        Thread.sleep(5);
+        Thread.sleep(250);
 
         // cache is full but iri1 is expired => purge should free capacity for iri2
         loader.loadDocument(URI.create(iri2), new DocumentLoaderOptions());
