@@ -81,6 +81,8 @@ public class ErrorConstants {
     public static final String ERROR_SIGNING_QR_ENTRY = "error_signing_qr_entry";
     public static final String ERROR_SIGNING_QR_DATA = "error_signing_qr_data";
     public static final String QR_CBOR_ENCODING_ERROR = "qr_cbor_encoding_error";
+    public static final String QR_INVALID_FIELD_REFERENCE = "qr_invalid_field_reference";
+    public static final String DUPLICATE_FIELDS_IN_QR_SETTINGS = "duplicate_fields_in_qr_settings";
     public static final String INVALID_CREDENTIAL_CONFIGURATION_ID = "invalid_credential_configuration_id";
     public static final String MISSING_MANDATORY_CLAIM = "missing_mandatory_claim";
     public static final String CREDENTIAL_OFFER_NOT_FOUND = "credential_offer_not_found";

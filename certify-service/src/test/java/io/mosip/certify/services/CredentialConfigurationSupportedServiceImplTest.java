@@ -1,6 +1,7 @@
 package io.mosip.certify.services;
 
 import io.mosip.certify.core.dto.*;
+import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.CredentialConfigException;
@@ -699,7 +700,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
     }
 
     @Test
-    public void validateCredentialConfiguration_QrSettingsNull_QrSignatureAlgoSet_ThrowsException() {
+    public void should_throwCertifyException_when_qrSettingsNullAndQrSignatureAlgoSet() {
         CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
         dto.setCredentialFormat("ldp_vc");
         dto.setVcTemplate("test_template");
@@ -713,7 +714,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
     }
 
     @Test
-    public void validateCredentialConfiguration_QrSettingsEmpty_QrSignatureAlgoSet_ThrowsException() {
+    public void should_throwCertifyException_when_qrSettingsEmptyAndQrSignatureAlgoSet() {
         CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
         dto.setCredentialFormat("ldp_vc");
         dto.setVcTemplate("test_template");
@@ -727,7 +728,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
     }
 
     @Test
-    public void validateCredentialConfiguration_QrSettingsPresent_UnsupportedQrSignatureAlgo_ThrowsException() {
+    public void should_throwCertifyException_when_qrSignatureAlgoUnsupported() {
         CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
         dto.setCredentialFormat("ldp_vc");
         dto.setVcTemplate("test_template");
@@ -742,7 +743,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
     }
 
     @Test
-    public void validateCredentialConfiguration_QrSettingsPresent_SupportedQrSignatureAlgo_AllowsConfig() {
+    public void should_allowCredentialConfiguration_when_qrSignatureAlgoSupported() {
         CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
         dto.setCredentialFormat("ldp_vc");
         dto.setVcTemplate("test_template");
@@ -757,6 +758,40 @@ public class CredentialConfigurationSupportedServiceImplTest {
             mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
             ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true);
         }
+    }
+
+    @Test
+    public void should_allowCredentialConfiguration_when_qrSettingsValidInBase64VcTemplate() {
+        String template = "{\"credentialSubject\":{\"fullName\":\"${fullName}\"}}";
+        String base64Template = java.util.Base64.getEncoder().encodeToString(template.getBytes());
+        CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
+        dto.setCredentialFormat("ldp_vc");
+        dto.setVcTemplate(base64Template);
+        dto.setQrSettings(List.of(Map.of("Full Name", "${fullName}")));
+        dto.setSignatureAlgo("EdDSA");
+        dto.setKeyManagerAppId("TEST2019");
+        dto.setKeyManagerRefId("TEST2019-REF");
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "DataProvider");
+        ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper", Map.of("EdDSA", List.of(List.of("TEST2019", "TEST2019-REF"))));
+        try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
+            ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true);
+        }
+    }
+
+    @Test
+    public void should_throwCertifyException_when_qrSettingsFieldMissingInBase64VcTemplate() {
+        String template = "{\"credentialSubject\":{\"fullName\":\"${fullName}\"}}";
+        String base64Template = java.util.Base64.getEncoder().encodeToString(template.getBytes());
+        CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
+        dto.setCredentialFormat("ldp_vc");
+        dto.setVcTemplate(base64Template);
+        dto.setQrSettings(List.of(Map.of("Invalid Field", "${unknownField}")));
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "DataProvider");
+        CertifyException ex = assertThrows(CertifyException.class, () ->
+                ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
+        );
+        assertEquals(ErrorConstants.QR_INVALID_FIELD_REFERENCE, ex.getErrorCode());
     }
 
     @Test
