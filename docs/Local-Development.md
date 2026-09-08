@@ -153,6 +153,7 @@ mvn clean install -Dgpg.skip=true
 ## Setting up Presentation During Issuance
 To setup presentation requirement during issuance, follow the steps below:
 1. **Configuration:** Use the following properties in `application-local.properties` to setup presentation requirement during issuance.
+
    ```properties
    ## Use certify as Auth Server
    # Use below properties to use certify as authorization server
@@ -170,6 +171,7 @@ To setup presentation requirement during issuance, follow the steps below:
    mosip.certify.oauth.code-challenge-methods-supported=S256
    mosip.certify.oauth.interactive-authorization-endpoint=${mosip.certify.authorization.url}${server.servlet.path}/oauth/iae
    ```
+
 2. **Local VP Request Configuration:** `application-local.properties` points `mosip.certify.vp-request.config-file-url` to `vp_request_config-local.json`. This file contains hardcoded `clientId` and `nonce` values that match the sample DCQL VP token used by the Postman collection, so the embedded Inji Verify library's signature / domain / challenge checks pass without regenerating a VP for every run. Deployment configurations should continue to use `vp_request_config.json` (no hardcoded `clientId` / `nonce`).
 3. Import the **Inji Certify - Presentation During Issuance VCI** collection and the [presentation-during-issuance environment](./postman-collections/Inji-certify-presentation-during-issuance.postman_environment.json) from [docs/postman-collections](./postman-collections/) to test the flow, running the requests in order:
 4. Use the `1. Discovery Endpoints Copy` folder to fetch the issuer and OAuth authorization-server metadata endpoints.
