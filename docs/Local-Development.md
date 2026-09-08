@@ -14,8 +14,7 @@
 5. Get a compatible eSignet setup running configured with the appropriate Authenticator plugin implementation matching the VCI plugin.
     * Configure `mosip.certify.authorization.url` to point to your Authorization service hostname, this could be a working eSignet instance or another AuthZ provider configured with an [Authenticator plugin implementation](https://docs.esignet.io/integration/authenticator), essentially enabling the VC Issuing plugin to do the work.
     * Configure `mosip.certify.domain.url`, `mosip.certify.identifier`, `mosip.certify.authn.issuer-uri`, `mosip.certify.authn.jwk-set-uri`, `mosip.certify.authn.allowed-audiences` appropriately as per the Authorization service and Certify URI.
-    * Update the `mosip.certify.key-values` with the well known appropriately, with the correct credential-type, scope and other relevant attributes.
-    * Update the well known configuration in `mosip.certify.key-values` to match the Credential type, scope and other fields to match your VerifiableCredential.
+    * Configure your Verifiable Credential types, scopes and other well-known attributes via the `/credential-configurations` API (stored in the `credential_config` table). Refer to [Credential-Issuer-Configuration.md](./Credential-Issuer-Configuration.md) for details.
     * Appropriately configure the `mosip.certify.authn.allowed-audiences` to allowed audiences such that it matches with the AuthZ token when the Credential issue request is made to Certify.
 6. (required if Mobile driving license configured) Onboard issuer key and certificate data into property `mosip.certify.mock.mdoc.issuer-key-cert` using the creation script.
 7. Perform Authentication & VC Issuance to see if the Certify & AuthZ stack is working apprpriately. Look out for the Postman collections referred to in the main README.md of this project.
@@ -154,23 +153,23 @@ mvn clean install -Dgpg.skip=true
 ## Setting up Presentation During Issuance
 To setup presentation requirement during issuance, follow the steps below:
 1. **Configuration:** Use the following properties in `application-local.properties` to setup presentation requirement during issuance.
-```properties
-## Use certify as Auth Server
-# Use below properties to use certify as authorization server
-#mosip.certify.authorization.url=http://localhost:8090
-#mosip.certify.authn.issuer-uri=${mosip.certify.authorization.url}
-#mosip.certify.authn.jwk-set-uri=${mosip.certify.authorization.url}${server.servlet.path}/.well-known/jwks.json
-#mosip.certify.authn.allowed-audiences={ '${mosip.certify.authorization.url}${server.servlet.path}/issuance/credential' }
+   ```properties
+   ## Use certify as Auth Server
+   # Use below properties to use certify as authorization server
+   #mosip.certify.authorization.url=http://localhost:8090
+   #mosip.certify.authn.issuer-uri=${mosip.certify.authorization.url}
+   #mosip.certify.authn.jwk-set-uri=${mosip.certify.authorization.url}${server.servlet.path}/.well-known/jwks.json
+   #mosip.certify.authn.allowed-audiences={ '${mosip.certify.authorization.url}${server.servlet.path}/issuance/credential' }
 
-## Auth Server Configurations
-mosip.certify.oauth.issuer=${mosip.certify.authorization.url}
-mosip.certify.oauth.token-endpoint=${mosip.certify.authorization.url}${server.servlet.path}/oauth/token
-mosip.certify.oauth.jwks-uri=${mosip.certify.authorization.url}${server.servlet.path}/.well-known/jwks.json
-mosip.certify.oauth.grant-types-supported=authorization_code,urn:ietf:params:oauth:grant-type:pre-authorized_code
-mosip.certify.oauth.response-types-supported=code
-mosip.certify.oauth.code-challenge-methods-supported=S256
-mosip.certify.oauth.interactive-authorization-endpoint=${mosip.certify.authorization.url}${server.servlet.path}/oauth/iae
-```
+   ## Auth Server Configurations
+   mosip.certify.oauth.issuer=${mosip.certify.authorization.url}
+   mosip.certify.oauth.token-endpoint=${mosip.certify.authorization.url}${server.servlet.path}/oauth/token
+   mosip.certify.oauth.jwks-uri=${mosip.certify.authorization.url}${server.servlet.path}/.well-known/jwks.json
+   mosip.certify.oauth.grant-types-supported=authorization_code,urn:ietf:params:oauth:grant-type:pre-authorized_code
+   mosip.certify.oauth.response-types-supported=code
+   mosip.certify.oauth.code-challenge-methods-supported=S256
+   mosip.certify.oauth.interactive-authorization-endpoint=${mosip.certify.authorization.url}${server.servlet.path}/oauth/iae
+   ```
 2. **Local VP Request Configuration:** `application-local.properties` points `mosip.certify.vp-request.config-file-url` to `vp_request_config-local.json`. This file contains hardcoded `clientId` and `nonce` values that match the sample DCQL VP token used by the Postman collection, so the embedded Inji Verify library's signature / domain / challenge checks pass without regenerating a VP for every run. Deployment configurations should continue to use `vp_request_config.json` (no hardcoded `clientId` / `nonce`).
 3. Import the **Inji Certify - Presentation During Issuance VCI** collection and the [presentation-during-issuance environment](./postman-collections/Inji-certify-presentation-during-issuance.postman_environment.json) from [docs/postman-collections](./postman-collections/) to test the flow, running the requests in order:
 4. Use the `1. Discovery Endpoints Copy` folder to fetch the issuer and OAuth authorization-server metadata endpoints.
