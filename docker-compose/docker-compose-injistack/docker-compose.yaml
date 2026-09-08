@@ -27,6 +27,9 @@ services:
       - enable_certify_artifactory=false
       - download_hsm_client=false
       - mosip_certify_domain_url=http://certify-nginx:80
+      # Set this on the host before starting compose, e.g.:
+      #   export CERTIFY_FARMER_DID_URL=did:web:your-tunnel-hostname
+      - CERTIFY_FARMER_DID_URL=${CERTIFY_FARMER_DID_URL:-}
     volumes:
       - ./config/certify-default.properties:/home/mosip/config/certify-default.properties
       - ./config/certify-csvdp-farmer.properties:/home/mosip/config/certify-csvdp-farmer.properties
