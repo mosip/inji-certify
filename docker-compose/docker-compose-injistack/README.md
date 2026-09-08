@@ -402,5 +402,5 @@ docker-compose down -v
 
 ### Presentation During Issuance (PDI)
 
-Certify supports the **Presentation During Issuance** flow using the embedded **verify-core** library (bundled in-process within the `inji-certify-with-plugins` image) — there is no separate `verify-service` container to run.
+Certify supports the **Presentation During Issuance** flow using the embedded **verify-core** library, which is a dependency of the Certify service and runs in-process — there is no separate `verify-service` container to run.
 

@@ -8,7 +8,7 @@
 1. Clone the repo, usually the active development happens on the `develop` branch but one can check out a tagged version as well.
 2. Run the DB init scripts present in `db_scripts/inji_certify` , running `./deploy.sh deploy.properties` is a good way to init the DB.
 3. Decide on the issuance mode of Certify. Some plugins enable Certify to operate as a Proxy and others enable it to work as an Issuer, configure `mosip.certify.plugin-mode` appropriately as `DataProvider` or `VCIssuance`.
-    * [Recommended] Set it to `DataProvider` if you want a quickest possible working setup, and configure `mosip.certify.data-provider-plugin.issuer-public-key-uri` appropriately.
+    * [Recommended] Set it to `DataProvider` if you want a quickest possible working setup, and configure `mosip.certify.data-provider-plugin.did-url` appropriately.
     * If you have another Issuance module such as Sunbird, MOSIP Stack, you may want to set it up in `VCIssuance` mode.
 4. Decide on the VCI plugin for use locally and configure it, while running locally from an IDE such as Eclipse or IntelliJ one needs to add configuration to the `application-local.properties` and add the VCI plugin dependency JAR to the certify-service project which implements one of `DataProviderPlugin` or `VCIssuancePlugin` interfaces.
 5. Get a compatible eSignet setup running configured with the appropriate Authenticator plugin implementation matching the VCI plugin.
