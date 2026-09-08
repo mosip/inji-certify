@@ -4,19 +4,19 @@ Two collections share one environment:
 
 | Postman name | File | What it does |
 |---|---|---|
-| `certify- Mock IDA` | `inji-certify-with-mock-identity.postman_collection.json` | Bearer credential issuance |
-| `certify- Mock IDA - DPoP` | `inji-certify-with-mock-identity-dpop.postman_collection.json` | DPoP-constrained issuance (RFC 9449) |
-| `certify-mock env` | `inji-certify-with-mock-identity.postman_environment.json` | shared by both |
+| `Inji Certify With Mock Identity` | `inji-certify-with-mock-identity.postman_collection.json` | Bearer credential issuance |
+| `Inji Certify With Mock Identity DPoP` | `inji-certify-with-mock-identity-dpop.postman_collection.json` | DPoP-constrained issuance (RFC 9449) |
+| `ENV Mock Identity` | `inji-certify-with-mock-identity.postman_environment.json` | shared by both |
 
-Both collections must use the **same** environment. The Bearer collection's `Get Tokens V2` publishes `unbound_access_token` into it, and the DPoP scenarios use that as the "token with no `cnf.jkt`" fixture.
+Both collections must use the **same** environment. The Bearer collection's `6. Get Tokens V2` publishes `unbound_access_token` into it, and the DPoP scenarios use that as the "token with no `cnf.jkt`" fixture.
 
 ## Run order
 
-Clients first, if they are not registered yet: `certify- Mock IDA - DPoP` → **OIDC Client Mgmt (DPoP)** for `dpop-wallet-demo`, and `certify- Mock IDA` → **OIDC Client Mgmt** for `wallet-demo`, once per deployment. Skip it against the local docker-compose stack — `setup-esignet.mjs` registers both clients there. See *Client registration*.
+Clients first, if they are not registered yet: `Inji Certify With Mock Identity DPoP` → **OIDC Client Mgmt (DPoP)** for `dpop-wallet-demo`, and `Inji Certify With Mock Identity` → **OIDC Client Mgmt** for `wallet-demo`, once per deployment. Skip it against the local docker-compose stack — `setup-esignet.mjs` registers both clients there. See *Client registration*.
 
-1. `certify- Mock IDA` → **VCI** folder, top to bottom. `Authorize / OAuthdetails request V2` must run before `Send OTP` — it sets `transaction_id`, `oauth_details_key` and `oauth_details_hash`.
-2. `certify- Mock IDA - DPoP` → **VCI (DPoP)** folder (steps 1–8, in order).
-3. `certify- Mock IDA - DPoP` → **DPoP scenarios**. These depend on both `access_token` (bound, from step 2) and `unbound_access_token` (from step 1).
+1. `Inji Certify With Mock Identity` → **VCI** folder, top to bottom. `2. Authorize / OAuthdetails request V2` must run before `3. Send OTP` — it sets `transaction_id`, `oauth_details_key` and `oauth_details_hash`.
+2. `Inji Certify With Mock Identity DPoP` → **VCI (DPoP)** folder (steps 1–8, in order).
+3. `Inji Certify With Mock Identity DPoP` → **DPoP scenarios**. These depend on both `access_token` (bound, from step 2) and `unbound_access_token` (from step 1).
 
 ## Switching deployments
 
@@ -36,7 +36,7 @@ The environment ships pointing at a **local** deployment. To run the VCI flow ag
 
 Both describe **certify**, which stays on `http://localhost:8091` no matter which eSignet you point at. Switching `authServerUrl` to a hosted host and dragging `audUrl` along with it is the single most common way to break this suite.
 
-`Get Farmer Credential` signs the OpenID4VCI proof with `"aud": audUrl`, and `JwtProofValidator` compares it as an exact string against certify's `mosip.certify.identifier`. It must equal the `credential_issuer` value certify advertises:
+`8. Get Farmer Credential` signs the OpenID4VCI proof with `"aud": audUrl`, and `JwtProofValidator` compares it as an exact string against certify's `mosip.certify.identifier`. It must equal the `credential_issuer` value certify advertises:
 
 ```bash
 curl -s $certifyUrl/.well-known/openid-credential-issuer \

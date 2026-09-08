@@ -70,6 +70,6 @@ sequenceDiagram
 ## References
 
 - [W3C Data Integrity Proofs](https://www.w3.org/TR/vc-data-integrity/)
-- [Inji Certify Credential Issuer Configuration](./Credential-Issuer-Configuration.md)
+- [Inji Certify Credential Issuer Configuration](./Credential_Issuer_Configuration.md)
 
 ---
