@@ -118,6 +118,9 @@ public class InjiTestRunner {
 				}
 			}
 
+			// Needed for every use case, not just mosipid, else eSignet returns 403 Forbidden
+			AdminTestUtil.fetchAndStoreCsrfToken();
+			
 			if (useCaseToExecute.equalsIgnoreCase("mosipid")) {
 
 				InjiCertifyUtil.dBCleanup();
@@ -137,7 +140,9 @@ public class InjiTestRunner {
 
 			}
 		} catch (Exception e) {
-			LOGGER.error("Exception " + e.getMessage());
+			LOGGER.error("Exception " + e.getMessage(), e);
+			// Fatal init/run failure: exit non-zero instead of falling through to the success path
+			System.exit(1);
 		}
 
 		if (useCaseToExecute.equalsIgnoreCase("landregistry")) {
