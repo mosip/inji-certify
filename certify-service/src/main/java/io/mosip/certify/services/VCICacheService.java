@@ -21,6 +21,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class VCICacheService {
 
+    public enum PreAuthCodeClaimResult {
+        CLAIMED,
+        EXPIRED,
+        INVALID_OR_USED
+    }
+
     @Autowired
     private CacheManager cacheManager;
 
@@ -155,6 +161,22 @@ public class VCICacheService {
             }
             markPreAuthCodeAsUsed(preAuthCode);
             return true;
+        }
+    }
+
+    public PreAuthCodeClaimResult claimPreAuthCodeIfUnexpired(String preAuthCode, long currentTime) {
+        synchronized (this) {
+            PreAuthCodeData codeData = getPreAuthCodeData(preAuthCode);
+            if (codeData == null || isPreAuthCodeUsed(preAuthCode)) {
+                return PreAuthCodeClaimResult.INVALID_OR_USED;
+            }
+
+            if (codeData.getExpiresAt() < currentTime) {
+                return PreAuthCodeClaimResult.EXPIRED;
+            }
+
+            markPreAuthCodeAsUsed(preAuthCode);
+            return PreAuthCodeClaimResult.CLAIMED;
         }
     }
 
