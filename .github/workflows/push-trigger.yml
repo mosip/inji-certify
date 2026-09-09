@@ -305,6 +305,7 @@ jobs:
           sed -i 's|eSignetbaseurl=.*|eSignetbaseurl=https://esignet-mock.released.mosip.net|' "$PROPS"
           sed -i 's|db-server=.*|db-server=database|' "$PROPS"
           sed -i 's|db-port=.*|db-port=5432|' "$PROPS"
+          sed -i 's|keycloak-external-url.*|keycloak-external-url=http://keycloak-mock:8080|' "$PROPS"
 
       - name: Build apitest jar
         run: |
@@ -340,9 +341,61 @@ jobs:
           sed -i 's|db-port=.*|db-port=5432|' api-test/target/config/injiCertify.properties
           sed -i 's|useCaseToExecute=.*|useCaseToExecute=mock|' api-test/target/config/injiCertify.properties
           sed -i 's|eSignetbaseurl=.*|eSignetbaseurl=https://esignet-mock.released.mosip.net|' api-test/target/config/injiCertify.properties
+          sed -i 's|keycloak-external-url.*|keycloak-external-url=http://keycloak-mock:8080|' api-test/target/config/injiCertify.properties
           touch application.properties
           mkdir -p "Biometric Devices"
           mkdir -p resource
+
+          # Create WireMock stubs for Keycloak mock service
+          mkdir -p docker-compose/docker-compose-injistack/keycloak-mock-stubs/mappings
+          cat > docker-compose/docker-compose-injistack/keycloak-mock-stubs/mappings/token.json << 'STUBEOF'
+          {
+            "request": { "method": "POST", "urlPattern": "/realms/.*/protocol/openid-connect/token" },
+            "response": {
+              "status": 200,
+              "headers": { "Content-Type": "application/json" },
+              "body": "{\"access_token\":\"ci-mock-token\",\"expires_in\":3600,\"refresh_expires_in\":0,\"token_type\":\"Bearer\",\"scope\":\"email profile\"}"
+            }
+          }
+          STUBEOF
+          cat > docker-compose/docker-compose-injistack/keycloak-mock-stubs/mappings/users-list.json << 'STUBEOF'
+          {
+            "request": { "method": "GET", "urlPattern": "/admin/realms/.*/users.*" },
+            "response": {
+              "status": 200,
+              "headers": { "Content-Type": "application/json" },
+              "body": "[]"
+            }
+          }
+          STUBEOF
+          cat > docker-compose/docker-compose-injistack/keycloak-mock-stubs/mappings/users-create.json << 'STUBEOF'
+          {
+            "request": { "method": "POST", "urlPattern": "/admin/realms/.*/users$" },
+            "response": {
+              "status": 201,
+              "headers": {
+                "Content-Type": "application/json",
+                "Location": "http://keycloak-mock:8080/admin/realms/mock/users/ci-mock-user-001"
+              }
+            }
+          }
+          STUBEOF
+          cat > docker-compose/docker-compose-injistack/keycloak-mock-stubs/mappings/users-delete.json << 'STUBEOF'
+          {
+            "request": { "method": "DELETE", "urlPattern": "/admin/realms/.*/users/.*" },
+            "response": { "status": 204 }
+          }
+          STUBEOF
+          cat > docker-compose/docker-compose-injistack/keycloak-mock-stubs/mappings/catchall.json << 'STUBEOF'
+          {
+            "request": { "method": "ANY", "urlPattern": "/.*" },
+            "response": {
+              "status": 200,
+              "headers": { "Content-Type": "application/json" },
+              "body": "{}"
+            }
+          }
+          STUBEOF
 
           # Replace test suites with CI-only versions (source files unchanged)
           cat > api-test/target/testNgXmlFiles/injicertifySuite.xml << 'XMLEOF'
@@ -423,7 +476,7 @@ jobs:
         run: docker build -t apitest-inji-certify:ci -f api-test/Dockerfile .
 
       - name: Start Full Stack
-        run: docker compose -f docker-compose/docker-compose-injistack/docker-compose-ci.yaml up -d database certify certify-nginx
+        run: docker compose -f docker-compose/docker-compose-injistack/docker-compose-ci.yaml up -d database keycloak-mock certify certify-nginx
 
       - name: Show container status
         if: always()

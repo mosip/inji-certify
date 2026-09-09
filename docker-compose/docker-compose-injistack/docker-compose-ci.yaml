@@ -62,6 +62,14 @@ services:
     depends_on:
       - certify
 
+  keycloak-mock:
+    container_name: keycloak-mock
+    image: wiremock/wiremock:3.3.1
+    ports:
+      - "8083:8080"
+    volumes:
+      - ./keycloak-mock-stubs:/home/wiremock
+
   apitest:
     container_name: apitest
     image: apitest-inji-certify:ci
@@ -69,6 +77,8 @@ services:
     depends_on:
       certify:
         condition: service_healthy
+      keycloak-mock:
+        condition: service_started
     environment:
       - ENV_ENDPOINT=http://certify:8090
       - ENV_TESTLEVEL=smokeAndRegression
