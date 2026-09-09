@@ -161,14 +161,14 @@ Refer to the document for custom `@context` registration: https://github.com/inj
 
 **Note**: Refer the relevant config file based on use case to connect to the required environment.
 
-Ensure all configuration files are properly updated in the config directory if you have are making any changes suggested for any Advanced usecase:
+Ensure each of the following files is updated in its documented directory if you are making any changes suggested for any Advanced usecase. The `.properties`, `.csv` and `vp_request_config.json` files live under `config/`, while the JSON-LD `@context` files live under the separate `context/` directory:
 
-- certify-default.properties
-- certify-csvdp-farmer.properties
-- certify-mock-mdl.properties
-- certify-mdl-pdi.properties
-- vp_request_config.json (drives the Presentation During Issuance flow)
-- context/farmer-context.json, context/mdl-pdi-context.json (JSON-LD @context files)
+- config/certify-default.properties
+- config/certify-csvdp-farmer.properties
+- config/certify-mock-mdl.properties
+- config/certify-mdl-pdi.properties
+- config/vp_request_config.json (drives the Presentation During Issuance flow)
+- context/farmer-context.json, context/mdl-pdi-context.json (JSON-LD `@context` files under the `context/` directory)
 
 Following files are optional and can be used to configure the Inji Web application for your usecase, if you are not using web application, you can skip these files:
 
