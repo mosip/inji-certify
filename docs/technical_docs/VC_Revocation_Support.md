@@ -173,7 +173,7 @@ end
             "status": true
         }
      ```
-   - The values for request body can be referenced from [Ledger Search Response](./Ledger-Issuance.md).
+   - The values for request body can be referenced from [Ledger Search Response](./Ledger_Issuance.md).
 - The system records this change for audit and adds the entry in `credential_status_transaction` table.
 - Sequence diagram for updating credential status:
 ```mermaid
@@ -289,7 +289,7 @@ end
 
 - For more details on the API endpoints and request/response formats, refer to the Inji Certify API documentation.
 
-For more details on the API endpoints and request/response formats, refer to the [Inji Certify API documentation](mosip.stoplight.io).
+For more details on the API endpoints and request/response formats, refer to the [Inji Certify API documentation](https://mosip.stoplight.io/docs/inji-certify).
 
 ## Notes
 - The Status List Credential is now independent of the ledger.

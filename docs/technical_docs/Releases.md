@@ -19,4 +19,4 @@ moved client.zip to build time dependency in dockerfile - addition of new hsm-cl
 
 ## Restructure of credential_template table
 
-Step-by-Step Migration guide for upgrade from 0.11.0 to 0.12.0 is available at [Migration Guide](./Migration-Guide-0.11.0-to-0.12.0.md)
+Step-by-Step Migration guide for upgrade from 0.11.0 to 0.12.0 is available at [Migration Guide](./Migration_Guide_0.11.0_To_0.12.0.md)

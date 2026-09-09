@@ -12,8 +12,8 @@ Ledger issuance refers to the process of creating a new ledger entry while a Ver
 ### Credential Status Details in Ledger
  - The ledger entry also contains credential status details (including status purpose, status list index, and status list credential URL), which allows tracking and managing the status of the issued credentials. 
  - The availability of credential status is subject to the allowed status purposes set in the credential configuration. The issuer can enable or disable the status purposed based on their business requirements.
- - To read more about credential status purposes, refer to the [credentialStatusPurposes Support](./VC-Revocation-Support.md) documentation.
- - To read about configuring allowed status purposes, refer to the [Credential Configuration](./Credential-Issuer-Configuration.md#configuration-properties) documentation.
+ - To read more about credential status purposes, refer to the [credentialStatusPurposes Support](./VC_Revocation_Support.md) documentation.
+ - To read about configuring allowed status purposes, refer to the [Credential Configuration](./Credential_Issuer_Configuration.md#configuration-properties) documentation.
 
 ## Ledger Issuance Flow
 When a VC is issued, the following steps are typically involved in the ledger issuance process:
@@ -68,7 +68,7 @@ The following points should be considered when enabling or disabling ledger issu
 ## Ledger Search
  - Ledger search allows users to query the ledger for specific credentials based on various criteria. 
  - The response retrieved from the ledger search can be used as a reference for updating the credential status.
- - Refer to the [Update Credential Status API](./VC-Revocation-Support.md#how-it-works) Point No. `3` documentation for more details on how to use the ledger search results.
+ - Refer to the [Update Credential Status API](./VC_Revocation_Support.md#how-it-works) Point No. `3` documentation for more details on how to use the ledger search results.
  - Ledger entries can be retrieved using `/ledger-search` endpoint to get the status information and other details.
 
 **Sample request of ledger search**:

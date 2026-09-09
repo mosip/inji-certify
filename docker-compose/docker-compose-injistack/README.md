@@ -20,9 +20,9 @@ You have two options for the certify plugin which gives Verifiable Credentials o
 - Docker and Docker Compose installed on your system
 - Git (to clone the repository)
 - Basic understanding of Docker and container operations
-- Relevant Postman collections available from [here](../../docs/postman-collections/), please add the `mock` ones and install the [pmlib library](https://joolfe.github.io/postman-util-lib/) as per the steps given under the heading `Postman Collection` to the Postman setup
+- Relevant Postman collections available from [here](../../docs/postman_collections/), please add the `mock` ones and install the [pmlib library](https://joolfe.github.io/postman-util-lib/) as per the steps given under the heading `Postman Collection` to the Postman setup
 - Network Connectivity to access the AuthZ Service, in this example MOSIP Collab setup has been used
-  - We can set up AuthZ server locally as well or use the one deployed in any other environment. If we do so, we need to update following values in environment variable of [postman collection](../../docs/postman-collections/inji-certify-with-mock-identity.postman_environment.json)
+  - We can set up AuthZ server locally as well or use the one deployed in any other environment. If we do so, we need to update following values in environment variable of [postman collection](../../docs/postman_collections/authorization_code_flow/data_provider_plugin/inji-certify-with-mock-identity.postman_environment.json)
     - authServerUrl - host of auth server. If it's esignet running locally then value will be http://localhost:8088/v1/esignet
     - aud - token audience. If it's esignet running locally then value will be http://localhost:8088/v1/esignet/oauth/v2/token
     - Create OIDC client if supporting `private_key_jwt` client authentication. While doing this, update following values
@@ -206,7 +206,7 @@ The following services will be available:
 ### Running only certify service - Accessing the Credentials via the Postman Interface
 
 1. Open Postman
-2. Import the [Mock Collections & Environments](../../docs/postman-collections/) from here, make appropriate changes to the Credential Type and contexts as per your VerifiableCredential and the configured WellKnown.
+2. Import the [Mock Collections & Environments](../../docs/postman_collections/) from here, make appropriate changes to the Credential Type and contexts as per your VerifiableCredential and the configured WellKnown.
 3. You can
     - Download credentials
     - View credential status

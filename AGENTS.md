@@ -121,7 +121,7 @@ Failures answer `401` with a `WWW-Authenticate` challenge **in the scheme the ca
 `error_description`, and for `invalid_dpop_proof` an `algs` list. The description names the failing claim, so a wallet
 developer is told which check rejected the proof rather than a bare `invalid_dpop_proof`.
 
-See `docs/postman-collections/README-mock-identity-dpop.md` for the 26-scenario conformance suite covering each rule.
+See `docs/postman_collections/authorization_code_flow/data_provider_plugin/README-mock-identity-dpop.md` for the 26-scenario conformance suite covering each rule.
 
 ---
 
@@ -237,8 +237,8 @@ Switch to Redis by setting `spring.cache.type=redis` and configuring `spring.dat
 - [Sample local config](./certify-service/src/main/resources/application-local.properties)
 - [DB scripts](./db_scripts/)
 - [Docker Compose quickstart](./docker-compose/docker-compose-injistack/README.md)
-- [Local dev guide](./docs/Local-Development.md)
-- [Credential config guide](./docs/Credential-Issuer-Configuration.md)
-- [VCIssuance vs DataProvider](./docs/VCIssuance-vs-DataProvider.md)
-- [SD-JWT support](./docs/SD-JWT-Support.md)
-- [VC Revocation](./docs/VC-Revocation-Support.md)
+- [Local dev guide](./docs/technical_docs/Local_Development.md)
+- [Credential config guide](./docs/technical_docs/Credential_Issuer_Configuration.md)
+- [VCIssuance vs DataProvider](./docs/technical_docs/VCIssuance_Vs_DataProvider.md)
+- [SD-JWT support](./docs/technical_docs/SD_JWT_Support.md)
+- [VC Revocation](./docs/technical_docs/VC_Revocation_Support.md)
