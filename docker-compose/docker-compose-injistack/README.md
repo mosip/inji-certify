@@ -48,9 +48,7 @@ docker-compose-injistack/
 │   ├── certify-default.properties
 │   ├── certify-csvdp-farmer.properties
 │   ├── certify-mock-mdl.properties
-│   ├── certify-mdl-pdi.properties
 │   ├── farmer_identity_data.csv
-│   ├── driving_license_mosipid.csv
 │   ├── vp_request_config.json
 │   ├── mimoto-bootstrap.properties
 │   ├── mimoto-default.properties
@@ -59,8 +57,7 @@ docker-compose-injistack/
 │   ├── mosip-cbeff.xsd
 │   └── credential-template.html
 ├── context/
-│   ├── farmer-context.json
-│   └── mdl-pdi-context.json
+│   └── farmer-context.json
 ├── nginx.conf
 ├── certify-nginx.conf
 ├── certify_init.sql
@@ -166,9 +163,8 @@ Ensure each of the following files is updated in its documented directory if you
 - config/certify-default.properties
 - config/certify-csvdp-farmer.properties
 - config/certify-mock-mdl.properties
-- config/certify-mdl-pdi.properties
 - config/vp_request_config.json (drives the Presentation During Issuance flow)
-- context/farmer-context.json, context/mdl-pdi-context.json (JSON-LD `@context` files under the `context/` directory)
+- context/farmer-context.json (JSON-LD `@context` file under the `context/` directory)
 
 Following files are optional and can be used to configure the Inji Web application for your usecase, if you are not using web application, you can skip these files:
 
