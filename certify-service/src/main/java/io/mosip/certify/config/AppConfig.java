@@ -34,8 +34,16 @@ import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 import lombok.extern.slf4j.Slf4j;
 
 @Configuration
-@EnableJpaRepositories(basePackages = {"io.mosip.kernel.keymanagerservice.repository", "io.mosip.certify.repository"})
-@EntityScan(basePackages = {"io.mosip.kernel.keymanagerservice.entity, io.mosip.certify.entity"})
+@EnableJpaRepositories(basePackages = {
+        "io.mosip.kernel.keymanagerservice.repository",
+        "io.mosip.certify.repository",
+        "io.inji.verify.repository"
+})
+@EntityScan(basePackages = {
+        "io.mosip.kernel.keymanagerservice.entity",
+        "io.mosip.certify.entity",
+        "io.inji.verify.models"
+})
 @Slf4j
 public class AppConfig implements ApplicationRunner {
 
@@ -79,10 +87,11 @@ public class AppConfig implements ApplicationRunner {
         return new RestTemplate(requestFactory);
     }
 
-    @Bean
+    @Bean("certifyPixelPass")
     public PixelPass pixelPass() {
         return new PixelPass();
     }
+
     @Override
     public void run(ApplicationArguments args) throws Exception {
             initKeys();

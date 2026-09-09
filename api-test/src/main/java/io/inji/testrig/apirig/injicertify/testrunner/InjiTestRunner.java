@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -88,6 +87,11 @@ public class InjiTestRunner {
 			setLogLevels();
 
 			useCaseToExecute = InjiCertifyConfigManager.getproperty("useCaseToExecute");
+			if (useCaseToExecute != null) {
+				useCaseToExecute = useCaseToExecute.trim();
+			} else {
+				useCaseToExecute = "";
+			}
 
 			HealthChecker healthcheck = new HealthChecker();
 			healthcheck.setCurrentRunningModule(GlobalConstants.INJICERTIFY);
@@ -110,7 +114,7 @@ public class InjiTestRunner {
 				String testCasesToExecute = InjiCertifyConfigManager.getproperty("testCasesToExecute");
 				if (testCasesToExecute != null && !testCasesToExecute.isBlank()) {
 					DependencyResolver.loadDependencies(BaseTestCase.getTestCaseInterDependencyPath(useCaseToExecute));
-					InjiCertifyUtil.testCasesInRunScope = DependencyResolver.getDependencies("testCasesToExecute");
+					InjiCertifyUtil.testCasesInRunScope = DependencyResolver.getDependencies(testCasesToExecute.trim());
 				}
 			}
 
@@ -215,6 +219,11 @@ public class InjiTestRunner {
 		File[] files = homeDir.listFiles();
 		if (files != null) {
 			String useCaseToExecute = InjiCertifyConfigManager.getproperty("useCaseToExecute");
+			if (useCaseToExecute != null) {
+				useCaseToExecute = useCaseToExecute.trim();
+			} else {
+				useCaseToExecute = "";
+			}
 			InjiCertifyUtil.currentUseCase = useCaseToExecute;
 
 			for (File file : files) {

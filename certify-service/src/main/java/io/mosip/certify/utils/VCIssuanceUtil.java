@@ -47,7 +47,7 @@ public class VCIssuanceUtil {
         }
 
         if (proofJwtHasNonceClaim != hasNonceEndpoint) {
-            if (proofJwtNonce != null) {
+            if (proofJwtHasNonceClaim) {
                 throw new CertifyException(
                         VCIErrorConstants.INVALID_PROOF,
                         "nonce claim is present, but issuer doesn't support nonce"

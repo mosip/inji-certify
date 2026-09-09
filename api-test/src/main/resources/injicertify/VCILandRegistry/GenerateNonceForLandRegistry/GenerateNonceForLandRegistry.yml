@@ -1,0 +1,13 @@
+GenerateNonceForLandRegistry:
+   InjiCertify_LandRegistry_GenerateNonce_StatusCode_Valid_Smoke_sid:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/nonce
+      uniqueIdentifier: TC_landRegistryDependent_GenerateNonce_01
+      description: Generate nonce for land registry VCI flow
+      role: resident
+      restMethod: post
+      checkOnlyStatusCodeInResponse: true
+      inputTemplate: injicertify/VCILandRegistry/GenerateNonceForLandRegistry/GenerateNonceForLandRegistry
+      outputTemplate: injicertify/responseCode
+      input: '{
+}'
+      output: "200"

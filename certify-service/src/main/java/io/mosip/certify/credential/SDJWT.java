@@ -82,6 +82,11 @@ public class SDJWT extends Credential{
         try {
             
             node = objectMapper.readTree(templatedJSON);
+            for (String path : sdPaths) {
+                if (!SDJsonUtils.isPathValid(node, path)) {
+                    throw new CertifyException(ErrorConstants.SD_CLAIMS_PARSE_ERROR, "SD-Claim path '" + path + "' not found in the credential template.");
+                }
+            }
             SDJsonUtils.constructSDPayload(node, sdObjectBuilder, disclosures, sdPaths, currentPath);
             Map<String,Object>  sdClaims = sdObjectBuilder.build();
             JWTClaimsSet claimsSet = JWTClaimsSet.parse(sdClaims);

@@ -233,7 +233,7 @@ public class IarServiceImpl implements IarService {
             return;
         }
 
-        // Validate that openid4vp_presentation is supported
+        // Validate OpenID4VCI 1.1 interaction type value.
         Arrays.stream(interactionTypesSupported.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
@@ -241,7 +241,8 @@ public class IarServiceImpl implements IarService {
                     InteractionType.OPENID4VP_PRESENTATION.getValue().equals(interactionType))
                 .findFirst()
                 .orElseThrow(() -> new CertifyException(IarConstants.MISSING_INTERACTION_TYPE,
-                    "interaction_types_supported in the request is missing the required interaction type 'openid4vp_presentation'"));
+                    "interaction_types_supported in the request is missing the required interaction type '" +
+                        InteractionType.OPENID4VP_PRESENTATION.getValue() + "'"));
 
         log.debug("Interaction types validation successful: {}", interactionTypesSupported);
     }

@@ -6,7 +6,7 @@ This document outlines the steps to add a new usecase using the Postgres Data Pr
 Current usecases include:
 
 ## Farmer Usecase:
-1. Config file: [certify-csvdp-farmer.properties](../../docker-compose/docker-compose-injistack/certify-csvdp-farmer.properties)
+1. Config file: [certify-csvdp-farmer.properties](../../docker-compose/docker-compose-injistack/config/certify-csvdp-farmer.properties)
 2. Plugin Used: mock-certify-plugin
 3. Plugin mode: `Data Provider`
 4. Conditional Property Name: 

@@ -8,12 +8,12 @@
 	<name>apitest-injicertify</name>
 	<description>Parent project of apitest-injicertify</description>
 	<url>https://github.com/inji/inji-certify</url>
-	<version>0.15.0-SNAPSHOT</version>
+	<version>1.0.0-beta.1-SNAPSHOT</version>
 
 	<licenses>
 		<license>
-			<name>MPL 2.0</name>
-			<url>https://www.mozilla.org/en-US/MPL/2.0/</url>
+			<name>Apache 2.0</name>
+			<url>https://www.apache.org/licenses/LICENSE-2.0</url>
 		</license>
 	</licenses>
 
@@ -43,6 +43,10 @@
 				<enabled>true</enabled>
 			</snapshots>
 		</repository>
+		<repository>
+			<id>danubetech-maven-public</id>
+			<url>https://repo.danubetech.com/repository/maven-public/</url>
+		</repository>
 	</repositories>
 
 	<properties>
@@ -61,14 +65,14 @@
 		<maven.antrun.plugin.version>3.0.0</maven.antrun.plugin.version>
 		<maven.source.plugin.version>2.2.1</maven.source.plugin.version>
 
-		<git.commit.id.plugin.version>3.0.1</git.commit.id.plugin.version>
-		<fileName>apitest-injicertify-0.15.0-SNAPSHOT-jar-with-dependencies</fileName>
+	<git.commit.id.plugin.version>3.0.1</git.commit.id.plugin.version>
+	<fileName>apitest-injicertify-1.0.0-beta.1-SNAPSHOT-jar-with-dependencies</fileName>
 	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>io.mosip.testrig.apitest.commons</groupId>
 			<artifactId>apitest-commons</artifactId>
-			<version>1.5.0-SNAPSHOT</version>
+			<version>1.6.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.openjson</groupId>
@@ -79,6 +83,11 @@
 			<groupId>com.nimbusds</groupId>
 			<artifactId>nimbus-jose-jwt</artifactId>
 			<version>9.41.2</version>
+		</dependency>
+		<dependency>
+			<groupId>info.weboftrust</groupId>
+			<artifactId>ld-signatures-java</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 
 		<dependency>

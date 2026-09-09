@@ -1,6 +1,6 @@
 IARWithVP:
    InjiCertify_IARRequest_with_VP_mdocvp_all_Valid_Smoke_sid:
-      endPoint: $INJICERTIFYBASEURL$/v1/certify/oauth/iar
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/oauth/iae
       uniqueIdentifier: TC_InjiCertify_IARInitialRequest_With_VP_01
       description: get Auth code with verifiable presentation response
       role: noauth
@@ -9,13 +9,15 @@ IARWithVP:
       inputTemplate: injicertify/PresentationDuringIssuance/IARWithVP/IARVP
       outputTemplate: injicertify/PresentationDuringIssuance/IARWithVP/IARVPResult
       input: '{
-		"auth_session":	"$ID:IAR_initial_Request_mdocvp_all_Valid_Smoke_sid_auth_session$"
+		"auth_session":	"$ID:IAR_initial_Request_mdocvp_all_Valid_Smoke_sid_auth_session$",
+		"openid4vp_response": "$OPENID4VP_RESPONSE$"
 }'
       output: '{
+		"status": "ok"
 }'
 
    InjiCertify_IARRequest_with_VP_mdocvp_without_authSession_neg:
-      endPoint: $INJICERTIFYBASEURL$/v1/certify/oauth/iar
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/oauth/iae
       uniqueIdentifier: TC_InjiCertify_IARInitialRequest_With_VP_02
       description: get Auth code without auth session in verifiable presentation response
       role: noauth
@@ -30,7 +32,7 @@ IARWithVP:
 }'
 
    InjiCertify_IARRequest_with_VP_mdocvp_without_openidvpresponse_neg:
-      endPoint: $INJICERTIFYBASEURL$/v1/certify/oauth/iar
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/oauth/iae
       uniqueIdentifier: TC_InjiCertify_IARInitialRequest_With_VP_03
       description: get Auth code wth verifiable presentation reposne without openid vp response
       role: noauth

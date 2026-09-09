@@ -1,11 +1,13 @@
 {
     "TC_InjiCertify_GetCredentialFormDoc_01": [
         "TC_esignetDependent_GenerateToken_04",
-        "TC_esignetDependent_CreateOidc_01"
+        "TC_esignetDependent_CreateOidc_01",
+        "TC_mdlDependent_GenerateNonce_01"
     ],
     "TC_InjiCertify_GetCredentialFormDoc_02": [
         "TC_esignetDependent_GenerateToken_04",
-        "TC_esignetDependent_CreateOidc_01"
+        "TC_esignetDependent_CreateOidc_01",
+        "TC_mdlDependent_GenerateNonce_01"
     ],
     "TC_InjiCertify_mdl_DeleteCredentialConfig_01": ["TC_InjiCertify_addCredentialtypeformdoc_01"],
     "TC_esignetDependent_OAuthdetailsRequest_04": ["TC_esignetDependent_CreateOidc_01"],
@@ -17,15 +19,21 @@
     "TC_InjiCertify_mdl_DeleteCredentialConfig_02": ["TC_InjiCertify_addCredentialtypeformdoc_03"],
     "TC_InjiCertify_GetCredentialFormDoc_03": [
         "TC_esignetDependent_GenerateToken_04",
-        "TC_esignetDependent_CreateOidc_01"
+        "TC_esignetDependent_CreateOidc_01",
+        "TC_mdlDependent_GenerateNonce_01"
     ],
     "TC_InjiCertify_GetCredentialFormDoc_04": [
         "TC_esignetDependent_GenerateToken_04",
-        "TC_esignetDependent_CreateOidc_01"
+        "TC_esignetDependent_CreateOidc_01",
+        "TC_mdlDependent_GenerateNonce_01"
     ],
     "TC_InjiCertify_GetCredentialFormDoc_05": [
         "TC_esignetDependent_GenerateToken_04",
-        "TC_esignetDependent_CreateOidc_01"
+        "TC_esignetDependent_CreateOidc_01",
+        "TC_mdlDependent_GenerateNonce_01"
+    ],
+    "TC_mdlDependent_GenerateNonce_01": [
+        "TC_esignetDependent_GenerateToken_04"
     ],
     "TC_esignetDependent_AuthorizationCode_04": [
         "TC_esignetDependent_OAuthdetailsRequest_04",

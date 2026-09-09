@@ -5,12 +5,14 @@
  */
 package io.mosip.certify.advice;
 
+import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.dto.Error;
 import io.mosip.certify.core.dto.ResponseWrapper;
 import io.mosip.certify.core.dto.VCError;
 import io.mosip.certify.core.dto.OAuthTokenError;
 import io.mosip.certify.core.exception.*;
 import io.mosip.certify.core.util.CommonUtil;
+import io.mosip.certify.dpop.DpopProofValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +37,11 @@ import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -53,6 +60,19 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
 
     @Autowired
     MessageSource messageSource;
+
+    /**
+     * Source of the {@code algs} parameter advertised in a DPoP challenge (RFC 9449
+     * §5.1), so a client that guessed wrong is told what this issuer will accept.
+     *
+     * <p>The validator is asked for the list rather than the property being bound here a
+     * second time: two bindings of one key can be edited apart, and a challenge that
+     * advertises algorithms the validator does not accept sends a wallet developer
+     * chasing a fault that is not theirs. Optional so an advice built outside a Spring
+     * context still answers, just without the {@code algs} hint.
+     */
+    @Autowired(required = false)
+    private DpopProofValidator dpopProofValidator;
 
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers,
@@ -98,7 +118,7 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
             return handleOAuthControllerExceptions(ex);
         }
         if (path != null && path.contains("/issuance/")) {
-            return handleVCIControllerExceptions(ex);
+            return handleVCIControllerExceptions(ex, servletRequest);
         }
 
         return handleInternalControllerException(ex);
@@ -151,32 +171,88 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
         return new ResponseEntity<ResponseWrapper>(getResponseWrapper(UNKNOWN_ERROR, ex.getMessage()), HttpStatus.OK);
     }
 
-    public ResponseEntity<VCError> handleVCIControllerExceptions(Exception ex) {
+    public ResponseEntity<VCError> handleVCIControllerExceptions(Exception ex, HttpServletRequest request) {
+        if(ex instanceof HttpMessageNotReadableException) {
+            String message = "Invalid JSON request body";
+            Throwable cause = ex.getCause();
+
+            // Provide more specific error based on the root cause
+            if (cause instanceof UnrecognizedPropertyException) {
+                UnrecognizedPropertyException propEx =
+                    (UnrecognizedPropertyException) cause;
+                message = String.format("Unrecognized field '%s' in request", propEx.getPropertyName());
+            } else if (cause instanceof InvalidFormatException) {
+                InvalidFormatException formatEx = (InvalidFormatException) cause;
+                String fieldName = formatEx.getPath().isEmpty() ? "unknown"
+                    : formatEx.getPath().get(formatEx.getPath().size() - 1).getFieldName();
+                message = String.format("Invalid format for field '%s' in request", fieldName);
+            } else if (cause instanceof JsonParseException) {
+                message = "Malformed JSON syntax error";
+            } else if (cause instanceof JsonMappingException) {
+                JsonMappingException mappingEx = (JsonMappingException) cause;
+                String fieldName = mappingEx.getPath().isEmpty() ? "unknown"
+                    : mappingEx.getPath().get(mappingEx.getPath().size() - 1).getFieldName();
+                message = String.format("Invalid request structure for field '%s'", fieldName);
+            }
+
+            return new ResponseEntity<>(getVCErrorDto(INVALID_REQUEST, message), HttpStatus.BAD_REQUEST);
+        }
         if(ex instanceof MethodArgumentNotValidException) {
             FieldError fieldError = ((MethodArgumentNotValidException) ex).getBindingResult().getFieldError();
             String message = fieldError != null ? fieldError.getDefaultMessage() : ex.getMessage();
-            return new ResponseEntity<VCError>(getVCErrorDto(message, message), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(getVCErrorDto(message, message), HttpStatus.BAD_REQUEST);
         }
         if(ex instanceof javax.validation.ConstraintViolationException) {
             Set<ConstraintViolation<?>> violations = ((ConstraintViolationException) ex).getConstraintViolations();
             String message = !violations.isEmpty() ? violations.stream().findFirst().get().getMessage() : ex.getMessage();
-            return new ResponseEntity<VCError>(getVCErrorDto(message, message), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(getVCErrorDto(message, message), HttpStatus.BAD_REQUEST);
         }
         if(ex instanceof NotAuthenticatedException) {
-            String errorCode = ((CertifyException) ex).getErrorCode();
-            return new ResponseEntity<VCError>(getVCErrorDto(errorCode, getMessage(errorCode, errorCode)), HttpStatus.UNAUTHORIZED);
+            Object reason = request.getAttribute(Constants.AUTH_ERROR_ATTRIBUTE);
+            // The filter cannot propagate its own exception - it records the failure and
+            // lets the chain run on - so both the code and the description are read back
+            // from the request. Without the code, every DPoP failure would surface as the
+            // generic invalid_token carried by NotAuthenticatedException.
+            Object code = request.getAttribute(Constants.AUTH_ERROR_CODE_ATTRIBUTE);
+            String errorCode = (code instanceof String) ? (String) code : ((CertifyException) ex).getErrorCode();
+            String description = (reason instanceof String) ? (String) reason : getMessage(errorCode, errorCode);
+            HttpHeaders headers = new HttpHeaders();
+            // RFC 9449 §7.1: challenge in the scheme the caller used, so a DPoP client is
+            // not told to retry with Bearer - which it must not do for a bound token. The
+            // algs parameter advertises what the proof may be signed with, as eSignet does.
+            Object schemeAttribute = request.getAttribute(Constants.AUTH_SCHEME_ATTRIBUTE);
+            String scheme = (schemeAttribute instanceof String) ? (String) schemeAttribute : Constants.SCHEME_BEARER;
+            // description can carry proof-supplied text - DpopProofValidator names the
+            // rejected alg, for instance - so it is escaped before going into the header.
+            // Unescaped, a proof with alg = x", scope="openid would inject an auth-param.
+            StringBuilder challenge = new StringBuilder(scheme)
+                    .append(" error=\"").append(quoteAuthParam(errorCode)).append('"')
+                    .append(", error_description=\"").append(quoteAuthParam(description)).append('"');
+            // algs comes from configuration rather than the request, so it is not
+            // attacker-controlled - but it is still a dynamic value, and escaping it
+            // keeps every quoted auth-param in this header safe by the same rule.
+            List<String> algs = dpopProofValidator == null
+                    ? List.of()
+                    : dpopProofValidator.getAllowedAlgorithms();
+            if(INVALID_DPOP_PROOF.equals(errorCode) && !algs.isEmpty()) {
+                challenge.append(", algs=\"")
+                        .append(quoteAuthParam(String.join(" ", algs)))
+                        .append('"');
+            }
+            headers.set(HttpHeaders.WWW_AUTHENTICATE, challenge.toString());
+            return new ResponseEntity<>(getVCErrorDto(errorCode, description), headers, HttpStatus.UNAUTHORIZED);
         }
         if(ex instanceof InvalidRequestException) {
             String errorCode = ((InvalidRequestException) ex).getErrorCode();
-            return new ResponseEntity<VCError>(getVCErrorDto(errorCode, getMessage(errorCode, errorCode)), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(getVCErrorDto(errorCode, getMessage(errorCode, errorCode)), HttpStatus.BAD_REQUEST);
         }
         if(ex instanceof CertifyException) {
             String errorCode = ((CertifyException) ex).getErrorCode();
             String errorMessage = ex.getMessage();
-            return new ResponseEntity<VCError>(getVCErrorDto(errorCode, errorMessage), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(getVCErrorDto(errorCode, errorMessage), HttpStatus.BAD_REQUEST);
         }
         log.error("Unhandled exception encountered in handler advice", ex);
-        return new ResponseEntity<VCError>(getVCErrorDto(UNKNOWN_ERROR, ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(getVCErrorDto(UNKNOWN_ERROR, ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     public ResponseEntity<Object> handleOAuthControllerExceptions(Exception ex) {
@@ -316,5 +392,29 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
             default:
                 return HttpStatus.BAD_REQUEST;
         }
+    }
+
+    /**
+     * Escapes a value for an RFC 9110 quoted-string auth-param.
+     *
+     * <p>Backslash and double quote are backslash-escaped so they cannot close the
+     * quoted-string and start another parameter; control characters, which would let a
+     * value break the header itself, are replaced with a space.
+     */
+    private static String quoteAuthParam(String value) {
+        if (value == null) {
+            return "";
+        }
+        StringBuilder out = new StringBuilder(value.length());
+        for (char c : value.toCharArray()) {
+            if (c < 0x20 || c == 0x7f) {
+                out.append(' ');
+            } else if (c == '"' || c == '\\') {
+                out.append('\\').append(c);
+            } else {
+                out.append(c);
+            }
+        }
+        return out.toString();
     }
 }

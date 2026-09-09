@@ -17,3 +17,7 @@ INJICERT-1290------InjiCertify_UploadCertificate_ForLandRegistry_without_applica
 INJICERT-1290------InjiCertify_UploadCertificate_ForLandRegistry_without_referenceId_value_neg
 INJICERT-1260------InjiCertify_UpdateCredentialStatusV2_ForLandRegistry_Revocation_invalid_statuspurpose_Neg
 INJICERT-1320------InjiCertify_GetCredentialFormdl_IdpAccessToken_Unsupported_JWT_Algo
+INJICERT-878------InjiCertify_GetCredentialForLandRegistry_IdpAccessToken_2.0_EdDSA_Did_Key_Sign_invalid
+INJICERT-878------InjiCertify_GetCredentialForLandRegistry_IdpAccessToken_2.0_ES256_Did_Key_Sign_invalid
+INJICERT-878------InjiCertify_UpdateCredentialStatus_ForLandRegistry_Revocation_invalid_statuspurpose_Neg
+INJICERT-878------InjiCertify_UpdateCredentialStatus_ForLandRegistry_Revocation_without_statuspurpose_Neg

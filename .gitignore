@@ -34,3 +34,4 @@ target/
 helm/*/Chart.lock
 helm/*/charts/
 .DS_Store
+.github/keys/

@@ -23,7 +23,6 @@ spec:
         {{- if or .Values.podAnnotations .Values.metrics.enabled }}
           {{- include "inji-certify.podAnnotations" . | nindent 8 }}
           {{- end }}
-
       labels: {{- include "common.labels.standard" . | nindent 8 }}
         {{- if .Values.podLabels }}
         {{- include "common.tplvalues.render" (dict "value" .Values.podLabels "context" $) | nindent 8 }}
@@ -54,8 +53,8 @@ spec:
       {{- if .Values.podSecurityContext.enabled }}
       securityContext: {{- omit .Values.podSecurityContext "enabled" | toYaml | nindent 8 }}
       {{- end }}
+      {{- if and .Values.volumePermissions.enabled .Values.persistence.enabled }}
       initContainers:
-        {{- if and .Values.volumePermissions.enabled .Values.persistence.enabled }}
         - name: volume-permissions
           image: {{ template "inji-certify.image" . }}
           imagePullPolicy: {{ .Values.volumePermissions.image.pullPolicy | quote }}
@@ -71,7 +70,7 @@ spec:
           volumeMounts:
             - name: {{ .Values.persistence.volume_name }}
               mountPath: {{ .Values.persistence.mountDir }}
-        {{- end }}
+      {{- end }}
       containers:
         - name: inji-certify
           image: {{ template "inji-certify.image" . }}
@@ -90,7 +89,7 @@ spec:
           {{- end }}
           env:
             - name: container_user
-              value: {{ .Values.containerSecurityContext.runAsUser }}
+              value: {{ .Values.containerSecurityContext.runAsUser | quote }}
             {{- if .Values.additionalResources.javaOpts }}
             - name: JDK_JAVA_OPTIONS
               value: {{ .Values.additionalResources.javaOpts }}
@@ -102,7 +101,7 @@ spec:
             {{- if .Values.activeProfileEnv }}
             - name: active_profile_env
               value: {{ .Values.activeProfileEnv }}
-            {{- end}}
+            {{- end }}
             {{- if .Values.extraEnvVars }}
             {{- include "common.tplvalues.render" (dict "value" .Values.extraEnvVars "context" $) | nindent 12 }}
             {{- end }}
@@ -126,7 +125,6 @@ spec:
           ports:
             - name: spring-service
               containerPort: {{ .Values.springServicePort }}
-
           {{- if .Values.resources }}
           resources: {{- toYaml .Values.resources | nindent 12 }}
           {{- end }}
@@ -146,15 +144,16 @@ spec:
           readinessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.customReadinessProbe "context" $) | nindent 12 }}
           {{- end }}
           {{- if .Values.persistence.enabled }}
-          - name: {{ .Values.persistence.volume_name }}
-            mountPath: {{ .Values.persistence.mountDir }}
+          volumeMounts:
+            - name: {{ .Values.persistence.volume_name }}
+              mountPath: {{ .Values.persistence.mountDir }}
           {{- end }}
         {{- if .Values.sidecars }}
         {{- include "common.tplvalues.render" ( dict "value" .Values.sidecars "context" $) | nindent 8 }}
         {{- end }}
-      volumes:
       {{- if .Values.persistence.enabled }}
-      - name: {{ .Values.persistence.volume_name }}
-        persistentVolumeClaim:
-          claimName: {{ .Values.persistence.existingClaim | default .Values.persistence.pvc_claim_name  }}
-      {{ end }}
+      volumes:
+        - name: {{ .Values.persistence.volume_name }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default .Values.persistence.pvc_claim_name }}
+      {{- end }}

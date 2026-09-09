@@ -39,7 +39,7 @@ OAuthDetailsRequestForLandRegistry:
       input: '{
       	"requestTime": "$TIMESTAMP$",
       	"clientId": "$ID:ESignet_CreateOIDCClientV2_ForLandRegistry_all_Valid_Smoke_sid_clientId$",
-      	"scope": "land_registry_vc_ldp",
+      	"scope": "land_statement_vc_ldp",
       	"responseType": "code",
       	"redirectUri": "$IDPREDIRECTURI$",
       	"display": "popup",

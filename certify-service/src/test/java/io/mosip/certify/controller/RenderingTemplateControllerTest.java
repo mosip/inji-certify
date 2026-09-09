@@ -18,6 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import io.mosip.certify.core.dto.RenderingTemplateDTO;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.ParsedAccessToken;
+import io.mosip.certify.dpop.DpopProofValidator;
 import io.mosip.certify.core.exception.RenderingTemplateException;
 import io.mosip.certify.core.spi.RenderingTemplateService;
 
@@ -32,6 +33,11 @@ public class RenderingTemplateControllerTest {
 
     @MockBean
     ParsedAccessToken parsedAccessToken;
+
+    // AccessTokenValidationFilter is a @Component, so the web slice builds it
+    // and every collaborator it autowires has to exist here too.
+    @MockBean
+    DpopProofValidator dpopProofValidator;
 
     @Test
     public void  getSvgTemplate_withValidId_thenPass() throws Exception {

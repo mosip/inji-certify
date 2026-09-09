@@ -3,6 +3,7 @@ package io.mosip.certify.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.core.dto.NonceResponse;
 import io.mosip.certify.core.dto.ParsedAccessToken;
+import io.mosip.certify.dpop.DpopProofValidator;
 import io.mosip.certify.core.spi.NonceService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,6 +33,11 @@ public class NonceControllerTest {
 
     @MockBean
     ParsedAccessToken parsedAccessToken;
+
+    // AccessTokenValidationFilter is a @Component, so the web slice builds it
+    // and every collaborator it autowires has to exist here too.
+    @MockBean
+    DpopProofValidator dpopProofValidator;
 
     @Test
     public void testGetNonce_success() throws Exception {

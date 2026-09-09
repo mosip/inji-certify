@@ -37,6 +37,11 @@ class WellKnownControllerTest {
     @MockBean
     private ParsedAccessToken parsedAccessToken;
 
+    // AccessTokenValidationFilter is a @Component, so the web slice builds it
+    // and every collaborator it autowires has to exist here too.
+    @MockBean
+    private io.mosip.certify.dpop.DpopProofValidator dpopProofValidator;
+
     @MockBean
     private JwksService jwksService;
 

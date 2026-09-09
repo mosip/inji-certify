@@ -47,6 +47,8 @@ class DIDDocumentUtilTest {
 
     private static final String RSA_CERTIFICATE = "-----BEGIN CERTIFICATE-----\nMIIDxzCCAq+gAwIBAgIIgusG+rdZJWgwDQYJKoZIhvcNAQELBQAweDELMAkGA1UE\nBhMCSU4xCzAJBgNVBAgMAktBMRIwEAYDVQQHDAlCQU5HQUxPUkUxDjAMBgNVBAoM\nBUlJSVRCMRcwFQYDVQQLDA5FWEFNUExFLUNFTlRFUjEfMB0GA1UEAwwWd3d3LmV4\nYW1wbGUuY29tIChST09UKTAeFw0yNDEyMjkxMDQ4NDRaFw0yNzEyMjkxMDQ4NDRa\nMIGHMQswCQYDVQQGEwJJTjELMAkGA1UECAwCS0ExEjAQBgNVBAcMCUJBTkdBTE9S\nRTEOMAwGA1UECgwFSUlJVEIxFzAVBgNVBAsMDkVYQU1QTEUtQ0VOVEVSMS4wLAYD\nVQQDDCV3d3cuZXhhbXBsZS5jb20gKENFUlRJRllfVkNfU0lHTl9SU0ApMIIBIjAN\nBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlkO3CPWJ6Jqu9hzm4Eew7EJSbYCX\n7YGBxYAjRHcLuVgsttyRWUZ3DiRYEoN7bG/jCh7E0Gvv4M5ux4VSw3RJlM+9Tfje\nDUkHdZQ0g5A/r69uyy7+zE8MIM2fXcgwEgIZabm/Zb6+T/K6mSsdPQAHnBe1zXoq\ngTuyTT6pVsHbR0+5ULkhN3BuJyhJ7zw8vC1aiFYA2b05nU7H1Rn+axes8+v80mQS\nGR9iJTrGeYtvz8a+gRhvXmK+h8nhUAJaPHJBacCRMErKvgddWkWBtknJZQmnX0RN\n2IC5+egbE8thCVg8BGBcxOoUBHjHYmus0CZNbTMJQIObL62p7caJHnYtHwIDAQAB\no0UwQzASBgNVHRMBAf8ECDAGAQH/AgEBMB0GA1UdDgQWBBSOi5/6I4vvp8eshKNs\nSwr/BtWM/zAOBgNVHQ8BAf8EBAMCAoQwDQYJKoZIhvcNAQELBQADggEBAKHiZu+1\nPjKqvlesbAj4QJkQlpdstz0PgEOnT6+flpcnmyMJj2QvWQbfX8niVWGMIc0HnO+H\ntzc/2oKmO9eQpmdnL4DN7NtuXxbTwTzsGDI934jRZGqHmeCh90j+T7QqSbk+GanC\nOMGFth7aV9j5cDSr7gCIom6N0TEUw/5a3O1+vJCwtQtN29H/+ksro+RYyN4/nbrR\ngix5XRR9VTcsLbM8J8dOxqZxsP+Bgebqp+fqv8QEea4cVYtStEMY6/4M6kKWyL7Q\nsmgwsJ5Vr5w/Y1hOIKaQe9WwWm/T8+byElVgZ/vT5tCYhLxHyBa1vfTgq1FQe5gb\nc6CDSimUO4tcosI=\n-----END CERTIFICATE-----\n";
 
+    private static final String SECP256K1_CERTIFICATE = "-----BEGIN CERTIFICATE-----\nMIIBnTCCAUSgAwIBAgIUEcbuA3qSx7zhVZzPgWxLrUp0c4owCgYIKoZIzj0EAwIw\nJjELMAkGA1UEBhMCSU4xFzAVBgNVBAMMDlRFU1RfU0VDUDI1NksxMB4XDTI2MDYw\nMTE1MzcwM1oXDTI5MDUzMTE1MzcwM1owJjELMAkGA1UEBhMCSU4xFzAVBgNVBAMM\nDlRFU1RfU0VDUDI1NksxMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEPKSAr1B+Tms1\nEfsHb/eF968n6vbmuY/5Ef+WDtijm6Bbu35kBAfZcXFT2OHGjRl+YPlHJVrTUbkg\nbe2X8/rcQ6NTMFEwHQYDVR0OBBYEFKsFre7gFjbnOjK18dy65IG71rDnMB8GA1Ud\nIwQYMBaAFKsFre7gFjbnOjK18dy65IG71rDnMA8GA1UdEwEB/wQFMAMBAf8wCgYI\nKoZIzj0EAwIDRwAwRAIgIDiBAHUEjlaGPyiYx5WzxeFpUUB5C/m2JeQwRppt+fkC\nIFU+j6AbYYT+plCUyAzfFZAXqVfOEw8zixmlNywW+7gf\n-----END CERTIFICATE-----\n";
+
     @BeforeEach
     void setUp() {
         mocks = MockitoAnnotations.openMocks(this);
@@ -228,5 +230,49 @@ class DIDDocumentUtilTest {
         assertThrows(CertifyException.class, () ->
                 didDocumentUtil.getCertificateDataResponseDto(appId, refId)
         );
+    }
+
+    @Test
+    void testGenerateVerificationMethodES256KDoesNotContainContext() {
+        Map<String, Object> verificationMethod = ReflectionTestUtils.invokeMethod(
+                didDocumentUtil,
+                "generateVerificationMethod",
+                JWSAlgorithm.ES256K,
+                null,
+                SECP256K1_CERTIFICATE, // secp256k1 test certificate constant
+                DID_URL,
+                "kid-ec-k1"
+        );
+        assertNotNull(verificationMethod);
+        assertEquals("EcdsaSecp256k1VerificationKey2019", verificationMethod.get("type"));
+        assertFalse(verificationMethod.containsKey("@context"),
+                "@context must not appear inside a verificationMethod per W3C DID Core 1.0");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void testGenerateDIDDocumentAddsSecp256k1ContextAtTopLevel() {
+        CredentialConfig config = new CredentialConfig();
+        config.setKeyManagerAppId("ec-app");
+        config.setKeyManagerRefId("ec-ref");
+        config.setSignatureAlgo(JWSAlgorithm.ES256K);
+
+        CertificateDataResponseDto certificate = new CertificateDataResponseDto();
+        certificate.setCertificateData(SECP256K1_CERTIFICATE);
+        certificate.setKeyId("ec-kid");
+
+        when(credentialConfigRepository.findAll()).thenReturn(List.of(config));
+        when(keymanagerService.getAllCertificates("ec-app", Optional.of("ec-ref")))
+                .thenReturn(new AllCertificatesDataResponseDto(new CertificateDataResponseDto[]{certificate}));
+
+        Map<String, Object> didDocument = didDocumentUtil.generateDIDDocument(DID_URL);
+        List<String> contexts = (List<String>) didDocument.get("@context");
+        List<Map<String, Object>> verificationMethods = (List<Map<String, Object>>)
+                didDocument.get("verificationMethod");
+
+        assertTrue(contexts.contains("https://w3id.org/security/v1"),
+                "Top-level @context must include the secp256k1 security context");
+        assertFalse(verificationMethods.get(0).containsKey("@context"),
+                "@context must not appear inside verificationMethod");
     }
 }

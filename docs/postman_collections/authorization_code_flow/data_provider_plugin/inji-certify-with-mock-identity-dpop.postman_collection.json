@@ -1,0 +1,4354 @@
+{
+	"info": {
+		"name": "Inji Certify With Mock Identity DPoP",
+		"description": "DPoP-constrained credential issuance (RFC 9449).\n\nEnvironment ships pointing at a LOCAL deployment. To run the VCI flow against MOSIP's released/collab deployment change these four variables only: authServerUrl, aud, mockIdentitySystemUrl, relayingPartyId. Leave certifyUrl and audUrl as they are - both describe certify itself, which stays local whichever eSignet you point at, and dragging audUrl along with authServerUrl fails every credential request with 400 invalid_proof. Registering your own clients on a hosted deployment additionally needs internalUrl and partnerSecret. See docs/postman_collections/authorization_code_flow/data_provider_plugin/README-mock-identity-dpop.md.\n\nNOTE: switching to collab makes the Bearer collection work, but NOT this one. DPoP arrived in eSignet 1.8; the collab mock is older and issues tokens with no cnf.jkt, so every scenario here fails by construction. This collection needs an authorization server at eSignet 1.8+.\n\nUses the SAME environment as \"Inji Certify With Mock Identity\": \"ENV Mock Identity\". Run that collection's VCI folder first - its Get Tokens V2 publishes unbound_access_token, used here as the \"token with no cnf.jkt\" fixture.\n\nDEMO KEYS: the RSA private keys in the shared environment are committed to a public repository and must be treated as compromised. They are for the local mock-identity demo only - never register them with an authorization server issuing tokens for anything real.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// The DPoP proof's htu claim must equal the URL the request actually goes to,",
+					"// byte for byte. Deriving these from certifyUrl on every request means changing",
+					"// certifyUrl alone is enough - the endpoints cannot drift out of step with it",
+					"// and start failing every proof with an htu mismatch.",
+					"var base = pm.environment.get('certifyUrl');",
+					"if (base) {",
+					"    base = base.replace(/\\/+$/, '');",
+					"    pm.environment.set('credentialEndpoint', base + '/issuance/credential');",
+					"    pm.environment.set('nonceEndpoint', base + '/nonce');",
+					"    pm.environment.set('issuerIdentifier', base.replace(/\\/v1\\/certify$/, ''));",
+					"}"
+				]
+			}
+		}
+	],
+	"item": [
+		{
+			"name": "OIDC Client Mgmt (DPoP)",
+			"description": "Registers {{dpopClientId}}, the DPoP client this collection authenticates as. Run it when you are standing up your own client - against the local docker-compose stack local-dev/dpop-test/setup-esignet.mjs has already done it, and the shared environment ships the matching private key.\n\nThe Bearer client {{clientId}} is registered by the OIDC Client Mgmt folder of \"Inji Certify With Mock Identity\". Both are needed: {{dpopClientId}} carries dpop_bound_access_tokens: true and gives the DPoP flow its bound token, {{clientId}} carries false and supplies the unbound_access_token fixture the scenarios test against. They cannot share a key - eSignet enforces one public key per client and rejects a repeat with duplicate_public_key.\n\nRequest 3 generates its own keypair and writes the private half into the environment, so what it registers is immediately usable by the rest of the collection and nothing has to be pasted in by hand. The key lives only in that environment: keep it, and do not click Reset All afterwards, which would restore the committed demo key over it.\n\nOn a LOCAL eSignet client-mgmt is unauthenticated: skip request 1 and run 2-3. On collab and released it is a Spring OAuth2 resource server, so run 1 first and set internalUrl and partnerSecret.",
+			"item": [
+				{
+					"name": "1. Authenticate (partner)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"eval(pm.environment.get('pmlib_code'));",
+									"",
+									"// The token comes back as a Set-Cookie, not in the body: the body carries only",
+									"// {status, message} and answers 200 whether or not a token was minted, so a",
+									"// green response here proves nothing. The cookie is the only evidence.",
+									"var token = null;",
+									"try { token = pm.cookies.get('Authorization') || null; } catch (e) { token = null; }",
+									"if (!token) {",
+									"    pm.response.headers.each(function (h) {",
+									"        if (!token && h.key.toLowerCase() === 'set-cookie' && h.value.indexOf('Authorization=') === 0) {",
+									"            token = h.value.split(';')[0].substring('Authorization='.length);",
+									"        }",
+									"    });",
+									"}",
+									"",
+									"var body = null;",
+									"try { body = pm.response.json(); } catch (e) { body = null; }",
+									"",
+									"pm.test('partner token issued', function () {",
+									"    pm.expect(JSON.stringify((body && body.errors) || []), 'authmanager rejected the credentials - partnerSecret is deployment-specific').to.equal('[]');",
+									"    pm.expect(token, 'no Authorization cookie in the response').to.be.a('string');",
+									"});",
+									"",
+									"if (token) {",
+									"    pm.environment.set('authToken', token);",
+									"",
+									"    // A token minted for the wrong appId authenticates perfectly and still",
+									"    // cannot register a client. Its scope is the only thing that says so, and",
+									"    // the failure it causes two requests later does not mention it.",
+									"    var claims = JSON.parse(pmlib.rs.b64utoutf8(token.split('.')[1]));",
+									"    pm.test('token carries add_oidc_client', function () {",
+									"        pm.expect(claims.scope || '', 'wrong appId - this token cannot register clients').to.include('add_oidc_client');",
+									"    });",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{internalUrl}}/v1/authmanager/authenticate/clientidsecretkey",
+							"host": [
+								"{{internalUrl}}/v1/authmanager/authenticate/clientidsecretkey"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							},
+							"raw": "{\n    \"id\": \"string\",\n    \"metadata\": {},\n    \"request\": {\n        \"appId\": \"partner\",\n        \"clientId\": \"mosip-pms-client\",\n        \"secretKey\": \"{{partnerSecret}}\"\n    },\n    \"requesttime\": \"{{$isoTimestamp}}\",\n    \"version\": \"string\"\n}"
+						},
+						"description": "Only needed on a hosted deployment. A local eSignet leaves client-mgmt unauthenticated, so requests 3 and 4 work on their own and this one has nothing to talk to - internalUrl ships empty.\n\npartnerSecret is deployment-specific and deliberately not committed: set it in your own environment. A collab secret used against released answers 401 Unauthorized, surfaced as {\"errorCode\":\"500\",\"message\":\"401 Unauthorized: [no body]\"}."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Get CSRF token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var body = pm.response.json();",
+									"// eSignet 1.8 (Spring Security 6, BREACH protection) returns the RAW token in",
+									"// the XSRF-TOKEN cookie and a MASKED one here. X-XSRF-TOKEN must carry this",
+									"// one; sending the cookie value gives 403 Forbidden with an empty path.",
+									"pm.environment.set('csrf_token', body.token);",
+									"",
+									"pm.test('csrf token issued', function () {",
+									"    pm.expect(body.token).to.be.a('string');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{authServerUrl}}/csrf/token",
+							"host": [
+								"{{authServerUrl}}/csrf/token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Create DPoP client",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Generates the keypair and writes the private half straight back into the",
+									"// environment, the same way the Bearer collection's Create OIDC client does.",
+									"// Nothing key-related is read from the environment first: this request produces",
+									"// the key material it registers, so it cannot be tripped by a variable whose",
+									"// CURRENT value is blank.",
+									"var pmlibCode = pm.environment.get('pmlib_code');",
+									"if (!pmlibCode) {",
+									"    throw new Error(",
+									"        'pmlib_code is empty - no environment is loaded, or its CURRENT column is ' +",
+									"        'blank. Select \"ENV Mock Identity\" and click Reset All in the environment editor.');",
+									"}",
+									"eval(pmlibCode);",
+									"",
+									"// Kept so a failed registration can put it back. On duplicate_client_id or a",
+									"// 401 the client that is actually registered is still the old one, and leaving",
+									"// the environment holding a key eSignet never saw would strand it.",
+									"pm.collectionVariables.set('dpop_privateKey_jwk_prev', pm.environment.get('dpop_privateKey_jwk') || '');",
+									"",
+									"var kp = pmlib.rs.KEYUTIL.generateKeypair('RSA', 2048);",
+									"var priv = pmlib.rs.KEYUTIL.getJWK(kp.prvKeyObj);",
+									"var pub = pmlib.rs.KEYUTIL.getJWK(kp.pubKeyObj);",
+									"pub.alg = 'RS256';",
+									"pub.use = 'sig';",
+									"",
+									"// Written before the request goes out, so the environment holds the private",
+									"// half of exactly the key eSignet is about to register. Steps 2 and 6 of VCI (DPoP) sign their client",
+									"// assertion with it.",
+									"pm.environment.set('dpop_privateKey_jwk', JSON.stringify(priv));",
+									"pm.environment.set('dpop_publicKey_jwk', JSON.stringify(pub));"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var body = null;",
+									"try { body = pm.response.json(); } catch (e) { body = null; }",
+									"",
+									"var errors = (body && body.errors) || [];",
+									"var registered = pm.response.code === 200 && errors.length === 0 &&",
+									"                 body && body.response && body.response.status === 'ACTIVE';",
+									"",
+									"// The new key went into the environment before the request was sent. If eSignet",
+									"// did not take it, the registered client is still the old one - put its private",
+									"// half back rather than leaving the environment holding a key that exists nowhere.",
+									"if (!registered) {",
+									"    var prev = pm.collectionVariables.get('dpop_privateKey_jwk_prev');",
+									"    if (prev) pm.environment.set('dpop_privateKey_jwk', prev);",
+									"}",
+									"",
+									"// A 401 here has an EMPTY body - the reason is in WWW-Authenticate, which",
+									"// distinguishes 'Malformed token' from expired from insufficient_scope. None of",
+									"// the three appear in a body, so the header is quoted into the failure message.",
+									"pm.test('request was authorised', function () {",
+									"    pm.expect(pm.response.code, pm.response.headers.get('WWW-Authenticate') || 'no WWW-Authenticate header').to.equal(200);",
+									"});",
+									"",
+									"// MOSIP reports registration failures at HTTP 200 with an errors array, so the",
+									"// status code above is not enough on its own. 'Full authentication is required",
+									"// to access this resource' here means authToken never reached the server: it",
+									"// goes in the Authorization header, and a Cookie: Authorization=... is ignored.",
+									"pm.test('client registered', function () {",
+									"    pm.expect(body, 'no JSON body - read WWW-Authenticate').to.not.equal(null);",
+									"    pm.expect(JSON.stringify(errors), 'duplicate_client_id means that id already exists with a different key - it cannot be re-keyed, so use a new clientId').to.equal('[]');",
+									"    pm.expect(body.response.clientId).to.equal(pm.environment.get('dpopClientId'));",
+									"    pm.expect(body.response.status).to.equal('ACTIVE');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-XSRF-TOKEN",
+								"value": "{{csrf_token}}"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{authServerUrl}}/client-mgmt/client",
+							"host": [
+								"{{authServerUrl}}/client-mgmt/client"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							},
+							"raw": "{\n    \"requestTime\": \"{{$isoTimestamp}}\",\n    \"request\": {\n        \"clientId\": \"{{dpopClientId}}\",\n        \"clientName\": \"DPoP wallet demo\",\n        \"publicKey\": {{dpop_publicKey_jwk}},\n        \"relyingPartyId\": \"{{relayingPartyId}}\",\n        \"userClaims\": [\n            \"name\",\n            \"email\",\n            \"gender\",\n            \"phone_number\",\n            \"picture\",\n            \"birthdate\"\n        ],\n        \"authContextRefs\": [\n            \"mosip:idp:acr:generated-code\"\n        ],\n        \"logoUri\": \"https://avatars.githubusercontent.com/u/60199888\",\n        \"redirectUris\": [\n            \"{{redirectionUrl}}\",\n            \"io.mosip.residentapp.inji://oauthredirect\"\n        ],\n        \"grantTypes\": [\n            \"authorization_code\"\n        ],\n        \"clientAuthMethods\": [\n            \"private_key_jwt\"\n        ],\n        \"additionalConfig\": {\n            \"userinfo_response_type\": \"JWS\",\n            \"dpop_bound_access_tokens\": true,\n            \"require_pushed_authorization_requests\": false\n        }\n    }\n}"
+						},
+						"description": "Registers {{dpopClientId}} with dpop_bound_access_tokens: true - the one field this folder exists for. With it eSignet demands a DPoP proof at the token endpoint and stamps the proof key's thumbprint on the access token as cnf.jkt.\n\nThe pre-request script generates the private_key_jwt keypair and writes the private half to dpop_privateKey_jwk, so the environment is left holding the key of the client that was just registered and VCI (DPoP) works against it immediately. Do not click Reset All afterwards - that restores the committed demo key, which the client you just created will not accept.\n\nPosted to client-mgmt/client, NOT client-mgmt/oidc-client. The v1 oidc-client endpoint silently drops additionalConfig, so a client created through it is never DPoP-bound and every scenario in this collection fails with 'access token is not DPoP-bound'.\n\nNote the server profile also has to carry the DPOP feature; per-client dpop_bound_access_tokens only decides binding for a profile that supports it."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "VCI (DPoP)",
+			"description": "The VCI flow from inji-certify-with-mock-identity, run against the local eSignet 1.8.0 in local-dev/docker-compose.dev.yaml, with DPoP added. Run the requests in order.\n\nStep 6 is where the binding is created: the client sends a DPoP proof to the token endpoint, eSignet verifies it and stamps that key's thumbprint on the access token as cnf.jkt, returning token_type DPoP. Nothing about the binding is simulated.\n\nStep 8 then presents that token as 'Authorization: DPoP' with a fresh proof over the credential endpoint, which is what certify's DPoPProofValidator checks.",
+			"item": [
+				{
+					"name": "1. Get CSRF token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var body = pm.response.json();",
+									"// eSignet 1.8 returns a CSRF token here that is NOT the XSRF-TOKEN cookie value,",
+									"// and the header has to carry this one. Reading the cookie instead - as the",
+									"// published mock-identity collection does - gets a bare 403 on every later step.",
+									"pm.environment.set('csrf_token', body.token);",
+									"",
+									"pm.test('csrf token issued', function () {",
+									"    pm.expect(body.token).to.be.a('string');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{authServerUrl}}/csrf/token",
+							"host": [
+								"{{authServerUrl}}/csrf/token"
+							]
+						}
+					}
+				},
+				{
+					"name": "2. Authorize / OAuthdetails request V2",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"eval(pm.environment.get('pmlib_code'));",
+									"",
+									"var pkce = pmlib.pkceChallenge();",
+									"pm.collectionVariables.set('codeVerifier', pkce.code_verifier);",
+									"pm.collectionVariables.set('codeChallenge', pkce.code_challenge);",
+									"pm.collectionVariables.set('codeChallengeMethod', pkce.code_challenge_method);",
+									"pm.environment.set('oidc_nonce', 'n-' + Date.now());",
+									"pm.environment.set('state', 's-' + Date.now());"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"eval(pm.environment.get('pmlib_code'));",
+									"",
+									"var body = pm.response.json();",
+									"pm.test('transaction started', function () {",
+									"    pm.expect(body.response.transactionId).to.be.a('string');",
+									"});",
+									"pm.environment.set('transaction_id', body.response.transactionId);",
+									"",
+									"// Every later request in the transaction is keyed by the transaction id and a",
+									"// hash of this response: base64url(SHA-256(JSON.stringify(response))), unpadded.",
+									"pm.environment.set('oauth_details_key', body.response.transactionId);",
+									"pm.environment.set('oauth_details_hash', pmlib.rs.hextob64u(",
+									"    pmlib.rs.KJUR.crypto.Util.hashString(JSON.stringify(body.response), 'sha256')));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-XSRF-TOKEN",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{authServerUrl}}/authorization/v2/oauth-details",
+							"host": [
+								"{{authServerUrl}}/authorization/v2/oauth-details"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							},
+							"raw": "{\n    \"requestTime\": \"{{$isoTimestamp}}\",\n    \"request\": {\n        \"clientId\": \"{{dpopClientId}}\",\n        \"scope\": \"{{scope}}\",\n        \"responseType\": \"code\",\n        \"redirectUri\": \"{{redirectionUrl}}\",\n        \"display\": \"popup\",\n        \"prompt\": \"login\",\n        \"acrValues\": \"mosip:idp:acr:generated-code\",\n        \"nonce\": \"{{oidc_nonce}}\",\n        \"state\": \"{{state}}\",\n        \"claimsLocales\": \"en\",\n        \"codeChallenge\": \"{{codeChallenge}}\",\n        \"codeChallengeMethod\": \"{{codeChallengeMethod}}\"\n    }\n}"
+						}
+					}
+				},
+				{
+					"name": "3. Send OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('otp sent', function () {",
+									"    pm.expect(pm.response.json().errors).to.be.empty;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-XSRF-TOKEN",
+								"value": "{{csrf_token}}"
+							},
+							{
+								"key": "oauth-details-key",
+								"value": "{{oauth_details_key}}"
+							},
+							{
+								"key": "oauth-details-hash",
+								"value": "{{oauth_details_hash}}"
+							}
+						],
+						"url": {
+							"raw": "{{authServerUrl}}/authorization/send-otp",
+							"host": [
+								"{{authServerUrl}}/authorization/send-otp"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							},
+							"raw": "{\n    \"requestTime\": \"{{$isoTimestamp}}\",\n    \"request\": {\n        \"transactionId\": \"{{transaction_id}}\",\n        \"individualId\": \"{{individual_id}}\",\n        \"otpChannels\": [\n            \"email\",\n            \"phone\"\n        ],\n        \"captchaToken\": \"dummy\"\n    }\n}"
+						}
+					}
+				},
+				{
+					"name": "4. Authenticate User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('authenticated', function () {",
+									"    pm.expect(pm.response.json().errors).to.be.empty;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-XSRF-TOKEN",
+								"value": "{{csrf_token}}"
+							},
+							{
+								"key": "oauth-details-key",
+								"value": "{{oauth_details_key}}"
+							},
+							{
+								"key": "oauth-details-hash",
+								"value": "{{oauth_details_hash}}"
+							}
+						],
+						"url": {
+							"raw": "{{authServerUrl}}/authorization/v3/authenticate",
+							"host": [
+								"{{authServerUrl}}/authorization/v3/authenticate"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							},
+							"raw": "{\n    \"requestTime\": \"{{$isoTimestamp}}\",\n    \"request\": {\n        \"transactionId\": \"{{transaction_id}}\",\n        \"individualId\": \"{{individual_id}}\",\n        \"challengeList\": [\n            {\n                \"authFactorType\": \"OTP\",\n                \"challenge\": \"111111\",\n                \"format\": \"alpha-numeric\"\n            }\n        ]\n    }\n}"
+						}
+					}
+				},
+				{
+					"name": "5. Authorization Code",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var body = pm.response.json();",
+									"pm.test('authorization code issued', function () {",
+									"    pm.expect(body.response.code).to.be.a('string');",
+									"});",
+									"pm.collectionVariables.set('code', body.response.code);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-XSRF-TOKEN",
+								"value": "{{csrf_token}}"
+							},
+							{
+								"key": "oauth-details-key",
+								"value": "{{oauth_details_key}}"
+							},
+							{
+								"key": "oauth-details-hash",
+								"value": "{{oauth_details_hash}}"
+							}
+						],
+						"url": {
+							"raw": "{{authServerUrl}}/authorization/auth-code",
+							"host": [
+								"{{authServerUrl}}/authorization/auth-code"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							},
+							"raw": "{\n    \"requestTime\": \"{{$isoTimestamp}}\",\n    \"request\": {\n        \"transactionId\": \"{{transaction_id}}\",\n        \"acceptedClaims\": [],\n        \"permittedAuthorizeScopes\": []\n    }\n}"
+						}
+					}
+				},
+				{
+					"name": "6. Get Tokens V2 (DPoP-bound)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"eval(pm.environment.get('pmlib_code'));",
+									"eval(pm.environment.get('dpop_lib'));",
+									"",
+									"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+									"var tokenUrl  = pm.environment.get('authServerUrl') + '/oauth/v2/token';",
+									"pm.environment.set('wallet_jkt', dpop.thumbprint(walletKey));",
+									"",
+									"// The token-endpoint proof: htu is the token endpoint, and there is deliberately",
+									"// no ath - no access token exists yet for it to hash.",
+									"function tokenProof(nonce) {",
+									"    return dpop.proof({ key: walletKey, htm: 'POST', htu: tokenUrl, omitAth: true, nonce: nonce });",
+									"}",
+									"",
+									"function clientAssertion() {",
+									"    return pmlib.clientAssertPrivateKey(",
+									"        JSON.parse(pm.environment.get('dpop_privateKey_jwk')),",
+									"        pm.environment.get('dpopClientId'),",
+									"        pm.environment.get('aud'),",
+									"        60,",
+									"        'RS256');",
+									"}",
+									"",
+									"// RFC 9449 §8. eSignet ALWAYS rejects the first DPoP token request with",
+									"// 400 use_dpop_nonce and a DPoP-Nonce header; the request then has to be repeated",
+									"// with that nonce echoed in the proof. Rather than making you send this request",
+									"// twice, the challenge is drawn here with a throwaway call.",
+									"//",
+									"// It has to be the FULL token request. OAuthServiceImpl.getTokens runs",
+									"// validateRequestParametersWithTransaction before it looks at DPoP at all, so a",
+									"// partial form fails earlier and never reaches the nonce logic. The nonce is then",
+									"// stored against the hash of the authorization code, which is why this must carry",
+									"// the same code the real request will use.",
+									"//",
+									"// Nothing is consumed: verifyClientAssertionToken runs *after* the nonce",
+									"// challenge, so this assertion is never verified and its jti stays unused, and",
+									"// the code is not redeemed on a rejected request.",
+									"pm.sendRequest({",
+									"    url: tokenUrl,",
+									"    method: 'POST',",
+									"    header: {",
+									"        'Content-Type': 'application/x-www-form-urlencoded',",
+									"        'X-XSRF-TOKEN': pm.environment.get('csrf_token'),",
+									"        'DPoP': tokenProof(null)",
+									"    },",
+									"    body: {",
+									"        mode: 'urlencoded',",
+									"        urlencoded: [",
+									"            { key: 'code', value: pm.collectionVariables.get('code') },",
+									"            { key: 'client_id', value: pm.environment.get('dpopClientId') },",
+									"            { key: 'redirect_uri', value: pm.environment.get('redirectionUrl') },",
+									"            { key: 'grant_type', value: 'authorization_code' },",
+									"            { key: 'client_assertion_type', value: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer' },",
+									"            { key: 'client_assertion', value: clientAssertion() },",
+									"            { key: 'code_verifier', value: pm.collectionVariables.get('codeVerifier') }",
+									"        ]",
+									"    }",
+									"}, function (err, res) {",
+									"    // Header lookup is spelled out rather than assumed case-insensitive, because",
+									"    // a miss here is silent: the proof simply goes out without a nonce and the",
+									"    // request comes back use_dpop_nonce with nothing to explain why.",
+									"    var nonce = null;",
+									"    if (!err && res && res.headers) {",
+									"        var names = ['DPoP-Nonce', 'dpop-nonce', 'DPOP-NONCE'];",
+									"        for (var i = 0; i < names.length && !nonce; i++) nonce = res.headers.get(names[i]);",
+									"    }",
+									"",
+									"    if (nonce) {",
+									"        pm.environment.set('dpop_nonce', nonce);",
+									"    } else {",
+									"        console.log('NO DPoP-Nonce CHALLENGE - this request will fail with use_dpop_nonce.',",
+									"                    err ? err.message : (res ? res.code + ' ' + res.text().slice(0, 200) : 'no response'));",
+									"    }",
+									"    pm.environment.set('token_dpop_proof', tokenProof(nonce));",
+									"    pm.collectionVariables.set('client_assertion', clientAssertion());",
+									"});"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"eval(pm.environment.get('pmlib_code'));",
+									"eval(pm.environment.get('dpop_lib'));",
+									"",
+									"var body = pm.response.json();",
+									"pm.test('access token issued', function () {",
+									"    pm.expect(body.access_token).to.be.a('string');",
+									"});",
+									"",
+									"// The two assertions that matter: eSignet honoured the proof and bound the token",
+									"// to the key that signed it.",
+									"pm.test('token_type is DPoP', function () {",
+									"    pm.expect(body.token_type).to.equal('DPoP');",
+									"});",
+									"",
+									"var claims = dpop.claimsOf(body.access_token);",
+									"pm.test('token is bound to the wallet key', function () {",
+									"    pm.expect(claims.cnf.jkt).to.equal(pm.environment.get('wallet_jkt'));",
+									"});",
+									"",
+									"pm.environment.set('access_token', body.access_token);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-XSRF-TOKEN",
+								"value": "{{csrf_token}}"
+							},
+							{
+								"key": "DPoP",
+								"value": "{{token_dpop_proof}}"
+							}
+						],
+						"url": {
+							"raw": "{{authServerUrl}}/oauth/v2/token",
+							"host": [
+								"{{authServerUrl}}/oauth/v2/token"
+							]
+						},
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "code",
+									"value": "{{code}}",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "{{dpopClientId}}",
+									"type": "text"
+								},
+								{
+									"key": "redirect_uri",
+									"value": "{{redirectionUrl}}",
+									"type": "text"
+								},
+								{
+									"key": "grant_type",
+									"value": "authorization_code",
+									"type": "text"
+								},
+								{
+									"key": "client_assertion_type",
+									"value": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+									"type": "text"
+								},
+								{
+									"key": "client_assertion",
+									"value": "{{client_assertion}}",
+									"type": "text"
+								},
+								{
+									"key": "code_verifier",
+									"value": "{{codeVerifier}}",
+									"type": "text"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "7. Nonce Endpoint",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var body = pm.response.json();",
+									"pm.test('c_nonce issued', function () {",
+									"    pm.expect(body.c_nonce).to.be.a('string');",
+									"});",
+									"pm.environment.set('c_nonce', body.c_nonce);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{certifyUrl}}/nonce",
+							"host": [
+								"{{certifyUrl}}/nonce"
+							]
+						}
+					}
+				},
+				{
+					"name": "8. Get Farmer Credential (DPoP)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"eval(pm.environment.get('pmlib_code'));",
+									"eval(pm.environment.get('dpop_lib'));",
+									"",
+									"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+									"",
+									"// One wallet key signs both: the DPoP proof demonstrating possession of the key",
+									"// the token is bound to, and the OID4VCI proof binding the credential to the",
+									"// holder. This proof carries ath - a resource request has a token to hash.",
+									"pm.environment.set('dpop_proof', dpop.proof({",
+									"    key:         walletKey,",
+									"    htm:         'POST',",
+									"    htu:         pm.environment.get('credentialEndpoint'),",
+									"    accessToken: pm.environment.get('access_token')",
+									"}));",
+									"",
+									"pm.environment.set('vci_proof', dpop.vciProof({",
+									"    key:      walletKey,",
+									"    audience: pm.environment.get('issuerIdentifier'),",
+									"    clientId: pm.environment.get('dpopClientId'),",
+									"    nonce:    pm.environment.get('c_nonce')",
+									"}));"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+									"",
+									"pm.test('a credential came back', function () {",
+									"    pm.expect(pm.response.json()).to.have.property('credentials');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "DPoP {{access_token}}"
+							},
+							{
+								"key": "DPoP",
+								"value": "{{dpop_proof}}"
+							}
+						],
+						"url": {
+							"raw": "{{certifyUrl}}/issuance/credential",
+							"host": [
+								"{{certifyUrl}}/issuance/credential"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							},
+							"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "DPoP scenarios",
+			"description": "One request per rule in RFC 9449 §4.3, each reusing a token from the folders above and bending exactly one thing about the proof. Run the VCI and Bearer folders first. Order-independent, except the two replay steps.",
+			"item": [
+				{
+					"name": "Happy paths",
+					"item": [
+						{
+							"name": "bound token + valid proof",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+											"",
+											"pm.test('a credential came back', function () {",
+											"    pm.expect(pm.response.json()).to.have.property('credentials');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						},
+						{
+							"name": "htu with a query string is ignored",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {",
+											"    \"htuSuffix\": \"?foo=bar\"",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+											"",
+											"pm.test('a credential came back', function () {",
+											"    pm.expect(pm.response.json()).to.have.property('credentials');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Scheme handling",
+					"item": [
+						{
+							"name": "DPoP-bound token presented as Bearer",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {",
+											"    \"scheme\": \"Bearer\",",
+											"    \"noProof\": true",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/cannot be presented as a Bearer token/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						},
+						{
+							"name": "DPoP scheme with no DPoP header",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {",
+											"    \"noProof\": true",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/DPoP header is required/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						},
+						{
+							"name": "two proofs in one DPoP header",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {",
+											"    \"twoProofs\": true",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/Exactly one DPoP proof/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Token binding",
+					"item": [
+						{
+							"name": "proof signed by a key the token is not bound to",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {",
+											"    \"otherKey\": true",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/does not match the access token binding/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						},
+						{
+							"name": "unbound token with a valid proof",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {",
+											"    \"unboundToken\": true",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/not DPoP-bound/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						},
+						{
+							"name": "ath is for a different token",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {",
+											"    \"athOfOtherToken\": true",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/ath does not match/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						},
+						{
+							"name": "ath computed as the OIDC at_hash",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {",
+											"    \"truncatedAth\": true",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/ath does not match/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						},
+						{
+							"name": "proof missing ath",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {",
+											"    \"omitAth\": true",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/missing the ath/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Request binding",
+					"item": [
+						{
+							"name": "htm does not match the method",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {",
+											"    \"htm\": \"GET\"",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/htm does not match/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						},
+						{
+							"name": "htu points at another endpoint",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {",
+											"    \"htuVar\": \"nonceEndpoint\"",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/htu does not match/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						},
+						{
+							"name": "proof missing htm",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"// RFC 9449 section 4.2 lists htm as required; absent, the request is unbound to a method.",
+											"var scenario = {",
+											"    \"omitHtm\": true",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/missing the htm claim/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						},
+						{
+							"name": "proof missing htu",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"// Without htu the proof is unbound to an endpoint and replayable at any of them.",
+											"var scenario = {",
+											"    \"omitHtu\": true",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/missing the htu claim/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Freshness and replay",
+					"item": [
+						{
+							"name": "proof older than the freshness window",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {",
+											"    \"iatOffset\": -600",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/expired/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						},
+						{
+							"name": "proof iat in the future",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {",
+											"    \"iatOffset\": 600",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/in the future/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						},
+						{
+							"name": "proof missing jti",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {",
+											"    \"omitJti\": true",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/missing the jti/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						},
+						{
+							"name": "replay step 1 - spend a proof",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {",
+											"    \"stashForReplay\": true",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+											"",
+											"pm.test('a credential came back', function () {",
+											"    pm.expect(pm.response.json()).to.have.property('credentials');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						},
+						{
+							"name": "replay step 2 - present it again",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"var proof = pm.environment.get('replay_proof');",
+											"if (!proof) throw new Error('Run \"replay step 1 - spend a proof\" first.');",
+											"pm.environment.set('authorization_header', 'DPoP ' + pm.environment.get('access_token'));",
+											"pm.environment.set('dpop_proof', proof);",
+											"pm.environment.unset('replay_proof');",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/already been used/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						},
+						{
+							"name": "proof missing iat",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"// No iat means no freshness window can be applied, so the proof never goes stale.",
+											"var scenario = {",
+											"    \"omitIat\": true",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/missing the iat claim/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Malformed proofs",
+					"item": [
+						{
+							"name": "wrong typ header",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {",
+											"    \"typ\": \"JWT\"",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/typ header must be/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						},
+						{
+							"name": "MAC algorithm",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {",
+											"    \"alg\": \"HS256\"",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/Unsupported DPoP proof algorithm/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						},
+						{
+							"name": "no jwk in the header",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {",
+											"    \"omitJwk\": true",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/must embed a public jwk/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						},
+						{
+							"name": "jwk carries private key material",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {",
+											"    \"leakPrivateKey\": true",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/not a well-formed JWS/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						},
+						{
+							"name": "tampered signature",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {",
+											"    \"corruptSignature\": true",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/signature/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						},
+						{
+							"name": "not a JWS at all",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"eval(pm.environment.get('pmlib_code'));",
+											"eval(pm.environment.get('dpop_lib'));",
+											"",
+											"// What this request bends. Everything else is a well-formed DPoP request.",
+											"var scenario = {",
+											"    \"rawProof\": \"not-a-jwt\"",
+											"};",
+											"",
+											"var walletKey = JSON.parse(pm.environment.get('wallet_private_key'));",
+											"var endpoint  = pm.environment.get('credentialEndpoint');",
+											"",
+											"// The bound token from the VCI folder, unless the scenario wants the unbound one",
+											"// from the Bearer baseline folder.",
+											"var token = scenario.unboundToken",
+											"    ? pm.environment.get('unbound_access_token')",
+											"    : pm.environment.get('access_token');",
+											"if (!token) {",
+											"    throw new Error('Run the VCI (DPoP) folder first - and the Bearer baseline folder too.');",
+											"}",
+											"pm.environment.set('authorization_header', (scenario.scheme || 'DPoP') + ' ' + token);",
+											"",
+											"var htu = scenario.htuVar ? pm.environment.get(scenario.htuVar) : endpoint;",
+											"if (scenario.htuSuffix) htu = htu + scenario.htuSuffix;",
+											"",
+											"if (scenario.rawProof !== undefined) {",
+											"    pm.environment.set('dpop_proof', scenario.rawProof);",
+											"} else if (!scenario.noProof) {",
+											"    var opts = {",
+											"        // signWith lets the proof be signed by a key the token is NOT bound to.",
+											"        key:         walletKey,",
+											"        signWith:    scenario.otherKey ? JSON.parse(pm.environment.get('other_private_key')) : walletKey,",
+											"        accessToken: token,",
+											"        jti:         scenario.jti,",
+											"        htm:         scenario.htm,",
+											"        htu:         htu,",
+											"        typ:         scenario.typ,",
+											"        alg:         scenario.alg,",
+											"        omitJwk:     scenario.omitJwk,",
+											"        omitJti:     scenario.omitJti,",
+											"        omitAth:     scenario.omitAth,",
+											"        omitHtm:     scenario.omitHtm,",
+											"        omitHtu:     scenario.omitHtu,",
+											"        omitIat:     scenario.omitIat,",
+											"        corruptSignature: scenario.corruptSignature",
+											"    };",
+											"    // The embedded jwk must be the signing key's, or the proof fails on signature",
+											"    // before the binding is ever compared.",
+											"    if (scenario.otherKey) opts.jwk = dpop.publicPart(JSON.parse(pm.environment.get('other_private_key')));",
+											"    if (scenario.iatOffset) opts.iat = dpop.now() + scenario.iatOffset;",
+											"    if (scenario.leakPrivateKey) opts.jwk = Object.assign(dpop.publicPart(walletKey), { d: walletKey.d });",
+											"    if (scenario.athOfOtherToken) opts.ath = dpop.ath(pm.environment.get('unbound_access_token'));",
+											"    if (scenario.truncatedAth) {",
+											"        // The OIDC at_hash keeps the left-most 128 bits of the digest; DPoP's ath",
+											"        // is the whole thing. 32 hex chars = 16 bytes.",
+											"        opts.ath = pmlib.rs.hextob64u(",
+											"            pmlib.rs.KJUR.crypto.Util.hashString(token, 'sha256').slice(0, 32));",
+											"    }",
+											"",
+											"    var proof = dpop.proof(opts);",
+											"    // A repeated DPoP header reaches the server comma-joined.",
+											"    pm.environment.set('dpop_proof', scenario.twoProofs ? proof + ', ' + dpop.proof(opts) : proof);",
+											"",
+											"    // Kept for the replay request that follows, which must present this exact",
+											"    // proof again - a fresh one would have a fresh jti and simply succeed.",
+											"    if (scenario.stashForReplay) pm.environment.set('replay_proof', proof);",
+											"}",
+											"",
+											"// Fresh c_nonce for the OID4VCI holder proof. Postman waits for the callback.",
+											"pm.sendRequest({ url: pm.environment.get('nonceEndpoint'), method: 'POST' }, function (err, res) {",
+											"    pm.environment.set('vci_proof', dpop.vciProof({",
+											"        key:      walletKey,",
+											"        audience: pm.environment.get('issuerIdentifier'),",
+											"        clientId: pm.environment.get('dpopClientId'),",
+											"        nonce:    err ? '' : res.json().c_nonce",
+											"    }));",
+											"});"
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+											"",
+											"pm.test('error_description matches', function () {",
+											"    pm.expect(pm.response.json().error_description).to.match(/well-formed JWS/);",
+											"});",
+											"",
+											"pm.test('challenges in the scheme the caller used', function () {",
+											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{authorization_header}}"
+									},
+									{
+										"key": "DPoP",
+										"value": "{{dpop_proof}}"
+									}
+								],
+								"url": {
+									"raw": "{{certifyUrl}}/issuance/credential",
+									"host": [
+										"{{certifyUrl}}/issuance/credential"
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									},
+									"raw": "{\n    \"credential_configuration_id\": \"{{configId}}\",\n    \"proofs\": {\n        \"jwt\": [\n            \"{{vci_proof}}\"\n        ]\n    }\n}"
+								}
+							}
+						}
+					]
+				}
+			]
+		}
+	]
+}

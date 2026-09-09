@@ -42,6 +42,11 @@ public class PreAuthorizedCodeControllerTest {
     @MockBean
     io.mosip.certify.core.dto.ParsedAccessToken parsedAccessToken;
 
+    // AccessTokenValidationFilter is a @Component, so the web slice builds it
+    // and every collaborator it autowires has to exist here too.
+    @MockBean
+    io.mosip.certify.dpop.DpopProofValidator dpopProofValidator;
+
     // Required by audit aspects/configuration
     @MockBean
     AuditPlugin auditWrapper;

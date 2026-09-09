@@ -1,20 +1,24 @@
 {
     "TC_InjiCertify_GetCredentialFormDocvp_02": [
         "TC_InjiCertify_oAuthTokenExchange_PresentationDuringIssuance_01",
+        "TC_mdocvpDependent_GenerateNonce_01",
         "TC_esignetDependent_CreateOidc_mdocvp_01"
     ],
     "TC_InjiCertify_IARInitialRequest_01": ["TC_esignetDependent_CreateOidc_mdocvp_01"],
     "TC_InjiCertify_GetCredentialFormDocvp_01": [
         "TC_InjiCertify_oAuthTokenExchange_PresentationDuringIssuance_01",
+        "TC_mdocvpDependent_GenerateNonce_01",
         "TC_esignetDependent_CreateOidc_mdocvp_01"
     ],
     "TC_InjiCertify_GetCredentialFormDocvp_04": [
         "TC_InjiCertify_oAuthTokenExchange_PresentationDuringIssuance_01",
+        "TC_mdocvpDependent_GenerateNonce_01",
         "TC_esignetDependent_CreateOidc_mdocvp_01"
     ],
     "TC_InjiCertify_IARInitialRequest_10": ["TC_esignetDependent_CreateOidc_mdocvp_01"],
     "TC_InjiCertify_GetCredentialFormDocvp_03": [
         "TC_InjiCertify_oAuthTokenExchange_PresentationDuringIssuance_01",
+        "TC_mdocvpDependent_GenerateNonce_01",
         "TC_esignetDependent_CreateOidc_mdocvp_01"
     ],
     "TC_InjiCertify_IARInitialRequest_06": ["TC_esignetDependent_CreateOidc_mdocvp_01"],
@@ -23,6 +27,7 @@
     "TC_InjiCertify_oAuthTokenExchange_PresentationDuringIssuance_05": ["TC_InjiCertify_IARInitialRequest_With_VP_01"],
     "TC_InjiCertify_GetCredentialFormDocvp_05": [
         "TC_InjiCertify_oAuthTokenExchange_PresentationDuringIssuance_01",
+        "TC_mdocvpDependent_GenerateNonce_01",
         "TC_esignetDependent_CreateOidc_mdocvp_01"
     ],
     "TC_InjiCertify_IARInitialRequest_04": ["TC_esignetDependent_CreateOidc_mdocvp_01"],
@@ -32,5 +37,8 @@
     "TC_InjiCertify_IARInitialRequest_08": ["TC_esignetDependent_CreateOidc_mdocvp_01"],
     "TC_InjiCertify_IARInitialRequest_07": ["TC_esignetDependent_CreateOidc_mdocvp_01"],
     "TC_InjiCertify_IARInitialRequest_With_VP_03": ["TC_InjiCertify_IARInitialRequest_01"],
-    "TC_InjiCertify_IARInitialRequest_With_VP_01": ["TC_InjiCertify_IARInitialRequest_01"]
+    "TC_InjiCertify_IARInitialRequest_With_VP_01": ["TC_InjiCertify_IARInitialRequest_01"],
+    "TC_mdocvpDependent_GenerateNonce_01": [
+        "TC_InjiCertify_oAuthTokenExchange_PresentationDuringIssuance_01"
+    ]
 }

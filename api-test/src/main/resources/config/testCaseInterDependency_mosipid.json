@@ -19,12 +19,16 @@
     "TC_InjiCertify_Delete_Credential_Config_Mosipid_04": ["TC_InjiCertify_MosipID_AddCredentialConfig_06"],
     "TC_injicertify_Mosipidcredentialissuance_02": [
         "TC_pms_dependency_01",
-        "TC_esignetDependent_GenerateToken_28"
+        "TC_esignetDependent_GenerateToken_28",
+        "TC_esignetDependent_GenerateNonce_01",
+        "TC_InjiCertify_MosipID_AddCredentialConfig_01"
     ],
     "TC_InjiCertify_Delete_Credential_Config_Mosipid_03": ["TC_InjiCertify_MosipID_AddCredentialConfig_03"],
     "TC_injicertify_Mosipidcredentialissuance_01": [
         "TC_pms_dependency_01",
-        "TC_esignetDependent_GenerateToken_27"
+        "TC_esignetDependent_GenerateToken_27",
+        "TC_esignetDependent_GenerateNonce_01",
+        "TC_InjiCertify_MosipID_AddCredentialConfig_01"
     ],
     "TC_InjiCertify_Delete_Credential_Config_Mosipid_02": ["TC_InjiCertify_MosipID_AddCredentialConfig_02"],
     "TC_esignetDependent_GenerateToken_28": [
@@ -42,7 +46,8 @@
     "TC_pms_dependency_08": ["TC_pms_dependency_03"],
     "TC_injicertify_Mosipidcredentialissuance_04": [
         "TC_pms_dependency_01",
-        "TC_esignetDependent_GenerateToken_claim169_02"
+        "TC_esignetDependent_GenerateToken_claim169_02",
+        "TC_esignetDependent_GenerateNonce_01"
     ],
     "TC_pms_dependency_07": [
         "TC_pms_dependency_04",
@@ -50,7 +55,8 @@
     ],
     "TC_injicertify_Mosipidcredentialissuance_03": [
         "TC_pms_dependency_01",
-        "TC_esignetDependent_GenerateToken_claim169_01"
+        "TC_esignetDependent_GenerateToken_claim169_01",
+        "TC_esignetDependent_GenerateNonce_01"
     ],
     "TC_pms_dependency_06": [
         "TC_pms_dependency_04",
@@ -62,7 +68,8 @@
     ],
     "TC_injicertify_Mosipidcredentialissuance_05": [
         "TC_pms_dependency_01",
-        "TC_esignetDependent_GenerateToken_claim169_03"
+        "TC_esignetDependent_GenerateToken_claim169_03",
+        "TC_esignetDependent_GenerateNonce_01"
     ],
     "TC_pms_dependency_04": ["TC_pms_dependency_05"],
     "TC_esignetDependent_AuthorizationCode_claim169_02": [
@@ -138,5 +145,145 @@
     "TC_InjiCertify_MosipID_AddCredentialConfig_12": ["TC_InjiCertify_Delete_Credential_Config_Mosipid_01"],
     "TC_InjiCertify_MosipID_AddCredentialConfig_14": ["TC_InjiCertify_Delete_Credential_Config_Mosipid_08"],
     "TC_InjiCertify_MosipID_AddCredentialConfig_13": ["TC_InjiCertify_Delete_Credential_Config_Mosipid_01"],
-    "TC_InjiCertify_MosipID_AddCredentialConfig_10": ["TC_InjiCertify_Delete_Credential_Config_Mosipid_01"]
+    "TC_InjiCertify_MosipID_AddCredentialConfig_10": ["TC_InjiCertify_Delete_Credential_Config_Mosipid_01"],
+    "TC_mosipIDDependent_GenerateNonceNeg_01": ["TC_pms_dependency_01"],
+    "TC_esignetDependent_OAuthdetailsRequestNeg_31": ["TC_pms_dependency_01"],
+    "TC_esignetDependent_AuthenticateUserNeg_31": [
+        "TC_idrepo_dependency_01",
+        "TC_esignetDependent_OAuthdetailsRequestNeg_31"
+    ],
+    "TC_esignetDependent_AuthorizationCodeNeg_31": [
+        "TC_esignetDependent_AuthenticateUserNeg_31",
+        "TC_esignetDependent_OAuthdetailsRequestNeg_31"
+    ],
+    "TC_esignetDependent_GenerateTokenNeg_31": [
+        "TC_esignetDependent_AuthorizationCodeNeg_31",
+        "TC_pms_dependency_01",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_38": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_MosipidcredentialissuanceNeg_03": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_MosipidcredentialissuanceNeg_05": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_06": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_07": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_08": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_09": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_10": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_11": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_12": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_13": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_17": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_20": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_21": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_22": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_23": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_26": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_27": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_28": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_29": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_30": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_32": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_33": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_34": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_35": [
+        "TC_pms_dependency_01",
+        "TC_esignetDependent_GenerateTokenNeg_31",
+        "TC_mosipIDDependent_GenerateNonceNeg_01"
+    ]
 }

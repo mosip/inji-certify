@@ -48,7 +48,7 @@ public class InteractiveAuthorizationRequest {
     private String codeChallengeMethod;
 
     /**
-     * Supported interaction types - e.g., "openid4vp_presentation"
+     * Supported interaction types - e.g., "urn:openid:dcp:iae:openid4vp_presentation"
      */
     @JsonProperty("interaction_types_supported")
     private String interactionTypesSupported;

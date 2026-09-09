@@ -1,0 +1,13 @@
+GenerateNonceForLandRegistryRevocation:
+   InjiCertify_LandRegistry_GenerateNonce_StatusCode_ForRevocation_Valid_Smoke_sid:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/nonce
+      uniqueIdentifier: TC_landRegistryDependent_GenerateNonce_revocation_01
+      description: Fresh nonce for Land Registry revocation Get Credential flow
+      role: noauth
+      restMethod: post
+      checkOnlyStatusCodeInResponse: true
+      inputTemplate: injicertify/VCILandRegistry/GenerateNonceForLandRegistryRevocation/GenerateNonceForLandRegistryRevocation
+      outputTemplate: injicertify/responseCode
+      input: '{
+}'
+      output: "200"

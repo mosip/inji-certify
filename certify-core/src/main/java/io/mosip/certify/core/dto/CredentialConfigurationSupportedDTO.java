@@ -27,7 +27,7 @@ public class CredentialConfigurationSupportedDTO {
     private List<String> cryptographicSuitesSupported;
 
     @JsonProperty("credential_signing_alg_values_supported")
-    private List<String> credentialSigningAlgValuesSupported;
+    private List<Object> credentialSigningAlgValuesSupported;
 
     @JsonProperty("proof_types_supported")
     private Map<String, Object> proofTypesSupported;

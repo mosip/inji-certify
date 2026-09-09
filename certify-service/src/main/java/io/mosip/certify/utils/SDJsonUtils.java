@@ -222,6 +222,103 @@ public class SDJsonUtils {
     }
 
     /**
+     * Validates if a JSON path exists in a given JsonNode.
+     *
+     * @param root The root JsonNode.
+     * @param path The JSON path to validate (e.g. $.credentialSubject.name, $.hobbies[*])
+     * @return true if the path exists, false otherwise.
+     */
+    public static boolean isPathValid(JsonNode root, String path) {
+        if (path == null || path.trim().isEmpty()) {
+            return false;
+        }
+        path = path.trim();
+        if (!path.matches("^\\$(?:\\.[^.\\[\\]]+|\\[(?:\\*|0|[1-9]\\d*)\\])*$")) {
+            return false;
+        }
+        if (path.contains("..")) {
+            return false;
+        }
+        if (path.startsWith("$")) {
+            path = path.substring(1);
+        }
+        if (path.startsWith(".")) {
+            path = path.substring(1);
+        }
+        if (path.isEmpty()) {
+            return true;
+        }
+
+        String normalizedPath = path.replace("[", ".[");
+        if (normalizedPath.startsWith(".")) {
+            normalizedPath = normalizedPath.substring(1);
+        }
+        String[] segments = normalizedPath.split("\\.");
+
+        return checkSegments(root, segments, 0);
+    }
+
+    private static boolean checkSegments(JsonNode node, String[] segments, int index) {
+        if (index >= segments.length) {
+            return true;
+        }
+        if (node == null || node.isMissingNode()) {
+            return false;
+        }
+        if (node.isNull()) {
+            return false;
+        }
+
+        String segment = segments[index];
+        if (segment.startsWith("[") && segment.endsWith("]")) {
+            if (!node.isArray()) {
+                return false;
+            }
+            String indexStr = segment.substring(1, segment.length() - 1);
+            if (indexStr.equals("*")) {
+                if (node.size() == 0) {
+                    return false;
+                }
+                for (JsonNode element : node) {
+                    if (checkSegments(element, segments, index + 1)) {
+                        return true;
+                    }
+                }
+                return false;
+            } else {
+                try {
+                    int arrayIdx = Integer.parseInt(indexStr);
+                    if (arrayIdx < 0 || arrayIdx >= node.size()) {
+                        return false;
+                    }
+                    return checkSegments(node.get(arrayIdx), segments, index + 1);
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+            }
+        } else {
+            if (!node.isObject()) {
+                return false;
+            }
+            if (segment.equals("*")) {
+                if (node.size() == 0) {
+                    return false;
+                }
+                for (JsonNode child : node) {
+                    if (checkSegments(child, segments, index + 1)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            if (!node.has(segment)) {
+                return false;
+            }
+            return checkSegments(node.get(segment), segments, index + 1);
+        }
+    }
+
+    /**
      * Extracts the leaf node name from the given JSONPath string.
      *
      * @param jsonPath The JSONPath string (e.g., $.store.book[0].author)

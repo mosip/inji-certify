@@ -1,7 +1,7 @@
 OAuthDetailsRequestForCsrcertificate:
    InjiCertify_ESignet_OAuthDetailsRequest_For_landregistry_Cred2_uin_all_Valid_Smoke_For_csrcertificate_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
-      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_CsrCertifiacte_01
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_CsrCertificate_01
       description: OAuth details request for csrcertificate for Cred2
       role: resident
       restMethod: post
@@ -28,7 +28,7 @@ OAuthDetailsRequestForCsrcertificate:
 }'
    InjiCertify_ESignet_OAuthDetailsRequest_For_landregistry_Cred1_uin_all_Valid_Smoke_For_csrcertificate_sid:
       endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
-      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_CsrCertifiacte_02
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_CsrCertificate_02
       description: OAuth details request for csrcertificate for Cred1
       role: resident
       restMethod: post

@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * Interactive Authorization Request DTO for OpenID4VCI
  * Combines fields from both InteractiveAuthorizationRequest and IarAuthorizationRequest
- * Used for the unified /iar endpoint to handle both initial requests and VP presentation responses
+ * Used for the unified /iae endpoint to handle both initial requests and VP presentation responses
  */
 @Data
 @NoArgsConstructor
@@ -44,7 +44,7 @@ public class IarRequest {
     private String code_challenge_method;
 
     /**
-     * Supported interaction types - e.g., "openid4vp_presentation"
+     * Supported interaction types - e.g., "urn:openid:dcp:iae:openid4vp_presentation"
      */
     private String interaction_types_supported;
 

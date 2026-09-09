@@ -93,4 +93,5 @@ public class ErrorConstants {
     public static final String INVALID_AUTHORIZATION_SERVER = "invalid_authorization_server";
     public static final String AUTHORIZATION_SERVER_NOT_CONFIGURED = "authorization_server_not_configured";
     public static final String INVALID_CREDENTIAL_REQUEST = "invalid_credential_request";
+    public static final String INVALID_DPOP_PROOF = "invalid_dpop_proof";
 }

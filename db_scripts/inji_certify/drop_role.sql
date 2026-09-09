@@ -3,4 +3,4 @@
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -- -------------------------------------------------------------------------------------------------
 
-drop role if exists certifyuser;
+drop role if exists :dbuname;

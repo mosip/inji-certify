@@ -40,7 +40,7 @@ class JwtProofValidatorTest {
         MockitoAnnotations.openMocks(this);
         jwtProofValidator = new JwtProofValidator();
         proofConfiguration = Map.of("jwt", Map.of(
-                "proof_signing_alg_values_supported", List.of("RS256", "ES256K", "Ed25519")));
+                "proof_signing_alg_values_supported", List.of("RS256", "ES256K", "EdDSA")));
         ReflectionTestUtils.setField(jwtProofValidator, "credentialIdentifier", "test-credential-id");
     }
 
@@ -441,7 +441,7 @@ class JwtProofValidatorTest {
                 .generate();
 
         // Create JWT header with Ed25519 algorithm and JWK
-        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.Ed25519)
+        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.EdDSA)
                 .type(new JOSEObjectType("openid4vci-proof+jwt"))
                 .keyID(keyId + Base64.getUrlEncoder().withoutPadding().encodeToString(edJWK.toPublicJWK().toJSONString().getBytes(StandardCharsets.UTF_8)))
                 .build();
@@ -525,10 +525,10 @@ class JwtProofValidatorTest {
     }
 
     @Test
-    void testValidateV2_ValidJWT_Ed25519() throws Exception {
+    void testValidateV2_ValidJWT_EdDSA() throws Exception {
         String keyId = "did:jwk:";
         String credentialProof = createValidEd25519JWT(keyId);
-        Map<String, Object> proofConfig = Map.of("jwt", Map.of("proof_signing_alg_values_supported", List.of("Ed25519")));
+        Map<String, Object> proofConfig = Map.of("jwt", Map.of("proof_signing_alg_values_supported", List.of("EdDSA")));
         boolean result = jwtProofValidator.validate("test-client", "test-nonce", credentialProof, proofConfig);
         assertTrue(result, "Expected validation to succeed for valid Ed25519 JWT");
     }

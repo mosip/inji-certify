@@ -118,8 +118,8 @@ public class AccessTokenJwtUtil {
             signatureRequest.setIncludePayload(true);
             signatureRequest.setIncludeCertificate(false);
             signatureRequest.setIncludeCertHash(false);
-            signatureRequest.setValidateJson(false);
-            signatureRequest.setB64JWSHeaderParam(false);
+            signatureRequest.setValidateJson(true);
+            signatureRequest.setB64JWSHeaderParam(true);
             signatureRequest.setSignAlgorithm("RS256");
 
             // Sign using keymanager service
@@ -136,16 +136,5 @@ public class AccessTokenJwtUtil {
             log.error("Failed to generate signed JWT", e);
             throw new CertifyException(ErrorConstants.UNKNOWN_ERROR, "JWT generation failed", e);
         }
-    }
-
-    /**
-     * Generate a cryptographically secure c_nonce following eSignet pattern
-     *
-     * @return Generated c_nonce string
-     */
-    public String generateCNonce() {
-        String cNonce = java.util.UUID.randomUUID().toString();
-        log.debug("Generated c_nonce following eSignet pattern (length: {})", cNonce.length());
-        return cNonce;
     }
 }

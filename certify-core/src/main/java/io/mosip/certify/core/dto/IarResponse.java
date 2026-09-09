@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * Interactive Authorization Response (IAR) DTO for OpenID4VCI
- * Response from POST /iar endpoint
+ * Response from POST /iae endpoint
  */
 @Data
 @NoArgsConstructor

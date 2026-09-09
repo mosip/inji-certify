@@ -1,0 +1,13 @@
+GenerateNonceForLandRegistryNeg:
+   InjiCertify_LandRegistry_GenerateNonce_StatusCode_Valid_sid_For_Neg_Flow:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/nonce
+      uniqueIdentifier: TC_landRegistryDependent_GenerateNonceNeg_01
+      description: Generate nonce for land registry VCI negative flow
+      role: noauth
+      restMethod: post
+      checkOnlyStatusCodeInResponse: true
+      inputTemplate: injicertify/VCILandRegistryNeg/GenerateNonceForLandRegistryNeg/GenerateNonceForLandRegistryNeg
+      outputTemplate: injicertify/responseCode
+      input: '{
+}'
+      output: "200"

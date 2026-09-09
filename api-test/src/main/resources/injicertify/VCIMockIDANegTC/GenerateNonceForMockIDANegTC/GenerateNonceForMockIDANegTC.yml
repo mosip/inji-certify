@@ -1,0 +1,13 @@
+GenerateNonceForMockIDANegTC:
+   InjiCertify_MockIDA_GenerateNonce_StatusCode_Valid_sid_For_Neg_Flow:
+      endPoint: $INJICERTIFYMOCKIDABASEURL$/v1/certify/nonce
+      uniqueIdentifier: TC_mockDependent_GenerateNonceNeg_26
+      description: Generate nonce for mock ida negative flow
+      role: noauth
+      restMethod: post
+      checkOnlyStatusCodeInResponse: true
+      inputTemplate: injicertify/VCIMockIDANegTC/GenerateNonceForMockIDANegTC/GenerateNonceForMockIDANegTC
+      outputTemplate: injicertify/responseCode
+      input: '{
+}'
+      output: "200"

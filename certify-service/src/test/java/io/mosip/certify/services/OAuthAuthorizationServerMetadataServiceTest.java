@@ -25,7 +25,7 @@ public class OAuthAuthorizationServerMetadataServiceTest {
     private static final String TEST_RESPONSE_TYPES = "code";
     private static final String TEST_GRANT_TYPES = "authorization_code";
     private static final String TEST_CODE_CHALLENGE_METHODS = "S256";
-    private static final String TEST_INTERACTIVE_AUTHORIZATION_ENDPOINT = "http://localhost:8090/v1/certify/oauth/iar";
+    private static final String TEST_INTERACTIVE_AUTHORIZATION_ENDPOINT = "http://localhost:8090/v1/certify/oauth/iae";
 
     @Before
     public void setup() {
@@ -37,6 +37,7 @@ public class OAuthAuthorizationServerMetadataServiceTest {
         ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "grantTypesSupported", TEST_GRANT_TYPES);
         ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "codeChallengeMethodsSupported", TEST_CODE_CHALLENGE_METHODS);
         ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "interactiveAuthorizationEndpoint", TEST_INTERACTIVE_AUTHORIZATION_ENDPOINT);
+        ReflectionTestUtils.setField(oAuthAuthorizationServerMetadataService, "requireInteractiveAuthorizationRequest", true);
     }
 
     @Test
@@ -50,6 +51,8 @@ public class OAuthAuthorizationServerMetadataServiceTest {
         assertEquals("Token endpoint should match", TEST_TOKEN_ENDPOINT, result.getTokenEndpoint());
         assertEquals("Jwks Uri should match", TEST_JWKS_URI, result.getJwksUri());
         assertEquals("Interactive authorization endpoint should match", TEST_INTERACTIVE_AUTHORIZATION_ENDPOINT, result.getInteractiveAuthorizationEndpoint());
+        assertTrue("Interactive authorization request should be required",
+                Boolean.TRUE.equals(result.getRequireInteractiveAuthorizationRequest()));
     }
 
     @Test

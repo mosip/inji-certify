@@ -74,6 +74,30 @@ public class CommonUtil {
         }
     }
 
+    /**
+     * base64url of the full, untruncated digest of {@code value}, unpadded.
+     *
+     * <p>Counterpart of eSignet's {@code IdentityProviderUtil.generateB64EncodedHash}.
+     * The DPoP {@code ath} claim is this over the access token (RFC 9449 §4.2).
+     *
+     * <p>Not interchangeable with {@link #generateOIDCAtHash(String)}: that implements
+     * the OIDC {@code at_hash} and keeps only the left-most 128 bits. Using the
+     * truncated form for {@code ath} makes every DPoP binding check fail.
+     *
+     * @param algorithm a {@link MessageDigest} algorithm name, e.g. {@link #ALGO_SHA_256}
+     * @param value     the value to hash, e.g. the access token exactly as presented
+     */
+    public static String generateB64EncodedHash(String algorithm, String value) throws CertifyException {
+        try {
+            MessageDigest digest = MessageDigest.getInstance(algorithm);
+            byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
+            return urlSafeEncoder.encodeToString(hash);
+        } catch (NoSuchAlgorithmException ex) {
+            log.error("Hashing failed with alg:{}", algorithm, ex);
+            throw new CertifyException(ErrorConstants.INVALID_ALGORITHM);
+        }
+    }
+
     public static String generateRandomAlphaNumeric(int length) {
         StringBuilder builder = new StringBuilder();
         for(int i=0; i<length; i++) {

@@ -64,4 +64,11 @@ public class OAuthAuthorizationServerMetadataDTO {
      */
     @JsonProperty("interactive_authorization_endpoint")
     private String interactiveAuthorizationEndpoint;
+
+    /**
+     * Indicates that Authorization Request for credential issuance must use
+     * the Interactive Authorization Endpoint.
+     */
+    @JsonProperty("require_interactive_authorization_request")
+    private Boolean requireInteractiveAuthorizationRequest;
 }

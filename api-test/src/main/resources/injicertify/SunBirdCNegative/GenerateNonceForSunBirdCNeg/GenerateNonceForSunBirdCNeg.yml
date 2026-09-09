@@ -1,0 +1,13 @@
+GenerateNonceForSunBirdCNeg:
+   InjiCertify_SunBirdC_GenerateNonce_StatusCode_Valid_sid_For_Neg_Flow:
+      endPoint: $INJICERTIFYINSURANCEBASEURL$/v1/certify/nonce
+      uniqueIdentifier: TC_sunbirdDependent_GenerateNonceNeg_01
+      description: Generate nonce for SunBird C negative get-credential flow
+      role: resident
+      restMethod: post
+      checkOnlyStatusCodeInResponse: true
+      inputTemplate: injicertify/SunBirdCNegative/GenerateNonceForSunBirdCNeg/GenerateNonceForSunBirdCNeg
+      outputTemplate: injicertify/responseCode
+      input: '{
+}'
+      output: "200"

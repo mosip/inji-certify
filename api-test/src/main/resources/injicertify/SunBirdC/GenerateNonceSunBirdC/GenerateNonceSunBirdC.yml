@@ -1,0 +1,13 @@
+GenerateNonceSunBirdC:
+   InjiCertify_SunBirdC_GenerateNonce_StatusCode_Valid_Smoke_sid:
+      endPoint: $INJICERTIFYINSURANCEBASEURL$/v1/certify/nonce
+      uniqueIdentifier: TC_sunbirdDependent_GenerateNonce_01
+      description: Generate nonce for SunBird C get-credential flow
+      role: resident
+      restMethod: post
+      checkOnlyStatusCodeInResponse: true
+      inputTemplate: injicertify/SunBirdC/GenerateNonceSunBirdC/GenerateNonceSunBirdC
+      outputTemplate: injicertify/responseCode
+      input: '{
+}'
+      output: "200"

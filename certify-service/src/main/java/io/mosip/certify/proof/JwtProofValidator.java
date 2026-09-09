@@ -119,8 +119,7 @@ public class JwtProofValidator implements ProofValidator {
                 boolean verified = jwt.verify(verifier);
                 claimsSetVerifier.verify(jwt.getJWTClaimsSet(), null);
                 return verified;
-            } else if (JWSAlgorithm.Ed25519.equals(jwt.getHeader().getAlgorithm()) ||
-                    JWSAlgorithm.EdDSA.equals(jwt.getHeader().getAlgorithm()))
+            } else if (JWSAlgorithm.EdDSA.equals(jwt.getHeader().getAlgorithm()))
             {
                 Ed25519Verifier verifier = new Ed25519Verifier(jwk.toOctetKeyPair());
                 boolean verified = jwt.verify(verifier);

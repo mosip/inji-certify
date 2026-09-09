@@ -11,16 +11,18 @@ on:
 
 jobs:
   maven-build-inji-certify-with-plugins:
-    uses: mosip/kattu/.github/workflows/maven-build.yml@master-java21
+    uses: mosip/kattu/.github/workflows/maven-build.yml@v0.0.1
     with:
       SERVICE_LOCATION: ./certify-service-with-plugins
       BUILD_ARTIFACT: certify-service-with-plugins
+      LICENSE_NAME: 'Apache 2.0'
       MAVEN_NON_EXEC_ARTIFACTS: "mock-certify-plugin.jar,mosip-identity-certify-plugin.jar,postgres-dataprovider-plugin.jar,sunbird-rc-certify-integration-impl.jar"
     secrets:
       OSSRH_USER: ${{ secrets.OSSRH_USER }}
       OSSRH_SECRET: ${{ secrets.OSSRH_SECRET }}
       OSSRH_TOKEN: ${{ secrets.OSSRH_TOKEN }}
       GPG_SECRET: ${{ secrets.GPG_SECRET }}
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
   build-docker-inji-certify-with-plugins:
@@ -34,7 +36,7 @@ jobs:
             BUILD_ARTIFACT: 'certify-service-with-plugins'
       fail-fast: false
     name: ${{ matrix.SERVICE_NAME }}
-    uses: mosip/kattu/.github/workflows/docker-build.yml@master-java21
+    uses: mosip/kattu/.github/workflows/docker-build.yml@v0.0.1
     with:
       SERVICE_LOCATION: ${{ matrix.SERVICE_LOCATION }}
       SERVICE_NAME: ${{ matrix.SERVICE_NAME }}

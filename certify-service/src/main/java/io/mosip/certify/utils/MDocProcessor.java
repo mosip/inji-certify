@@ -22,7 +22,6 @@ import io.mosip.kernel.signature.service.CoseSignatureService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.LocalDate;
@@ -63,38 +62,48 @@ public class MDocProcessor {
             JsonNode templateNode = objectMapper.readTree(templatedJSON);
             Map<String, Object> finalMDoc = new HashMap<>();
 
-            if (templateNode.has(Constants.VALIDITY_INFO)) {
-                JsonNode validityInfo = templateNode.get(Constants.VALIDITY_INFO);
-                Map<String, Object> validity = objectMapper.convertValue(validityInfo, Map.class);
+            JsonNode validityInfo = Objects.requireNonNull(
+                    templateNode.get(Constants.VALIDITY_INFO),
+                    "Missing validity info"
+            );
 
-                if (validity.containsKey(VCDM2Constants.VALID_FROM)) {
-                    String validFromValue = (String) validity.get(VCDM2Constants.VALID_FROM);
-                    if ("${_validFrom}".equals(validFromValue)) {
-                        String currentTime = ZonedDateTime.now(ZoneOffset.UTC)
-                                .format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-                        validity.put(VCDM2Constants.VALID_FROM, currentTime);
-                    }
-                }
-                if (validity.containsKey(VCDM2Constants.VALID_UNTIL)) {
-                    String validUntilValue = (String) validity.get(VCDM2Constants.VALID_UNTIL);
-                    if ("${_validUntil}".equals(validUntilValue)) {
-                        String futureTime = ZonedDateTime.now(ZoneOffset.UTC)
-                                .plusYears(mDocConfig.getValidityPeriodYears())
-                                .format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
-                        validity.put(VCDM2Constants.VALID_UNTIL, futureTime);
-                    }
-                }
+            Map<String, Object> validity = objectMapper.convertValue(validityInfo, Map.class);
 
+            String validFromValue = Objects.requireNonNull(
+                    (String) validity.get(VCDM2Constants.VALID_FROM),
+                    "Missing validFrom"
+            );
+            String signedValue = Objects.requireNonNull(
+                    (String) validity.get(Constants.SIGNED),
+                    "Missing signed"
+            );
+            String validUntilValue = Objects.requireNonNull(
+                    (String) validity.get(VCDM2Constants.VALID_UNTIL),
+                    "Missing validUntil"
+            );
 
-                finalMDoc.put(Constants.VALIDITY_INFO, validity);
+            ZonedDateTime currentTime = ZonedDateTime.now(ZoneOffset.UTC);
+            String formattedCurrentTime = currentTime.format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
+
+            if ("${_validFrom}".equals(validFromValue)) {
+                validity.put(VCDM2Constants.VALID_FROM, createCBORTaggedDateTime(formattedCurrentTime));
             }
+            if ("${_signed}".equals(signedValue)) {
+                validity.put(Constants.SIGNED, createCBORTaggedDateTime(formattedCurrentTime));
+            }
+            if ("${_validUntil}".equals(validUntilValue)) {
+                String futureTime = currentTime.plusYears(mDocConfig.getValidityPeriodYears())
+                        .format(DateTimeFormatter.ofPattern(Constants.UTC_DATETIME_PATTERN));
+                validity.put(VCDM2Constants.VALID_UNTIL, createCBORTaggedDateTime(futureTime));
+            }
+
+            finalMDoc.put(Constants.VALIDITY_INFO, validity);
 
             if (templateParams.containsKey(Constants.DID_URL)) {
                 finalMDoc.put("_issuer", templateParams.get(Constants.DID_URL));
             }
-            if (templateNode.has(Constants.DOCTYPE)) {
-                finalMDoc.put("_docType", templateNode.get(Constants.DOCTYPE).asText());
-            }
+            String docType = Objects.requireNonNull(templateNode.get(Constants.DOCTYPE), "Missing docType").asText();
+            finalMDoc.put("_docType", docType);
             if (templateParams.containsKey(Constants._HOLDER_ID)) {
                 finalMDoc.put(Constants._HOLDER_ID, templateParams.get(Constants._HOLDER_ID));
             }
@@ -227,6 +236,24 @@ public class MDocProcessor {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             CborEncoder encoder = new CborEncoder(baos);
             encoder.encode(convertToDataItem(preprocessedData));
+            return baos.toByteArray();
+        } catch (Exception e) {
+            log.error("Error encoding to CBOR: {}", e.getMessage(), e);
+            throw new Exception("CBOR encoding failed: " + e.getMessage(), e);
+        }
+    }
+
+    public static byte[] encodeToTaggedCBOR(Object obj) throws Exception {
+        try {
+            byte[] innerCborBytes = encodeToCBOR(obj);
+
+            // Format: #6.24(bstr .cbor convertToDataItem(preprocessedData))
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            CborEncoder encoder = new CborEncoder(baos);
+            ByteString taggedCbor = new ByteString(innerCborBytes);
+            taggedCbor.setTag(24);
+            encoder.encode(taggedCbor);
+
             return baos.toByteArray();
         } catch (Exception e) {
             log.error("Error encoding to CBOR: {}", e.getMessage(), e);
@@ -370,6 +397,18 @@ public class MDocProcessor {
     }
 
     /**
+     * Creates a CBOR tagged datetime (tag 0) for datetime strings (RFC 3339 format)
+     * RFC 8610: tdate = #6.0(tstr) where tstr = #3
+     * This wraps full datetime timestamps in Tag 0 as per mso_mdoc specification
+     */
+    private static Map<String, Object> createCBORTaggedDateTime(String dateTimeStr) {
+        Map<String, Object> taggedDate = new HashMap<>();
+        taggedDate.put(Constants.__CBOR_TAG, 0);
+        taggedDate.put(Constants.__CBOR_VALUE, dateTimeStr);
+        return taggedDate;
+    }
+
+    /**
      * Creates the Mobile Security Object (MSO) structure
      */
     public Map<String, Object> createMobileSecurityObject
@@ -393,6 +432,7 @@ public class MDocProcessor {
             Map<String, Object> originalValidity = (Map<String, Object>) mDocJson.get(Constants.VALIDITY_INFO);
             validityInfo.put(VCDM2Constants.VALID_FROM, originalValidity.get(VCDM2Constants.VALID_FROM));
             validityInfo.put(VCDM2Constants.VALID_UNTIL, originalValidity.get(VCDM2Constants.VALID_UNTIL));
+            validityInfo.put(Constants.SIGNED, originalValidity.get(Constants.SIGNED));
         }
         mso.put(Constants.VALIDITY_INFO, validityInfo);
 
@@ -407,12 +447,13 @@ public class MDocProcessor {
      * Creates device key info structure (placeholder implementation)
      */
     private static Map<String, Object> createDeviceKeyInfo(Object deviceInfo) throws Exception {
-        if(deviceInfo == null) {
+        if (deviceInfo == null) {
             throw new IllegalArgumentException("Device info (holder ID) is required for mDoc credential");
         }
         String deviceKeyEncoded = deviceInfo.toString();
         if (deviceKeyEncoded.startsWith(Constants.DID_JWK_PREFIX)) {
             deviceKeyEncoded = deviceKeyEncoded.substring(Constants.DID_JWK_PREFIX.length());
+            deviceKeyEncoded = deviceKeyEncoded.replace("#0","");
         }
 
         byte[] decodedBytes = Base64.getUrlDecoder().decode(deviceKeyEncoded);
@@ -455,7 +496,7 @@ public class MDocProcessor {
      */
     public byte[] signMSO(Map<String, Object> mso, String appID, String refID, String signAlgorithm) throws Exception {
         try {
-            byte[] msoCbor = encodeToCBOR(mso);
+            byte[] msoCbor = encodeToTaggedCBOR(mso);
 
             CoseSignRequestDto signRequest = new CoseSignRequestDto();
 
@@ -465,6 +506,7 @@ public class MDocProcessor {
             signRequest.setApplicationId(appID);
             signRequest.setReferenceId(refID);
             signRequest.setAlgorithm(signAlgorithm);
+            signRequest.setIncludeCOSETag(false);
 
             // Set unprotected header in request
             signRequest.setUnprotectedHeader(Map.of("includeCertificate", true));

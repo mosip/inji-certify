@@ -1,7 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at https://mozilla.org/MPL/2.0/. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
@@ -15,7 +12,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.inji.certify</groupId>
 	<artifactId>certify-parent</artifactId>
-	<version>0.15.0-SNAPSHOT</version>
+	<version>1.0.0-beta.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>certify</name>
 	<description>Parent project for MOSIP certify</description>
@@ -23,8 +20,8 @@
 
 	<licenses>
 		<license>
-			<name>MPL 2.0</name>
-			<url>https://www.mozilla.org/en-US/MPL/2.0/</url>
+			<name>Apache 2.0</name>
+			<url>https://www.apache.org/licenses/LICENSE-2.0</url>
 		</license>
 	</licenses>
 
@@ -97,7 +94,7 @@
 		<maven-shade-plugin.version>4.4.3</maven-shade-plugin.version>
 
 		<spring.boot.version>3.2.3</spring.boot.version>
-		<central.publishing.maven.plugin.version>0.7.0</central.publishing.maven.plugin.version>
+		<central.publishing.maven.plugin.version>0.8.0</central.publishing.maven.plugin.version>
 
 		<java.version>21</java.version>
 		<jose4j.version>0.6.5</jose4j.version>
@@ -147,21 +144,6 @@
 			<groupId>org.junit.vintage</groupId>
 			<artifactId>junit-vintage-engine</artifactId>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>jakarta.persistence</groupId>
-			<artifactId>jakarta.persistence-api</artifactId>
-			<version>3.2.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.hibernate.orm</groupId>
-			<artifactId>hibernate-core</artifactId>
-			<version>7.0.8.Final</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jboss.logging</groupId>
-			<artifactId>jboss-logging</artifactId>
-			<version>3.6.1.Final</version>
 		</dependency>
 	</dependencies>
 

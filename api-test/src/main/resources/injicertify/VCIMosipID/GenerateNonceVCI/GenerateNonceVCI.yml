@@ -1,0 +1,13 @@
+GenerateNonceVCI:
+   InjiCertify_MosipID_GenerateNonce_StatusCode_Valid_Smoke_sid:
+      endPoint: $INJICERTIFYMOSIPIDBASEURL$/v1/certify/nonce
+      uniqueIdentifier: TC_esignetDependent_GenerateNonce_01
+      description: Generate nonce
+      role: resident
+      restMethod: post
+      checkOnlyStatusCodeInResponse: true
+      inputTemplate: injicertify/VCIMosipID/GenerateNonceVCI/GenerateNonceVCI
+      outputTemplate: injicertify/responseCode
+      input: '{
+}'
+      output: "200"

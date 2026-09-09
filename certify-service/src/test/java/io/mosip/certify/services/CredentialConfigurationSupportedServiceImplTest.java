@@ -104,6 +104,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
         Map<String, List<String>> credentialSigningMap = new LinkedHashMap<>();
         credentialSigningMap.put("Ed25519Signature2020", List.of("EdDSA"));
         credentialSigningMap.put("RsaSignature2018", List.of("RS256"));
+        credentialSigningMap.put("EcdsaSecp256r1Signature2019", List.of("ES256"));
         ReflectionTestUtils.setField(credentialConfigurationService, "cryptographicBindingMethodsSupportedMap", new LinkedHashMap<>());
         ReflectionTestUtils.setField(credentialConfigurationService, "credentialSigningAlgValuesSupportedMap", credentialSigningMap);
         ReflectionTestUtils.setField(credentialConfigurationService, "proofTypesSupported", new LinkedHashMap<>());
@@ -368,7 +369,53 @@ public class CredentialConfigurationSupportedServiceImplTest {
     }
 
     @Test
-    public void fetchCredentialIssuerMetadata_MsoMdocFormat() {
+    public void should_returnIntegerCoseAlgorithms_when_credentialFormatIsMsoMdoc() {
+        CredentialConfig config = new CredentialConfig();
+        config.setConfigId(UUID.randomUUID().toString());
+        config.setCredentialConfigKeyId("mdoc-credential");
+        config.setStatus("active");
+        config.setCredentialFormat("mso_mdoc");
+        config.setDocType("org.iso.18013.5.1.mDL");
+        config.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
+
+        when(credentialConfigRepository.findAll()).thenReturn(List.of(config));
+        CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
+        dto.setCredentialFormat("mso_mdoc");
+        dto.setDocType("org.iso.18013.5.1.mDL");
+        when(credentialConfigMapper.toDto(config)).thenReturn(dto);
+
+        CredentialIssuerMetadataDTO result = credentialConfigurationService.fetchCredentialIssuerMetadata();
+
+        Assert.assertNotNull(result);
+        Assert.assertTrue(result.getCredentialConfigurationSupportedDTO().containsKey("mdoc-credential"));
+        CredentialConfigurationSupportedDTO supportedDTO = result.getCredentialConfigurationSupportedDTO().get("mdoc-credential");
+        Assert.assertEquals(List.of(-7), supportedDTO.getCredentialSigningAlgValuesSupported());
+    }
+
+    @Test
+    public void should_throwException_when_msoMdocAlgorithmIsUnsupported() {
+        CredentialConfig config = new CredentialConfig();
+        config.setConfigId(UUID.randomUUID().toString());
+        config.setCredentialConfigKeyId("mdoc-invalid-alg");
+        config.setStatus("active");
+        config.setCredentialFormat("mso_mdoc");
+        config.setDocType("org.iso.18013.5.1.mDL");
+        config.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
+
+        LinkedHashMap<String, List<String>> unsupportedAlgorithms = new LinkedHashMap<>();
+        unsupportedAlgorithms.put("EcdsaSecp256r1Signature2019", List.of("UNSUPPORTED_ALG"));
+        ReflectionTestUtils.setField(
+                credentialConfigurationService,
+                "credentialSigningAlgValuesSupportedMap",
+                unsupportedAlgorithms);
+
+        when(credentialConfigRepository.findAll()).thenReturn(List.of(config));
+        CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
+        dto.setCredentialFormat("mso_mdoc");
+        dto.setDocType("org.iso.18013.5.1.mDL");
+        when(credentialConfigMapper.toDto(config)).thenReturn(dto);
+
+        assertThrows(IllegalArgumentException.class, () -> credentialConfigurationService.fetchCredentialIssuerMetadata());
     }
 
     @Test

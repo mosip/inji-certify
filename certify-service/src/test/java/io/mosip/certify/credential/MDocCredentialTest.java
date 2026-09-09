@@ -58,13 +58,13 @@ public class MDocCredentialTest {
     // ==================== Format Handling Tests ====================
 
     @Test
-    public void testCanHandleReturnsTrueForMsoMdoc() {
+    public void should_returnTrue_when_canHandleMsoMdoc() {
         assertTrue("Should handle MSO_MDOC format",
                 mDocCredential.canHandle(VCFormats.MSO_MDOC));
     }
 
     @Test
-    public void testCanHandleReturnsFalseForOtherFormat() {
+    public void should_returnFalse_when_canHandleOtherFormat() {
         assertFalse("Should not handle ldp_vc", mDocCredential.canHandle(VCFormats.LDP_VC));
         assertFalse("Should not handle dc+sd-jwt", mDocCredential.canHandle(VCFormats.DC_SD_JWT));
         assertFalse("Should not handle null", mDocCredential.canHandle(null));
@@ -73,7 +73,7 @@ public class MDocCredentialTest {
     // ==================== Credential Creation Tests ====================
 
     @Test
-    public void testCreateCredentialWithValidInput() throws Exception {
+    public void should_createCredential_when_validInputProvided() throws Exception {
         String templateName = "mDocTemplate";
         Map<String, Object> templateParams = new HashMap<>();
         templateParams.put("name", "John Doe");
@@ -101,7 +101,7 @@ public class MDocCredentialTest {
     }
 
     @Test
-    public void testCreateCredentialWithComplexTemplate() throws Exception {
+    public void should_createCredential_when_complexTemplateProvided() throws Exception {
         String templateName = "complexTemplate";
         Map<String, Object> templateParams = new HashMap<>();
         templateParams.put("familyName", "Doe");
@@ -126,7 +126,7 @@ public class MDocCredentialTest {
     }
 
     @Test(expected = CertifyException.class)
-    public void testCreateCredentialThrowsExceptionWhenFormatterFails() throws Exception {
+    public void should_throwException_when_formatterFails() {
         String templateName = "badTemplate";
         Map<String, Object> templateParams = new HashMap<>();
 
@@ -137,7 +137,7 @@ public class MDocCredentialTest {
     }
 
     @Test(expected = CertifyException.class)
-    public void testCreateCredentialThrowsExceptionWhenProcessingFails() throws Exception {
+    public void should_throwException_when_processingFails() {
         String templateName = "badTemplate";
         Map<String, Object> templateParams = new HashMap<>();
         String templatedJSON = "{\"docType\":\"org.iso.18013.5.1.mDL\"}";
@@ -150,7 +150,7 @@ public class MDocCredentialTest {
     }
 
     @Test(expected = CertifyException.class)
-    public void testCreateCredentialThrowsExceptionWhenJsonSerializationFails() throws Exception {
+    public void should_throwException_when_jsonSerializationFails() throws Exception {
         String templateName = "mDocTemplate";
         Map<String, Object> templateParams = new HashMap<>();
         String templatedJSON = "{\"docType\":\"org.iso.18013.5.1.mDL\"}";
@@ -167,7 +167,7 @@ public class MDocCredentialTest {
     // ==================== Proof Generation Tests ====================
 
     @Test
-    public void testAddProofGeneratesCorrectVCResult() throws Exception {
+    public void should_generateCorrectVCResult_when_addProofCalled() throws Exception {
         String vcToSign = "{\"_docType\":\"org.iso.18013.5.1.mDL\",\"nameSpaces\":{}}";
         String appID = "testApp";
         String refID = "testRef";
@@ -176,7 +176,6 @@ public class MDocCredentialTest {
 
         Map<String, Object> mDocJson = createTestMDocJson();
         Map<String, Object> saltedNamespaces = createTestSaltedNamespaces();
-        Map<String, Map<Integer, byte[]>> namespaceDigests = new HashMap<>();
         Map<String, Object> taggedNamespaces = createTestTaggedNamespaces();
         Map<String, Object> mso = createTestMSO();
         byte[] signedMSO = new byte[]{1, 2, 3, 4};
@@ -208,11 +207,15 @@ public class MDocCredentialTest {
 
             verify(mDocProcessor).createMobileSecurityObject(eq(mDocJson), any());
             verify(mDocProcessor).signMSO(mso, appID, refID, signAlgorithm);
+            // Issuer signed is CBOR encoded and base64 url encoded
+            mockedStatic.verify(() -> MDocProcessor.encodeToCBOR(issuerSigned));
+            byte[] decodedMdoc = Base64.getUrlDecoder().decode(result.getCredential().toString());
+            assertArrayEquals(decodedMdoc, cborIssuerSigned);
         }
     }
 
     @Test
-    public void testAddProofReturnsBase64UrlEncodedCredential() throws Exception {
+    public void should_returnBase64UrlEncodedCredential_when_addProofCalled() throws Exception {
         String vcToSign = "{\"_docType\":\"org.iso.18013.5.1.mDL\"}";
         Map<String, Object> mDocJson = createTestMDocJson();
         Map<String, Object> saltedNamespaces = createTestSaltedNamespaces();
@@ -249,7 +252,7 @@ public class MDocCredentialTest {
     }
 
     @Test
-    public void testAddProofWithDifferentSignatureAlgorithms() throws Exception {
+    public void should_handleDifferentSignatureAlgorithms_when_addProofCalled() throws Exception {
         String vcToSign = "{\"_docType\":\"org.iso.18013.5.1.mDL\"}";
         String[] algorithms = {"ES256", "ES384", "ES512"};
 
@@ -285,7 +288,7 @@ public class MDocCredentialTest {
     }
 
     @Test
-    public void testAddProofWithNullHeaders() throws Exception {
+    public void should_handleNullHeaders_when_addProofCalled() throws Exception {
         String vcToSign = "{\"_docType\":\"org.iso.18013.5.1.mDL\"}";
         Map<String, Object> mDocJson = createTestMDocJson();
         Map<String, Object> saltedNamespaces = createTestSaltedNamespaces();
@@ -319,7 +322,7 @@ public class MDocCredentialTest {
     // ==================== Error Handling Tests ====================
 
     @Test(expected = CertifyException.class)
-    public void testAddProofThrowsExceptionWhenJsonParsingFails() throws Exception {
+    public void should_throwException_when_jsonParsingFails() throws Exception {
         String vcToSign = "invalid json";
         String appID = "testApp";
         String refID = "testRef";
@@ -333,7 +336,7 @@ public class MDocCredentialTest {
     }
 
     @Test(expected = CertifyException.class)
-    public void testAddProofThrowsExceptionWhenSaltingFails() throws Exception {
+    public void should_throwException_when_saltingFails() throws Exception {
         String vcToSign = "{\"_docType\":\"org.iso.18013.5.1.mDL\"}";
         Map<String, Object> mDocJson = createTestMDocJson();
 
@@ -349,7 +352,7 @@ public class MDocCredentialTest {
     }
 
     @Test(expected = CertifyException.class)
-    public void testAddProofThrowsExceptionWhenDigestCalculationFails() throws Exception {
+    public void should_throwException_when_digestCalculationFails() throws Exception {
         String vcToSign = "{\"_docType\":\"org.iso.18013.5.1.mDL\"}";
         Map<String, Object> mDocJson = createTestMDocJson();
         Map<String, Object> saltedNamespaces = createTestSaltedNamespaces();
@@ -367,7 +370,7 @@ public class MDocCredentialTest {
     }
 
     @Test(expected = CertifyException.class)
-    public void testAddProofThrowsExceptionWhenMSOCreationFails() throws Exception {
+    public void should_throwException_when_msoCreationFails() throws Exception {
         String vcToSign = "{\"_docType\":\"org.iso.18013.5.1.mDL\"}";
         Map<String, Object> mDocJson = createTestMDocJson();
         Map<String, Object> saltedNamespaces = createTestSaltedNamespaces();
@@ -388,7 +391,7 @@ public class MDocCredentialTest {
     }
 
     @Test(expected = CertifyException.class)
-    public void testAddProofThrowsExceptionWhenMSOSigningFails() throws Exception {
+    public void should_throwException_when_msoSigningFails() throws Exception {
         String vcToSign = "{\"_docType\":\"org.iso.18013.5.1.mDL\"}";
         Map<String, Object> mDocJson = createTestMDocJson();
         Map<String, Object> saltedNamespaces = createTestSaltedNamespaces();
@@ -411,7 +414,7 @@ public class MDocCredentialTest {
     }
 
     @Test(expected = CertifyException.class)
-    public void testAddProofThrowsExceptionWhenCBOREncodingFails() throws Exception {
+    public void should_throwException_when_cborEncodingFails() throws Exception {
         String vcToSign = "{\"_docType\":\"org.iso.18013.5.1.mDL\"}";
         Map<String, Object> mDocJson = createTestMDocJson();
         Map<String, Object> saltedNamespaces = createTestSaltedNamespaces();
@@ -440,7 +443,7 @@ public class MDocCredentialTest {
     }
 
     @Test(expected = CertifyException.class)
-    public void testAddProofThrowsExceptionWhenIssuerSignedStructureFails() throws Exception {
+    public void should_throwException_when_issuerSignedStructureFails() throws Exception {
         String vcToSign = "{\"_docType\":\"org.iso.18013.5.1.mDL\"}";
         Map<String, Object> mDocJson = createTestMDocJson();
         Map<String, Object> saltedNamespaces = createTestSaltedNamespaces();

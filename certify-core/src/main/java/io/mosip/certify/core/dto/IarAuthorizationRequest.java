@@ -12,7 +12,7 @@ import jakarta.validation.constraints.NotBlank;
 
 /**
  * Interactive Authorization Request DTO for OpenID4VCI
- * Used for POST /iar endpoint to submit Verifiable Presentation response
+ * Used for POST /iae endpoint to submit Verifiable Presentation response
  */
 @Data
 @NoArgsConstructor

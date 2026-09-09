@@ -3,5 +3,5 @@
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -- -------------------------------------------------------------------------------------------------
 
-DROP DATABASE IF EXISTS inji_certify;
+DROP DATABASE IF EXISTS :mosipdbname;
 

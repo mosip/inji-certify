@@ -42,7 +42,7 @@
     "farmerID"
   ],
   "scope": "sample_vc_ldp",
-  "credentialSubjectDefinition": {
+  "claims": {
     "fullName": {
       "display": [
         {

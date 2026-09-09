@@ -1,0 +1,13 @@
+GenerateNonceFormDocMDL:
+   InjiCertify_Formdl_GenerateNonce_StatusCode_Valid_Smoke_sid:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/nonce
+      uniqueIdentifier: TC_mdlDependent_GenerateNonce_01
+      description: Generate nonce for mDocMDL credential issuance flow
+      role: resident
+      restMethod: post
+      checkOnlyStatusCodeInResponse: true
+      inputTemplate: injicertify/mDocMDL/GenerateNonceFormDoc/GenerateNonceFormDoc
+      outputTemplate: injicertify/responseCode
+      input: '{
+}'
+      output: "200"

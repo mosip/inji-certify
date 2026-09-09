@@ -252,8 +252,6 @@ public class DIDDocumentUtil {
         Map<String, Object> verificationMethod = new HashMap<>();
         // ref: https://github.com/w3c-ccg/lds-ecdsa-secp256k1-2019/issues/8
         verificationMethod.put("type", "EcdsaSecp256k1VerificationKey2019");
-        verificationMethod.put("@context", "https://w3id.org/security/v1");
-        // (improvement): can also add expires key here
         verificationMethod.put("controller", didUrl);
         verificationMethod.put("publicKeyJwk", nimbusKey.toJSONObject());
         // NOTE: Advice against using publicKeyHex by the spec author

@@ -49,7 +49,7 @@ public class DIDkeysProofManager implements JwtProofKeyManager {
                         "x", Base64.getUrlEncoder().withoutPadding().encodeToString(Arrays.copyOfRange(b, 2, 34))));
                 return Optional.of(edKey);
             } catch (ParseException e) {
-                return null;
+                return Optional.empty();
             }
         } else if (b[0] == (byte) 0xe7 && b[1] == (byte) 0x01 && b.length == 35) {
             ECNamedCurveParameterSpec params = ECNamedCurveTable.getParameterSpec("secp256k1");

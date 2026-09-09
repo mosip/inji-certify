@@ -28,6 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import java.util.*;
 import java.util.stream.Collectors;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.authlete.cose.constants.COSEAlgorithms;
 
 @Slf4j
 @Component
@@ -78,6 +80,13 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
 
     private static final String CREDENTIAL_CONFIG_CACHE_NAME = "credentialConfig";
+
+    private static final Map<String, Integer> COSE_ALGORITHM_INTEGER_MAP = Map.of(
+        JWSAlgorithm.ES256.getName(), COSEAlgorithms.ES256,
+        JWSAlgorithm.EdDSA.getName(), COSEAlgorithms.EdDSA,                
+        JWSAlgorithm.ES256K.getName(), COSEAlgorithms.ES256K,
+        JWSAlgorithm.RS256.getName(), COSEAlgorithms.RS256         
+    );
 
     @Override
     public CredentialConfigResponse addCredentialConfiguration(CredentialConfigurationDTO credentialConfigurationDTO) {
@@ -304,14 +313,21 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
         credentialConfigList.forEach(credentialConfig -> {
             CredentialConfigurationSupportedDTO dto = mapToSupportedDTO(credentialConfig);
+            List<String> algs;
             if (credentialConfig.getSignatureCryptoSuite() != null) {
-                dto.setCredentialSigningAlgValuesSupported(
-                        credentialSigningAlgValuesSupportedMap.get(credentialConfig.getSignatureCryptoSuite())
-                );
+                algs = credentialSigningAlgValuesSupportedMap.get(credentialConfig.getSignatureCryptoSuite());
             } else {
-                dto.setCredentialSigningAlgValuesSupported(
-                        Collections.singletonList(credentialConfig.getSignatureAlgo())
-                );
+                algs = Collections.singletonList(credentialConfig.getSignatureAlgo());
+            }
+
+            if (VCFormats.MSO_MDOC.equals(credentialConfig.getCredentialFormat()) && algs != null) {
+                List<Object> coseAlgs = new ArrayList<>();
+                for (String alg : algs) {
+                    coseAlgs.add(getCoseAlgorithm(alg));
+                }
+                dto.setCredentialSigningAlgValuesSupported(coseAlgs);
+            } else {
+                dto.setCredentialSigningAlgValuesSupported(algs != null ? new ArrayList<>(algs) : null);
             }
             credentialConfigurationSupportedMap.put(credentialConfig.getCredentialConfigKeyId(), dto);
         });
@@ -320,6 +336,18 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         populateCommonMetadataFields(credentialIssuerMetadata);
         return credentialIssuerMetadata;
     }
+
+    public Integer getCoseAlgorithm(String signAlgorithm) {
+        if (signAlgorithm == null) {
+            throw new IllegalArgumentException("Missing COSE signing algorithm");
+        }
+        Integer coseAlg = COSE_ALGORITHM_INTEGER_MAP.get(signAlgorithm);
+        if (coseAlg == null) {
+            throw new IllegalArgumentException("Unsupported COSE signing algorithm for mso_mdoc: " + signAlgorithm);
+        }
+        return coseAlg;
+    }
+
 
     private void populateCommonMetadataFields(CredentialIssuerMetadataDTO metadata) {
         metadata.setCredentialIssuer(credentialIssuer);

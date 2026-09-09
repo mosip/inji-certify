@@ -1,0 +1,13 @@
+GenerateNoncePreAuth:
+  InjiCertify_PreAuthCode_GenerateNonce_StatusCode_Valid_Smoke_sid:
+    endPoint: $INJICERTIFYBASEURL$/v1/certify/nonce
+    uniqueIdentifier: TC_preauth_GenerateNonce_01
+    description: Generate c_nonce for pre-auth code VCI credential issuance
+    role: noauth
+    restMethod: post
+    checkOnlyStatusCodeInResponse: true
+    inputTemplate: injicertify/PreAuthCodeFlow/GenerateNoncePreAuth/GenerateNoncePreAuth
+    outputTemplate: injicertify/responseCode
+    input: '{
+}'
+    output: "200"

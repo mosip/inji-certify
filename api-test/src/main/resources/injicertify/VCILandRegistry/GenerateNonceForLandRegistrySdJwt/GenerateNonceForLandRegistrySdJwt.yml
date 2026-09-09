@@ -1,0 +1,13 @@
+GenerateNonceForLandRegistrySdJwt:
+   InjiCertify_LandRegistry_GenerateNonce_StatusCode_ForSdJwt_Valid_Smoke_sid:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/nonce
+      uniqueIdentifier: TC_landRegistryDependent_GenerateNonce_sd_jwt_01
+      description: Fresh nonce for Land Registry sd-jwt Get Credential flow
+      role: noauth
+      restMethod: post
+      checkOnlyStatusCodeInResponse: true
+      inputTemplate: injicertify/VCILandRegistry/GenerateNonceForLandRegistrySdJwt/GenerateNonceForLandRegistrySdJwt
+      outputTemplate: injicertify/responseCode
+      input: '{
+}'
+      output: "200"

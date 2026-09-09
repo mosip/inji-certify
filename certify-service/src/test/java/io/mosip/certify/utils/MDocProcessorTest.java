@@ -12,19 +12,25 @@ import io.mosip.kernel.signature.dto.CoseSignRequestDto;
 import io.mosip.kernel.signature.dto.CoseSignResponseDto;
 import io.mosip.kernel.signature.service.CoseSignatureService;
 import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.AfterClass;
 import org.junit.Test;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.*;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
+import java.time.ZonedDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
+import java.util.Base64;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -44,6 +50,37 @@ import static org.mockito.Mockito.*;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MDocProcessorTest {
+
+    private static MockedStatic<ZonedDateTime> mockedZonedDateTime;
+    private static final ZonedDateTime FIXED_NOW = ZonedDateTime.of(2026, 7, 20, 10, 0, 0, 0, ZoneOffset.UTC);
+    private static final Map<String, Map<String, ? extends Serializable>> expectedValidityInfo = Map.of(
+            "signed", Map.of(
+                    Constants.__CBOR_TAG, 0,
+                    Constants.__CBOR_VALUE, "2026-07-20T10:00:00.000Z"
+            ),
+            "validFrom", Map.of(
+                    Constants.__CBOR_TAG, 0,
+                    Constants.__CBOR_VALUE, "2026-07-20T10:00:00.000Z"
+            ),
+            "validUntil", Map.of(
+                    Constants.__CBOR_TAG, 0,
+                    Constants.__CBOR_VALUE, "2031-07-20T10:00:00.000Z"
+            )
+    );
+
+    @BeforeClass
+    public static void setUpZonedDateTimeMock() {
+        mockedZonedDateTime = mockStatic(ZonedDateTime.class, withSettings().defaultAnswer(CALLS_REAL_METHODS));
+        mockedZonedDateTime.when(() -> ZonedDateTime.now(ZoneOffset.UTC))
+                .thenReturn(FIXED_NOW);
+    }
+
+    @AfterClass
+    public static void tearDownZonedDateTimeMock() {
+        if (mockedZonedDateTime != null) {
+            mockedZonedDateTime.close();
+        }
+    }
 
     @Mock
     private MDocConfig mDocConfig;
@@ -70,21 +107,8 @@ public class MDocProcessorTest {
     // ==================== Template Processing Tests ====================
 
     @Test
-    public void processTemplatedJson_ValidmDLTemplate_MapsToISO18013Elements() throws Exception {
-        String templatedJSON = "{"
-                + "\"docType\": \"org.iso.18013.5.1.mDL\","
-                + "\"validityInfo\": {"
-                + "  \"validFrom\": \"${_validFrom}\","
-                + "  \"validUntil\": \"${_validUntil}\""
-                + "},"
-                + "\"nameSpaces\": {"
-                + "  \"org.iso.18013.5.1\": ["
-                + "    {\"digestID\": 0, \"elementIdentifier\": \"family_name\", \"elementValue\": \"Doe\"},"
-                + "    {\"digestID\": 1, \"elementIdentifier\": \"given_name\", \"elementValue\": \"John\"},"
-                + "    {\"digestID\": 2, \"elementIdentifier\": \"birth_date\", \"elementValue\": \"1990-08-25\"}"
-                + "  ]"
-                + "}"
-                + "}";
+    public void should_mapToISO18013Elements_when_validmDLTemplateIsProcessed() {
+        String templatedJSON = createFullmDLTemplate();
 
         Map<String, Object> templateParams = new HashMap<>();
         templateParams.put("didUrl", "https://issuer.example.com/did");
@@ -103,18 +127,21 @@ public class MDocProcessorTest {
         List<Map<String, Object>> items = (List<Map<String, Object>>) nameSpaces.get("org.iso.18013.5.1");
         assertEquals("Should have 3 elements", 3, items.size());
 
-        assertEquals("family_name", items.get(0).get("elementIdentifier"));
-        assertEquals("Doe", items.get(0).get("elementValue"));
-        assertEquals(0, items.get(0).get("digestID"));
+        assertEquals("family_name", items.getFirst().get("elementIdentifier"));
+        assertEquals("Doe", items.getFirst().get("elementValue"));
+        assertEquals(0, items.getFirst().get("digestID"));
+
+        assertEquals("ValidityInfo should match", expectedValidityInfo, result.get("validityInfo"));
     }
 
     @Test
-    public void processTemplatedJson_ValidityInfoPlaceholders_ReplacedWithTimestamps() throws Exception {
+    public void processTemplatedJson_ValidityInfoPlaceholders_ReplacedWithTimestamps() {
         String templatedJSON = "{"
                 + "\"docType\": \"org.iso.18013.5.1.mDL\","
                 + "\"validityInfo\": {"
                 + "  \"validFrom\": \"${_validFrom}\","
-                + "  \"validUntil\": \"${_validUntil}\""
+                + "  \"validUntil\": \"${_validUntil}\","
+                + "  \"signed\": \"${_signed}\""
                 + "},"
                 + "\"nameSpaces\": {}"
                 + "}";
@@ -124,24 +151,29 @@ public class MDocProcessorTest {
         Map<String, Object> validityInfo = (Map<String, Object>) result.get("validityInfo");
         assertNotNull("ValidityInfo should not be null", validityInfo);
 
-        String validFrom = (String) validityInfo.get(VCDM2Constants.VALID_FROM);
-        String validUntil = (String) validityInfo.get(VCDM2Constants.VALID_UNTIL);
+        String validFrom =  (String)((Map<String,Object>) validityInfo.get(VCDM2Constants.VALID_FROM)).get(Constants.__CBOR_VALUE);
+        String validUntil =  (String)((Map<String,Object>) validityInfo.get(VCDM2Constants.VALID_UNTIL)).get(Constants.__CBOR_VALUE);
+        String signed =  (String)((Map<String,Object>) validityInfo.get(Constants.SIGNED)).get(Constants.__CBOR_VALUE);
 
         assertNotNull("ValidFrom should be set", validFrom);
         assertNotNull("ValidUntil should be set", validUntil);
         assertNotEquals("${_validFrom}", validFrom);
+        assertNotEquals("${_signed}", signed);
         assertNotEquals("${_validUntil}", validUntil);
 
         // Verify timestamp format (ISO 8601)
         assertTrue("ValidFrom should match ISO 8601",
                 validFrom.matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*"));
+        assertTrue(signed.matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*"));
         assertTrue("ValidUntil should match ISO 8601",
                 validUntil.matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*"));
     }
 
     @Test
-    public void processTemplatedJson_ComplexElementValue_PreservesStructure() throws Exception {
+    public void should_preserveStructure_when_complexElementValueProcessed() throws Exception {
         String templatedJSON = "{"
+                + getValidityInfoTemplate()+","
+                +"\"docType\": \"org.iso.18013.5.1.mDL\","
                 + "\"nameSpaces\": {"
                 + "  \"org.iso.18013.5.1\": ["
                 + "    {"
@@ -171,7 +203,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void processTemplatedJson_InvalidJson_ReturnsEmptyMap() {
+    public void should_returnEmptyMap_when_invalidJsonProcessed() {
         String invalidJSON = "{invalid json}";
         Map<String, Object> result;
         try {
@@ -183,11 +215,46 @@ public class MDocProcessorTest {
         assertTrue("Result should be empty", result.isEmpty());
     }
 
+    @Test
+    public void should_throwException_when_validityInfoInvalid() {
+        provideValidityInfoTestCases().forEach(args -> {
+            String testName = (String) args.get()[0];
+            String templatedJSON = (String) args.get()[1];
+            String expectedErrorMessage = (String) args.get()[2];
+
+            Map<String, Object> templateParams = new HashMap<>();
+            templateParams.put("didUrl", "https://issuer.example.com/did");
+            templateParams.put("_holderId", "did:jwk:test123");
+
+            CertifyException exception = assertThrows(CertifyException.class, () ->
+                    mDocProcessor.processTemplatedJson(templatedJSON, templateParams));
+
+            assertEquals("Test case [" + testName + "] failed", "Error processing templated JSON: "+expectedErrorMessage, exception.getMessage());
+        });
+    }
 
     @Test
-    public void processTemplatedJson_MultipleNamespaces_HandlesAll() throws Exception {
+    public void should_throwException_when_docTypeMissing() {
+        String templatedJSON = "{"
+                + getValidityInfoTemplate() + ","
+                + "\"nameSpaces\": {}"
+                + "}";
+
+        Map<String, Object> templateParams = new HashMap<>();
+        templateParams.put("didUrl", "https://issuer.example.com/did");
+        templateParams.put("_holderId", "did:jwk:test123");
+
+        CertifyException exception = assertThrows(CertifyException.class, () ->
+                mDocProcessor.processTemplatedJson(templatedJSON, templateParams));
+
+        assertEquals("Error processing templated JSON: Missing docType", exception.getMessage());
+    }
+
+    @Test
+    public void should_handleAllNamespaces_when_multipleNamespacesProcessed() throws Exception {
         String templatedJSON = "{"
                 + "\"docType\": \"org.mosip.credential\","
+                + getValidityInfoTemplate()+","
                 + "\"nameSpaces\": {"
                 + "  \"org.iso.18013.5.1\": ["
                 + "    {\"digestID\": 0, \"elementIdentifier\": \"family_name\", \"elementValue\": \"Doe\"}"
@@ -208,7 +275,7 @@ public class MDocProcessorTest {
     // ==================== Random Salt Generation Tests ====================
 
     @Test
-    public void addRandomSalts_AddsRandomBytesToAllElements() {
+    public void should_addRandomBytes_when_addRandomSaltsCalled() {
         Map<String, Object> mDocJson = createTestMDocJson();
 
         Map<String, Object> result = MDocProcessor.addRandomSalts(mDocJson);
@@ -225,7 +292,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void addRandomSalts_GeneratesUniqueSalts() {
+    public void should_generateUniqueSalts_when_addRandomSaltsCalled() {
         Map<String, Object> mDocJson = new HashMap<>();
         Map<String, Object> nameSpaces = new HashMap<>();
         List<Map<String, Object>> elements = new ArrayList<>();
@@ -249,7 +316,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void addRandomSalts_PreservesOriginalData() {
+    public void should_preserveOriginalData_when_addRandomSaltsCalled() {
         Map<String, Object> mDocJson = createTestMDocJson();
 
         Map<String, Object> result = MDocProcessor.addRandomSalts(mDocJson);
@@ -263,7 +330,7 @@ public class MDocProcessorTest {
     // ==================== Digest Calculation Tests ====================
 
     @Test
-    public void calculateDigests_GeneratesCorrectSHA256Digests() throws Exception {
+    public void should_generateCorrectSHA256Digests_when_calculateDigestsCalled() throws Exception {
         Map<String, Object> saltedNamespaces = new HashMap<>();
         List<Map<String, Object>> elements = new ArrayList<>();
         elements.add(createSaltedElement(0, "family_name", "Doe"));
@@ -282,7 +349,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void calculateDigests_MultipleElements_MapsDigestsByID() throws Exception {
+    public void should_mapDigestsByID_when_multipleElementsProvided() throws Exception {
         Map<String, Object> saltedNamespaces = new HashMap<>();
         List<Map<String, Object>> elements = new ArrayList<>();
 
@@ -304,7 +371,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void calculateDigests_WrapsWithCBORTag24() throws Exception {
+    public void should_wrapWithCBORTag24_when_calculateDigestsCalled() throws Exception {
         Map<String, Object> saltedNamespaces = new HashMap<>();
         List<Map<String, Object>> elements = new ArrayList<>();
         elements.add(createSaltedElement(0, "test", "value"));
@@ -325,7 +392,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void calculateDigests_VerifyDigestCalculation() throws Exception {
+    public void should_verifyDigestCalculation_when_calculateDigestsCalled() throws Exception {
         // Create element with known data
         Map<String, Object> element = new HashMap<>();
         element.put("digestID", 0);
@@ -352,7 +419,7 @@ public class MDocProcessorTest {
     // ==================== CBOR Encoding Tests ====================
 
     @Test
-    public void encodeToCBOR_SimpleMap_EncodesSuccessfully() throws Exception {
+    public void should_encodeSuccessfully_when_simpleMapEncoded() throws Exception {
         Map<String, Object> data = new HashMap<>();
         data.put("key", "value");
         data.put("number", 42);
@@ -369,7 +436,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void encodeToCBOR_WithByteArray_PreservesBytes() throws Exception {
+    public void should_preserveBytes_when_byteArrayEncoded() throws Exception {
         byte[] testBytes = new byte[]{1, 2, 3, 4, 5};
         Map<String, Object> data = new HashMap<>();
         data.put("bytes", testBytes);
@@ -386,7 +453,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void encodeToCBOR_NestedStructures_EncodesRecursively() throws Exception {
+    public void should_encodeRecursively_when_nestedStructuresEncoded() throws Exception {
         Map<String, Object> nested = new HashMap<>();
         nested.put("inner", "value");
         nested.put("innerNumber", 123);
@@ -402,7 +469,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void encodeToCBOR_DateString_AppliesTag1004() throws Exception {
+    public void should_applyTag1004_when_dateStringEncoded() throws Exception {
         Map<String, Object> data = new HashMap<>();
         data.put("birthDate", "1990-08-25");
 
@@ -421,7 +488,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void encodeToCBOR_AllDataTypes_HandlesCorrectly() throws Exception {
+    public void should_handleCorrectly_when_allDataTypesEncoded() throws Exception {
         Map<String, Object> data = new HashMap<>();
         data.put("string", "test");
         data.put("integer", 42);
@@ -440,7 +507,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void encodeToCBOR_NullInput_HandlesGracefully() throws Exception {
+    public void should_handleGracefully_when_nullInputEncoded() throws Exception {
         // Null is handled by preprocessForCBOR and converted to SimpleValue.NULL
         byte[] result = MDocProcessor.encodeToCBOR(Collections.singletonMap("nullKey", null));
 
@@ -451,7 +518,7 @@ public class MDocProcessorTest {
     // ==================== Date Handling Tests ====================
 
     @Test
-    public void dateHandling_ValidDates_RecognizedCorrectly() throws Exception {
+    public void should_recognizeCorrectly_when_validDatesHandled() throws Exception {
         String[] validDates = {
                 "2025-01-15",
                 "1990-12-31",
@@ -480,7 +547,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void dateHandling_NonDateStrings_NotTagged() throws Exception {
+    public void should_notTag_when_nonDateStringsHandled() throws Exception {
         String[] nonDates = {
                 "2025-13-01", // Invalid month
                 "2025/01/15", // Wrong format
@@ -498,7 +565,7 @@ public class MDocProcessorTest {
 
             // These should be encoded as regular strings without tag 1004
             List<DataItem> decoded = new CborDecoder(new ByteArrayInputStream(encoded)).decode();
-            co.nstant.in.cbor.model.Map map = (co.nstant.in.cbor.model.Map) decoded.get(0);
+            co.nstant.in.cbor.model.Map map = (co.nstant.in.cbor.model.Map) decoded.getFirst();
             DataItem textItem = map.get(new UnicodeString("text"));
             assertNotNull("Text item should exist", textItem);
         }
@@ -507,7 +574,7 @@ public class MDocProcessorTest {
     // ==================== DeviceKeyInfo Tests ====================
 
     @Test
-    public void createDeviceKeyInfo_ValidDidJwkEC_ParsesCorrectly() throws Exception {
+    public void should_parseCorrectly_when_validDidJwkECProvided() throws Exception {
         String jwkJson = "{\"kty\":\"EC\",\"crv\":\"P-256\","
                 + "\"x\":\"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4\","
                 + "\"y\":\"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM\"}";
@@ -537,12 +604,12 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void createDeviceKeyInfo_P384Curve_MapsCorrectly() throws Exception {
+    public void should_mapCorrectly_when_p384CurveUsed() throws Exception {
         String jwkJson = "{\"kty\":\"EC\",\"crv\":\"P-384\","
                 + "\"x\":\"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4\","
                 + "\"y\":\"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM\"}";
         String encodedKey = Base64.getUrlEncoder().encodeToString(jwkJson.getBytes());
-        String didJwk = "did:jwk:" + encodedKey;
+        String didJwk = "did:jwk:" + encodedKey+"#0";
 
         Map<String, Object> mDocJson = new HashMap<>();
         mDocJson.put("_holderId", didJwk);
@@ -555,7 +622,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void createDeviceKeyInfo_P521Curve_MapsCorrectly() throws Exception {
+    public void should_mapCorrectly_when_p521CurveUsed() throws Exception {
         String jwkJson = "{\"kty\":\"EC\",\"crv\":\"P-521\","
                 + "\"x\":\"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4\","
                 + "\"y\":\"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM\"}";
@@ -573,7 +640,7 @@ public class MDocProcessorTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void createDeviceKeyInfo_UnsupportedCurve_ThrowsException() throws Exception {
+    public void should_throwException_when_unsupportedCurveUsed() throws Exception {
         String jwkJson = "{\"kty\":\"EC\",\"crv\":\"secp256k1\","
                 + "\"x\":\"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4\","
                 + "\"y\":\"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM\"}";
@@ -587,7 +654,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void createDeviceKeyInfo_WithKeyId_PreservesKid() throws Exception {
+    public void should_preserveKid_when_keyIdProvided() throws Exception {
         String jwkJson = "{\"kty\":\"EC\",\"crv\":\"P-256\","
                 + "\"kid\":\"test-key-123\","
                 + "\"x\":\"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4\","
@@ -611,15 +678,11 @@ public class MDocProcessorTest {
     // ==================== MSO Structure Tests ====================
 
     @Test
-    public void createMobileSecurityObject_ValidInput_CreatesCompleteStructure() throws Exception {
+    public void should_createCompleteStructure_when_validInputProvided() throws Exception {
         Map<String, Object> mDocJson = new HashMap<>();
         mDocJson.put("_docType", "org.iso.18013.5.1.mDL");
         mDocJson.put("_holderId", createTestDidJwk());
-
-        Map<String, Object> validityInfo = new HashMap<>();
-        validityInfo.put(VCDM2Constants.VALID_FROM, "2024-01-01T00:00:00Z");
-        validityInfo.put(VCDM2Constants.VALID_UNTIL, "2025-01-01T00:00:00Z");
-        mDocJson.put("validityInfo", validityInfo);
+        mDocJson.put("validityInfo", expectedValidityInfo);
 
         Map<String, Map<Integer, byte[]>> namespaceDigests = new HashMap<>();
         Map<Integer, byte[]> digests = new HashMap<>();
@@ -634,13 +697,14 @@ public class MDocProcessorTest {
         assertEquals("Digest algorithm should match", "SHA-256", result.get("digestAlgorithm"));
         assertEquals("DocType should match", "org.iso.18013.5.1.mDL", result.get(Constants.DOCTYPE));
 
-        assertNotNull("Should have validityInfo", result.get("validityInfo"));
+        Map<String, Object> actualValidityInfo = (Map<String, Object>) result.get("validityInfo");
+        assertEquals(expectedValidityInfo, actualValidityInfo);
         assertNotNull("Should have valueDigests", result.get("valueDigests"));
         assertNotNull("Should have deviceKeyInfo", result.get("deviceKeyInfo"));
     }
 
     @Test
-    public void createMobileSecurityObject_ValueDigests_StructureCorrect() throws Exception {
+    public void should_structureCorrectly_when_valueDigestsProcessed() throws Exception {
         Map<String, Object> mDocJson = new HashMap<>();
         mDocJson.put("_docType", "org.test.doc");
         mDocJson.put("_holderId", createTestDidJwk());
@@ -669,29 +733,22 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void createMobileSecurityObject_ValidityInfo_PreservesValues() throws Exception {
+    public void should_addValidityInfo_when_createMobileSecurityObjectIsCalled() throws Exception {
         Map<String, Object> mDocJson = new HashMap<>();
         mDocJson.put("_docType", "org.test.doc");
         mDocJson.put("_holderId", createTestDidJwk());
-
-        String validFrom = "2024-06-15T10:30:00Z";
-        String validUntil = "2025-06-15T10:30:00Z";
-        Map<String, Object> validityInfo = new HashMap<>();
-        validityInfo.put(VCDM2Constants.VALID_FROM, validFrom);
-        validityInfo.put(VCDM2Constants.VALID_UNTIL, validUntil);
-        mDocJson.put("validityInfo", validityInfo);
+        mDocJson.put("validityInfo", expectedValidityInfo);
 
         Map<String, Object> result = mDocProcessor.createMobileSecurityObject(mDocJson, new HashMap<>());
 
         Map<String, Object> resultValidity = (Map<String, Object>) result.get("validityInfo");
-        assertEquals("ValidFrom should match", validFrom, resultValidity.get(VCDM2Constants.VALID_FROM));
-        assertEquals("ValidUntil should match", validUntil, resultValidity.get(VCDM2Constants.VALID_UNTIL));
+        assertEquals(expectedValidityInfo, resultValidity);
     }
 
     // ==================== COSE Signing Tests ====================
 
     @Test
-    public void signMSO_ValidInput_ReturnsSignedBytes() throws Exception {
+    public void should_returnSignedBytes_when_validInputProvided() throws Exception {
         Map<String, Object> mso = new HashMap<>();
         mso.put("version", "1.0");
         mso.put("digestAlgorithm", "SHA-256");
@@ -717,10 +774,26 @@ public class MDocProcessorTest {
         assertEquals("Application ID should match", "testApp", requestDto.getApplicationId());
         assertEquals("Reference ID should match", "testRef", requestDto.getReferenceId());
         assertEquals("Algorithm should match", "ES256", requestDto.getAlgorithm());
+        assertEquals("Include COSE Tag should match", false, requestDto.getIncludeCOSETag());
+
+        // Assert the request dto payload is B64 encoded - tagged mso #6.24(bstr .cbor mso)
+        String payload = requestDto.getPayload();
+        try {
+            byte[] decodedPayload = Base64.getUrlDecoder().decode(payload);
+            assertTrue("Decoded payload should contain data", decodedPayload.length > 0);
+            // Verify the decoded payload is a CBOR-encoded tag-24 wrapped ByteString (bstr .cbor mso)
+            List<DataItem> cborItems = new CborDecoder(new ByteArrayInputStream(decodedPayload)).decode();
+            assertFalse("Should decode to CBOR items", cborItems.isEmpty());
+            DataItem item = cborItems.get(0);
+            assertTrue("Payload should be a ByteString", item instanceof ByteString);
+            assertEquals("Payload should have CBOR tag 24", 24, item.getTag().getValue());
+        } catch (IllegalArgumentException e) {
+            fail("Payload should be valid Base64 encoded: " + e.getMessage());
+        }
     }
 
     @Test(expected = CertifyException.class)
-    public void signMSO_SigningFails_ThrowsException() throws Exception {
+    public void should_throwException_when_signingFails() throws Exception {
         Map<String, Object> mso = new HashMap<>();
         mso.put("version", "1.0");
 
@@ -733,7 +806,7 @@ public class MDocProcessorTest {
     // ==================== IssuerSigned Structure Tests ====================
 
     @Test
-    public void createIssuerSignedStructure_ValidInput_CreatesStructure() throws Exception {
+    public void should_createStructure_when_validInputProvided() throws Exception {
         Map<String, Object> processedNamespaces = new HashMap<>();
         List<Object> elements = new ArrayList<>();
 
@@ -765,7 +838,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void createIssuerSignedStructure_EmptyNamespaces_HandlesGracefully() throws Exception {
+    public void should_handleGracefully_when_emptyNamespacesProvided() throws Exception {
         Map<String, Object> processedNamespaces = new HashMap<>();
 
         co.nstant.in.cbor.model.Array coseArray = new co.nstant.in.cbor.model.Array();
@@ -786,7 +859,7 @@ public class MDocProcessorTest {
     }
 
     @Test(expected = IOException.class)
-    public void createIssuerSignedStructure_InvalidCBOR_ThrowsException() throws Exception {
+    public void should_throwException_when_invalidCBOREncountered() throws Exception {
         Map<String, Object> processedNamespaces = new HashMap<>();
 
         // Use bytes that will cause CborException - incomplete CBOR structure
@@ -797,7 +870,7 @@ public class MDocProcessorTest {
     // ==================== Integration Tests ====================
 
     @Test
-    public void multipleNamespacesWorkflow_HandlesCorrectly() throws Exception {
+    public void should_handleCorrectly_when_multipleNamespacesProcessed() throws Exception {
         Map<String, Object> mDocJson = new HashMap<>();
         mDocJson.put("_docType", "org.multi.credential");
         mDocJson.put("_holderId", createTestDidJwk());
@@ -823,7 +896,7 @@ public class MDocProcessorTest {
     // ==================== Edge Cases and Error Handling ====================
 
     @Test
-    public void addRandomSalts_EmptyNamespace_HandlesGracefully() {
+    public void should_handleGracefully_when_emptyNamespaceEncountered() {
         Map<String, Object> mDocJson = new HashMap<>();
         Map<String, Object> nameSpaces = new HashMap<>();
         nameSpaces.put("org.iso.18013.5.1", new ArrayList<>());
@@ -838,7 +911,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void calculateDigests_EmptyElements_HandlesGracefully() throws Exception {
+    public void should_handleGracefully_when_emptyElementsEncountered() throws Exception {
         Map<String, Object> saltedNamespaces = new HashMap<>();
         saltedNamespaces.put("org.iso.18013.5.1", new ArrayList<>());
 
@@ -852,7 +925,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void encodeToCBOR_NullValue_HandlesCorrectly() throws Exception {
+    public void should_handleCorrectly_when_nullValueEncoded() throws Exception {
         Map<String, Object> data = new HashMap<>();
         data.put("nullField", null);
         data.put("normalField", "value");
@@ -869,7 +942,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void encodeToCBOR_LargeNumbers_HandlesCorrectly() throws Exception {
+    public void should_handleCorrectly_when_largeNumbersEncoded() throws Exception {
         Map<String, Object> data = new HashMap<>();
         data.put("maxInt", Integer.MAX_VALUE);
         data.put("minInt", Integer.MIN_VALUE);
@@ -883,7 +956,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void encodeToCBOR_SpecialFloats_HandlesCorrectly() throws Exception {
+    public void should_handleCorrectly_when_specialFloatsEncoded() throws Exception {
         Map<String, Object> data = new HashMap<>();
         data.put("pi", 3.14159);
         data.put("negative", -2.5);
@@ -898,7 +971,7 @@ public class MDocProcessorTest {
     // ==================== CBOR Type Conversion Tests ====================
 
     @Test
-    public void convertToDataItem_Integer_ConvertsCorrectly() throws Exception {
+    public void should_convertCorrectly_when_integerConverted() throws Exception {
         Map<String, Object> data = new HashMap<>();
         data.put("positive", 42);
         data.put("negative", -42);
@@ -912,7 +985,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void convertToDataItem_Boolean_ConvertsCorrectly() throws Exception {
+    public void should_convertCorrectly_when_booleanConverted() throws Exception {
         Map<String, Object> data = new HashMap<>();
         data.put("trueValue", true);
         data.put("falseValue", false);
@@ -930,7 +1003,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void convertToDataItem_List_ConvertsToArray() throws Exception {
+    public void should_convertToArray_when_listConverted() throws Exception {
         Map<String, Object> data = new HashMap<>();
         data.put("list", Arrays.asList("a", "b", "c"));
 
@@ -945,14 +1018,14 @@ public class MDocProcessorTest {
     // ==================== Configuration Tests ====================
 
     @Test
-    public void mDocConfig_ValidityPeriod_UsedInTemplate() throws Exception {
+    public void should_addValidityPeriod_asPer_MdocConfig() throws Exception {
         when(mDocConfig.getValidityPeriodYears()).thenReturn(10);
 
-        String template = "{\"validityInfo\": {\"validFrom\": \"${_validFrom}\", \"validUntil\": \"${_validUntil}\"}}";
+        String template = "{\"validityInfo\": {\"validFrom\": \"${_validFrom}\",\"signed\": \"${_signed}\", \"validUntil\": \"${_validUntil}\"}, \"docType\": \"${_docType}\"}";
         Map<String, Object> result = mDocProcessor.processTemplatedJson(template, new HashMap<>());
 
         Map<String, Object> validityInfo = (Map<String, Object>) result.get("validityInfo");
-        String validUntil = (String) validityInfo.get(VCDM2Constants.VALID_UNTIL);
+        String validUntil = (String) ((Map<String, Object>) validityInfo.get("validUntil")).get(Constants.__CBOR_VALUE);
 
         assertNotNull("ValidUntil should be set", validUntil);
         // Verify it's approximately 10 years in the future (allowing for execution time)
@@ -960,7 +1033,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void mDocConfig_MsoVersion_UsedInMSO() throws Exception {
+    public void should_useMsoVersion_when_mDocConfigApplied() throws Exception {
         when(mDocConfig.getMsoVersion()).thenReturn("2.0");
 
         Map<String, Object> mDocJson = new HashMap<>();
@@ -973,7 +1046,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void mDocConfig_DigestAlgorithm_UsedInMSO() throws Exception {
+    public void should_useDigestAlgorithm_when_mDocConfigApplied() throws Exception {
         when(mDocConfig.getDigestAlgorithm()).thenReturn("SHA-512");
 
         Map<String, Object> mDocJson = new HashMap<>();
@@ -988,7 +1061,7 @@ public class MDocProcessorTest {
     // ==================== Compliance Tests (ISO 18013-5) ====================
 
     @Test
-    public void iso18013_IssuerSignedStructure_HasRequiredFields() throws Exception {
+    public void should_haveRequiredFields_when_issuerSignedStructureCreated() throws Exception {
         Map<String, Object> processedNamespaces = new HashMap<>();
         processedNamespaces.put("org.iso.18013.5.1", new ArrayList<>());
 
@@ -1001,7 +1074,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void iso18013_MSO_HasRequiredFields() throws Exception {
+    public void should_haveRequiredFields_when_msoCreated() throws Exception {
         Map<String, Object> mDocJson = new HashMap<>();
         mDocJson.put("_docType", "org.iso.18013.5.1.mDL");
         mDocJson.put("_holderId", createTestDidJwk());
@@ -1017,7 +1090,7 @@ public class MDocProcessorTest {
     }
 
     @Test
-    public void iso18013_IssuerSignedItem_Structure() throws Exception {
+    public void should_structureCorrectly_when_issuerSignedItemCreated() throws Exception {
         Map<String, Object> element = createSaltedElement(0, "family_name", "Doe");
 
         // Verify element has required fields
@@ -1070,10 +1143,7 @@ public class MDocProcessorTest {
     private String createFullmDLTemplate() {
         return "{"
                 + "\"docType\": \"org.iso.18013.5.1.mDL\","
-                + "\"validityInfo\": {"
-                + "  \"validFrom\": \"${_validFrom}\","
-                + "  \"validUntil\": \"${_validUntil}\""
-                + "},"
+                + getValidityInfoTemplate()+","
                 + "\"nameSpaces\": {"
                 + "  \"org.iso.18013.5.1\": ["
                 + "    {\"digestID\": 0, \"elementIdentifier\": \"family_name\", \"elementValue\": \"Doe\"},"
@@ -1081,6 +1151,14 @@ public class MDocProcessorTest {
                 + "    {\"digestID\": 2, \"elementIdentifier\": \"birth_date\", \"elementValue\": \"1990-08-25\"}"
                 + "  ]"
                 + "}"
+                + "}";
+    }
+
+    private static String getValidityInfoTemplate() {
+        return "\"validityInfo\": {"
+                + "  \"validFrom\": \"${_validFrom}\","
+                + "  \"validUntil\": \"${_validUntil}\","
+                + "  \"signed\": \"${_signed}\""
                 + "}";
     }
 
@@ -1104,5 +1182,53 @@ public class MDocProcessorTest {
         return sb.toString();
     }
 
+    private static Stream<Arguments> provideValidityInfoTestCases() {
+        return Stream.of(
+                Arguments.of(
+                        "Missing validFrom field",
+                        "{"
+                                + "\"docType\": \"org.iso.18013.5.1.mDL\","
+                                + "\"holderId\": \"${_holderId}\","
+                                + "\"validityInfo\": {"
+                                + "\"signed\": \"${_signed}\","
+                                + "\"validUntil\": \"${_validUntil}\""
+                                + "}"
+                                + "}",
+                        "Missing validFrom"
+                ),
+                Arguments.of(
+                        "Missing signed field",
+                        "{"
+                                + "\"docType\": \"org.iso.18013.5.1.mDL\","
+                                + "\"holderId\": \"${_holderId}\","
+                                + "\"validityInfo\": {"
+                                + "\"validFrom\": \"${_validFrom}\","
+                                + "\"validUntil\": \"${_validUntil}\""
+                                + "}"
+                                + "}",
+                        "Missing signed"
+                ),
+                Arguments.of(
+                        "Missing validUntil field",
+                        "{"
+                                + "\"docType\": \"org.iso.18013.5.1.mDL\","
+                                + "\"holderId\": \"${_holderId}\","
+                                + "\"validityInfo\": {"
+                                + "\"validFrom\": \"${_validFrom}\","
+                                + "\"signed\": \"${_signed}\""
+                                + "}"
+                                + "}",
+                        "Missing validUntil"
+                ),
+                Arguments.of(
+                        "Validity info entirely missing",
+                        "{"
+                                + "\"docType\": \"org.iso.18013.5.1.mDL\","
+                                + "\"holderId\": \"${_holderId}\""
+                                + "}",
+                        "Missing validity info"
+                )
+        );
+    }
 
 }

@@ -14,14 +14,14 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum InteractionType {
     
     /**
-     * OpenID4VP presentation interaction type
+     * OpenID4VP presentation interaction type (OpenID4VCI 1.1)
      */
-    OPENID4VP_PRESENTATION("openid4vp_presentation"),
-    
+    OPENID4VP_PRESENTATION("urn:openid:dcp:iae:openid4vp_presentation"),
+
     /**
      * Redirect to web interaction type (not supported)
      */
-    REDIRECT_TO_WEB("redirect_to_web");
+    REDIRECT_TO_WEB("urn:openid:dcp:iae:redirect_to_web");
     
     private final String value;
     

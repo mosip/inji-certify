@@ -3,27 +3,27 @@
 -- file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -- -------------------------------------------------------------------------------------------------
 
-\c inji_certify
+\c :mosipdbname
 
 GRANT CONNECT
-   ON DATABASE inji_certify
-   TO certifyuser;
+   ON DATABASE :mosipdbname
+   TO :dbuname;
 
 GRANT USAGE
    ON SCHEMA certify
-   TO certifyuser;
+   TO :dbuname;
 
 GRANT SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES
    ON ALL TABLES IN SCHEMA certify
-   TO certifyuser;
+   TO :dbuname;
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA certify
-	GRANT SELECT,INSERT,UPDATE,DELETE,REFERENCES ON TABLES TO certifyuser;
+	GRANT SELECT,INSERT,UPDATE,DELETE,REFERENCES ON TABLES TO :dbuname;
 
 GRANT USAGE, SELECT
    ON ALL SEQUENCES IN SCHEMA certify
-   TO certifyuser;
+   TO :dbuname;
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA certify
-   GRANT USAGE, SELECT ON SEQUENCES TO certifyuser;
+   GRANT USAGE, SELECT ON SEQUENCES TO :dbuname;
 

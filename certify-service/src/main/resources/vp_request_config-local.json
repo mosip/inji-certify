@@ -1,0 +1,29 @@
+{
+  "clientId": "injiverify.dev-int-inji.mosip.net/",
+  "nonce": "NkdHJkBIbdOdQaAjWm8gpA",
+  "dcqlQuery": {
+    "credentials": [
+      {
+        "id": "mosip_verifiable_credential_id",
+        "format": "ldp_vc",
+        "meta": {
+          "type_values": [
+            [
+              "https://www.w3.org/2018/credentials#VerifiableCredential",
+              "https://example.org/credentials#MOSIPVerifiableCredential"
+            ]
+          ]
+        }
+      }
+    ],
+    "credential_sets": [
+      {
+        "options": [
+          [
+            "mosip_verifiable_credential_id"
+          ]
+        ]
+      }
+    ]
+  }
+}

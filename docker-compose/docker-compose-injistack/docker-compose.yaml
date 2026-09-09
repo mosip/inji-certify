@@ -9,14 +9,13 @@ services:
     volumes:
       - ./certify_init.sql:/docker-entrypoint-initdb.d/certify_init.sql
       - ./mimoto_init.sql:/docker-entrypoint-initdb.d/mimoto_init.sql
-      - ./verify_init.sql:/docker-entrypoint-initdb.d/verify_init.sql
     networks:
       - network
     ports:
       - "5433:5432"
 
   certify:
-    image: injistack/inji-certify-with-plugins:0.14.0
+    image: injistackdev/inji-certify-with-plugins:develop
     user: root
     ports:
       - 8090:8090
@@ -32,12 +31,16 @@ services:
       - ./config/certify-default.properties:/home/mosip/config/certify-default.properties
       - ./config/certify-csvdp-farmer.properties:/home/mosip/config/certify-csvdp-farmer.properties
       - ./config/certify-mock-mdl.properties:/home/mosip/config/certify-mock-mdl.properties
+      - ./config/certify-mdl-pdi.properties:/home/mosip/config/certify-mdl-pdi.properties
       - ./data/CERTIFY_PKCS12:/home/mosip/CERTIFY_PKCS12
       # This can be disabled if one uses plugins included in inji-certify-with-plugins docker image.
       #      - ./loader_path/certify/:/home/mosip/additional_jars/
       # modify the below file to change the identity fields in the VC
       - ./config/farmer_identity_data.csv:/home/mosip/config/farmer_identity_data.csv
+      - ./config/driving_license_mosipid.csv:/home/mosip/config/driving_license_mosipid.csv
       - ./config/vp_request_config.json:/home/mosip/config/vp_request_config.json
+      - ./context/farmer-context.json:/home/mosip/context/farmer-context.json
+      - ./context/mdl-pdi-context.json:/home/mosip/context/mdl-pdi-context.json
     networks:
       - network
     depends_on:
@@ -61,7 +64,7 @@ services:
 
   mimoto-service:
     container_name: 'mimoto-service'
-    image: injistack/mimoto:0.21.0
+    image: injistack/mimoto:1.0.0-alpha.1
     user: root
     ports:
       - '8099:8099'
@@ -86,12 +89,13 @@ services:
       - ./config/mimoto-issuers-config.json:/home/mosip/mimoto-issuers-config.json
       - ./config/mimoto-trusted-verifiers.json:/home/mosip/mimoto-trusted-verifiers.json
       - ./certs/oidckeystore.p12:/home/mosip/certs/oidckeystore.p12
+      - ./config/mosip-cbeff.xsd:/home/mosip/mosip-cbeff.xsd
     depends_on:
       - database
 
   inji-web:
     container_name: 'inji-web'
-    image: injistack/inji-web:0.16.0
+    image: injistack/inji-web:1.0.0-alpha.1
     ports:
       - '3004:3004'
     environment:
@@ -107,32 +111,6 @@ services:
       - mimoto-service
     networks:
       - network
-
-## Enable this to test Presentation during Issuance locally
-#  verify-service:
-#    container_name: verify-service
-#    image: injistack/inji-verify-service:0.17.0
-#    user: root
-#    ports:
-#      - "8095:8080"
-#    environment:
-#      - active_profile_env=default
-#      - DATABASE_HOST=database
-#      - DATABASE_PORT=5432
-#      - DATABASE_NAME=inji_verify
-#      - DATABASE_SCHEMA=verify
-#      - DATABASE_USERNAME=postgres
-#      - DATABASE_PASSWORD=postgres
-#      - INJI_VP_REQUEST_LONG_POLLING_TIMEOUT=55000
-#      - INJI_VP_SUBMISSION_BASE_URL=http://verify-service:8080/v1/verify
-#      - INJI_DID_VERIFY_URI=did:web:verify-service:v1:verify
-#      - INJI_DID_VERIFY_PUBLIC_KEY_URI=did:web:verify-service:v1:verify#key-0
-#      - INJI_KEYSTORE_FILE_PASS=mosip
-#      - INJI_VERIFY_REDIRECT_URI=http://verify-service:8080
-#    depends_on:
-#      - database
-#    networks:
-#      - network
 
 networks:
   network:

@@ -1,0 +1,13 @@
+GenerateNonceForLandRegistryDataIntegrity:
+   InjiCertify_LandRegistry_GenerateNonce_StatusCode_ForDataIntegrity_Valid_Smoke_sid:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/nonce
+      uniqueIdentifier: TC_landRegistryDependent_GenerateNonce_dataIntegrity_01
+      description: Fresh nonce for Land Registry data integrity Get Credential flow
+      role: noauth
+      restMethod: post
+      checkOnlyStatusCodeInResponse: true
+      inputTemplate: injicertify/VCILandRegistry/GenerateNonceForLandRegistryDataIntegrity/GenerateNonceForLandRegistryDataIntegrity
+      outputTemplate: injicertify/responseCode
+      input: '{
+}'
+      output: "200"

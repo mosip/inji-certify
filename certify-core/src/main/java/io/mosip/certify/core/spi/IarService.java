@@ -30,10 +30,10 @@ public interface IarService {
 
     /**
      * Process OAuth Token Request (Step 19-20)
-     * Exchanges authorization code for access token and c_nonce
+     * Exchanges authorization code for access token
      * 
      * @param tokenRequest The token request containing authorization code
-     * @return OAuthTokenResponse with access_token and c_nonce
+     * @return OAuthTokenResponse with access_token
      * @throws CertifyException if token request processing fails
      */
     OAuthTokenResponse processTokenRequest(OAuthTokenRequest tokenRequest) throws CertifyException;

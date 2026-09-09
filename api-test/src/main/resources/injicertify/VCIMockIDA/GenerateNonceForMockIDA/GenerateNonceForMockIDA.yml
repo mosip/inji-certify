@@ -1,0 +1,13 @@
+GenerateNonceForMockIDA:
+   InjiCertify_MockIDA_GenerateNonce_StatusCode_Valid_Smoke_sid:
+      endPoint: $INJICERTIFYMOCKIDABASEURL$/v1/certify/nonce
+      uniqueIdentifier: TC_mockDependent_GenerateNonce_Mock_01
+      description: Generate nonce for mock
+      role: noauth
+      restMethod: post
+      checkOnlyStatusCodeInResponse: true
+      inputTemplate: injicertify/VCIMockIDA/GenerateNonceForMockIDA/GenerateNonceForMockIDA
+      outputTemplate: injicertify/responseCode
+      input: '{
+}'
+      output: "200"

@@ -11,8 +11,8 @@ Expected time to setup: ~10 minutes
 
 You have two options for the certify plugin which gives Verifiable Credentials of different types
 
-1. Farmer Credential: returns an JSON-LD VC and is implemented using the [CSV Plugin](https://github.com/inji/digital-credential-plugins/blob/release-0.5.x/mock-certify-plugin/src/main/java/io.mosip.certify.mock.integration/service/MockCSVDataProviderPlugin.java).
-2. Mobile Driving License Credential: returns an mDL VC and is implemented using the [mock-mdl Plugin](https://github.com/inji/digital-credential-plugins/blob/release-0.5.x/mock-certify-plugin/src/main/java/io.mosip.certify.mock.integration/service/MDocMockVCIssuancePlugin.java).
+1. Farmer Credential: returns an JSON-LD VC and is implemented using the [CSV Plugin](https://github.com/inji/digital-credential-plugins/blob/release-1.0.x/mock-certify-plugin/src/main/java/io.mosip.certify.mock.integration/service/MockCSVDataProviderPlugin.java).
+2. Mobile Driving License Credential: returns an mDL VC and is implemented using the [mock-mdl Plugin](https://github.com/inji/digital-credential-plugins/blob/release-1.0.x/mock-certify-plugin/src/main/java/io.mosip.certify.mock.integration/service/MDocMockVCIssuancePlugin.java).
 
 
 ## Prerequisites
@@ -20,9 +20,9 @@ You have two options for the certify plugin which gives Verifiable Credentials o
 - Docker and Docker Compose installed on your system
 - Git (to clone the repository)
 - Basic understanding of Docker and container operations
-- Relevant Postman collections available from [here](../../docs/postman-collections/), please add the `mock` ones and install the [pmlib library](https://joolfe.github.io/postman-util-lib/) as per the steps given under the heading `Postman Collection` to the Postman setup
+- Relevant Postman collections available from [here](../../docs/postman_collections/), please add the `mock` ones and install the [pmlib library](https://joolfe.github.io/postman-util-lib/) as per the steps given under the heading `Postman Collection` to the Postman setup
 - Network Connectivity to access the AuthZ Service, in this example MOSIP Collab setup has been used
-  - We can set up AuthZ server locally as well or use the one deployed in any other environment. If we do so, we need to update following values in environment variable of [postman collection](../../docs/postman-collections/inji-certify-with-mock-identity.postman_environment.json)
+  - We can set up AuthZ server locally as well or use the one deployed in any other environment. If we do so, we need to update following values in environment variable of [postman collection](../../docs/postman_collections/authorization_code_flow/data_provider_plugin/inji-certify-with-mock-identity.postman_environment.json)
     - authServerUrl - host of auth server. If it's esignet running locally then value will be http://localhost:8088/v1/esignet
     - aud - token audience. If it's esignet running locally then value will be http://localhost:8088/v1/esignet/oauth/v2/token
     - Create OIDC client if supporting `private_key_jwt` client authentication. While doing this, update following values
@@ -47,6 +47,7 @@ docker-compose-injistack/
 ├── config/ (default setup should work as is for csvplugin, any other config changes user can make as per their setup)
 │   ├── certify-default.properties
 │   ├── certify-csvdp-farmer.properties
+│   ├── certify-mock-mdl.properties
 │   ├── mimoto-default.properties
 │   ├── mimoto-issuers-config.json
 │   ├── mimoto-trusted-verifiers.json
@@ -96,7 +97,7 @@ public interface VCIssuancePlugin {
 - Place the resultant JAR in `loader_path/certify/`
 - uncomment volume mount for certify-service in `docker-compose.yaml`
 
-Reference Implementation: [CSVDataProviderPlugin](https://github.com/inji/digital-credential-plugins/blob/release-0.5.x/mock-certify-plugin/src/main/java/io.mosip.certify.mock.integration/service/MockCSVDataProviderPlugin.java) or [MDocMockVCIssuancePlugin](https://github.com/inji/digital-credential-plugins/blob/release-0.5.x/mock-certify-plugin/src/main/java/io.mosip.certify.mock.integration/service/MDocMockVCIssuancePlugin.java).
+Reference Implementation: [CSVDataProviderPlugin](https://github.com/inji/digital-credential-plugins/blob/release-1.0.x/mock-certify-plugin/src/main/java/io.mosip.certify.mock.integration/service/MockCSVDataProviderPlugin.java) or [MDocMockVCIssuancePlugin](https://github.com/inji/digital-credential-plugins/blob/release-1.0.x/mock-certify-plugin/src/main/java/io.mosip.certify.mock.integration/service/MDocMockVCIssuancePlugin.java).
 
 ## Certificate Setup
 
@@ -139,8 +140,11 @@ mosip.certify.data-provider-plugin.did-url=did:web:<your-public-hostname>
 - **Note**: For updating the default vc type in this setup, please refer to the insert query present in the [certify_init.sql](./certify_init.sql) file for `credential_config`.
 
 
-- (required if Mobile driving license configured) Onboard issuer key and certificate data into property `mosip.certify.mock.mdoc.issuer-key-cert` using the creation script, please read the [plugin README](https://github.com/inji/digital-credential-plugins/tree/release-0.5.x/mock-certify-plugin) for the same.
+- (required if Mobile driving license configured) Onboard issuer key and certificate data into property `mosip.certify.mock.mdoc.issuer-key-cert` using the creation script, please read the [plugin README](https://github.com/inji/digital-credential-plugins/tree/release-1.0.x/mock-certify-plugin) for the same.
 
+### Registering a custom JSON-LD `@context`
+
+Refer to the document for custom `@context` registration: https://github.com/inji/inji-certify/blob/release-1.0.x/docs/JSON-LD-context-loader.md
 
 ## Other configurations
 
@@ -202,7 +206,7 @@ The following services will be available:
 ### Running only certify service - Accessing the Credentials via the Postman Interface
 
 1. Open Postman
-2. Import the [Mock Collections & Environments](../../docs/postman-collections/) from here, make appropriate changes to the Credential Type and contexts as per your VerifiableCredential and the configured WellKnown.
+2. Import the [Mock Collections & Environments](../../docs/postman_collections/) from here, make appropriate changes to the Credential Type and contexts as per your VerifiableCredential and the configured WellKnown.
 3. You can
     - Download credentials
     - View credential status

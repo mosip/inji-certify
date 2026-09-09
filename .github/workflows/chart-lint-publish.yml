@@ -45,7 +45,7 @@ on:
 
 jobs:
   chart-lint-publish:
-    uses: mosip/kattu/.github/workflows/chart-lint-publish.yml@master
+    uses: mosip/kattu/.github/workflows/chart-lint-publish.yml@v0.0.1
     with:
       CHARTS_DIR: ./helm
       CHARTS_URL: https://inji.github.io/helm

@@ -435,11 +435,19 @@ istio:
   uriMatches:
     - matchType: exact
       uri: /.well-known/openid-credential-issuer
-      rewriteUri: /v1/certify/issuance/.well-known/openid-credential-issuer
+      rewriteUri: /v1/certify/.well-known/openid-credential-issuer
+      port: 80
+    - matchType: exact
+      uri: /.well-known/oauth-authorization-server
+      rewriteUri: /v1/certify/.well-known/oauth-authorization-server
+      port: 80
+    - matchType: exact
+      uri: /.well-known/jwks.json
+      rewriteUri: /v1/certify/.well-known/jwks.json
       port: 80
     - matchType: exact
       uri: /.well-known/did.json
-      rewriteUri: /v1/certify/issuance/.well-known/did.json
+      rewriteUri: /v1/certify/.well-known/did.json
       port: 80
     - matchType: prefix
       uri: /

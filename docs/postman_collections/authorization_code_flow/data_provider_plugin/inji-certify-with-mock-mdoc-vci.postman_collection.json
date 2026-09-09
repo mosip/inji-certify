@@ -1,0 +1,869 @@
+{
+	"info": {
+		"_postman_id": "dc5253d4-a6a8-4da3-9271-a358e097bb9e",
+		"name": "Inji Certify With Mock Mdoc VCI",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "41350892"
+	},
+	"item": [
+		{
+			"name": "VCI",
+			"item": [
+				{
+					"name": "Get CSRF token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var token = pm.cookies.get(\"XSRF-TOKEN\")",
+									"pm.environment.set(\"csrf_token\", token);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{authServerUrl}}/csrf/token",
+							"host": [
+								"{{authServerUrl}}"
+							],
+							"path": [
+								"csrf",
+								"token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Authorize / OAuthdetails request V2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var btoa = require('btoa');",
+									"",
+									"var token = pm.cookies.get(\"XSRF-TOKEN\")",
+									"pm.environment.set(\"csrf_token\", token);",
+									"",
+									"pm.test(\"Validate transactionId\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.response.transactionId).not.equals(null);",
+									"    pm.environment.set(\"transaction_id\", jsonData.response.transactionId);",
+									"});",
+									"",
+									"// pm.test(\"Validate auth factors\", function () {",
+									"//     var jsonData = pm.response.json();",
+									"//     pm.expect(jsonData.response.authFactors[0].name).to.eql(pm.environment.get(\"expected_amr\"));",
+									"// });",
+									"",
+									"pm.test(\"set oauth-details-hash\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var sha256Hash = CryptoJS.SHA256(JSON.stringify(jsonData.response));",
+									"    var base64Encoded = sha256Hash.toString(CryptoJS.enc.Base64);",
+									"    // Remove padding characters",
+									"    base64Encoded = base64Encoded.replace(/=+$/, '');",
+									"    // Replace '+' with '-' and '/' with '_' to convert to base64 URL encoding",
+									"    base64Encoded = base64Encoded.replace(/\\+/g, '-').replace(/\\//g, '_');",
+									"    console.log(\"base64Encoded : \" + base64Encoded);",
+									"    pm.environment.set(\"oauth_details_key\", jsonData.response.transactionId);",
+									"    pm.environment.set(\"oauth_details_hash\", base64Encoded);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"eval(pm.globals.get('pmlib_code'))",
+									"",
+									"const pkce = pmlib.pkceChallenge();",
+									"pm.collectionVariables.set(\"codeChallenge\",pkce.code_challenge);",
+									"pm.collectionVariables.set(\"codeChallengeMethod\",pkce.code_challenge_method);",
+									"pm.collectionVariables.set(\"codeVerifier\",pkce.code_verifier);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-XSRF-TOKEN",
+								"value": "{{csrf_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"requestTime\": \"{{$isoTimestamp}}\",\n    \"request\": {\n        \"clientId\": \"{{clientId}}\",\n        \"scope\": \"mock_identity_vc_ldp\",\n        \"responseType\": \"code\",\n        \"redirectUri\": \"{{redirectionUrl}}\",\n        \"display\": \"popup\",\n        \"prompt\": \"login\",\n        \"acrValues\": \"mosip:idp:acr:generated-code\",\n        \"nonce\" : \"{{nonce}}\",\n        \"state\" : \"{{state}}\",\n        \"claimsLocales\" : \"en\",\n        \"codeChallenge\" : \"{{codeChallenge}}\",\n        \"codeChallengeMethod\" : \"{{codeChallengeMethod}}\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{authServerUrl}}/authorization/v2/oauth-details",
+							"host": [
+								"{{authServerUrl}}"
+							],
+							"path": [
+								"authorization",
+								"v2",
+								"oauth-details"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-XSRF-TOKEN",
+								"value": "{{csrf_token}}",
+								"type": "text"
+							},
+							{
+								"key": "oauth-details-key",
+								"value": "{{oauth_details_key}}",
+								"type": "text"
+							},
+							{
+								"key": "oauth-details-hash",
+								"value": "{{oauth_details_hash}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"requestTime\": \"{{$isoTimestamp}}\",\n    \"request\": {\n        \"transactionId\": \"{{transaction_id}}\",\n        \"individualId\": \"{{individual_id}}\",\n        \"otpChannels\" : [\"email\",\"phone\"],\n        \"captchaToken\" : \"dummy\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{authServerUrl}}/authorization/send-otp",
+							"host": [
+								"{{authServerUrl}}"
+							],
+							"path": [
+								"authorization",
+								"send-otp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Authenticate User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var token = pm.cookies.get(\"XSRF-TOKEN\")",
+									"pm.environment.set(\"csrf_token\", token);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-XSRF-TOKEN",
+								"value": "{{csrf_token}}",
+								"type": "text"
+							},
+							{
+								"key": "oauth-details-key",
+								"value": "{{oauth_details_key}}",
+								"type": "text"
+							},
+							{
+								"key": "oauth-details-hash",
+								"value": "{{oauth_details_hash}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"requestTime\": \"{{$isoTimestamp}}\",\n    \"request\": {\n        \"transactionId\": \"{{transaction_id}}\",\n        \"individualId\": \"{{individual_id}}\",\n        \"challengeList\" : [\n            {\n                \"authFactorType\" : \"OTP\",\n                \"challenge\" : \"111111\",\n                \"format\" : \"alpha-numeric\"\n            }\n        ]\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{authServerUrl}}/authorization/v3/authenticate",
+							"host": [
+								"{{authServerUrl}}"
+							],
+							"path": [
+								"authorization",
+								"v3",
+								"authenticate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Authorization Code",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var token = pm.cookies.get(\"XSRF-TOKEN\")",
+									"pm.environment.set(\"csrf_token\", token);",
+									"",
+									"pm.test(\"Validate code\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.response.code).not.equals(null);",
+									"    pm.collectionVariables.set(\"code\", jsonData.response.code);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"followRedirects": false
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-XSRF-TOKEN",
+								"value": "{{csrf_token}}",
+								"type": "text"
+							},
+							{
+								"key": "oauth-details-key",
+								"value": "{{oauth_details_key}}",
+								"type": "text"
+							},
+							{
+								"key": "oauth-details-hash",
+								"value": "{{oauth_details_hash}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"requestTime\": \"{{$isoTimestamp}}\",\n    \"request\": {\n        \"transactionId\": \"{{transaction_id}}\",\n        \"acceptedClaims\": [],\n        \"permittedAuthorizeScopes\" : []\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{authServerUrl}}/authorization/auth-code",
+							"host": [
+								"{{authServerUrl}}"
+							],
+							"path": [
+								"authorization",
+								"auth-code"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Tokens V2",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"eval(pm.globals.get('pmlib_code'))",
+									"",
+									"// Set headers for JWT",
+									"var header = {\t",
+									"\t\"alg\": \"RS256\"",
+									"};",
+									"",
+									"",
+									"//sign token",
+									"//Note: Key pair is generated in \"Create OIDC client\" pre-requests script",
+									"//generated private and public keys are stored in the postman environment ",
+									"const signed_jwt = pmlib.clientAssertPrivateKey(JSON.parse(pm.environment.get(\"privateKey_jwk\")), pm.environment.get('clientId'), pm.environment.get('aud'), exp = 60,  \"RS256\");",
+									"",
+									"pm.collectionVariables.set(\"client_assertion\",signed_jwt);",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Validate Id-token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id_token).not.equals(null);",
+									"});",
+									"",
+									"pm.test(\"Validate access-token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.access_token).not.equals(null);",
+									"    pm.environment.set(\"access_token\", jsonData.access_token);",
+									"",
+									"    // var jwt_parts = pm.environment.get('access_token').split('.'); // header.payload.signature",
+									"    // var jwt_payload = JSON.parse(atob(jwt_parts[1]));",
+									"    // pm.environment.set(\"c_nonce\", jwt_payload.c_nonce);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "code",
+									"value": "{{code}}",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "{{clientId}}",
+									"type": "text"
+								},
+								{
+									"key": "redirect_uri",
+									"value": "{{redirectionUrl}}",
+									"type": "text"
+								},
+								{
+									"key": "grant_type",
+									"value": "authorization_code",
+									"type": "text"
+								},
+								{
+									"key": "client_assertion_type",
+									"value": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+									"type": "text"
+								},
+								{
+									"key": "client_assertion",
+									"value": "{{client_assertion}}",
+									"type": "text"
+								},
+								{
+									"key": "code_verifier",
+									"value": "{{codeVerifier}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{authServerUrl}}/oauth/v2/token",
+							"host": [
+								"{{authServerUrl}}"
+							],
+							"path": [
+								"oauth",
+								"v2",
+								"token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Nonce Endpoint",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var response = pm.response.json();",
+									"pm.environment.set(\"c_nonce\", response.c_nonce);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{certifyUrl}}/nonce",
+							"host": [
+								"{{certifyUrl}}"
+							],
+							"path": [
+								"nonce"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Mdoc Credential",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"eval(pm.globals.get('pmlib_code'))",
+									"keyPair = pmlib.rs.KEYUTIL.generateKeypair(\"EC\", \"secp256r1\");",
+									"jwkPrivateKey = pmlib.rs.KEYUTIL.getJWK(keyPair.prvKeyObj);",
+									"jwkPublicKey  = pmlib.rs.KEYUTIL.getJWK(keyPair.pubKeyObj);",
+									"jwkPublicKey[\"alg\"] = \"ES256\";",
+									"jwkPublicKey[\"use\"] = \"sig\";",
+									"",
+									"pm.environment.set(\"holder_public_key\", JSON.stringify(jwkPublicKey))",
+									"pm.environment.set(\"holder_private_key\", JSON.stringify(jwkPrivateKey));",
+									"",
+									"// Set headers for JWT",
+									"var header = {\t",
+									"\t\"alg\": \"ES256\",",
+									"    \"typ\" : \"openid4vci-proof+jwt\",",
+									"    \"jwk\" : JSON.parse(pm.environment.get(\"holder_public_key\"))",
+									"};",
+									"",
+									"",
+									"console.log(\"Getting c_nonce >> \" +  pm.environment.get('c_nonce'));",
+									"",
+									"const signed_jwt = pmlib.jwtSign(JSON.parse(pm.environment.get(\"holder_private_key\")), {",
+									"    // \"aud\" : 'http://localhost:8090',",
+									"    \"aud\": pm.environment.get(\"audUrl\"),",
+									"\t\"nonce\": pm.environment.get('c_nonce'),",
+									"    \"iss\" : pm.environment.get('clientId'),",
+									"}, header, exp=600, alg = \"ES256\")",
+									"",
+									"console.log(\"modified aud\")",
+									"",
+									"console.log(\"proof - \",signed_jwt)",
+									"",
+									"pm.collectionVariables.set(\"proof_jwt\",signed_jwt);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Validate c_nonce\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if(jsonData.c_nonce != null) {",
+									"        pm.environment.set(\"c_nonce\", jsonData.c_nonce);",
+									"        console.log(\"setting c_nonce\");",
+									"    }    ",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"credential_configuration_id\":\"DrivingLicenseCredential\",\n    \"proofs\": {\n        \"jwt\": [\"{{proof_jwt}}\"]\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{certifyUrl}}/issuance/credential",
+							"host": [
+								"{{certifyUrl}}"
+							],
+							"path": [
+								"issuance",
+								"credential"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Well-known endpoints",
+			"item": [
+				{
+					"name": "JWKS",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{authServerUrl}}/oauth/.well-known/jwks.json",
+							"host": [
+								"{{authServerUrl}}"
+							],
+							"path": [
+								"oauth",
+								".well-known",
+								"jwks.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Openid-configuration",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{authServerUrl}}/oidc/.well-known/openid-configuration",
+							"host": [
+								"{{authServerUrl}}"
+							],
+							"path": [
+								"oidc",
+								".well-known",
+								"openid-configuration"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "OAuth-configuration",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{authServerUrl}}/oauth/.well-known/oauth-authorization-server",
+							"host": [
+								"{{authServerUrl}}"
+							],
+							"path": [
+								"oauth",
+								".well-known",
+								"oauth-authorization-server"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "VC issuer metadata",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{certifyUrl}}/.well-known/openid-credential-issuer",
+							"host": [
+								"{{certifyUrl}}"
+							],
+							"path": [
+								".well-known",
+								"openid-credential-issuer"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Credential Configuration",
+			"item": [
+				{
+					"name": "Add New Config",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"vcTemplate\": \"ewogICJuYW1lU3BhY2VzIjogewogICAgIm9yZy5pc28uMTgwMTMuNS4xIjogWwogICAgICB7CiAgICAgICAgImRpZ2VzdElEIjogMCwKICAgICAgICAiZWxlbWVudElkZW50aWZpZXIiOiAiZmFtaWx5X25hbWUiLAogICAgICAgICJlbGVtZW50VmFsdWUiOiAiJHtmYW1pbHlOYW1lfSIKICAgICAgfSwKICAgICAgewogICAgICAgICJkaWdlc3RJRCI6IDEsCiAgICAgICAgImVsZW1lbnRJZGVudGlmaWVyIjogImdpdmVuX25hbWUiLAogICAgICAgICJlbGVtZW50VmFsdWUiOiAiJHtnaXZlbk5hbWV9IgogICAgICB9LAogICAgICB7CiAgICAgICAgImRpZ2VzdElEIjogMiwKICAgICAgICAiZWxlbWVudElkZW50aWZpZXIiOiAiYmlydGhfZGF0ZSIsCiAgICAgICAgImVsZW1lbnRWYWx1ZSI6ICIke2JpcnRoRGF0ZX0iCiAgICAgIH0sCiAgICAgIHsKICAgICAgICAiZGlnZXN0SUQiOiA1LAogICAgICAgICJlbGVtZW50SWRlbnRpZmllciI6ICJkb2N1bWVudF9udW1iZXIiLAogICAgICAgICJlbGVtZW50VmFsdWUiOiAiJHtkb2N1bWVudE51bWJlcn0iCiAgICAgIH0KICAgIF0KICB9LAogICJkb2NUeXBlIjogIiR7X2RvY3R5cGV9IiwKICAidmFsaWRpdHlJbmZvIjogewogICAgInZhbGlkRnJvbSI6ICIke192YWxpZEZyb219IiwKICAgICJ2YWxpZFVudGlsIjogIiR7X3ZhbGlkVW50aWx9IiwKICAgICAic2lnbmVkIjogIiR7X3NpZ25lZH0iICAgIAogIH0KfQ==\",\r\n  \"credentialConfigKeyId\": \"DrivingLicenseCredential\",\r\n  \"contextURLs\": [],\r\n  \"credentialTypes\": [],\r\n  \"credentialFormat\": \"mso_mdoc\",\r\n  \"didUrl\": \"did:web:inji.github.io:inji-config:dev-int-inji:mock-mdl\",\r\n  \"keyManagerAppId\": \"CERTIFY_VC_SIGN_EC_R1\",\r\n  \"keyManagerRefId\": \"EC_SECP256R1_SIGN\",\r\n  \"signatureAlgo\": \"ES256\",\r\n  \"signatureCryptoSuite\": \"EcdsaSecp256r1Signature2019\",\r\n  \"metaDataDisplay\": [\r\n    {\r\n      \"logo\": {\r\n        \"uri\": \"https://example.com/logo.png\",\r\n        \"alt_text\": \"Driving License Logo\"\r\n      },\r\n      \"name\": \"DrivingLicenseCredential\",\r\n      \"locale\": \"en\",\r\n      \"text_color\": \"#FFFFFF\",\r\n      \"background_color\": \"#12107c\",\r\n      \"background_image\": {\r\n        \"uri\": \"https://inji.github.io/inji-config/logos/agro-vertias-logo.png\"\r\n      }\r\n    }\r\n  ],\r\n  \"displayOrder\": [\r\n    \"org.iso.18013.5.1~family_name\",\r\n    \"org.iso.18013.5.1~given_name\",\r\n    \"org.iso.18013.5.1~birth_date\",\r\n    \"org.iso.18013.5.1~document_number\"\r\n  ],\r\n  \"scope\": \"sample_vc_mdoc\",\r\n  \"qrSettings\": [\r\n    {\r\n      \"Full Name\": \"${fullName}\",\r\n      \"Phone Number\": \"${mobileNumber}\",\r\n      \"Date Of Birth\": \"${dateOfBirth}\"\r\n    }\r\n  ],\r\n  \"qrSignatureAlgo\": \"EdDSA\",\r\n  \"msoMdocClaims\": {\r\n    \"org.iso.18013.5.1\": {\r\n      \"document_number\": {\r\n        \"display\": [\r\n          {\r\n            \"name\": \"Document Number\",\r\n            \"locale\": \"en\"\r\n          }\r\n        ]\r\n      },\r\n      \"birth_date\": {\r\n        \"display\": [\r\n          {\r\n            \"name\": \"Date of Birth\",\r\n            \"locale\": \"en\"\r\n          }\r\n        ]\r\n      },\r\n      \"given_name\": {\r\n        \"display\": [\r\n          {\r\n            \"name\": \"Given Name\",\r\n            \"locale\": \"en\"\r\n          }\r\n        ]\r\n      },\r\n      \"family_name\": {\r\n        \"display\": [\r\n          {\r\n            \"name\": \"Family Name\",\r\n            \"locale\": \"en\"\r\n          }\r\n        ]\r\n      }\r\n    }\r\n  },\r\n  \"doctype\": \"org.iso.18013.5.1.mDL\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{certifyUrl}}/credential-configurations",
+							"host": [
+								"{{certifyUrl}}"
+							],
+							"path": [
+								"credential-configurations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Configuration By Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{certifyUrl}}/credential-configurations/{{configId}}",
+							"host": [
+								"{{certifyUrl}}"
+							],
+							"path": [
+								"credential-configurations",
+								"{{configId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Configuration By Id",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"vcTemplate\": \"ewogICJuYW1lU3BhY2VzIjogewogICAgIm9yZy5pc28uMTgwMTMuNS4xIjogWwogICAgICB7CiAgICAgICAgImRpZ2VzdElEIjogMCwKICAgICAgICAiZWxlbWVudElkZW50aWZpZXIiOiAiZmFtaWx5X25hbWUiLAogICAgICAgICJlbGVtZW50VmFsdWUiOiAiJHtmYW1pbHlOYW1lfSIKICAgICAgfSwKICAgICAgewogICAgICAgICJkaWdlc3RJRCI6IDEsCiAgICAgICAgImVsZW1lbnRJZGVudGlmaWVyIjogImdpdmVuX25hbWUiLAogICAgICAgICJlbGVtZW50VmFsdWUiOiAiJHtnaXZlbk5hbWV9IgogICAgICB9LAogICAgICB7CiAgICAgICAgImRpZ2VzdElEIjogMiwKICAgICAgICAiZWxlbWVudElkZW50aWZpZXIiOiAiYmlydGhfZGF0ZSIsCiAgICAgICAgImVsZW1lbnRWYWx1ZSI6ICIke2JpcnRoRGF0ZX0iCiAgICAgIH0sCiAgICAgIHsKICAgICAgICAiZGlnZXN0SUQiOiA1LAogICAgICAgICJlbGVtZW50SWRlbnRpZmllciI6ICJkb2N1bWVudF9udW1iZXIiLAogICAgICAgICJlbGVtZW50VmFsdWUiOiAiJHtkb2N1bWVudE51bWJlcn0iCiAgICAgIH0KICAgIF0KICB9LAogICJkb2NUeXBlIjogIiR7X2RvY3R5cGV9IiwKICAidmFsaWRpdHlJbmZvIjogewogICAgInZhbGlkRnJvbSI6ICIke192YWxpZEZyb219IiwKICAgICJ2YWxpZFVudGlsIjogIiR7X3ZhbGlkVW50aWx9IgogIH0KfQ==\",\r\n  \"credentialConfigKeyId\": \"DrivingLicenseCredential_Mdoc\",\r\n  \"contextURLs\": [],\r\n  \"credentialTypes\": [],\r\n  \"credentialFormat\": \"mso_mdoc\",\r\n  \"didUrl\": \"did:web:inji.github.io:inji-config:dev-int-inji:mock-mdl\",\r\n  \"keyManagerAppId\": \"CERTIFY_VC_SIGN_EC_R1\",\r\n  \"keyManagerRefId\": \"EC_SECP256R1_SIGN\",\r\n  \"signatureAlgo\": \"ES256\",\r\n  \"signatureCryptoSuite\": \"EcdsaSecp256r1Signature2019\",\r\n  \"metaDataDisplay\": [\r\n    {\r\n      \"logo\": {\r\n        \"uri\": \"https://example.com/logo.png\",\r\n        \"alt_text\": \"Driving License Logo\"\r\n      },\r\n      \"name\": \"DrivingLicenseCredential\",\r\n      \"locale\": \"en\",\r\n      \"text_color\": \"#FFFFFF\",\r\n      \"background_color\": \"#12107c\",\r\n      \"background_image\": {\r\n        \"uri\": \"https://inji.github.io/inji-config/logos/agro-vertias-logo.png\"\r\n      }\r\n    }\r\n  ],\r\n  \"displayOrder\": [\r\n    \"org.iso.18013.5.1~family_name\",\r\n    \"org.iso.18013.5.1~given_name\",\r\n    \"org.iso.18013.5.1~birth_date\",\r\n    \"org.iso.18013.5.1~document_number\"\r\n  ],\r\n  \"scope\": \"sample_vc_mdoc\",\r\n  \"qrSettings\": [\r\n    {\r\n      \"Full Name\": \"${fullName}\",\r\n      \"Phone Number\": \"${mobileNumber}\",\r\n      \"Date Of Birth\": \"${dateOfBirth}\"\r\n    }\r\n  ],\r\n  \"qrSignatureAlgo\": \"EdDSA\",\r\n  \"msoMdocClaims\": {\r\n    \"org.iso.18013.5.1\": {\r\n      \"document_number\": {\r\n        \"display\": [\r\n          {\r\n            \"name\": \"Document Number\",\r\n            \"locale\": \"en\"\r\n          }\r\n        ]\r\n      },\r\n      \"birth_date\": {\r\n        \"display\": [\r\n          {\r\n            \"name\": \"Date of Birth\",\r\n            \"locale\": \"en\"\r\n          }\r\n        ]\r\n      },\r\n      \"given_name\": {\r\n        \"display\": [\r\n          {\r\n            \"name\": \"Given Name\",\r\n            \"locale\": \"en\"\r\n          }\r\n        ]\r\n      },\r\n      \"family_name\": {\r\n        \"display\": [\r\n          {\r\n            \"name\": \"Family Name\",\r\n            \"locale\": \"en\"\r\n          }\r\n        ]\r\n      }\r\n    }\r\n  },\r\n  \"doctype\": \"org.iso.18013.5.1.mDL\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{certifyUrl}}/credential-configurations/{{configId}}",
+							"host": [
+								"{{certifyUrl}}"
+							],
+							"path": [
+								"credential-configurations",
+								"{{configId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Configuration By Id Copy",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{certifyUrl}}/credential-configurations/{{configId}}",
+							"host": [
+								"{{certifyUrl}}"
+							],
+							"path": [
+								"credential-configurations",
+								"{{configId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "clientId",
+			"value": "mock-oidc-client"
+		},
+		{
+			"key": "redirectionUrl",
+			"value": "https://mosip.io/index.php"
+		},
+		{
+			"key": "relayingPartyId",
+			"value": "mock-relaying-party-id"
+		},
+		{
+			"key": "status",
+			"value": "\"ACTIVE\""
+		},
+		{
+			"key": "acr_values",
+			"value": "level0 level1"
+		},
+		{
+			"key": "scope",
+			"value": "openid profile"
+		},
+		{
+			"key": "claims_request_param",
+			"value": "{\n            \"userinfo\": {\n                \"email\": {\n                    \"value\": null,\n                    \"values\": null,\n           ..."
+		},
+		{
+			"key": "nonce",
+			"value": "2erwER34WW"
+		},
+		{
+			"key": "state",
+			"value": "ptOO76SD"
+		},
+		{
+			"key": "expected_amr",
+			"value": "\"pin\""
+		},
+		{
+			"key": "transaction_id",
+			"value": "ece56bfa-d0c2-46ce-a5a2-8500dfb393a7"
+		},
+		{
+			"key": "individual_id",
+			"value": "8267411571"
+		},
+		{
+			"key": "auth_pin",
+			"value": "34789"
+		},
+		{
+			"key": "url",
+			"value": "http://localhost:8088/v1/idp"
+		},
+		{
+			"key": "url",
+			"value": ""
+		},
+		{
+			"key": "code",
+			"value": ""
+		},
+		{
+			"key": "client_assertion",
+			"value": ""
+		},
+		{
+			"key": "access_token",
+			"value": ""
+		},
+		{
+			"key": "linkTransactionId",
+			"value": ""
+		},
+		{
+			"key": "wla_challenge",
+			"value": ""
+		},
+		{
+			"key": "client_secret",
+			"value": "JfoG3eLWLW7iSZDt"
+		},
+		{
+			"key": "client_secret",
+			"value": ""
+		},
+		{
+			"key": "csrf_token",
+			"value": "08a17840-da3c-4b93-9ab3-83d9b297ac68"
+		},
+		{
+			"key": "proof_jwt",
+			"value": ""
+		},
+		{
+			"key": "codeChallenge",
+			"value": ""
+		},
+		{
+			"key": "codeChallengeMethod",
+			"value": ""
+		},
+		{
+			"key": "codeVerifier",
+			"value": ""
+		},
+		{
+			"key": "proof_cwt",
+			"value": ""
+		}
+	]
+}

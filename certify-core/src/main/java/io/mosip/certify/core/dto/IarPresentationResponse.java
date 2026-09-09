@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * Interactive Authorization Response (IAR) DTO for OpenID4VCI
- * Response from POST /iar endpoint
+ * Response from POST /iae endpoint
  */
 @Data
 @NoArgsConstructor
@@ -21,7 +21,7 @@ public class IarPresentationResponse extends IarResponse{
 
     /**
      * Type of interaction required
-     * - "openid4vp_presentation": OpenID4VP presentation required
+     * - "urn:openid:dcp:iae:openid4vp_presentation": OpenID4VP presentation required
      */
     @JsonProperty("type")
     private InteractionType type;

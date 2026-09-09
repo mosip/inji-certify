@@ -35,8 +35,8 @@ public class VerifyVpResponse {
         @JsonProperty("clientId")
         private String clientId;
 
-        @JsonProperty("presentationDefinition")
-        private PresentationDefinition presentationDefinition;
+        @JsonProperty("dcqlQuery")
+        private Object dcqlQuery;
 
         @JsonProperty("nonce")
         private String nonce;

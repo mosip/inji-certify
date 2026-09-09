@@ -32,6 +32,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.Arrays;
@@ -105,22 +106,30 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	private static String policyNumberForSunBirdR = generateRandomNumberString(9);
 	private static final ObjectMapper mapper = new ObjectMapper();
 	
-	public static List<String> testCasesInRunScope = new ArrayList<>();
-	
-	public static void setLogLevel() {
+public static List<String> testCasesInRunScope = new ArrayList<>();
+
+private static String trimLowerUseCase() {
+	if (currentUseCase == null || currentUseCase.isBlank()) {
+		return "";
+	}
+	return currentUseCase.trim().toLowerCase(Locale.ROOT);
+}
+
+public static void setLogLevel() {
 		if (InjiCertifyConfigManager.IsDebugEnabled())
 			logger.setLevel(Level.ALL);
 		else
 			logger.setLevel(Level.ERROR);
 	}
 	
-	public static void configureOtp() {
-		// For mock, mdoc and landregistry usecase also the OTP value is hard coded and not configurable.
+public static void configureOtp() {
+	// For mock, mdoc and landregistry usecase also the OTP value is hard coded and not configurable.
 
-		if (currentUseCase != null && !currentUseCase.isEmpty() && (currentUseCase.equals("mock")
-				|| currentUseCase.equals("landregistry") || currentUseCase.equals("mdl"))) {
+	String cu = currentUseCase != null ? currentUseCase.trim() : "";
+	if (!cu.isEmpty() && (cu.equals("mock")
+			|| cu.equals("landregistry") || cu.equals("mdl"))) {
 
-			Map<String, Object> additionalPropertiesMap = new HashMap<>();
+		Map<String, Object> additionalPropertiesMap = new HashMap<>();
 			additionalPropertiesMap.put(InjiCertifyConstants.USE_PRE_CONFIGURED_OTP_STRING,
 					InjiCertifyConstants.TRUE_STRING);
 			additionalPropertiesMap.put(InjiCertifyConstants.PRE_CONFIGURED_OTP_STRING,
@@ -277,6 +286,14 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	protected static final String BINDINGJWK1 = "bindingJWK1";
 
 	public String inputStringKeyWordHandeler(String jsonString, String testCaseName) {
+		if (jsonString != null && jsonString.contains("\"vpTestData\"")) {
+			JSONObject request = new JSONObject(jsonString);
+			if (request.has("vpTestData")) {
+				request.remove("vpTestData");
+				jsonString = request.toString();
+			}
+		}
+
 		if (jsonString.contains("$CA_CERT$")) {
 			JSONObject request = new JSONObject(jsonString);
 			String csrCert = "";
@@ -289,13 +306,13 @@ public class InjiCertifyUtil extends AdminTestUtil {
 				request.remove("csrCert");
 			}
 			if (request.has("algorithm")) {
-		        algorithm = request.getString("algorithm");
-		        request.remove("algorithm");
-		    }
+				algorithm = request.getString("algorithm");
+				request.remove("algorithm");
+			}
 			if (request.has("cafilename")) {
 				cafilename = request.getString("cafilename");
-		        request.remove("cafilename");
-		    }
+				request.remove("cafilename");
+			}
 			jsonString = request.toString();
 
 			try {
@@ -312,18 +329,18 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		
 		if (jsonString.contains("$FETCH_ID_FROM_CSV$")) {
 
-		    String csvUrl = getValueFromCertifyActuator(
-		            InjiCertifyConfigManager.getproperty("certifyActuatorPropertySection"),
-		            "mosip.certify.mock.data-provider.csv-registry-uri");
+			String csvUrl = getValueFromCertifyActuator(
+					InjiCertifyConfigManager.getproperty("certifyActuatorPropertySection"),
+					"mosip.certify.mock.data-provider.csv-registry-uri");
 
-		    String id = getIdFromCsvUrl(csvUrl);
-		    logger.info("Fetched ID from CSV");
+			String id = getIdFromCsvUrl(csvUrl);
+			logger.info("Fetched ID from CSV");
 
-		    if (id == null) {
-		        logger.error("ID fetched from CSV is null");
-		    }
+			if (id == null) {
+				logger.error("ID fetched from CSV is null");
+			}
 
-		    jsonString = jsonString.replace("$FETCH_ID_FROM_CSV$", id);
+			jsonString = jsonString.replace("$FETCH_ID_FROM_CSV$", id);
 		}
 		
 		if (jsonString.contains("$offer_id$")) {
@@ -373,8 +390,8 @@ public class InjiCertifyUtil extends AdminTestUtil {
 
 		if (jsonString.contains("$KYCEXCHANGE_LOCALES$")) {
 			String key = getValueFromCertifyActuator(
-		            InjiCertifyConfigManager.getproperty("certifyActuatorPropertySection"),
-		            "mosip.certify.ida.kyc-exchange.accepted-locales");
+					InjiCertifyConfigManager.getproperty("certifyActuatorPropertySection"),
+					"mosip.certify.ida.kyc-exchange.accepted-locales");
 			jsonString = replaceKeywordValue(jsonString, "$KYCEXCHANGE_LOCALES$", key);
 		}
 
@@ -408,6 +425,15 @@ public class InjiCertifyUtil extends AdminTestUtil {
 					ApplnURI.replace(GlobalConstants.API_INTERNAL, "healthservices") + "/userprofile");
 		}
 
+		if (jsonString.contains("$OPENID4VP_RESPONSE$")) {
+			JSONObject openId4VpRequest = resolveOpenId4VpRequest();
+			JSONObject request = new JSONObject(jsonString);
+			request.remove("openid4vp_request");
+			JSONObject openId4VpResponse = PresentationDuringIssuanceVpUtil.buildOpenId4VpResponse(openId4VpRequest);
+			request.put("openid4vp_response", openId4VpResponse);
+			jsonString = request.toString();
+		}
+
 		if (jsonString.contains("$OIDCJWKKEY$")) {
 			String jwkKey = "";
 			if (gettriggerESignetKeyGen1()) {
@@ -432,6 +458,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			JSONObject request = new JSONObject(jsonString);
 			String clientId = "";
 			String accessToken = "";
+			String cNonce = "";
 			String tempUrl = "";
 			if (request.has("client_id")) {
 				clientId = request.getString("client_id");
@@ -440,11 +467,15 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			if (request.has("idpAccessToken")) {
 				accessToken = request.getString("idpAccessToken");
 			}
+			if (request.has("c_nonce")) {
+				cNonce = request.getString("c_nonce");
+				request.remove("c_nonce");
+			}
 			jsonString = request.toString();
 			tempUrl = getBaseURL(testCaseName, InjiCertifyConfigManager.getInjiCertifyBaseUrl());
 
 			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT$",
-					signJWKForMockID(clientId, accessToken, oidcJWKKey1, testCaseName, tempUrl));
+					signJWKForMockID(clientId, accessToken, cNonce, oidcJWKKey1, testCaseName, tempUrl));
 		}		
 
 		if (jsonString.contains("$OIDCJWKKEY4$")) {
@@ -471,6 +502,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			JSONObject request = new JSONObject(jsonString);
 			String clientId = "";
 			String accessToken = "";
+			String cNonce = "";
 			String tempUrl = "";
 			if (request.has("client_id")) {
 				clientId = request.getString("client_id");
@@ -479,17 +511,22 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			if (request.has("idpAccessToken")) {
 				accessToken = request.getString("idpAccessToken");
 			}
+			if (request.has("c_nonce")) {
+				cNonce = request.getString("c_nonce");
+				request.remove("c_nonce");
+			}
 			jsonString = request.toString();
 			tempUrl = getBaseURL(testCaseName, InjiCertifyConfigManager.getInjiCertifyBaseUrl());
 
 			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_3$",
-					signJWKForMockID(clientId, accessToken, oidcJWKKey4, testCaseName, tempUrl));
+					signJWKForMockID(clientId, accessToken, cNonce, oidcJWKKey4, testCaseName, tempUrl));
 		}
 		
 		if (jsonString.contains("$PROOF_JWT_ED25519$")) {
 			JSONObject request = new JSONObject(jsonString);
 			String clientId = "";
 			String accessToken = "";
+			String cNonce = "";
 			String tempUrl = "";
 			if (request.has("client_id")) {
 				clientId = request.getString("client_id");
@@ -498,17 +535,22 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			if (request.has("idpAccessToken")) {
 				accessToken = request.getString("idpAccessToken");
 			}
+			if (request.has("c_nonce")) {
+				cNonce = request.getString("c_nonce");
+				request.remove("c_nonce");
+			}
 			jsonString = request.toString();
 			tempUrl = getBaseURL(testCaseName, InjiCertifyConfigManager.getInjiCertifyBaseUrl());
 
 			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_ED25519$",
-					signED25519JWT(clientId, accessToken, testCaseName, tempUrl));
+					signED25519JWT(clientId, accessToken, cNonce, testCaseName, tempUrl));
 		}
 		
 		if (jsonString.contains("$PROOF_JWT_ES256$")) {
 			JSONObject request = new JSONObject(jsonString);
 			String clientId = "";
 			String accessToken = "";
+			String cNonce = "";
 			String tempUrl = "";
 			if (request.has("client_id")) {
 				clientId = request.getString("client_id");
@@ -517,17 +559,22 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			if (request.has("idpAccessToken")) {
 				accessToken = request.getString("idpAccessToken");
 			}
+			if (request.has("c_nonce")) {
+				cNonce = request.getString("c_nonce");
+				request.remove("c_nonce");
+			}
 			jsonString = request.toString();
 			tempUrl = getBaseURL(testCaseName, InjiCertifyConfigManager.getInjiCertifyBaseUrl());
 
 			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_ES256$",
-					signES256JWT(clientId, accessToken, testCaseName, tempUrl));
+					signES256JWT(clientId, accessToken, cNonce, testCaseName, tempUrl));
 		}
 		
 		if (jsonString.contains("$PROOF_JWT_ES256K$")) {
 			JSONObject request = new JSONObject(jsonString);
 			String clientId = "";
 			String accessToken = "";
+			String cNonce = "";
 			String tempUrl = "";
 			if (request.has("client_id")) {
 				clientId = request.getString("client_id");
@@ -536,11 +583,15 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			if (request.has("idpAccessToken")) {
 				accessToken = request.getString("idpAccessToken");
 			}
+			if (request.has("c_nonce")) {
+				cNonce = request.getString("c_nonce");
+				request.remove("c_nonce");
+			}
 			jsonString = request.toString();
 			tempUrl = getBaseURL(testCaseName, InjiCertifyConfigManager.getInjiCertifyBaseUrl());
 
 			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_ES256K$",
-					signES256KJWT(clientId, accessToken, testCaseName, tempUrl));
+					signES256KJWT(clientId, accessToken, cNonce, testCaseName, tempUrl));
 		}
 
 		if (jsonString.contains("$CLIENT_ASSERTION_JWT$")) {
@@ -614,6 +665,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			JSONObject request = new JSONObject(jsonString);
 			String clientId = "";
 			String accessToken = "";
+			String cNonce = "";
 			String tempUrl = "";
 			if (request.has("client_id")) {
 				clientId = request.getString("client_id");
@@ -622,6 +674,10 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			if (request.has("idpAccessToken")) {
 				accessToken = request.getString("idpAccessToken");
 			}
+			if (request.has("c_nonce")) {
+				cNonce = request.getString("c_nonce");
+				request.remove("c_nonce");
+			}
 			jsonString = request.toString();
 
 			String baseURL = InjiCertifyConfigManager.getInjiCertifyBaseUrl();
@@ -629,11 +685,21 @@ public class InjiCertifyUtil extends AdminTestUtil {
 				tempUrl = getValueFromInjiCertifyWellKnownEndPoint("credential_issuer", baseURL);
 			}
 			jsonString = replaceKeywordValue(jsonString, "$PROOF_JWT_2$",
-					signJWKForMockID(clientId, accessToken, oidcJWKKey4, testCaseName, tempUrl));
+					signJWKForMockID(clientId, accessToken, cNonce, oidcJWKKey4, testCaseName, tempUrl));
 		}
 		
 		if (jsonString.contains("indexedAttributesEquals")) {
 			jsonString = normalizeIndexedAttributes(jsonString);
+		}
+
+		if (jsonString.contains("\"credential_configuration_id\"")) {
+			try {
+				JSONObject request = new JSONObject(jsonString);
+				request.remove("c_nonce");
+				jsonString = request.toString();
+			} catch (Exception e) {
+				logger.error("Failed to strip c_nonce from credential request: " + e.getMessage());
+			}
 		}
 
 		return jsonString;
@@ -975,16 +1041,21 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			return InjiCertifyConfigManager.getEsignetBaseUrl();
 		} else if (testCaseDTO.getEndPoint().startsWith("$INJICERTIFYINSURANCEBASEURL$")
 				&& testCaseName.contains("GetCredentialSunBirdC")) {
-			return InjiCertifyConfigManager. getInjiCertifyBaseUrl();
+			return InjiCertifyConfigManager.getInjiCertifyBaseUrl();
 		} else if (testCaseDTO.getEndPoint().startsWith("$INJICERTIFYINSURANCEBASEURL$")
-					&& testCaseName.contains("CredentialConfig")) {
-				return InjiCertifyConfigManager. getInjiCertifyBaseUrl();
+				&& testCaseName.contains("SunBirdC_GenerateNonce")) {
+			return InjiCertifyConfigManager.getInjiCertifyBaseUrl();
+		} else if (testCaseDTO.getEndPoint().startsWith("$INJICERTIFYINSURANCEBASEURL$")
+				&& testCaseName.contains("CredentialConfig")) {
+			return InjiCertifyConfigManager.getInjiCertifyBaseUrl();
 		} else if (testCaseDTO.getEndPoint().startsWith("$INJICERTIFYMOSIPIDBASEURL$")
-				&& testCaseName.contains("_GetCredentialMosipID")) {
-			return InjiCertifyConfigManager. getInjiCertifyBaseUrl();
+				&& (testCaseName.contains("_GetCredentialMosipID")
+						|| testCaseName.contains("MosipID_GenerateNonce"))) {
+			return InjiCertifyConfigManager.getInjiCertifyBaseUrl();
 		} else if (testCaseDTO.getEndPoint().startsWith("$INJICERTIFYMOCKIDABASEURL$")
-				&& testCaseName.contains("_GetCredentialForMockIDA")) {
-			return InjiCertifyConfigManager. getInjiCertifyBaseUrl();
+				&& (testCaseName.contains("_GetCredentialForMockIDA")
+						|| testCaseName.contains("MockIDA_GenerateNonce"))) {
+			return InjiCertifyConfigManager.getInjiCertifyBaseUrl();
 		} else if (testCaseDTO.getEndPoint().startsWith("$SUNBIRDBASEURL$")
 				&& testCaseName.contains("Policy_")) {
 			return InjiCertifyConfigManager.getSunBirdBaseURL();
@@ -1049,7 +1120,9 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			throw new SkipException(GlobalConstants.KNOWN_ISSUES);
 		}
 
-		if (currentUseCase.equalsIgnoreCase("mock")) {
+		String uc = trimLowerUseCase();
+
+		if (uc.equals("mock")) {
 			if (!testCaseName.toLowerCase().contains("mock")) {
 				throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
 			} else if (testCaseName.contains("_GetCredentialForMockIDA")
@@ -1058,7 +1131,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			}
 
 		}
-		if (currentUseCase.toLowerCase().equals("sunbird")) {
+		if (uc.equals("sunbird")) {
 			if (!testCaseName.toLowerCase().contains("sunbird")) {
 				throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
 			} else if (testCaseName.contains("_GetCredentialSunBirdC")
@@ -1067,11 +1140,11 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			}
 		}
 
-		if (currentUseCase.toLowerCase().equals("mosipid") && testCaseName.toLowerCase().contains("mosipid") == false) {
+		if (uc.equals("mosipid") && testCaseName.toLowerCase().contains("mosipid") == false) {
 			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
 		}
 
-		if (currentUseCase.equalsIgnoreCase("landregistry")) {
+		if (uc.equals("landregistry")) {
 			if (!testCaseName.toLowerCase().contains("landregistry")) {
 				throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
 			} else if (testCaseName.contains("_GetCredentialForLandRegistry")
@@ -1079,19 +1152,24 @@ public class InjiCertifyUtil extends AdminTestUtil {
 				throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
 			}
 		}
-		if (currentUseCase.toLowerCase().equals("mdl") && testCaseName.toLowerCase().contains("mdl") == false) {
+		if (uc.equals("mdl")) {
+			if (testCaseName.toLowerCase().contains("sunbird")) {
+				throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+			}
+			if (testCaseName.toLowerCase().contains("mdl") == false) {
+				throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
+			}
+		}
+		if (uc.equals("mdocvp") && testCaseName.toLowerCase().contains("mdocvp") == false) {
 			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
 		}
-		if (currentUseCase.toLowerCase().equals("mdocvp") && testCaseName.toLowerCase().contains("mdocvp") == false) {
+		if (uc.equals("preauthcode") && testCaseName.toLowerCase().contains("preauthcode") == false) {
 			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
 		}
-		if (currentUseCase.toLowerCase().equals("preauthcode") && testCaseName.toLowerCase().contains("preauthcode") == false) {
+		if (uc.equals("credentialconfig") && testCaseName.toLowerCase().contains("credentialconfig") == false) {
 			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
 		}
-		if (currentUseCase.toLowerCase().equals("credentialconfig") && testCaseName.toLowerCase().contains("credentialconfig") == false) {
-			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
-		}
-		if (currentUseCase.toLowerCase().equals("svgtemplate") && testCaseName.toLowerCase().contains("svgtemplate") == false) {
+		if (uc.equals("svgtemplate") && testCaseName.toLowerCase().contains("svgtemplate") == false) {
 			throw new SkipException(GlobalConstants.FEATURE_NOT_SUPPORTED_MESSAGE);
 		}
 		
@@ -1126,7 +1204,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		return bReturn;
 	}
 	
-	public static String signJWKForMockID(String clientId, String accessToken, RSAKey jwkKey, String testCaseName,
+	public static String signJWKForMockID(String clientId, String accessToken, String cNonce, RSAKey jwkKey, String testCaseName,
 			String tempUrl) {
 		int idTokenExpirySecs = Integer
 				.parseInt(getValueFromEsignetActuator(InjiCertifyConfigManager.getEsignetActuatorPropertySection(),
@@ -1151,12 +1229,8 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			// Get the updated expiration time
 			Date expirationTime = calendar.getTime();
 
-			String[] jwtParts = accessToken.split("\\.");
-			String jwtPayloadBase64 = jwtParts[1];
-			byte[] jwtPayloadBytes = Base64.getDecoder().decode(jwtPayloadBase64);
-			String jwtPayload = new String(jwtPayloadBytes, StandardCharsets.UTF_8);
 			JWTClaimsSet claimsSet = null;
-			String nonce = new ObjectMapper().readTree(jwtPayload).get("c_nonce").asText();
+			String nonce = resolveCNonce(accessToken, cNonce);
 			
 			if (testCaseName.contains("_Invalid_C_nonce_"))
 				nonce = "jwt_payload.c_nonce123";
@@ -1210,46 +1284,66 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		}
 		return proofJWT;
 	}
+
+	private static String resolveCNonce(String accessToken, String cNonceOverride) throws Exception {
+		if (cNonceOverride != null && !cNonceOverride.isBlank()) {
+			return cNonceOverride;
+		}
+		if (accessToken == null || accessToken.isBlank()) {
+			throw new IllegalArgumentException("accessToken is required to resolve c_nonce");
+		}
+		String[] jwtParts = accessToken.split("\\.");
+		if (jwtParts.length < 2) {
+			throw new IllegalArgumentException("Invalid JWT: missing payload segment");
+		}
+		byte[] jwtPayloadBytes = Base64.getUrlDecoder().decode(jwtParts[1]);
+		String jwtPayload = new String(jwtPayloadBytes, StandardCharsets.UTF_8);
+		com.fasterxml.jackson.databind.JsonNode cNonceNode = new ObjectMapper().readTree(jwtPayload).get("c_nonce");
+		if (cNonceNode == null || cNonceNode.isNull()) {
+			throw new IllegalArgumentException("c_nonce claim missing from access token");
+		}
+		return cNonceNode.asText();
+	}
 	
 	public static String generateP256DidKey(byte[] rawP256PublicKey) {
-        // P-256 public keys in compressed format are 33 bytes
-        if (rawP256PublicKey == null || rawP256PublicKey.length != 33) {
-            throw new IllegalArgumentException(
-                    "Invalid P-256 public key: must be 33 bytes (compressed format)");
-        }
+		// P-256 public keys in compressed format are 33 bytes
+		if (rawP256PublicKey == null || rawP256PublicKey.length != 33) {
+			throw new IllegalArgumentException(
+					"Invalid P-256 public key: must be 33 bytes (compressed format)");
+		}
 
-     // Multicodec prefix for P-256 (0x8024) as expected by DIDkeysProofManager
-        byte[] prefix = new byte[] { (byte) 0x80, (byte) 0x24 };
+	// Multicodec prefix for P-256 (0x8024) as expected by DIDkeysProofManager
+		byte[] prefix = new byte[] { (byte) 0x80, (byte) 0x24 };
 
-        byte[] combined = new byte[prefix.length + rawP256PublicKey.length];
-        System.arraycopy(prefix, 0, combined, 0, prefix.length);
-        System.arraycopy(rawP256PublicKey, 0, combined, prefix.length, rawP256PublicKey.length);
+		byte[] combined = new byte[prefix.length + rawP256PublicKey.length];
+		System.arraycopy(prefix, 0, combined, 0, prefix.length);
+		System.arraycopy(rawP256PublicKey, 0, combined, prefix.length, rawP256PublicKey.length);
 
-        return "did:key:z" + Base58.encode(combined);
-    }
+		return "did:key:z" + Base58.encode(combined);
+	}
 	
 	/**
-     * Extract compressed raw P-256 public key from an EC JWK using Bouncy Castle
-     * for correct compression.
-     */
-    private static byte[] extractRawP256PublicKey(ECKey ecJWK) throws Exception {
-        ECPublicKey publicKey = ecJWK.toECPublicKey();
+	 * Extract compressed raw P-256 public key from an EC JWK using Bouncy Castle
+	 * for correct compression.
+	 */
+	private static byte[] extractRawP256PublicKey(ECKey ecJWK) throws Exception {
+		ECPublicKey publicKey = ecJWK.toECPublicKey();
 
-        // Use BouncyCastle EC curve for compression
-        org.bouncycastle.jce.spec.ECParameterSpec ecSpec =
-                org.bouncycastle.jce.ECNamedCurveTable.getParameterSpec("secp256r1");
-        org.bouncycastle.math.ec.ECCurve curve = ecSpec.getCurve();
+		// Use BouncyCastle EC curve for compression
+		org.bouncycastle.jce.spec.ECParameterSpec ecSpec =
+				org.bouncycastle.jce.ECNamedCurveTable.getParameterSpec("secp256r1");
+		org.bouncycastle.math.ec.ECCurve curve = ecSpec.getCurve();
 
-        java.security.spec.ECPoint javaPoint = publicKey.getW();
-        org.bouncycastle.math.ec.ECPoint bcPoint = curve.createPoint(
-                javaPoint.getAffineX(),
-                javaPoint.getAffineY()
-        );
+		java.security.spec.ECPoint javaPoint = publicKey.getW();
+		org.bouncycastle.math.ec.ECPoint bcPoint = curve.createPoint(
+				javaPoint.getAffineX(),
+				javaPoint.getAffineY()
+		);
 
-        // true = compressed format (33 bytes)
-        return bcPoint.getEncoded(true);
-    }
-	public static String signES256JWT(String clientId, String accessToken, String testCaseName, String tempUrl) {
+		// true = compressed format (33 bytes)
+		return bcPoint.getEncoded(true);
+	}
+	public static String signES256JWT(String clientId, String accessToken, String cNonce, String testCaseName, String tempUrl) {
 		int idTokenExpirySecs = Integer
 				.parseInt(getValueFromEsignetActuator(InjiCertifyConfigManager.getEsignetActuatorPropertySection(),
 						GlobalConstants.MOSIP_ESIGNET_ID_TOKEN_EXPIRE_SECONDS));
@@ -1262,46 +1356,49 @@ public class InjiCertifyUtil extends AdminTestUtil {
 
 		try {
 			// Generate EC P-256 keypair
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC");
-            keyGen.initialize(new ECGenParameterSpec("secp256r1"));
-            KeyPair keyPair = keyGen.generateKeyPair();
-            ECPrivateKey privateKey = (ECPrivateKey) keyPair.getPrivate();
-            ECPublicKey publicKey = (ECPublicKey) keyPair.getPublic();
+			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC");
+			keyGen.initialize(new ECGenParameterSpec("secp256r1"));
+			KeyPair keyPair = keyGen.generateKeyPair();
+			ECPrivateKey privateKey = (ECPrivateKey) keyPair.getPrivate();
+			ECPublicKey publicKey = (ECPublicKey) keyPair.getPublic();
 
-            if (testCaseName.contains("_Did_Key_Sign_")) {
-                // Convert to ECKey
-                ECKey ecJWK = new ECKey.Builder(Curve.P_256, publicKey)
-                        .privateKey(privateKey)
-                        .build();
+			if (testCaseName.contains("_Did_Key_Sign_")) {
+				// Convert to ECKey
+				ECKey ecJWK = new ECKey.Builder(Curve.P_256, publicKey)
+						.privateKey(privateKey)
+						.build();
 
-                // Extract compressed P-256 public key
-                byte[] compressedKey = extractRawP256PublicKey(ecJWK);
+				// Extract compressed P-256 public key
+				byte[] compressedKey = extractRawP256PublicKey(ecJWK);
 
-                // Generate DID:key
-                String didKey = generateP256DidKey(compressedKey);
+				// Generate DID:key
+				String didKey = generateP256DidKey(compressedKey);
+				if (testCaseName.contains("_Did_Key_Sign_invalid")) {
+					didKey = "did:key:zINVALIDDIDKEYFORPROOFTEST";
+				}
 
-                // Build header with DID key
-                header = new JWSHeader.Builder(JWSAlgorithm.ES256)
-                        .keyID(didKey)
-                        .type(new JOSEObjectType("openid4vci-proof+jwt"))
-                        .build();
+				// Build header with DID key
+				header = new JWSHeader.Builder(JWSAlgorithm.ES256)
+						.keyID(didKey)
+						.type(new JOSEObjectType("openid4vci-proof+jwt"))
+						.build();
 
-                signingKey = new ECKey.Builder(Curve.P_256, publicKey)
-                        .privateKey(privateKey)
-                        .build();
+				signingKey = new ECKey.Builder(Curve.P_256, publicKey)
+						.privateKey(privateKey)
+						.build();
 
-            } else {
-                signingKey = new ECKey.Builder(Curve.P_256, publicKey)
-                        .privateKey(privateKey)
-                        .keyID(UUID.randomUUID().toString())
-                        .build();
+			} else {
+				signingKey = new ECKey.Builder(Curve.P_256, publicKey)
+						.privateKey(privateKey)
+						.keyID(UUID.randomUUID().toString())
+						.build();
 
-                header = new JWSHeader.Builder(JWSAlgorithm.ES256)
-                        .jwk(signingKey.toPublicJWK())
-                        .type(new JOSEObjectType("openid4vci-proof+jwt"))
-                        .build();
-            }
-          
+				header = new JWSHeader.Builder(JWSAlgorithm.ES256)
+						.jwk(signingKey.toPublicJWK())
+						.type(new JOSEObjectType("openid4vci-proof+jwt"))
+						.build();
+			}
+		
 
 			Date currentTime = new Date();
 
@@ -1310,8 +1407,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			calendar.add(Calendar.SECOND, idTokenExpirySecs);
 			Date expirationTime = calendar.getTime();
 
-			signedJWT = SignedJWT.parse(accessToken);
-			String nonce = signedJWT.getJWTClaimsSet().getClaim("c_nonce").toString();
+			String nonce = resolveCNonce(accessToken, cNonce);
 
 			JWTClaimsSet claimsSet = new JWTClaimsSet.Builder().audience(tempUrl).claim("nonce", nonce).issuer(clientId)
 					.issueTime(currentTime).expirationTime(expirationTime).jwtID(UUID.randomUUID().toString()).build();
@@ -1330,150 +1426,152 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	}
 	
 	public static String generateSecp256k1DidKey(byte[] rawSecp256k1PublicKey) {
-	    // secp256k1 compressed public keys are always 33 bytes (0x02/0x03 + 32-byte x coordinate)
-	    if (rawSecp256k1PublicKey == null || rawSecp256k1PublicKey.length != 33) {
-	        throw new IllegalArgumentException("Invalid secp256k1 public key: must be 33 bytes (compressed format)");
-	    }
+		// secp256k1 compressed public keys are always 33 bytes (0x02/0x03 + 32-byte x coordinate)
+		if (rawSecp256k1PublicKey == null || rawSecp256k1PublicKey.length != 33) {
+			throw new IllegalArgumentException("Invalid secp256k1 public key: must be 33 bytes (compressed format)");
+		}
 
-	    // Multicodec prefix for secp256k1 (0xE701)
-	    byte[] prefix = new byte[]{(byte) 0xE7, 0x01};
+		// Multicodec prefix for secp256k1 (0xE701)
+		byte[] prefix = new byte[]{(byte) 0xE7, 0x01};
 
-	    byte[] combined = new byte[prefix.length + rawSecp256k1PublicKey.length];
-	    System.arraycopy(prefix, 0, combined, 0, prefix.length);
-	    System.arraycopy(rawSecp256k1PublicKey, 0, combined, prefix.length, rawSecp256k1PublicKey.length);
+		byte[] combined = new byte[prefix.length + rawSecp256k1PublicKey.length];
+		System.arraycopy(prefix, 0, combined, 0, prefix.length);
+		System.arraycopy(rawSecp256k1PublicKey, 0, combined, prefix.length, rawSecp256k1PublicKey.length);
 
-	    return "did:key:z" + Base58.encode(combined);
+		return "did:key:z" + Base58.encode(combined);
 	}
 
-	public static String signES256KJWT(String clientId, String accessToken, String testCaseName, String tempUrl) {
-	    int idTokenExpirySecs = Integer.parseInt(
-	            getValueFromEsignetActuator(
-	                    InjiCertifyConfigManager.getEsignetActuatorPropertySection(),
-	                    GlobalConstants.MOSIP_ESIGNET_ID_TOKEN_EXPIRE_SECONDS
-	            )
-	    );
+	public static String signES256KJWT(String clientId, String accessToken, String cNonce, String testCaseName, String tempUrl) {
+		int idTokenExpirySecs = Integer.parseInt(
+				getValueFromEsignetActuator(
+						InjiCertifyConfigManager.getEsignetActuatorPropertySection(),
+						GlobalConstants.MOSIP_ESIGNET_ID_TOKEN_EXPIRE_SECONDS
+				)
+		);
 
-	    JWSSigner signer;
-	    String proofJWT = "";
-	    SignedJWT signedJWT;
-	    JWSHeader header;
+		JWSSigner signer;
+		String proofJWT = "";
+		SignedJWT signedJWT;
+		JWSHeader header;
 
-	    try {
-	    	// 🔑 Ensure BC is available
-	        if (Security.getProvider("BC") == null) {
-	            Security.addProvider(new BouncyCastleProvider());
-	        }
-	        // Generate secp256k1 key pair using BouncyCastle provider
-	        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC", "BC");
-	        keyGen.initialize(new ECGenParameterSpec("secp256k1"));
-	        KeyPair keyPair = keyGen.generateKeyPair();
+		try {
+			// 🔑 Ensure BC is available
+			if (Security.getProvider("BC") == null) {
+				Security.addProvider(new BouncyCastleProvider());
+			}
+			// Generate secp256k1 key pair using BouncyCastle provider
+			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC", "BC");
+			keyGen.initialize(new ECGenParameterSpec("secp256k1"));
+			KeyPair keyPair = keyGen.generateKeyPair();
 
-	        ECPublicKey publicKey = (ECPublicKey) keyPair.getPublic();
-	        ECPrivateKey privateKey = (ECPrivateKey) keyPair.getPrivate();
+			ECPublicKey publicKey = (ECPublicKey) keyPair.getPublic();
+			ECPrivateKey privateKey = (ECPrivateKey) keyPair.getPrivate();
 
-	        // Nimbus ECKey
-	        ECKey ecJWK = new ECKey.Builder(Curve.SECP256K1, publicKey)
-	                .privateKey(privateKey)
-	                .keyID(UUID.randomUUID().toString())
-	                .build();
+			// Nimbus ECKey
+			ECKey ecJWK = new ECKey.Builder(Curve.SECP256K1, publicKey)
+					.privateKey(privateKey)
+					.keyID(UUID.randomUUID().toString())
+					.build();
 
-	        if (testCaseName.contains("_Did_Key_Sign_")) {
-	            // Compress public key (33 bytes: 0x02/0x03 + X)
-	            byte[] compressedKey = compressSecp256k1PublicKey(publicKey);
+			if (testCaseName.contains("_Did_Key_Sign_")) {
+				// Compress public key (33 bytes: 0x02/0x03 + X)
+				byte[] compressedKey = compressSecp256k1PublicKey(publicKey);
 
-	            // Generate did:key
-	            String didKey = generateSecp256k1DidKey(compressedKey);
+				// Generate did:key
+				String didKey = generateSecp256k1DidKey(compressedKey);
+				if (testCaseName.contains("_Did_Key_Sign_invalid")) {
+					didKey = "did:key:zINVALIDDIDKEYFORPROOFTEST";
+				}
 
-	            header = new JWSHeader.Builder(JWSAlgorithm.ES256K)
-	                    .type(new JOSEObjectType("openid4vci-proof+jwt"))
-	                    .keyID(didKey)
-	                    .build();
-	        } else {
-	            header = new JWSHeader.Builder(JWSAlgorithm.ES256K)
-	                    .type(new JOSEObjectType("openid4vci-proof+jwt"))
-	                    .jwk(ecJWK.toPublicJWK())
-	                    .build();
-	        }
+				header = new JWSHeader.Builder(JWSAlgorithm.ES256K)
+						.type(new JOSEObjectType("openid4vci-proof+jwt"))
+						.keyID(didKey)
+						.build();
+			} else {
+				header = new JWSHeader.Builder(JWSAlgorithm.ES256K)
+						.type(new JOSEObjectType("openid4vci-proof+jwt"))
+						.jwk(ecJWK.toPublicJWK())
+						.build();
+			}
 
-	        Date currentTime = new Date();
+			Date currentTime = new Date();
 
-	        Calendar calendar = Calendar.getInstance();
-	        calendar.setTime(currentTime);
-	        calendar.add(Calendar.SECOND, idTokenExpirySecs);
-	        Date expirationTime = calendar.getTime();
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(currentTime);
+			calendar.add(Calendar.SECOND, idTokenExpirySecs);
+			Date expirationTime = calendar.getTime();
 
-	        signedJWT = SignedJWT.parse(accessToken);
-	        String nonce = signedJWT.getJWTClaimsSet().getClaim("c_nonce").toString();
+			String nonce = resolveCNonce(accessToken, cNonce);
 
-	        JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-	                .audience(tempUrl)
-	                .claim("nonce", nonce)
-	                .issuer(clientId)
-	                .issueTime(currentTime)
-	                .expirationTime(expirationTime)
-	                .jwtID(UUID.randomUUID().toString())
-	                .build();
+			JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+					.audience(tempUrl)
+					.claim("nonce", nonce)
+					.issuer(clientId)
+					.issueTime(currentTime)
+					.expirationTime(expirationTime)
+					.jwtID(UUID.randomUUID().toString())
+					.build();
 
-	        signedJWT = new SignedJWT(header, claimsSet);
-	        signer = new ECDSASigner(privateKey);
+			signedJWT = new SignedJWT(header, claimsSet);
+			signer = new ECDSASigner(privateKey);
 
-	        // ✅ Fix: pass actual Provider object
-	        signer.getJCAContext().setProvider(Security.getProvider("BC"));
+			// ✅ Fix: pass actual Provider object
+			signer.getJCAContext().setProvider(Security.getProvider("BC"));
 
-	        signedJWT.sign(signer);
-	        proofJWT = signedJWT.serialize();
+			signedJWT.sign(signer);
+			proofJWT = signedJWT.serialize();
 
-	    } catch (Exception e) {
-	        logger.error("Exception while signing proof_jwt with ES256K: " + e.getMessage(), e);
-	    }
+		} catch (Exception e) {
+			logger.error("Exception while signing proof_jwt with ES256K: " + e.getMessage(), e);
+		}
 
-	    return proofJWT;
+		return proofJWT;
 	}
 
 	/**
 	 * Compress a secp256k1 public key into 33-byte format.
 	 */
 	private static byte[] compressSecp256k1PublicKey(ECPublicKey publicKey) {
-	    java.security.spec.ECPoint w = publicKey.getW();
-	    BigInteger x = w.getAffineX();
-	    BigInteger y = w.getAffineY();
+		java.security.spec.ECPoint w = publicKey.getW();
+		BigInteger x = w.getAffineX();
+		BigInteger y = w.getAffineY();
 
-	    // Prefix 0x02 if y is even, 0x03 if odd
-	    byte prefix = (y.testBit(0)) ? (byte) 0x03 : (byte) 0x02;
+		// Prefix 0x02 if y is even, 0x03 if odd
+		byte prefix = (y.testBit(0)) ? (byte) 0x03 : (byte) 0x02;
 
-	    byte[] xBytes = x.toByteArray();
-	    if (xBytes.length > 32) {
-	        xBytes = Arrays.copyOfRange(xBytes, xBytes.length - 32, xBytes.length);
-	    } else if (xBytes.length < 32) {
-	        byte[] padded = new byte[32];
-	        System.arraycopy(xBytes, 0, padded, 32 - xBytes.length, xBytes.length);
-	        xBytes = padded;
-	    }
+		byte[] xBytes = x.toByteArray();
+		if (xBytes.length > 32) {
+			xBytes = Arrays.copyOfRange(xBytes, xBytes.length - 32, xBytes.length);
+		} else if (xBytes.length < 32) {
+			byte[] padded = new byte[32];
+			System.arraycopy(xBytes, 0, padded, 32 - xBytes.length, xBytes.length);
+			xBytes = padded;
+		}
 
-	    byte[] compressed = new byte[33];
-	    compressed[0] = prefix;
-	    System.arraycopy(xBytes, 0, compressed, 1, 32);
+		byte[] compressed = new byte[33];
+		compressed[0] = prefix;
+		System.arraycopy(xBytes, 0, compressed, 1, 32);
 
-	    return compressed;
+		return compressed;
 	}
 
 
 	public static String generateEd25519DidKey(byte[] rawEd25519PublicKey) {
-	    // Ed25519 public keys are 32 bytes
-	    if (rawEd25519PublicKey == null || rawEd25519PublicKey.length != 32) {
-	        throw new IllegalArgumentException("Invalid Ed25519 public key: must be 32 bytes");
-	    }
+		// Ed25519 public keys are 32 bytes
+		if (rawEd25519PublicKey == null || rawEd25519PublicKey.length != 32) {
+			throw new IllegalArgumentException("Invalid Ed25519 public key: must be 32 bytes");
+		}
 
-	    // Multicodec prefix for Ed25519 (0xED01)
-	    byte[] prefix = new byte[]{(byte) 0xED, 0x01};
+		// Multicodec prefix for Ed25519 (0xED01)
+		byte[] prefix = new byte[]{(byte) 0xED, 0x01};
 
-	    byte[] combined = new byte[prefix.length + rawEd25519PublicKey.length];
-	    System.arraycopy(prefix, 0, combined, 0, prefix.length);
-	    System.arraycopy(rawEd25519PublicKey, 0, combined, prefix.length, rawEd25519PublicKey.length);
+		byte[] combined = new byte[prefix.length + rawEd25519PublicKey.length];
+		System.arraycopy(prefix, 0, combined, 0, prefix.length);
+		System.arraycopy(rawEd25519PublicKey, 0, combined, prefix.length, rawEd25519PublicKey.length);
 
-	    return "did:key:z" + Base58.encode(combined);
+		return "did:key:z" + Base58.encode(combined);
 	}
-	public static String signED25519JWT(String clientId, String accessToken, String testCaseName, String tempUrl) {
+	public static String signED25519JWT(String clientId, String accessToken, String cNonce, String testCaseName, String tempUrl) {
 		int idTokenExpirySecs = Integer
 				.parseInt(getValueFromEsignetActuator(InjiCertifyConfigManager.getEsignetActuatorPropertySection(),
 						GlobalConstants.MOSIP_ESIGNET_ID_TOKEN_EXPIRE_SECONDS));
@@ -1484,17 +1582,20 @@ public class InjiCertifyUtil extends AdminTestUtil {
 
 		try {
 			OctetKeyPair edJWK = new OctetKeyPairGenerator(Curve.Ed25519).generate();
-			
+
 			if(testCaseName.contains("_Did_Key_Sign_")) {
 				
 				byte[] rawPublicKey = edJWK.getX().decode();
 
 				String didKey = generateEd25519DidKey(rawPublicKey);
+				if (testCaseName.contains("_Did_Key_Sign_invalid")) {
+					didKey = "did:key:zINVALIDDIDKEYFORPROOFTEST";
+				}
 				
-				header = new JWSHeader.Builder(JWSAlgorithm.Ed25519)
+				header = new JWSHeader.Builder(JWSAlgorithm.EdDSA)
 						.type(new JOSEObjectType("openid4vci-proof+jwt")).keyID(didKey).build();
 			}else {
-				header = new JWSHeader.Builder(JWSAlgorithm.Ed25519)
+				header = new JWSHeader.Builder(JWSAlgorithm.EdDSA)
 						.type(new JOSEObjectType("openid4vci-proof+jwt")).jwk(edJWK.toPublicJWK()).build();
 			}
 
@@ -1510,9 +1611,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 			// Get the updated expiration time
 			Date expirationTime = calendar.getTime();
 
-			signedJWT = SignedJWT.parse(accessToken);
-
-			String nonce = signedJWT.getJWTClaimsSet().getClaim("c_nonce").toString();
+			String nonce = resolveCNonce(accessToken, cNonce);
 			JWTClaimsSet claimsSet = null;
 
 			claimsSet = new JWTClaimsSet.Builder().audience(tempUrl).claim("nonce", nonce).issuer(clientId)
@@ -1543,8 +1642,12 @@ public class InjiCertifyUtil extends AdminTestUtil {
 	public static JSONArray certifyActuatorResponseArray = null;
 	
 	public static String getValueFromCertifyActuator(String section, String key) {
-		String url = InjiCertifyConfigManager.getInjiCertifyBaseUrl()
-				+ InjiCertifyConfigManager.getproperty("actuatorCertifyEndpoint");
+		// Backward compatible property key: injiCertify.properties historically used actuatorcertifyEndpoint
+		String actuatorPath = InjiCertifyConfigManager.getproperty("actuatorCertifyEndpoint");
+		if (actuatorPath == null || actuatorPath.isBlank()) {
+			actuatorPath = InjiCertifyConfigManager.getproperty("actuatorcertifyEndpoint");
+		}
+		String url = InjiCertifyConfigManager.getInjiCertifyBaseUrl() + actuatorPath;
 		// Combine the cache key to uniquely identify each request
 		String actuatorCacheKey = url + section + key;
 
@@ -1671,6 +1774,48 @@ public class InjiCertifyUtil extends AdminTestUtil {
 		// Look for "indexedAttributesEquals": "{"..."}"
 		return json.replaceAll("\"indexedAttributesEquals\"\\s*:\\s*\"\\{", "\"indexedAttributesEquals\": {")
 				.replaceAll("\\}\"\\s*(,?)", "}$1");
+	}
+
+	@Override
+	protected void writeAutoGeneratedId(Response response, String idKeyName, String testCaseName) {
+		super.writeAutoGeneratedId(response, idKeyName, testCaseName);
+		persistOpenId4VpRequestFromIarResponse(response, testCaseName);
+	}
+
+	private void persistOpenId4VpRequestFromIarResponse(Response response, String testCaseName) {
+		try {
+			JSONObject jsonObject = new JSONObject(response.getBody().asString());
+			if (!jsonObject.has("openid4vp_request")) {
+				return;
+			}
+			JSONObject openId4VpRequest = jsonObject.getJSONObject("openid4vp_request");
+			writeAutoGeneratedId(testCaseName, "openid4vp_request", openId4VpRequest.toString());
+			logger.info("Saved openid4vp_request for test case: " + testCaseName);
+		} catch (Exception e) {
+			logger.error("Failed to persist openid4vp_request from IAR response: " + e.getMessage());
+		}
+	}
+
+	private JSONObject resolveOpenId4VpRequest() {
+		String cachedOpenId4VpRequest = replaceIdWithAutogeneratedId(
+				"$ID:IAR_initial_Request_mdocvp_all_Valid_Smoke_sid_openid4vp_request$", "$ID:");
+		if (cachedOpenId4VpRequest == null || cachedOpenId4VpRequest.isBlank()
+				|| cachedOpenId4VpRequest.contains("$ID:")) {
+			throw new RuntimeException(
+					"openid4vp_request not found in cache. Ensure TC_InjiCertify_IARInitialRequest_01 ran successfully.");
+		}
+		return new JSONObject(cachedOpenId4VpRequest);
+	}
+
+	public static JSONObject loadJsonFromHbsTemplate(String inputTemplatePath) {
+		String json = new InjiCertifyUtil().getJsonFromTemplate("{}", inputTemplatePath);
+		return new JSONObject(json);
+	}
+
+	public static JSONObject getPresentationDuringIssuanceVpTestData(String key) {
+		JSONObject template = loadJsonFromHbsTemplate(
+				"injicertify/PresentationDuringIssuance/GetCredential/GetCredential");
+		return template.getJSONObject("vpTestData").getJSONObject(key);
 	}
 	
 	protected void writeAutoGeneratedIdWithResponse(Response response, String idKeyName, String testCaseName) {

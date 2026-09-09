@@ -1,7 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at https://mozilla.org/MPL/2.0/. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -9,20 +6,20 @@
     <parent>
         <groupId>io.inji.certify</groupId>
         <artifactId>certify-parent</artifactId>
-        <version>0.15.0-SNAPSHOT</version>
+        <version>1.0.0-beta.1-SNAPSHOT</version>
     </parent>
 
     <groupId>io.inji.certify</groupId>
     <artifactId>certify-service-with-plugins</artifactId>
-    <version>0.15.0-SNAPSHOT</version>
+    <version>1.0.0-beta.1-SNAPSHOT</version>
     <name>certify-service-with-plugins</name>
     <description>certify vci service</description>
     <url>https://github.com/inji/inji-certify</url>
 
     <licenses>
         <license>
-            <name>MPL 2.0</name>
-            <url>https://www.mozilla.org/en-US/MPL/2.0/</url>
+            <name>Apache 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
         </license>
     </licenses>
 
@@ -37,13 +34,13 @@
 
     <properties>
         <certify-plugins.location>target</certify-plugins.location>
-        <mock-certify-plugin.version>0.7.0-SNAPSHOT</mock-certify-plugin.version>
+        <mock-certify-plugin.version>1.0.0-beta.1-SNAPSHOT</mock-certify-plugin.version>
         <mock-certify-plugin.fileName>mock-certify-plugin.jar</mock-certify-plugin.fileName>
-        <mosip-identity-certify-plugin.version>0.7.0-SNAPSHOT</mosip-identity-certify-plugin.version>
+        <mosip-identity-certify-plugin.version>1.0.0-beta.1-SNAPSHOT</mosip-identity-certify-plugin.version>
         <mosip-identity-certify-plugin.fileName>mosip-identity-certify-plugin.jar</mosip-identity-certify-plugin.fileName>
-        <postgres-dataprovider-plugin.version>0.7.0-SNAPSHOT</postgres-dataprovider-plugin.version>
+        <postgres-dataprovider-plugin.version>1.0.0-beta.1-SNAPSHOT</postgres-dataprovider-plugin.version>
         <postgres-dataprovider-plugin.fileName>postgres-dataprovider-plugin.jar</postgres-dataprovider-plugin.fileName>
-        <sunbird-rc-certify-integration-plugin.version>0.7.0-SNAPSHOT</sunbird-rc-certify-integration-plugin.version>
+        <sunbird-rc-certify-integration-plugin.version>1.0.0-beta.1-SNAPSHOT</sunbird-rc-certify-integration-plugin.version>
         <sunbird-rc-certify-integration-plugin.fileName>sunbird-rc-certify-integration-impl.jar</sunbird-rc-certify-integration-plugin.fileName>
     </properties>
     <build>

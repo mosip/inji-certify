@@ -1,0 +1,13 @@
+GenerateNonceForMosipIDNeg:
+   InjiCertify_MosipID_GenerateNonce_StatusCode_Valid_sid_For_Neg_Flow:
+      endPoint: $INJICERTIFYMOSIPIDBASEURL$/v1/certify/nonce
+      uniqueIdentifier: TC_mosipIDDependent_GenerateNonceNeg_01
+      description: Generate nonce for Mosip ID negative get-credential flow
+      role: resident
+      restMethod: post
+      checkOnlyStatusCodeInResponse: true
+      inputTemplate: injicertify/VCIMosipIDNegative/GenerateNonceForMosipIDNeg/GenerateNonceForMosipIDNeg
+      outputTemplate: injicertify/responseCode
+      input: '{
+}'
+      output: "200"

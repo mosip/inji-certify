@@ -7,7 +7,35 @@
     "TC_preauth_TokenExchange_Neg_05": ["TC_preauth_GetOffer_06"],
     "TC_preauth_GetOffer_07": ["TC_preauth_GenerateCode_11"],
     "TC_preauth_TokenExchange_01": ["TC_preauth_GetOffer_01"],
-    "TC_preauth_GetCredential_01": ["TC_preauth_TokenExchange_01"],
+    "TC_preauth_GetCredential_01": [
+        "TC_preauth_TokenExchange_01",
+        "TC_preauth_GenerateNonce_01"
+    ],
+    "TC_preauth_GetCredential_02": ["TC_preauth_TokenExchange_01"],
+    "TC_preauth_GetCredential_Neg_10": [
+        "TC_preauth_TokenExchange_01",
+        "TC_preauth_GenerateNonce_01"
+    ],
+    "TC_preauth_GetCredential_Neg_11": [
+        "TC_preauth_TokenExchange_01",
+        "TC_preauth_GenerateNonce_01"
+    ],
+    "TC_preauth_GetCredential_Neg_12": [
+        "TC_preauth_TokenExchange_01",
+        "TC_preauth_GenerateNonce_01"
+    ],
+    "TC_preauth_GetCredential_Neg_13": [
+        "TC_preauth_TokenExchange_01",
+        "TC_preauth_GenerateNonce_01"
+    ],
+    "TC_preauth_GetCredential_Neg_14": [
+        "TC_preauth_TokenExchange_01",
+        "TC_preauth_GenerateNonce_01"
+    ],
+    "TC_preauth_GetCredential_Neg_15": [
+        "TC_preauth_TokenExchange_01",
+        "TC_preauth_GenerateNonce_01"
+    ],
     "TC_preauth_TokenExchange_02": ["TC_preauth_GetOffer_02"],
     "TC_preauth_GetOffer_06": ["TC_preauth_GenerateCode_09"],
     "TC_preauth_GetOffer_05": ["TC_preauth_GenerateCode_08"]

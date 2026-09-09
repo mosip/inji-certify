@@ -261,4 +261,46 @@ public class SDJsonUtilsTest extends TestCase {
     assertTrue(mobilePhoneObject.containsKey("type"));
     assertFalse(mobilePhoneObject.containsKey("number"));
   }
+
+  @org.junit.Test
+  public void should_validatePath_when_validAndInvalidPaths() {
+      ObjectNode node = JsonNodeFactory.instance.objectNode();
+      node.put("name", "John");
+      node.putNull("middleName");
+      ObjectNode addressNode = JsonNodeFactory.instance.objectNode();
+      addressNode.put("city", "Coimbatore");
+      node.set("address", addressNode);
+
+      ArrayNode emptyArray = JsonNodeFactory.instance.arrayNode();
+      node.set("emptyList", emptyArray);
+
+      ObjectNode emptyObj = JsonNodeFactory.instance.objectNode();
+      node.set("emptyObj", emptyObj);
+
+      ArrayNode listWithItems = JsonNodeFactory.instance.arrayNode();
+      listWithItems.add("item1");
+      listWithItems.add("item2");
+      node.set("listWithItems", listWithItems);
+
+      // Valid paths
+      assertTrue(SDJsonUtils.isPathValid(node, "$.name"));
+      assertTrue(SDJsonUtils.isPathValid(node, "$.address.city"));
+      assertTrue(SDJsonUtils.isPathValid(node, "$.middleName"));
+      assertTrue(SDJsonUtils.isPathValid(node, "$.address.*"));
+      assertTrue(SDJsonUtils.isPathValid(node, "$.listWithItems[0]"));
+      assertTrue(SDJsonUtils.isPathValid(node, "$.listWithItems[1]"));
+
+      // Invalid paths
+      assertFalse(SDJsonUtils.isPathValid(node, "$.invalidKey"));
+      assertFalse(SDJsonUtils.isPathValid(node, "$.address.invalidKey"));
+      assertFalse(SDJsonUtils.isPathValid(node, "$.middleName.lastName"));
+      assertFalse(SDJsonUtils.isPathValid(node, "$.emptyList[*].someField"));
+      assertFalse(SDJsonUtils.isPathValid(node, "$.emptyObj.*"));
+      assertFalse(SDJsonUtils.isPathValid(node, "$.listWithItems[01]"));
+      assertFalse(SDJsonUtils.isPathValid(node, "$.listWithItems[00]"));
+
+      // Duplicate dot paths
+      assertFalse(SDJsonUtils.isPathValid(node, "$.address..city"));
+      assertFalse(SDJsonUtils.isPathValid(node, "$.address...city"));
+  }
 }

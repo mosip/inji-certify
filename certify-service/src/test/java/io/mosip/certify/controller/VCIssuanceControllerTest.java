@@ -8,7 +8,6 @@ import io.mosip.certify.core.constants.VCIErrorConstants;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.VCIssuanceService;
-import io.mosip.certify.exception.InvalidNonceException;
 import io.mosip.certify.services.VCICacheService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,7 +18,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import java.util.*;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -40,6 +42,11 @@ public class VCIssuanceControllerTest {
 
     @MockBean
     ParsedAccessToken parsedAccessToken;
+
+    // AccessTokenValidationFilter is a @Component, so the web slice builds it
+    // and every collaborator it autowires has to exist here too.
+    @MockBean
+    io.mosip.certify.dpop.DpopProofValidator dpopProofValidator;
 
     @MockBean
     VCIssuanceService vcIssuanceService;
@@ -118,7 +125,7 @@ public class VCIssuanceControllerTest {
         credentialRequest.setCredentialConfigId("TestId");
         credentialRequest.setProofs(Map.of(ProofType.JWT,List.of("dummy_jwt_proof")));
 
-        InvalidNonceException exception = new InvalidNonceException("test-new-nonce", 400);
+        CertifyException exception = new CertifyException("invalid_nonce", "c_nonce is invalid or expired");
         Mockito.when(vcIssuanceService.getCredential(credentialRequest)).thenThrow(exception);
 
         mockMvc.perform(post("/issuance/credential")
@@ -126,7 +133,16 @@ public class VCIssuanceControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value(exception.getErrorCode()))
-                .andExpect(jsonPath("$.c_nonce_expires_in").value(exception.getClientNonceExpireSeconds()))
-                .andExpect(jsonPath("$.c_nonce").value(exception.getClientNonce()));
+                .andExpect(jsonPath("$.error_description").value(exception.getMessage()));
+    }
+
+    @Test
+    public void should_returnInvalidRequest_when_credentialRequestJsonIsMalformed() throws Exception {
+        mockMvc.perform(post("/issuance/credential")
+                        .content("{invalid-json}")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("invalid_request"))
+                .andExpect(jsonPath("$.error_description").value("Malformed JSON syntax error"));
     }
 }

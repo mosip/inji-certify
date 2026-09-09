@@ -8,7 +8,6 @@ package io.mosip.certify.services;
 import io.mosip.certify.core.dto.OAuthAuthorizationServerMetadataDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -42,6 +41,9 @@ public class OAuthAuthorizationServerMetadataService {
     @Value("${mosip.certify.oauth.interactive-authorization-endpoint:}")
     private String interactiveAuthorizationEndpoint;
 
+    @Value("${mosip.certify.oauth.require-interactive-authorization-request:true}")
+    private boolean requireInteractiveAuthorizationRequest;
+
     /**
      * Builds and returns OAuth 2.0 Authorization Server Metadata
      * @return OAuthAuthorizationServerMetadataDTO containing the OAuth Authorization Server metadata
@@ -58,6 +60,7 @@ public class OAuthAuthorizationServerMetadataService {
         metadata.setResponseTypesSupported(parseCommaSeparatedValues(responseTypesSupported));
         metadata.setCodeChallengeMethodsSupported(parseCommaSeparatedValues(codeChallengeMethodsSupported));
         metadata.setInteractiveAuthorizationEndpoint(interactiveAuthorizationEndpoint);
+        metadata.setRequireInteractiveAuthorizationRequest(requireInteractiveAuthorizationRequest);
 
         log.debug("OAuth Authorization Server metadata built successfully for issuer: {}", issuer);
         return metadata;
