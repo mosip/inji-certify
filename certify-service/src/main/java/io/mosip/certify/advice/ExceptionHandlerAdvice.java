@@ -149,6 +149,10 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
             return new ResponseEntity<ResponseWrapper>(getResponseWrapper(INVALID_REQUEST, ex.getMessage()),
                     HttpStatus.OK);
         }
+        if(ex instanceof CredentialConfigValidationException) {
+            return new ResponseEntity<ResponseWrapper>(
+                    getResponseWrapper(((CredentialConfigValidationException) ex).getErrors()), HttpStatus.OK);
+        }
         if(ex instanceof CertifyException) {
             String errorCode = ((CertifyException) ex).getErrorCode();
             String errorMessage = ex.getMessage();

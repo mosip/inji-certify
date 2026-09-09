@@ -69,4 +69,10 @@ public class CredentialConfigurationDTO {
     private List<Map<String, Object>> qrSettings;
 
     private String qrSignatureAlgo;
+
+    private List<String> cryptographicBindingMethodsSupported;
+
+    private List<String> credentialSigningAlgValuesSupported;
+
+    private Map<String, Object> proofTypesSupported;
 }

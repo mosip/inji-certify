@@ -930,105 +930,352 @@
 			"name": "Credential Configuration",
 			"item": [
 				{
-					"name": "Add New Config",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n  \"vcTemplate\": \"ewogICAgICJAY29udGV4dCI6IFsKICAgICAgICAgICAgICJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsCiAgICAgICAgICAgICAiaHR0cHM6Ly9hcGkucmVsZWFzZWQubW9zaXAubmV0Ly53ZWxsLWtub3duL21vc2lwLWlkYS1jb250ZXh0Lmpzb24iLAoJICAgICAiaHR0cHM6Ly93M2lkLm9yZy9zZWN1cml0eS9zdWl0ZXMvZWQyNTUxOS0yMDIwL3YxIgogICAgICAgICBdLAogICAgICAgICAiaXNzdWVyIjogIiR7X2lzc3Vlcn0iLAogICAgICAgICAidHlwZSI6IFsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCAiTW9ja1ZlcmlmaWFibGVDcmVkZW50aWFsIl0sCiAgICAgICAgICJpc3N1YW5jZURhdGUiOiAiJHt2YWxpZEZyb219IiwKICAgICAgICAgImV4cGlyYXRpb25EYXRlIjogIiR7dmFsaWRVbnRpbH0iLAogICAgICAgICAiY3JlZGVudGlhbFN1YmplY3QiOiB7CiAgICAgICAgICAgICJpZCI6ICIke19ob2xkZXJJZH0iLAogICAgICAgICAgICAiZ2VuZGVyIjogJHtnZW5kZXJ9LAogICAgICAgICAgICAicG9zdGFsQ29kZSI6ICR7cG9zdGFsQ29kZX0sCiAgICAgICAgICAgICJmdWxsTmFtZSI6ICR7ZnVsbE5hbWV9LAogICAgICAgICAgICAiZGF0ZU9mQmlydGgiOiAiJHtkYXRlT2ZCaXJ0aH0iLAogICAgICAgICAgICAicGhvbmUiOiAiJHtwaG9uZX0iLAogICAgICAgICAgICAicHJvdmluY2UiOiAke3Byb3ZpbmNlfSwKICAgICAgICAgICAgInJlZ2lvbiI6ICR7cmVnaW9ufSwKICAgICAgICAgICAgIlVJTiI6ICR7VUlOfSwKCSAgICAiVklEIjogJHtVSU59LAogICAgICAgICAgICAiZW1haWwiOiAiJHtlbWFpbH0iLAogICAgICAgICAgICAiZmFjZSI6ICIke2ZhY2V9IgogICAgICAgICB9CiAgICAgfQ==\",\r\n  \"credentialConfigKeyId\": \"MockVerifiableCredential\",\r\n  \"contextURLs\": [\r\n    \"https://api.released.mosip.net/.well-known/mosip-ida-context.json\",\r\n    \"https://www.w3.org/2018/credentials/v1\"\r\n  ],\r\n  \"credentialTypes\": [\r\n    \"MockVerifiableCredential\",\r\n    \"VerifiableCredential\"\r\n  ],\r\n  \"credentialFormat\": \"ldp_vc\",\r\n  \"didUrl\": \"did:web:inji.github.io:inji-config:dev-int-inji:mock-identity\",\r\n  \"keyManagerAppId\": \"CERTIFY_VC_SIGN_EC_R1\",\r\n  \"keyManagerRefId\": \"EC_SECP256R1_SIGN\",\r\n  \"signatureAlgo\": \"ES256\",\r\n  \"signatureCryptoSuite\": \"EcdsaSecp256r1Signature2019\",\r\n  \"metaDataDisplay\": [\r\n    {\r\n      \"logo\": {\r\n        \"uri\": \"https://inji.github.io/inji-config/logos/mosipid-logo.png\",\r\n        \"alt_text\": \"a square logo of a MOSIP\"\r\n      },\r\n      \"name\": \"Mock Verifiable Credential\",\r\n      \"locale\": \"en\",\r\n      \"text_color\": \"#FFFFFF\",\r\n      \"background_color\": \"#12107c\",\r\n      \"background_image\": {\r\n        \"uri\": \"https://api.dev-int-inji.mosip.net/inji/mosip-logo.png\"\r\n      }\r\n    }\r\n  ],\r\n  \"displayOrder\": [\r\n    \"fullName\",\r\n    \"phone\",\r\n    \"dateOfBirth\",\r\n    \"gender\",\r\n    \"email\",\r\n    \"region\",\r\n    \"addressLine1\",\r\n    \"vcVer\",\r\n    \"UIN\",\r\n    \"postalCode\"\r\n  ],\r\n  \"scope\": \"mock_identity_vc_ldp\",\r\n  \"claims\": {\r\n    \"UIN\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"UIN\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"email\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Email Id\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"phone\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Phone Number\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"vcVer\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"VC Verification\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"gender\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Gender\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"region\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Region\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"fullName\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Full Name\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"postalCode\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Postal Code\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"dateOfBirth\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Date of Birth\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"addressLine1\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Address Line 1\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    }\r\n  }\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
+					"name": "ldp_vc",
+					"description": "ldp_vc requires contextURLs, credentialTypes and signatureCryptoSuite, and must not carry doctype, sdJwtVct, msoMdocClaims or sdJwtClaims. This is the configuration the VCI folder issues against.",
+					"item": [
+						{
+							"name": "Add Config",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"// Store the returned credentialConfigKeyId so the Get/Update/Delete requests below resolve.",
+											"if (pm.response.code === 201) {",
+											"    pm.collectionVariables.set(\"ldpVcConfigId\", pm.response.json().id);",
+											"}"
+										]
+									}
 								}
-							}
-						},
-						"url": {
-							"raw": "{{certifyUrl}}/credential-configurations",
-							"host": [
-								"{{certifyUrl}}"
 							],
-							"path": [
-								"credential-configurations"
-							]
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"vcTemplate\": \"ewogICAgICJAY29udGV4dCI6IFsKICAgICAgICAgICAgICJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsCiAgICAgICAgICAgICAiaHR0cHM6Ly9hcGkucmVsZWFzZWQubW9zaXAubmV0Ly53ZWxsLWtub3duL21vc2lwLWlkYS1jb250ZXh0Lmpzb24iLAoJICAgICAiaHR0cHM6Ly93M2lkLm9yZy9zZWN1cml0eS9zdWl0ZXMvZWQyNTUxOS0yMDIwL3YxIgogICAgICAgICBdLAogICAgICAgICAiaXNzdWVyIjogIiR7X2lzc3Vlcn0iLAogICAgICAgICAidHlwZSI6IFsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCAiTW9ja1ZlcmlmaWFibGVDcmVkZW50aWFsIl0sCiAgICAgICAgICJpc3N1YW5jZURhdGUiOiAiJHt2YWxpZEZyb219IiwKICAgICAgICAgImV4cGlyYXRpb25EYXRlIjogIiR7dmFsaWRVbnRpbH0iLAogICAgICAgICAiY3JlZGVudGlhbFN1YmplY3QiOiB7CiAgICAgICAgICAgICJpZCI6ICIke19ob2xkZXJJZH0iLAogICAgICAgICAgICAiZ2VuZGVyIjogJHtnZW5kZXJ9LAogICAgICAgICAgICAicG9zdGFsQ29kZSI6ICR7cG9zdGFsQ29kZX0sCiAgICAgICAgICAgICJmdWxsTmFtZSI6ICR7ZnVsbE5hbWV9LAogICAgICAgICAgICAiZGF0ZU9mQmlydGgiOiAiJHtkYXRlT2ZCaXJ0aH0iLAogICAgICAgICAgICAicGhvbmUiOiAiJHtwaG9uZX0iLAogICAgICAgICAgICAicHJvdmluY2UiOiAke3Byb3ZpbmNlfSwKICAgICAgICAgICAgInJlZ2lvbiI6ICR7cmVnaW9ufSwKICAgICAgICAgICAgIlVJTiI6ICR7VUlOfSwKCSAgICAiVklEIjogJHtVSU59LAogICAgICAgICAgICAiZW1haWwiOiAiJHtlbWFpbH0iLAogICAgICAgICAgICAiZmFjZSI6ICIke2ZhY2V9IgogICAgICAgICB9CiAgICAgfQ==\",\r\n  \"credentialConfigKeyId\": \"MockVerifiableCredential\",\r\n  \"contextURLs\": [\r\n    \"https://api.released.mosip.net/.well-known/mosip-ida-context.json\",\r\n    \"https://www.w3.org/2018/credentials/v1\"\r\n  ],\r\n  \"credentialTypes\": [\r\n    \"MockVerifiableCredential\",\r\n    \"VerifiableCredential\"\r\n  ],\r\n  \"credentialFormat\": \"ldp_vc\",\r\n  \"didUrl\": \"did:web:inji.github.io:inji-config:dev-int-inji:mock-identity\",\r\n  \"keyManagerAppId\": \"CERTIFY_VC_SIGN_EC_R1\",\r\n  \"keyManagerRefId\": \"EC_SECP256R1_SIGN\",\r\n  \"signatureAlgo\": \"ES256\",\r\n  \"signatureCryptoSuite\": \"EcdsaSecp256r1Signature2019\",\r\n  \"cryptographicBindingMethodsSupported\": [\r\n    \"did:jwk\",\r\n    \"did:key\"\r\n  ],\r\n  \"credentialSigningAlgValuesSupported\": [\r\n    \"ES256\"\r\n  ],\r\n  \"proofTypesSupported\": {\r\n    \"jwt\": {\r\n      \"proof_signing_alg_values_supported\": [\r\n        \"RS256\",\r\n        \"PS256\",\r\n        \"ES256\",\r\n        \"EdDSA\"\r\n      ]\r\n    }\r\n  },\r\n  \"metaDataDisplay\": [\r\n    {\r\n      \"logo\": {\r\n        \"uri\": \"https://inji.github.io/inji-config/logos/mosipid-logo.png\",\r\n        \"alt_text\": \"a square logo of a MOSIP\"\r\n      },\r\n      \"name\": \"Mock Verifiable Credential\",\r\n      \"locale\": \"en\",\r\n      \"text_color\": \"#FFFFFF\",\r\n      \"background_color\": \"#12107c\",\r\n      \"background_image\": {\r\n        \"uri\": \"https://api.dev-int-inji.mosip.net/inji/mosip-logo.png\"\r\n      }\r\n    }\r\n  ],\r\n  \"displayOrder\": [\r\n    \"fullName\",\r\n    \"phone\",\r\n    \"dateOfBirth\",\r\n    \"gender\",\r\n    \"email\",\r\n    \"region\",\r\n    \"addressLine1\",\r\n    \"vcVer\",\r\n    \"UIN\",\r\n    \"postalCode\"\r\n  ],\r\n  \"scope\": \"mock_identity_vc_ldp\",\r\n  \"claims\": {\r\n    \"UIN\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"UIN\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"email\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Email Id\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"phone\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Phone Number\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"vcVer\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"VC Verification\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"gender\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Gender\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"region\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Region\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"fullName\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Full Name\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"postalCode\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Postal Code\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"dateOfBirth\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Date of Birth\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"addressLine1\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Address Line 1\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    }\r\n  }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{certifyUrl}}/credential-configurations",
+									"host": [
+										"{{certifyUrl}}"
+									],
+									"path": [
+										"credential-configurations"
+									]
+								},
+								"description": "cryptographicBindingMethodsSupported, credentialSigningAlgValuesSupported and proofTypesSupported are optional. Each is validated against what the deployment declares in mosip.certify.credential-config.* — a request can narrow that list, never exceed it. Omit an attribute and the value derived from configuration applies: every binding method declared for the credential format, the algorithms declared for the signatureCryptoSuite, and all declared proof types. The values below are those derived defaults, so they are safe to trim."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Config By Id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{certifyUrl}}/credential-configurations/{{ldpVcConfigId}}",
+									"host": [
+										"{{certifyUrl}}"
+									],
+									"path": [
+										"credential-configurations",
+										"{{ldpVcConfigId}}"
+									]
+								},
+								"description": "Returns the stored configuration. cryptographicBindingMethodsSupported, credentialSigningAlgValuesSupported and proofTypesSupported are always present in the response, resolved from configuration for a credential configuration that never set them."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Config By Id",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"vcTemplate\": \"ewogICAgICJAY29udGV4dCI6IFsKICAgICAgICAgICAgICJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsCiAgICAgICAgICAgICAiaHR0cHM6Ly9hcGkucmVsZWFzZWQubW9zaXAubmV0Ly53ZWxsLWtub3duL21vc2lwLWlkYS1jb250ZXh0Lmpzb24iLAoJICAgICAiaHR0cHM6Ly93M2lkLm9yZy9zZWN1cml0eS9zdWl0ZXMvZWQyNTUxOS0yMDIwL3YxIgogICAgICAgICBdLAogICAgICAgICAiaXNzdWVyIjogIiR7X2lzc3Vlcn0iLAogICAgICAgICAidHlwZSI6IFsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCAiTW9ja1ZlcmlmaWFibGVDcmVkZW50aWFsIl0sCiAgICAgICAgICJpc3N1YW5jZURhdGUiOiAiJHt2YWxpZEZyb219IiwKICAgICAgICAgImV4cGlyYXRpb25EYXRlIjogIiR7dmFsaWRVbnRpbH0iLAogICAgICAgICAiY3JlZGVudGlhbFN1YmplY3QiOiB7CiAgICAgICAgICAgICJpZCI6ICIke19ob2xkZXJJZH0iLAogICAgICAgICAgICAiZ2VuZGVyIjogJHtnZW5kZXJ9LAogICAgICAgICAgICAicG9zdGFsQ29kZSI6ICR7cG9zdGFsQ29kZX0sCiAgICAgICAgICAgICJmdWxsTmFtZSI6ICR7ZnVsbE5hbWV9LAogICAgICAgICAgICAiZGF0ZU9mQmlydGgiOiAiJHtkYXRlT2ZCaXJ0aH0iLAogICAgICAgICAgICAicGhvbmUiOiAiJHtwaG9uZX0iLAogICAgICAgICAgICAicHJvdmluY2UiOiAke3Byb3ZpbmNlfSwKICAgICAgICAgICAgInJlZ2lvbiI6ICR7cmVnaW9ufSwKICAgICAgICAgICAgIlVJTiI6ICR7VUlOfSwKCSAgICAiVklEIjogJHtVSU59LAogICAgICAgICAgICAiZW1haWwiOiAiJHtlbWFpbH0iLAogICAgICAgICAgICAiZmFjZSI6ICIke2ZhY2V9IgogICAgICAgICB9CiAgICAgfQ==\",\r\n  \"credentialConfigKeyId\": \"MockVerifiableCredential\",\r\n  \"contextURLs\": [\r\n    \"https://api.released.mosip.net/.well-known/mosip-ida-context.json\",\r\n    \"https://www.w3.org/2018/credentials/v1\"\r\n  ],\r\n  \"credentialTypes\": [\r\n    \"MockVerifiableCredential\",\r\n    \"VerifiableCredential\"\r\n  ],\r\n  \"credentialFormat\": \"ldp_vc\",\r\n  \"didUrl\": \"did:web:inji.github.io:inji-config:dev-int-inji:mock-identity\",\r\n  \"keyManagerAppId\": \"CERTIFY_VC_SIGN_EC_R1\",\r\n  \"keyManagerRefId\": \"EC_SECP256R1_SIGN\",\r\n  \"signatureAlgo\": \"ES256\",\r\n  \"signatureCryptoSuite\": \"EcdsaSecp256r1Signature2019\",\r\n  \"cryptographicBindingMethodsSupported\": [\r\n    \"did:jwk\"\r\n  ],\r\n  \"credentialSigningAlgValuesSupported\": [\r\n    \"ES256\"\r\n  ],\r\n  \"proofTypesSupported\": {\r\n    \"jwt\": {\r\n      \"proof_signing_alg_values_supported\": [\r\n        \"RS256\",\r\n        \"PS256\",\r\n        \"ES256\",\r\n        \"EdDSA\"\r\n      ]\r\n    }\r\n  },\r\n  \"metaDataDisplay\": [\r\n    {\r\n      \"logo\": {\r\n        \"uri\": \"https://inji.github.io/inji-config/logos/mosipid-logo.png\",\r\n        \"alt_text\": \"a square logo of a MOSIP\"\r\n      },\r\n      \"name\": \"Mock Verifiable Credential\",\r\n      \"locale\": \"en\",\r\n      \"text_color\": \"#FFFFFF\",\r\n      \"background_color\": \"#12107c\",\r\n      \"background_image\": {\r\n        \"uri\": \"https://api.dev-int-inji.mosip.net/inji/mosip-logo.png\"\r\n      }\r\n    }\r\n  ],\r\n  \"displayOrder\": [\r\n    \"fullName\",\r\n    \"phone\",\r\n    \"dateOfBirth\",\r\n    \"gender\",\r\n    \"email\",\r\n    \"region\",\r\n    \"addressLine1\",\r\n    \"vcVer\",\r\n    \"UIN\",\r\n    \"postalCode\"\r\n  ],\r\n  \"scope\": \"mock_identity_vc_ldp\",\r\n  \"claims\": {\r\n    \"UIN\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"UIN\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"email\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Email Id\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"phone\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Phone Number\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"vcVer\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"VC Verification\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"gender\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Gender\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"region\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Region\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"fullName\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Full Name\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"postalCode\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Postal Code\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"dateOfBirth\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Date of Birth\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"addressLine1\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Address Line 1\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    }\r\n  }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{certifyUrl}}/credential-configurations/{{ldpVcConfigId}}",
+									"host": [
+										"{{certifyUrl}}"
+									],
+									"path": [
+										"credential-configurations",
+										"{{ldpVcConfigId}}"
+									]
+								},
+								"description": "cryptographicBindingMethodsSupported, credentialSigningAlgValuesSupported and proofTypesSupported are optional and validated against what the deployment declares in mosip.certify.credential-config.*. Unlike Add, omitting an attribute here retains the value already stored against this configuration rather than re-deriving it, so an earlier explicit selection is never silently discarded. An attribute that is present but empty is rejected."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Config By Id",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{certifyUrl}}/credential-configurations/{{ldpVcConfigId}}",
+									"host": [
+										"{{certifyUrl}}"
+									],
+									"path": [
+										"credential-configurations",
+										"{{ldpVcConfigId}}"
+									]
+								},
+								"description": "Soft-deletes the configuration; it stops being advertised in the credential issuer metadata."
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
 				},
 				{
-					"name": "Get Configuration By Id",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{certifyUrl}}/credential-configurations/{{configId}}",
-							"host": [
-								"{{certifyUrl}}"
+					"name": "mso_mdoc",
+					"description": "mso_mdoc requires doctype and signatureCryptoSuite, and must not carry contextURLs, credentialTypes, sdJwtVct, claims or sdJwtClaims. Note that mosip.certify.credential-config.cryptographic-binding-methods-supported declares only cose_key for this format. The vcTemplate below is a starting point: its ${...} bindings must match the fields the configured data provider plugin supplies.",
+					"item": [
+						{
+							"name": "Add Config",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"// Store the returned credentialConfigKeyId so the Get/Update/Delete requests below resolve.",
+											"if (pm.response.code === 201) {",
+											"    pm.collectionVariables.set(\"msoMdocConfigId\", pm.response.json().id);",
+											"}"
+										]
+									}
+								}
 							],
-							"path": [
-								"credential-configurations",
-								"{{configId}}"
-							]
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"vcTemplate\": \"ewogICJuYW1lU3BhY2VzIjogewogICAgIm9yZy5pc28uMTgwMTMuNS4xIjogWwogICAgICB7ICJkaWdlc3RJRCI6IDAsICJlbGVtZW50SWRlbnRpZmllciI6ICJmYW1pbHlfbmFtZSIsICJlbGVtZW50VmFsdWUiOiAiJHtmdWxsTmFtZX0iIH0sCiAgICAgIHsgImRpZ2VzdElEIjogMSwgImVsZW1lbnRJZGVudGlmaWVyIjogImJpcnRoX2RhdGUiLCAiZWxlbWVudFZhbHVlIjogIiR7ZGF0ZU9mQmlydGh9IiB9LAogICAgICB7ICJkaWdlc3RJRCI6IDIsICJlbGVtZW50SWRlbnRpZmllciI6ICJkb2N1bWVudF9udW1iZXIiLCAiZWxlbWVudFZhbHVlIjogIiR7VUlOfSIgfQogICAgXQogIH0sCiAgImRvY1R5cGUiOiAiJHtfZG9jdHlwZX0iLAogICJ2YWxpZGl0eUluZm8iOiB7CiAgICAidmFsaWRGcm9tIjogIiR7X3ZhbGlkRnJvbX0iLAogICAgInZhbGlkVW50aWwiOiAiJHtfdmFsaWRVbnRpbH0iLAogICAgInNpZ25lZCI6ICIke19zaWduZWR9IgogIH0KfQ==\",\r\n  \"credentialConfigKeyId\": \"MockDrivingLicenseCredential\",\r\n  \"contextURLs\": [],\r\n  \"credentialTypes\": [],\r\n  \"credentialFormat\": \"mso_mdoc\",\r\n  \"doctype\": \"org.iso.18013.5.1.mDL\",\r\n  \"didUrl\": \"did:web:inji.github.io:inji-config:dev-int-inji:mock-identity\",\r\n  \"keyManagerAppId\": \"CERTIFY_VC_SIGN_EC_R1\",\r\n  \"keyManagerRefId\": \"EC_SECP256R1_SIGN\",\r\n  \"signatureAlgo\": \"ES256\",\r\n  \"signatureCryptoSuite\": \"EcdsaSecp256r1Signature2019\",\r\n  \"cryptographicBindingMethodsSupported\": [\r\n    \"cose_key\"\r\n  ],\r\n  \"credentialSigningAlgValuesSupported\": [\r\n    \"ES256\"\r\n  ],\r\n  \"proofTypesSupported\": {\r\n    \"jwt\": {\r\n      \"proof_signing_alg_values_supported\": [\r\n        \"RS256\",\r\n        \"PS256\",\r\n        \"ES256\",\r\n        \"EdDSA\"\r\n      ]\r\n    }\r\n  },\r\n  \"metaDataDisplay\": [\r\n    {\r\n      \"logo\": {\r\n        \"uri\": \"https://inji.github.io/inji-config/logos/mosipid-logo.png\",\r\n        \"alt_text\": \"a square logo of a MOSIP\"\r\n      },\r\n      \"name\": \"Mock Driving Licence\",\r\n      \"locale\": \"en\",\r\n      \"text_color\": \"#FFFFFF\",\r\n      \"background_color\": \"#12107c\",\r\n      \"background_image\": {\r\n        \"uri\": \"https://api.dev-int-inji.mosip.net/inji/mosip-logo.png\"\r\n      }\r\n    }\r\n  ],\r\n  \"displayOrder\": [\r\n    \"org.iso.18013.5.1~family_name\",\r\n    \"org.iso.18013.5.1~birth_date\",\r\n    \"org.iso.18013.5.1~document_number\"\r\n  ],\r\n  \"scope\": \"mock_identity_vc_mdoc\",\r\n  \"msoMdocClaims\": {\r\n    \"org.iso.18013.5.1\": {\r\n      \"family_name\": {\r\n        \"display\": [\r\n          {\r\n            \"name\": \"Full Name\",\r\n            \"locale\": \"en\"\r\n          }\r\n        ]\r\n      },\r\n      \"birth_date\": {\r\n        \"display\": [\r\n          {\r\n            \"name\": \"Date of Birth\",\r\n            \"locale\": \"en\"\r\n          }\r\n        ]\r\n      },\r\n      \"document_number\": {\r\n        \"display\": [\r\n          {\r\n            \"name\": \"Document Number\",\r\n            \"locale\": \"en\"\r\n          }\r\n        ]\r\n      }\r\n    }\r\n  }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{certifyUrl}}/credential-configurations",
+									"host": [
+										"{{certifyUrl}}"
+									],
+									"path": [
+										"credential-configurations"
+									]
+								},
+								"description": "cryptographicBindingMethodsSupported, credentialSigningAlgValuesSupported and proofTypesSupported are optional. Each is validated against what the deployment declares in mosip.certify.credential-config.* — a request can narrow that list, never exceed it. Omit an attribute and the value derived from configuration applies: every binding method declared for the credential format, the algorithms declared for the signatureCryptoSuite, and all declared proof types. The values below are those derived defaults, so they are safe to trim."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Config By Id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{certifyUrl}}/credential-configurations/{{msoMdocConfigId}}",
+									"host": [
+										"{{certifyUrl}}"
+									],
+									"path": [
+										"credential-configurations",
+										"{{msoMdocConfigId}}"
+									]
+								},
+								"description": "Returns the stored configuration. cryptographicBindingMethodsSupported, credentialSigningAlgValuesSupported and proofTypesSupported are always present in the response, resolved from configuration for a credential configuration that never set them."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Config By Id",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"vcTemplate\": \"ewogICJuYW1lU3BhY2VzIjogewogICAgIm9yZy5pc28uMTgwMTMuNS4xIjogWwogICAgICB7ICJkaWdlc3RJRCI6IDAsICJlbGVtZW50SWRlbnRpZmllciI6ICJmYW1pbHlfbmFtZSIsICJlbGVtZW50VmFsdWUiOiAiJHtmdWxsTmFtZX0iIH0sCiAgICAgIHsgImRpZ2VzdElEIjogMSwgImVsZW1lbnRJZGVudGlmaWVyIjogImJpcnRoX2RhdGUiLCAiZWxlbWVudFZhbHVlIjogIiR7ZGF0ZU9mQmlydGh9IiB9LAogICAgICB7ICJkaWdlc3RJRCI6IDIsICJlbGVtZW50SWRlbnRpZmllciI6ICJkb2N1bWVudF9udW1iZXIiLCAiZWxlbWVudFZhbHVlIjogIiR7VUlOfSIgfQogICAgXQogIH0sCiAgImRvY1R5cGUiOiAiJHtfZG9jdHlwZX0iLAogICJ2YWxpZGl0eUluZm8iOiB7CiAgICAidmFsaWRGcm9tIjogIiR7X3ZhbGlkRnJvbX0iLAogICAgInZhbGlkVW50aWwiOiAiJHtfdmFsaWRVbnRpbH0iLAogICAgInNpZ25lZCI6ICIke19zaWduZWR9IgogIH0KfQ==\",\r\n  \"credentialConfigKeyId\": \"MockDrivingLicenseCredential\",\r\n  \"contextURLs\": [],\r\n  \"credentialTypes\": [],\r\n  \"credentialFormat\": \"mso_mdoc\",\r\n  \"doctype\": \"org.iso.18013.5.1.mDL\",\r\n  \"didUrl\": \"did:web:inji.github.io:inji-config:dev-int-inji:mock-identity\",\r\n  \"keyManagerAppId\": \"CERTIFY_VC_SIGN_EC_R1\",\r\n  \"keyManagerRefId\": \"EC_SECP256R1_SIGN\",\r\n  \"signatureAlgo\": \"ES256\",\r\n  \"signatureCryptoSuite\": \"EcdsaSecp256r1Signature2019\",\r\n  \"cryptographicBindingMethodsSupported\": [\r\n    \"cose_key\"\r\n  ],\r\n  \"credentialSigningAlgValuesSupported\": [\r\n    \"ES256\"\r\n  ],\r\n  \"proofTypesSupported\": {\r\n    \"jwt\": {\r\n      \"proof_signing_alg_values_supported\": [\r\n        \"RS256\",\r\n        \"PS256\",\r\n        \"ES256\",\r\n        \"EdDSA\"\r\n      ]\r\n    }\r\n  },\r\n  \"metaDataDisplay\": [\r\n    {\r\n      \"logo\": {\r\n        \"uri\": \"https://inji.github.io/inji-config/logos/mosipid-logo.png\",\r\n        \"alt_text\": \"a square logo of a MOSIP\"\r\n      },\r\n      \"name\": \"Mock Driving Licence\",\r\n      \"locale\": \"en\",\r\n      \"text_color\": \"#FFFFFF\",\r\n      \"background_color\": \"#12107c\",\r\n      \"background_image\": {\r\n        \"uri\": \"https://api.dev-int-inji.mosip.net/inji/mosip-logo.png\"\r\n      }\r\n    }\r\n  ],\r\n  \"displayOrder\": [\r\n    \"org.iso.18013.5.1~family_name\",\r\n    \"org.iso.18013.5.1~birth_date\",\r\n    \"org.iso.18013.5.1~document_number\"\r\n  ],\r\n  \"scope\": \"mock_identity_vc_mdoc\",\r\n  \"msoMdocClaims\": {\r\n    \"org.iso.18013.5.1\": {\r\n      \"family_name\": {\r\n        \"display\": [\r\n          {\r\n            \"name\": \"Full Name\",\r\n            \"locale\": \"en\"\r\n          }\r\n        ]\r\n      },\r\n      \"birth_date\": {\r\n        \"display\": [\r\n          {\r\n            \"name\": \"Date of Birth\",\r\n            \"locale\": \"en\"\r\n          }\r\n        ]\r\n      },\r\n      \"document_number\": {\r\n        \"display\": [\r\n          {\r\n            \"name\": \"Document Number\",\r\n            \"locale\": \"en\"\r\n          }\r\n        ]\r\n      }\r\n    }\r\n  }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{certifyUrl}}/credential-configurations/{{msoMdocConfigId}}",
+									"host": [
+										"{{certifyUrl}}"
+									],
+									"path": [
+										"credential-configurations",
+										"{{msoMdocConfigId}}"
+									]
+								},
+								"description": "cryptographicBindingMethodsSupported, credentialSigningAlgValuesSupported and proofTypesSupported are optional and validated against what the deployment declares in mosip.certify.credential-config.*. Unlike Add, omitting an attribute here retains the value already stored against this configuration rather than re-deriving it, so an earlier explicit selection is never silently discarded. An attribute that is present but empty is rejected."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Config By Id",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{certifyUrl}}/credential-configurations/{{msoMdocConfigId}}",
+									"host": [
+										"{{certifyUrl}}"
+									],
+									"path": [
+										"credential-configurations",
+										"{{msoMdocConfigId}}"
+									]
+								},
+								"description": "Soft-deletes the configuration; it stops being advertised in the credential issuer metadata."
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
 				},
 				{
-					"name": "Update Configuration By Id",
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n  \"vcTemplate\": \"ewoJIkBjb250ZXh0IjogWwoJICAiaHR0cHM6Ly93d3cudzMub3JnLzIwMTgvY3JlZGVudGlhbHMvdjEiLAoJICAiaHR0cHM6Ly9pbmppLmdpdGh1Yi5pby9pbmppLWNvbmZpZy9jb250ZXh0cy9mYXJtZXItY29udGV4dC5qc29uIiwKCSAgImh0dHBzOi8vdzNpZC5vcmcvc2VjdXJpdHkvc3VpdGVzL2VkMjU1MTktMjAyMC92MSIKCV0sCgkiaXNzdWVyIjogIiR7X2lzc3Vlcn0iLAoJInR5cGUiOiBbCgkgICJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsCgkgICJGYXJtZXJDcmVkZW50aWFsIgoJXSwKCSJpc3N1YW5jZURhdGUiOiAiJHt2YWxpZEZyb219IiwKCSJleHBpcmF0aW9uRGF0ZSI6ICIke3ZhbGlkVW50aWx9IiwKCSJjcmVkZW50aWFsU3ViamVjdCI6IHsKCSAgImlkIjogIiR7X2hvbGRlcklkfSIsCgkgICJhdXRob3JpdHkiOiAiJHthdXRob3JpdHl9IiwKCSAgImlkVHlwZSI6ICIke2lkVHlwZX0iLAoJICAiZnVsbE5hbWUiOiAiJHtmdWxsTmFtZX0iLAoJICAiZmFybWVySWQiOiAiJHtmYXJtZXJJZH0iLAoJICAiZ2VuZGVyIjogIiR7Z2VuZGVyfSIsCgkgICJwaG9uZU51bWJlciI6ICIke3Bob25lTnVtYmVyfSIsCgkgICJkYXRlT2ZCaXJ0aCI6ICIke2RhdGVPZkJpcnRofSIsCgkgICJhZGRyZXNzIjogewoJCSAgInZpbGxhZ2UiOiAiJHthZGRyZXNzX3ZpbGxhZ2V9IiwKCQkgICJkaXN0cmljdCI6ICIke2FkZHJlc3NfZGlzdHJpY3R9IiwKCQkgICJzdGF0ZSI6ICIke2FkZHJlc3Nfc3RhdGV9IgoJICB9LAoJICAicHJpbWFyeUNvbW1vZGl0eSI6ICIke3ByaW1hcnlDb21tb2RpdHl9IiwKCSAgInRvdGFsTGFuZEFyZWEiOiB7CgkJICAidmFsdWUiOiAke3RvdGFsTGFuZEFyZWFfdmFsdWV9LAoJCSAgInVuaXQiOiAiJHt0b3RhbExhbmRBcmVhX3VuaXR9IgoJICB9LAoJICAib3duZXJzaGlwVHlwZSI6ICIke293bmVyc2hpcFR5cGV9IiwKCSAgImNyb3BzIjogJHtjcm9wc30sCiAgICAgICAgICAiaWRlbnRpdHlRUkNvZGUiOiAiJGNsYWltXzE2OV92YWx1ZXNbMF0iLAogICAgICAgICAgImZhY2VRUkNvZGUiOiAiJGNsYWltXzE2OV92YWx1ZXNbMV0iCgl9CiAgfQ==\",\r\n  \"credentialConfigKeyId\": \"FarmerCredential\",\r\n  \"contextURLs\": [\r\n    \"https://inji.github.io/inji-config/contexts/farmer-context.json\",\r\n    \"https://www.w3.org/2018/credentials/v1\"\r\n  ],\r\n  \"credentialTypes\": [\r\n    \"FarmerCredential\",\r\n    \"VerifiableCredential\"\r\n  ],\r\n  \"credentialFormat\": \"ldp_vc\",\r\n  \"didUrl\": \"did:web:inji.github.io:inji-config:dev-int-inji:farmer\",\r\n  \"keyManagerAppId\": \"CERTIFY_VC_SIGN_ED25519\",\r\n  \"keyManagerRefId\": \"ED25519_SIGN\",\r\n  \"signatureAlgo\": \"EdDSA\",\r\n  \"signatureCryptoSuite\": \"Ed25519Signature2020\",\r\n  \"metaDataDisplay\": [\r\n    {\r\n      \"logo\": {\r\n        \"uri\": \"https://inji.github.io/inji-config/logos/agro-vertias-logo.png\",\r\n        \"alt_text\": \"Farmer Logo\"\r\n      },\r\n      \"name\": \"Farmer Credential - QR\",\r\n      \"locale\": \"en\",\r\n      \"text_color\": \"#FFFFFF\",\r\n      \"background_color\": \"#12107c\",\r\n      \"background_image\": {\r\n        \"uri\": \"https://inji.github.io/inji-config/logos/agro-vertias-logo.png\"\r\n      }\r\n    }\r\n  ],\r\n  \"displayOrder\": [\r\n    \"authority\",\r\n    \"idType\",\r\n    \"fullName\",\r\n    \"farmerId\",\r\n    \"gender\",\r\n    \"phoneNumber\",\r\n    \"dateOfBirth\",\r\n    \"primaryCommodity\",\r\n    \"ownershipType\",\r\n    \"crops\"\r\n  ],\r\n  \"scope\": \"mock_identity_vc_ldp\",\r\n  \"credentialStatusPurposes\": [\r\n    \"revocation\"\r\n  ],\r\n  \"qrSettings\": [\r\n    {\r\n      \"Full Name\": \"${fullName}\",\r\n      \"Phone Number\": \"${phoneNumber}\",\r\n      \"Date Of Birth\": \"${dateOfBirth}\"\r\n    },\r\n    {\r\n      \"Face\": {\r\n        \"Data\": \"${face}\",\r\n        \"Data format\": \"Image\",\r\n        \"Data sub format\": \"JPEG\"\r\n      },\r\n      \"Full Name\": \"${fullName}\",\r\n      \"Date Of Birth\": \"${dateOfBirth}\"\r\n    }\r\n  ],\r\n  \"qrSignatureAlgo\": \"ES256\",\r\n  \"claims\": {\r\n    \"crops\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Crops\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"gender\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Gender\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"idType\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"ID Type\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"farmerId\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Farmer ID\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"fullName\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Full Name\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"authority\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Authority\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"dateOfBirth\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Date of Birth\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"phoneNumber\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Phone Number\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"ownershipType\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Ownership Type\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"primaryCommodity\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Primary Commodity\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    }\r\n  }\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
+					"name": "dc+sd-jwt",
+					"description": "dc+sd-jwt requires sdJwtVct and signatureAlgo, and must not carry signatureCryptoSuite, contextURLs, credentialTypes, doctype, claims or msoMdocClaims. Because there is no crypto suite, credentialSigningAlgValuesSupported is validated against mosip.certify.signature-algo.key-alias-mapper. The vcTemplate below is a starting point: its ${...} bindings must match the fields the configured data provider plugin supplies.",
+					"item": [
+						{
+							"name": "Add Config",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"// Store the returned credentialConfigKeyId so the Get/Update/Delete requests below resolve.",
+											"if (pm.response.code === 201) {",
+											"    pm.collectionVariables.set(\"sdJwtConfigId\", pm.response.json().id);",
+											"}"
+										]
+									}
 								}
-							}
-						},
-						"url": {
-							"raw": "{{certifyUrl}}/credential-configurations/{{configId}}",
-							"host": [
-								"{{certifyUrl}}"
 							],
-							"path": [
-								"credential-configurations",
-								"{{configId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete Configuration By Id Copy",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"vcTemplate\": \"ewogICJmdWxsTmFtZSI6ICIke2Z1bGxOYW1lfSIsCiAgImRhdGVPZkJpcnRoIjogIiR7ZGF0ZU9mQmlydGh9IiwKICAiZ2VuZGVyIjogIiR7Z2VuZGVyfSIsCiAgInBob25lIjogIiR7cGhvbmV9IiwKICAiZW1haWwiOiAiJHtlbWFpbH0iLAogICJVSU4iOiAiJHtVSU59IiwKICAicG9zdGFsQ29kZSI6ICIke3Bvc3RhbENvZGV9IiwKICAicmVnaW9uIjogIiR7cmVnaW9ufSIKfQ==\",\r\n  \"credentialConfigKeyId\": \"MockIdentitySdJwtCredential\",\r\n  \"contextURLs\": [],\r\n  \"credentialTypes\": [],\r\n  \"credentialFormat\": \"dc+sd-jwt\",\r\n  \"sdJwtVct\": \"MockVerifiableCredentialSdJwt\",\r\n  \"keyManagerAppId\": \"CERTIFY_VC_SIGN_EC_R1\",\r\n  \"keyManagerRefId\": \"EC_SECP256R1_SIGN\",\r\n  \"signatureAlgo\": \"ES256\",\r\n  \"cryptographicBindingMethodsSupported\": [\r\n    \"did:jwk\",\r\n    \"did:key\"\r\n  ],\r\n  \"credentialSigningAlgValuesSupported\": [\r\n    \"ES256\"\r\n  ],\r\n  \"proofTypesSupported\": {\r\n    \"jwt\": {\r\n      \"proof_signing_alg_values_supported\": [\r\n        \"RS256\",\r\n        \"PS256\",\r\n        \"ES256\",\r\n        \"EdDSA\"\r\n      ]\r\n    }\r\n  },\r\n  \"metaDataDisplay\": [\r\n    {\r\n      \"logo\": {\r\n        \"uri\": \"https://inji.github.io/inji-config/logos/mosipid-logo.png\",\r\n        \"alt_text\": \"a square logo of a MOSIP\"\r\n      },\r\n      \"name\": \"Mock Identity Credential (SD-JWT)\",\r\n      \"locale\": \"en\",\r\n      \"text_color\": \"#FFFFFF\",\r\n      \"background_color\": \"#12107c\",\r\n      \"background_image\": {\r\n        \"uri\": \"https://api.dev-int-inji.mosip.net/inji/mosip-logo.png\"\r\n      }\r\n    }\r\n  ],\r\n  \"displayOrder\": [\r\n    \"fullName\",\r\n    \"dateOfBirth\",\r\n    \"gender\",\r\n    \"phone\",\r\n    \"email\",\r\n    \"UIN\",\r\n    \"postalCode\",\r\n    \"region\"\r\n  ],\r\n  \"scope\": \"mock_identity_vc_sdjwt\",\r\n  \"sdJwtClaims\": {\r\n    \"fullName\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Full Name\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"dateOfBirth\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Date of Birth\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"gender\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Gender\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"phone\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Phone Number\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"email\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Email Id\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"UIN\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"UIN\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"postalCode\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Postal Code\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"region\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Region\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    }\r\n  }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{certifyUrl}}/credential-configurations",
+									"host": [
+										"{{certifyUrl}}"
+									],
+									"path": [
+										"credential-configurations"
+									]
+								},
+								"description": "cryptographicBindingMethodsSupported, credentialSigningAlgValuesSupported and proofTypesSupported are optional. Each is validated against what the deployment declares in mosip.certify.credential-config.* — a request can narrow that list, never exceed it. Omit an attribute and the value derived from configuration applies: every binding method declared for the credential format, the algorithms declared for the signatureCryptoSuite, and all declared proof types. The values below are those derived defaults, so they are safe to trim."
+							},
+							"response": []
 						},
-						"url": {
-							"raw": "{{certifyUrl}}/credential-configurations/{{configId}}",
-							"host": [
-								"{{certifyUrl}}"
-							],
-							"path": [
-								"credential-configurations",
-								"{{configId}}"
-							]
+						{
+							"name": "Get Config By Id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{certifyUrl}}/credential-configurations/{{sdJwtConfigId}}",
+									"host": [
+										"{{certifyUrl}}"
+									],
+									"path": [
+										"credential-configurations",
+										"{{sdJwtConfigId}}"
+									]
+								},
+								"description": "Returns the stored configuration. cryptographicBindingMethodsSupported, credentialSigningAlgValuesSupported and proofTypesSupported are always present in the response, resolved from configuration for a credential configuration that never set them."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Config By Id",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"vcTemplate\": \"ewogICJmdWxsTmFtZSI6ICIke2Z1bGxOYW1lfSIsCiAgImRhdGVPZkJpcnRoIjogIiR7ZGF0ZU9mQmlydGh9IiwKICAiZ2VuZGVyIjogIiR7Z2VuZGVyfSIsCiAgInBob25lIjogIiR7cGhvbmV9IiwKICAiZW1haWwiOiAiJHtlbWFpbH0iLAogICJVSU4iOiAiJHtVSU59IiwKICAicG9zdGFsQ29kZSI6ICIke3Bvc3RhbENvZGV9IiwKICAicmVnaW9uIjogIiR7cmVnaW9ufSIKfQ==\",\r\n  \"credentialConfigKeyId\": \"MockIdentitySdJwtCredential\",\r\n  \"contextURLs\": [],\r\n  \"credentialTypes\": [],\r\n  \"credentialFormat\": \"dc+sd-jwt\",\r\n  \"sdJwtVct\": \"MockVerifiableCredentialSdJwt\",\r\n  \"keyManagerAppId\": \"CERTIFY_VC_SIGN_EC_R1\",\r\n  \"keyManagerRefId\": \"EC_SECP256R1_SIGN\",\r\n  \"signatureAlgo\": \"ES256\",\r\n  \"cryptographicBindingMethodsSupported\": [\r\n    \"did:jwk\"\r\n  ],\r\n  \"credentialSigningAlgValuesSupported\": [\r\n    \"ES256\"\r\n  ],\r\n  \"proofTypesSupported\": {\r\n    \"jwt\": {\r\n      \"proof_signing_alg_values_supported\": [\r\n        \"RS256\",\r\n        \"PS256\",\r\n        \"ES256\",\r\n        \"EdDSA\"\r\n      ]\r\n    }\r\n  },\r\n  \"metaDataDisplay\": [\r\n    {\r\n      \"logo\": {\r\n        \"uri\": \"https://inji.github.io/inji-config/logos/mosipid-logo.png\",\r\n        \"alt_text\": \"a square logo of a MOSIP\"\r\n      },\r\n      \"name\": \"Mock Identity Credential (SD-JWT)\",\r\n      \"locale\": \"en\",\r\n      \"text_color\": \"#FFFFFF\",\r\n      \"background_color\": \"#12107c\",\r\n      \"background_image\": {\r\n        \"uri\": \"https://api.dev-int-inji.mosip.net/inji/mosip-logo.png\"\r\n      }\r\n    }\r\n  ],\r\n  \"displayOrder\": [\r\n    \"fullName\",\r\n    \"dateOfBirth\",\r\n    \"gender\",\r\n    \"phone\",\r\n    \"email\",\r\n    \"UIN\",\r\n    \"postalCode\",\r\n    \"region\"\r\n  ],\r\n  \"scope\": \"mock_identity_vc_sdjwt\",\r\n  \"sdJwtClaims\": {\r\n    \"fullName\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Full Name\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"dateOfBirth\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Date of Birth\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"gender\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Gender\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"phone\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Phone Number\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"email\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Email Id\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"UIN\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"UIN\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"postalCode\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Postal Code\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    },\r\n    \"region\": {\r\n      \"display\": [\r\n        {\r\n          \"name\": \"Region\",\r\n          \"locale\": \"en\"\r\n        }\r\n      ]\r\n    }\r\n  }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{certifyUrl}}/credential-configurations/{{sdJwtConfigId}}",
+									"host": [
+										"{{certifyUrl}}"
+									],
+									"path": [
+										"credential-configurations",
+										"{{sdJwtConfigId}}"
+									]
+								},
+								"description": "cryptographicBindingMethodsSupported, credentialSigningAlgValuesSupported and proofTypesSupported are optional and validated against what the deployment declares in mosip.certify.credential-config.*. Unlike Add, omitting an attribute here retains the value already stored against this configuration rather than re-deriving it, so an earlier explicit selection is never silently discarded. An attribute that is present but empty is rejected."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Config By Id",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{certifyUrl}}/credential-configurations/{{sdJwtConfigId}}",
+									"host": [
+										"{{certifyUrl}}"
+									],
+									"path": [
+										"credential-configurations",
+										"{{sdJwtConfigId}}"
+									]
+								},
+								"description": "Soft-deletes the configuration; it stops being advertised in the credential issuer metadata."
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
 				}
 			]
 		}
@@ -1163,6 +1410,18 @@
 		{
 			"key": "proof_cwt",
 			"value": ""
+		},
+		{
+			"key": "ldpVcConfigId",
+			"value": "MockVerifiableCredential"
+		},
+		{
+			"key": "msoMdocConfigId",
+			"value": "MockDrivingLicenseCredential"
+		},
+		{
+			"key": "sdJwtConfigId",
+			"value": "MockIdentitySdJwtCredential"
 		}
 	]
 }

@@ -1635,6 +1635,30 @@ components:
         qrSignatureAlgo:
           type: string
           description: Signature algorithm used for QR code signing.
+        cryptographicBindingMethodsSupported:
+          type: array
+          description: 'Optional. Binding methods advertised for this credential configuration. Every value must already be declared for this credential format in mosip.certify.credential-config.cryptographic-binding-methods-supported; a value that is not declared there is rejected with unsupported_cryptographic_binding_method, and a credential format with no declared binding methods is rejected with cryptographic_binding_config_not_found. Omitted on Add, the full set declared for the credential format applies; omitted on Update, the stored value is retained. Always returned by the Get response. An empty array is rejected.'
+          items:
+            type: string
+        credentialSigningAlgValuesSupported:
+          type: array
+          description: 'Optional. Signing algorithms advertised for this credential configuration. Where signatureCryptoSuite is present every value must be declared for that suite in mosip.certify.credential-config.credential-signing-alg-values-supported; where the format carries no crypto suite, such as dc+sd-jwt, every value must be an algorithm the deployment holds a signing key for in mosip.certify.signature-algo.key-alias-mapper. An undeclared value is rejected with unsupported_credential_signing_alg. Omitted on Add, the algorithms declared for the crypto suite apply, or the configuration''s own signatureAlgo where there is no suite; omitted on Update, the stored value is retained. Always returned by the Get response. An empty array is rejected.'
+          items:
+            type: string
+        proofTypesSupported:
+          type: object
+          description: 'Optional. Proof types advertised for this credential configuration. Each key must be a proof type declared in mosip.certify.credential-config.proof-types-supported, otherwise the request is rejected with unsupported_proof_type. Omitted on Add, all declared proof types apply; omitted on Update, the stored value is retained. Always returned by the Get response. An empty object is rejected.'
+          additionalProperties:
+            $ref: '#/components/schemas/ProofTypeSupportedDTO'
+    ProofTypeSupportedDTO:
+      type: object
+      description: 'Narrows a single proof type. proof_signing_alg_values_supported is the only recognised attribute; any other attribute is rejected with invalid_request.'
+      properties:
+        proof_signing_alg_values_supported:
+          type: array
+          description: 'Optional. Must be a subset of the algorithms declared for this proof type in mosip.certify.credential-config.proof-types-supported; a value outside that set is rejected with unsupported_proof_signing_alg. Omitted, every declared algorithm for the proof type applies. An empty array is rejected.'
+          items:
+            type: string
     CredentialConfigResponse:
       type: object
       properties:
