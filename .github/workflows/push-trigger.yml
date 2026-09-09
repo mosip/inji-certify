@@ -269,3 +269,286 @@ jobs:
       RELEASE_DOCKER_HUB: ${{ secrets.RELEASE_DOCKER_HUB }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
+  run-apitest-pr:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 21
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-m2
+
+      - name: Setup the settings file for ossrh server
+        run: echo "<settings> <servers>  <server>  <id>ossrh</id>    <username>${{secrets.ossrh_user}}</username> <password>${{secrets.ossrh_secret}}</password> </server> </servers> <profiles> <profile>     <id>ossrh</id> <activation> <activeByDefault>true</activeByDefault> </activation>  <properties> <gpg.executable>gpg2</gpg.executable> <gpg.passphrase>${{secrets.gpg_secret}}</gpg.passphrase> </properties> </profile> <profile> <id>allow-snapshots</id>       <activation><activeByDefault>true</activeByDefault></activation> <repositories> <repository>        <id>snapshots-repo</id> <url>https://oss.sonatype.org/content/repositories/snapshots</url> <releases><enabled>false</enabled></releases> <snapshots><enabled>true</enabled></snapshots> </repository>  <repository>         <id>releases-repo</id>  <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>         <releases><enabled>true</enabled></releases>         <snapshots><enabled>false</enabled></snapshots> </repository> </repositories>  </profile> <profile> <id>sonar</id> <properties>  <sonar.sources>.</sonar.sources> <sonar.host.url>https://sonarcloud.io</sonar.host.url>  </properties> <activation> <activeByDefault>false</activeByDefault> </activation> </profile> </profiles> </settings>" > $GITHUB_WORKSPACE/settings.xml
+
+      - name: Build certify-service jar
+        run: mvn clean package -DskipTests -s $GITHUB_WORKSPACE/settings.xml
+
+      - name: Patch apitest config for CI
+        run: |
+          PROPS=api-test/src/main/resources/config/injiCertify.properties
+          sed -i 's|useCaseToExecute=.*|useCaseToExecute=mock|' "$PROPS"
+          sed -i 's|injiCertifyBaseURL=.*|injiCertifyBaseURL=http://certify:8090|' "$PROPS"
+          sed -i 's|eSignetbaseurl=.*|eSignetbaseurl=https://esignet-mock.released.mosip.net|' "$PROPS"
+          sed -i 's|db-server=.*|db-server=database|' "$PROPS"
+          sed -i 's|db-port=.*|db-port=5432|' "$PROPS"
+          sed -i 's|keycloak-external-url.*|keycloak-external-url=http://keycloak-mock:8080|' "$PROPS"
+
+      - name: Build apitest jar
+        run: |
+          cd api-test
+          mvn clean package -s $GITHUB_WORKSPACE/settings.xml
+
+      - name: Verify certify-service jar exists
+        run: ls certify-service/target/certify-service-*.jar
+
+      - name: Build certify-service image
+        run: docker build -t inji-certify:ci ./certify-service
+
+      - name: Download plugin JARs
+        run: |
+          cd certify-service-with-plugins
+          mvn clean package -DskipTests -s $GITHUB_WORKSPACE/settings.xml
+
+      - name: Bundle plugins into certify image
+        run: |
+          printf 'FROM inji-certify:ci\nCOPY target/*.jar ${loader_path_env}\n' \
+            > certify-service-with-plugins/Dockerfile.ci
+          docker build -t inji-certify:ci \
+            -f certify-service-with-plugins/Dockerfile.ci \
+            certify-service-with-plugins
+
+      - name: Prepare apitest build context
+        run: |
+          cp api-test/entrypoint.sh .
+          cp -r api-test/testNgXmlFiles api-test/target/testNgXmlFiles
+          cp -r api-test/target/classes/config api-test/target/config
+          sed -i 's|injiCertifyBaseURL=.*|injiCertifyBaseURL=http://certify:8090|' api-test/target/config/injiCertify.properties
+          sed -i 's|db-server=.*|db-server=database|' api-test/target/config/injiCertify.properties
+          sed -i 's|db-port=.*|db-port=5432|' api-test/target/config/injiCertify.properties
+          sed -i 's|useCaseToExecute=.*|useCaseToExecute=mock|' api-test/target/config/injiCertify.properties
+          sed -i 's|eSignetbaseurl=.*|eSignetbaseurl=https://esignet-mock.released.mosip.net|' api-test/target/config/injiCertify.properties
+          sed -i 's|keycloak-external-url.*|keycloak-external-url=http://keycloak-mock:8080|' api-test/target/config/injiCertify.properties
+          touch application.properties
+          mkdir -p "Biometric Devices"
+          mkdir -p resource
+
+          # Create WireMock stubs for Keycloak mock service
+          mkdir -p docker-compose/docker-compose-injistack/keycloak-mock-stubs/mappings
+          cat > docker-compose/docker-compose-injistack/keycloak-mock-stubs/mappings/token.json << 'STUBEOF'
+          {
+            "request": { "method": "POST", "urlPattern": "/realms/.*/protocol/openid-connect/token" },
+            "response": {
+              "status": 200,
+              "headers": { "Content-Type": "application/json" },
+              "body": "{\"access_token\":\"ci-mock-token\",\"expires_in\":3600,\"refresh_expires_in\":0,\"token_type\":\"Bearer\",\"scope\":\"email profile\"}"
+            }
+          }
+          STUBEOF
+          cat > docker-compose/docker-compose-injistack/keycloak-mock-stubs/mappings/users-list.json << 'STUBEOF'
+          {
+            "request": { "method": "GET", "urlPattern": "/admin/realms/.*/users.*" },
+            "response": {
+              "status": 200,
+              "headers": { "Content-Type": "application/json" },
+              "body": "[]"
+            }
+          }
+          STUBEOF
+          cat > docker-compose/docker-compose-injistack/keycloak-mock-stubs/mappings/users-create.json << 'STUBEOF'
+          {
+            "request": { "method": "POST", "urlPattern": "/admin/realms/.*/users$" },
+            "response": {
+              "status": 201,
+              "headers": {
+                "Content-Type": "application/json",
+                "Location": "http://keycloak-mock:8080/admin/realms/mock/users/ci-mock-user-001"
+              }
+            }
+          }
+          STUBEOF
+          cat > docker-compose/docker-compose-injistack/keycloak-mock-stubs/mappings/users-delete.json << 'STUBEOF'
+          {
+            "request": { "method": "DELETE", "urlPattern": "/admin/realms/.*/users/.*" },
+            "response": { "status": 204 }
+          }
+          STUBEOF
+          cat > docker-compose/docker-compose-injistack/keycloak-mock-stubs/mappings/catchall.json << 'STUBEOF'
+          {
+            "request": { "method": "ANY", "urlPattern": "/.*" },
+            "response": {
+              "status": 200,
+              "headers": { "Content-Type": "application/json" },
+              "body": "{}"
+            }
+          }
+          STUBEOF
+
+          # Replace test suites with CI-only versions (source files unchanged)
+          cat > api-test/target/testNgXmlFiles/injicertifySuite.xml << 'XMLEOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+          <suite name="Inji-Certify API Test CI">
+            <listeners>
+              <listener class-name="io.mosip.testrig.apirig.report.EmailableReport" />
+            </listeners>
+            <test name="WellKnownEndpoint">
+              <parameter name="ymlFile" value="injicertify/WellKnownEndpoint/WellKnownEndpoint.yml" />
+              <classes>
+                <class name="io.inji.testrig.apirig.injicertify.testscripts.GetWithParam" />
+              </classes>
+            </test>
+            <test name="OAuthDetailsRequestVCIForMockIDA">
+              <parameter name="ymlFile" value="injicertify/VCIMockIDA/OAuthDetailsRequestForMockIDA/OAuthDetailsRequestForMockIDA.yml" />
+              <parameter name="idKeyName" value="transactionId,encodedResp" />
+              <parameter name="prerequisite" value="Yes" />
+              <classes>
+                <class name="io.inji.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+              </classes>
+            </test>
+            <test name="AuthenticateUserVCIForMockIDA">
+              <parameter name="ymlFile" value="injicertify/VCIMockIDA/AuthenticateUserForMockIDA/AuthenticateUserForMockIDA.yml" />
+              <parameter name="prerequisite" value="Yes" />
+              <classes>
+                <class name="io.inji.testrig.apirig.injicertify.testscripts.PostWithAutogenIdWithOtpGenerate" />
+              </classes>
+            </test>
+            <test name="AuthorizationCodeVCIForMockIDA">
+              <parameter name="ymlFile" value="injicertify/VCIMockIDA/AuthorizationCodeForMockIDA/AuthorizationCodeForMockIDA.yml" />
+              <parameter name="idKeyName" value="code" />
+              <parameter name="prerequisite" value="Yes" />
+              <classes>
+                <class name="io.inji.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+              </classes>
+            </test>
+            <test name="GenerateTokenVCIForMockIDA">
+              <parameter name="ymlFile" value="injicertify/VCIMockIDA/GenerateTokenForMockIDA/GenerateTokenForMockIDA.yml" />
+              <parameter name="idKeyName" value="access_token" />
+              <parameter name="prerequisite" value="Yes" />
+              <classes>
+                <class name="io.inji.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenIdForUrlEncoded" />
+              </classes>
+            </test>
+            <test name="GenerateNonceForMockIDA">
+              <parameter name="ymlFile" value="injicertify/VCIMockIDA/GenerateNonceForMockIDA/GenerateNonceForMockIDA.yml" />
+              <parameter name="idKeyName" value="c_nonce" />
+              <parameter name="prerequisite" value="Yes" />
+              <classes>
+                <class name="io.inji.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+              </classes>
+            </test>
+            <test name="GetCredentialForMockIDA">
+              <parameter name="ymlFile" value="injicertify/VCIMockIDA/GetCredentialForMockIDA/GetCredentialForMockIDA.yml" />
+              <classes>
+                <class name="io.inji.testrig.apirig.injicertify.testscripts.SimplePost" />
+              </classes>
+            </test>
+          </suite>
+          XMLEOF
+
+          cat > api-test/target/testNgXmlFiles/injicertifyMasterTestSuite.xml << 'XMLEOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+          <suite name="Inji-Certify API Test Rig Master Suite CI">
+            <listeners>
+              <listener class-name="io.mosip.testrig.apirig.report.EmailableReport" />
+            </listeners>
+            <suite-files>
+              <suite-file path="injicertifySuite.xml" />
+            </suite-files>
+          </suite>
+          XMLEOF
+
+      - name: Build apitest image
+        run: docker build -t apitest-inji-certify:ci -f api-test/Dockerfile .
+
+      - name: Start Full Stack
+        run: docker compose -f docker-compose/docker-compose-injistack/docker-compose-ci.yaml up -d database keycloak-mock certify certify-nginx
+
+      - name: Show container status
+        if: always()
+        run: |
+          docker compose -f docker-compose/docker-compose-injistack/docker-compose-ci.yaml ps -a
+          docker images | grep -E "inji-certify|apitest|postgres|nginx" || true
+
+      - name: Wait for Service
+        run: |
+          for i in {1..30}; do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+              http://localhost:8090/v1/certify/.well-known/openid-credential-issuer 2>&1 || true)
+            echo "[$i/30] HTTP status: $HTTP_CODE"
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "Certify is UP"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Certify did not become healthy in time"
+          docker logs certify || true
+          exit 1
+
+      - name: Run API Tests
+        run: |
+          set +e
+          docker compose -f docker-compose/docker-compose-injistack/docker-compose-ci.yaml up --exit-code-from apitest apitest
+          EXIT_CODE=$?
+          echo "EXIT_CODE=$EXIT_CODE" >> $GITHUB_ENV
+          set -e
+
+      - name: Copy reports from container
+        if: always()
+        run: |
+          mkdir -p ci-reports
+          CONTAINER_ID=$(docker ps -a --filter "name=apitest" --format "{{.ID}}" | head -n 1)
+          if [ -n "$CONTAINER_ID" ]; then
+            docker cp $CONTAINER_ID:/home/inji/testng-report/. ci-reports || echo "No reports found"
+          else
+            echo "Apitest container not found"
+          fi
+          ls -R ci-reports || true
+
+      - name: Sanitize report filenames
+        if: always()
+        run: |
+          find ci-reports -depth -name "*:*" -exec bash -c '
+            for f; do
+              mv "$f" "${f//:/_}"
+            done
+          ' _ {} +
+
+      - name: Upload Test Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: inji-certify-test-report
+          path: ci-reports/
+
+      - name: Print certify logs
+        if: always()
+        run: docker logs certify || echo "Certify container was never created — check earlier steps"
+
+      - name: Print all service logs
+        if: always()
+        run: docker compose -f docker-compose/docker-compose-injistack/docker-compose-ci.yaml logs
+
+      - name: Shutdown
+        if: always()
+        run: docker compose -f docker-compose/docker-compose-injistack/docker-compose-ci.yaml down
+
+      - name: Fail Job If Tests Failed
+        if: env.EXIT_CODE != '0'
+        run: exit 1
+
