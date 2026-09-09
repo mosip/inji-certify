@@ -70,6 +70,10 @@ public class ErrorConstants {
     public static final String UNSUPPORTED_SIGNATURE_ALGO = "unsupported_signature_algo";
     public static final String KEY_CHOOSER_CONFIG_NOT_FOUND = "key_chooser_config_not_found";
     public static final String KEY_CHOOSER_APP_REF_NOT_FOUND = "key_chooser_app_ref_not_found";
+    public static final String UNSUPPORTED_CRYPTOGRAPHIC_BINDING_METHOD = "unsupported_cryptographic_binding_method";
+    public static final String CRYPTOGRAPHIC_BINDING_CONFIG_NOT_FOUND = "cryptographic_binding_config_not_found";
+    public static final String UNSUPPORTED_CREDENTIAL_SIGNING_ALG = "unsupported_credential_signing_alg";
+    public static final String UNSUPPORTED_PROOF_SIGNING_ALG = "unsupported_proof_signing_alg";
     public static final String CONFIG_NOT_FOUND_BY_ID = "config_not_found_by_id";
     public static final String CONFIG_NOT_ACTIVE = "config_not_active";
     public static final String CONFIG_NOT_FOUND_FOR_UPDATE = "config_not_found_for_update";

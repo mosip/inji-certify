@@ -70,6 +70,17 @@ Inji Certify checks your configuration for required fields and possible duplicat
   - `signatureCryptoSuite` must be one of the supported suites defined in `mosip.certify.credential-config.credential-signing-alg-values-supported`.
   - `signatureAlgo` must be one of the supported algorithms for the chosen `signatureCryptoSuite`.
   - `keyManagerAppId` and `keyManagerRefId` must refer to the correct keys defined in `mosip.certify.signature-algo.key-alias-mapper`.
+- **Per-configuration selection of `cryptographicBindingMethodsSupported`, `credentialSigningAlgValuesSupported` and `proofTypesSupported`**.
+  - All three are optional in the Add and Update Credential Configuration requests, and are always returned by the Get response.
+  - The configuration properties above are the authoritative allow-list. A request can select from or narrow what the deployment declares; it can never exceed it.
+  - `cryptographicBindingMethodsSupported` is validated against the methods declared for the credential format in `mosip.certify.credential-config.cryptographic-binding-methods-supported`.
+  - `credentialSigningAlgValuesSupported` is validated against the algorithms declared for the chosen `signatureCryptoSuite` in `mosip.certify.credential-config.credential-signing-alg-values-supported`. For a format that carries no crypto suite, such as `dc+sd-jwt`, it is validated against `mosip.certify.signature-algo.key-alias-mapper`, so only an algorithm the deployment actually holds a signing key for is accepted.
+  - `proofTypesSupported` is validated against `mosip.certify.credential-config.proof-types-supported`. Each proof type must be declared there, and its `proof_signing_alg_values_supported` must be a subset of the algorithms declared for that proof type. `proof_signing_alg_values_supported` is the only recognised attribute within a proof type entry.
+  - A proof type named without a `proof_signing_alg_values_supported` list is stored with the full set declared for it, rather than with no algorithms at all. Storing it bare would publish a proof type carrying no algorithms, which OpenID4VCI does not allow, and proof validation reads a missing list as an empty one and rejects every proof.
+  - **When an attribute is omitted on Add**, the value derived from configuration applies: the full set of binding methods declared for the credential format, the algorithms declared for the crypto suite (or the configuration's own `signatureAlgo` where there is no suite), and all declared proof types.
+  - **When an attribute is omitted on Update**, the previously stored value is retained as-is and is not re-derived from the current configuration, so an issuer's earlier explicit selection is never silently discarded.
+  - An attribute that is present but empty is rejected. If several values across the three attributes are invalid, all of them are reported together so the payload can be corrected in a single pass.
+  - Whatever is stored against a credential configuration is what the credential issuer metadata advertises for it.
 - **Purpose of `didUrl` in `credential_config`**:
   - `didUrl` in `credential_config` can be different from the issuer did url specified by the property `mosip.certify.data-provider-plugin.did-url`.
   - It is used to point to temporary `didUrl` which is specific to a VC type. The did document fetched from the `./well-known/did.json` endpoint can be copied and hosted on the credentialConfig didUrl.
