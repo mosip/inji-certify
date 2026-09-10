@@ -3,15 +3,22 @@ package io.mosip.certify.vcformatters;
 import java.util.*;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.constants.VCDMConstants;
+import io.mosip.certify.core.constants.VCFormats;
+import io.mosip.certify.core.exception.CertifyException;
+import io.mosip.certify.core.exception.RenderingTemplateException;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Assert;
 
 import static io.mosip.certify.core.constants.Constants.DELIMITER;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -135,6 +142,7 @@ public class VelocityTemplatingEngineImplTest {
         );
 
 
+        ReflectionTestUtils.setField(formatter, "objectMapper", new ObjectMapper());
         ReflectionTestUtils.setField(formatter, "defaultExpiryDuration", "P730d");
         ReflectionTestUtils.setField(formatter, "idPrefix", "uurn:uuid:");
 
@@ -208,6 +216,187 @@ public class VelocityTemplatingEngineImplTest {
         // Uses vc2 by default
         String expected = vc2.getSignatureCryptoSuite();
         Assert.assertEquals(expected, formatter.getSignatureCryptoSuite(vc2TemplateKey));
+    }
+
+    // ---- folded from VelocityTemplatingEngineImplExtraTest ----
+
+    private final String VC2_URL = VCDM2Constants.URL;
+    private final String extraType = "MockType";
+    private final String ldpKey = extraType + DELIMITER + VC2_URL + DELIMITER + VCFormats.LDP_VC;
+
+    private String encode(String s) {
+        return Base64.getEncoder().encodeToString(s.getBytes());
+    }
+
+    private CredentialConfig ldpConfig(String template) {
+        CredentialConfig cc = new CredentialConfig();
+        cc.setVcTemplate(template == null ? null : encode(template));
+        cc.setCredentialType(extraType);
+        cc.setContext(VC2_URL);
+        cc.setCredentialFormat(VCFormats.LDP_VC);
+        cc.setDidUrl("did:example:issuer");
+        return cc;
+    }
+
+    private void mockLdp(CredentialConfig cc) {
+        when(credentialConfigRepository.findByCredentialFormatAndCredentialTypeAndContext(
+                VCFormats.LDP_VC, extraType, VC2_URL)).thenReturn(Optional.of(cc));
+    }
+
+    @Test
+    public void format_basic_setsIssuer() {
+        mockLdp(ldpConfig("{\"issuer\":\"${_issuer}\",\"name\":\"${name}\"}"));
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.TEMPLATE_NAME, ldpKey);
+        params.put(Constants.DID_URL, "did:example:issuer");
+        params.put("name", "Alice");
+
+        String result = formatter.format(params);
+        JSONObject json = new JSONObject(result);
+        assertEquals("did:example:issuer", json.getString("issuer"));
+        assertEquals("Alice", json.getString("name"));
+    }
+
+    @Test
+    public void format_withCredentialId_setsId() {
+        mockLdp(ldpConfig("{\"issuer\":\"${_issuer}\"}"));
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.TEMPLATE_NAME, ldpKey);
+        params.put(Constants.DID_URL, "did:example:issuer");
+        params.put(VCDMConstants.CREDENTIAL_ID, "urn:uuid:abc");
+
+        JSONObject json = new JSONObject(formatter.format(params));
+        assertEquals("urn:uuid:abc", json.getString(VCDMConstants.ID));
+    }
+
+    @Test
+    public void format_withCredentialStatus_whenVcdm2Url() {
+        mockLdp(ldpConfig("{\"issuer\":\"${_issuer}\"}"));
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.TEMPLATE_NAME, ldpKey);
+        params.put(Constants.DID_URL, "did:example:issuer");
+        Map<String, Object> status = Map.of("type", "BitstringStatusListEntry");
+        params.put(VCDM2Constants.CREDENTIAL_STATUS, status);
+
+        JSONObject json = new JSONObject(formatter.format(params));
+        assertTrue(json.has(VCDM2Constants.CREDENTIAL_STATUS));
+    }
+
+    @Test
+    public void format_withVctConfirmationIssuer() {
+        mockLdp(ldpConfig("{\"issuer\":\"${_issuer}\"}"));
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.TEMPLATE_NAME, ldpKey);
+        params.put(Constants.DID_URL, "did:example:issuer");
+        params.put(Constants.VCTYPE, "MyVct");
+        params.put(Constants.CONFIRMATION, Map.of("jwk", "x"));
+        params.put(Constants.ISSUER, "https://issuer");
+
+        JSONObject json = new JSONObject(formatter.format(params));
+        assertEquals("MyVct", json.getString(Constants.VCTYPE));
+        assertEquals("https://issuer", json.getString(Constants.ISSUER));
+    }
+
+    @Test
+    public void format_renderingTemplateMissing_handledGracefully() throws Exception {
+        mockLdp(ldpConfig("{\"issuer\":\"${_issuer}\"}"));
+        when(renderingTemplateService.getTemplate("render-1"))
+                .thenThrow(new RenderingTemplateException("not-found"));
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.TEMPLATE_NAME, ldpKey);
+        params.put(Constants.DID_URL, "did:example:issuer");
+        params.put(Constants.RENDERING_TEMPLATE_ID, "render-1");
+
+        String result = formatter.format(params);
+        assertNotNull(new JSONObject(result));
+    }
+
+    @Test
+    public void formatQRData_nullSettings_returnsNull() {
+        CredentialConfig cc = ldpConfig("{}");
+        cc.setQrSettings(null);
+        mockLdp(cc);
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.TEMPLATE_NAME, ldpKey);
+        assertNull(formatter.formatQRData(params));
+    }
+
+    @Test
+    public void formatQRData_withSettings_returnsArray() {
+        CredentialConfig cc = ldpConfig("{}");
+        cc.setQrSettings(List.of(Map.of("key", (Object) "value")));
+        mockLdp(cc);
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.TEMPLATE_NAME, ldpKey);
+        JSONArray array = formatter.formatQRData(params);
+        assertNotNull(array);
+        assertEquals(1, array.length());
+        assertEquals("value", array.getJSONObject(0).getString("key"));
+    }
+
+    @Test
+    public void getCachedCredentialConfig_nullKey_throws() {
+        assertThrows(CertifyException.class, () -> formatter.getProofAlgorithm(null));
+    }
+
+    @Test
+    public void getCachedCredentialConfig_noDelimiter_throws() {
+        assertThrows(CertifyException.class, () -> formatter.getProofAlgorithm("nodelim"));
+    }
+
+    @Test
+    public void getCachedCredentialConfig_msoMdocTwoParts() {
+        String key = VCFormats.MSO_MDOC + DELIMITER + "org.iso.mdl";
+        CredentialConfig cc = new CredentialConfig();
+        cc.setSignatureAlgo("ES256");
+        when(credentialConfigRepository.findByCredentialFormatAndDocType(VCFormats.MSO_MDOC, "org.iso.mdl"))
+                .thenReturn(Optional.of(cc));
+        assertEquals("ES256", formatter.getProofAlgorithm(key));
+    }
+
+    @Test
+    public void getCachedCredentialConfig_sdJwtTwoParts() {
+        String key = VCFormats.DC_SD_JWT + DELIMITER + "MyVct";
+        CredentialConfig cc = new CredentialConfig();
+        cc.setSignatureAlgo("EdDSA");
+        when(credentialConfigRepository.findByCredentialFormatAndSdJwtVct(VCFormats.DC_SD_JWT, "MyVct"))
+                .thenReturn(Optional.of(cc));
+        assertEquals("EdDSA", formatter.getProofAlgorithm(key));
+    }
+
+    @Test
+    public void getCachedCredentialConfig_undefinedFormatTwoParts_throws() {
+        String key = "ldp_vc" + DELIMITER + "something";
+        assertThrows(CertifyException.class, () -> formatter.getProofAlgorithm(key));
+    }
+
+    @Test
+    public void getCachedCredentialConfig_notFound_throws() {
+        String key = VCFormats.MSO_MDOC + DELIMITER + "unknown";
+        when(credentialConfigRepository.findByCredentialFormatAndDocType(VCFormats.MSO_MDOC, "unknown"))
+                .thenReturn(Optional.empty());
+        assertThrows(CertifyException.class, () -> formatter.getProofAlgorithm(key));
+    }
+
+    @Test
+    public void getSelectiveDisclosureInfo_nullSdClaim_returnsEmpty() {
+        CredentialConfig cc = ldpConfig("{}");
+        cc.setSdClaim(null);
+        mockLdp(cc);
+        assertTrue(formatter.getSelectiveDisclosureInfo(ldpKey).isEmpty());
+    }
+
+    @Test
+    public void remainingGetters_delegateToConfig() {
+        CredentialConfig cc = ldpConfig("{}");
+        cc.setCredentialStatusPurposes(List.of("revocation"));
+        cc.setQrSettings(List.of(Map.of("a", (Object) "b")));
+        cc.setQrSignatureAlgo("RS256");
+        mockLdp(cc);
+
+        assertEquals(List.of("revocation"), formatter.getCredentialStatusPurpose(ldpKey));
+        assertEquals(1, formatter.getQRSettings(ldpKey).size());
+        assertEquals("RS256", formatter.getQRSignatureAlgo(ldpKey));
     }
 
 //    @Test
