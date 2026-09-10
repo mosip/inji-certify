@@ -303,4 +303,59 @@ public class SDJsonUtilsTest extends TestCase {
       assertFalse(SDJsonUtils.isPathValid(node, "$.address..city"));
       assertFalse(SDJsonUtils.isPathValid(node, "$.address...city"));
   }
+
+  public void testGetLeafNodeName_nullOrEmpty_returnsNull() {
+      assertNull(SDJsonUtils.getLeafNodeName(null));
+      assertNull(SDJsonUtils.getLeafNodeName("   "));
+  }
+
+  public void testIsPathValid_nullEmptyAndMalformed() {
+      ObjectNode node = JsonNodeFactory.instance.objectNode();
+      node.put("name", "x");
+      assertFalse(SDJsonUtils.isPathValid(node, null));
+      assertFalse(SDJsonUtils.isPathValid(node, "  "));
+      assertFalse(SDJsonUtils.isPathValid(node, "name.without.dollar"));
+      assertTrue(SDJsonUtils.isPathValid(node, "$"));
+  }
+
+  public void testAnyMatch_returnsFalseForNoMatch() {
+      assertFalse(SDJsonUtils.anyMatch("$.a.b", Arrays.asList("$.x.y", "$.p.q")));
+      assertTrue(SDJsonUtils.anyMatch("$.a.b", Arrays.asList("$.x.y", "$.a.*")));
+  }
+
+  public void testConstructSDPayload_wholeArrayAsSD() {
+      ObjectNode node = JsonNodeFactory.instance.objectNode();
+      ArrayNode numbers = JsonNodeFactory.instance.arrayNode();
+      numbers.add(1);
+      numbers.add(2);
+      node.set("nums", numbers);
+
+      SDObjectBuilder builder = new SDObjectBuilder();
+      List<Disclosure> disclosures = new ArrayList<>();
+      // Mark the whole array as selectively disclosable
+      SDJsonUtils.constructSDPayload(node, builder, disclosures, Arrays.asList("$.nums"), "$");
+
+      Map<String, Object> claims = builder.build();
+      // When an entire array is SD, the raw key must not remain in the digest claims
+      assertFalse(claims.containsKey("nums"));
+      assertFalse(disclosures.isEmpty());
+  }
+
+  public void testConstructSDPayload_nestedArrayOfObjects() {
+      ObjectNode node = JsonNodeFactory.instance.objectNode();
+      ArrayNode people = JsonNodeFactory.instance.arrayNode();
+      ObjectNode p1 = JsonNodeFactory.instance.objectNode();
+      p1.put("name", "A");
+      p1.put("secret", "s1");
+      people.add(p1);
+      node.set("people", people);
+
+      SDObjectBuilder builder = new SDObjectBuilder();
+      List<Disclosure> disclosures = new ArrayList<>();
+      SDJsonUtils.constructSDPayload(node, builder, disclosures,
+              Arrays.asList("$.people[0].secret"), "$");
+
+      Map<String, Object> claims = builder.build();
+      assertTrue(claims.containsKey("people"));
+  }
 }
