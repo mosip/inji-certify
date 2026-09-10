@@ -163,6 +163,7 @@ Ensure each of the following files is updated in its documented directory if you
 - config/certify-default.properties
 - config/certify-csvdp-farmer.properties
 - config/certify-mock-mdl.properties
+- config/farmer_identity_data.csv
 - config/vp_request_config.json (drives the Presentation During Issuance flow)
 - context/farmer-context.json (JSON-LD `@context` file under the `context/` directory)
 
