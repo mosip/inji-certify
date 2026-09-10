@@ -48,13 +48,21 @@ docker-compose-injistack/
 │   ├── certify-default.properties
 │   ├── certify-csvdp-farmer.properties
 │   ├── certify-mock-mdl.properties
+│   ├── farmer_identity_data.csv
+│   ├── vp_request_config.json
+│   ├── mimoto-bootstrap.properties
 │   ├── mimoto-default.properties
 │   ├── mimoto-issuers-config.json
 │   ├── mimoto-trusted-verifiers.json
+│   ├── mosip-cbeff.xsd
 │   └── credential-template.html
+├── context/
+│   └── farmer-context.json
 ├── nginx.conf
+├── certify-nginx.conf
 ├── certify_init.sql
-└── docker-compose.yml
+├── mimoto_init.sql
+└── docker-compose.yaml
 ```
 
 
@@ -150,10 +158,14 @@ Refer to the document for custom `@context` registration: https://github.com/inj
 
 **Note**: Refer the relevant config file based on use case to connect to the required environment.
 
-Ensure all configuration files are properly updated in the config directory if you have are making any changes suggested for any Advanced usecase:
+Ensure each of the following files is updated in its documented directory if you are making any changes suggested for any Advanced usecase. The `.properties`, `.csv` and `vp_request_config.json` files live under `config/`, while the JSON-LD `@context` files live under the separate `context/` directory:
 
-- certify-default.properties
-- certify-csvdp-farmer.properties
+- config/certify-default.properties
+- config/certify-csvdp-farmer.properties
+- config/certify-mock-mdl.properties
+- config/farmer_identity_data.csv
+- config/vp_request_config.json (drives the Presentation During Issuance flow)
+- context/farmer-context.json (JSON-LD `@context` file under the `context/` directory)
 
 Following files are optional and can be used to configure the Inji Web application for your usecase, if you are not using web application, you can skip these files:
 
@@ -191,7 +203,6 @@ The following services will be available:
 - Certify Nginx: `localhost:8091`
 - Mimoto Service: `localhost:8099`
 - Inji Web: `localhost:3004`
-- Inji Verify: `localhost:8095`
 
 ## Using the Application
 
@@ -242,7 +253,7 @@ The digest multibase can be hardcoded or if the template has been stored with Ce
 - Second is `Sign in with Google` which requires Google OAuth credentials to be setup.
 ## To configure your own Google Auth Credentials:
 - Refer to the steps documented in the `mimoto` for the same. [GOOGLE_AUTH_SETUP](https://github.com/inji/mimoto/blob/master/docker-compose/README.md#how-to-create-google-client-credentials)
-- Replace the placeholders under the `mimoto-service` in the `docker-compose.yml` file with the generated credentials:
+- Replace the placeholders under the `mimoto-service` in the `docker-compose.yaml` file with the generated credentials:
 
    ```yaml
        environment:
@@ -333,7 +344,7 @@ The digest multibase can be hardcoded or if the template has been stored with Ce
     - Replace certify:8090 with your actual backend service name and port.
     - If you're using Docker, ensure the backend and NGINX are on the same network.
     - For HTTPS, add SSL configuration (`listen 443 ssl;`, `ssl_certificate`, etc.).
-3. **Integrate with Docker Compose**: Update your docker-compose.yml:
+3. **Integrate with Docker Compose**: Update your docker-compose.yaml:
 ```yaml
     services:
         nginx:
@@ -401,7 +412,6 @@ docker-compose down -v
 - [Inji Documentation](https://docs.inji.io/)
 
 
-### Verify Service
+### Presentation During Issuance (PDI)
 
-The verify-service is commented out by default in the `docker-compose.yml`.  
-If you want to explore the Presentation During Issuance feature and test the end-to-end issuance + verification flow**, uncomment the `verify-service` and restart the stack.
+Certify supports the **Presentation During Issuance** flow using the embedded **verify-core** library, which is a dependency of the Certify service and runs in-process — there is no separate `verify-service` container to run.

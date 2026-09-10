@@ -31,16 +31,13 @@ services:
       - ./config/certify-default.properties:/home/mosip/config/certify-default.properties
       - ./config/certify-csvdp-farmer.properties:/home/mosip/config/certify-csvdp-farmer.properties
       - ./config/certify-mock-mdl.properties:/home/mosip/config/certify-mock-mdl.properties
-      - ./config/certify-mdl-pdi.properties:/home/mosip/config/certify-mdl-pdi.properties
       - ./data/CERTIFY_PKCS12:/home/mosip/CERTIFY_PKCS12
       # This can be disabled if one uses plugins included in inji-certify-with-plugins docker image.
       #      - ./loader_path/certify/:/home/mosip/additional_jars/
       # modify the below file to change the identity fields in the VC
       - ./config/farmer_identity_data.csv:/home/mosip/config/farmer_identity_data.csv
-      - ./config/driving_license_mosipid.csv:/home/mosip/config/driving_license_mosipid.csv
       - ./config/vp_request_config.json:/home/mosip/config/vp_request_config.json
       - ./context/farmer-context.json:/home/mosip/context/farmer-context.json
-      - ./context/mdl-pdi-context.json:/home/mosip/context/mdl-pdi-context.json
     networks:
       - network
     depends_on:
