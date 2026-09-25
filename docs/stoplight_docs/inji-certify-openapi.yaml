@@ -1650,8 +1650,7 @@ components:
           description: Signature algorithm used for QR code signing.
         cryptographicBindingMethodsSupported:
           type: array
-          minItems: 1
-          description: 'Optional. Binding methods advertised for this credential configuration. Every value must already be declared for this credential format in mosip.certify.credential-config.cryptographic-binding-methods-supported; a value that is not declared there is rejected with unsupported_cryptographic_binding_method, and a credential format with no declared binding methods is rejected with cryptographic_binding_config_not_found. Omitted on Add, the full set declared for the credential format applies; omitted on Update, the stored value is retained. Always returned by the Get response. An empty array is rejected.'
+          description: 'Optional. Binding methods advertised for this credential configuration. Every value must already be declared for this credential format in mosip.certify.credential-config.cryptographic-binding-methods-supported; a value that is not declared there is rejected with unsupported_cryptographic_binding_method, and a credential format with no declared binding methods is rejected with cryptographic_binding_config_not_found. Omitted on Add, the full set declared for the credential format applies; omitted on Update, the stored value is retained. Returned by the Get response unless the configuration has no holder binding. An empty array is rejected unless proofTypesSupported is also empty: both empty configure the credential without holder binding, so no proof is required at issuance and the issuer metadata omits both. mso_mdoc is always holder-bound and cannot be configured this way.'
           items:
             type: string
         credentialSigningAlgValuesSupported:
@@ -1662,8 +1661,7 @@ components:
             type: string
         proofTypesSupported:
           type: object
-          minProperties: 1
-          description: 'Optional. Proof types advertised for this credential configuration. Each key must be a proof type declared in mosip.certify.credential-config.proof-types-supported, otherwise the request is rejected with unsupported_proof_type. A proof type may be named with null or with an empty object, in which case every algorithm declared for it applies. Omitted on Add, all declared proof types apply; omitted on Update, the stored value is retained. Always returned by the Get response. An empty object is rejected.'
+          description: 'Optional. Proof types advertised for this credential configuration. Each key must be a proof type declared in mosip.certify.credential-config.proof-types-supported, otherwise the request is rejected with unsupported_proof_type. A proof type may be named with null or with an empty object, in which case every algorithm declared for it applies. Omitted on Add, all declared proof types apply; omitted on Update, the stored value is retained. Returned by the Get response unless the configuration has no holder binding. An empty object is rejected unless cryptographicBindingMethodsSupported is also empty, which configures the credential without holder binding.'
           additionalProperties:
             $ref: '#/components/schemas/ProofTypeSupportedDTO'
     ProofTypeSupportedDTO:

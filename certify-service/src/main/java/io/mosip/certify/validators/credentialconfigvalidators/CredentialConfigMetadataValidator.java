@@ -179,6 +179,17 @@ public class CredentialConfigMetadataValidator {
         }
     }
 
+    /**
+     * A configuration without holder binding is not possible for mso_mdoc: ISO/IEC 18013-5 requires
+     * deviceKeyInfo in the mobile security object.
+     */
+    public static void validateWithoutHolderBinding(String credentialFormat, List<Error> errors) {
+        if (VCFormats.MSO_MDOC.equals(credentialFormat)) {
+            errors.add(buildError(ErrorConstants.INVALID_REQUEST,
+                    "mso_mdoc credentials are always holder-bound; cryptographicBindingMethodsSupported and proofTypesSupported must not be empty."));
+        }
+    }
+
     private static Error buildError(String errorCode, String errorMessage) {
         return new Error(errorCode, errorMessage);
     }

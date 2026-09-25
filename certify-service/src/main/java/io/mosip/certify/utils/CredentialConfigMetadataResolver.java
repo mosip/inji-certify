@@ -29,6 +29,16 @@ public class CredentialConfigMetadataResolver {
     /**
      * The binding methods declared for a credential format, empty when the deployment declares none.
      */
+    /**
+     * False only for a configuration created without holder binding, which stores NULL for both
+     * cryptographic_binding_methods_supported and proof_types_supported. Such a configuration advertises
+     * neither and gets no derived defaults.
+     */
+    public static boolean hasHolderBinding(CredentialConfig credentialConfig) {
+        return credentialConfig.getCryptographicBindingMethodsSupported() != null
+                || credentialConfig.getProofTypesSupported() != null;
+    }
+
     public static List<String> deriveBindingMethods(String credentialFormat,
                                                     Map<String, List<String>> declaredBindingMethodsByFormat) {
         List<String> declared = declaredBindingMethodsByFormat.get(credentialFormat);

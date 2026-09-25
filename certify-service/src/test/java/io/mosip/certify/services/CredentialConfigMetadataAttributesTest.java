@@ -538,18 +538,21 @@ public class CredentialConfigMetadataAttributesTest {
 
     // ---------- BR-CM-1: present but empty ----------
 
+    /**
+     * Binding methods and proof types empty together configure the credential without holder binding
+     * (covered below), so each is rejected here when it is empty on its own.
+     */
     @Test
     public void addWithEmptyAttributes_IsRejected() {
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
         CredentialConfigurationDTO request = ldpVcRequest();
         request.setCryptographicBindingMethodsSupported(List.of());
         request.setCredentialSigningAlgValuesSupported(List.of());
-        request.setProofTypesSupported(Map.of());
 
         CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
                 () -> credentialConfigurationService.addCredentialConfiguration(request));
 
-        Assert.assertEquals(3, exception.getErrors().size());
+        Assert.assertEquals(2, exception.getErrors().size());
         exception.getErrors().forEach(error ->
                 Assert.assertEquals(ErrorConstants.INVALID_REQUEST, error.getErrorCode()));
         verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
@@ -720,7 +723,10 @@ public class CredentialConfigMetadataAttributesTest {
     @Test
     public void getLegacyConfiguration_ReturnsResolvedDefaults() {
         CredentialConfig legacy = ldpVcEntity();
+        // Legacy rows always store binding methods; 0.14.0 stored empty proof types to mean the defaults.
+        legacy.setCryptographicBindingMethodsSupported(List.of("did:jwk", "did:web"));
         legacy.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
+        legacy.setProofTypesSupported(new LinkedHashMap<>());
 
         when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(legacy));
         when(credentialConfigMapper.toDto(legacy)).thenReturn(ldpVcRequest());
@@ -839,5 +845,122 @@ public class CredentialConfigMetadataAttributesTest {
 
         Assert.assertEquals(List.of("EdDSA"), metadata.getCredentialConfigurationSupportedDTO()
                 .get("test-credential").getCredentialSigningAlgValuesSupported());
+    }
+
+    // ---------- Optional holder binding: binding methods and proof types both empty ----------
+
+    @Test
+    public void addWithBindingMethodsAndProofTypesEmpty_StoresConfigurationWithoutHolderBinding() {
+        CredentialConfig entity = ldpVcEntity();
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setCryptographicBindingMethodsSupported(List.of());
+        request.setProofTypesSupported(Map.of());
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
+        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
+
+        credentialConfigurationService.addCredentialConfiguration(request);
+
+        Assert.assertNull(entity.getCryptographicBindingMethodsSupported());
+        Assert.assertNull(entity.getProofTypesSupported());
+        Assert.assertEquals(List.of("EdDSA"), entity.getCredentialSigningAlgValuesSupported());
+    }
+
+    @Test
+    public void addWithOnlyProofTypesEmpty_IsRejected() {
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
+        request.setProofTypesSupported(Map.of());
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        Assert.assertEquals(ErrorConstants.INVALID_REQUEST, exception.getErrors().getFirst().getErrorCode());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    /**
+     * ISO/IEC 18013-5 requires deviceKeyInfo in the mobile security object, so mso_mdoc is always bound.
+     */
+    @Test
+    public void addMsoMdocWithBindingMethodsAndProofTypesEmpty_IsRejected() {
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(msoMdocEntity());
+        CredentialConfigurationDTO request = msoMdocRequest();
+        request.setCryptographicBindingMethodsSupported(List.of());
+        request.setProofTypesSupported(Map.of());
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        Assert.assertEquals(ErrorConstants.INVALID_REQUEST, exception.getErrors().getFirst().getErrorCode());
+        Assert.assertTrue(exception.getErrors().getFirst().getErrorMessage().contains("mso_mdoc"));
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    @Test
+    public void updateConfigurationWithoutHolderBinding_WithAttributesOmitted_StaysWithoutHolderBinding() {
+        CredentialConfig stored = ldpVcEntity();
+        stored.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
+
+        when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(stored));
+        when(credentialConfigMapper.toDto(any(CredentialConfig.class))).thenReturn(ldpVcRequest());
+        doNothing().when(credentialConfigMapper).updateEntityFromDto(any(CredentialConfigurationDTO.class), any(CredentialConfig.class));
+        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(stored);
+
+        credentialConfigurationService.updateCredentialConfiguration("test-credential", new CredentialConfigurationDTO());
+
+        Assert.assertNull(stored.getCryptographicBindingMethodsSupported());
+        Assert.assertNull(stored.getProofTypesSupported());
+    }
+
+    @Test
+    public void updateWithBindingMethodsAndProofTypesEmpty_RemovesHolderBinding() {
+        CredentialConfig stored = ldpVcEntity();
+        stored.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
+        stored.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
+        stored.setProofTypesSupported(new LinkedHashMap<>(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA")))));
+        CredentialConfigurationDTO request = new CredentialConfigurationDTO();
+        request.setCryptographicBindingMethodsSupported(List.of());
+        request.setProofTypesSupported(Map.of());
+
+        when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(stored));
+        when(credentialConfigMapper.toDto(any(CredentialConfig.class))).thenReturn(ldpVcRequest());
+        doNothing().when(credentialConfigMapper).updateEntityFromDto(any(CredentialConfigurationDTO.class), any(CredentialConfig.class));
+        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(stored);
+
+        credentialConfigurationService.updateCredentialConfiguration("test-credential", request);
+
+        Assert.assertNull(stored.getCryptographicBindingMethodsSupported());
+        Assert.assertNull(stored.getProofTypesSupported());
+    }
+
+    @Test
+    public void getConfigurationWithoutHolderBinding_ReturnsNeitherBindingMethodsNorProofTypes() {
+        CredentialConfig stored = ldpVcEntity();
+        stored.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
+
+        when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(stored));
+        when(credentialConfigMapper.toDto(stored)).thenReturn(ldpVcRequest());
+
+        CredentialConfigurationDTO result = credentialConfigurationService.getCredentialConfigurationById("test-credential");
+
+        Assert.assertNull(result.getCryptographicBindingMethodsSupported());
+        Assert.assertNull(result.getProofTypesSupported());
+        Assert.assertEquals(List.of("EdDSA"), result.getCredentialSigningAlgValuesSupported());
+    }
+
+    @Test
+    public void metadata_ForConfigurationWithoutHolderBinding_AdvertisesNeitherBindingMethodsNorProofTypes() {
+        CredentialConfig stored = ldpVcEntity();
+        stored.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
+
+        when(credentialConfigRepository.findAll()).thenReturn(List.of(stored));
+        when(credentialConfigMapper.toDto(stored)).thenReturn(ldpVcRequest());
+
+        CredentialConfigurationSupportedDTO supported = credentialConfigurationService.fetchCredentialIssuerMetadata()
+                .getCredentialConfigurationSupportedDTO().get("test-credential");
+
+        Assert.assertNull(supported.getCryptographicBindingMethodsSupported());
+        Assert.assertNull(supported.getProofTypesSupported());
     }
 }
