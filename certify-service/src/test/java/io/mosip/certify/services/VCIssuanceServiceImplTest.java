@@ -488,11 +488,10 @@ public class VCIssuanceServiceImplTest {
         request.setProofs(null); // proofs are always mandatory for VCIssuanceServiceImpl
 
         when(parsedAccessToken.isActive()).thenReturn(true);
-        when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
 
         CertifyException ex = assertThrows(CertifyException.class, () -> issuanceService.getCredential(request));
         assertEquals(VCIErrorConstants.INVALID_PROOF, ex.getErrorCode());
-        verifyNoInteractions(proofValidatorFactory);
+        verifyNoInteractions(proofValidatorFactory, credentialConfigurationService);
     }
 
     @Test

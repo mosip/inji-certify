@@ -60,6 +60,11 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         if(!parsedAccessToken.isActive())
             throw new NotAuthenticatedException();
 
+        // The VC issuance plugin always issues holder-bound credentials, so proofs are required
+        if (CollectionUtils.isEmpty(credentialRequest.getProofs())) {
+            throw new CertifyException(VCIErrorConstants.INVALID_PROOF, "Proofs are required for this credential configuration.");
+        }
+
         String scopeClaim = (String) parsedAccessToken.getClaims().getOrDefault("scope", "");
         CredentialConfigurationSupported credentialConfigurationSupported = null;
         CredentialIssuerMetadataDTO credentialIssuerMetadataDTO = credentialConfigurationService.fetchCredentialIssuerMetadata();
@@ -81,9 +86,6 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         // 3. Proof Validation
         String clientId = (String) parsedAccessToken.getClaims().get(Constants.CLIENT_ID);
         String accessTokenHash = parsedAccessToken.getAccessTokenHash();
-        if (CollectionUtils.isEmpty(credentialRequest.getProofs())) {
-            throw new CertifyException(VCIErrorConstants.INVALID_PROOF, "Proofs are required for this credential configuration.");
-        }
         Map<String, Object> supportedProofTypes = credentialConfigurationSupported.getProofTypesSupported();
         Map<ProofType, Set<String>> proofs = credentialRequest.getProofs()
                 .entrySet()
