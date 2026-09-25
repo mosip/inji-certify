@@ -10,6 +10,7 @@ import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.services.VCICacheService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.CollectionUtils;
 import org.slf4j.Logger;
 
 import java.text.ParseException;
@@ -117,6 +118,18 @@ public class VCIssuanceUtil {
         }
     }
 
+    /**
+     * A proof is required when the configuration declares both cryptographic binding methods and
+     * proof types. mso_mdoc always requires one, as ISO 18013-5 mandates deviceKeyInfo in the MSO.
+     */
+    public static boolean requiresProof(CredentialConfigurationSupported credentialConfigurationSupported) {
+        if (VCFormats.MSO_MDOC.equals(credentialConfigurationSupported.getFormat())) {
+            return true;
+        }
+        return !CollectionUtils.isEmpty(credentialConfigurationSupported.getCryptographicBindingMethodsSupported())
+                && !CollectionUtils.isEmpty(credentialConfigurationSupported.getProofTypesSupported());
+    }
+
     public static Optional<CredentialConfigurationSupported> getScopeCredentialMapping(
             String scope,
             String credentialConfigId,
@@ -139,7 +152,13 @@ public class VCIssuanceUtil {
         credentialConfigurationSupported.setFormat(credentialConfig.getFormat());
         credentialConfigurationSupported.setScope(credentialConfig.getScope());
         credentialConfigurationSupported.setId(credentialConfigId);
-        credentialConfigurationSupported.setProofTypesSupported(credentialConfig.getProofTypesSupported());
+        credentialConfigurationSupported.setCryptographicBindingMethodsSupported(
+                credentialConfig.getCryptographicBindingMethodsSupported());
+        // proof_types_supported is nullable; default to an empty map for downstream consumers
+        credentialConfigurationSupported.setProofTypesSupported(
+                credentialConfig.getProofTypesSupported() != null
+                        ? credentialConfig.getProofTypesSupported()
+                        : Collections.emptyMap());
         if (credentialConfig.getCredentialDefinition() != null) {
             credentialConfigurationSupported.setTypes(credentialConfig.getCredentialDefinition().getType());
             credentialConfigurationSupported.setContext(credentialConfig.getCredentialDefinition().getContext());

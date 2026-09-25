@@ -482,6 +482,20 @@ public class VCIssuanceServiceImplTest {
     }
 
     @Test
+    public void getCredential_MissingProofs_ThrowsInvalidProof() {
+        request = new CredentialRequest();
+        request.setCredentialConfigId("test-credential-id-ldp");
+        request.setProofs(null); // proofs are always mandatory for VCIssuanceServiceImpl
+
+        when(parsedAccessToken.isActive()).thenReturn(true);
+        when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
+
+        CertifyException ex = assertThrows(CertifyException.class, () -> issuanceService.getCredential(request));
+        assertEquals(VCIErrorConstants.INVALID_PROOF, ex.getErrorCode());
+        verifyNoInteractions(proofValidatorFactory);
+    }
+
+    @Test
     public void getDIDDocument_ThrowsUnsupportedException() {
         InvalidRequestException ex = assertThrows(InvalidRequestException.class, () -> issuanceService.getDIDDocument());
         assertEquals(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE, ex.getErrorCode());

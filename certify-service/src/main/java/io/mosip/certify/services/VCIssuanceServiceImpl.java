@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -80,6 +81,9 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
         // 3. Proof Validation
         String clientId = (String) parsedAccessToken.getClaims().get(Constants.CLIENT_ID);
         String accessTokenHash = parsedAccessToken.getAccessTokenHash();
+        if (CollectionUtils.isEmpty(credentialRequest.getProofs())) {
+            throw new CertifyException(VCIErrorConstants.INVALID_PROOF, "Proofs are required for this credential configuration.");
+        }
         Map<String, Object> supportedProofTypes = credentialConfigurationSupported.getProofTypesSupported();
         Map<ProofType, Set<String>> proofs = credentialRequest.getProofs()
                 .entrySet()

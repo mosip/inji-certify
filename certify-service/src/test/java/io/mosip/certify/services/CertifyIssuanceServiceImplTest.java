@@ -20,6 +20,7 @@ import io.mosip.certify.api.spi.DataProviderPlugin;
 import io.mosip.certify.api.util.Action;
 import io.mosip.certify.api.util.ActionStatus;
 import io.mosip.certify.config.VelocityEnvConfig;
+import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.NonceErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.constants.VCIErrorConstants;
@@ -203,10 +204,23 @@ public class CertifyIssuanceServiceImplTest {
         supportedDTO_MDOC.setCredentialDefinition(credDefDtoForMDOC);
         supportedCredsMap.put("test-credential-id-mdoc", supportedDTO_MDOC);
 
+        supportedCredsMap.values().forEach(CertifyIssuanceServiceImplTest::requireHolderBinding);
         mockGlobalCredentialIssuerMetadataDTO.setCredentialConfigurationSupportedDTO(supportedCredsMap);
 
         when(credentialConfigurationService.fetchCredentialIssuerMetadata())
                 .thenReturn(mockGlobalCredentialIssuerMetadataDTO); // Default mock
+    }
+
+    private static void requireHolderBinding(CredentialConfigurationSupportedDTO dto) {
+        dto.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
+        dto.setProofTypesSupported(Map.of("jwt", Map.of("proof_signing_alg_values_supported", List.of("ES256"))));
+    }
+
+    private void removeHolderBinding(String credentialConfigId) {
+        CredentialConfigurationSupportedDTO dto = mockGlobalCredentialIssuerMetadataDTO
+                .getCredentialConfigurationSupportedDTO().get(credentialConfigId);
+        dto.setCryptographicBindingMethodsSupported(null);
+        dto.setProofTypesSupported(null);
     }
 
     private CredentialRequest createValidCredentialRequest(String format) {
@@ -544,6 +558,80 @@ public class CertifyIssuanceServiceImplTest {
     }
 
     @Test
+    public void getCredential_HolderBindingNotRequired_SkipsProofValidation_Success() throws DataProviderExchangeException {
+        request = new CredentialRequest();
+        request.setCredentialConfigId("test-credential-id-ldp");
+        request.setProofs(null); // no proofs submitted; holder binding not required
+
+        when(parsedAccessToken.isActive()).thenReturn(true);
+        when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
+        removeHolderBinding("test-credential-id-ldp");
+
+        when(dataProviderPlugin.fetchData(claimsFromAccessToken)).thenReturn(new JSONObject().put("subjectKey", "subjectValue"));
+
+        W3CJsonLD mockW3CJsonLD = mock(W3CJsonLD.class);
+        when(credentialFactory.getCredential(DEFAULT_FORMAT_LDP)).thenReturn(Optional.of(mockW3CJsonLD));
+        when(mockW3CJsonLD.createCredential(anyMap(), anyString())).thenReturn("{\"unsigned\":\"credential\"}");
+
+        when(vcFormatter.getProofAlgorithm(anyString())).thenReturn("EdDSA");
+        when(vcFormatter.getAppID(anyString())).thenReturn("testAppIdLdp");
+        when(vcFormatter.getRefID(anyString())).thenReturn("testRefIdLdp");
+        when(vcFormatter.getDidUrl(anyString())).thenReturn("did:example:ldp");
+        when(vcFormatter.getSignatureCryptoSuite(anyString())).thenReturn("testSignatureCryptoSuite");
+
+        VCResult mockVcResultLdp = new VCResult<JsonLDObject>();
+        JsonLDObject signedCredObj = JsonLDObject.fromJson("{\"signed\":\"credential\", \"proof\":{}}");
+        mockVcResultLdp.setCredential(signedCredObj);
+
+        // holderId is null here (no proof validation ran); the service still passes "" to addProof for LDP.
+        when(mockW3CJsonLD.addProof(
+                eq("{\"unsigned\":\"credential\"}"),
+                eq(""),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString()
+        )).thenReturn(mockVcResultLdp);
+
+        CredentialResponse<?> response = issuanceService.getCredential(request);
+
+        assertNotNull(response);
+        assertTrue(response.getCredentials().getFirst().getCredential() instanceof JsonLDObject);
+        verifyNoInteractions(proofValidatorFactory, proofValidator);
+        verify(auditWrapper).logAudit(eq(Action.VC_ISSUANCE), eq(ActionStatus.SUCCESS), any(), isNull());
+    }
+
+    @Test
+    public void getCredential_HolderBindingRequired_MissingProofs_ThrowsInvalidProof() {
+        request = new CredentialRequest();
+        request.setCredentialConfigId("test-credential-id-ldp");
+        request.setProofs(Collections.emptyMap()); // holder binding required (default stub), but no proofs submitted
+
+        when(parsedAccessToken.isActive()).thenReturn(true);
+        when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
+
+        CertifyException ex = assertThrows(CertifyException.class, () -> issuanceService.getCredential(request));
+        assertEquals(VCIErrorConstants.INVALID_PROOF, ex.getErrorCode());
+        verifyNoInteractions(proofValidatorFactory);
+    }
+
+    @Test
+    public void getCredential_MsoMdocWithoutBindingMetadata_StillRequiresProof() {
+        removeHolderBinding("test-credential-id-mdoc");
+        request = new CredentialRequest();
+        request.setCredentialConfigId("test-credential-id-mdoc");
+        request.setProofs(null);
+
+        when(parsedAccessToken.isActive()).thenReturn(true);
+        when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
+
+        CertifyException ex = assertThrows(CertifyException.class, () -> issuanceService.getCredential(request));
+        assertEquals(VCIErrorConstants.INVALID_PROOF, ex.getErrorCode());
+        verifyNoInteractions(proofValidatorFactory);
+    }
+
+    @Test
     public void getCredential_SDJWT_Success() throws Exception {
         request = createValidCredentialRequest(DEFAULT_FORMAT_SDJWT);
 
@@ -591,6 +679,90 @@ public class CertifyIssuanceServiceImplTest {
         assertTrue("Response credential should be a String", response.getCredentials().getFirst().getCredential() instanceof String);
         String credential = (String) response.getCredentials().getFirst().getCredential();
         assertTrue("Credential string should contain SD-JWT disclosure separator '~'", credential.contains("~"));
+        verify(auditWrapper).logAudit(eq(Action.VC_ISSUANCE), eq(ActionStatus.SUCCESS), any(), isNull());
+    }
+
+    @Test
+    public void getCredential_SDJWT_HolderBindingRequired_CnfClaimReflectsHolderId() throws Exception {
+        request = createValidCredentialRequest(DEFAULT_FORMAT_SDJWT);
+        String expectedHolderId = "did:jwk:test-holder-sdjwt";
+
+        when(parsedAccessToken.isActive()).thenReturn(true);
+        when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
+        when(vciCacheService.getNonceTransaction(anyString())).thenReturn(transaction);
+        when(proofValidatorFactory.getProofValidator(anyString())).thenReturn(proofValidator);
+        when(proofValidator.getKeyMaterial(anyString())).thenReturn(expectedHolderId);
+        when(proofValidator.validate(anyString(), eq(TEST_CNONCE), anyString(), any())).thenReturn(true);
+        when(dataProviderPlugin.fetchData(claimsFromAccessToken)).thenReturn(new JSONObject().put("key", "value"));
+
+        SDJWT mockSdJwt = mock(SDJWT.class);
+        when(credentialFactory.getCredential(DEFAULT_FORMAT_SDJWT)).thenReturn(Optional.of(mockSdJwt));
+        when(mockSdJwt.createCredential(anyMap(), anyString())).thenReturn("{\"unsigned\":\"sdjwt_payload\"}");
+
+        VCResult mockVcResultSdJwt = new VCResult<String>();
+        mockVcResultSdJwt.setCredential("signed.sdjwt.string~disclosure1~disclosure2");
+
+        when(vcFormatter.getProofAlgorithm(anyString())).thenReturn("EdDSA");
+        when(vcFormatter.getAppID(anyString())).thenReturn("testAppId");
+        when(vcFormatter.getRefID(anyString())).thenReturn("testRefId");
+        when(vcFormatter.getDidUrl(anyString())).thenReturn("did:example:123");
+        when(vcFormatter.getSignatureCryptoSuite(anyString())).thenReturn("testSignatureCryptoSuite");
+
+        when(mockSdJwt.addProof(anyString(), eq(""), anyString(), anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(mockVcResultSdJwt);
+
+        issuanceService.getCredential(request);
+
+        ArgumentCaptor<Map> templateParamsCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(mockSdJwt).createCredential(templateParamsCaptor.capture(), anyString());
+        Map<String, Object> capturedTemplateParams = templateParamsCaptor.getValue();
+
+        assertTrue("cnf claim must be present when holder binding is required and a proof was validated",
+                capturedTemplateParams.containsKey(Constants.CONFIRMATION));
+        Object cnf = capturedTemplateParams.get(Constants.CONFIRMATION);
+        String kid = (cnf instanceof JSONObject)
+                ? ((JSONObject) cnf).getString("kid")
+                : ((Map<?, ?>) cnf).get("kid").toString();
+        assertEquals(expectedHolderId, kid);
+    }
+
+    @Test
+    public void getCredential_SDJWT_HolderBindingNotRequired_SkipsProofValidation_Success() throws Exception {
+        request = new CredentialRequest();
+        request.setCredentialConfigId("test-credential-id-sdjwt");
+        request.setProofs(null); // no proofs submitted; holder binding not required
+
+        when(parsedAccessToken.isActive()).thenReturn(true);
+        when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
+        removeHolderBinding("test-credential-id-sdjwt");
+        when(dataProviderPlugin.fetchData(claimsFromAccessToken)).thenReturn(new JSONObject().put("key", "value"));
+
+        SDJWT mockSdJwt = mock(SDJWT.class);
+        when(credentialFactory.getCredential(DEFAULT_FORMAT_SDJWT)).thenReturn(Optional.of(mockSdJwt));
+        when(mockSdJwt.createCredential(anyMap(), anyString())).thenReturn("{\"unsigned\":\"sdjwt_payload\"}");
+
+        VCResult mockVcResultSdJwt = new VCResult<String>();
+        mockVcResultSdJwt.setCredential("signed.sdjwt.string~disclosure1~disclosure2");
+
+        when(vcFormatter.getProofAlgorithm(anyString())).thenReturn("EdDSA");
+        when(vcFormatter.getAppID(anyString())).thenReturn("testAppId");
+        when(vcFormatter.getRefID(anyString())).thenReturn("testRefId");
+        when(vcFormatter.getDidUrl(anyString())).thenReturn("did:example:123");
+        when(vcFormatter.getSignatureCryptoSuite(anyString())).thenReturn("testSignatureCryptoSuite");
+
+        when(mockSdJwt.addProof(anyString(), eq(""), anyString(), anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(mockVcResultSdJwt);
+
+        CredentialResponse<?> response = issuanceService.getCredential(request);
+
+        assertNotNull(response);
+        assertTrue(response.getCredentials().getFirst().getCredential() instanceof String);
+        verifyNoInteractions(proofValidatorFactory, proofValidator);
+
+        ArgumentCaptor<Map> templateParamsCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(mockSdJwt).createCredential(templateParamsCaptor.capture(), anyString());
+        assertFalse("cnf claim must not be present when holder binding is not required",
+                templateParamsCaptor.getValue().containsKey(Constants.CONFIRMATION));
         verify(auditWrapper).logAudit(eq(Action.VC_ISSUANCE), eq(ActionStatus.SUCCESS), any(), isNull());
     }
 

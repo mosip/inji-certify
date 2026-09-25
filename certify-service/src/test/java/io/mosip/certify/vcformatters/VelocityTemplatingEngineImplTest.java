@@ -498,4 +498,106 @@ public class VelocityTemplatingEngineImplTest {
 //        Assert.assertEquals(789012L, actualJsonObj.getJSONObject("credentialSubject").getLong("UIN"));
 //        Assert.assertEquals("https://example.com/fake-issuer", actualJsonObj.getString("issuer"));
 //    }
+
+    // Optional holder binding
+
+    private CredentialConfig minimalTemplate;
+    private String minimalTemplateKey;
+
+    private void registerMinimalTemplate() {
+        String type = "MinimalVerifiableCredential,VerifiableCredential";
+        String context = "https://www.w3.org/2018/credentials/v1";
+        String format = "ldp_vc";
+        minimalTemplateKey = type + DELIMITER + context + DELIMITER + format;
+        minimalTemplate = initTemplate(
+                "{\"@context\": [\"https://www.w3.org/2018/credentials/v1\"], \"type\": [\"VerifiableCredential\"]}",
+                type, context, format, "did:example:issuer-minimal", "appIdMin", "refIdMin", "EdDSA", null, "testCryptoSuite"
+        );
+        when(credentialConfigRepository.findByCredentialFormatAndCredentialTypeAndContext(format, type, context))
+                .thenReturn(Optional.of(minimalTemplate));
+    }
+
+    @Test
+    @SneakyThrows
+    public void testFormat_OmitsIdAndCnf_WhenHolderIdIsNull() {
+        registerMinimalTemplate();
+
+        Map<String, Object> templateInput = new HashMap<>();
+        templateInput.put(Constants.TEMPLATE_NAME, minimalTemplateKey);
+        templateInput.put(Constants.DID_URL, "https://example.com/fake-issuer");
+        // No CREDENTIAL_ID, VCTYPE, CONFIRMATION or ISSUER supplied: mirrors what
+        // CertifyIssuanceServiceImpl/VCIssuanceServiceImpl now pass when holderId is null.
+
+        String result = formatter.format(templateInput);
+        assertNotNull(result);
+
+        JSONObject actualJsonObj = new JSONObject(result);
+        assertTrue("id must not be present when CREDENTIAL_ID was not supplied", !actualJsonObj.has(VCDMConstants.ID));
+        assertTrue("cnf must not be present when holder-binding params were not supplied", !actualJsonObj.has(Constants.CONFIRMATION));
+    }
+
+    @Test
+    @SneakyThrows
+    public void testFormat_IncludesId_WhenCredentialIdIsProvided() {
+        registerMinimalTemplate();
+
+        Map<String, Object> templateInput = new HashMap<>();
+        templateInput.put(Constants.TEMPLATE_NAME, minimalTemplateKey);
+        templateInput.put(Constants.DID_URL, "https://example.com/fake-issuer");
+        templateInput.put(VCDMConstants.CREDENTIAL_ID, "uurn:uuid:test-credential-id");
+
+        String result = formatter.format(templateInput);
+        JSONObject actualJsonObj = new JSONObject(result);
+
+        assertTrue("id must be present when CREDENTIAL_ID was supplied", actualJsonObj.has(VCDMConstants.ID));
+        Assert.assertEquals("uurn:uuid:test-credential-id", actualJsonObj.getString(VCDMConstants.ID));
+    }
+
+    @Test
+    @SneakyThrows
+    public void testFormat_IncludesCnf_WhenHolderBindingParamsAreProvided() {
+        registerMinimalTemplate();
+
+        Map<String, Object> templateInput = new HashMap<>();
+        templateInput.put(Constants.TEMPLATE_NAME, minimalTemplateKey);
+        templateInput.put(Constants.DID_URL, "https://example.com/fake-issuer");
+        templateInput.put(Constants.VCTYPE, "TestVct");
+        templateInput.put(Constants.CONFIRMATION, Map.of("kid", "did:jwk:test-holder"));
+        templateInput.put(Constants.ISSUER, "https://example.com/fake-issuer");
+
+        String result = formatter.format(templateInput);
+        JSONObject actualJsonObj = new JSONObject(result);
+
+        assertTrue("cnf must be present when holder-binding params were supplied", actualJsonObj.has(Constants.CONFIRMATION));
+        Assert.assertEquals("did:jwk:test-holder", actualJsonObj.getJSONObject(Constants.CONFIRMATION).getString("kid"));
+    }
+
+    @Test
+    @SneakyThrows
+    public void testFormat_GuardedHolderIdTemplate_OmitsCredentialSubjectIdWhenUnbound() {
+        String type = "GuardedVerifiableCredential,VerifiableCredential";
+        String context = "https://www.w3.org/2018/credentials/v1";
+        String format = "ldp_vc";
+        String templateKey = type + DELIMITER + context + DELIMITER + format;
+        CredentialConfig guardedTemplate = initTemplate(
+                "{\"@context\": [\"https://www.w3.org/2018/credentials/v1\"], \"type\": [\"VerifiableCredential\"], " +
+                        "\"credentialSubject\": {#if($_holderId)\"id\": \"${_holderId}\", #end\"name\": \"${name}\"}}",
+                type, context, format, "did:example:issuer-guarded", "appIdGuarded", "refIdGuarded", "EdDSA", null, "testCryptoSuite"
+        );
+        when(credentialConfigRepository.findByCredentialFormatAndCredentialTypeAndContext(format, type, context))
+                .thenReturn(Optional.of(guardedTemplate));
+
+        Map<String, Object> unbound = new HashMap<>();
+        unbound.put(Constants.TEMPLATE_NAME, templateKey);
+        unbound.put(Constants.DID_URL, "https://example.com/fake-issuer");
+        unbound.put("name", "Alice");
+        JSONObject unboundSubject = new JSONObject(formatter.format(unbound)).getJSONObject("credentialSubject");
+        Assert.assertFalse(unboundSubject.has("id"));
+        Assert.assertEquals("Alice", unboundSubject.getString("name"));
+
+        Map<String, Object> bound = new HashMap<>(unbound);
+        bound.put("_holderId", "did:jwk:test-holder");
+        JSONObject boundSubject = new JSONObject(formatter.format(bound)).getJSONObject("credentialSubject");
+        Assert.assertEquals("did:jwk:test-holder", boundSubject.getString("id"));
+    }
 }
