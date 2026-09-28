@@ -876,6 +876,42 @@ public class CredentialConfigMetadataAttributesTest {
                 () -> credentialConfigurationService.addCredentialConfiguration(request));
 
         Assert.assertEquals(ErrorConstants.INVALID_REQUEST, exception.getErrors().getFirst().getErrorCode());
+        Assert.assertEquals("proofTypesSupported was provided but is empty. To configure a credential without holder "
+                        + "binding, send both cryptographicBindingMethodsSupported and proofTypesSupported empty.",
+                exception.getErrors().getFirst().getErrorMessage());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    @Test
+    public void addWithOnlyBindingMethodsEmpty_IsRejectedWithWithoutHolderBindingHint() {
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setCryptographicBindingMethodsSupported(List.of());
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        Assert.assertEquals(ErrorConstants.INVALID_REQUEST, exception.getErrors().getFirst().getErrorCode());
+        Assert.assertEquals("cryptographicBindingMethodsSupported was provided but is empty. To configure a credential "
+                        + "without holder binding, send both cryptographicBindingMethodsSupported and proofTypesSupported empty.",
+                exception.getErrors().getFirst().getErrorMessage());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    /**
+     * mso_mdoc cannot be configured without holder binding, so its message does not suggest it.
+     */
+    @Test
+    public void addMsoMdocWithOnlyBindingMethodsEmpty_IsRejectedWithoutWithoutHolderBindingHint() {
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(msoMdocEntity());
+        CredentialConfigurationDTO request = msoMdocRequest();
+        request.setCryptographicBindingMethodsSupported(List.of());
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        Assert.assertTrue(exception.getErrors().stream().anyMatch(error ->
+                error.getErrorMessage().equals("cryptographicBindingMethodsSupported was provided but is empty.")));
         verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
     }
 

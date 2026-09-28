@@ -21,6 +21,9 @@ import java.util.Set;
  */
 public class CredentialConfigMetadataValidator {
 
+    private static final String WITHOUT_HOLDER_BINDING_HINT = " To configure a credential without holder binding, "
+            + "send both cryptographicBindingMethodsSupported and proofTypesSupported empty.";
+
     private CredentialConfigMetadataValidator() {
     }
 
@@ -29,7 +32,7 @@ public class CredentialConfigMetadataValidator {
                                               List<Error> errors) {
         if (requested.isEmpty()) {
             errors.add(buildError(ErrorConstants.INVALID_REQUEST,
-                    "cryptographicBindingMethodsSupported was provided but is empty."));
+                    emptyHolderBindingAttributeMessage("cryptographicBindingMethodsSupported", credentialFormat)));
             return;
         }
 
@@ -109,11 +112,12 @@ public class CredentialConfigMetadataValidator {
         }
     }
 
-    public static void validateProofTypes(Map<String, Object> requested,
+    public static void validateProofTypes(Map<String, Object> requested, String credentialFormat,
                                           Map<String, Object> declaredProofTypes,
                                           List<Error> errors) {
         if (requested.isEmpty()) {
-            errors.add(buildError(ErrorConstants.INVALID_REQUEST, "proofTypesSupported was provided but is empty."));
+            errors.add(buildError(ErrorConstants.INVALID_REQUEST,
+                    emptyHolderBindingAttributeMessage("proofTypesSupported", credentialFormat)));
             return;
         }
 
@@ -188,6 +192,15 @@ public class CredentialConfigMetadataValidator {
             errors.add(buildError(ErrorConstants.INVALID_REQUEST,
                     "mso_mdoc credentials are always holder-bound; cryptographicBindingMethodsSupported and proofTypesSupported must not be empty."));
         }
+    }
+
+    /**
+     * One of the two holder-binding attributes sent empty on its own. Unless the format is always
+     * holder-bound, the message also says how to configure the credential without holder binding.
+     */
+    private static String emptyHolderBindingAttributeMessage(String attribute, String credentialFormat) {
+        String message = attribute + " was provided but is empty.";
+        return VCFormats.MSO_MDOC.equals(credentialFormat) ? message : message + WITHOUT_HOLDER_BINDING_HINT;
     }
 
     private static Error buildError(String errorCode, String errorMessage) {
