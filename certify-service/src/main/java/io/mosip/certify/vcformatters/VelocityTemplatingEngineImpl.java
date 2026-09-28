@@ -245,6 +245,7 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         VelocityContext context = new VelocityContext(updatedTemplateParams);
         engine.evaluate(context, writer, /*logTag */ templateName, vcTemplateString); // use vcTemplateString
         JSONObject jsonObject = new JSONObject(writer.toString());
+        removeUnresolvedHolderId(jsonObject, updatedTemplateParams);
         if (updatedTemplateParams.containsKey(VCDMConstants.CREDENTIAL_ID)) {
             jsonObject.put(VCDMConstants.ID, updatedTemplateParams.get(VCDMConstants.CREDENTIAL_ID));
         }
@@ -261,6 +262,26 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         }
 
         return jsonObject.toString();
+    }
+
+    /**
+     * A credential issued without holder binding has no _holderId. Velocity renders an unguarded
+     * ${_holderId} reference as literal text, so an unresolved or blank credentialSubject.id is
+     * removed instead of being signed into the credential.
+     */
+    private void removeUnresolvedHolderId(JSONObject jsonObject, Map<String, Object> templateParams) {
+        if (templateParams.get(Constants._HOLDER_ID) != null) {
+            return;
+        }
+        JSONObject credentialSubject = jsonObject.optJSONObject("credentialSubject");
+        if (credentialSubject == null) {
+            return;
+        }
+        Object subjectId = credentialSubject.opt(VCDMConstants.ID);
+        if (subjectId instanceof String id
+                && (id.isBlank() || id.contains("${" + Constants._HOLDER_ID + "}") || id.contains("$" + Constants._HOLDER_ID))) {
+            credentialSubject.remove(VCDMConstants.ID);
+        }
     }
 
     /**

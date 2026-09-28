@@ -600,4 +600,33 @@ public class VelocityTemplatingEngineImplTest {
         JSONObject boundSubject = new JSONObject(formatter.format(bound)).getJSONObject("credentialSubject");
         Assert.assertEquals("did:jwk:test-holder", boundSubject.getString("id"));
     }
+
+    @Test
+    @SneakyThrows
+    public void testFormat_UnguardedHolderIdTemplate_OmitsCredentialSubjectIdWhenUnbound() {
+        String type = "UnguardedVerifiableCredential,VerifiableCredential";
+        String context = "https://www.w3.org/2018/credentials/v1";
+        String format = "ldp_vc";
+        String templateKey = type + DELIMITER + context + DELIMITER + format;
+        CredentialConfig unguardedTemplate = initTemplate(
+                "{\"@context\": [\"https://www.w3.org/2018/credentials/v1\"], \"type\": [\"VerifiableCredential\"], " +
+                        "\"credentialSubject\": {\"id\": \"${_holderId}\", \"name\": \"${name}\"}}",
+                type, context, format, "did:example:issuer-unguarded", "appIdUnguarded", "refIdUnguarded", "EdDSA", null, "testCryptoSuite"
+        );
+        when(credentialConfigRepository.findByCredentialFormatAndCredentialTypeAndContext(format, type, context))
+                .thenReturn(Optional.of(unguardedTemplate));
+
+        Map<String, Object> unbound = new HashMap<>();
+        unbound.put(Constants.TEMPLATE_NAME, templateKey);
+        unbound.put(Constants.DID_URL, "https://example.com/fake-issuer");
+        unbound.put("name", "Alice");
+        JSONObject unboundSubject = new JSONObject(formatter.format(unbound)).getJSONObject("credentialSubject");
+        Assert.assertFalse("an unresolved ${_holderId} must not be issued", unboundSubject.has("id"));
+        Assert.assertEquals("Alice", unboundSubject.getString("name"));
+
+        Map<String, Object> bound = new HashMap<>(unbound);
+        bound.put("_holderId", "did:jwk:test-holder");
+        JSONObject boundSubject = new JSONObject(formatter.format(bound)).getJSONObject("credentialSubject");
+        Assert.assertEquals("did:jwk:test-holder", boundSubject.getString("id"));
+    }
 }
