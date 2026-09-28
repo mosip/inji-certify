@@ -933,6 +933,44 @@ public class CredentialConfigMetadataAttributesTest {
         verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
     }
 
+    /**
+     * Omitting both attributes derives the binding methods declared for the format. With none declared the
+     * configuration would advertise an empty list next to proof types, so it is rejected.
+     */
+    @Test
+    public void addWithAttributesOmitted_ForFormatWithoutDeclaredBindingMethods_IsRejected() {
+        ReflectionTestUtils.setField(credentialConfigurationService, "cryptographicBindingMethodsSupportedMap",
+                new LinkedHashMap<>(Map.of("mso_mdoc", List.of("cose_key"))));
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setCryptographicBindingMethodsSupported(null);
+        request.setProofTypesSupported(null);
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        Assert.assertEquals(ErrorConstants.CRYPTOGRAPHIC_BINDING_CONFIG_NOT_FOUND, exception.getErrors().getFirst().getErrorCode());
+        Assert.assertTrue(exception.getErrors().getFirst().getErrorMessage().contains("without holder binding"));
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    @Test
+    public void addWithoutHolderBinding_ForFormatWithoutDeclaredBindingMethods_IsStored() {
+        ReflectionTestUtils.setField(credentialConfigurationService, "cryptographicBindingMethodsSupportedMap",
+                new LinkedHashMap<>(Map.of("mso_mdoc", List.of("cose_key"))));
+        CredentialConfig entity = ldpVcEntity();
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setCryptographicBindingMethodsSupported(List.of());
+        request.setProofTypesSupported(Map.of());
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
+        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
+
+        credentialConfigurationService.addCredentialConfiguration(request);
+
+        Assert.assertNull(entity.getCryptographicBindingMethodsSupported());
+        Assert.assertNull(entity.getProofTypesSupported());
+    }
+
     @Test
     public void updateConfigurationWithoutHolderBinding_WithAttributesOmitted_StaysWithoutHolderBinding() {
         CredentialConfig stored = ldpVcEntity();

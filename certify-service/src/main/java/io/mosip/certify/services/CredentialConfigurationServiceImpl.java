@@ -277,9 +277,22 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 : CredentialConfigMetadataResolver.deriveSigningAlgs(credentialConfig.getSignatureCryptoSuite(),
                         credentialConfig.getSignatureAlgo(), credentialSigningAlgValuesSupportedMap);
 
+        // A holder-bound configuration that names no binding methods takes the deployment's declared ones
+        List<String> derivedBindingMethods = withoutHolderBinding || providedBindingMethods != null ? null
+                : CredentialConfigMetadataResolver.deriveBindingMethods(credentialConfig.getCredentialFormat(),
+                        cryptographicBindingMethodsSupportedMap);
+
         List<io.mosip.certify.core.dto.Error> errors = new ArrayList<>();
         if (withoutHolderBinding) {
             CredentialConfigMetadataValidator.validateWithoutHolderBinding(credentialConfig.getCredentialFormat(), errors);
+        }
+        if (derivedBindingMethods != null) {
+            CredentialConfigMetadataValidator.validateDerivedBindingMethods(derivedBindingMethods,
+                    credentialConfig.getCredentialFormat(), errors);
+        }
+        if (!withoutHolderBinding && providedProofTypes == null) {
+            CredentialConfigMetadataValidator.validateDerivedProofTypes(proofTypesSupported,
+                    credentialConfig.getCredentialFormat(), errors);
         }
         if (providedBindingMethods != null) {
             CredentialConfigMetadataValidator.validateBindingMethods(providedBindingMethods,
@@ -315,8 +328,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         // Whatever was provided is stored; only an attribute nobody provided falls back to configuration.
         credentialConfig.setCryptographicBindingMethodsSupported(providedBindingMethods != null
                 ? providedBindingMethods
-                : CredentialConfigMetadataResolver.deriveBindingMethods(credentialConfig.getCredentialFormat(),
-                        cryptographicBindingMethodsSupportedMap));
+                : derivedBindingMethods);
 
         // The derived default goes through the same resolution as a requested value, so a proof type the
         // deployment declares without any signing algorithm cannot be stored by omitting the attribute.

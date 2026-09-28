@@ -195,6 +195,41 @@ public class CredentialConfigMetadataValidator {
     }
 
     /**
+     * A holder-bound configuration that names no binding methods takes the ones the deployment declares
+     * for its format. When the deployment declares none, the configuration would advertise an empty
+     * cryptographic_binding_methods_supported next to proof types and be issued without holder binding,
+     * so it is rejected instead.
+     */
+    public static void validateDerivedBindingMethods(List<String> derived, String credentialFormat, List<Error> errors) {
+        if (!derived.isEmpty()) {
+            return;
+        }
+        String message = "No cryptographic binding methods are declared for the credential format: " + credentialFormat
+                + ". Declare them in mosip.certify.credential-config.cryptographic-binding-methods-supported.";
+        if (!VCFormats.MSO_MDOC.equals(credentialFormat)) {
+            message += WITHOUT_HOLDER_BINDING_HINT;
+        }
+        errors.add(buildError(ErrorConstants.CRYPTOGRAPHIC_BINDING_CONFIG_NOT_FOUND, message));
+    }
+
+    /**
+     * A holder-bound configuration that names no proof types takes the ones the deployment declares. When
+     * the deployment declares none, the configuration would advertise binding methods with no way to prove
+     * possession of the key, so it is rejected instead.
+     */
+    public static void validateDerivedProofTypes(Map<String, Object> declaredProofTypes, String credentialFormat,
+                                                 List<Error> errors) {
+        if (declaredProofTypes != null && !declaredProofTypes.isEmpty()) {
+            return;
+        }
+        String message = "No proof types are declared. Declare them in mosip.certify.credential-config.proof-types-supported.";
+        if (!VCFormats.MSO_MDOC.equals(credentialFormat)) {
+            message += WITHOUT_HOLDER_BINDING_HINT;
+        }
+        errors.add(buildError(ErrorConstants.UNSUPPORTED_PROOF_TYPE, message));
+    }
+
+    /**
      * One of the two holder-binding attributes sent empty on its own. Unless the format is always
      * holder-bound, the message also says how to configure the credential without holder binding.
      */
