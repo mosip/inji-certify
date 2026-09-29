@@ -518,6 +518,9 @@ paths:
                     jwt:
                       - eyJ0eXAiOiJvcGVuaWQ0dmNpLXByb29mK2p3dC
                       - eyJ0eXAiOiJvcGVuaWQ0dmNpLXByb29mK2p3d....
+              Without holder binding:
+                value:
+                  credential_configuration_id: FarmerCredentialNoBinding
       responses:
         '200':
           description: OK
@@ -747,6 +750,27 @@ paths:
                       Phone Number: "${mobileNumber}"
                       Date Of Birth: "${dateOfBirth}"
                   qrSignatureAlgo: EdDSA
+              ldp_vc without holder binding example:
+                value:
+                  vcTemplate: ewogICJAY29udGV4dCI6IFsiaHR0cHM6Ly93d3cudzMub3JnL25zL2NyZWRlbnRpYWxzL3YyIl0sCiAgInR5cGUiOiBbIlZlcmlmaWFibGVDcmVkZW50aWFsIiwgIkZhcm1lckNyZWRlbnRpYWwiXSwKICAiaXNzdWVyIjogIiR7X2lzc3Vlcn0iLAogICJ2YWxpZEZyb20iOiAiJHt2YWxpZEZyb219IiwKICAidmFsaWRVbnRpbCI6ICIke3ZhbGlkVW50aWx9IiwKICAiY3JlZGVudGlhbFN1YmplY3QiOiB7CiAgICAjaWYoJF9ob2xkZXJJZCkiaWQiOiAiJHtfaG9sZGVySWR9IiwjZW5kCiAgICAiZnVsbE5hbWUiOiAiJHtmdWxsTmFtZX0iLAogICAgImZhcm1lcklEIjogIiR7ZmFybWVySUR9IgogIH0KfQ==
+                  credentialConfigKeyId: FarmerCredentialNoBinding
+                  credentialFormat: ldp_vc
+                  scope: mock_identity_vc_ldp
+                  contextURLs:
+                    - 'https://www.w3.org/ns/credentials/v2'
+                  credentialTypes:
+                    - VerifiableCredential
+                    - FarmerCredential
+                  didUrl: 'did:web:www.example.com:inji-config:farmer'
+                  keyManagerAppId: CERTIFY_VC_SIGN_ED25519
+                  keyManagerRefId: ED25519_SIGN
+                  signatureCryptoSuite: eddsa-rdfc-2022
+                  signatureAlgo: EdDSA
+                  cryptographicBindingMethodsSupported: []
+                  proofTypesSupported: {}
+                  metaDataDisplay:
+                    - name: Farmer Credential (No Binding)
+                      locale: en
               VCIssuance plugin mso_mdoc example:
                 value:
                   credentialConfigKeyId: DrivingLicenseCredential12
@@ -1650,7 +1674,7 @@ components:
           description: Signature algorithm used for QR code signing.
         cryptographicBindingMethodsSupported:
           type: array
-          description: 'Optional. Binding methods advertised for this credential configuration. Every value must already be declared for this credential format in mosip.certify.credential-config.cryptographic-binding-methods-supported; a value that is not declared there is rejected with unsupported_cryptographic_binding_method, and a credential format with no declared binding methods is rejected with cryptographic_binding_config_not_found. Omitted on Add, the full set declared for the credential format applies; omitted on Update, the stored value is retained. Returned by the Get response unless the configuration has no holder binding. An empty array is rejected unless proofTypesSupported is also empty: both empty configure the credential without holder binding, so no proof is required at issuance and the issuer metadata omits both. mso_mdoc is always holder-bound and cannot be configured this way.'
+          description: 'Optional. Binding methods advertised for this credential configuration. Every value must already be declared for this credential format in mosip.certify.credential-config.cryptographic-binding-methods-supported; a value that is not declared there is rejected with unsupported_cryptographic_binding_method, and a credential format with no declared binding methods is rejected with cryptographic_binding_config_not_found. Omitted on Add, the full set declared for the credential format applies, and if none is declared the request is rejected with cryptographic_binding_config_not_found; omitted on Update, the stored value is retained. Returned by the Get response unless the configuration has no holder binding. An empty array is rejected unless proofTypesSupported is also empty: both empty configure the credential without holder binding, so no proof is required at issuance (a proof sent anyway is ignored) and the issuer metadata omits both. mso_mdoc is always holder-bound and cannot be configured this way.'
           items:
             type: string
         credentialSigningAlgValuesSupported:
@@ -1661,7 +1685,7 @@ components:
             type: string
         proofTypesSupported:
           type: object
-          description: 'Optional. Proof types advertised for this credential configuration. Each key must be a proof type declared in mosip.certify.credential-config.proof-types-supported, otherwise the request is rejected with unsupported_proof_type. A proof type may be named with null or with an empty object, in which case every algorithm declared for it applies. Omitted on Add, all declared proof types apply; omitted on Update, the stored value is retained. Returned by the Get response unless the configuration has no holder binding. An empty object is rejected unless cryptographicBindingMethodsSupported is also empty, which configures the credential without holder binding.'
+          description: 'Optional. Proof types advertised for this credential configuration. Each key must be a proof type declared in mosip.certify.credential-config.proof-types-supported, otherwise the request is rejected with unsupported_proof_type. A proof type may be named with null or with an empty object, in which case every algorithm declared for it applies. Omitted on Add, all declared proof types apply, and if none is declared the request is rejected with unsupported_proof_type; omitted on Update, the stored value is retained. Returned by the Get response unless the configuration has no holder binding. An empty object is rejected unless cryptographicBindingMethodsSupported is also empty, which configures the credential without holder binding.'
           additionalProperties:
             $ref: '#/components/schemas/ProofTypeSupportedDTO'
     ProofTypeSupportedDTO:
@@ -1944,7 +1968,6 @@ components:
       type: object
       required:
         - credential_configuration_id
-        - proofs
       properties:
         credential_configuration_id:
           type: string
@@ -1955,6 +1978,10 @@ components:
           description: |
             JSON object containing proof(s) of possession of the key material.
             Keys are proof types (e.g., "jwt"), values are non-empty arrays of proof strings.
+            Required when the credential configuration advertises proof_types_supported; a request
+            without it is rejected with invalid_proof. For a configuration without holder binding
+            it may be omitted, and a proof sent anyway is ignored. In VCIssuance plugin mode it is
+            always required.
           additionalProperties:
             type: array
             minItems: 1
@@ -2187,7 +2214,7 @@ components:
           description: 'Document type identifier, used for mDL/mDoc credentials.'
         cryptographic_binding_methods_supported:
           type: array
-          description: 'List of supported cryptographic binding methods (e.g., did:jwk, did:key, cose_key).'
+          description: 'List of supported cryptographic binding methods (e.g., did:jwk, did:key, cose_key). Omitted when the credential configuration has no holder binding.'
           items:
             type: string
         credential_signing_alg_values_supported:
@@ -2199,7 +2226,7 @@ components:
               - type: integer
         proof_types_supported:
           type: object
-          description: 'Map of supported proof types and their parameters (e.g., jwt, ldp).'
+          description: 'Map of supported proof types and their parameters (e.g., jwt, ldp). Omitted when the credential configuration has no holder binding.'
           additionalProperties:
             type: object
         credential_definition:

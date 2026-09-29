@@ -10,6 +10,7 @@
 - [DCQL Support](./technical_docs/DCQL_Support.md)
 - [Inji Verify as a Library](./technical_docs/Inji_Verify_As_A_Library.md)
 - [DPoP Support (RFC 9449)](./technical_docs/DPoP_Support.md)
+- [Credentials Without Holder Binding](./technical_docs/Credentials_Without_Holder_Binding.md)
 
 # Integrator READMEs
 
