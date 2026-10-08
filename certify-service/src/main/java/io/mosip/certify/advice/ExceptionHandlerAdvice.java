@@ -121,6 +121,14 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
 
 
     private ResponseEntity<ResponseWrapper> handleInternalControllerException(Exception ex) {
+        if(ex instanceof HttpMessageNotReadableException) {
+            // A body Jackson could not read is the caller's mistake, so it is a 400 even
+            // though the validation branches below answer 200 in the ResponseWrapper style:
+            // there is no request to report a result for. Without this branch the fall-through
+            // at the end of this method answered 200 + unknown_error + Jackson's own prose.
+            return new ResponseEntity<>(getResponseWrapper(INVALID_REQUEST, describeUnreadableBody(ex)),
+                    HttpStatus.BAD_REQUEST);
+        }
         if(ex instanceof MethodArgumentNotValidException) {
             List<Error> errors = new ArrayList<>();
             for (FieldError error : ((MethodArgumentNotValidException) ex).getBindingResult().getFieldErrors()) {
@@ -172,29 +180,8 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
 
     public ResponseEntity<VCError> handleVCIControllerExceptions(Exception ex, HttpServletRequest request) {
         if(ex instanceof HttpMessageNotReadableException) {
-            String message = "Invalid JSON request body";
-            Throwable cause = ex.getCause();
-
-            // Provide more specific error based on the root cause
-            if (cause instanceof UnrecognizedPropertyException) {
-                UnrecognizedPropertyException propEx =
-                    (UnrecognizedPropertyException) cause;
-                message = String.format("Unrecognized field '%s' in request", propEx.getPropertyName());
-            } else if (cause instanceof InvalidFormatException) {
-                InvalidFormatException formatEx = (InvalidFormatException) cause;
-                String fieldName = formatEx.getPath().isEmpty() ? "unknown"
-                    : formatEx.getPath().get(formatEx.getPath().size() - 1).getFieldName();
-                message = String.format("Invalid format for field '%s' in request", fieldName);
-            } else if (cause instanceof JsonParseException) {
-                message = "Malformed JSON syntax error";
-            } else if (cause instanceof JsonMappingException) {
-                JsonMappingException mappingEx = (JsonMappingException) cause;
-                String fieldName = mappingEx.getPath().isEmpty() ? "unknown"
-                    : mappingEx.getPath().get(mappingEx.getPath().size() - 1).getFieldName();
-                message = String.format("Invalid request structure for field '%s'", fieldName);
-            }
-
-            return new ResponseEntity<>(getVCErrorDto(INVALID_REQUEST, message), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(getVCErrorDto(INVALID_REQUEST, describeUnreadableBody(ex)),
+                    HttpStatus.BAD_REQUEST);
         }
         if(ex instanceof MethodArgumentNotValidException) {
             FieldError fieldError = ((MethodArgumentNotValidException) ex).getBindingResult().getFieldError();
@@ -305,6 +292,51 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
         log.error("Unhandled exception encountered in OAuth controller", ex);
         OAuthTokenError oauthError = new OAuthTokenError("server_error", "Internal server error");
         return new ResponseEntity<Object>(oauthError, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    /**
+     * Describes why a request body could not be read, in words that are safe to return.
+     *
+     * <p>{@code ex.getMessage()} is Jackson's own prose - it names the DTO class and says
+     * things like "not marked as ignorable" - so it leaks internals and changes between
+     * library versions, which leaves API consumers nothing stable to assert on. Every
+     * caller therefore maps the cause to one of these fixed sentences instead of passing
+     * the exception message through.
+     *
+     * <p>The {@code instanceof} order is significant: {@link UnrecognizedPropertyException}
+     * and {@link InvalidFormatException} both extend {@link JsonMappingException}, so the
+     * specific types have to be tested first or they would be reported as the general one.
+     */
+    private String describeUnreadableBody(Exception ex) {
+        Throwable cause = ex.getCause();
+        if (cause instanceof UnrecognizedPropertyException) {
+            return String.format("Unrecognized field '%s' in request",
+                    ((UnrecognizedPropertyException) cause).getPropertyName());
+        }
+        if (cause instanceof InvalidFormatException) {
+            return String.format("Invalid format for field '%s' in request",
+                    fieldNameOf((InvalidFormatException) cause));
+        }
+        if (cause instanceof JsonParseException) {
+            return "Malformed JSON syntax error";
+        }
+        if (cause instanceof JsonMappingException) {
+            return String.format("Invalid request structure for field '%s'",
+                    fieldNameOf((JsonMappingException) cause));
+        }
+        return "Invalid JSON request body";
+    }
+
+    /**
+     * The field Jackson stopped on, or {@code unknown} when it reports no path (for
+     * example when the very first token of the body is already wrong).
+     */
+    private String fieldNameOf(JsonMappingException ex) {
+        List<JsonMappingException.Reference> path = ex.getPath();
+        if (path == null || path.isEmpty()) {
+            return "unknown";
+        }
+        return path.get(path.size() - 1).getFieldName();
     }
 
     private ResponseWrapper getResponseWrapper(String errorCode, String errorMessage) {
