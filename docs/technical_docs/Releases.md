@@ -23,7 +23,7 @@ Step-by-Step Migration guide for upgrade from 0.11.0 to 0.12.0 is available at [
 
 ---
 
-# Changes in release 1.0.0-alpha.2
+# Changes in release 1.0.0-rc.1
 
 ## Velocity upgraded from 1.7 to 2.4.1: template behaviour changes
 
