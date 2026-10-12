@@ -7,13 +7,13 @@
     <parent>
         <groupId>io.inji.certify</groupId>
         <artifactId>certify-parent</artifactId>
-        <version>1.0.0-alpha.2-SNAPSHOT</version>
+        <version>1.0.0-rc.1-SNAPSHOT</version>
     </parent>
 
     <groupId>io.inji.certify</groupId>
     <artifactId>certify-core</artifactId>
     <name>certify-core</name>
-    <version>1.0.0-alpha.2-SNAPSHOT</version>
+    <version>1.0.0-rc.1-SNAPSHOT</version>
     <description>Certify Core Library</description>
 
     <dependencies>
@@ -35,7 +35,7 @@
         <dependency>
             <groupId>io.inji.certify</groupId>
             <artifactId>certify-integration-api</artifactId>
-            <version>1.0.0-alpha.2-SNAPSHOT</version>
+            <version>1.0.0-rc.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
