@@ -93,7 +93,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         validateCredentialConfiguration(credentialConfigurationDTO, true);
 
         CredentialConfig credentialConfig = credentialConfigMapper.toEntity(credentialConfigurationDTO);
-        validateAndApplyCredentialConfigMetadataAttributes(credentialConfigurationDTO, credentialConfig, true);
+        validateAndApplyCredentialConfigMetadataAttributes(credentialConfigurationDTO, credentialConfig);
         return saveCredentialConfiguration(credentialConfig);
     }
 
@@ -215,100 +215,38 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     }
 
     /**
-     * Resolves cryptographic_binding_methods_supported, credential_signing_alg_values_supported and
-     * proof_types_supported onto the entity.
+     * Validates cryptographic_binding_methods_supported, credential_signing_alg_values_supported and
+     * proof_types_supported and stores them on the entity exactly as requested.
      * <p>
-     * An attribute present in the request is validated against the deployment configuration, which acts
-     * as the allow-list, and stored exactly as requested. An omitted attribute falls back to the value
-     * derived from configuration on add, and to the previously stored value on update, so an earlier
-     * explicit selection is never silently re-derived away.
+     * All three are mandatory on add and on update. The deployment configuration is the allow-list every
+     * value is checked against, and never a source of values: nothing is filled in from it, so what a
+     * configuration advertises is always what the issuer declared for it.
      * <p>
      * Every failure across all three attributes is collected before anything is stored, so the caller
      * sees the whole payload's problems at once and nothing is partially saved.
      */
-    private void validateAndApplyCredentialConfigMetadataAttributes(CredentialConfigurationDTO request, CredentialConfig credentialConfig, boolean isAdd) {
-        List<String> requestedBindingMethods = request.getCryptographicBindingMethodsSupported();
-        List<String> requestedSigningAlgs = request.getCredentialSigningAlgValuesSupported();
-        Map<String, Object> requestedProofTypes = request.getProofTypesSupported();
-
-        List<String> storedBindingMethods = credentialConfig.getCryptographicBindingMethodsSupported();
-        Map<String, Object> storedProofTypes = credentialConfig.getProofTypesSupported();
-        List<String> rawStoredSigningAlgs = credentialConfig.getCredentialSigningAlgValuesSupported();
-
-        // A retained value is validated too, so a value the deployment has stopped declaring surfaces on
-        // the next update rather than drifting silently. A value that was only ever derived is not, since
-        // it came from the configuration in the first place and there is nothing for an issuer to correct.
-        boolean retainsBindingMethods = requestedBindingMethods == null && !isAdd
-                && storedBindingMethods != null && !storedBindingMethods.isEmpty();
-        boolean retainsSigningAlgs = requestedSigningAlgs == null && !isAdd
-                && rawStoredSigningAlgs != null && rawStoredSigningAlgs.stream().anyMatch(Objects::nonNull);
-        boolean retainsProofTypes = requestedProofTypes == null && !isAdd
-                && storedProofTypes != null && !storedProofTypes.isEmpty();
-
-        // Read as-is, except that a crypto suite name written before this change is corrected to the
-        // algorithms it stands for. What the configuration advertises is unchanged either way.
-        List<String> storedSigningAlgs = retainsSigningAlgs
-                ? CredentialConfigMetadataResolver.resolveStoredSigningAlgs(credentialConfig, credentialSigningAlgValuesSupportedMap)
-                : null;
-
-        List<String> providedBindingMethods =
-                providedValue(requestedBindingMethods, storedBindingMethods, retainsBindingMethods);
-        List<String> providedSigningAlgs =
-                providedValue(requestedSigningAlgs, storedSigningAlgs, retainsSigningAlgs);
-        Map<String, Object> providedProofTypes =
-                providedValue(requestedProofTypes, storedProofTypes, retainsProofTypes);
-
-        // What this configuration will actually advertise: the request's selection, or the algorithms
-        // derived from configuration when it made none.
-        List<String> effectiveSigningAlgs = providedSigningAlgs != null
-                ? providedSigningAlgs
-                : CredentialConfigMetadataResolver.deriveSigningAlgs(credentialConfig.getSignatureCryptoSuite(),
-                        credentialConfig.getSignatureAlgo(), credentialSigningAlgValuesSupportedMap);
+    private void validateAndApplyCredentialConfigMetadataAttributes(CredentialConfigurationDTO request, CredentialConfig credentialConfig) {
+        List<String> bindingMethods = request.getCryptographicBindingMethodsSupported();
+        List<String> signingAlgs = request.getCredentialSigningAlgValuesSupported();
+        Map<String, Object> proofTypes = request.getProofTypesSupported();
 
         List<io.mosip.certify.core.dto.Error> errors = new ArrayList<>();
-        if (providedBindingMethods != null) {
-            CredentialConfigMetadataValidator.validateBindingMethods(providedBindingMethods,
-                    credentialConfig.getCredentialFormat(), cryptographicBindingMethodsSupportedMap, errors);
-        }
-        if (providedSigningAlgs != null) {
-            CredentialConfigMetadataValidator.validateSigningAlgs(providedSigningAlgs,
-                    credentialConfig.getSignatureCryptoSuite(), credentialSigningAlgValuesSupportedMap,
-                    keyAliasMapper, errors);
-        }
-        // A derived value is not checked against configuration - that is the allow-list - but the COSE
-        // constraint belongs to the mso_mdoc format, which configuration can violate, so it is checked
-        // whoever chose the algorithms.
-        CredentialConfigMetadataValidator.validateCoseSigningAlgs(effectiveSigningAlgs,
+        CredentialConfigMetadataValidator.validateBindingMethods(bindingMethods,
+                credentialConfig.getCredentialFormat(), cryptographicBindingMethodsSupportedMap, errors);
+        CredentialConfigMetadataValidator.validateSigningAlgs(signingAlgs,
+                credentialConfig.getSignatureCryptoSuite(), credentialSigningAlgValuesSupportedMap,
+                keyAliasMapper, errors);
+        CredentialConfigMetadataValidator.validateCoseSigningAlgs(signingAlgs,
                 credentialConfig.getCredentialFormat(), COSE_ALGORITHM_INTEGER_MAP.keySet(), errors);
-        if (providedProofTypes != null) {
-            CredentialConfigMetadataValidator.validateProofTypes(providedProofTypes, proofTypesSupported, errors);
-        }
+        CredentialConfigMetadataValidator.validateProofTypes(proofTypes, proofTypesSupported, errors);
 
         if (!errors.isEmpty()) {
             throw new CredentialConfigValidationException(errors);
         }
 
-        // Whatever was provided is stored; only an attribute nobody provided falls back to configuration.
-        credentialConfig.setCryptographicBindingMethodsSupported(providedBindingMethods != null
-                ? providedBindingMethods
-                : CredentialConfigMetadataResolver.deriveBindingMethods(credentialConfig.getCredentialFormat(),
-                        cryptographicBindingMethodsSupportedMap));
-
-        credentialConfig.setCredentialSigningAlgValuesSupported(effectiveSigningAlgs);
-
-        // The derived default goes through the same resolution as a requested value, so a proof type the
-        // deployment declares without any signing algorithm cannot be stored by omitting the attribute.
-        credentialConfig.setProofTypesSupported(CredentialConfigMetadataResolver.resolveProofTypes(
-                providedProofTypes != null ? providedProofTypes : proofTypesSupported, proofTypesSupported));
-    }
-
-    /**
-     * The value already provided for an attribute: by the request, or by the stored row when that value
-     * is being retained. Null when neither provided one and it will be derived from configuration, which
-     * is not validated - configuration is the allow-list, and checking it against itself proves nothing.
-     */
-    private static <T> T providedValue(T requested, T stored, boolean retains) {
-        return requested != null ? requested : (retains ? stored : null);
+        credentialConfig.setCryptographicBindingMethodsSupported(bindingMethods);
+        credentialConfig.setCredentialSigningAlgValuesSupported(signingAlgs);
+        credentialConfig.setProofTypesSupported(proofTypes);
     }
 
     @Override
@@ -316,7 +254,8 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         CredentialConfig credentialConfig = getActiveCredentialConfig(credentialConfigKeyId);
 
         CredentialConfigurationDTO credentialConfigurationDTO = credentialConfigMapper.toDto(credentialConfig);
-        // All three are always returned, resolving the defaults for configurations that never set them.
+        // All three are always returned. The stored values are returned as they are; a configuration created
+        // before these attributes were stored carries none, and keeps returning the values it always has.
         if (credentialConfigurationDTO.getCryptographicBindingMethodsSupported() == null) {
             credentialConfigurationDTO.setCryptographicBindingMethodsSupported(
                     CredentialConfigMetadataResolver.deriveBindingMethods(credentialConfig.getCredentialFormat(),
@@ -366,7 +305,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
         validateCredentialConfiguration(credentialConfigMapper.toDto(credentialConfig), false);
 
-        validateAndApplyCredentialConfigMetadataAttributes(credentialConfigurationDTO, credentialConfig, false);
+        validateAndApplyCredentialConfigMetadataAttributes(credentialConfigurationDTO, credentialConfig);
 
         CredentialConfig savedConfig = credentialConfigRepository.save(credentialConfig);
         log.info("Updated credential configuration: {}", savedConfig.getConfigId());

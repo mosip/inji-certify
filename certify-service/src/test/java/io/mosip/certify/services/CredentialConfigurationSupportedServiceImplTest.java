@@ -116,12 +116,28 @@ public class CredentialConfigurationSupportedServiceImplTest {
 
     }
 
+    /**
+     * Add and Update require all three metadata attributes, so this declares an allow-list for them and
+     * has the request select from it.
+     */
+    private void selectMetadataAttributes(CredentialConfigurationDTO dto, String credentialFormat,
+                                          String bindingMethod, String signingAlg) {
+        ReflectionTestUtils.setField(credentialConfigurationService, "cryptographicBindingMethodsSupportedMap",
+                new LinkedHashMap<>(Map.of(credentialFormat, List.of(bindingMethod))));
+        ReflectionTestUtils.setField(credentialConfigurationService, "proofTypesSupported",
+                new LinkedHashMap<String, Object>(Map.of("jwt", Map.of("proof_signing_alg_values_supported", List.of(signingAlg)))));
+        dto.setCryptographicBindingMethodsSupported(List.of(bindingMethod));
+        dto.setCredentialSigningAlgValuesSupported(List.of(signingAlg));
+        dto.setProofTypesSupported(Map.of("jwt", Map.of("proof_signing_alg_values_supported", List.of(signingAlg))));
+    }
+
     @Test
     public void addNewCredentialConfig_Success() {
         credentialConfigurationDTO.setContextURLs(List.of("https://www.w3.org/2018/credentials/v1"));
         credentialConfigurationDTO.setCredentialTypes(List.of("VerifiableCredential", "TestVerifiableCredential"));
         credentialConfigurationDTO.setSignatureCryptoSuite("Ed25519Signature2020");
         credentialConfigurationDTO.setSignatureAlgo("EdDSA");
+        selectMetadataAttributes(credentialConfigurationDTO, "ldp_vc", "did:jwk", "EdDSA");
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(credentialConfig);
         when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(credentialConfig);
 
@@ -207,6 +223,8 @@ public class CredentialConfigurationSupportedServiceImplTest {
 
 
         CredentialConfigurationDTO mockDto = new CredentialConfigurationDTO();
+        selectMetadataAttributes(mockDto, "dc+sd-jwt", "did:jwk", "ES256");
+        ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper", Map.of("ES256", List.of(List.of("TEST_EC", "TEST_EC-REF"))));
 
         // Create a valid DTO for validation that will be returned by toDto
         CredentialConfigurationDTO validationDto = new CredentialConfigurationDTO();
@@ -439,6 +457,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
         mdocDTO.setDocType("docType1");
         mdocDTO.setVcTemplate("mdoc_template");
         mdocDTO.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019"); // required
+        selectMetadataAttributes(mdocDTO, "mso_mdoc", "cose_key", "ES256");
 
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(mdocConfig);
         when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(mdocConfig);
@@ -467,6 +486,8 @@ public class CredentialConfigurationSupportedServiceImplTest {
         sdJwtDTO.setVcTemplate("sd_jwt_template");
         sdJwtDTO.setSdJwtVct("test-vct"); // required
         sdJwtDTO.setSignatureAlgo("ES256"); // required
+        selectMetadataAttributes(sdJwtDTO, "dc+sd-jwt", "did:jwk", "ES256");
+        ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper", Map.of("ES256", List.of(List.of("TEST_EC", "TEST_EC-REF"))));
 
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(sdJwtConfig);
         when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(sdJwtConfig);

@@ -15,11 +15,18 @@ import java.util.Set;
  * credential_signing_alg_values_supported and proof_types_supported — against what the deployment
  * declares for them.
  * <p>
+ * All three are mandatory: a request that leaves one out, sends it as null or sends it empty is
+ * rejected, and nothing is filled in from the deployment configuration, which is the allow-list only.
+ * <p>
  * Every method appends to the caller's error list rather than throwing, so a single request reports
  * all of its problems at once instead of one per round trip. The declared values are passed in rather
  * than injected, keeping the class a pure function of request and configuration.
  */
 public class CredentialConfigMetadataValidator {
+
+    private static final String BINDING_METHODS_ATTRIBUTE = "cryptographicBindingMethodsSupported";
+    private static final String SIGNING_ALGS_ATTRIBUTE = "credentialSigningAlgValuesSupported";
+    private static final String PROOF_TYPES_ATTRIBUTE = "proofTypesSupported";
 
     private CredentialConfigMetadataValidator() {
     }
@@ -27,9 +34,8 @@ public class CredentialConfigMetadataValidator {
     public static void validateBindingMethods(List<String> requested, String credentialFormat,
                                               Map<String, List<String>> declaredBindingMethodsByFormat,
                                               List<Error> errors) {
-        if (requested.isEmpty()) {
-            errors.add(buildError(ErrorConstants.INVALID_REQUEST,
-                    "cryptographicBindingMethodsSupported was provided but is empty."));
+        if (rejectMissing(requested, BINDING_METHODS_ATTRIBUTE, errors)
+                || rejectUnbound(requested.isEmpty(), BINDING_METHODS_ATTRIBUTE, errors)) {
             return;
         }
 
@@ -53,9 +59,13 @@ public class CredentialConfigMetadataValidator {
                                            Map<String, List<String>> declaredSigningAlgsByCryptoSuite,
                                            Map<String, List<List<String>>> keyAliasMapper,
                                            List<Error> errors) {
+        if (rejectMissing(requested, SIGNING_ALGS_ATTRIBUTE, errors)) {
+            return;
+        }
+        // A credential cannot be issued without a signing algorithm, so unlike the binding methods and
+        // proof types this attribute can never be empty.
         if (requested.isEmpty()) {
-            errors.add(buildError(ErrorConstants.INVALID_REQUEST,
-                    "credentialSigningAlgValuesSupported was provided but is empty."));
+            errors.add(buildError(ErrorConstants.INVALID_REQUEST, SIGNING_ALGS_ATTRIBUTE + " must not be empty."));
             return;
         }
 
@@ -91,16 +101,15 @@ public class CredentialConfigMetadataValidator {
     /**
      * An mso_mdoc credential is advertised with COSE algorithm identifiers, so an algorithm with no COSE
      * equivalent cannot be used for that format. This is the format's own constraint rather than the
-     * deployment's, so it applies to the algorithms a request selects and equally to the ones derived
-     * from configuration when the request selects none - both end up in the issuer metadata.
+     * deployment's, so it applies even to an algorithm the deployment declares for the crypto suite.
      */
-    public static void validateCoseSigningAlgs(List<String> effective, String credentialFormat,
+    public static void validateCoseSigningAlgs(List<String> requested, String credentialFormat,
                                                Set<String> coseSigningAlgs, List<Error> errors) {
-        if (!VCFormats.MSO_MDOC.equals(credentialFormat)) {
+        if (!VCFormats.MSO_MDOC.equals(credentialFormat) || requested == null) {
             return;
         }
 
-        for (String signingAlg : effective) {
+        for (String signingAlg : requested) {
             if (!coseSigningAlgs.contains(signingAlg)) {
                 errors.add(buildError(ErrorConstants.UNSUPPORTED_CREDENTIAL_SIGNING_ALG,
                         "The credential signing algorithm " + signingAlg + " is not supported for the credential format "
@@ -112,8 +121,8 @@ public class CredentialConfigMetadataValidator {
     public static void validateProofTypes(Map<String, Object> requested,
                                           Map<String, Object> declaredProofTypes,
                                           List<Error> errors) {
-        if (requested.isEmpty()) {
-            errors.add(buildError(ErrorConstants.INVALID_REQUEST, "proofTypesSupported was provided but is empty."));
+        if (rejectMissing(requested, PROOF_TYPES_ATTRIBUTE, errors)
+                || rejectUnbound(requested.isEmpty(), PROOF_TYPES_ATTRIBUTE, errors)) {
             return;
         }
 
@@ -132,9 +141,6 @@ public class CredentialConfigMetadataValidator {
     private static void validateProofTypeDetail(String proofType, Object detail,
                                                 Map<String, Object> declaredProofTypes,
                                                 List<Error> errors) {
-        if (detail == null) {
-            return;
-        }
         if (!(detail instanceof Map)) {
             errors.add(buildError(ErrorConstants.INVALID_REQUEST,
                     "The proof type " + proofType + " must carry an object holding "
@@ -151,8 +157,12 @@ public class CredentialConfigMetadataValidator {
             }
         }
 
+        // A proof type is advertised with the algorithms it accepts, and none are filled in from the
+        // deployment configuration, so the request has to name them.
         Object requestedAlgs = requestedDetail.get(Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED);
         if (requestedAlgs == null) {
+            errors.add(buildError(ErrorConstants.INVALID_REQUEST,
+                    Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED + " is mandatory for the proof type " + proofType + "."));
             return;
         }
         if (!(requestedAlgs instanceof List)) {
@@ -165,7 +175,7 @@ public class CredentialConfigMetadataValidator {
         if (requestedAlgList.isEmpty()) {
             errors.add(buildError(ErrorConstants.INVALID_REQUEST,
                     Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED + " for the proof type " + proofType
-                            + " was provided but is empty."));
+                            + " must not be empty."));
             return;
         }
 
@@ -177,6 +187,30 @@ public class CredentialConfigMetadataValidator {
                                 + proofType + ". The supported values are: " + declared));
             }
         }
+    }
+
+    /**
+     * A missing attribute and one sent as null are the same to Jackson, and both are rejected.
+     */
+    private static boolean rejectMissing(Object requested, String attribute, List<Error> errors) {
+        if (requested != null) {
+            return false;
+        }
+        errors.add(buildError(ErrorConstants.INVALID_REQUEST, attribute + " is mandatory."));
+        return true;
+    }
+
+    /**
+     * An empty list of binding methods or set of proof types describes an unbound credential, which is
+     * not supported yet, so it is rejected for now. Once unbound credentials are supported an empty value
+     * means a bearer credential and this check is dropped; the signing algorithms keep their own check.
+     */
+    private static boolean rejectUnbound(boolean empty, String attribute, List<Error> errors) {
+        if (!empty) {
+            return false;
+        }
+        errors.add(buildError(ErrorConstants.INVALID_REQUEST, attribute + " must not be empty."));
+        return true;
     }
 
     private static Error buildError(String errorCode, String errorMessage) {

@@ -137,6 +137,13 @@ Current usecases include:
         "RegistrationReceiptCredential"
     ],
     "credentialFormat": "ldp_vc",
+    "cryptographicBindingMethodsSupported": ["did:jwk"],
+    "credentialSigningAlgValuesSupported": ["EdDSA"],
+    "proofTypesSupported": {
+        "jwt": {
+            "proof_signing_alg_values_supported": ["ES256", "EdDSA"]
+        }
+    },
     "didUrl": "did:web:mosip.github.io:inji-config:dev-int-inji:landregistry-ed25519#key-0",
     "display": [{
         "name": "REGISTRATION RECEIPT OF THE RURAL PROPERTY IN CAR",

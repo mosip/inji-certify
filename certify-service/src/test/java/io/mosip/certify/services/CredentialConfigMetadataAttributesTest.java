@@ -20,6 +20,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -27,9 +28,9 @@ import static org.mockito.Mockito.*;
 
 /**
  * Covers the per-credential-configuration selection of cryptographic_binding_methods_supported,
- * credential_signing_alg_values_supported and proof_types_supported: what is accepted, what is
- * rejected, what the defaults resolve to when an attribute is omitted, and what reaches the
- * credential issuer metadata.
+ * credential_signing_alg_values_supported and proof_types_supported: all three are mandatory, what is
+ * accepted is stored exactly as requested with nothing filled in from the deployment configuration,
+ * what is rejected, and what reaches the Get response and the credential issuer metadata.
  */
 @RunWith(MockitoJUnitRunner.class)
 public class CredentialConfigMetadataAttributesTest {
@@ -44,6 +45,16 @@ public class CredentialConfigMetadataAttributesTest {
     private CredentialConfigurationServiceImpl credentialConfigurationService;
 
     private static final String PROOF_SIGNING_ALGS = Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED;
+
+    private static final Map<String, Consumer<CredentialConfigurationDTO>> CLEAR_ATTRIBUTE = Map.of(
+            "cryptographicBindingMethodsSupported", dto -> dto.setCryptographicBindingMethodsSupported(null),
+            "credentialSigningAlgValuesSupported", dto -> dto.setCredentialSigningAlgValuesSupported(null),
+            "proofTypesSupported", dto -> dto.setProofTypesSupported(null));
+
+    private static final Map<String, Consumer<CredentialConfigurationDTO>> EMPTY_ATTRIBUTE = Map.of(
+            "cryptographicBindingMethodsSupported", dto -> dto.setCryptographicBindingMethodsSupported(List.of()),
+            "credentialSigningAlgValuesSupported", dto -> dto.setCredentialSigningAlgValuesSupported(List.of()),
+            "proofTypesSupported", dto -> dto.setProofTypesSupported(Map.of()));
 
     @Before
     public void setup() {
@@ -76,7 +87,11 @@ public class CredentialConfigMetadataAttributesTest {
         ReflectionTestUtils.setField(credentialConfigurationService, "authorizationServerMapping", Map.of());
     }
 
-    private CredentialConfigurationDTO ldpVcRequest() {
+    /**
+     * An ldp_vc configuration without the three attributes, as the mapper returns one created before
+     * they were stored.
+     */
+    private CredentialConfigurationDTO ldpVcConfig() {
         CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
         dto.setCredentialConfigKeyId("test-credential");
         dto.setMetaDataDisplay(List.of(new MetaDataDisplayDTO()));
@@ -91,6 +106,17 @@ public class CredentialConfigMetadataAttributesTest {
         return dto;
     }
 
+    /**
+     * A valid ldp_vc request, carrying all three attributes.
+     */
+    private CredentialConfigurationDTO ldpVcRequest() {
+        CredentialConfigurationDTO dto = ldpVcConfig();
+        dto.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
+        dto.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
+        dto.setProofTypesSupported(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))));
+        return dto;
+    }
+
     private CredentialConfig ldpVcEntity() {
         CredentialConfig entity = new CredentialConfig();
         entity.setCredentialConfigKeyId("test-credential");
@@ -101,7 +127,7 @@ public class CredentialConfigMetadataAttributesTest {
         return entity;
     }
 
-    private CredentialConfigurationDTO sdJwtRequest() {
+    private CredentialConfigurationDTO sdJwtConfig() {
         CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
         dto.setCredentialConfigKeyId("test-sd-jwt");
         dto.setMetaDataDisplay(List.of(new MetaDataDisplayDTO()));
@@ -109,6 +135,14 @@ public class CredentialConfigMetadataAttributesTest {
         dto.setCredentialFormat("dc+sd-jwt");
         dto.setSdJwtVct("test-vct");
         dto.setSignatureAlgo("ES256");
+        return dto;
+    }
+
+    private CredentialConfigurationDTO sdJwtRequest() {
+        CredentialConfigurationDTO dto = sdJwtConfig();
+        dto.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
+        dto.setCredentialSigningAlgValuesSupported(List.of("ES256"));
+        dto.setProofTypesSupported(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("ES256"))));
         return dto;
     }
 
@@ -122,7 +156,7 @@ public class CredentialConfigMetadataAttributesTest {
         return entity;
     }
 
-    private CredentialConfigurationDTO msoMdocRequest() {
+    private CredentialConfigurationDTO msoMdocConfig() {
         CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
         dto.setCredentialConfigKeyId("test-mso-mdoc");
         dto.setMetaDataDisplay(List.of(new MetaDataDisplayDTO()));
@@ -130,6 +164,14 @@ public class CredentialConfigMetadataAttributesTest {
         dto.setCredentialFormat("mso_mdoc");
         dto.setDocType("org.iso.18013.5.1.mDL");
         dto.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
+        return dto;
+    }
+
+    private CredentialConfigurationDTO msoMdocRequest() {
+        CredentialConfigurationDTO dto = msoMdocConfig();
+        dto.setCryptographicBindingMethodsSupported(List.of("cose_key"));
+        dto.setCredentialSigningAlgValuesSupported(List.of("ES256"));
+        dto.setProofTypesSupported(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("ES256"))));
         return dto;
     }
 
@@ -144,41 +186,149 @@ public class CredentialConfigMetadataAttributesTest {
         return entity;
     }
 
-    // ---------- AC-1, BR-BM-3, BR-ALG-3, BR-PT-5: omitted attributes fall back to the derived defaults ----------
+    private CredentialConfig storedLdpVcEntity() {
+        CredentialConfig stored = ldpVcEntity();
+        stored.setCryptographicBindingMethodsSupported(List.of("did:jwk", "did:web"));
+        stored.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
+        stored.setProofTypesSupported(new LinkedHashMap<>(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("RS256", "EdDSA")))));
+        return stored;
+    }
+
+    private void stubUpdateOf(CredentialConfig stored) {
+        when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(stored));
+        when(credentialConfigMapper.toDto(any(CredentialConfig.class))).thenReturn(ldpVcConfig());
+        doNothing().when(credentialConfigMapper).updateEntityFromDto(any(CredentialConfigurationDTO.class), any(CredentialConfig.class));
+    }
+
+    private static void assertRejectedAsInvalidRequestNaming(CredentialConfigValidationException exception, String attribute) {
+        Assert.assertEquals(1, exception.getErrors().size());
+        Assert.assertEquals(ErrorConstants.INVALID_REQUEST, exception.getErrors().getFirst().getErrorCode());
+        Assert.assertTrue(exception.getErrors().getFirst().getErrorMessage().contains(attribute));
+    }
+
+    // ---------- All three are mandatory on add: missing, null and empty are rejected alike ----------
+
+    /**
+     * Jackson binds a missing attribute and one sent as null to the same null, so this covers both.
+     * Nothing is filled in from the deployment configuration in its place.
+     */
+    @Test
+    public void addWithAnyAttributeMissingOrNull_IsRejected() {
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
+
+        CLEAR_ATTRIBUTE.forEach((attribute, clear) -> {
+            CredentialConfigurationDTO request = ldpVcRequest();
+            clear.accept(request);
+
+            CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                    () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+            assertRejectedAsInvalidRequestNaming(exception, attribute);
+        });
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
 
     @Test
-    public void addWithAllThreeOmitted_StoresDerivedDefaults() {
+    public void addWithAnyAttributeEmpty_IsRejected() {
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
+
+        EMPTY_ATTRIBUTE.forEach((attribute, empty) -> {
+            CredentialConfigurationDTO request = ldpVcRequest();
+            empty.accept(request);
+
+            CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                    () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+            assertRejectedAsInvalidRequestNaming(exception, attribute);
+        });
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    /**
+     * A request written before the attributes were mandatory sends none of them, and is told about all
+     * three at once.
+     */
+    @Test
+    public void addWithAllThreeMissing_ReportsEachOfThem() {
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(ldpVcConfig()));
+
+        Assert.assertEquals(3, exception.getErrors().size());
+        exception.getErrors().forEach(error ->
+                Assert.assertEquals(ErrorConstants.INVALID_REQUEST, error.getErrorCode()));
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    // ---------- A proof type has to name its proof signing algorithms ----------
+
+    @Test
+    public void addWithProofTypeAndNoAlgorithmList_IsRejected() {
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setProofTypesSupported(Map.of("jwt", Map.of()));
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        assertRejectedAsInvalidRequestNaming(exception, PROOF_SIGNING_ALGS);
+        Assert.assertTrue(exception.getErrors().getFirst().getErrorMessage().contains("jwt"));
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    @Test
+    public void addWithProofTypeAndNullDetail_IsRejected() {
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
+        CredentialConfigurationDTO request = ldpVcRequest();
+        LinkedHashMap<String, Object> proofTypes = new LinkedHashMap<>();
+        proofTypes.put("jwt", null);
+        request.setProofTypesSupported(proofTypes);
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        assertRejectedAsInvalidRequestNaming(exception, PROOF_SIGNING_ALGS);
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    @Test
+    public void addWithProofTypeAndEmptyAlgorithmList_IsRejected() {
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setProofTypesSupported(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of())));
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        assertRejectedAsInvalidRequestNaming(exception, PROOF_SIGNING_ALGS);
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    // ---------- What is accepted is stored exactly as requested ----------
+
+    /**
+     * Each value narrows what the deployment declares, and nothing is added back from it: the proof type
+     * keeps the one algorithm requested rather than the four declared.
+     */
+    @Test
+    public void addWithAllThreeDeclared_StoresExactlyWhatWasRequested() {
         CredentialConfig entity = ldpVcEntity();
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
         when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
 
         credentialConfigurationService.addCredentialConfiguration(ldpVcRequest());
 
-        Assert.assertEquals(List.of("did:jwk", "did:web"), entity.getCryptographicBindingMethodsSupported());
+        Assert.assertEquals(List.of("did:jwk"), entity.getCryptographicBindingMethodsSupported());
         Assert.assertEquals(List.of("EdDSA"), entity.getCredentialSigningAlgValuesSupported());
-        Assert.assertEquals(Set.of("jwt"), entity.getProofTypesSupported().keySet());
+        Assert.assertEquals(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))), entity.getProofTypesSupported());
     }
 
     /**
-     * BR-ALG-3: the algorithms declared for the crypto suite are stored, not the crypto suite name.
+     * With no crypto suite the allow-list is the key selection configuration.
      */
     @Test
-    public void addWithSigningAlgsOmitted_StoresAlgorithmsRatherThanCryptoSuiteName() {
-        CredentialConfig entity = ldpVcEntity();
-        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
-        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
-
-        credentialConfigurationService.addCredentialConfiguration(ldpVcRequest());
-
-        Assert.assertEquals(List.of("EdDSA"), entity.getCredentialSigningAlgValuesSupported());
-        Assert.assertFalse(entity.getCredentialSigningAlgValuesSupported().contains("Ed25519Signature2020"));
-    }
-
-    /**
-     * BR-ALG-4: with no crypto suite the configuration's own signature algorithm is stored.
-     */
-    @Test
-    public void addWithoutCryptoSuite_StoresConfigurationSignatureAlgo() {
+    public void addSdJwtWithAlgorithmHoldingASigningKey_IsAccepted() {
         CredentialConfig entity = sdJwtEntity();
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
         when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
@@ -188,104 +338,19 @@ public class CredentialConfigMetadataAttributesTest {
         Assert.assertEquals(List.of("ES256"), entity.getCredentialSigningAlgValuesSupported());
     }
 
-    // ---------- AC-2: explicitly selected values are stored as requested ----------
-
     @Test
-    public void addWithAllThreeDeclared_StoresExactlyWhatWasRequested() {
-        CredentialConfig entity = ldpVcEntity();
-        CredentialConfigurationDTO request = ldpVcRequest();
-        request.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
-        request.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
-        request.setProofTypesSupported(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))));
+    public void addMsoMdocWithDeclaredValues_IsAccepted() {
+        CredentialConfig entity = msoMdocEntity();
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
         when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
 
-        credentialConfigurationService.addCredentialConfiguration(request);
+        credentialConfigurationService.addCredentialConfiguration(msoMdocRequest());
 
-        Assert.assertEquals(List.of("did:jwk"), entity.getCryptographicBindingMethodsSupported());
-        Assert.assertEquals(List.of("EdDSA"), entity.getCredentialSigningAlgValuesSupported());
-        Assert.assertEquals(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))), entity.getProofTypesSupported());
-    }
-
-    /**
-     * BR-PT-3: naming a proof type without narrowing it leaves every declared algorithm applying.
-     */
-    @Test
-    public void addWithProofTypeAndNoAlgorithmList_StoresTheFullDeclaredSet() {
-        CredentialConfig entity = ldpVcEntity();
-        CredentialConfigurationDTO request = ldpVcRequest();
-        request.setProofTypesSupported(new LinkedHashMap<>(Map.of("jwt", Map.of())));
-        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
-        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
-
-        credentialConfigurationService.addCredentialConfiguration(request);
-
-        // Storing the bare proof type would advertise no algorithms at all, and JwtProofValidator reads a
-        // missing proof_signing_alg_values_supported as an empty list and rejects every proof.
-        Assert.assertEquals(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("RS256", "PS256", "ES256", "EdDSA"))),
-                entity.getProofTypesSupported());
-    }
-
-    /**
-     * BR-PT-3: the same applies when the proof type carries no object at all.
-     */
-    @Test
-    public void addWithProofTypeAndNullDetail_StoresTheFullDeclaredSet() {
-        CredentialConfig entity = ldpVcEntity();
-        CredentialConfigurationDTO request = ldpVcRequest();
-        LinkedHashMap<String, Object> proofTypes = new LinkedHashMap<>();
-        proofTypes.put("jwt", null);
-        request.setProofTypesSupported(proofTypes);
-        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
-        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
-
-        credentialConfigurationService.addCredentialConfiguration(request);
-
-        Assert.assertEquals(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("RS256", "PS256", "ES256", "EdDSA"))),
-                entity.getProofTypesSupported());
-    }
-
-    /**
-     * BR-PT-3 reaching the credential issuer metadata: what a wallet sees carries the algorithms, so the
-     * published metadata stays valid under OpenID4VCI.
-     */
-    @Test
-    public void metadata_ForProofTypeWithNoAlgorithmList_AdvertisesTheFullDeclaredSet() {
-        CredentialConfig stored = ldpVcEntity();
-        stored.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
-        stored.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
-        LinkedHashMap<String, Object> bare = new LinkedHashMap<>();
-        bare.put("jwt", Map.of());
-        stored.setProofTypesSupported(bare);
-
-        CredentialConfigurationDTO mapped = ldpVcRequest();
-        mapped.setProofTypesSupported(bare);
-        when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(stored));
-        when(credentialConfigMapper.toDto(stored)).thenReturn(mapped);
-
-        CredentialConfigurationDTO result = credentialConfigurationService.getCredentialConfigurationById("test-credential");
-
-        Assert.assertEquals(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("RS256", "PS256", "ES256", "EdDSA"))),
-                result.getProofTypesSupported());
-    }
-
-    /**
-     * BR-ALG-2: with no crypto suite the allow-list is the key selection configuration.
-     */
-    @Test
-    public void addSdJwtWithAlgorithmHoldingASigningKey_IsAccepted() {
-        CredentialConfig entity = sdJwtEntity();
-        CredentialConfigurationDTO request = sdJwtRequest();
-        request.setCredentialSigningAlgValuesSupported(List.of("ES256"));
-        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
-        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
-
-        credentialConfigurationService.addCredentialConfiguration(request);
-
+        Assert.assertEquals(List.of("cose_key"), entity.getCryptographicBindingMethodsSupported());
         Assert.assertEquals(List.of("ES256"), entity.getCredentialSigningAlgValuesSupported());
     }
 
-    // ---------- AC-3, BR-CM-3: undeclared values are rejected and nothing is saved ----------
+    // ---------- Undeclared values are rejected and nothing is saved ----------
 
     @Test
     public void addWithUndeclaredBindingMethod_IsRejected() {
@@ -304,18 +369,16 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     /**
-     * BR-BM-2: a format the deployment declares no binding methods for.
+     * A format the deployment declares no binding methods for.
      */
     @Test
     public void addWithBindingMethodsForUndeclaredFormat_IsRejected() {
         ReflectionTestUtils.setField(credentialConfigurationService, "cryptographicBindingMethodsSupportedMap",
                 new LinkedHashMap<String, List<String>>());
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
-        CredentialConfigurationDTO request = ldpVcRequest();
-        request.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
 
         CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
-                () -> credentialConfigurationService.addCredentialConfiguration(request));
+                () -> credentialConfigurationService.addCredentialConfiguration(ldpVcRequest()));
 
         Assert.assertEquals(ErrorConstants.CRYPTOGRAPHIC_BINDING_CONFIG_NOT_FOUND,
                 exception.getErrors().getFirst().getErrorCode());
@@ -338,7 +401,7 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     /**
-     * BR-ALG-2: an algorithm the deployment holds no signing key for.
+     * An algorithm the deployment holds no signing key for.
      */
     @Test
     public void addSdJwtWithAlgorithmHoldingNoSigningKey_IsRejected() {
@@ -406,26 +469,6 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     /**
-     * Omitting the attribute must not be a way round the COSE check: the algorithms derived from the
-     * deployment's own declaration are what gets stored, and for mso_mdoc they have to convert too.
-     */
-    @Test
-    public void addMsoMdocWithSigningAlgsOmittedAndSuiteDeclaringNoCoseEquivalent_IsRejected() {
-        LinkedHashMap<String, List<String>> signingAlgs = new LinkedHashMap<>();
-        signingAlgs.put("EcdsaSecp256r1Signature2019", List.of("ES256", "PS256"));
-        ReflectionTestUtils.setField(credentialConfigurationService, "credentialSigningAlgValuesSupportedMap", signingAlgs);
-        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(msoMdocEntity());
-
-        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
-                () -> credentialConfigurationService.addCredentialConfiguration(msoMdocRequest()));
-
-        Assert.assertEquals(ErrorConstants.UNSUPPORTED_CREDENTIAL_SIGNING_ALG,
-                exception.getErrors().getFirst().getErrorCode());
-        Assert.assertTrue(exception.getErrors().getFirst().getErrorMessage().contains("PS256"));
-        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
-    }
-
-    /**
      * The COSE restriction applies to mso_mdoc alone; every other format keeps the crypto suite's own
      * declared algorithms.
      */
@@ -445,53 +488,11 @@ public class CredentialConfigMetadataAttributesTest {
         Assert.assertEquals(List.of("EdDSA", "PS256"), entity.getCredentialSigningAlgValuesSupported());
     }
 
-    /**
-     * A proof type the deployment declares with no signing algorithms would be stored, and advertised,
-     * carrying none - which OpenID4VCI does not allow and which makes JwtProofValidator reject every
-     * proof. The misconfiguration is reported instead of being persisted.
-     */
-    @Test
-    public void addWithProofTypeDeclaringNoSigningAlgs_IsRejected() {
-        LinkedHashMap<String, Object> proofTypes = new LinkedHashMap<>();
-        proofTypes.put("jwt", Map.of(PROOF_SIGNING_ALGS, List.of()));
-        ReflectionTestUtils.setField(credentialConfigurationService, "proofTypesSupported", proofTypes);
-        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
-        CredentialConfigurationDTO request = ldpVcRequest();
-        request.setProofTypesSupported(Map.of("jwt", Map.of()));
-
-        IllegalStateException exception = assertThrows(IllegalStateException.class,
-                () -> credentialConfigurationService.addCredentialConfiguration(request));
-
-        Assert.assertTrue(exception.getMessage().contains(PROOF_SIGNING_ALGS));
-        Assert.assertTrue(exception.getMessage().contains("jwt"));
-        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
-    }
-
-    /**
-     * Omitting the attribute must not be a way round that check: the derived default is resolved the
-     * same way a requested value is.
-     */
-    @Test
-    public void addWithProofTypesOmittedAndDeclaredWithoutSigningAlgs_IsRejected() {
-        LinkedHashMap<String, Object> proofTypes = new LinkedHashMap<>();
-        proofTypes.put("jwt", Map.of(PROOF_SIGNING_ALGS, List.of()));
-        ReflectionTestUtils.setField(credentialConfigurationService, "proofTypesSupported", proofTypes);
-        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
-
-        assertThrows(IllegalStateException.class,
-                () -> credentialConfigurationService.addCredentialConfiguration(ldpVcRequest()));
-
-        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
-    }
-
-    /**
-     * BR-PT-1: an undeclared proof type.
-     */
     @Test
     public void addWithUndeclaredProofType_IsRejected() {
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
         CredentialConfigurationDTO request = ldpVcRequest();
-        request.setProofTypesSupported(Map.of("ldp_vp", Map.of()));
+        request.setProofTypesSupported(Map.of("ldp_vp", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))));
 
         CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
                 () -> credentialConfigurationService.addCredentialConfiguration(request));
@@ -501,9 +502,6 @@ public class CredentialConfigMetadataAttributesTest {
         verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
     }
 
-    /**
-     * BR-PT-2: a proof signing algorithm outside the set declared for that proof type.
-     */
     @Test
     public void addWithUndeclaredProofSigningAlgorithm_IsRejected() {
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
@@ -520,42 +518,22 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     /**
-     * BR-PT-4: an attribute the deployment does not recognise inside a proof type entry.
+     * An attribute the deployment does not recognise inside a proof type entry.
      */
     @Test
     public void addWithUnrecognisedProofTypeAttribute_IsRejected() {
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
         CredentialConfigurationDTO request = ldpVcRequest();
-        request.setProofTypesSupported(Map.of("jwt", Map.of("unknown_attribute", List.of("EdDSA"))));
+        request.setProofTypesSupported(Map.of("jwt", Map.of(
+                PROOF_SIGNING_ALGS, List.of("EdDSA"),
+                "unknown_attribute", List.of("EdDSA"))));
 
         CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
                 () -> credentialConfigurationService.addCredentialConfiguration(request));
 
-        Assert.assertEquals(ErrorConstants.INVALID_REQUEST, exception.getErrors().getFirst().getErrorCode());
-        Assert.assertTrue(exception.getErrors().getFirst().getErrorMessage().contains("unknown_attribute"));
+        assertRejectedAsInvalidRequestNaming(exception, "unknown_attribute");
         verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
     }
-
-    // ---------- BR-CM-1: present but empty ----------
-
-    @Test
-    public void addWithEmptyAttributes_IsRejected() {
-        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
-        CredentialConfigurationDTO request = ldpVcRequest();
-        request.setCryptographicBindingMethodsSupported(List.of());
-        request.setCredentialSigningAlgValuesSupported(List.of());
-        request.setProofTypesSupported(Map.of());
-
-        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
-                () -> credentialConfigurationService.addCredentialConfiguration(request));
-
-        Assert.assertEquals(3, exception.getErrors().size());
-        exception.getErrors().forEach(error ->
-                Assert.assertEquals(ErrorConstants.INVALID_REQUEST, error.getErrorCode()));
-        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
-    }
-
-    // ---------- Every failure is reported in one pass ----------
 
     @Test
     public void addWithSeveralInvalidValues_ReportsThemTogether() {
@@ -563,7 +541,7 @@ public class CredentialConfigMetadataAttributesTest {
         CredentialConfigurationDTO request = ldpVcRequest();
         request.setCryptographicBindingMethodsSupported(List.of("cose_key"));
         request.setCredentialSigningAlgValuesSupported(List.of("RS256"));
-        request.setProofTypesSupported(Map.of("ldp_vp", Map.of()));
+        request.setProofTypesSupported(Map.of("ldp_vp", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))));
 
         CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
                 () -> credentialConfigurationService.addCredentialConfiguration(request));
@@ -576,63 +554,107 @@ public class CredentialConfigMetadataAttributesTest {
         verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
     }
 
-    // ---------- AC-4, AC-5, BR-CM-2: update replaces what is present and retains what is omitted ----------
+    // ---------- A proof type declared with no proof signing algorithms ----------
 
+    /**
+     * The deployment may declare a proof type with no proof signing algorithms. That is no longer filled
+     * in on write, so it cannot break a request that does not name it.
+     */
     @Test
-    public void updateWithAttributesPresent_ReplacesStoredValues() {
-        CredentialConfig stored = ldpVcEntity();
-        stored.setCryptographicBindingMethodsSupported(List.of("did:jwk", "did:web"));
-        stored.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
-        stored.setProofTypesSupported(new LinkedHashMap<>(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("RS256", "EdDSA")))));
+    public void addNotNamingAProofTypeDeclaredWithoutSigningAlgs_IsAccepted() {
+        LinkedHashMap<String, Object> proofTypes = new LinkedHashMap<>();
+        proofTypes.put("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA")));
+        proofTypes.put("ldp_vp", Map.of(PROOF_SIGNING_ALGS, List.of()));
+        ReflectionTestUtils.setField(credentialConfigurationService, "proofTypesSupported", proofTypes);
+        CredentialConfig entity = ldpVcEntity();
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
+        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
 
-        CredentialConfigurationDTO request = new CredentialConfigurationDTO();
-        request.setCryptographicBindingMethodsSupported(List.of("did:web"));
-        request.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
-        request.setProofTypesSupported(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))));
+        credentialConfigurationService.addCredentialConfiguration(ldpVcRequest());
 
-        when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(stored));
-        when(credentialConfigMapper.toDto(any(CredentialConfig.class))).thenReturn(ldpVcRequest());
-        doNothing().when(credentialConfigMapper).updateEntityFromDto(any(CredentialConfigurationDTO.class), any(CredentialConfig.class));
-        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(stored);
-
-        credentialConfigurationService.updateCredentialConfiguration("test-credential", request);
-
-        Assert.assertEquals(List.of("did:web"), stored.getCryptographicBindingMethodsSupported());
-        Assert.assertEquals(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))), stored.getProofTypesSupported());
+        Assert.assertEquals(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))), entity.getProofTypesSupported());
     }
 
     /**
-     * AC-5 and BR-CM-2: an omitted attribute keeps its stored value and is never re-derived from the
-     * current deployment configuration.
+     * Only a request naming that proof type is rejected, since no algorithm it names can be declared.
      */
     @Test
-    public void updateWithAttributesOmitted_RetainsStoredValues() {
-        CredentialConfig stored = ldpVcEntity();
-        stored.setCryptographicBindingMethodsSupported(List.of("did:web"));
-        stored.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
-        stored.setProofTypesSupported(new LinkedHashMap<>(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA")))));
+    public void addNamingAProofTypeDeclaredWithoutSigningAlgs_IsRejected() {
+        LinkedHashMap<String, Object> proofTypes = new LinkedHashMap<>();
+        proofTypes.put("jwt", Map.of(PROOF_SIGNING_ALGS, List.of()));
+        ReflectionTestUtils.setField(credentialConfigurationService, "proofTypesSupported", proofTypes);
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
 
-        when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(stored));
-        when(credentialConfigMapper.toDto(any(CredentialConfig.class))).thenReturn(ldpVcRequest());
-        doNothing().when(credentialConfigMapper).updateEntityFromDto(any(CredentialConfigurationDTO.class), any(CredentialConfig.class));
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(ldpVcRequest()));
+
+        Assert.assertEquals(ErrorConstants.UNSUPPORTED_PROOF_SIGNING_ALG,
+                exception.getErrors().getFirst().getErrorCode());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    // ---------- Update: all three are mandatory and replace what is stored ----------
+
+    @Test
+    public void updateWithAllThree_ReplacesStoredValues() {
+        CredentialConfig stored = storedLdpVcEntity();
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setCryptographicBindingMethodsSupported(List.of("did:web"));
+        stubUpdateOf(stored);
         when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(stored);
 
-        credentialConfigurationService.updateCredentialConfiguration("test-credential", new CredentialConfigurationDTO());
+        credentialConfigurationService.updateCredentialConfiguration("test-credential", request);
 
         Assert.assertEquals(List.of("did:web"), stored.getCryptographicBindingMethodsSupported());
         Assert.assertEquals(List.of("EdDSA"), stored.getCredentialSigningAlgValuesSupported());
         Assert.assertEquals(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))), stored.getProofTypesSupported());
     }
 
+    /**
+     * An attribute left out of an update is rejected rather than retained or re-derived, and what is
+     * stored is left untouched.
+     */
+    @Test
+    public void updateWithAnyAttributeMissingOrNull_IsRejectedAndNothingIsSaved() {
+        CredentialConfig stored = storedLdpVcEntity();
+        stubUpdateOf(stored);
+
+        CLEAR_ATTRIBUTE.forEach((attribute, clear) -> {
+            CredentialConfigurationDTO request = ldpVcRequest();
+            clear.accept(request);
+
+            CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                    () -> credentialConfigurationService.updateCredentialConfiguration("test-credential", request));
+
+            assertRejectedAsInvalidRequestNaming(exception, attribute);
+        });
+        Assert.assertEquals(storedLdpVcEntity().getCryptographicBindingMethodsSupported(), stored.getCryptographicBindingMethodsSupported());
+        Assert.assertEquals(storedLdpVcEntity().getCredentialSigningAlgValuesSupported(), stored.getCredentialSigningAlgValuesSupported());
+        Assert.assertEquals(storedLdpVcEntity().getProofTypesSupported(), stored.getProofTypesSupported());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    @Test
+    public void updateWithAnyAttributeEmpty_IsRejectedAndNothingIsSaved() {
+        stubUpdateOf(storedLdpVcEntity());
+
+        EMPTY_ATTRIBUTE.forEach((attribute, empty) -> {
+            CredentialConfigurationDTO request = ldpVcRequest();
+            empty.accept(request);
+
+            CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                    () -> credentialConfigurationService.updateCredentialConfiguration("test-credential", request));
+
+            assertRejectedAsInvalidRequestNaming(exception, attribute);
+        });
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
     @Test
     public void updateWithUndeclaredValue_IsRejectedAndNothingIsSaved() {
-        CredentialConfig stored = ldpVcEntity();
-        CredentialConfigurationDTO request = new CredentialConfigurationDTO();
+        stubUpdateOf(storedLdpVcEntity());
+        CredentialConfigurationDTO request = ldpVcRequest();
         request.setCryptographicBindingMethodsSupported(List.of("cose_key"));
-
-        when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(stored));
-        when(credentialConfigMapper.toDto(any(CredentialConfig.class))).thenReturn(ldpVcRequest());
-        doNothing().when(credentialConfigMapper).updateEntityFromDto(any(CredentialConfigurationDTO.class), any(CredentialConfig.class));
 
         assertThrows(CredentialConfigValidationException.class,
                 () -> credentialConfigurationService.updateCredentialConfiguration("test-credential", request));
@@ -641,55 +663,24 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     /**
-     * BR-CM-4: a stored value the deployment has stopped declaring surfaces on the next update rather
-     * than drifting silently, even though the attribute is omitted from the request.
+     * A configuration created before these attributes were stored is updated like any other: what it is
+     * left holding is exactly what the request sent, with the crypto suite name it stored replaced.
      */
     @Test
-    public void updateRetainingAValueTheDeploymentNoLongerDeclares_IsRejected() {
-        LinkedHashMap<String, List<String>> narrowedBindingMethods = new LinkedHashMap<>();
-        narrowedBindingMethods.put("ldp_vc", List.of("did:jwk"));
-        ReflectionTestUtils.setField(credentialConfigurationService, "cryptographicBindingMethodsSupportedMap",
-                narrowedBindingMethods);
-
-        CredentialConfig stored = ldpVcEntity();
-        stored.setCryptographicBindingMethodsSupported(List.of("did:web"));
-
-        when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(stored));
-        when(credentialConfigMapper.toDto(any(CredentialConfig.class))).thenReturn(ldpVcRequest());
-        doNothing().when(credentialConfigMapper).updateEntityFromDto(any(CredentialConfigurationDTO.class), any(CredentialConfig.class));
-
-        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
-                () -> credentialConfigurationService.updateCredentialConfiguration("test-credential", new CredentialConfigurationDTO()));
-
-        Assert.assertEquals(ErrorConstants.UNSUPPORTED_CRYPTOGRAPHIC_BINDING_METHOD,
-                exception.getErrors().getFirst().getErrorCode());
-        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
-    }
-
-    /**
-     * A configuration created before this change is updated for an unrelated field: the three attributes
-     * are retained and the update succeeds, with the stored crypto suite name corrected to the algorithms
-     * it stands for.
-     */
-    @Test
-    public void updateLegacyConfiguration_SucceedsAndCorrectsTheStoredSigningAlgorithms() {
+    public void updateLegacyConfiguration_StoresExactlyTheRequestedValues() {
         CredentialConfig legacy = ldpVcEntity();
-        legacy.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
         legacy.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
-        legacy.setProofTypesSupported(new LinkedHashMap<>(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("RS256", "PS256", "ES256", "EdDSA")))));
-
-        when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(legacy));
-        when(credentialConfigMapper.toDto(any(CredentialConfig.class))).thenReturn(ldpVcRequest());
-        doNothing().when(credentialConfigMapper).updateEntityFromDto(any(CredentialConfigurationDTO.class), any(CredentialConfig.class));
+        stubUpdateOf(legacy);
         when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(legacy);
 
-        credentialConfigurationService.updateCredentialConfiguration("test-credential", new CredentialConfigurationDTO());
+        credentialConfigurationService.updateCredentialConfiguration("test-credential", ldpVcRequest());
 
-        Assert.assertEquals(List.of("EdDSA"), legacy.getCredentialSigningAlgValuesSupported());
         Assert.assertEquals(List.of("did:jwk"), legacy.getCryptographicBindingMethodsSupported());
+        Assert.assertEquals(List.of("EdDSA"), legacy.getCredentialSigningAlgValuesSupported());
+        Assert.assertEquals(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))), legacy.getProofTypesSupported());
     }
 
-    // ---------- AC-6, AC-7: the Get response always carries all three ----------
+    // ---------- The Get response always carries all three ----------
 
     @Test
     public void getConfiguration_ReturnsStoredValues() {
@@ -698,7 +689,7 @@ public class CredentialConfigMetadataAttributesTest {
         stored.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
         stored.setProofTypesSupported(new LinkedHashMap<>(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA")))));
 
-        CredentialConfigurationDTO mapped = ldpVcRequest();
+        CredentialConfigurationDTO mapped = ldpVcConfig();
         mapped.setCryptographicBindingMethodsSupported(stored.getCryptographicBindingMethodsSupported());
         mapped.setCredentialSigningAlgValuesSupported(stored.getCredentialSigningAlgValuesSupported());
         mapped.setProofTypesSupported(stored.getProofTypesSupported());
@@ -710,12 +701,13 @@ public class CredentialConfigMetadataAttributesTest {
 
         Assert.assertEquals(List.of("did:web"), result.getCryptographicBindingMethodsSupported());
         Assert.assertEquals(List.of("EdDSA"), result.getCredentialSigningAlgValuesSupported());
-        Assert.assertEquals(Set.of("jwt"), result.getProofTypesSupported().keySet());
+        Assert.assertEquals(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))), result.getProofTypesSupported());
     }
 
     /**
-     * AC-7: a configuration created before this change resolves its signing algorithms from the crypto
-     * suite name it stored, rather than returning that suite name.
+     * A configuration created before these attributes were stored keeps returning what it always has:
+     * its signing algorithms resolved from the crypto suite name it stored, and the declared defaults for
+     * the other two.
      */
     @Test
     public void getLegacyConfiguration_ReturnsResolvedDefaults() {
@@ -723,7 +715,7 @@ public class CredentialConfigMetadataAttributesTest {
         legacy.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
 
         when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(legacy));
-        when(credentialConfigMapper.toDto(legacy)).thenReturn(ldpVcRequest());
+        when(credentialConfigMapper.toDto(legacy)).thenReturn(ldpVcConfig());
 
         CredentialConfigurationDTO result = credentialConfigurationService.getCredentialConfigurationById("test-credential");
 
@@ -732,7 +724,7 @@ public class CredentialConfigMetadataAttributesTest {
         Assert.assertEquals(Set.of("jwt"), result.getProofTypesSupported().keySet());
     }
 
-    // ---------- AC-8 and the metadata stability requirement ----------
+    // ---------- The credential issuer metadata ----------
 
     @Test
     public void metadata_AdvertisesTheValuesStoredAgainstTheConfiguration() {
@@ -742,7 +734,7 @@ public class CredentialConfigMetadataAttributesTest {
         stored.setProofTypesSupported(new LinkedHashMap<>(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA")))));
 
         when(credentialConfigRepository.findAll()).thenReturn(List.of(stored));
-        when(credentialConfigMapper.toDto(stored)).thenReturn(ldpVcRequest());
+        when(credentialConfigMapper.toDto(stored)).thenReturn(ldpVcConfig());
 
         CredentialIssuerMetadataDTO metadata = credentialConfigurationService.fetchCredentialIssuerMetadata();
 
@@ -751,6 +743,50 @@ public class CredentialConfigMetadataAttributesTest {
         Assert.assertEquals(List.of("EdDSA"), supported.getCredentialSigningAlgValuesSupported());
         Assert.assertEquals(List.of("did:web"), supported.getCryptographicBindingMethodsSupported());
         Assert.assertEquals(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))), supported.getProofTypesSupported());
+    }
+
+    /**
+     * A configuration created before this change stored the crypto suite name; it must keep advertising
+     * exactly what it advertised before, with no data migration.
+     */
+    @Test
+    public void metadata_ForLegacyConfiguration_IsUnchanged() {
+        CredentialConfig legacy = ldpVcEntity();
+        legacy.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
+        legacy.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
+
+        when(credentialConfigRepository.findAll()).thenReturn(List.of(legacy));
+        when(credentialConfigMapper.toDto(legacy)).thenReturn(ldpVcConfig());
+
+        CredentialIssuerMetadataDTO metadata = credentialConfigurationService.fetchCredentialIssuerMetadata();
+
+        CredentialConfigurationSupportedDTO supported =
+                metadata.getCredentialConfigurationSupportedDTO().get("test-credential");
+        Assert.assertEquals(List.of("EdDSA"), supported.getCredentialSigningAlgValuesSupported());
+        Assert.assertEquals(List.of("did:jwk"), supported.getCryptographicBindingMethodsSupported());
+        Assert.assertEquals(Set.of("jwt"), supported.getProofTypesSupported().keySet());
+    }
+
+    /**
+     * A legacy stored proof type carrying no algorithm list is advertised with the algorithms declared for
+     * it, so the published metadata stays valid under OpenID4VCI.
+     */
+    @Test
+    public void metadata_ForLegacyProofTypeWithNoAlgorithmList_AdvertisesTheFullDeclaredSet() {
+        CredentialConfig legacy = ldpVcEntity();
+        legacy.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
+        legacy.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
+        LinkedHashMap<String, Object> bare = new LinkedHashMap<>();
+        bare.put("jwt", Map.of());
+        legacy.setProofTypesSupported(bare);
+
+        when(credentialConfigRepository.findAll()).thenReturn(List.of(legacy));
+        when(credentialConfigMapper.toDto(legacy)).thenReturn(ldpVcConfig());
+
+        CredentialIssuerMetadataDTO metadata = credentialConfigurationService.fetchCredentialIssuerMetadata();
+
+        Assert.assertEquals(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("RS256", "PS256", "ES256", "EdDSA"))),
+                metadata.getCredentialConfigurationSupportedDTO().get("test-credential").getProofTypesSupported());
     }
 
     /**
@@ -770,8 +806,8 @@ public class CredentialConfigMetadataAttributesTest {
         healthy.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
 
         when(credentialConfigRepository.findAll()).thenReturn(List.of(legacy, healthy));
-        when(credentialConfigMapper.toDto(legacy)).thenReturn(msoMdocRequest());
-        when(credentialConfigMapper.toDto(healthy)).thenReturn(ldpVcRequest());
+        when(credentialConfigMapper.toDto(legacy)).thenReturn(msoMdocConfig());
+        when(credentialConfigMapper.toDto(healthy)).thenReturn(ldpVcConfig());
 
         CredentialIssuerMetadataDTO metadata = credentialConfigurationService.fetchCredentialIssuerMetadata();
 
@@ -780,7 +816,7 @@ public class CredentialConfigMetadataAttributesTest {
 
     /**
      * A stored proof type the deployment no longer declares any signing algorithm for cannot be advertised
-     * either. Before, the exception escaped and the endpoint failed for every credential type.
+     * either, and only that configuration is left out.
      */
     @Test
     public void should_omitOnlyInvalidConfiguration_when_proofTypeHasNoSigningAlgorithms() {
@@ -794,8 +830,8 @@ public class CredentialConfigMetadataAttributesTest {
         healthy.setProofTypesSupported(new LinkedHashMap<>(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA")))));
 
         when(credentialConfigRepository.findAll()).thenReturn(List.of(broken, healthy));
-        when(credentialConfigMapper.toDto(broken)).thenReturn(sdJwtRequest());
-        when(credentialConfigMapper.toDto(healthy)).thenReturn(ldpVcRequest());
+        when(credentialConfigMapper.toDto(broken)).thenReturn(sdJwtConfig());
+        when(credentialConfigMapper.toDto(healthy)).thenReturn(ldpVcConfig());
 
         CredentialIssuerMetadataDTO metadata = credentialConfigurationService.fetchCredentialIssuerMetadata();
 
@@ -815,7 +851,7 @@ public class CredentialConfigMetadataAttributesTest {
         legacy.setCredentialSigningAlgValuesSupported(List.of("EcdsaSecp256r1Signature2019"));
 
         when(credentialConfigRepository.findAll()).thenReturn(List.of(legacy));
-        when(credentialConfigMapper.toDto(legacy)).thenReturn(msoMdocRequest());
+        when(credentialConfigMapper.toDto(legacy)).thenReturn(msoMdocConfig());
 
         credentialConfigurationService.validateStoredConfigurations();
 
@@ -823,21 +859,21 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     /**
-     * A configuration created before this change stored the crypto suite name; it must keep advertising
-     * exactly what it advertised before, with no data migration.
+     * A deployment declaring a proof type with no proof signing algorithms still starts: the startup check
+     * runs to completion over every stored configuration.
      */
     @Test
-    public void metadata_ForLegacyConfiguration_IsUnchanged() {
-        CredentialConfig legacy = ldpVcEntity();
-        legacy.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
-        legacy.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
+    public void should_completeStartupValidation_when_proofTypeIsDeclaredWithoutSigningAlgs() {
+        LinkedHashMap<String, Object> proofTypes = new LinkedHashMap<>();
+        proofTypes.put("jwt", Map.of(PROOF_SIGNING_ALGS, List.of()));
+        ReflectionTestUtils.setField(credentialConfigurationService, "proofTypesSupported", proofTypes);
+        CredentialConfig stored = storedLdpVcEntity();
 
-        when(credentialConfigRepository.findAll()).thenReturn(List.of(legacy));
-        when(credentialConfigMapper.toDto(legacy)).thenReturn(ldpVcRequest());
+        when(credentialConfigRepository.findAll()).thenReturn(List.of(stored));
+        when(credentialConfigMapper.toDto(stored)).thenReturn(ldpVcConfig());
 
-        CredentialIssuerMetadataDTO metadata = credentialConfigurationService.fetchCredentialIssuerMetadata();
+        credentialConfigurationService.validateStoredConfigurations();
 
-        Assert.assertEquals(List.of("EdDSA"), metadata.getCredentialConfigurationSupportedDTO()
-                .get("test-credential").getCredentialSigningAlgValuesSupported());
+        verify(credentialConfigMapper).toDto(stored);
     }
 }
