@@ -1,6 +1,7 @@
 package io.mosip.certify.services;
 
 import io.mosip.certify.core.dto.*;
+import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.exception.CertifyException;
@@ -125,10 +126,10 @@ public class CredentialConfigurationSupportedServiceImplTest {
         ReflectionTestUtils.setField(credentialConfigurationService, "cryptographicBindingMethodsSupportedMap",
                 new LinkedHashMap<>(Map.of(credentialFormat, List.of(bindingMethod))));
         ReflectionTestUtils.setField(credentialConfigurationService, "proofTypesSupported",
-                new LinkedHashMap<String, Object>(Map.of("jwt", Map.of("proof_signing_alg_values_supported", List.of(signingAlg)))));
+                new LinkedHashMap<String, Object>(Map.of("jwt", Map.of(Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED, List.of(signingAlg)))));
         dto.setCryptographicBindingMethodsSupported(List.of(bindingMethod));
         dto.setCredentialSigningAlgValuesSupported(List.of(signingAlg));
-        dto.setProofTypesSupported(Map.of("jwt", Map.of("proof_signing_alg_values_supported", List.of(signingAlg))));
+        dto.setProofTypesSupported(Map.of("jwt", Map.of(Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED, List.of(signingAlg))));
     }
 
     @Test
