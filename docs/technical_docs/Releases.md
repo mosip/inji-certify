@@ -46,3 +46,15 @@ Replace `$velocityCount` with `$foreach.count`, and `$velocityHasNext` with `$fo
 **3. Reflection blocked**
 
 `SecureUberspector` is enabled. Templates can no longer call methods on classes like `Class`, `ClassLoader`, `Runtime` or `System`, so `$x.getClass().forName(...)` no longer works. Normal field access and the `$_dateTool` and `$_esc` tools are unaffected.
+
+---
+
+# Changes in release 1.0.0-rc.2
+
+## Credential configuration metadata attributes are mandatory
+
+`cryptographicBindingMethodsSupported`, `credentialSigningAlgValuesSupported` and `proofTypesSupported` are now mandatory in the Add (`POST /credential-configurations`) and Update (`PUT /credential-configurations/{credentialConfigKeyId}`) requests. A request that leaves one out, sends it as `null` or sends it empty is rejected with `invalid_request`, and nothing is filled in from the deployment properties any more.
+
+**Action for existing automation:** every Update request must send all three attributes, even one that only changes an unrelated field such as the display name. This includes configurations created before these attributes were stored. Existing configurations keep advertising the same values without being re-submitted; the Get response returns those values, which can be sent back unchanged.
+
+See [Credential Issuer Configuration](./Credential_Issuer_Configuration.md) for the validation rules.

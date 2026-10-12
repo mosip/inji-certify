@@ -6,6 +6,7 @@ import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.dto.Error;
 import io.mosip.certify.utils.CredentialConfigMetadataResolver;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,7 +36,7 @@ public class CredentialConfigMetadataValidator {
                                               Map<String, List<String>> declaredBindingMethodsByFormat,
                                               List<Error> errors) {
         if (rejectMissing(requested, BINDING_METHODS_ATTRIBUTE, errors)
-                || rejectUnbound(requested.isEmpty(), BINDING_METHODS_ATTRIBUTE, errors)) {
+                || rejectEmptyBindingOrProofTypes(requested, BINDING_METHODS_ATTRIBUTE, errors)) {
             return;
         }
 
@@ -65,7 +66,7 @@ public class CredentialConfigMetadataValidator {
         // A credential cannot be issued without a signing algorithm, so unlike the binding methods and
         // proof types this attribute can never be empty.
         if (requested.isEmpty()) {
-            errors.add(buildError(ErrorConstants.INVALID_REQUEST, SIGNING_ALGS_ATTRIBUTE + " must not be empty."));
+            errors.add(missingOrEmptyError(SIGNING_ALGS_ATTRIBUTE));
             return;
         }
 
@@ -122,7 +123,7 @@ public class CredentialConfigMetadataValidator {
                                           Map<String, Object> declaredProofTypes,
                                           List<Error> errors) {
         if (rejectMissing(requested, PROOF_TYPES_ATTRIBUTE, errors)
-                || rejectUnbound(requested.isEmpty(), PROOF_TYPES_ATTRIBUTE, errors)) {
+                || rejectEmptyBindingOrProofTypes(requested, PROOF_TYPES_ATTRIBUTE, errors)) {
             return;
         }
 
@@ -160,22 +161,13 @@ public class CredentialConfigMetadataValidator {
         // A proof type is advertised with the algorithms it accepts, and none are filled in from the
         // deployment configuration, so the request has to name them.
         Object requestedAlgs = requestedDetail.get(Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED);
-        if (requestedAlgs == null) {
-            errors.add(buildError(ErrorConstants.INVALID_REQUEST,
-                    Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED + " is mandatory for the proof type " + proofType + "."));
+        String algsAttribute = Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED + " for the proof type " + proofType;
+        if (requestedAlgs == null || requestedAlgs instanceof List<?> algs && algs.isEmpty()) {
+            errors.add(missingOrEmptyError(algsAttribute));
             return;
         }
-        if (!(requestedAlgs instanceof List)) {
-            errors.add(buildError(ErrorConstants.INVALID_REQUEST,
-                    Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED + " for the proof type " + proofType + " must be a list."));
-            return;
-        }
-
-        List<?> requestedAlgList = (List<?>) requestedAlgs;
-        if (requestedAlgList.isEmpty()) {
-            errors.add(buildError(ErrorConstants.INVALID_REQUEST,
-                    Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED + " for the proof type " + proofType
-                            + " must not be empty."));
+        if (!(requestedAlgs instanceof List<?> requestedAlgList)) {
+            errors.add(buildError(ErrorConstants.INVALID_REQUEST, algsAttribute + " must be a list."));
             return;
         }
 
@@ -196,21 +188,28 @@ public class CredentialConfigMetadataValidator {
         if (requested != null) {
             return false;
         }
-        errors.add(buildError(ErrorConstants.INVALID_REQUEST, attribute + " is mandatory."));
+        errors.add(missingOrEmptyError(attribute));
         return true;
     }
 
     /**
-     * An empty list of binding methods or set of proof types describes an unbound credential, which is
-     * not supported yet, so it is rejected for now. Once unbound credentials are supported an empty value
-     * means a bearer credential and this check is dropped; the signing algorithms keep their own check.
+     * An empty {@code cryptographicBindingMethodsSupported} or {@code proofTypesSupported} is currently
+     * rejected. This check is temporary and is removed once an empty value is given a meaning.
      */
-    private static boolean rejectUnbound(boolean empty, String attribute, List<Error> errors) {
+    private static boolean rejectEmptyBindingOrProofTypes(Object requested, String attribute, List<Error> errors) {
+        boolean empty = requested instanceof Collection<?> values ? values.isEmpty() : ((Map<?, ?>) requested).isEmpty();
         if (!empty) {
             return false;
         }
-        errors.add(buildError(ErrorConstants.INVALID_REQUEST, attribute + " must not be empty."));
+        errors.add(missingOrEmptyError(attribute));
         return true;
+    }
+
+    /**
+     * A missing value and an empty one are rejected the same way, with the same message.
+     */
+    private static Error missingOrEmptyError(String attribute) {
+        return buildError(ErrorConstants.INVALID_REQUEST, attribute + " is mandatory and must not be empty.");
     }
 
     private static Error buildError(String errorCode, String errorMessage) {

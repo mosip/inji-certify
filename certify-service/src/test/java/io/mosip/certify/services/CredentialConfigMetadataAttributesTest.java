@@ -213,7 +213,7 @@ public class CredentialConfigMetadataAttributesTest {
      * Nothing is filled in from the deployment configuration in its place.
      */
     @Test
-    public void addWithAnyAttributeMissingOrNull_IsRejected() {
+    public void should_rejectAdd_when_anyAttributeIsMissingOrNull() {
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
 
         CLEAR_ATTRIBUTE.forEach((attribute, clear) -> {
@@ -229,7 +229,7 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     @Test
-    public void addWithAnyAttributeEmpty_IsRejected() {
+    public void should_rejectAdd_when_anyAttributeIsEmpty() {
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
 
         EMPTY_ATTRIBUTE.forEach((attribute, empty) -> {
@@ -249,7 +249,7 @@ public class CredentialConfigMetadataAttributesTest {
      * three at once.
      */
     @Test
-    public void addWithAllThreeMissing_ReportsEachOfThem() {
+    public void should_reportEachAttribute_when_allThreeAreMissing() {
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
 
         CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
@@ -264,7 +264,7 @@ public class CredentialConfigMetadataAttributesTest {
     // ---------- A proof type has to name its proof signing algorithms ----------
 
     @Test
-    public void addWithProofTypeAndNoAlgorithmList_IsRejected() {
+    public void should_rejectAdd_when_proofTypeHasNoAlgorithmList() {
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
         CredentialConfigurationDTO request = ldpVcRequest();
         request.setProofTypesSupported(Map.of("jwt", Map.of()));
@@ -278,7 +278,7 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     @Test
-    public void addWithProofTypeAndNullDetail_IsRejected() {
+    public void should_rejectAdd_when_proofTypeIsNull() {
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
         CredentialConfigurationDTO request = ldpVcRequest();
         LinkedHashMap<String, Object> proofTypes = new LinkedHashMap<>();
@@ -293,7 +293,7 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     @Test
-    public void addWithProofTypeAndEmptyAlgorithmList_IsRejected() {
+    public void should_rejectAdd_when_proofTypeHasEmptyAlgorithmList() {
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
         CredentialConfigurationDTO request = ldpVcRequest();
         request.setProofTypesSupported(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of())));
@@ -312,7 +312,7 @@ public class CredentialConfigMetadataAttributesTest {
      * keeps the one algorithm requested rather than the four declared.
      */
     @Test
-    public void addWithAllThreeDeclared_StoresExactlyWhatWasRequested() {
+    public void should_storeExactlyTheRequestedValues_when_allThreeAreDeclared() {
         CredentialConfig entity = ldpVcEntity();
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
         when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
@@ -328,7 +328,7 @@ public class CredentialConfigMetadataAttributesTest {
      * With no crypto suite the allow-list is the key selection configuration.
      */
     @Test
-    public void addSdJwtWithAlgorithmHoldingASigningKey_IsAccepted() {
+    public void should_acceptSdJwt_when_algorithmHasASigningKey() {
         CredentialConfig entity = sdJwtEntity();
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
         when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
@@ -339,7 +339,7 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     @Test
-    public void addMsoMdocWithDeclaredValues_IsAccepted() {
+    public void should_acceptMsoMdoc_when_valuesAreDeclared() {
         CredentialConfig entity = msoMdocEntity();
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
         when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
@@ -353,7 +353,7 @@ public class CredentialConfigMetadataAttributesTest {
     // ---------- Undeclared values are rejected and nothing is saved ----------
 
     @Test
-    public void addWithUndeclaredBindingMethod_IsRejected() {
+    public void should_rejectAdd_when_bindingMethodIsUndeclared() {
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
         CredentialConfigurationDTO request = ldpVcRequest();
         request.setCryptographicBindingMethodsSupported(List.of("cose_key"));
@@ -372,7 +372,7 @@ public class CredentialConfigMetadataAttributesTest {
      * A format the deployment declares no binding methods for.
      */
     @Test
-    public void addWithBindingMethodsForUndeclaredFormat_IsRejected() {
+    public void should_rejectAdd_when_formatDeclaresNoBindingMethods() {
         ReflectionTestUtils.setField(credentialConfigurationService, "cryptographicBindingMethodsSupportedMap",
                 new LinkedHashMap<String, List<String>>());
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
@@ -386,7 +386,7 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     @Test
-    public void addWithAlgorithmNotDeclaredForCryptoSuite_IsRejected() {
+    public void should_rejectAdd_when_algorithmIsNotDeclaredForCryptoSuite() {
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
         CredentialConfigurationDTO request = ldpVcRequest();
         request.setCredentialSigningAlgValuesSupported(List.of("RS256"));
@@ -404,7 +404,7 @@ public class CredentialConfigMetadataAttributesTest {
      * An algorithm the deployment holds no signing key for.
      */
     @Test
-    public void addSdJwtWithAlgorithmHoldingNoSigningKey_IsRejected() {
+    public void should_rejectSdJwt_when_algorithmHasNoSigningKey() {
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(sdJwtEntity());
         CredentialConfigurationDTO request = sdJwtRequest();
         request.setCredentialSigningAlgValuesSupported(List.of("PS256"));
@@ -424,7 +424,7 @@ public class CredentialConfigMetadataAttributesTest {
      * instead of failing when the issuer metadata is built.
      */
     @Test
-    public void addMsoMdocWithAlgorithmHavingNoCoseEquivalent_IsRejected() {
+    public void should_rejectMsoMdoc_when_algorithmHasNoCoseEquivalent() {
         LinkedHashMap<String, List<String>> signingAlgs = new LinkedHashMap<>();
         signingAlgs.put("EcdsaSecp256r1Signature2019", List.of("ES256", "PS256"));
         ReflectionTestUtils.setField(credentialConfigurationService, "credentialSigningAlgValuesSupportedMap", signingAlgs);
@@ -473,7 +473,7 @@ public class CredentialConfigMetadataAttributesTest {
      * declared algorithms.
      */
     @Test
-    public void addWithAlgorithmHavingNoCoseEquivalent_IsAcceptedForOtherFormats() {
+    public void should_acceptAlgorithmWithoutCoseEquivalent_when_formatIsNotMsoMdoc() {
         LinkedHashMap<String, List<String>> signingAlgs = new LinkedHashMap<>();
         signingAlgs.put("Ed25519Signature2020", List.of("EdDSA", "PS256"));
         ReflectionTestUtils.setField(credentialConfigurationService, "credentialSigningAlgValuesSupportedMap", signingAlgs);
@@ -489,7 +489,7 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     @Test
-    public void addWithUndeclaredProofType_IsRejected() {
+    public void should_rejectAdd_when_proofTypeIsUndeclared() {
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
         CredentialConfigurationDTO request = ldpVcRequest();
         request.setProofTypesSupported(Map.of("ldp_vp", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))));
@@ -503,7 +503,7 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     @Test
-    public void addWithUndeclaredProofSigningAlgorithm_IsRejected() {
+    public void should_rejectAdd_when_proofSigningAlgorithmIsUndeclared() {
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
         CredentialConfigurationDTO request = ldpVcRequest();
         request.setProofTypesSupported(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("ES512"))));
@@ -521,7 +521,7 @@ public class CredentialConfigMetadataAttributesTest {
      * An attribute the deployment does not recognise inside a proof type entry.
      */
     @Test
-    public void addWithUnrecognisedProofTypeAttribute_IsRejected() {
+    public void should_rejectAdd_when_proofTypeHasUnrecognisedAttribute() {
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
         CredentialConfigurationDTO request = ldpVcRequest();
         request.setProofTypesSupported(Map.of("jwt", Map.of(
@@ -536,7 +536,7 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     @Test
-    public void addWithSeveralInvalidValues_ReportsThemTogether() {
+    public void should_reportAllErrorsTogether_when_severalValuesAreInvalid() {
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
         CredentialConfigurationDTO request = ldpVcRequest();
         request.setCryptographicBindingMethodsSupported(List.of("cose_key"));
@@ -561,7 +561,7 @@ public class CredentialConfigMetadataAttributesTest {
      * in on write, so it cannot break a request that does not name it.
      */
     @Test
-    public void addNotNamingAProofTypeDeclaredWithoutSigningAlgs_IsAccepted() {
+    public void should_acceptAdd_when_proofTypeDeclaredWithoutSigningAlgsIsNotNamed() {
         LinkedHashMap<String, Object> proofTypes = new LinkedHashMap<>();
         proofTypes.put("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA")));
         proofTypes.put("ldp_vp", Map.of(PROOF_SIGNING_ALGS, List.of()));
@@ -579,7 +579,7 @@ public class CredentialConfigMetadataAttributesTest {
      * Only a request naming that proof type is rejected, since no algorithm it names can be declared.
      */
     @Test
-    public void addNamingAProofTypeDeclaredWithoutSigningAlgs_IsRejected() {
+    public void should_rejectAdd_when_proofTypeDeclaredWithoutSigningAlgsIsNamed() {
         LinkedHashMap<String, Object> proofTypes = new LinkedHashMap<>();
         proofTypes.put("jwt", Map.of(PROOF_SIGNING_ALGS, List.of()));
         ReflectionTestUtils.setField(credentialConfigurationService, "proofTypesSupported", proofTypes);
@@ -596,7 +596,7 @@ public class CredentialConfigMetadataAttributesTest {
     // ---------- Update: all three are mandatory and replace what is stored ----------
 
     @Test
-    public void updateWithAllThree_ReplacesStoredValues() {
+    public void should_replaceStoredValues_when_updateSendsAllThree() {
         CredentialConfig stored = storedLdpVcEntity();
         CredentialConfigurationDTO request = ldpVcRequest();
         request.setCryptographicBindingMethodsSupported(List.of("did:web"));
@@ -615,7 +615,7 @@ public class CredentialConfigMetadataAttributesTest {
      * stored is left untouched.
      */
     @Test
-    public void updateWithAnyAttributeMissingOrNull_IsRejectedAndNothingIsSaved() {
+    public void should_rejectUpdateAndSaveNothing_when_anyAttributeIsMissingOrNull() {
         CredentialConfig stored = storedLdpVcEntity();
         stubUpdateOf(stored);
 
@@ -635,7 +635,7 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     @Test
-    public void updateWithAnyAttributeEmpty_IsRejectedAndNothingIsSaved() {
+    public void should_rejectUpdateAndSaveNothing_when_anyAttributeIsEmpty() {
         stubUpdateOf(storedLdpVcEntity());
 
         EMPTY_ATTRIBUTE.forEach((attribute, empty) -> {
@@ -651,7 +651,7 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     @Test
-    public void updateWithUndeclaredValue_IsRejectedAndNothingIsSaved() {
+    public void should_rejectUpdateAndSaveNothing_when_valueIsUndeclared() {
         stubUpdateOf(storedLdpVcEntity());
         CredentialConfigurationDTO request = ldpVcRequest();
         request.setCryptographicBindingMethodsSupported(List.of("cose_key"));
@@ -667,7 +667,7 @@ public class CredentialConfigMetadataAttributesTest {
      * left holding is exactly what the request sent, with the crypto suite name it stored replaced.
      */
     @Test
-    public void updateLegacyConfiguration_StoresExactlyTheRequestedValues() {
+    public void should_storeExactlyTheRequestedValues_when_legacyConfigurationIsUpdated() {
         CredentialConfig legacy = ldpVcEntity();
         legacy.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
         stubUpdateOf(legacy);
@@ -683,7 +683,7 @@ public class CredentialConfigMetadataAttributesTest {
     // ---------- The Get response always carries all three ----------
 
     @Test
-    public void getConfiguration_ReturnsStoredValues() {
+    public void should_returnStoredValues_when_configurationIsFetched() {
         CredentialConfig stored = ldpVcEntity();
         stored.setCryptographicBindingMethodsSupported(List.of("did:web"));
         stored.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
@@ -710,7 +710,7 @@ public class CredentialConfigMetadataAttributesTest {
      * the other two.
      */
     @Test
-    public void getLegacyConfiguration_ReturnsResolvedDefaults() {
+    public void should_returnResolvedDefaults_when_legacyConfigurationIsFetched() {
         CredentialConfig legacy = ldpVcEntity();
         legacy.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
 
@@ -727,7 +727,7 @@ public class CredentialConfigMetadataAttributesTest {
     // ---------- The credential issuer metadata ----------
 
     @Test
-    public void metadata_AdvertisesTheValuesStoredAgainstTheConfiguration() {
+    public void should_advertiseStoredValues_when_metadataIsBuilt() {
         CredentialConfig stored = ldpVcEntity();
         stored.setCryptographicBindingMethodsSupported(List.of("did:web"));
         stored.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
@@ -750,7 +750,7 @@ public class CredentialConfigMetadataAttributesTest {
      * exactly what it advertised before, with no data migration.
      */
     @Test
-    public void metadata_ForLegacyConfiguration_IsUnchanged() {
+    public void should_advertiseUnchangedValues_when_configurationIsLegacy() {
         CredentialConfig legacy = ldpVcEntity();
         legacy.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
         legacy.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
@@ -772,7 +772,7 @@ public class CredentialConfigMetadataAttributesTest {
      * it, so the published metadata stays valid under OpenID4VCI.
      */
     @Test
-    public void metadata_ForLegacyProofTypeWithNoAlgorithmList_AdvertisesTheFullDeclaredSet() {
+    public void should_advertiseDeclaredAlgorithms_when_legacyProofTypeHasNoAlgorithmList() {
         CredentialConfig legacy = ldpVcEntity();
         legacy.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
         legacy.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
