@@ -306,6 +306,13 @@ jobs:
           sed -i 's|db-server=.*|db-server=database|' "$PROPS"
           sed -i 's|db-port=.*|db-port=5432|' "$PROPS"
 
+      - name: Log patched config values (source)
+        run: |
+          PROPS=api-test/src/main/resources/config/injiCertify.properties
+          echo "=== Patched config values (source) ==="
+          echo "eSignetbaseurl=$(grep '^eSignetbaseurl=' "$PROPS" || echo 'NOT FOUND')"
+          echo "injiCertifyBaseURL=$(grep '^injiCertifyBaseURL=' "$PROPS" || echo 'NOT FOUND')"
+
       - name: Build apitest jar
         run: |
           cd api-test
@@ -420,6 +427,13 @@ jobs:
           </suite>
           XMLEOF
           sed -i 's/^[[:space:]]*//' api-test/target/testNgXmlFiles/injicertifyMasterTestSuite.xml
+
+      - name: Log patched config values (target)
+        run: |
+          PROPS=api-test/target/config/injiCertify.properties
+          echo "=== Patched config values (target) ==="
+          echo "eSignetbaseurl=$(grep '^eSignetbaseurl=' "$PROPS" || echo 'NOT FOUND')"
+          echo "injiCertifyBaseURL=$(grep '^injiCertifyBaseURL=' "$PROPS" || echo 'NOT FOUND')"
 
       - name: Build apitest image
         run: docker build -t apitest-inji-certify:ci -f api-test/Dockerfile .
