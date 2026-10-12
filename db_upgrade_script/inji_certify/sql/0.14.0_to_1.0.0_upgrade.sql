@@ -1,6 +1,6 @@
 -- -------------------------------------------------------------------------------------------------
 -- Upgrade Script : v0.14.0 to v1.0.0
--- Release name   : 1.0.0-alpha.1, 1.0.0-alpha.2
+-- Release name   : 1.0.0-alpha.1, 1.0.0-rc.1
 -- Database       : inji_certify
 -- Purpose        : Apply schema changes introduced across the 1.0.0 pre-releases.
 -- -------------------------------------------------------------------------------------------------
@@ -72,7 +72,7 @@ WHERE proof_types_supported #> '{jwt,proof_signing_alg_values_supported}' IS NOT
 
 -- -------------------------------------------------------------------------------------------------
 -- SECTION 3: Embedded inji-verify library tables
--- Introduced in: 1.0.0-alpha.2
+-- Introduced in: 1.0.0-rc.1
 -- -------------------------------------------------------------------------------------------------
 -- authorization_request_details
 CREATE TABLE IF NOT EXISTS certify.authorization_request_details (

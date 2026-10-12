@@ -239,7 +239,7 @@
         <dependency>
             <groupId>io.inji.verify</groupId>
             <artifactId>verify-core</artifactId>
-            <version>1.0.0-alpha.2-SNAPSHOT</version>
+            <version>1.0.0-rc.1-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <groupId>io.inji</groupId>
