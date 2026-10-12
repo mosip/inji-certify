@@ -13,13 +13,18 @@ import java.util.stream.Collectors;
 
 /**
  * Reads what the deployment declares for cryptographic_binding_methods_supported,
- * credential_signing_alg_values_supported and proof_types_supported, and turns it into the values a
- * credential configuration stores and advertises.
+ * credential_signing_alg_values_supported and proof_types_supported, and resolves the values a stored
+ * credential configuration advertises.
+ * <p>
+ * A configuration written through the API always stores all three, and they are advertised as stored.
+ * Configurations created before these attributes were stored carry no value, or a crypto suite name in
+ * place of the signing algorithms, and are resolved from the deployment configuration so they keep
+ * advertising what they always have, with no data migration. Nothing here is used to fill in a value
+ * on write.
  * <p>
  * This is the counterpart to CredentialConfigMetadataValidator: this class answers what the deployment
- * declares and what should be stored, the validator answers whether a requested value is among them.
- * The declared values are passed in rather than injected, so both remain pure functions of request and
- * configuration.
+ * declares, the validator answers whether a requested value is among them. The declared values are
+ * passed in rather than injected, so both remain pure functions of request and configuration.
  */
 public class CredentialConfigMetadataResolver {
 
@@ -37,7 +42,7 @@ public class CredentialConfigMetadataResolver {
 
     /**
      * The algorithms declared for the crypto suite, rather than the crypto suite name itself, so that
-     * what is persisted is an algorithm value such as EdDSA and not a suite such as Ed25519Signature2020.
+     * what is advertised is an algorithm value such as EdDSA and not a suite such as Ed25519Signature2020.
      */
     public static List<String> deriveSigningAlgs(String signatureCryptoSuite, String signatureAlgo,
                                                  Map<String, List<String>> declaredSigningAlgsByCryptoSuite) {
@@ -82,17 +87,17 @@ public class CredentialConfigMetadataResolver {
     }
 
     /**
-     * Fills in proof_signing_alg_values_supported for a proof type named without one, so that what is
-     * stored always carries the algorithms the deployment declares for that proof type.
+     * Fills in proof_signing_alg_values_supported for a stored proof type that carries none, so that what
+     * is advertised always carries the algorithms the deployment declares for that proof type. Only a
+     * configuration created before these attributes were mandatory can hold such a proof type.
      * <p>
-     * Storing the bare proof type instead would publish it with no algorithms, which OpenID4VCI does not
-     * allow, and JwtProofValidator reads a missing list as an empty one and rejects every proof, so the
-     * configuration would silently stop issuing.
+     * Advertising the bare proof type instead would publish it with no algorithms, which OpenID4VCI does
+     * not allow, and JwtProofValidator reads a missing list as an empty one and rejects every proof, so
+     * the configuration would silently stop issuing.
      * <p>
      * A proof type left with no algorithms at all - the deployment declares none for it, so there is
-     * nothing to fill in with - has exactly that effect, so it is rejected here rather than persisted or
-     * advertised. That is a deployment misconfiguration in
-     * mosip.certify.credential-config.proof-types-supported, not something a request can correct.
+     * nothing to fill in with - has exactly that effect, so it is rejected here rather than advertised.
+     * That is a deployment misconfiguration in mosip.certify.credential-config.proof-types-supported.
      *
      * @throws IllegalStateException when a proof type resolves to an empty list of signing algorithms
      */

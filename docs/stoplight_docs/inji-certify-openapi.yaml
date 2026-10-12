@@ -92,6 +92,15 @@ paths:
                       - VerifiableCredential
                       - landstatement_dataIntegrity
                     signatureAlgo: EdDSA
+                    cryptographicBindingMethodsSupported:
+                      - 'did:jwk'
+                    credentialSigningAlgValuesSupported:
+                      - EdDSA
+                    proofTypesSupported:
+                      jwt:
+                        proof_signing_alg_values_supported:
+                          - ES256
+                          - EdDSA
                     qrSettings:
                       - Full Name: "${fullName}"
                         Phone Number: "${mobileNumber}"
@@ -198,6 +207,15 @@ paths:
                     - VerifiableCredential
                     - landstatement_dataIntegrity
                   signatureAlgo: EdDSA
+                  cryptographicBindingMethodsSupported:
+                    - 'did:jwk'
+                  credentialSigningAlgValuesSupported:
+                    - EdDSA
+                  proofTypesSupported:
+                    jwt:
+                      proof_signing_alg_values_supported:
+                        - ES256
+                        - EdDSA
                   qrSettings:
                     - Full Name: "${fullName}"
                       Phone Number: "${mobileNumber}"
@@ -742,6 +760,15 @@ paths:
                     - VerifiableCredential
                     - landstatement_dataIntegrity
                   signatureAlgo: EdDSA
+                  cryptographicBindingMethodsSupported:
+                    - 'did:jwk'
+                  credentialSigningAlgValuesSupported:
+                    - EdDSA
+                  proofTypesSupported:
+                    jwt:
+                      proof_signing_alg_values_supported:
+                        - ES256
+                        - EdDSA
                   qrSettings:
                     - Full Name: "${fullName}"
                       Phone Number: "${mobileNumber}"
@@ -752,6 +779,14 @@ paths:
                   credentialConfigKeyId: DrivingLicenseCredential12
                   credentialFormat: mso_mdoc
                   signatureCryptoSuite: EcdsaSecp256r1Signature2019
+                  cryptographicBindingMethodsSupported:
+                    - 'cose_key'
+                  credentialSigningAlgValuesSupported:
+                    - ES256
+                  proofTypesSupported:
+                    jwt:
+                      proof_signing_alg_values_supported:
+                        - ES256
                   metaDataDisplay:
                     - name: Mobile Driving License
                       locale: en
@@ -809,6 +844,15 @@ paths:
                   keyManagerAppId: CERTIFY_VC_SIGN_ED25519
                   keyManagerRefId: ED25519_SIGN
                   signatureAlgo: EdDSA
+                  cryptographicBindingMethodsSupported:
+                    - 'did:jwk'
+                  credentialSigningAlgValuesSupported:
+                    - EdDSA
+                  proofTypesSupported:
+                    jwt:
+                      proof_signing_alg_values_supported:
+                        - ES256
+                        - EdDSA
                   sdJwtVct: SD_JWT
                   credentialFormat: dc+sd-jwt
                   didUrl: 'did:web:likhitharl.github.io:vc:qainji#key-0'
@@ -1019,6 +1063,14 @@ paths:
                   didUrl: ''
                   signatureAlgo: ''
                   signatureCryptoSuite: EcdsaSecp256r1Signature2019
+                  cryptographicBindingMethodsSupported:
+                    - 'did:jwk'
+                  credentialSigningAlgValuesSupported:
+                    - ES256
+                  proofTypesSupported:
+                    jwt:
+                      proof_signing_alg_values_supported:
+                        - ES256
                   sdClaim: ''
                   displayOrder:
                     - fullName
@@ -1529,6 +1581,9 @@ components:
         - credentialFormat
         - metaDataDisplay
         - scope
+        - cryptographicBindingMethodsSupported
+        - credentialSigningAlgValuesSupported
+        - proofTypesSupported
       properties:
         vcTemplate:
           type: string
@@ -1651,31 +1706,32 @@ components:
         cryptographicBindingMethodsSupported:
           type: array
           minItems: 1
-          description: 'Optional. Binding methods advertised for this credential configuration. Every value must already be declared for this credential format in mosip.certify.credential-config.cryptographic-binding-methods-supported; a value that is not declared there is rejected with unsupported_cryptographic_binding_method, and a credential format with no declared binding methods is rejected with cryptographic_binding_config_not_found. Omitted on Add, the full set declared for the credential format applies; omitted on Update, the stored value is retained. Always returned by the Get response. An empty array is rejected.'
+          description: 'Mandatory on Add and Update. Binding methods advertised for this credential configuration. Every value must already be declared for this credential format in mosip.certify.credential-config.cryptographic-binding-methods-supported; a value that is not declared there is rejected with unsupported_cryptographic_binding_method, and a credential format with no declared binding methods is rejected with cryptographic_binding_config_not_found. Nothing is filled in from that property: a missing, null or empty value is rejected with invalid_request. Stored and returned by the Get response exactly as sent.'
           items:
             type: string
         credentialSigningAlgValuesSupported:
           type: array
           minItems: 1
-          description: 'Optional. Signing algorithms advertised for this credential configuration. Where signatureCryptoSuite is present every value must be declared for that suite in mosip.certify.credential-config.credential-signing-alg-values-supported; where the format carries no crypto suite, such as dc+sd-jwt, every value a request provides must be an algorithm the deployment holds a signing key for in mosip.certify.signature-algo.key-alias-mapper. Unlike the COSE constraint below, this key check applies only to the values a request provides: where the attribute is omitted, the algorithm derived from the configuration''s own signatureAlgo is stored without it, and a missing key surfaces at issuance rather than at configuration time. For the mso_mdoc format every value must additionally be ES256: that format advertises COSE algorithm identifiers, and ES256 is the only algorithm supported for an mdoc's issuerAuth; this applies to the algorithms derived from the crypto suite when the attribute is omitted just as it does to the ones a request selects. An undeclared value is rejected with unsupported_credential_signing_alg. Omitted on Add, the algorithms declared for the crypto suite apply, or the configuration''s own signatureAlgo where there is no suite; omitted on Update, the stored value is retained. Always returned by the Get response. An empty array is rejected.'
+          description: 'Mandatory on Add and Update. Signing algorithms advertised for this credential configuration. Where signatureCryptoSuite is present every value must be declared for that suite in mosip.certify.credential-config.credential-signing-alg-values-supported; where the format carries no crypto suite, such as dc+sd-jwt, every value must be an algorithm the deployment holds a signing key for in mosip.certify.signature-algo.key-alias-mapper. For the mso_mdoc format every value must additionally be ES256: that format advertises COSE algorithm identifiers, and ES256 is the only algorithm supported for an mdoc''s issuerAuth. An undeclared value is rejected with unsupported_credential_signing_alg. Nothing is filled in from those properties: a missing, null or empty value is rejected with invalid_request. Stored and returned by the Get response exactly as sent.'
           items:
             type: string
         proofTypesSupported:
           type: object
           minProperties: 1
-          description: 'Optional. Proof types advertised for this credential configuration. Each key must be a proof type declared in mosip.certify.credential-config.proof-types-supported, otherwise the request is rejected with unsupported_proof_type. A proof type may be named with null or with an empty object, in which case every algorithm declared for it applies. Omitted on Add, all declared proof types apply; omitted on Update, the stored value is retained. Always returned by the Get response. An empty object is rejected.'
+          description: 'Mandatory on Add and Update. Proof types advertised for this credential configuration. Each key must be a proof type declared in mosip.certify.credential-config.proof-types-supported, otherwise the request is rejected with unsupported_proof_type. Nothing is filled in from that property: a missing, null or empty value is rejected with invalid_request. Stored and returned by the Get response exactly as sent.'
           additionalProperties:
             $ref: '#/components/schemas/ProofTypeSupportedDTO'
     ProofTypeSupportedDTO:
       type: object
-      nullable: true
-      description: 'Narrows a single proof type. proof_signing_alg_values_supported is the only recognised attribute; any other attribute is rejected with invalid_request. Null is accepted and means every algorithm declared for the proof type applies.'
+      required:
+        - proof_signing_alg_values_supported
+      description: 'The proof signing algorithms accepted for a single proof type. proof_signing_alg_values_supported is the only recognised attribute; any other attribute is rejected with invalid_request. A proof type sent as null or without proof_signing_alg_values_supported is rejected with invalid_request.'
       additionalProperties: false
       properties:
         proof_signing_alg_values_supported:
           type: array
           minItems: 1
-          description: 'Optional. Must be a subset of the algorithms declared for this proof type in mosip.certify.credential-config.proof-types-supported; a value outside that set is rejected with unsupported_proof_signing_alg. Omitted, every declared algorithm for the proof type applies. An empty array is rejected.'
+          description: 'Mandatory. Must be a subset of the algorithms declared for this proof type in mosip.certify.credential-config.proof-types-supported; a value outside that set is rejected with unsupported_proof_signing_alg. A missing, null or empty value is rejected with invalid_request.'
           items:
             type: string
     CredentialConfigResponse:

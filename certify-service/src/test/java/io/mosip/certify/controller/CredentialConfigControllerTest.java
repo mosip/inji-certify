@@ -1,5 +1,6 @@
 package io.mosip.certify.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
@@ -129,8 +130,8 @@ public class CredentialConfigControllerTest {
     }
 
     /**
-     * AC-2 over the wire: the three optional attributes bind from the request JSON onto the DTO the
-     * service receives, rather than being dropped between Jackson and the controller.
+     * The three attributes bind from the request JSON onto the DTO the service receives, rather than
+     * being dropped between Jackson and the controller.
      */
     @Test
     public void addCredentialConfiguration_BindsTheThreeMetadataAttributes() throws Exception {
@@ -160,7 +161,39 @@ public class CredentialConfigControllerTest {
     }
 
     /**
-     * AC-6, AC-7 over the wire: the Get response carries all three attributes.
+     * A request that leaves the three attributes out and one that sends them as null reach the service
+     * identically, so the service rejects a missing attribute and a null one the same way.
+     */
+    @Test
+    public void addCredentialConfiguration_BindsMissingAndNullAttributesAlike() throws Exception {
+        Mockito.when(credentialConfigurationService.addCredentialConfiguration(Mockito.any(CredentialConfigurationDTO.class)))
+                .thenReturn(new CredentialConfigResponse());
+        Map<String, Object> withNulls = new HashMap<>(objectMapper.convertValue(credentialConfigurationDTO,
+                new TypeReference<Map<String, Object>>() {}));
+        withNulls.put("cryptographicBindingMethodsSupported", null);
+        withNulls.put("credentialSigningAlgValuesSupported", null);
+        withNulls.put("proofTypesSupported", null);
+
+        mockMvc.perform(post("/credential-configurations")
+                        .content(objectMapper.writeValueAsBytes(credentialConfigurationDTO))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/credential-configurations")
+                        .content(objectMapper.writeValueAsBytes(withNulls))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        ArgumentCaptor<CredentialConfigurationDTO> captor = ArgumentCaptor.forClass(CredentialConfigurationDTO.class);
+        Mockito.verify(credentialConfigurationService, Mockito.times(2)).addCredentialConfiguration(captor.capture());
+        for (CredentialConfigurationDTO received : captor.getAllValues()) {
+            Assert.assertNull(received.getCryptographicBindingMethodsSupported());
+            Assert.assertNull(received.getCredentialSigningAlgValuesSupported());
+            Assert.assertNull(received.getProofTypesSupported());
+        }
+    }
+
+    /**
+     * The Get response carries all three attributes.
      */
     @Test
     public void getCredentialConfigurationById_ReturnsTheThreeMetadataAttributes() throws Exception {

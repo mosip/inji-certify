@@ -11,6 +11,11 @@ To add a new SD-JWT credential configuration, use the `/credential-configuration
 - **credentialFormat**: Must be set to `dc+sd-jwt`
 - **signatureAlgo**: The signing algorithm (e.g., `ES256K`)
 - **sdJwtVct**: The VCT (Verifiable Credential Type) value for the credential
+- **cryptographicBindingMethodsSupported**: The binding methods to advertise, chosen from those declared for `dc+sd-jwt` in `mosip.certify.credential-config.cryptographic-binding-methods-supported` (e.g., `["did:jwk"]`)
+- **credentialSigningAlgValuesSupported**: The signing algorithms to advertise. An SD-JWT configuration carries no crypto suite, so each value must be an algorithm the deployment holds a signing key for in `mosip.certify.signature-algo.key-alias-mapper` (e.g., `["ES256K"]`)
+- **proofTypesSupported**: The proof types to accept, each with its proof signing algorithms, chosen from `mosip.certify.credential-config.proof-types-supported` (e.g., `{"jwt": {"proof_signing_alg_values_supported": ["ES256"]}}`)
+
+The last three are mandatory, and nothing is filled in from the properties when one is missing or empty.
 
 For full details on the required fields and how to structure your request with examples, refer to the [Inji Certify API documentation](https://mosip.stoplight.io/docs/inji-certify).
 
