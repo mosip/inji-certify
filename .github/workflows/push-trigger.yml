@@ -302,7 +302,7 @@ jobs:
           PROPS=api-test/src/main/resources/config/injiCertify.properties
           sed -i 's|useCaseToExecute=.*|useCaseToExecute=mock|' "$PROPS"
           sed -i 's|injiCertifyBaseURL=.*|injiCertifyBaseURL=http://certify:8090|' "$PROPS"
-          sed -i 's|eSignetbaseurl=.*|eSignetbaseurl=http://certify:8090|' "$PROPS"
+          sed -i 's|eSignetbaseurl=.*|eSignetbaseurl=https://esignet-mock.released.mosip.net|' "$PROPS"
           sed -i 's|db-server=.*|db-server=database|' "$PROPS"
           sed -i 's|db-port=.*|db-port=5432|' "$PROPS"
 
