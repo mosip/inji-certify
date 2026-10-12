@@ -2340,7 +2340,7 @@ components:
             statusPurpose:
               type: string
               nullable: true
-              description: 'Indicates the purpose of the status (e.g., ''revocation'', ''suspension''). Determines interpretation of the ''status'' bit. Should align with system policy/list purpose. If not provided, system may use a default value stored in the status_list_credential table for the provided statusListCredentialId.'
+              description: 'Indicates the purpose of the status (e.g., ''revocation'', ''suspension''). Determines interpretation of the ''status'' bit. Required when mosip.certify.data-provider-plugin.credential-status.allowed-status-purposes is configured, and must be one of its values; anything else is rejected. When that property is not configured the feature is not enabled: whatever is sent here is ignored, and the purpose already stored in the status_list_credential table for the provided statusListCredentialId is kept. Empty and whitespace-only values are trimmed and count as not provided.'
             statusListIndex:
               type: integer
               nullable: true

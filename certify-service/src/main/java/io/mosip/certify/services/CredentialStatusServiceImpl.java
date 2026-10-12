@@ -43,9 +43,9 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
         StatusListCredential statusListCredential = statusListCredentialRepository.findById(statusListCredentialId)
                 .orElseThrow(() -> new CertifyException(ErrorConstants.STATUS_LIST_NOT_FOUND, "Status List Credential not found for ID: " + statusListCredentialId));
 
-        // Validate statusPurpose and statusListIndex
-        String validatedPurpose = validateCredentialStatus(request.getCredentialStatus().getStatusPurpose(),
-                statusListIndex, statusListCredential);
+        validateStatusListIndex(statusListIndex, statusListCredential);
+        String validatedPurpose = resolveStatusPurpose(request.getCredentialStatus().getStatusPurpose(),
+                statusListCredential);
 
         CredentialStatusTransaction transaction = new CredentialStatusTransaction();
         transaction.setStatusPurpose(validatedPurpose);
@@ -65,11 +65,10 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
         return dto;
     }
 
-    private String validateCredentialStatus(String requestedPurpose, Long statusListIndex,
-                                            StatusListCredential statusListCredential) {
-        // The controller's @Valid binding rejects a null index before it gets here, but this
-        // is a public service on an SPI interface: a direct caller skips bean validation, and
-        // the unboxing in the comparison below would turn a null into a NullPointerException.
+    /**
+     * Validates the requested index against the referenced status list's capacity.
+     */
+    private void validateStatusListIndex(Long statusListIndex, StatusListCredential statusListCredential) {
         if (statusListIndex == null) {
             throw new CertifyException(ErrorConstants.INVALID_REQUEST, "statusListIndex is required");
         }
@@ -79,9 +78,6 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
                 "statusListIndex must be non-negative, received: " + statusListIndex);
         }
 
-        // Validate statusListIndex using shared utility, after the cheap checks above so the
-        // KB->bits conversion only runs for an index that could be in range.
-        // This ensures the effective 16 KB minimum and overflow/maximum checks match batch processing
         long maxCapacity = BitStringStatusListUtils.safeConvertKBToBits(statusListCredential.getCapacityInKB());
 
         if (statusListIndex >= maxCapacity) {
@@ -89,20 +85,30 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
                 "statusListIndex " + statusListIndex + " exceeds maximum capacity " +
                 maxCapacity + " for status list '" + statusListCredential.getId() + "'");
         }
+    }
 
-
+    /**
+     * Resolves the status purpose to store for this update. It can only change if given and the allowed purposes are
+     * given from the app properties
+     */
+    private String resolveStatusPurpose(String requestedPurpose, StatusListCredential statusListCredential) {
         if (allowedStatusPurposes == null || allowedStatusPurposes.isEmpty()) {
+            // The feature is not enabled, so leave the recorded purpose as it is.
+            return statusListCredential.getStatusPurpose();
+        }
+
+        // Trimmed once here and used everywhere below
+        String purpose = StringUtils.trimToNull(requestedPurpose);
+
+        if (purpose == null) {
+            throw new CertifyException(ErrorConstants.STATUS_PURPOSE_REQUIRED,
+                "statusPurpose is required. Allowed values are: " + allowedStatusPurposes);
+        }
+
+        if (!allowedStatusPurposes.contains(purpose)) {
             throw new CertifyException(ErrorConstants.INVALID_STATUS_PURPOSE,
-                "No status purpose is configured in this environment.");
+                "Invalid status purpose '" + purpose + "'. Allowed values are: " + allowedStatusPurposes);
         }
-    
-        if (StringUtils.isEmpty(requestedPurpose)) {
-            return allowedStatusPurposes.getFirst();
-        }
-        if (!allowedStatusPurposes.contains(requestedPurpose)) {
-            throw new CertifyException(ErrorConstants.INVALID_STATUS_PURPOSE,
-                "Invalid status purpose '" + requestedPurpose + "'. Allowed values are: " + allowedStatusPurposes);
-        }
-        return requestedPurpose;
+        return purpose;
     }
 }

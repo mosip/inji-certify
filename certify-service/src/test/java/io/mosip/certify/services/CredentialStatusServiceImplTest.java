@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -75,29 +76,25 @@ public class CredentialStatusServiceImplTest {
     }
 
     @Test
-    public void updateCredentialStatusV2_NullStatusPurpose_DefaultsToConfiguredPurpose() {
+    public void should_throwStatusPurposeRequired_when_purposeNullAndConfigured() {
         String statusListCredential = "https://example.com/status-list/xyz#87823";
         UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(statusListCredential);
         request.getCredentialStatus().setStatusPurpose(null); // Null status purpose
 
         StatusListCredential mockStatusListCredential = new StatusListCredential();
-        mockStatusListCredential.setStatusPurpose(null); // nullable column; the default must come from config, not from here
+        mockStatusListCredential.setStatusPurpose("revocation"); // not a fallback: the feature is enabled, so the client must say
         mockStatusListCredential.setCapacityInKB(1024L);
 
         when(statusListCredentialRepository.findById(statusListCredential)).thenReturn(Optional.of(mockStatusListCredential));
-        when(credentialStatusTransactionRepository.save(any(CredentialStatusTransaction.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        CredentialStatusResponse response = credentialStatusService.updateCredentialStatus(request);
+        CertifyException exception = assertThrows(CertifyException.class, () ->
+                credentialStatusService.updateCredentialStatus(request));
 
-        assertNotNull(response);
-        assertEquals("revocation", response.getStatusPurpose());
+        assertEquals("status_purpose_required", exception.getErrorCode());
+        assertEquals("statusPurpose is required. Allowed values are: [revocation]", exception.getMessage());
 
-        // The reported symptom was an empty purpose reaching the stored payload,
-        // so assert on what is handed to the repository, not only on the response.
-        ArgumentCaptor<CredentialStatusTransaction> saved = ArgumentCaptor.forClass(CredentialStatusTransaction.class);
-        verify(credentialStatusTransactionRepository).save(saved.capture());
-        assertEquals("revocation", saved.getValue().getStatusPurpose());
+        // Nothing may be persisted for a rejected update.
+        verify(credentialStatusTransactionRepository, never()).save(any(CredentialStatusTransaction.class));
     }
 
     @Test
@@ -134,23 +131,21 @@ public class CredentialStatusServiceImplTest {
     }
 
     @Test
-    public void updateCredentialStatusV2_EmptyStatusPurpose_DefaultsToConfiguredPurpose() {
+    public void should_throwStatusPurposeRequired_when_purposeEmptyAndConfigured() {
         String statusListCredential = "https://example.com/status-list/xyz#87823";
         UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(statusListCredential);
         request.getCredentialStatus().setStatusPurpose(""); // Empty StatusPurpose
 
         StatusListCredential mockStatusListCredential = new StatusListCredential();
-        mockStatusListCredential.setStatusPurpose(null); // nullable column; the default must come from config, not from here
+        mockStatusListCredential.setStatusPurpose("revocation");
         mockStatusListCredential.setCapacityInKB(1024L);
 
         when(statusListCredentialRepository.findById(statusListCredential)).thenReturn(Optional.of(mockStatusListCredential));
-        when(credentialStatusTransactionRepository.save(any(CredentialStatusTransaction.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        CredentialStatusResponse response = credentialStatusService.updateCredentialStatus(request);
+        CertifyException exception = assertThrows(CertifyException.class, () ->
+                credentialStatusService.updateCredentialStatus(request));
 
-        assertNotNull(response);
-        assertEquals("revocation", response.getStatusPurpose());
+        assertEquals("status_purpose_required", exception.getErrorCode());
     }
 
     @Test
@@ -229,11 +224,40 @@ public class CredentialStatusServiceImplTest {
     }
 
     @Test
-    public void should_throwInvalidStatusPurposeException_when_noStatusPurposeConfigured() {
+    public void should_fallBackToStatusListPurpose_when_purposeOmittedAndPropertyUnset() {
+        // Property unset means the revocation feature is not enabled, so an issuer that sends no
+        // purpose is simply not using it: accepted, and recorded against the list's own purpose.
         ReflectionTestUtils.setField(credentialStatusService, "allowedStatusPurposes", List.of());
         String statusListCredential = "https://example.com/status-list/xyz#87823";
         UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(statusListCredential);
-        request.getCredentialStatus().setStatusPurpose("revocation"); // even a sensible value is refused without configuration
+        request.getCredentialStatus().setStatusPurpose(null);
+
+        StatusListCredential mockStatusListCredential = new StatusListCredential();
+        mockStatusListCredential.setId(statusListCredential);
+        mockStatusListCredential.setStatusPurpose("suspension");
+        mockStatusListCredential.setCapacityInKB(1024L);
+
+        when(statusListCredentialRepository.findById(statusListCredential)).thenReturn(Optional.of(mockStatusListCredential));
+        when(credentialStatusTransactionRepository.save(any(CredentialStatusTransaction.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        CredentialStatusResponse response = credentialStatusService.updateCredentialStatus(request);
+
+        assertNotNull(response);
+        assertEquals("suspension", response.getStatusPurpose());
+
+        ArgumentCaptor<CredentialStatusTransaction> saved = ArgumentCaptor.forClass(CredentialStatusTransaction.class);
+        verify(credentialStatusTransactionRepository).save(saved.capture());
+        assertEquals("suspension", saved.getValue().getStatusPurpose());
+    }
+
+    @Test
+    public void should_acceptPaddedStatusPurpose_when_trimmedValueIsConfigured() {
+        // The same trim that makes "   " count as not-given also makes " revocation " match,
+        // so padding never changes the outcome.
+        String statusListCredential = "https://example.com/status-list/xyz#87823";
+        UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(statusListCredential);
+        request.getCredentialStatus().setStatusPurpose("  revocation  ");
 
         StatusListCredential mockStatusListCredential = new StatusListCredential();
         mockStatusListCredential.setId(statusListCredential);
@@ -241,12 +265,42 @@ public class CredentialStatusServiceImplTest {
         mockStatusListCredential.setCapacityInKB(1024L);
 
         when(statusListCredentialRepository.findById(statusListCredential)).thenReturn(Optional.of(mockStatusListCredential));
+        when(credentialStatusTransactionRepository.save(any(CredentialStatusTransaction.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        CertifyException exception = assertThrows(CertifyException.class, () ->
-                credentialStatusService.updateCredentialStatus(request));
+        CredentialStatusResponse response = credentialStatusService.updateCredentialStatus(request);
 
-        assertEquals("invalid_status_purpose", exception.getErrorCode());
-        assertEquals("No status purpose is configured in this environment.", exception.getMessage());
+        assertNotNull(response);
+        assertEquals("revocation", response.getStatusPurpose());
+    }
+
+    @Test
+    public void should_ignoreRequestedPurpose_when_propertyUnset() {
+        // Nothing configured means the feature is not enabled, so the requested purpose is not
+        // acted on at all: the purpose recorded against the status list is kept as it was.
+        ReflectionTestUtils.setField(credentialStatusService, "allowedStatusPurposes", List.of());
+        String statusListCredential = "https://example.com/status-list/xyz#87823";
+        UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(statusListCredential);
+        request.getCredentialStatus().setStatusPurpose("suspension"); // ignored, not validated
+
+        StatusListCredential mockStatusListCredential = new StatusListCredential();
+        mockStatusListCredential.setId(statusListCredential);
+        mockStatusListCredential.setStatusPurpose("revocation"); // the purpose that must survive
+        mockStatusListCredential.setCapacityInKB(1024L);
+
+        when(statusListCredentialRepository.findById(statusListCredential)).thenReturn(Optional.of(mockStatusListCredential));
+        when(credentialStatusTransactionRepository.save(any(CredentialStatusTransaction.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        CredentialStatusResponse response = credentialStatusService.updateCredentialStatus(request);
+
+        assertNotNull(response);
+        assertEquals("revocation", response.getStatusPurpose());
+
+        // The requested purpose must not reach the stored row.
+        ArgumentCaptor<CredentialStatusTransaction> saved = ArgumentCaptor.forClass(CredentialStatusTransaction.class);
+        verify(credentialStatusTransactionRepository).save(saved.capture());
+        assertEquals("revocation", saved.getValue().getStatusPurpose());
     }
 
     @Test
@@ -388,10 +442,9 @@ public class CredentialStatusServiceImplTest {
     }
     
     @Test
-    public void should_throwInvalidStatusPurposeException_when_statusPurposeIsWhitespaceOnly() {
-        // Whitespace is a provided value, not an omitted one. "" is how clients serialize an
-        // unset field, so it defaults; nothing legitimately sends "   ", so it is rejected
-        // like any other value outside the configured list.
+    public void should_throwStatusPurposeRequired_when_purposeIsWhitespaceOnly() {
+        // Whitespace-only is trimmed to nothing, so it counts as "not given" exactly like ""
+        // and null do. One trim, one value: a client cannot get a different error by padding.
         String statusListCredential = "https://example.com/status-list/xyz#87823";
         UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(statusListCredential);
         request.getCredentialStatus().setStatusPurpose("   ");
@@ -406,8 +459,7 @@ public class CredentialStatusServiceImplTest {
             credentialStatusService.updateCredentialStatus(request);
         });
 
-        assertEquals("invalid_status_purpose", exception.getErrorCode());
-        assertEquals("Invalid status purpose '   '. Allowed values are: [revocation]", exception.getMessage());
+        assertEquals("status_purpose_required", exception.getErrorCode());
     }
 
     @Test

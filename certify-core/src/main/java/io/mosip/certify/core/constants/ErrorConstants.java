@@ -53,6 +53,7 @@ public class ErrorConstants {
     public static final String SD_CLAIMS_PARSE_ERROR = "sd_claims_parse_error";
     public static final String MULTIPLE_STATUS_PURPOSES_NOT_SUPPORTED = "multiple_status_purposes_not_supported";
     public static final String INVALID_STATUS_PURPOSE = "invalid_status_purpose";
+    public static final String STATUS_PURPOSE_REQUIRED = "status_purpose_required";
     public static final String CREDENTIAL_TEMPLATE_REQUIRED = "credential_template_required";
     public static final String LDP_VC_MANDATORY_FIELDS_MISSING = "ldp_vc_mandatory_fields_missing";
     public static final String LDP_VC_CONFIG_EXISTS = "ldp_vc_config_exists";
