@@ -49,7 +49,7 @@ Replace `$velocityCount` with `$foreach.count`, and `$velocityHasNext` with `$fo
 
 ---
 
-# Changes in release 1.0.0-rc.2
+# Changes in release 1.0.0-rc.1
 
 ## Credential configuration metadata attributes are mandatory
 
