@@ -216,19 +216,22 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
     /**
      * Validates cryptographic_binding_methods_supported, credential_signing_alg_values_supported and
-     * proof_types_supported and stores them on the entity exactly as requested.
+     * proof_types_supported and stores them on the entity as requested.
      * <p>
      * All three are mandatory on add and on update. The deployment configuration is the allow-list every
      * value is checked against, and never a source of values: nothing is filled in from it, so what a
      * configuration advertises is always what the issuer declared for it.
      * <p>
+     * A value listed more than once is kept once, in the order first given, and the request is not
+     * rejected for it. This happens before validation, so a repeated value is also reported only once.
+     * <p>
      * Every failure across all three attributes is collected before anything is stored, so the caller
      * sees the whole payload's problems at once and nothing is partially saved.
      */
     private void validateAndApplyCredentialConfigMetadataAttributes(CredentialConfigurationDTO request, CredentialConfig credentialConfig) {
-        List<String> bindingMethods = request.getCryptographicBindingMethodsSupported();
-        List<String> signingAlgs = request.getCredentialSigningAlgValuesSupported();
-        Map<String, Object> proofTypes = request.getProofTypesSupported();
+        List<String> bindingMethods = distinct(request.getCryptographicBindingMethodsSupported());
+        List<String> signingAlgs = distinct(request.getCredentialSigningAlgValuesSupported());
+        Map<String, Object> proofTypes = withDistinctProofSigningAlgs(request.getProofTypesSupported());
 
         List<io.mosip.certify.core.dto.Error> errors = new ArrayList<>();
         CredentialConfigMetadataValidator.validateBindingMethods(bindingMethods,
@@ -247,6 +250,33 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         credentialConfig.setCryptographicBindingMethodsSupported(bindingMethods);
         credentialConfig.setCredentialSigningAlgValuesSupported(signingAlgs);
         credentialConfig.setProofTypesSupported(proofTypes);
+    }
+
+    private static <T> List<T> distinct(List<T> values) {
+        return values == null ? null : new ArrayList<>(new LinkedHashSet<>(values));
+    }
+
+    /**
+     * The proof types with each proof_signing_alg_values_supported list de-duplicated. A proof type name
+     * cannot repeat, being a JSON object key. Any other shape is passed through unchanged for the
+     * validator to report.
+     */
+    private static Map<String, Object> withDistinctProofSigningAlgs(Map<String, Object> proofTypes) {
+        if (proofTypes == null) {
+            return null;
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        proofTypes.forEach((proofType, detail) -> {
+            if (detail instanceof Map<?, ?> detailMap
+                    && detailMap.get(Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED) instanceof List<?> algs) {
+                Map<Object, Object> distinctDetail = new LinkedHashMap<>(detailMap);
+                distinctDetail.put(Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED, distinct(algs));
+                result.put(proofType, distinctDetail);
+            } else {
+                result.put(proofType, detail);
+            }
+        });
+        return result;
     }
 
     @Override
