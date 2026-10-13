@@ -325,6 +325,44 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     /**
+     * A value listed more than once is accepted and stored once, keeping the order it was first given in.
+     */
+    @Test
+    public void should_storeEachValueOnce_when_addRepeatsValues() {
+        CredentialConfig entity = ldpVcEntity();
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
+        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setCryptographicBindingMethodsSupported(List.of("did:web", "did:jwk", "did:web"));
+        request.setCredentialSigningAlgValuesSupported(List.of("EdDSA", "EdDSA"));
+        request.setProofTypesSupported(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("ES256", "EdDSA", "ES256"))));
+
+        credentialConfigurationService.addCredentialConfiguration(request);
+
+        Assert.assertEquals(List.of("did:web", "did:jwk"), entity.getCryptographicBindingMethodsSupported());
+        Assert.assertEquals(List.of("EdDSA"), entity.getCredentialSigningAlgValuesSupported());
+        Assert.assertEquals(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("ES256", "EdDSA"))), entity.getProofTypesSupported());
+    }
+
+    /**
+     * Duplicates are removed before validation, so an undeclared value given twice is reported once.
+     */
+    @Test
+    public void should_reportUndeclaredValueOnce_when_itIsRepeated() {
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setCryptographicBindingMethodsSupported(List.of("cose_key", "cose_key"));
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        Assert.assertEquals(1, exception.getErrors().size());
+        Assert.assertEquals(ErrorConstants.UNSUPPORTED_CRYPTOGRAPHIC_BINDING_METHOD,
+                exception.getErrors().getFirst().getErrorCode());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    /**
      * With no crypto suite the allow-list is the key selection configuration.
      */
     @Test
@@ -660,6 +698,21 @@ public class CredentialConfigMetadataAttributesTest {
                 () -> credentialConfigurationService.updateCredentialConfiguration("test-credential", request));
 
         verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    @Test
+    public void should_storeEachValueOnce_when_updateRepeatsValues() {
+        CredentialConfig stored = storedLdpVcEntity();
+        stubUpdateOf(stored);
+        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(stored);
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setCryptographicBindingMethodsSupported(List.of("did:jwk", "did:jwk"));
+        request.setProofTypesSupported(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA", "EdDSA"))));
+
+        credentialConfigurationService.updateCredentialConfiguration("test-credential", request);
+
+        Assert.assertEquals(List.of("did:jwk"), stored.getCryptographicBindingMethodsSupported());
+        Assert.assertEquals(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))), stored.getProofTypesSupported());
     }
 
     /**
