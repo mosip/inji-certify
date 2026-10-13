@@ -973,77 +973,53 @@ public class CredentialConfigurationSupportedServiceImplTest {
         Assert.assertEquals("Last Name", result.getCredentialMetadataDTO().getClaims().getFirst().getDisplay().getFirst().getName());
     }
 
-
     @Test
     public void should_throwCertifyException_when_qrSignatureAlgoUnsupported_onUpdate() {
-        // #842 scenario 1 on the update path, exercised through the real mapper: the unsupported
-        // algorithm travels on the request, so the merged configuration is what validation sees.
+        // the real mapper merges the request into the stored entity, so validation sees what would be saved
         ReflectionTestUtils.setField(credentialConfigurationService, "credentialConfigMapper", new CredentialConfigMapperImpl());
         // the real mapper clears the entity's collections before refilling them, so they must be mutable
         credentialConfig.setClaims(new HashMap<>(credentialConfig.getClaims()));
-        CredentialConfigurationDTO request = credentialConfigurationDTO;
-        request.setSignatureAlgo("EdDSA");
-        request.setQrSettings(List.of(Map.of("key", "value")));
-        request.setQrSignatureAlgo("UNSUPPORTED_ALGO");
-
+        credentialConfigurationDTO.setSignatureAlgo("EdDSA");
+        credentialConfigurationDTO.setQrSettings(List.of(Map.of("key", "value")));
+        credentialConfigurationDTO.setQrSignatureAlgo("UNSUPPORTED_ALGO");
         when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(credentialConfig));
 
         CertifyException ex = assertThrows(CertifyException.class, () ->
-                credentialConfigurationService.updateCredentialConfiguration("test-credential", request));
+                credentialConfigurationService.updateCredentialConfiguration("test-credential", credentialConfigurationDTO));
 
         assertEquals(ErrorConstants.INVALID_QR_SIGNING_ALGORITHM, ex.getErrorCode());
         verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
     }
 
     @Test
-    public void should_deriveSignatureAlgoFromCryptoSuite_when_qrSignatureAlgoProvidedWithoutSignatureAlgo_onAdd() {
-        CredentialConfigurationDTO dto = credentialConfigurationDTO;
-        dto.setSignatureAlgo(null);
-        dto.setQrSettings(List.of(Map.of("key", "value")));
-        dto.setQrSignatureAlgo("EdDSA");
-
-        ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, false);
-
-        assertEquals("EdDSA", dto.getSignatureAlgo());
-        assertEquals("EdDSA", dto.getQrSignatureAlgo());
-    }
-
-    @Test
-    public void should_throwCertifyException_when_qrSignatureAlgoProvidedWithoutSignatureAlgo_forSdJwt_onAdd() {
-        CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
-        dto.setCredentialFormat(VCFormats.DC_SD_JWT);
-        dto.setVcTemplate("test_template");
-        dto.setSdJwtVct("test-vct");
-        dto.setSignatureAlgo(null);
-        dto.setQrSettings(List.of(Map.of("key", "value")));
-        dto.setQrSignatureAlgo("EdDSA");
+    public void should_throwCertifyException_when_qrSignatureAlgoSetWithoutSignatureAlgo_onAdd() {
+        credentialConfigurationDTO.setSignatureAlgo(null);
+        credentialConfigurationDTO.setQrSettings(List.of(Map.of("key", "value")));
+        credentialConfigurationDTO.setQrSignatureAlgo("EdDSA");
 
         CertifyException ex = assertThrows(CertifyException.class, () ->
-                ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, false));
+                credentialConfigurationService.addCredentialConfiguration(credentialConfigurationDTO));
 
-        assertEquals(ErrorConstants.DC_SD_JWT_MANDATORY_FIELDS_MISSING, ex.getErrorCode());
+        assertEquals(ErrorConstants.QR_SIGNATURE_ALGO_NOT_ALLOWED, ex.getErrorCode());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
     }
 
     @Test
-    public void should_persistDerivedSignatureAlgo_when_signatureAlgoOmitted_onUpdate() {
+    public void should_throwCertifyException_when_qrSignatureAlgoSetWithoutSignatureAlgo_onUpdate() {
         ReflectionTestUtils.setField(credentialConfigurationService, "credentialConfigMapper", new CredentialConfigMapperImpl());
         credentialConfig.setClaims(new HashMap<>(credentialConfig.getClaims()));
-        Map<String, List<String>> bindingMethods = new LinkedHashMap<>();
-        bindingMethods.put("ldp_vc", List.of("did:jwk")); // the entity from setup retains did:jwk, re-validated on update
-        ReflectionTestUtils.setField(credentialConfigurationService, "cryptographicBindingMethodsSupportedMap", bindingMethods);
-
-        credentialConfig.setSignatureAlgo(null);
-        CredentialConfigurationDTO request = credentialConfigurationDTO;
-        request.setSignatureAlgo(null); // the request omits it
-        request.setQrSettings(List.of(Map.of("key", "value")));
-        request.setQrSignatureAlgo("EdDSA");
-
+        // the stored config has a signatureAlgo; the request omits it, which the mapper applies as null
+        credentialConfig.setSignatureAlgo("EdDSA");
+        credentialConfigurationDTO.setSignatureAlgo(null);
+        credentialConfigurationDTO.setQrSettings(List.of(Map.of("key", "value")));
+        credentialConfigurationDTO.setQrSignatureAlgo("EdDSA");
         when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(credentialConfig));
-        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(credentialConfig);
 
-        credentialConfigurationService.updateCredentialConfiguration("test-credential", request);
+        CertifyException ex = assertThrows(CertifyException.class, () ->
+                credentialConfigurationService.updateCredentialConfiguration("test-credential", credentialConfigurationDTO));
 
-        verify(credentialConfigRepository).save(credentialConfig);
-        assertEquals("EdDSA", credentialConfig.getSignatureAlgo());
+        assertEquals(ErrorConstants.QR_SIGNATURE_ALGO_NOT_ALLOWED, ex.getErrorCode());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
     }
 }
+

@@ -113,7 +113,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
     private void validateCredentialConfiguration(CredentialConfigurationDTO credentialConfig, boolean shouldCheckDuplicate) {
 
-        validateCommonCredentialConfig(credentialConfig.getCredentialStatusPurposes(),credentialConfig.getVcTemplate(),credentialConfig.getQrSettings(),credentialConfig.getQrSignatureAlgo());
+        validateCommonCredentialConfig(credentialConfig.getCredentialStatusPurposes(),credentialConfig.getVcTemplate(),credentialConfig.getQrSettings(),credentialConfig.getQrSignatureAlgo(),credentialConfig.getSignatureAlgo());
 
         switch (credentialConfig.getCredentialFormat()) {
             case VCFormats.LDP_VC:
@@ -150,7 +150,8 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
             List<String> credentialStatusPurposes,
             String vcTemplate,
             List<Map<String, Object>> qrSettings,
-            String qrSignatureAlgo){
+            String qrSignatureAlgo,
+            String signatureAlgo){
         if (credentialStatusPurposes != null && credentialStatusPurposes.size() > 1){
             throw new CertifyException(ErrorConstants.MULTIPLE_STATUS_PURPOSES_NOT_SUPPORTED, "Multiple credential status purposes are not supported. Please specify only one.");
         }
@@ -171,6 +172,9 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         } else {
             if (qrSignatureAlgo != null && !qrSignatureAlgo.isEmpty() && !keyAliasMapper.containsKey(qrSignatureAlgo)) {
                 throw new CertifyException(ErrorConstants.INVALID_QR_SIGNING_ALGORITHM, "The algorithm " + qrSignatureAlgo + " is not supported for QR signing. The supported values are: " + keyAliasMapper.keySet());
+            }
+            if (qrSignatureAlgo != null && !qrSignatureAlgo.isEmpty() && (signatureAlgo == null || signatureAlgo.isEmpty())) {
+                throw new CertifyException(ErrorConstants.QR_SIGNATURE_ALGO_NOT_ALLOWED, "QR signature algorithm is not allowed when signatureAlgo is not set.");
             }
             QrSettingsValidator.validateQrSettings(qrSettings, vcTemplate);
         }
@@ -364,9 +368,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         CredentialConfig credentialConfig = optional.get();
         credentialConfigMapper.updateEntityFromDto(credentialConfigurationDTO, credentialConfig);
 
-        CredentialConfigurationDTO mergedConfig = credentialConfigMapper.toDto(credentialConfig);
-        validateCredentialConfiguration(mergedConfig, false);
-        credentialConfig.setSignatureAlgo(mergedConfig.getSignatureAlgo());
+        validateCredentialConfiguration(credentialConfigMapper.toDto(credentialConfig), false);
 
         validateAndApplyCredentialConfigMetadataAttributes(credentialConfigurationDTO, credentialConfig, false);
 
