@@ -113,6 +113,7 @@
 		<module>certify-service</module>
 		<module>certify-core</module>
 		<module>certify-integration-api</module>
+		<module>dmt-dataprovider-plugin</module>
 	</modules>
 	
 	<dependencies>

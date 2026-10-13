@@ -1,0 +1,33 @@
+# External configuration fragment: merge with the deployment's existing Certify settings.
+# Keep the audit-plugin package in CERTIFY_INTEGRATION_SCAN_PACKAGES.
+mosip:
+  certify:
+    plugin-mode: DataProvider
+    integration:
+      scan-base-package: "${CERTIFY_INTEGRATION_SCAN_PACKAGES:lk.gov.dmt.certify.plugin}"
+      data-provider-plugin: MasterDataProviderPlugin
+
+dmt:
+  data-provider:
+    enabled: true
+    clients:
+      "[dmt]":
+        base-url: "${DMT_API_BASE_URL}"
+        connect-timeout: 2s
+        exchange-timeout: 5s
+        max-response-bytes: 65536
+        trusted-issuer: "${DMT_IDENTITY_ISSUER}"
+        authentication:
+          api-key-header: X-API-Key
+          api-key: "${DMT_API_KEY}"
+    vc-types:
+      "[ERL]":
+        enabled: true
+        strategy-id: erl
+        authorized-scopes:
+          - dmt_erl
+        client-id: dmt
+        endpoint-path: "/api/v1/erl/vehicles/{vehicleNo}"
+      "[DRIVING_LICENSE]":
+        enabled: false
+        strategy-id: driving-license

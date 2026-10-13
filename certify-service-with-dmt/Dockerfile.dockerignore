@@ -1,0 +1,8 @@
+# Send only the two Maven artifacts required by this runtime image.
+**
+!certify-service/
+!certify-service/target/
+!certify-service/target/certify-service-*.jar
+!dmt-dataprovider-plugin/
+!dmt-dataprovider-plugin/target/
+!dmt-dataprovider-plugin/target/dmt-dataprovider-plugin-*.jar

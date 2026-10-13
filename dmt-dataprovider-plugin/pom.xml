@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent><groupId>io.inji.certify</groupId><artifactId>certify-parent</artifactId><version>0.14.0</version></parent>
+    <artifactId>dmt-dataprovider-plugin</artifactId>
+    <name>DMT Data Provider Plugin</name>
+    <dependencies>
+        <dependency><groupId>io.inji.certify</groupId><artifactId>certify-integration-api</artifactId><version>${project.version}</version><scope>provided</scope></dependency>
+        <dependency><groupId>com.fasterxml.jackson.datatype</groupId><artifactId>jackson-datatype-jsr310</artifactId><scope>provided</scope></dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope>
+            <exclusions>
+                <exclusion><groupId>com.vaadin.external.google</groupId><artifactId>android-json</artifactId></exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+</project>

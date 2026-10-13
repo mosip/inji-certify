@@ -22,6 +22,7 @@ hs_err_pid*
 # other directories
 target/
 .idea/
+.vscode/
 *.p12
 *.iml
 .settings/

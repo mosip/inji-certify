@@ -190,13 +190,15 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     }
 
     private VCResult<?> getVerifiableCredential(CredentialRequest credentialRequest, CredentialMetadata credentialMetadata, String holderId) {
-        parsedAccessToken.getClaims().put("accessTokenHash", parsedAccessToken.getAccessTokenHash());
+        Map<String, Object> providerInput = new HashMap<>(parsedAccessToken.getClaims());
+        providerInput.put("accessTokenHash", parsedAccessToken.getAccessTokenHash());
+        providerInput.put(DataProviderPlugin.SELECTED_SCOPE, credentialMetadata.getScope());
         VCRequestDto vcRequestDto = new VCRequestDto();
         vcRequestDto.setFormat(credentialRequest.getFormat());
 
         try {
             // Fetch data once, as it's common to all formats
-            JSONObject jsonObject = dataProviderPlugin.fetchData(parsedAccessToken.getClaims());
+            JSONObject jsonObject = dataProviderPlugin.fetchData(providerInput);
             log.info("Data fetched successfully from Data Provider Plugin");
 
             String templateName;

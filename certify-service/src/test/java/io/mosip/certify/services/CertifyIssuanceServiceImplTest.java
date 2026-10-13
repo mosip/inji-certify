@@ -262,6 +262,8 @@ public class CertifyIssuanceServiceImplTest {
     @Test
     public void getCredential_LDP_WithValidTransaction_Success() throws DataProviderExchangeException {
         request = createValidCredentialRequest(DEFAULT_FORMAT_LDP);
+        claimsFromAccessToken.put("scope", "openid " + DEFAULT_SCOPE + " future-driving-scope");
+        claimsFromAccessToken.put(DataProviderPlugin.SELECTED_SCOPE, "forged-scope");
 
         when(parsedAccessToken.isActive()).thenReturn(true);
         when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
@@ -272,7 +274,7 @@ public class CertifyIssuanceServiceImplTest {
         when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn("");
 
         when(proofValidator.validate(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
-        when(dataProviderPlugin.fetchData(claimsFromAccessToken)).thenReturn(new JSONObject().put("subjectKey", "subjectValue"));
+        when(dataProviderPlugin.fetchData(anyMap())).thenReturn(new JSONObject().put("subjectKey", "subjectValue"));
 
         W3CJsonLD mockW3CJsonLD = mock(W3CJsonLD.class);
         when(credentialFactory.getCredential(DEFAULT_FORMAT_LDP)).thenReturn(Optional.of(mockW3CJsonLD));
@@ -306,6 +308,13 @@ public class CertifyIssuanceServiceImplTest {
         assertNotNull("CredentialResponse should not be null", response);
         assertNotNull("Response credential should not be null", response.getCredential());
         assertTrue("Response credential should be JsonLDObject", response.getCredential() instanceof JsonLDObject);
+        ArgumentCaptor<Map<String, Object>> providerInput = ArgumentCaptor.forClass(Map.class);
+        verify(dataProviderPlugin).fetchData(providerInput.capture());
+        assertEquals(DEFAULT_SCOPE, providerInput.getValue().get(DataProviderPlugin.SELECTED_SCOPE));
+        assertEquals(TEST_ACCESS_TOKEN_HASH, providerInput.getValue().get("accessTokenHash"));
+        assertEquals("forged-scope", claimsFromAccessToken.get(DataProviderPlugin.SELECTED_SCOPE));
+        assertFalse(claimsFromAccessToken.containsKey("accessTokenHash"));
+        assertNotSame(claimsFromAccessToken, providerInput.getValue());
         // Refined audit log matcher
         verify(auditWrapper).logAudit(eq(Action.VC_ISSUANCE), eq(ActionStatus.SUCCESS), any(), isNull());
     }
@@ -334,7 +343,7 @@ public class CertifyIssuanceServiceImplTest {
         when(proofValidatorFactory.getProofValidator(anyString())).thenReturn(proofValidator);
         when(proofValidator.validate(anyString(), anyString(), any(CredentialProof.class),any())).thenReturn(true);
         DataProviderExchangeException e = new DataProviderExchangeException("DP_FETCH_FAILED", "Failed to fetch data");
-        when(dataProviderPlugin.fetchData(claimsFromAccessToken)).thenThrow(e);
+        when(dataProviderPlugin.fetchData(anyMap())).thenThrow(e);
 
         CertifyException ex = assertThrows(CertifyException.class, () -> issuanceService.getCredential(request));
         assertEquals("DP_FETCH_FAILED", ex.getErrorCode());
@@ -432,7 +441,7 @@ public class CertifyIssuanceServiceImplTest {
         when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn("");
 
         when(proofValidator.validate(anyString(), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
-        when(dataProviderPlugin.fetchData(claimsFromAccessToken)).thenReturn(new JSONObject().put("key", "value"));
+        when(dataProviderPlugin.fetchData(anyMap())).thenReturn(new JSONObject().put("key", "value"));
 
         SDJWT mockSdJwt = mock(SDJWT.class);
         when(credentialFactory.getCredential(DEFAULT_FORMAT_SDJWT)).thenReturn(Optional.of(mockSdJwt));
@@ -489,7 +498,7 @@ public class CertifyIssuanceServiceImplTest {
         when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn("");
 
         when(proofValidator.validate(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
-        when(dataProviderPlugin.fetchData(claimsFromAccessToken)).thenReturn(new JSONObject().put("subjectKey", "subjectValue"));
+        when(dataProviderPlugin.fetchData(anyMap())).thenReturn(new JSONObject().put("subjectKey", "subjectValue"));
 
         W3CJsonLD mockW3CJsonLD = mock(W3CJsonLD.class);
         when(credentialFactory.getCredential(DEFAULT_FORMAT_LDP)).thenReturn(Optional.of(mockW3CJsonLD));
@@ -551,7 +560,7 @@ public class CertifyIssuanceServiceImplTest {
         when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn("");
 
         when(proofValidator.validate(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
-        when(dataProviderPlugin.fetchData(claimsFromAccessToken)).thenReturn(new JSONObject().put("subjectKey", "subjectValue"));
+        when(dataProviderPlugin.fetchData(anyMap())).thenReturn(new JSONObject().put("subjectKey", "subjectValue"));
 
         W3CJsonLD mockW3CJsonLD = mock(W3CJsonLD.class);
         when(credentialFactory.getCredential(DEFAULT_FORMAT_LDP)).thenReturn(Optional.of(mockW3CJsonLD));
@@ -617,7 +626,7 @@ public class CertifyIssuanceServiceImplTest {
             when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn("");
 
             when(proofValidator.validate(eq("test-client"), eq(TEST_CNONCE), any(CredentialProof.class), any())).thenReturn(true);
-            when(dataProviderPlugin.fetchData(claimsFromAccessToken)).thenReturn(new JSONObject().put("key", "value"));
+            when(dataProviderPlugin.fetchData(anyMap())).thenReturn(new JSONObject().put("key", "value"));
 
             // Mock the mDOC credential
             MDocCredential mockMdoc = mock(MDocCredential.class);
@@ -665,7 +674,7 @@ public class CertifyIssuanceServiceImplTest {
         when(proofValidatorFactory.getProofValidator(anyString())).thenReturn(proofValidator);
         when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn("");
         when(proofValidator.validate(anyString(), anyString(), any(CredentialProof.class), any())).thenReturn(true);
-        when(dataProviderPlugin.fetchData(claimsFromAccessToken)).thenReturn(new JSONObject().put("subjectKey", "subjectValue"));
+        when(dataProviderPlugin.fetchData(anyMap())).thenReturn(new JSONObject().put("subjectKey", "subjectValue"));
 
         // Mock credential and QR data
         W3CJsonLD mockW3CJsonLD = mock(W3CJsonLD.class);
@@ -732,7 +741,7 @@ public class CertifyIssuanceServiceImplTest {
         when(proofValidatorFactory.getProofValidator(anyString())).thenReturn(proofValidator);
         when(proofValidator.getKeyMaterial(any(CredentialProof.class))).thenReturn("");
         when(proofValidator.validate(anyString(), anyString(), any(CredentialProof.class), any())).thenReturn(true);
-        when(dataProviderPlugin.fetchData(claimsFromAccessToken)).thenReturn(new JSONObject().put("subjectKey", "subjectValue"));
+        when(dataProviderPlugin.fetchData(anyMap())).thenReturn(new JSONObject().put("subjectKey", "subjectValue"));
 
         W3CJsonLD mockW3CJsonLD = mock(W3CJsonLD.class);
         when(credentialFactory.getCredential(DEFAULT_FORMAT_LDP)).thenReturn(Optional.of(mockW3CJsonLD));

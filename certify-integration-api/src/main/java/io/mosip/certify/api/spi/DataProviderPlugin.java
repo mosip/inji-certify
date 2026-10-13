@@ -13,5 +13,8 @@ import io.mosip.certify.api.exception.DataProviderExchangeException;
  *  and then signed using {@link VCSigner}.
  */
 public interface DataProviderPlugin {
+    /** Reserved input populated by Certify after credential selection; never trust a token's value. */
+    String SELECTED_SCOPE = "_certifySelectedScope";
+
     JSONObject fetchData(Map<String, Object> identityDetails) throws DataProviderExchangeException;
 }
