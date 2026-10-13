@@ -1148,5 +1148,33 @@
         "TC_esignetDependent_GenerateToken_02",
         "TC_esignetDependent_GenerateToken_01",
         "TC_esignetDependent_CreateOidc_For_EccR1_04"
+    ],
+    "TC_esignetDependent_OAuthdetailsRequest_DPoP_01": [
+        "TC_esignetDependent_CreateOidc_DPoP_01"
+    ],
+    "TC_esignetDependent_AuthenticateUser_DPoP_01": [
+        "TC_esignetDependent_OAuthdetailsRequest_DPoP_01",
+        "TC_mock_identity_dependency_02"
+    ],
+    "TC_InjiCertify_GetCredentialForLandRegistry_DPoP_01": [
+        "TC_esignetDependent_CreateOidc_DPoP_01",
+        "TC_esignetDependent_GenerateToken_DPoP_01",
+        "TC_landRegistryDependent_GenerateNonce_01",
+        "TC_DBDependent_InsertQuery_02"
+    ],
+    "TC_InjiCertify_GetCredentialForLandRegistry_DPoP_Bearer_01": [
+        "TC_esignetDependent_CreateOidc_DPoP_01",
+        "TC_esignetDependent_GenerateToken_DPoP_01",
+        "TC_landRegistryDependent_GenerateNonce_01",
+        "TC_DBDependent_InsertQuery_02"
+    ],
+    "TC_esignetDependent_GenerateToken_DPoP_01": [
+        "TC_esignetDependent_AuthorizationCode_DPoP_01",
+        "TC_esignetDependent_CreateOidc_DPoP_01"
+    ],
+    "TC_esignetDependent_CreateOidc_DPoP_01": [],
+    "TC_esignetDependent_AuthorizationCode_DPoP_01": [
+        "TC_esignetDependent_OAuthdetailsRequest_DPoP_01",
+        "TC_esignetDependent_AuthenticateUser_DPoP_01"
     ]
 }

@@ -291,5 +291,33 @@
         "TC_pms_dependency_01",
         "TC_esignetDependent_GenerateTokenNeg_31",
         "TC_mosipIDDependent_GenerateNonceNeg_01"
-    ]
+    ],
+    "TC_esignetDependent_AuthenticateUser_DPoP_Mosip_01": [
+        "TC_esignetDependent_OAuthdetailsRequest_DPoP_Mosip_01",
+        "TC_idrepo_dependency_01"
+    ],
+    "TC_esignetDependent_GenerateToken_DPoP_Mosip_01": [
+        "TC_esignetDependent_AuthorizationCode_DPoP_Mosip_01",
+        "TC_esignetDependent_CreateOidc_DPoP_Mosip_01"
+    ],
+    "TC_esignetDependent_OAuthdetailsRequest_DPoP_Mosip_01": [
+        "TC_esignetDependent_CreateOidc_DPoP_Mosip_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_DPoP_01": [
+        "TC_esignetDependent_CreateOidc_DPoP_Mosip_01",
+        "TC_esignetDependent_GenerateToken_DPoP_Mosip_01",
+        "TC_esignetDependent_GenerateNonce_01",
+        "TC_InjiCertify_MosipID_AddCredentialConfig_01"
+    ],
+    "TC_injicertify_Mosipidcredentialissuance_DPoP_Bearer_01": [
+        "TC_esignetDependent_CreateOidc_DPoP_Mosip_01",
+        "TC_esignetDependent_GenerateToken_DPoP_Mosip_01",
+        "TC_esignetDependent_GenerateNonce_01",
+        "TC_InjiCertify_MosipID_AddCredentialConfig_01"
+    ],
+    "TC_esignetDependent_AuthorizationCode_DPoP_Mosip_01": [
+        "TC_esignetDependent_OAuthdetailsRequest_DPoP_Mosip_01",
+        "TC_esignetDependent_AuthenticateUser_DPoP_Mosip_01"
+    ],
+    "TC_esignetDependent_CreateOidc_DPoP_Mosip_01": []
 }

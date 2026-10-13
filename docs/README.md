@@ -6,6 +6,10 @@
 - [SD-JWT VC Support](./technical_docs/SD_JWT_Support.md)
 - [Data Integrity Proof Support](./technical_docs/Data_Integrity_Proof_Support.md)
 - [VC Revocation Support](./technical_docs/VC_Revocation_Support.md)
+- [Presentation During Issuance](./technical_docs/Presentation_During_Issuance.md)
+- [DCQL Support](./technical_docs/DCQL_Support.md)
+- [Inji Verify as a Library](./technical_docs/Inji_Verify_As_A_Library.md)
+- [DPoP Support (RFC 9449)](./technical_docs/DPoP_Support.md)
 
 # Integrator READMEs
 

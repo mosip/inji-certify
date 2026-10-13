@@ -30,6 +30,7 @@
         ],
     	"clientNameLangMap": {
 		      "{{keyLang1}}": "{{clientNameLang}}"
-    	}
+    	}{{#if additionalConfig}},
+        "additionalConfig": {"dpop_bound_access_tokens": true}{{/if}}
     }
 }

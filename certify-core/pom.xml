@@ -7,13 +7,13 @@
     <parent>
         <groupId>io.inji.certify</groupId>
         <artifactId>certify-parent</artifactId>
-        <version>1.0.0-alpha.2-SNAPSHOT</version>
+        <version>1.0.0-rc.2-SNAPSHOT</version>
     </parent>
 
     <groupId>io.inji.certify</groupId>
     <artifactId>certify-core</artifactId>
     <name>certify-core</name>
-    <version>1.0.0-alpha.2-SNAPSHOT</version>
+    <version>1.0.0-rc.2-SNAPSHOT</version>
     <description>Certify Core Library</description>
 
     <dependencies>
@@ -35,7 +35,7 @@
         <dependency>
             <groupId>io.inji.certify</groupId>
             <artifactId>certify-integration-api</artifactId>
-            <version>1.0.0-alpha.2-SNAPSHOT</version>
+            <version>1.0.0-rc.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
@@ -49,27 +49,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-cache</artifactId>
-        </dependency>
-        <!-- templating dependencies -->
-        <dependency>
-            <groupId>org.apache.velocity</groupId>
-            <artifactId>velocity</artifactId>
-            <version>1.7</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.velocity.tools</groupId>
-            <artifactId>velocity-tools-generic</artifactId>
-            <version>3.1</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.velocity</groupId>
-                    <artifactId>velocity-engine-core</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

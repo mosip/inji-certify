@@ -21,3 +21,34 @@ CreateOIDCClient:
       output: '{
         "status": "ACTIVE"
 }'
+   InjiCertify_ESignet_CreateOIDCClient_MOSIPID_DPoP_all_Valid_Smoke_sid:
+      endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/client-mgmt/client
+      uniqueIdentifier: TC_esignetDependent_CreateOidc_DPoP_Mosip_01
+      description: Create OIDC client with DPoP-bound access tokens
+      role: partner
+      restMethod: post
+      inputTemplate: injicertify/VCILandRegistry/CreateOIDCClientV2ForLandRegistry/CreateOIDCClientV2ForLandRegistry
+      outputTemplate: injicertify/VCILandRegistry/CreateOIDCClientV2ForLandRegistry/CreateOIDCClientV2ForLandRegistryResult
+      input: '{
+      	"requestTime": "$TIMESTAMP$",
+      	"clientId": "$RANDOMID$DPI",
+      	"clientName": "MOSIP OIDC Client",
+      	"logoUri": "https://health-services.com/logo.png",
+      	"relyingPartyId": "mpartner-default-mobile",
+      	"redirectUris": "$IDPREDIRECTURI$",
+      	"publicKey": "$OIDCJWKKEY_DPOP$",
+      	"userClaims1": "name",
+      	"userClaims2": "email",
+      	"userClaims3": "gender",
+      	"userClaims4": "phone_number",
+      	"userClaims5": "birthdate",
+      	"authContextRefs": [{acrValues: "mosip:idp:acr:static-code"},{acrValues: "mosip:idp:acr:generated-code"},{acrValues: "mosip:idp:acr:biometrics"},{acrValues: "mosip:idp:acr:knowledge"}],
+      	"grantTypes": "authorization_code",
+      	"clientAuthMethods": "private_key_jwt",
+      	"keyLang1": "$1STLANG$",
+      	"clientNameLang": "MOSIP OIDC Client",
+      	"additionalConfig": "true"
+}'
+      output: '{
+    	"status": "ACTIVE"
+}'

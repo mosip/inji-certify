@@ -20,3 +20,29 @@ moved client.zip to build time dependency in dockerfile - addition of new hsm-cl
 ## Restructure of credential_template table
 
 Step-by-Step Migration guide for upgrade from 0.11.0 to 0.12.0 is available at [Migration Guide](./Migration_Guide_0.11.0_To_0.12.0.md)
+
+---
+
+# Changes in release 1.0.0-rc.1
+
+## Velocity upgraded from 1.7 to 2.4.1: template behaviour changes
+
+Credential templates (`vc_template`) are now rendered with Velocity 2.4.1. This fixes CVE-2020-13936.
+
+**1. `#if` treats empty values as false**
+
+| `phone` value | Before (1.7) | After (2.4.1) |
+|---|---|---|
+| `"+91..."` | included | included |
+| `""` | `"phone": ""` included | **omitted** |
+| null | omitted | omitted |
+
+If a field must always appear, use `#if($var || $var == '')`, or drop the `#if` and use `$!{var}`.
+
+**2. Loop variables renamed**
+
+Replace `$velocityCount` with `$foreach.count`, and `$velocityHasNext` with `$foreach.hasNext`.
+
+**3. Reflection blocked**
+
+`SecureUberspector` is enabled. Templates can no longer call methods on classes like `Class`, `ClassLoader`, `Runtime` or `System`, so `$x.getClass().forName(...)` no longer works. Normal field access and the `$_dateTool` and `$_esc` tools are unaffected.

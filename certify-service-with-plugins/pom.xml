@@ -6,12 +6,12 @@
     <parent>
         <groupId>io.inji.certify</groupId>
         <artifactId>certify-parent</artifactId>
-        <version>1.0.0-alpha.2-SNAPSHOT</version>
+        <version>1.0.0-rc.2-SNAPSHOT</version>
     </parent>
 
     <groupId>io.inji.certify</groupId>
     <artifactId>certify-service-with-plugins</artifactId>
-    <version>1.0.0-alpha.2-SNAPSHOT</version>
+    <version>1.0.0-rc.2-SNAPSHOT</version>
     <name>certify-service-with-plugins</name>
     <description>certify vci service</description>
     <url>https://github.com/inji/inji-certify</url>
@@ -34,13 +34,13 @@
 
     <properties>
         <certify-plugins.location>target</certify-plugins.location>
-        <mock-certify-plugin.version>1.0.0-alpha.2-SNAPSHOT</mock-certify-plugin.version>
+        <mock-certify-plugin.version>1.0.0-rc.2-SNAPSHOT</mock-certify-plugin.version>
         <mock-certify-plugin.fileName>mock-certify-plugin.jar</mock-certify-plugin.fileName>
-        <mosip-identity-certify-plugin.version>1.0.0-alpha.2-SNAPSHOT</mosip-identity-certify-plugin.version>
+        <mosip-identity-certify-plugin.version>1.0.0-rc.2-SNAPSHOT</mosip-identity-certify-plugin.version>
         <mosip-identity-certify-plugin.fileName>mosip-identity-certify-plugin.jar</mosip-identity-certify-plugin.fileName>
-        <postgres-dataprovider-plugin.version>1.0.0-alpha.2-SNAPSHOT</postgres-dataprovider-plugin.version>
+        <postgres-dataprovider-plugin.version>1.0.0-rc.2-SNAPSHOT</postgres-dataprovider-plugin.version>
         <postgres-dataprovider-plugin.fileName>postgres-dataprovider-plugin.jar</postgres-dataprovider-plugin.fileName>
-        <sunbird-rc-certify-integration-plugin.version>1.0.0-alpha.2-SNAPSHOT</sunbird-rc-certify-integration-plugin.version>
+        <sunbird-rc-certify-integration-plugin.version>1.0.0-rc.2-SNAPSHOT</sunbird-rc-certify-integration-plugin.version>
         <sunbird-rc-certify-integration-plugin.fileName>sunbird-rc-certify-integration-impl.jar</sunbird-rc-certify-integration-plugin.fileName>
     </properties>
     <build>
@@ -122,26 +122,6 @@
                     <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
                     <format>json</format>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>1.5</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                        <configuration>
-                            <gpgArguments>
-                                <arg>--pinentry-mode</arg>
-                                <arg>loopback</arg>
-                            </gpgArguments>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

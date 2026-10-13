@@ -2189,7 +2189,7 @@ components:
           description: 'Document type identifier, used for mDL/mDoc credentials.'
         cryptographic_binding_methods_supported:
           type: array
-          description: 'List of supported cryptographic binding methods (e.g., did, holder\_binding).'
+          description: 'List of supported cryptographic binding methods (e.g., did:jwk, did:key, cose_key).'
           items:
             type: string
         credential_signing_alg_values_supported:
@@ -2588,7 +2588,10 @@ components:
           description: Applicable for subsequent request - auth session value shared as response of initial IAR
         openid4vp_response:
           type: string
-          description: Applicable for subsequent request - OpenID4VP presentation submission response contains vp_token and presentation_submission
+          description: |
+            Applicable for subsequent request - OpenID4VP presentation submission response.
+            In DCQL mode (OpenID4VP 1.0) it contains a vp_token keyed by the DCQL credential
+            query id; there is no presentation_submission.
     AuthorizationSuccess:
       type: object
       required:
@@ -2611,7 +2614,11 @@ components:
           description: random string to identify session for auth flow, sent in response to initial request
         openid4vp_request:
           type: object
-          description: OpenId4VP compliant VP request. sent in response to initial request
+          description: |
+            OpenID4VP 1.0 compliant VP request, sent in response to the initial request.
+            Carries a dcql_query (Digital Credentials Query Language) describing the
+            credential(s) the wallet must present, together with nonce, response_mode
+            (only iae_post is supported for now) and response_uri.
         code:
           type: string
           description: Authorization code to exchange for access token, sent in subsequent request once VP is submitted and verified successfully

@@ -1,6 +1,10 @@
 package io.mosip.certify.vcformatters;
 
+import java.io.StringWriter;
 import java.util.*;
+
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,6 +21,7 @@ import org.junit.Assert;
 import static io.mosip.certify.core.constants.Constants.DELIMITER;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
@@ -397,6 +402,61 @@ public class VelocityTemplatingEngineImplTest {
         assertEquals(List.of("revocation"), formatter.getCredentialStatusPurpose(ldpKey));
         assertEquals(1, formatter.getQRSettings(ldpKey).size());
         assertEquals("RS256", formatter.getQRSignatureAlgo(ldpKey));
+    }
+
+    @Test
+    public void should_blockReflectionEscape_when_templateAttemptsRce() {
+        mockLdp(ldpConfig("{\"klass\":\"${str.getClass()}\"," +
+                "\"loader\":\"${str.getClass().getClassLoader()}\"," +
+                "\"runtime\":\"${str.getClass().forName('java.lang.Runtime')}\"}"));
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.TEMPLATE_NAME, ldpKey);
+        params.put(Constants.DID_URL, "did:example:issuer");
+        params.put("str", "hello");
+
+        JSONObject json = new JSONObject(formatter.format(params));
+
+        // getClass() alone resolves (allowed by design) - only leaks the type name, no RCE.
+        assertEquals("class java.lang.String", json.getString("klass"));
+        // The escape vectors stay unevaluated: no live ClassLoader, no arbitrary class loaded.
+        assertTrue("getClassLoader() must be blocked", json.getString("loader").contains("${"));
+        assertTrue("forName() must be blocked", json.getString("runtime").contains("${"));
+    }
+
+    @Test
+    public void should_resolveReflectionEscape_when_secureUberspectorAbsent() {
+        VelocityEngine insecure = new VelocityEngine();
+        insecure.init();
+        StringWriter out = new StringWriter();
+        VelocityContext ctx = new VelocityContext();
+        ctx.put("str", "hello");
+        insecure.evaluate(ctx, out,
+                "insecure-control",
+                "${str.getClass().forName('java.lang.Runtime')}");
+
+        String result = out.toString();
+        assertFalse("Without SecureUberspector the escape must resolve", result.contains("${"));
+        assertTrue("forName should load the class when unguarded",
+                result.contains("java.lang.Runtime"));
+    }
+
+    @Test
+    public void should_omitEmptyField_when_guardedByIf_velocity2Behaviour() {
+        mockLdp(ldpConfig("{\"issuer\":\"${_issuer}\"#if($phone),\"phone\":\"${phone}\"#end}"));
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.TEMPLATE_NAME, ldpKey);
+        params.put(Constants.DID_URL, "did:example:issuer");
+
+        // empty value -> field omitted
+        params.put("phone", "");
+        JSONObject emptyResult = new JSONObject(formatter.format(params));
+        assertFalse("Empty field guarded by #if must be omitted in Velocity 2.x",
+                emptyResult.has("phone"));
+
+        // non-empty value -> field still included
+        params.put("phone", "+91-9999999999");
+        JSONObject nonEmptyResult = new JSONObject(formatter.format(params));
+        assertEquals("+91-9999999999", nonEmptyResult.getString("phone"));
     }
 
 //    @Test

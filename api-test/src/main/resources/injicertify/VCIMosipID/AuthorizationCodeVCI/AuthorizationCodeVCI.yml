@@ -75,6 +75,25 @@ AuthorizationCodeVCI:
       output: '{
 }'
 
+   InjiCertify_ESignet_AuthorizationCode_VCI_MOSIPID_DPoP_uin_All_Valid_Smoke_sid:
+      endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/auth-code
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCode_DPoP_Mosip_01
+      description: Authorization Code for DPoP client
+      role: resident
+      restMethod: post
+      additionalDependencies: TC_esignetDependent_AuthenticateUser_DPoP_Mosip_01
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/VCIMosipID/AuthorizationCodeVCI/AuthorizationCodeVCI
+      outputTemplate: injicertify/VCIMosipID/AuthorizationCodeVCI/AuthorizationCodeVCIResult
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_VCI_MOSIPID_DPoP_uin_all_Valid_Smoke_sid_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_VCI_MOSIPID_DPoP_uin_all_Valid_Smoke_sid_transactionId$"
+}'
+      output: '{
+}'
+
    InjiCertify_ESignet_AuthorizationCode_VCI_MOSIPID_uin_claim169_eccr1_sid:
       endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/authorization/auth-code
       uniqueIdentifier: TC_esignetDependent_AuthorizationCode_claim169_03     
