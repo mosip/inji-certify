@@ -229,9 +229,9 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
      * sees the whole payload's problems at once and nothing is partially saved.
      */
     private void validateAndApplyCredentialConfigMetadataAttributes(CredentialConfigurationDTO request, CredentialConfig credentialConfig) {
-        List<String> bindingMethods = distinct(request.getCryptographicBindingMethodsSupported());
-        List<String> signingAlgs = distinct(request.getCredentialSigningAlgValuesSupported());
-        Map<String, Object> proofTypes = withDistinctProofSigningAlgs(request.getProofTypesSupported());
+        List<String> bindingMethods = getDistinct(request.getCryptographicBindingMethodsSupported());
+        List<String> signingAlgs = getDistinct(request.getCredentialSigningAlgValuesSupported());
+        Map<String, Object> proofTypes = getDistinctProofSigningAlgs(request.getProofTypesSupported());
 
         List<io.mosip.certify.core.dto.Error> errors = new ArrayList<>();
         CredentialConfigMetadataValidator.validateBindingMethods(bindingMethods,
@@ -252,7 +252,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         credentialConfig.setProofTypesSupported(proofTypes);
     }
 
-    private static <T> List<T> distinct(List<T> values) {
+    private static <T> List<T> getDistinct(List<T> values) {
         return values == null ? null : new ArrayList<>(new LinkedHashSet<>(values));
     }
 
@@ -261,7 +261,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
      * cannot repeat, being a JSON object key. Any other shape is passed through unchanged for the
      * validator to report.
      */
-    private static Map<String, Object> withDistinctProofSigningAlgs(Map<String, Object> proofTypes) {
+    private static Map<String, Object> getDistinctProofSigningAlgs(Map<String, Object> proofTypes) {
         if (proofTypes == null) {
             return null;
         }
@@ -270,7 +270,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
             if (detail instanceof Map<?, ?> detailMap
                     && detailMap.get(Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED) instanceof List<?> algs) {
                 Map<Object, Object> distinctDetail = new LinkedHashMap<>(detailMap);
-                distinctDetail.put(Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED, distinct(algs));
+                distinctDetail.put(Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED, getDistinct(algs));
                 result.put(proofType, distinctDetail);
             } else {
                 result.put(proofType, detail);
