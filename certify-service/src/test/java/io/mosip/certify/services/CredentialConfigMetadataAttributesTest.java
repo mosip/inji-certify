@@ -865,10 +865,6 @@ public class CredentialConfigMetadataAttributesTest {
         Assert.assertEquals(List.of("EdDSA"), entity.getCredentialSigningAlgValuesSupported());
     }
 
-    /**
-     * The VC issuance plugin always issues holder-bound credentials, so a configuration it could never
-     * issue is rejected instead of being advertised as needing no proof.
-     */
     @Test
     public void addWithoutHolderBinding_InVCIssuanceMode_IsRejected() {
         ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "VCIssuance");

@@ -1,5 +1,7 @@
 package io.mosip.certify.services;
 
+import com.authlete.cose.constants.COSEAlgorithms;
+import com.nimbusds.jose.JWSAlgorithm;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
@@ -13,11 +15,7 @@ import io.mosip.certify.entity.attributes.Claims;
 import io.mosip.certify.repository.CredentialConfigRepository;
 import io.mosip.certify.utils.CredentialConfigMapper;
 import io.mosip.certify.utils.CredentialConfigMetadataResolver;
-import io.mosip.certify.validators.credentialconfigvalidators.CredentialConfigMetadataValidator;
-import io.mosip.certify.validators.credentialconfigvalidators.LdpVcCredentialConfigValidator;
-import io.mosip.certify.validators.credentialconfigvalidators.MsoMdocCredentialConfigValidator;
-import io.mosip.certify.validators.credentialconfigvalidators.QrSettingsValidator;
-import io.mosip.certify.validators.credentialconfigvalidators.SdJwtCredentialConfigValidator;
+import io.mosip.certify.validators.credentialconfigvalidators.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,10 +26,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import io.mosip.certify.core.dto.Error;
+
 import java.util.*;
 import java.util.stream.Collectors;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.authlete.cose.constants.COSEAlgorithms;
 
 @Slf4j
 @Component
@@ -286,9 +284,8 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         boolean withoutHolderBindingSupported = !"VCIssuance".equals(pluginMode);
         if (withoutHolderBinding) {
             CredentialConfigMetadataValidator.validateWithoutHolderBinding(credentialConfig.getCredentialFormat(), errors);
-            // The VC issuance plugin always issues holder-bound credentials, so it could never issue this
             if (!withoutHolderBindingSupported) {
-                errors.add(new io.mosip.certify.core.dto.Error(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE,
+                errors.add(new Error(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE,
                         "Credentials without holder binding are not supported in the VCIssuance plugin mode."));
             }
         }
