@@ -51,6 +51,7 @@ public class ErrorConstants {
     public static final String STATUS_ID_MISMATCH = "status_id_mismatch";
     public static final String JSON_PROCESSING_ERROR = "json_processing_error";
     public static final String SD_CLAIMS_PARSE_ERROR = "sd_claims_parse_error";
+    public static final String INVALID_SD_CLAIM = "invalid_sd_claim";
     public static final String MULTIPLE_STATUS_PURPOSES_NOT_SUPPORTED = "multiple_status_purposes_not_supported";
     public static final String INVALID_STATUS_PURPOSE = "invalid_status_purpose";
     public static final String CREDENTIAL_TEMPLATE_REQUIRED = "credential_template_required";
