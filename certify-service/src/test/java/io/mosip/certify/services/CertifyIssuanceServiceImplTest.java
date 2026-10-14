@@ -344,6 +344,7 @@ public class CertifyIssuanceServiceImplTest {
         assertTrue("Response credential should be JsonLDObject", response.getCredentials().getFirst().getCredential() instanceof JsonLDObject);
         // Refined audit log matcher
         verify(auditWrapper).logAudit(eq(Action.VC_ISSUANCE), eq(ActionStatus.SUCCESS), any(), isNull());
+        verify(auditWrapper, never()).logAudit(eq(Action.PROOF_VALIDATION_SKIPPED), any(), any(), any());
     }
 
     @Test
@@ -599,6 +600,7 @@ public class CertifyIssuanceServiceImplTest {
         assertNotNull(response);
         assertTrue(response.getCredentials().getFirst().getCredential() instanceof JsonLDObject);
         verifyNoInteractions(proofValidatorFactory, proofValidator);
+        verify(auditWrapper).logAudit(eq(Action.PROOF_VALIDATION_SKIPPED), eq(ActionStatus.SUCCESS), any(), isNull());
         verify(auditWrapper).logAudit(eq(Action.VC_ISSUANCE), eq(ActionStatus.SUCCESS), any(), isNull());
     }
 
@@ -783,6 +785,7 @@ public class CertifyIssuanceServiceImplTest {
         verify(mockSdJwt).createCredential(templateParamsCaptor.capture(), anyString());
         assertFalse("cnf claim must not be present when holder binding is not required",
                 templateParamsCaptor.getValue().containsKey(Constants.CONFIRMATION));
+        verify(auditWrapper).logAudit(eq(Action.PROOF_VALIDATION_SKIPPED), eq(ActionStatus.SUCCESS), any(), isNull());
         verify(auditWrapper).logAudit(eq(Action.VC_ISSUANCE), eq(ActionStatus.SUCCESS), any(), isNull());
     }
 

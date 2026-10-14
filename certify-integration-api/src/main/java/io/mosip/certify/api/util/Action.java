@@ -5,6 +5,8 @@ public enum Action {
 
     PROOF_VALIDATION("proof-validation"),
 
+    PROOF_VALIDATION_SKIPPED("proof-validation"),
+
     NONCE_VALIDATION("nonce-validation");
 
     String module;

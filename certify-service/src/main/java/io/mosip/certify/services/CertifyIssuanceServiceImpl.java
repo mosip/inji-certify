@@ -163,6 +163,8 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         } else {
             log.info("Proof not required for credential_configuration_id {}, issuing without holder binding",
                     credentialRequest.getCredentialConfigId());
+            auditWrapper.logAudit(Action.PROOF_VALIDATION_SKIPPED, ActionStatus.SUCCESS,
+                    AuditHelper.buildAuditDto(accessTokenHash, "accessTokenHash"), null);
             vcResults.add(getVerifiableCredential(credentialConfigurationSupported, null));
         }
 
