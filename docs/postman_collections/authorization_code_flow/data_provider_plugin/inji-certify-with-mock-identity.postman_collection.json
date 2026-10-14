@@ -1089,7 +1089,7 @@
 										"credential-configurations"
 									]
 								},
-								"description": "cryptographicBindingMethodsSupported and proofTypesSupported are mandatory: omitting either, or sending it null or empty, is rejected with invalid_request. Each is validated against what the deployment declares in mosip.certify.credential-config.* — a request can narrow that list, never exceed it — and nothing is filled in from it. A value listed more than once is stored once. signatureAlgo is mandatory too: it is the algorithm the credential is signed with, and must be declared for the signatureCryptoSuite. The credential issuer metadata advertises the signatureCryptoSuite in credential_signing_alg_values_supported, per OpenID4VCI 1.0 Appendix A.1.2.2. credentialSigningAlgValuesSupported is no longer part of the request and is ignored if sent."
+								"description": "cryptographicBindingMethodsSupported and proofTypesSupported are mandatory: omitting either, or sending it null or empty, is rejected with invalid_request. Each is validated against what the deployment declares in mosip.certify.credential-config.* — a request can narrow that list, never exceed it — and nothing is filled in from it. A value listed more than once is stored once. signatureAlgo is mandatory too: it is the algorithm the credential is signed with, and must be declared for the signatureCryptoSuite. The credential issuer metadata advertises the signatureCryptoSuite in credential_signing_alg_values_supported, per OpenID4VCI 1.0 Appendix A.1.2.2. credentialSigningAlgValuesSupported is no longer part of the request; a request that still sends it is rejected with invalid_request as an unrecognised field."
 							},
 							"response": []
 						},
@@ -1136,7 +1136,7 @@
 										"{{ldpVcConfigId}}"
 									]
 								},
-								"description": "Update replaces what is stored, so cryptographicBindingMethodsSupported, proofTypesSupported and signatureAlgo are mandatory here as on Add: omitting one, or sending it null or empty, is rejected with invalid_request rather than keeping the stored value. Each is validated against what the deployment declares in mosip.certify.credential-config.*. credentialSigningAlgValuesSupported is no longer part of the request and is ignored if sent."
+								"description": "Update replaces what is stored, so cryptographicBindingMethodsSupported, proofTypesSupported and signatureAlgo are mandatory here as on Add: omitting one, or sending it null or empty, is rejected with invalid_request rather than keeping the stored value. Each is validated against what the deployment declares in mosip.certify.credential-config.*. credentialSigningAlgValuesSupported is no longer part of the request; a request that still sends it is rejected with invalid_request as an unrecognised field."
 							},
 							"response": []
 						},
@@ -1205,7 +1205,7 @@
 										"credential-configurations"
 									]
 								},
-								"description": "cryptographicBindingMethodsSupported and proofTypesSupported are mandatory: omitting either, or sending it null or empty, is rejected with invalid_request. Each is validated against what the deployment declares in mosip.certify.credential-config.* — a request can narrow that list, never exceed it — and nothing is filled in from it. A value listed more than once is stored once. signatureAlgo is mandatory too: it is the algorithm the credential is signed with and the only value advertised in credential_signing_alg_values_supported. credentialSigningAlgValuesSupported is no longer part of the request and is ignored if sent."
+								"description": "cryptographicBindingMethodsSupported and proofTypesSupported are mandatory: omitting either, or sending it null or empty, is rejected with invalid_request. Each is validated against what the deployment declares in mosip.certify.credential-config.* — a request can narrow that list, never exceed it — and nothing is filled in from it. A value listed more than once is stored once. signatureAlgo is mandatory too: it is the algorithm the credential is signed with and the only value advertised in credential_signing_alg_values_supported. credentialSigningAlgValuesSupported is no longer part of the request; a request that still sends it is rejected with invalid_request as an unrecognised field."
 							},
 							"response": []
 						},
@@ -1252,7 +1252,7 @@
 										"{{msoMdocConfigId}}"
 									]
 								},
-								"description": "Update replaces what is stored, so cryptographicBindingMethodsSupported, proofTypesSupported and signatureAlgo are mandatory here as on Add: omitting one, or sending it null or empty, is rejected with invalid_request rather than keeping the stored value. Each is validated against what the deployment declares in mosip.certify.credential-config.*. credentialSigningAlgValuesSupported is no longer part of the request and is ignored if sent."
+								"description": "Update replaces what is stored, so cryptographicBindingMethodsSupported, proofTypesSupported and signatureAlgo are mandatory here as on Add: omitting one, or sending it null or empty, is rejected with invalid_request rather than keeping the stored value. Each is validated against what the deployment declares in mosip.certify.credential-config.*. credentialSigningAlgValuesSupported is no longer part of the request; a request that still sends it is rejected with invalid_request as an unrecognised field."
 							},
 							"response": []
 						},
@@ -1321,7 +1321,7 @@
 										"credential-configurations"
 									]
 								},
-								"description": "cryptographicBindingMethodsSupported and proofTypesSupported are mandatory: omitting either, or sending it null or empty, is rejected with invalid_request. Each is validated against what the deployment declares in mosip.certify.credential-config.* — a request can narrow that list, never exceed it — and nothing is filled in from it. A value listed more than once is stored once. signatureAlgo is mandatory too: it is the algorithm the credential is signed with and the only value advertised in credential_signing_alg_values_supported. credentialSigningAlgValuesSupported is no longer part of the request and is ignored if sent."
+								"description": "cryptographicBindingMethodsSupported and proofTypesSupported are mandatory: omitting either, or sending it null or empty, is rejected with invalid_request. Each is validated against what the deployment declares in mosip.certify.credential-config.* — a request can narrow that list, never exceed it — and nothing is filled in from it. A value listed more than once is stored once. signatureAlgo is mandatory too: it is the algorithm the credential is signed with and the only value advertised in credential_signing_alg_values_supported. credentialSigningAlgValuesSupported is no longer part of the request; a request that still sends it is rejected with invalid_request as an unrecognised field."
 							},
 							"response": []
 						},
@@ -1368,7 +1368,7 @@
 										"{{sdJwtConfigId}}"
 									]
 								},
-								"description": "Update replaces what is stored, so cryptographicBindingMethodsSupported, proofTypesSupported and signatureAlgo are mandatory here as on Add: omitting one, or sending it null or empty, is rejected with invalid_request rather than keeping the stored value. Each is validated against what the deployment declares in mosip.certify.credential-config.*. credentialSigningAlgValuesSupported is no longer part of the request and is ignored if sent."
+								"description": "Update replaces what is stored, so cryptographicBindingMethodsSupported, proofTypesSupported and signatureAlgo are mandatory here as on Add: omitting one, or sending it null or empty, is rejected with invalid_request rather than keeping the stored value. Each is validated against what the deployment declares in mosip.certify.credential-config.*. credentialSigningAlgValuesSupported is no longer part of the request; a request that still sends it is rejected with invalid_request as an unrecognised field."
 							},
 							"response": []
 						},

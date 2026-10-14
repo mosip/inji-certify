@@ -1620,7 +1620,7 @@ components:
 
             A missing value is rejected with invalid_request, or with mso_mdoc_mandatory_fields_missing or dc_sd_jwt_mandatory_fields_missing for those formats.
 
-            For mso_mdoc and dc+sd-jwt this is the value advertised in credential_signing_alg_values_supported of the credential issuer metadata (as its COSE identifier for mso_mdoc). The request no longer accepts credentialSigningAlgValuesSupported; a value sent for it is ignored.
+            For mso_mdoc and dc+sd-jwt this is the value advertised in credential_signing_alg_values_supported of the credential issuer metadata (as its COSE identifier for mso_mdoc). The request no longer accepts credentialSigningAlgValuesSupported; a request that still sends it is rejected with invalid_request as an unrecognised field, and nothing is stored.
 
             Mapping of signatureCryptoSuite and signatureAlgo values for DataIntegrityProof suite scenario :
 

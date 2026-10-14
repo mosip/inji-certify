@@ -74,7 +74,7 @@ Inji Certify checks your configuration for required fields and possible duplicat
   - Where the property is keyed by crypto suite only, `mso_mdoc` and `dc+sd-jwt` accept any algorithm the deployment holds a signing key for.
   - `keyManagerAppId` and `keyManagerRefId` must refer to the correct keys defined in `mosip.certify.signature-algo.key-alias-mapper`.
 - **What the credential issuer metadata advertises in `credential_signing_alg_values_supported`**.
-  - It is derived from the credential configuration; the Add and Update requests no longer take a `credentialSigningAlgValuesSupported` list, and a value sent for it is ignored. Each configuration advertises the one value it is signed with, so what is advertised can never differ from how the credential is signed.
+  - It is derived from the credential configuration; the Add and Update requests no longer take a `credentialSigningAlgValuesSupported` list, and a request that still sends it is rejected with `invalid_request` as an unrecognised field, storing nothing. Each configuration advertises the one value it is signed with, so what is advertised can never differ from how the credential is signed.
   - `ldp_vc` advertises its `signatureCryptoSuite`, for example `Ed25519Signature2020` or `eddsa-rdfc-2022`, as OpenID4VCI 1.0 Appendix A.1.2.2 requires. A JWS algorithm such as `EdDSA` stands for more than one suite, so a wallet could not act on it.
   - `dc+sd-jwt` advertises its `signatureAlgo`, for example `ES256`, and `mso_mdoc` advertises the COSE identifier of its `signatureAlgo`, `-7` for `ES256`.
   - Existing `ldp_vc` configurations advertise their crypto suite without being re-submitted.
@@ -89,7 +89,7 @@ Inji Certify checks your configuration for required fields and possible duplicat
   - A value listed more than once, in either attribute or in a proof type's `proof_signing_alg_values_supported`, is stored once, in the order first given. The request is not rejected for it; for example, `["did:jwk", "did:jwk"]` is stored as `["did:jwk"]`.
   - Whatever is stored against a credential configuration is what the Get response returns and the credential issuer metadata advertises for it.
   - **Configurations created before these attributes were stored** need not be re-submitted. Where nothing is stored for an attribute, the Get response and the issuer metadata keep resolving it from the properties as before.
-  - **Upgrading existing automation:** every Update request must now send both attributes and `signatureAlgo`, even one that only changes an unrelated field such as the display name. A script or client that omits any of them receives an error. `credentialSigningAlgValuesSupported` can be dropped from requests; an `mso_mdoc` request must also drop `signatureCryptoSuite`.
+  - **Upgrading existing automation:** every Update request must now send both attributes and `signatureAlgo`, even one that only changes an unrelated field such as the display name. A script or client that omits any of them receives an error. `credentialSigningAlgValuesSupported` must be removed from every request body, and an `mso_mdoc` request must also drop `signatureCryptoSuite`.
   - An empty `cryptographicBindingMethodsSupported` or `proofTypesSupported` is rejected for now.
 - **Purpose of `didUrl` in `credential_config`**:
   - `didUrl` in `credential_config` can be different from the issuer did url specified by the property `mosip.certify.data-provider-plugin.did-url`.
