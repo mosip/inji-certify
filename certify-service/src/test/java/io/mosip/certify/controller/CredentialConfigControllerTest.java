@@ -134,7 +134,7 @@ public class CredentialConfigControllerTest {
      * receives, rather than being dropped between Jackson and the controller.
      */
     @Test
-    public void addCredentialConfiguration_BindsTheMetadataAttributes() throws Exception {
+    public void should_bindMetadataAttributes_when_addRequestCarriesThem() throws Exception {
         credentialConfigurationDTO.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
         credentialConfigurationDTO.setProofTypesSupported(
                 Map.of("jwt", Map.of(Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED, List.of("ES256"))));
@@ -164,7 +164,7 @@ public class CredentialConfigControllerTest {
      * what is stored or advertised.
      */
     @Test
-    public void addCredentialConfiguration_IgnoresCredentialSigningAlgValuesSupported() throws Exception {
+    public void should_ignoreSigningAlgList_when_requestSendsCredentialSigningAlgValuesSupported() throws Exception {
         Mockito.when(credentialConfigurationService.addCredentialConfiguration(Mockito.any(CredentialConfigurationDTO.class)))
                 .thenReturn(new CredentialConfigResponse());
         credentialConfigurationDTO.setSignatureAlgo("EdDSA");
@@ -187,7 +187,7 @@ public class CredentialConfigControllerTest {
      * identically, so the service rejects a missing attribute and a null one the same way.
      */
     @Test
-    public void addCredentialConfiguration_BindsMissingAndNullAttributesAlike() throws Exception {
+    public void should_bindAttributesAsNull_when_addRequestOmitsOrNullsThem() throws Exception {
         Mockito.when(credentialConfigurationService.addCredentialConfiguration(Mockito.any(CredentialConfigurationDTO.class)))
                 .thenReturn(new CredentialConfigResponse());
         Map<String, Object> withNulls = new HashMap<>(objectMapper.convertValue(credentialConfigurationDTO,
@@ -217,7 +217,7 @@ public class CredentialConfigControllerTest {
      * signatureAlgo rather than as a separate list.
      */
     @Test
-    public void getCredentialConfigurationById_ReturnsTheMetadataAttributes() throws Exception {
+    public void should_returnMetadataAttributesAndSignatureAlgo_when_configurationIsFetched() throws Exception {
         credentialConfigurationDTO.setCryptographicBindingMethodsSupported(List.of("did:jwk", "did:key"));
         credentialConfigurationDTO.setSignatureAlgo("EdDSA");
         credentialConfigurationDTO.setProofTypesSupported(

@@ -56,7 +56,7 @@ class MsoMdocCredentialConfigValidatorTest {
     }
 
     @Test
-    void testIsValidCheck_missingSignatureAlgo_returnsFalse() {
+    void should_returnFalse_when_signatureAlgoIsMissing() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("docType");
         config.setSignatureAlgo(null);
@@ -64,7 +64,7 @@ class MsoMdocCredentialConfigValidatorTest {
     }
 
     @Test
-    void testIsValidCheck_emptySignatureAlgo_returnsFalse() {
+    void should_returnFalse_when_signatureAlgoIsEmpty() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("docType");
         config.setSignatureAlgo("");
@@ -76,7 +76,7 @@ class MsoMdocCredentialConfigValidatorTest {
      * one is rejected by the service as an invalid request, not reported as a missing mandatory field.
      */
     @Test
-    void testIsValidCheck_withoutSignatureCryptoSuite_returnsTrue() {
+    void should_returnTrue_when_signatureCryptoSuiteIsAbsent() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("docType");
         config.setSignatureAlgo("ES256");
