@@ -285,6 +285,11 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         List<io.mosip.certify.core.dto.Error> errors = new ArrayList<>();
         if (withoutHolderBinding) {
             CredentialConfigMetadataValidator.validateWithoutHolderBinding(credentialConfig.getCredentialFormat(), errors);
+            // The VC issuance plugin always issues holder-bound credentials, so it could never issue this
+            if (pluginMode.equals("VCIssuance")) {
+                errors.add(new io.mosip.certify.core.dto.Error(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE,
+                        "Credentials without holder binding are not supported in the VCIssuance plugin mode."));
+            }
         }
         if (derivedBindingMethods != null) {
             CredentialConfigMetadataValidator.validateDerivedBindingMethods(derivedBindingMethods,

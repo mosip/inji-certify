@@ -865,6 +865,83 @@ public class CredentialConfigMetadataAttributesTest {
         Assert.assertEquals(List.of("EdDSA"), entity.getCredentialSigningAlgValuesSupported());
     }
 
+    /**
+     * The VC issuance plugin always issues holder-bound credentials, so a configuration it could never
+     * issue is rejected instead of being advertised as needing no proof.
+     */
+    @Test
+    public void addWithoutHolderBinding_InVCIssuanceMode_IsRejected() {
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "VCIssuance");
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setCryptographicBindingMethodsSupported(List.of());
+        request.setProofTypesSupported(Map.of());
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        Assert.assertEquals(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE, exception.getErrors().getFirst().getErrorCode());
+        Assert.assertEquals("Credentials without holder binding are not supported in the VCIssuance plugin mode.",
+                exception.getErrors().getFirst().getErrorMessage());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    @Test
+    public void updateWithBindingMethodsAndProofTypesEmpty_InVCIssuanceMode_IsRejected() {
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "VCIssuance");
+        CredentialConfig stored = ldpVcEntity();
+        stored.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
+        stored.setProofTypesSupported(new LinkedHashMap<>(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA")))));
+        CredentialConfigurationDTO request = new CredentialConfigurationDTO();
+        request.setCryptographicBindingMethodsSupported(List.of());
+        request.setProofTypesSupported(Map.of());
+
+        when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(stored));
+        when(credentialConfigMapper.toDto(any(CredentialConfig.class))).thenReturn(ldpVcRequest());
+        doNothing().when(credentialConfigMapper).updateEntityFromDto(any(CredentialConfigurationDTO.class), any(CredentialConfig.class));
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.updateCredentialConfiguration("test-credential", request));
+
+        Assert.assertEquals(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE, exception.getErrors().getFirst().getErrorCode());
+        Assert.assertEquals(List.of("did:jwk"), stored.getCryptographicBindingMethodsSupported());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    /**
+     * A configuration stored without holder binding, for example before the deployment switched plugin
+     * mode, is not kept unbound by an update that omits both attributes.
+     */
+    @Test
+    public void updateConfigurationWithoutHolderBinding_InVCIssuanceMode_IsRejected() {
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "VCIssuance");
+        CredentialConfig stored = ldpVcEntity();
+        stored.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
+
+        when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(stored));
+        when(credentialConfigMapper.toDto(any(CredentialConfig.class))).thenReturn(ldpVcRequest());
+        doNothing().when(credentialConfigMapper).updateEntityFromDto(any(CredentialConfigurationDTO.class), any(CredentialConfig.class));
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.updateCredentialConfiguration("test-credential", new CredentialConfigurationDTO()));
+
+        Assert.assertEquals(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE, exception.getErrors().getFirst().getErrorCode());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    @Test
+    public void addWithHolderBinding_InVCIssuanceMode_IsStored() {
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "VCIssuance");
+        CredentialConfig entity = ldpVcEntity();
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
+        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
+
+        credentialConfigurationService.addCredentialConfiguration(ldpVcRequest());
+
+        Assert.assertNotNull(entity.getCryptographicBindingMethodsSupported());
+        Assert.assertNotNull(entity.getProofTypesSupported());
+    }
+
     @Test
     public void addWithOnlyProofTypesEmpty_IsRejected() {
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
