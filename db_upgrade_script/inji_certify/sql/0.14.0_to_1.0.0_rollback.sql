@@ -1,6 +1,6 @@
 -- -------------------------------------------------------------------------------------------------
 -- Rollback Script : v1.0.0 to v0.14.0
--- Release name    : 1.0.0-alpha.1, 1.0.0-alpha.2
+-- Release name    : 1.0.0-alpha.1, 1.0.0-rc.1
 -- Database        : inji_certify
 -- Purpose         : Revert schema changes introduced across the 1.0.0 pre-releases.
 -- -------------------------------------------------------------------------------------------------
@@ -75,7 +75,7 @@ WHERE proof_types_supported #> '{jwt,proof_signing_alg_values_supported}' IS NOT
 
 -- -------------------------------------------------------------------------------------------------
 -- SECTION 3: Drop embedded inji-verify library tables
--- Reverts: 1.0.0-alpha.2
+-- Reverts: 1.0.0-rc.1
 -- -------------------------------------------------------------------------------------------------
 DROP INDEX IF EXISTS certify.idx_vp_submission_response_code;
 DROP INDEX IF EXISTS certify.idx_vc_submission_transaction_id;
