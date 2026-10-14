@@ -14,7 +14,8 @@ import java.util.Set;
 /**
  * Validates the three per-configuration metadata attributes — cryptographic_binding_methods_supported,
  * credential_signing_alg_values_supported and proof_types_supported — against what the deployment
- * declares for them.
+ * declares for them. credential_signing_alg_values_supported is not taken from the request: it is the
+ * configuration's signatureAlgo, so that is what is validated for it.
  * <p>
  * All three are mandatory: a request that leaves one out, sends it as null or sends it empty is
  * rejected, and nothing is filled in from the deployment configuration, which is the allow-list only.
@@ -26,7 +27,7 @@ import java.util.Set;
 public class CredentialConfigMetadataValidator {
 
     private static final String BINDING_METHODS_ATTRIBUTE = "cryptographicBindingMethodsSupported";
-    private static final String SIGNING_ALGS_ATTRIBUTE = "credentialSigningAlgValuesSupported";
+    private static final String SIGNING_ALG_ATTRIBUTE = "signatureAlgo";
     private static final String PROOF_TYPES_ATTRIBUTE = "proofTypesSupported";
 
     private CredentialConfigMetadataValidator() {
@@ -56,29 +57,42 @@ public class CredentialConfigMetadataValidator {
         }
     }
 
-    public static void validateSigningAlgs(List<String> requested, String signatureCryptoSuite,
-                                           Map<String, List<String>> declaredSigningAlgsByCryptoSuite,
-                                           Map<String, List<List<String>>> keyAliasMapper,
-                                           List<Error> errors) {
-        if (rejectMissing(requested, SIGNING_ALGS_ATTRIBUTE, errors)) {
-            return;
-        }
-        // A credential cannot be issued without a signing algorithm, so unlike the binding methods and
-        // proof types this attribute can never be empty.
-        if (requested.isEmpty()) {
-            errors.add(missingOrEmptyError(SIGNING_ALGS_ATTRIBUTE));
+    /**
+     * The configuration's signatureAlgo is the one algorithm it signs with, and so what it advertises in
+     * credential_signing_alg_values_supported (an ldp_vc configuration advertises its crypto suite
+     * instead). It is mandatory, and nothing is filled in from the deployment configuration when it is
+     * left out.
+     * <p>
+     * Where the deployment declares algorithms for the credential format itself, it is checked against
+     * those; otherwise against the algorithms declared for its crypto suite or, with no crypto suite,
+     * the algorithms the deployment holds a signing key for.
+     */
+    public static void validateSigningAlg(String signatureAlgo, String credentialFormat, String signatureCryptoSuite,
+                                          Map<String, List<String>> declaredSigningAlgsByCryptoSuite,
+                                          Map<String, List<String>> declaredSigningAlgsByFormat,
+                                          Map<String, List<List<String>>> keyAliasMapper,
+                                          List<Error> errors) {
+        if (signatureAlgo == null || signatureAlgo.isEmpty()) {
+            errors.add(missingOrEmptyError(SIGNING_ALG_ATTRIBUTE));
             return;
         }
 
+        List<String> declaredForFormat = declaredSigningAlgsByFormat.get(credentialFormat);
+        if (declaredForFormat != null) {
+            validateAgainstFormat(signatureAlgo, credentialFormat, signatureCryptoSuite, declaredForFormat,
+                    keyAliasMapper, errors);
+            return;
+        }
+
+        // The property is keyed by crypto suite, or declares nothing for this format, so the format is
+        // validated through its crypto suite as it always has been.
         if (signatureCryptoSuite == null) {
-            // Formats such as dc+sd-jwt carry a signature algorithm rather than a crypto suite, so the
-            // allow-list is the set of algorithms the deployment actually holds a signing key for.
-            for (String signingAlg : requested) {
-                if (!keyAliasMapper.containsKey(signingAlg)) {
-                    errors.add(buildError(ErrorConstants.UNSUPPORTED_CREDENTIAL_SIGNING_ALG,
-                            "No signing key is available for the credential signing algorithm " + signingAlg
-                                    + ". The supported values are: " + keyAliasMapper.keySet()));
-                }
+            // Formats signed without a crypto suite, such as dc+sd-jwt and mso_mdoc, are allowed the
+            // algorithms the deployment actually holds a signing key for.
+            if (!keyAliasMapper.containsKey(signatureAlgo)) {
+                errors.add(buildError(ErrorConstants.UNSUPPORTED_CREDENTIAL_SIGNING_ALG,
+                        "No signing key is available for the credential signing algorithm " + signatureAlgo
+                                + ". The supported values are: " + keyAliasMapper.keySet()));
             }
             return;
         }
@@ -90,12 +104,31 @@ public class CredentialConfigMetadataValidator {
             return;
         }
 
-        for (String signingAlg : requested) {
-            if (!declared.contains(signingAlg)) {
-                errors.add(buildError(ErrorConstants.UNSUPPORTED_CREDENTIAL_SIGNING_ALG,
-                        "The credential signing algorithm " + signingAlg + " is not supported for the crypto suite "
-                                + signatureCryptoSuite + ". The supported values are: " + declared));
-            }
+        if (!declared.contains(signatureAlgo)) {
+            errors.add(buildError(ErrorConstants.UNSUPPORTED_CREDENTIAL_SIGNING_ALG,
+                    "The credential signing algorithm " + signatureAlgo + " is not supported for the crypto suite "
+                            + signatureCryptoSuite + ". The supported values are: " + declared));
+        }
+    }
+
+    /**
+     * With the property grouped by credential format, mso_mdoc and dc+sd-jwt each declare their own
+     * algorithms, so the value is checked against its format directly rather than through a crypto
+     * suite. Both are signed with a key the deployment must also hold, so a declared algorithm with no
+     * signing key is still rejected.
+     */
+    private static void validateAgainstFormat(String signatureAlgo, String credentialFormat, String signatureCryptoSuite,
+                                              List<String> declaredForFormat,
+                                              Map<String, List<List<String>>> keyAliasMapper,
+                                              List<Error> errors) {
+        if (!declaredForFormat.contains(signatureAlgo)) {
+            errors.add(buildError(ErrorConstants.UNSUPPORTED_CREDENTIAL_SIGNING_ALG,
+                    "The credential signing algorithm " + signatureAlgo + " is not supported for the credential format "
+                            + credentialFormat + ". The supported values are: " + declaredForFormat));
+        } else if (signatureCryptoSuite == null && !keyAliasMapper.containsKey(signatureAlgo)) {
+            errors.add(buildError(ErrorConstants.UNSUPPORTED_CREDENTIAL_SIGNING_ALG,
+                    "No signing key is available for the credential signing algorithm " + signatureAlgo
+                            + ". The supported values are: " + keyAliasMapper.keySet()));
         }
     }
 
@@ -104,18 +137,16 @@ public class CredentialConfigMetadataValidator {
      * equivalent cannot be used for that format. This is the format's own constraint rather than the
      * deployment's, so it applies even to an algorithm the deployment declares for the crypto suite.
      */
-    public static void validateCoseSigningAlgs(List<String> requested, String credentialFormat,
-                                               Set<String> coseSigningAlgs, List<Error> errors) {
-        if (!VCFormats.MSO_MDOC.equals(credentialFormat) || requested == null) {
+    public static void validateCoseSigningAlg(String signatureAlgo, String credentialFormat,
+                                              Set<String> coseSigningAlgs, List<Error> errors) {
+        if (!VCFormats.MSO_MDOC.equals(credentialFormat) || signatureAlgo == null || signatureAlgo.isEmpty()) {
             return;
         }
 
-        for (String signingAlg : requested) {
-            if (!coseSigningAlgs.contains(signingAlg)) {
-                errors.add(buildError(ErrorConstants.UNSUPPORTED_CREDENTIAL_SIGNING_ALG,
-                        "The credential signing algorithm " + signingAlg + " is not supported for the credential format "
-                                + VCFormats.MSO_MDOC + ". The supported values are: " + coseSigningAlgs));
-            }
+        if (!coseSigningAlgs.contains(signatureAlgo)) {
+            errors.add(buildError(ErrorConstants.UNSUPPORTED_CREDENTIAL_SIGNING_ALG,
+                    "The credential signing algorithm " + signatureAlgo + " is not supported for the credential format "
+                            + VCFormats.MSO_MDOC + ". The supported values are: " + coseSigningAlgs));
         }
     }
 

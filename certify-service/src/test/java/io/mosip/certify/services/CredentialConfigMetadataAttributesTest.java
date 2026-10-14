@@ -6,6 +6,7 @@ import io.mosip.certify.core.dto.CredentialConfigurationDTO;
 import io.mosip.certify.core.dto.CredentialConfigurationSupportedDTO;
 import io.mosip.certify.core.dto.CredentialIssuerMetadataDTO;
 import io.mosip.certify.core.dto.MetaDataDisplayDTO;
+import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.CredentialConfigValidationException;
 import io.mosip.certify.entity.CredentialConfig;
 import io.mosip.certify.repository.CredentialConfigRepository;
@@ -28,9 +29,10 @@ import static org.mockito.Mockito.*;
 
 /**
  * Covers the per-credential-configuration selection of cryptographic_binding_methods_supported,
- * credential_signing_alg_values_supported and proof_types_supported: all three are mandatory, what is
- * accepted is stored exactly as requested with nothing filled in from the deployment configuration,
- * what is rejected, and what reaches the Get response and the credential issuer metadata.
+ * credential_signing_alg_values_supported and proof_types_supported: the binding methods and proof types
+ * are mandatory in the request, the signing algorithm is the configuration's mandatory signatureAlgo,
+ * what is accepted is stored exactly as requested with nothing filled in from the deployment
+ * configuration, what is rejected, and what reaches the Get response and the credential issuer metadata.
  */
 @RunWith(MockitoJUnitRunner.class)
 public class CredentialConfigMetadataAttributesTest {
@@ -48,12 +50,10 @@ public class CredentialConfigMetadataAttributesTest {
 
     private static final Map<String, Consumer<CredentialConfigurationDTO>> CLEAR_ATTRIBUTE = Map.of(
             "cryptographicBindingMethodsSupported", dto -> dto.setCryptographicBindingMethodsSupported(null),
-            "credentialSigningAlgValuesSupported", dto -> dto.setCredentialSigningAlgValuesSupported(null),
             "proofTypesSupported", dto -> dto.setProofTypesSupported(null));
 
     private static final Map<String, Consumer<CredentialConfigurationDTO>> EMPTY_ATTRIBUTE = Map.of(
             "cryptographicBindingMethodsSupported", dto -> dto.setCryptographicBindingMethodsSupported(List.of()),
-            "credentialSigningAlgValuesSupported", dto -> dto.setCredentialSigningAlgValuesSupported(List.of()),
             "proofTypesSupported", dto -> dto.setProofTypesSupported(Map.of()));
 
     @Before
@@ -88,8 +88,8 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     /**
-     * An ldp_vc configuration without the three attributes, as the mapper returns one created before
-     * they were stored.
+     * An ldp_vc configuration without the binding methods and proof types, as the mapper returns one
+     * created before they were stored.
      */
     private CredentialConfigurationDTO ldpVcConfig() {
         CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
@@ -107,12 +107,11 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     /**
-     * A valid ldp_vc request, carrying all three attributes.
+     * A valid ldp_vc request, carrying both attributes and its signatureAlgo.
      */
     private CredentialConfigurationDTO ldpVcRequest() {
         CredentialConfigurationDTO dto = ldpVcConfig();
         dto.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
-        dto.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
         dto.setProofTypesSupported(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))));
         return dto;
     }
@@ -141,7 +140,6 @@ public class CredentialConfigMetadataAttributesTest {
     private CredentialConfigurationDTO sdJwtRequest() {
         CredentialConfigurationDTO dto = sdJwtConfig();
         dto.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
-        dto.setCredentialSigningAlgValuesSupported(List.of("ES256"));
         dto.setProofTypesSupported(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("ES256"))));
         return dto;
     }
@@ -163,14 +161,13 @@ public class CredentialConfigMetadataAttributesTest {
         dto.setVcTemplate("test_template");
         dto.setCredentialFormat("mso_mdoc");
         dto.setDocType("org.iso.18013.5.1.mDL");
-        dto.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
+        dto.setSignatureAlgo("ES256");
         return dto;
     }
 
     private CredentialConfigurationDTO msoMdocRequest() {
         CredentialConfigurationDTO dto = msoMdocConfig();
         dto.setCryptographicBindingMethodsSupported(List.of("cose_key"));
-        dto.setCredentialSigningAlgValuesSupported(List.of("ES256"));
         dto.setProofTypesSupported(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("ES256"))));
         return dto;
     }
@@ -181,7 +178,6 @@ public class CredentialConfigMetadataAttributesTest {
         entity.setStatus("active");
         entity.setCredentialFormat("mso_mdoc");
         entity.setDocType("org.iso.18013.5.1.mDL");
-        entity.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
         entity.setSignatureAlgo("ES256");
         return entity;
     }
@@ -206,7 +202,7 @@ public class CredentialConfigMetadataAttributesTest {
         Assert.assertTrue(exception.getErrors().getFirst().getErrorMessage().contains(attribute));
     }
 
-    // ---------- All three are mandatory on add: missing, null and empty are rejected alike ----------
+    // ---------- Both attributes are mandatory on add: missing, null and empty are rejected alike ----------
 
     /**
      * Jackson binds a missing attribute and one sent as null to the same null, so this covers both.
@@ -245,19 +241,137 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     /**
-     * A request written before the attributes were mandatory sends none of them, and is told about all
-     * three at once.
+     * A request written before the attributes were mandatory sends neither of them, and is told about
+     * both at once.
      */
     @Test
-    public void should_reportEachAttribute_when_allThreeAreMissing() {
+    public void should_reportEachAttribute_when_bothAreMissing() {
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
 
         CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
                 () -> credentialConfigurationService.addCredentialConfiguration(ldpVcConfig()));
 
-        Assert.assertEquals(3, exception.getErrors().size());
+        Assert.assertEquals(2, exception.getErrors().size());
         exception.getErrors().forEach(error ->
                 Assert.assertEquals(ErrorConstants.INVALID_REQUEST, error.getErrorCode()));
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    // ---------- The signing algorithm is mandatory and never filled in ----------
+
+    /**
+     * An ldp_vc configuration used to take the first algorithm the deployment declares for its crypto
+     * suite when signatureAlgo was left out. It is now rejected instead.
+     */
+    @Test
+    public void should_rejectAdd_when_ldpVcSignatureAlgoIsMissing() {
+        for (String missing : Arrays.asList(null, "")) {
+            CredentialConfigurationDTO request = ldpVcRequest();
+            request.setSignatureAlgo(missing);
+
+            CertifyException exception = assertThrows(CertifyException.class,
+                    () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+            Assert.assertEquals(ErrorConstants.INVALID_REQUEST, exception.getErrorCode());
+            Assert.assertTrue(exception.getMessage().contains("signatureAlgo"));
+            // Nothing is filled in from the deployment configuration.
+            Assert.assertEquals(missing, request.getSignatureAlgo());
+        }
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    /**
+     * An mdoc is signed with signatureAlgo alone, so the format requires it in place of a crypto suite.
+     */
+    @Test
+    public void should_rejectAdd_when_msoMdocSignatureAlgoIsMissing() {
+        CredentialConfigurationDTO request = msoMdocRequest();
+        request.setSignatureAlgo(null);
+
+        CertifyException exception = assertThrows(CertifyException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        Assert.assertEquals(ErrorConstants.MSO_MDOC_MANDATORY_FIELDS_MISSING, exception.getErrorCode());
+        Assert.assertTrue(exception.getMessage().contains("signatureAlgo"));
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    /**
+     * An mdoc is signed with signatureAlgo alone, so a request carrying a crypto suite is rejected rather
+     * than storing a value that plays no part in signing. An empty one is rejected the same way.
+     */
+    @Test
+    public void should_rejectMsoMdoc_when_signatureCryptoSuiteIsSent() {
+        for (String suite : List.of("EcdsaSecp256r1Signature2019", "")) {
+            CredentialConfigurationDTO request = msoMdocRequest();
+            request.setSignatureCryptoSuite(suite);
+
+            CertifyException exception = assertThrows(CertifyException.class,
+                    () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+            Assert.assertEquals(ErrorConstants.INVALID_REQUEST, exception.getErrorCode());
+            Assert.assertTrue(exception.getMessage().contains("signatureCryptoSuite"));
+        }
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    /**
+     * Update replaces the stored configuration, so a suite sent on update is rejected the same way.
+     */
+    @Test
+    public void should_rejectMsoMdocUpdate_when_signatureCryptoSuiteIsSent() {
+        CredentialConfig stored = msoMdocEntity();
+        CredentialConfigurationDTO merged = msoMdocConfig();
+        merged.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
+        when(credentialConfigRepository.findByCredentialConfigKeyId("test-mso-mdoc")).thenReturn(Optional.of(stored));
+        when(credentialConfigMapper.toDto(any(CredentialConfig.class))).thenReturn(merged);
+        doNothing().when(credentialConfigMapper).updateEntityFromDto(any(CredentialConfigurationDTO.class), any(CredentialConfig.class));
+        CredentialConfigurationDTO request = msoMdocRequest();
+        request.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
+
+        CertifyException exception = assertThrows(CertifyException.class,
+                () -> credentialConfigurationService.updateCredentialConfiguration("test-mso-mdoc", request));
+
+        Assert.assertEquals(ErrorConstants.INVALID_REQUEST, exception.getErrorCode());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    /**
+     * The VCIssuance plugin skips the key selection check, so the mandatory signatureAlgo is enforced with
+     * the attributes.
+     */
+    @Test
+    public void should_rejectAdd_when_signatureAlgoIsMissingInVcIssuanceMode() {
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "VCIssuance");
+        CredentialConfig entity = ldpVcEntity();
+        entity.setSignatureAlgo(null);
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setSignatureAlgo(null);
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        assertRejectedAsInvalidRequestNaming(exception, "signatureAlgo");
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    @Test
+    public void should_rejectUpdateAndSaveNothing_when_signatureAlgoIsMissing() {
+        CredentialConfig stored = storedLdpVcEntity();
+        CredentialConfigurationDTO merged = ldpVcConfig();
+        merged.setSignatureAlgo(null);
+        when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(stored));
+        when(credentialConfigMapper.toDto(any(CredentialConfig.class))).thenReturn(merged);
+        doNothing().when(credentialConfigMapper).updateEntityFromDto(any(CredentialConfigurationDTO.class), any(CredentialConfig.class));
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setSignatureAlgo(null);
+
+        CertifyException exception = assertThrows(CertifyException.class,
+                () -> credentialConfigurationService.updateCredentialConfiguration("test-credential", request));
+
+        Assert.assertEquals(ErrorConstants.INVALID_REQUEST, exception.getErrorCode());
+        Assert.assertEquals(storedLdpVcEntity().getCredentialSigningAlgValuesSupported(), stored.getCredentialSigningAlgValuesSupported());
         verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
     }
 
@@ -309,7 +423,8 @@ public class CredentialConfigMetadataAttributesTest {
 
     /**
      * Each value narrows what the deployment declares, and nothing is added back from it: the proof type
-     * keeps the one algorithm requested rather than the four declared.
+     * keeps the one algorithm requested rather than the four declared. The signing algorithm stored is
+     * the configuration's signatureAlgo.
      */
     @Test
     public void should_storeExactlyTheRequestedValues_when_allThreeAreDeclared() {
@@ -320,7 +435,7 @@ public class CredentialConfigMetadataAttributesTest {
         credentialConfigurationService.addCredentialConfiguration(ldpVcRequest());
 
         Assert.assertEquals(List.of("did:jwk"), entity.getCryptographicBindingMethodsSupported());
-        Assert.assertEquals(List.of("EdDSA"), entity.getCredentialSigningAlgValuesSupported());
+        Assert.assertEquals(List.of("Ed25519Signature2020"), entity.getCredentialSigningAlgValuesSupported());
         Assert.assertEquals(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))), entity.getProofTypesSupported());
     }
 
@@ -334,13 +449,12 @@ public class CredentialConfigMetadataAttributesTest {
         when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
         CredentialConfigurationDTO request = ldpVcRequest();
         request.setCryptographicBindingMethodsSupported(List.of("did:web", "did:jwk", "did:web"));
-        request.setCredentialSigningAlgValuesSupported(List.of("EdDSA", "EdDSA"));
         request.setProofTypesSupported(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("ES256", "EdDSA", "ES256"))));
 
         credentialConfigurationService.addCredentialConfiguration(request);
 
         Assert.assertEquals(List.of("did:web", "did:jwk"), entity.getCryptographicBindingMethodsSupported());
-        Assert.assertEquals(List.of("EdDSA"), entity.getCredentialSigningAlgValuesSupported());
+        Assert.assertEquals(List.of("Ed25519Signature2020"), entity.getCredentialSigningAlgValuesSupported());
         Assert.assertEquals(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("ES256", "EdDSA"))), entity.getProofTypesSupported());
     }
 
@@ -423,11 +537,18 @@ public class CredentialConfigMetadataAttributesTest {
         verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
     }
 
+    /**
+     * The VCIssuance plugin skips the key selection check, so the crypto suite's declared algorithms are
+     * enforced with the attributes.
+     */
     @Test
     public void should_rejectAdd_when_algorithmIsNotDeclaredForCryptoSuite() {
-        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "VCIssuance");
+        CredentialConfig entity = ldpVcEntity();
+        entity.setSignatureAlgo("RS256");
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
         CredentialConfigurationDTO request = ldpVcRequest();
-        request.setCredentialSigningAlgValuesSupported(List.of("RS256"));
+        request.setSignatureAlgo("RS256");
 
         CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
                 () -> credentialConfigurationService.addCredentialConfiguration(request));
@@ -443,9 +564,11 @@ public class CredentialConfigMetadataAttributesTest {
      */
     @Test
     public void should_rejectSdJwt_when_algorithmHasNoSigningKey() {
-        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(sdJwtEntity());
+        CredentialConfig entity = sdJwtEntity();
+        entity.setSignatureAlgo("PS256");
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
         CredentialConfigurationDTO request = sdJwtRequest();
-        request.setCredentialSigningAlgValuesSupported(List.of("PS256"));
+        request.setSignatureAlgo("PS256");
 
         CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
                 () -> credentialConfigurationService.addCredentialConfiguration(request));
@@ -458,17 +581,18 @@ public class CredentialConfigMetadataAttributesTest {
 
     /**
      * An mso_mdoc credential is advertised with COSE algorithm identifiers, so an algorithm the
-     * deployment declares for the crypto suite but that has no COSE equivalent is rejected on write
-     * instead of failing when the issuer metadata is built.
+     * deployment holds a signing key for but that has no COSE equivalent is rejected on write instead of
+     * failing when the issuer metadata is built.
      */
     @Test
     public void should_rejectMsoMdoc_when_algorithmHasNoCoseEquivalent() {
-        LinkedHashMap<String, List<String>> signingAlgs = new LinkedHashMap<>();
-        signingAlgs.put("EcdsaSecp256r1Signature2019", List.of("ES256", "PS256"));
-        ReflectionTestUtils.setField(credentialConfigurationService, "credentialSigningAlgValuesSupportedMap", signingAlgs);
-        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(msoMdocEntity());
+        ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper",
+                Map.of("PS256", List.of(List.of("TEST_EC", "TEST_EC-REF"))));
+        CredentialConfig entity = msoMdocEntity();
+        entity.setSignatureAlgo("PS256");
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
         CredentialConfigurationDTO request = msoMdocRequest();
-        request.setCredentialSigningAlgValuesSupported(List.of("PS256"));
+        request.setSignatureAlgo("PS256");
 
         CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
                 () -> credentialConfigurationService.addCredentialConfiguration(request));
@@ -487,14 +611,18 @@ public class CredentialConfigMetadataAttributesTest {
      */
     @Test
     public void should_rejectConfiguration_when_msoMdocAlgorithmIsUnsupported() {
-        LinkedHashMap<String, List<String>> signingAlgs = new LinkedHashMap<>();
-        signingAlgs.put("EcdsaSecp256r1Signature2019", List.of("ES256", "EdDSA", "RS256", "ES256K"));
-        ReflectionTestUtils.setField(credentialConfigurationService, "credentialSigningAlgValuesSupportedMap", signingAlgs);
-        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(msoMdocEntity());
+        Map<String, List<List<String>>> keyAliasMapper = new HashMap<>();
+        for (String alg : List.of("ES256", "EdDSA", "RS256", "ES256K")) {
+            keyAliasMapper.put(alg, List.of(List.of("TEST_EC", "TEST_EC-REF")));
+        }
+        ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper", keyAliasMapper);
 
         for (String alg : List.of("EdDSA", "RS256", "ES256K")) {
+            CredentialConfig entity = msoMdocEntity();
+            entity.setSignatureAlgo(alg);
+            when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
             CredentialConfigurationDTO request = msoMdocRequest();
-            request.setCredentialSigningAlgValuesSupported(List.of(alg));
+            request.setSignatureAlgo(alg);
 
             CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
                     () -> credentialConfigurationService.addCredentialConfiguration(request));
@@ -515,15 +643,94 @@ public class CredentialConfigMetadataAttributesTest {
         LinkedHashMap<String, List<String>> signingAlgs = new LinkedHashMap<>();
         signingAlgs.put("Ed25519Signature2020", List.of("EdDSA", "PS256"));
         ReflectionTestUtils.setField(credentialConfigurationService, "credentialSigningAlgValuesSupportedMap", signingAlgs);
+        ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper",
+                Map.of("PS256", List.of(List.of("TEST2019", "TEST2019-REF"))));
         CredentialConfig entity = ldpVcEntity();
+        entity.setSignatureAlgo("PS256");
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
         when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
         CredentialConfigurationDTO request = ldpVcRequest();
-        request.setCredentialSigningAlgValuesSupported(List.of("EdDSA", "PS256"));
+        request.setSignatureAlgo("PS256");
 
         credentialConfigurationService.addCredentialConfiguration(request);
 
-        Assert.assertEquals(List.of("EdDSA", "PS256"), entity.getCredentialSigningAlgValuesSupported());
+        // The COSE restriction did not apply, so PS256 is accepted; ldp_vc advertises its crypto suite.
+        Assert.assertEquals("PS256", entity.getSignatureAlgo());
+        Assert.assertEquals(List.of("Ed25519Signature2020"), entity.getCredentialSigningAlgValuesSupported());
+    }
+
+    // ---------- The signing algorithm allow-list grouped by credential format ----------
+
+    private void declareSigningAlgsByFormat(Map<String, List<String>> byFormat) {
+        ReflectionTestUtils.setField(credentialConfigurationService, "credentialSigningAlgValuesSupportedByFormat", byFormat);
+    }
+
+    /**
+     * With the property grouped by format, mso_mdoc is checked against its own list rather than through
+     * its crypto suite.
+     */
+    @Test
+    public void should_rejectMsoMdoc_when_algorithmIsNotDeclaredForTheFormat() {
+        declareSigningAlgsByFormat(Map.of("mso_mdoc", List.of("ES256K")));
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(msoMdocEntity());
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(msoMdocRequest()));
+
+        Assert.assertEquals(ErrorConstants.UNSUPPORTED_CREDENTIAL_SIGNING_ALG, exception.getErrors().getFirst().getErrorCode());
+        Assert.assertTrue(exception.getErrors().getFirst().getErrorMessage()
+                .contains("ES256 is not supported for the credential format mso_mdoc"));
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    @Test
+    public void should_acceptMsoMdoc_when_algorithmIsDeclaredForTheFormat() {
+        declareSigningAlgsByFormat(Map.of("mso_mdoc", List.of("ES256")));
+        // The crypto suite declares no algorithms of its own; the format's list is what applies.
+        ReflectionTestUtils.setField(credentialConfigurationService, "credentialSigningAlgValuesSupportedMap", new LinkedHashMap<>());
+        CredentialConfig entity = msoMdocEntity();
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
+        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
+
+        credentialConfigurationService.addCredentialConfiguration(msoMdocRequest());
+
+        Assert.assertEquals(List.of("ES256"), entity.getCredentialSigningAlgValuesSupported());
+    }
+
+    /**
+     * dc+sd-jwt is signed with a key the deployment must hold, so an algorithm declared for the format
+     * but with no signing key is still rejected.
+     */
+    @Test
+    public void should_rejectSdJwt_when_algorithmIsDeclaredForTheFormatButHasNoSigningKey() {
+        declareSigningAlgsByFormat(Map.of("dc+sd-jwt", List.of("ES256", "RS256")));
+        CredentialConfig entity = sdJwtEntity();
+        entity.setSignatureAlgo("RS256");
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
+        CredentialConfigurationDTO request = sdJwtRequest();
+        request.setSignatureAlgo("RS256");
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        Assert.assertTrue(exception.getErrors().getFirst().getErrorMessage().contains("No signing key is available"));
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    /**
+     * A key alone is no longer enough once the format declares its own list.
+     */
+    @Test
+    public void should_rejectSdJwt_when_algorithmHasASigningKeyButIsNotDeclaredForTheFormat() {
+        declareSigningAlgsByFormat(Map.of("dc+sd-jwt", List.of("EdDSA")));
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(sdJwtEntity());
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(sdJwtRequest()));
+
+        Assert.assertTrue(exception.getErrors().getFirst().getErrorMessage()
+                .contains("ES256 is not supported for the credential format dc+sd-jwt"));
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
     }
 
     @Test
@@ -575,10 +782,13 @@ public class CredentialConfigMetadataAttributesTest {
 
     @Test
     public void should_reportAllErrorsTogether_when_severalValuesAreInvalid() {
-        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "VCIssuance");
+        CredentialConfig entity = ldpVcEntity();
+        entity.setSignatureAlgo("RS256");
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
         CredentialConfigurationDTO request = ldpVcRequest();
+        request.setSignatureAlgo("RS256");
         request.setCryptographicBindingMethodsSupported(List.of("cose_key"));
-        request.setCredentialSigningAlgValuesSupported(List.of("RS256"));
         request.setProofTypesSupported(Map.of("ldp_vp", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))));
 
         CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
@@ -631,7 +841,7 @@ public class CredentialConfigMetadataAttributesTest {
         verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
     }
 
-    // ---------- Update: all three are mandatory and replace what is stored ----------
+    // ---------- Update: both attributes are mandatory and replace what is stored ----------
 
     @Test
     public void should_replaceStoredValues_when_updateSendsAllThree() {
@@ -644,7 +854,7 @@ public class CredentialConfigMetadataAttributesTest {
         credentialConfigurationService.updateCredentialConfiguration("test-credential", request);
 
         Assert.assertEquals(List.of("did:web"), stored.getCryptographicBindingMethodsSupported());
-        Assert.assertEquals(List.of("EdDSA"), stored.getCredentialSigningAlgValuesSupported());
+        Assert.assertEquals(List.of("Ed25519Signature2020"), stored.getCredentialSigningAlgValuesSupported());
         Assert.assertEquals(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))), stored.getProofTypesSupported());
     }
 
@@ -717,7 +927,8 @@ public class CredentialConfigMetadataAttributesTest {
 
     /**
      * A configuration created before these attributes were stored is updated like any other: what it is
-     * left holding is exactly what the request sent, with the crypto suite name it stored replaced.
+     * left holding is exactly what the request sent, with the crypto suite name it stored replaced by its
+     * signatureAlgo.
      */
     @Test
     public void should_storeExactlyTheRequestedValues_when_legacyConfigurationIsUpdated() {
@@ -729,11 +940,11 @@ public class CredentialConfigMetadataAttributesTest {
         credentialConfigurationService.updateCredentialConfiguration("test-credential", ldpVcRequest());
 
         Assert.assertEquals(List.of("did:jwk"), legacy.getCryptographicBindingMethodsSupported());
-        Assert.assertEquals(List.of("EdDSA"), legacy.getCredentialSigningAlgValuesSupported());
+        Assert.assertEquals(List.of("Ed25519Signature2020"), legacy.getCredentialSigningAlgValuesSupported());
         Assert.assertEquals(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))), legacy.getProofTypesSupported());
     }
 
-    // ---------- The Get response always carries all three ----------
+    // ---------- The Get response always carries both, and the signing algorithm as signatureAlgo ----------
 
     @Test
     public void should_returnStoredValues_when_configurationIsFetched() {
@@ -744,7 +955,6 @@ public class CredentialConfigMetadataAttributesTest {
 
         CredentialConfigurationDTO mapped = ldpVcConfig();
         mapped.setCryptographicBindingMethodsSupported(stored.getCryptographicBindingMethodsSupported());
-        mapped.setCredentialSigningAlgValuesSupported(stored.getCredentialSigningAlgValuesSupported());
         mapped.setProofTypesSupported(stored.getProofTypesSupported());
 
         when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(stored));
@@ -753,14 +963,13 @@ public class CredentialConfigMetadataAttributesTest {
         CredentialConfigurationDTO result = credentialConfigurationService.getCredentialConfigurationById("test-credential");
 
         Assert.assertEquals(List.of("did:web"), result.getCryptographicBindingMethodsSupported());
-        Assert.assertEquals(List.of("EdDSA"), result.getCredentialSigningAlgValuesSupported());
+        Assert.assertEquals("EdDSA", result.getSignatureAlgo());
         Assert.assertEquals(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))), result.getProofTypesSupported());
     }
 
     /**
      * A configuration created before these attributes were stored keeps returning what it always has:
-     * its signing algorithms resolved from the crypto suite name it stored, and the declared defaults for
-     * the other two.
+     * the declared defaults for the binding methods and proof types.
      */
     @Test
     public void should_returnResolvedDefaults_when_legacyConfigurationIsFetched() {
@@ -772,7 +981,6 @@ public class CredentialConfigMetadataAttributesTest {
 
         CredentialConfigurationDTO result = credentialConfigurationService.getCredentialConfigurationById("test-credential");
 
-        Assert.assertEquals(List.of("EdDSA"), result.getCredentialSigningAlgValuesSupported());
         Assert.assertEquals(List.of("did:jwk", "did:web"), result.getCryptographicBindingMethodsSupported());
         Assert.assertEquals(Set.of("jwt"), result.getProofTypesSupported().keySet());
     }
@@ -793,18 +1001,99 @@ public class CredentialConfigMetadataAttributesTest {
 
         CredentialConfigurationSupportedDTO supported =
                 metadata.getCredentialConfigurationSupportedDTO().get("test-credential");
-        Assert.assertEquals(List.of("EdDSA"), supported.getCredentialSigningAlgValuesSupported());
+        Assert.assertEquals(List.of("Ed25519Signature2020"), supported.getCredentialSigningAlgValuesSupported());
         Assert.assertEquals(List.of("did:web"), supported.getCryptographicBindingMethodsSupported());
         Assert.assertEquals(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA"))), supported.getProofTypesSupported());
     }
 
     /**
-     * A configuration created before this change stored the crypto suite name; it must keep advertising
-     * exactly what it advertised before, with no data migration.
+     * An ldp_vc configuration advertises the crypto suite it signs with, per OpenID4VCI 1.0 Appendix
+     * A.1.2.2, whatever list is stored against it, so a wallet is never told of something the credential
+     * is not signed with.
      */
     @Test
-    public void should_advertiseUnchangedValues_when_configurationIsLegacy() {
+    public void should_advertiseCryptoSuite_when_ldpVcStoredListDiffers() {
+        CredentialConfig stored = storedLdpVcEntity();
+        stored.setCredentialSigningAlgValuesSupported(List.of("RS256", "EdDSA"));
+
+        when(credentialConfigRepository.findAll()).thenReturn(List.of(stored));
+        when(credentialConfigMapper.toDto(stored)).thenReturn(ldpVcConfig());
+
+        CredentialIssuerMetadataDTO metadata = credentialConfigurationService.fetchCredentialIssuerMetadata();
+
+        Assert.assertEquals(List.of("Ed25519Signature2020"),
+                metadata.getCredentialConfigurationSupportedDTO().get("test-credential").getCredentialSigningAlgValuesSupported());
+    }
+
+    /**
+     * Every Data Integrity crypto suite Certify signs ldp_vc with is advertised by its own name, per
+     * OpenID4VCI 1.0 Appendix A.1.2.2, rather than by the JWS algorithm behind it, which several suites
+     * share.
+     */
+    @Test
+    public void should_advertiseItsCryptoSuite_when_ldpVcIsSignedWithEachSupportedSuite() {
+        Map<String, String> algorithmBySuite = new LinkedHashMap<>();
+        algorithmBySuite.put("RsaSignature2018", "RS256");
+        algorithmBySuite.put("Ed25519Signature2018", "EdDSA");
+        algorithmBySuite.put("Ed25519Signature2020", "EdDSA");
+        algorithmBySuite.put("EcdsaKoblitzSignature2016", "ES256K");
+        algorithmBySuite.put("EcdsaSecp256k1Signature2019", "ES256K");
+        algorithmBySuite.put("EcdsaSecp256r1Signature2019", "ES256");
+        algorithmBySuite.put("ecdsa-rdfc-2019", "ES256");
+        algorithmBySuite.put("ecdsa-jcs-2019", "ES256");
+        algorithmBySuite.put("eddsa-rdfc-2022", "EdDSA");
+        algorithmBySuite.put("eddsa-jcs-2022", "EdDSA");
+
+        List<CredentialConfig> configs = new ArrayList<>();
+        algorithmBySuite.forEach((suite, algorithm) -> {
+            CredentialConfig config = storedLdpVcEntity();
+            config.setCredentialConfigKeyId(suite);
+            config.setSignatureCryptoSuite(suite);
+            config.setSignatureAlgo(algorithm);
+            config.setCredentialSigningAlgValuesSupported(List.of(algorithm));
+            configs.add(config);
+            when(credentialConfigMapper.toDto(config)).thenReturn(ldpVcConfig());
+        });
+        when(credentialConfigRepository.findAll()).thenReturn(configs);
+
+        Map<String, CredentialConfigurationSupportedDTO> supported =
+                credentialConfigurationService.fetchCredentialIssuerMetadata().getCredentialConfigurationSupportedDTO();
+
+        Assert.assertEquals(algorithmBySuite.keySet(), supported.keySet());
+        algorithmBySuite.keySet().forEach(suite ->
+                Assert.assertEquals(List.of(suite), supported.get(suite).getCredentialSigningAlgValuesSupported()));
+    }
+
+    /**
+     * Every format other than ldp_vc advertises its signatureAlgo as a single-valued list; mso_mdoc
+     * carries it as its COSE algorithm identifier.
+     */
+    @Test
+    public void should_advertiseSignatureAlgo_when_formatIsSdJwtOrMsoMdoc() {
+        CredentialConfig sdJwt = sdJwtEntity();
+        sdJwt.setCredentialSigningAlgValuesSupported(List.of("ES256"));
+        CredentialConfig msoMdoc = msoMdocEntity();
+        msoMdoc.setCredentialSigningAlgValuesSupported(List.of("ES256"));
+
+        when(credentialConfigRepository.findAll()).thenReturn(List.of(sdJwt, msoMdoc));
+        when(credentialConfigMapper.toDto(sdJwt)).thenReturn(sdJwtConfig());
+        when(credentialConfigMapper.toDto(msoMdoc)).thenReturn(msoMdocConfig());
+
+        Map<String, CredentialConfigurationSupportedDTO> supported =
+                credentialConfigurationService.fetchCredentialIssuerMetadata().getCredentialConfigurationSupportedDTO();
+
+        Assert.assertEquals(List.of("ES256"), supported.get("test-sd-jwt").getCredentialSigningAlgValuesSupported());
+        Assert.assertEquals(List.of(-7), supported.get("test-mso-mdoc").getCredentialSigningAlgValuesSupported());
+    }
+
+    /**
+     * A legacy ldp_vc configuration, with no signatureAlgo and its crypto suite name stored, now
+     * advertises that crypto suite rather than the algorithm it used to be resolved to.
+     */
+    @Test
+    public void should_advertiseCryptoSuite_when_ldpVcConfigurationIsLegacy() {
         CredentialConfig legacy = ldpVcEntity();
+        legacy.setSignatureAlgo(null);
         legacy.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
         legacy.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
 
@@ -815,9 +1104,29 @@ public class CredentialConfigMetadataAttributesTest {
 
         CredentialConfigurationSupportedDTO supported =
                 metadata.getCredentialConfigurationSupportedDTO().get("test-credential");
-        Assert.assertEquals(List.of("EdDSA"), supported.getCredentialSigningAlgValuesSupported());
+        Assert.assertEquals(List.of("Ed25519Signature2020"), supported.getCredentialSigningAlgValuesSupported());
         Assert.assertEquals(List.of("did:jwk"), supported.getCryptographicBindingMethodsSupported());
         Assert.assertEquals(Set.of("jwt"), supported.getProofTypesSupported().keySet());
+    }
+
+    /**
+     * A legacy mso_mdoc configuration with no signatureAlgo stored its crypto suite name; it keeps
+     * advertising the algorithm that suite resolves to, as a COSE identifier.
+     */
+    @Test
+    public void should_advertiseUnchangedValues_when_msoMdocConfigurationIsLegacy() {
+        CredentialConfig legacy = msoMdocEntity();
+        legacy.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
+        legacy.setSignatureAlgo(null);
+        legacy.setCredentialSigningAlgValuesSupported(List.of("EcdsaSecp256r1Signature2019"));
+
+        when(credentialConfigRepository.findAll()).thenReturn(List.of(legacy));
+        when(credentialConfigMapper.toDto(legacy)).thenReturn(msoMdocConfig());
+
+        CredentialIssuerMetadataDTO metadata = credentialConfigurationService.fetchCredentialIssuerMetadata();
+
+        Assert.assertEquals(List.of(-7),
+                metadata.getCredentialConfigurationSupportedDTO().get("test-mso-mdoc").getCredentialSigningAlgValuesSupported());
     }
 
     /**
@@ -854,6 +1163,8 @@ public class CredentialConfigMetadataAttributesTest {
         signingAlgs.put("EcdsaSecp256r1Signature2019", List.of("ES256", "PS256"));
         ReflectionTestUtils.setField(credentialConfigurationService, "credentialSigningAlgValuesSupportedMap", signingAlgs);
         CredentialConfig legacy = msoMdocEntity();
+        legacy.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
+        legacy.setSignatureAlgo(null);
         legacy.setCredentialSigningAlgValuesSupported(List.of("EcdsaSecp256r1Signature2019"));
         CredentialConfig healthy = ldpVcEntity();
         healthy.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
@@ -901,6 +1212,8 @@ public class CredentialConfigMetadataAttributesTest {
         signingAlgs.put("EcdsaSecp256r1Signature2019", List.of("ES256", "PS256"));
         ReflectionTestUtils.setField(credentialConfigurationService, "credentialSigningAlgValuesSupportedMap", signingAlgs);
         CredentialConfig legacy = msoMdocEntity();
+        legacy.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
+        legacy.setSignatureAlgo(null);
         legacy.setCredentialSigningAlgValuesSupported(List.of("EcdsaSecp256r1Signature2019"));
 
         when(credentialConfigRepository.findAll()).thenReturn(List.of(legacy));

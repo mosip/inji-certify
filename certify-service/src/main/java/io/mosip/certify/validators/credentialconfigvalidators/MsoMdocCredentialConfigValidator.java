@@ -8,9 +8,14 @@ import java.util.Optional;
 
 public class MsoMdocCredentialConfigValidator {
 
+    /**
+     * An mdoc's issuerAuth is signed with signatureAlgo alone, so that is mandatory. signatureCryptoSuite
+     * plays no part in signing an mdoc and is not required; a request that sends one is rejected by the
+     * service as an invalid request.
+     */
     public static boolean isValidCheck(CredentialConfigurationDTO credentialConfig) {
         return credentialConfig.getDocType() != null && !credentialConfig.getDocType().isEmpty()
-                && credentialConfig.getSignatureCryptoSuite() != null && !credentialConfig.getSignatureCryptoSuite().isEmpty()
+                && credentialConfig.getSignatureAlgo() != null && !credentialConfig.getSignatureAlgo().isEmpty()
                 && (credentialConfig.getCredentialTypes() == null || credentialConfig.getCredentialTypes().isEmpty()) && (credentialConfig.getContextURLs() == null || credentialConfig.getContextURLs().isEmpty())
                 && credentialConfig.getSdJwtVct() == null && credentialConfig.getClaims() == null
                 && credentialConfig.getSdJwtClaims() == null;
