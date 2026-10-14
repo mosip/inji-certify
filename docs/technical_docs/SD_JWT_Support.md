@@ -9,13 +9,12 @@ This document explains how to configure and use SD-JWT (Selective Disclosure JWT
 To add a new SD-JWT credential configuration, use the `/credential-configurations` endpoint with the following important fields in your JSON payload:
 
 - **credentialFormat**: Must be set to `dc+sd-jwt`
-- **signatureAlgo**: The signing algorithm (e.g., `ES256K`)
+- **signatureAlgo**: The signing algorithm (e.g., `ES256K`). It must be declared under `'dc+sd-jwt'` in `mosip.certify.credential-config.credential-signing-alg-values-supported` when that property is grouped by credential format, and the deployment must hold a signing key for it in `mosip.certify.signature-algo.key-alias-mapper`. It is also the value the credential issuer metadata advertises in `credential_signing_alg_values_supported`.
 - **sdJwtVct**: The VCT (Verifiable Credential Type) value for the credential
 - **cryptographicBindingMethodsSupported**: The binding methods to advertise, chosen from those declared for `dc+sd-jwt` in `mosip.certify.credential-config.cryptographic-binding-methods-supported` (e.g., `["did:jwk"]`)
-- **credentialSigningAlgValuesSupported**: The signing algorithms to advertise. An SD-JWT configuration carries no crypto suite, so each value must be an algorithm the deployment holds a signing key for in `mosip.certify.signature-algo.key-alias-mapper` (e.g., `["ES256K"]`)
 - **proofTypesSupported**: The proof types to accept, each with its proof signing algorithms, chosen from `mosip.certify.credential-config.proof-types-supported` (e.g., `{"jwt": {"proof_signing_alg_values_supported": ["ES256"]}}`)
 
-The last three are mandatory, and nothing is filled in from the properties when one is missing or empty.
+`signatureAlgo`, `cryptographicBindingMethodsSupported` and `proofTypesSupported` are mandatory, and nothing is filled in from the properties when one is missing or empty. The request no longer takes a `credentialSigningAlgValuesSupported` list.
 
 For full details on the required fields and how to structure your request with examples, refer to the [Inji Certify API documentation](https://mosip.stoplight.io/docs/inji-certify).
 
@@ -27,7 +26,7 @@ Add the following properties to your `application.yml` or `application.propertie
 
 | Property Name                                                          | Description                                                                                                                                                               | Example Value                                      |
 |------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------|
-| `mosip.certify.credential-config.credential-signing-alg-values-supported` | Supported signing algorithms for SD-JWT                                                                                                                                   | `{ 'RsaSignature2018': {'RS256'}, 'Ed25519Signature2018': {'EdDSA'}, 'Ed25519Signature2020': {'EdDSA'}, 'EcdsaKoblitzSignature2016': {'ES256K'}, 'EcdsaSecp256k1Signature2019': {'ES256K'}, 'EcdsaSecp256r1Signature2019': {'ES256'}, 'ecdsa-rdfc-2019': {'ES256'}, 'ecdsa-jcs-2019': {'ES256'}}`              |
+| `mosip.certify.credential-config.credential-signing-alg-values-supported` | Signing algorithms allowed per credential format; the `'dc+sd-jwt'` entry lists those an SD-JWT configuration may use. Keyed by crypto suite only, any algorithm with a signing key is allowed for SD-JWT. | `{ 'ldp_vc': {'Ed25519Signature2020': {'EdDSA'}, ...}, 'mso_mdoc': {'ES256'}, 'dc+sd-jwt': {'RS256', 'EdDSA', 'ES256K', 'ES256'} }`              |
 | `mosip.certify.credential-config.proof-types-supported`                | Supported proof types for SD-JWT                                                                                                                                          | `{'jwt': {'proof_signing_alg_values_supported': {'RS256', 'PS256', 'ES256', 'EdDSA'}}}`                     |
 | `mosip.certify.credential-config.cryptographic-binding-methods-supported` | Supported binding methods for SD-JWT                                                                                                                                      | `{ 'ldp_vc': {'did:jwk','did:key'}, 'mso_mdoc': {'cose_key'},'dc+sd-jwt': {'did:jwk','did:key'} }`          |
 | `mosip.certify.data-provider-plugin.did-url` | The base Decentralized Identifier document URL used by the data provider plugin to resolve and bind DIDs for credential issuance.                                         | `did:web:someuser.github.io:somerepo:somedirectory` |

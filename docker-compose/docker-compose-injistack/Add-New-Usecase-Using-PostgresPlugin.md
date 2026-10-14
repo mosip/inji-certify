@@ -138,7 +138,6 @@ Current usecases include:
     ],
     "credentialFormat": "ldp_vc",
     "cryptographicBindingMethodsSupported": ["did:jwk"],
-    "credentialSigningAlgValuesSupported": ["EdDSA"],
     "proofTypesSupported": {
         "jwt": {
             "proof_signing_alg_values_supported": ["ES256", "EdDSA"]

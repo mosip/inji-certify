@@ -53,8 +53,17 @@ Replace `$velocityCount` with `$foreach.count`, and `$velocityHasNext` with `$fo
 
 ## Credential configuration metadata attributes are mandatory
 
-`cryptographicBindingMethodsSupported`, `credentialSigningAlgValuesSupported` and `proofTypesSupported` are now mandatory in the Add (`POST /credential-configurations`) and Update (`PUT /credential-configurations/{credentialConfigKeyId}`) requests. A request that leaves one out, sends it as `null` or sends it empty is rejected with `invalid_request`, and nothing is filled in from the deployment properties any more.
+`cryptographicBindingMethodsSupported`, `proofTypesSupported` and `signatureAlgo` are now mandatory in the Add (`POST /credential-configurations`) and Update (`PUT /credential-configurations/{credentialConfigKeyId}`) requests, for every credential format. A request that leaves one out, sends it as `null` or sends it empty is rejected, and nothing is filled in from the deployment properties any more. In particular, an `ldp_vc` configuration without `signatureAlgo` no longer takes the first algorithm declared for its crypto suite.
 
-**Action for existing automation:** every Update request must send all three attributes, even one that only changes an unrelated field such as the display name. This includes configurations created before these attributes were stored. Existing configurations keep advertising the same values without being re-submitted; the Get response returns those values, which can be sent back unchanged.
+`credentialSigningAlgValuesSupported` is no longer part of the request; a value sent for it is ignored. What the credential issuer metadata advertises in `credential_signing_alg_values_supported` is derived from the configuration instead, so it is always what the credential is signed with:
+
+- `ldp_vc` advertises its crypto suite, for example `Ed25519Signature2020`, as OpenID4VCI 1.0 Appendix A.1.2.2 requires, where it previously advertised a JWS algorithm such as `EdDSA`. Existing `ldp_vc` configurations advertise their crypto suite without being re-submitted.
+- `dc+sd-jwt` advertises its `signatureAlgo`, and `mso_mdoc` the COSE identifier of its `signatureAlgo`, as before.
+
+`mso_mdoc` is signed with `signatureAlgo` alone, so it now requires `signatureAlgo` in place of `signatureCryptoSuite`, and a request that sends `signatureCryptoSuite` is rejected with `invalid_request`.
+
+`mosip.certify.credential-config.credential-signing-alg-values-supported` can now be grouped by credential format, giving `mso_mdoc` and `dc+sd-jwt` their own list of allowed algorithms. The original shape, keyed by crypto suite only, is still read, so existing deployments need not change it.
+
+**Action for existing automation:** every Update request must send both attributes and `signatureAlgo`, even one that only changes an unrelated field such as the display name. This includes configurations created before these attributes were stored. `credentialSigningAlgValuesSupported` can be dropped from requests, and `mso_mdoc` requests must drop `signatureCryptoSuite`.
 
 See [Credential Issuer Configuration](./Credential_Issuer_Configuration.md) for the validation rules.

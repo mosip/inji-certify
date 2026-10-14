@@ -94,8 +94,6 @@ paths:
                     signatureAlgo: EdDSA
                     cryptographicBindingMethodsSupported:
                       - 'did:jwk'
-                    credentialSigningAlgValuesSupported:
-                      - EdDSA
                     proofTypesSupported:
                       jwt:
                         proof_signing_alg_values_supported:
@@ -209,8 +207,6 @@ paths:
                   signatureAlgo: EdDSA
                   cryptographicBindingMethodsSupported:
                     - 'did:jwk'
-                  credentialSigningAlgValuesSupported:
-                    - EdDSA
                   proofTypesSupported:
                     jwt:
                       proof_signing_alg_values_supported:
@@ -762,8 +758,6 @@ paths:
                   signatureAlgo: EdDSA
                   cryptographicBindingMethodsSupported:
                     - 'did:jwk'
-                  credentialSigningAlgValuesSupported:
-                    - EdDSA
                   proofTypesSupported:
                     jwt:
                       proof_signing_alg_values_supported:
@@ -778,11 +772,9 @@ paths:
                 value:
                   credentialConfigKeyId: DrivingLicenseCredential12
                   credentialFormat: mso_mdoc
-                  signatureCryptoSuite: EcdsaSecp256r1Signature2019
+                  signatureAlgo: ES256
                   cryptographicBindingMethodsSupported:
                     - 'cose_key'
-                  credentialSigningAlgValuesSupported:
-                    - ES256
                   proofTypesSupported:
                     jwt:
                       proof_signing_alg_values_supported:
@@ -846,8 +838,6 @@ paths:
                   signatureAlgo: EdDSA
                   cryptographicBindingMethodsSupported:
                     - 'did:jwk'
-                  credentialSigningAlgValuesSupported:
-                    - EdDSA
                   proofTypesSupported:
                     jwt:
                       proof_signing_alg_values_supported:
@@ -1061,12 +1051,10 @@ paths:
                   credentialFormat: ldp_vc
                   credentialConfigKeyId: Insurance_eccr1
                   didUrl: ''
-                  signatureAlgo: ''
+                  signatureAlgo: ES256
                   signatureCryptoSuite: EcdsaSecp256r1Signature2019
                   cryptographicBindingMethodsSupported:
                     - 'did:jwk'
-                  credentialSigningAlgValuesSupported:
-                    - ES256
                   proofTypesSupported:
                     jwt:
                       proof_signing_alg_values_supported:
@@ -1581,8 +1569,8 @@ components:
         - credentialFormat
         - metaDataDisplay
         - scope
+        - signatureAlgo
         - cryptographicBindingMethodsSupported
-        - credentialSigningAlgValuesSupported
         - proofTypesSupported
       properties:
         vcTemplate:
@@ -1622,7 +1610,19 @@ components:
           description: Reference ID for the key manager. Applicable for DataProvider plugin mode.
         signatureAlgo:
           description: |-
-            Signature or proof algorithm used for credential signing. This field is required for certain credential formats, such as dc+sd-jwt and optionally for ldp_vc when the signatureCryptoSuite is one of DataIntegrityProof suite (e.g. ecdsa-rdfc-2019, ecdsa-jcs-2019, etc). It ensures compatibility between the cryptographic suite and the signing algorithm. Mapping of signatureCryptoSuite and signatureAlgo values for DataIntegrityProof suite scenario :
+            Mandatory on Add and Update for every credential format; a missing or empty value is rejected, and nothing is filled in from the deployment configuration. It is the algorithm the credential is signed with, and the signing key is selected by it through mosip.certify.signature-algo.key-alias-mapper.
+
+            It must be allowed by mosip.certify.credential-config.credential-signing-alg-values-supported:
+            - ldp_vc: declared for the configuration's signatureCryptoSuite, under 'ldp_vc' when the property is grouped by credential format. Otherwise rejected with unsupported_signature_algo or unsupported_credential_signing_alg.
+            - mso_mdoc: declared under 'mso_mdoc' when the property is grouped by credential format, and backed by a signing key; it must also be ES256, the only algorithm supported for an mdoc's issuerAuth.
+            - dc+sd-jwt: declared under 'dc+sd-jwt' when the property is grouped by credential format, and backed by a signing key.
+            Where the property is keyed by crypto suite only, mso_mdoc and dc+sd-jwt accept any algorithm the deployment holds a signing key for.
+
+            A missing value is rejected with invalid_request, or with mso_mdoc_mandatory_fields_missing or dc_sd_jwt_mandatory_fields_missing for those formats.
+
+            For mso_mdoc and dc+sd-jwt this is the value advertised in credential_signing_alg_values_supported of the credential issuer metadata (as its COSE identifier for mso_mdoc). The request no longer accepts credentialSigningAlgValuesSupported; a value sent for it is ignored.
+
+            Mapping of signatureCryptoSuite and signatureAlgo values for DataIntegrityProof suite scenario :
 
             signatureCryptoSuite |  signatureAlgo
             ---------|----------
@@ -1633,6 +1633,7 @@ components:
             - EdDSA
             - ES256K
             - ES256
+            - RS256
           type: string
         sdClaim:
           type: string
@@ -1677,7 +1678,7 @@ components:
           type: string
           description: Document type identifier for the credential. Mandatory for mso_mdoc credential format.
         signatureCryptoSuite:
-          description: 'Holds value for signature crypto suites supported for key algorithms like Ed25519Signature2020,EcdsaSecp256k1Signature2019, etc. It will also be applicable for data integrity proof crypto suites, for e.g. ecds-rdfc-2019, eddsa-rdfc-2022, etc. Mandatory for DataProvider plugin. The values should be only be those supported by certify.'
+          description: 'Holds value for signature crypto suites supported for key algorithms like Ed25519Signature2020,EcdsaSecp256k1Signature2019, etc. It will also be applicable for data integrity proof crypto suites, for e.g. ecds-rdfc-2019, eddsa-rdfc-2022, etc. Mandatory for the ldp_vc format, and must be declared in mosip.certify.credential-config.credential-signing-alg-values-supported (under ''ldp_vc'' when that property is grouped by credential format). For ldp_vc it is the value advertised in credential_signing_alg_values_supported of the credential issuer metadata, per OpenID4VCI 1.0 Appendix A.1.2.2. Not accepted for the mso_mdoc format, which is signed with signatureAlgo alone: a request that sends it is rejected with invalid_request. Must not be sent for the dc+sd-jwt format.'
           type: string
           enum:
             - RsaSignature2018
@@ -1707,12 +1708,6 @@ components:
           type: array
           minItems: 1
           description: 'Mandatory on Add and Update. Binding methods advertised for this credential configuration. Every value must already be declared for this credential format in mosip.certify.credential-config.cryptographic-binding-methods-supported; a value that is not declared there is rejected with unsupported_cryptographic_binding_method, and a credential format with no declared binding methods is rejected with cryptographic_binding_config_not_found. Nothing is filled in from that property: a missing, null or empty value is rejected with invalid_request. A value listed more than once is stored once, in the order first given; the request is not rejected for it. Otherwise stored and returned by the Get response exactly as sent.'
-          items:
-            type: string
-        credentialSigningAlgValuesSupported:
-          type: array
-          minItems: 1
-          description: 'Mandatory on Add and Update. Signing algorithms advertised for this credential configuration. Where signatureCryptoSuite is present every value must be declared for that suite in mosip.certify.credential-config.credential-signing-alg-values-supported; where the format carries no crypto suite, such as dc+sd-jwt, every value must be an algorithm the deployment holds a signing key for in mosip.certify.signature-algo.key-alias-mapper. For the mso_mdoc format every value must additionally be ES256: that format advertises COSE algorithm identifiers, and ES256 is the only algorithm supported for an mdoc''s issuerAuth. An undeclared value is rejected with unsupported_credential_signing_alg. Nothing is filled in from those properties: a missing, null or empty value is rejected with invalid_request. A value listed more than once is stored once, in the order first given; the request is not rejected for it. Otherwise stored and returned by the Get response exactly as sent.'
           items:
             type: string
         proofTypesSupported:
@@ -2250,7 +2245,7 @@ components:
             type: string
         credential_signing_alg_values_supported:
           type: array
-          description: 'List of supported credential signing algorithms (e.g., ES256, EdDSA for JWT/LDP formats, or integer values like -7 for mso_mdoc format).'
+          description: 'The single value the credential is signed with, derived from the credential configuration. For ldp_vc, the crypto suite (signatureCryptoSuite), for example Ed25519Signature2020 or eddsa-rdfc-2022, per OpenID4VCI 1.0 Appendix A.1.2.2. For dc+sd-jwt, the signing algorithm (signatureAlgo), for example ES256. For mso_mdoc, the COSE algorithm identifier of signatureAlgo, for example -7 for ES256.'
           items:
             anyOf:
               - type: string
