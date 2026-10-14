@@ -124,15 +124,16 @@ Current usecases include:
    ```
    {
     "credentialConfigKeyId": "RegistrationReceiptCredential",
-    "vcTemplate": "",
+    "vcTemplate": "<Base64-encoded Velocity template for the credential; required in DataProvider plugin mode>",
     "keyManagerAppId": "CERTIFY_VC_SIGN_ED25519",
     "keyManagerRefId": "ED25519_SIGN",
     "signatureAlgo": "EdDSA",
-    "context": [
+    "signatureCryptoSuite": "Ed25519Signature2020",
+    "contextURLs": [
         "https://www.w3.org/2018/credentials/v1",
         "https://inji.github.io/inji-config/contexts/landregistry-registration-receipt-context.json"
     ],
-    "credentialType": [
+    "credentialTypes": [
         "VerifiableCredential",
         "RegistrationReceiptCredential"
     ],
@@ -144,20 +145,20 @@ Current usecases include:
         }
     },
     "didUrl": "did:web:mosip.github.io:inji-config:dev-int-inji:landregistry-ed25519#key-0",
-    "display": [{
+    "metaDataDisplay": [{
         "name": "REGISTRATION RECEIPT OF THE RURAL PROPERTY IN CAR",
         "locale": "en",
         "logo": {
-        "url": "https://inji.github.io/inji-config/logos/agro-vertias-logo.png",
+        "uri": "https://inji.github.io/inji-config/logos/agro-vertias-logo.png",
         "alt_text": "Registration Receipt Credential logo"
         },
         "background_image": { "uri": "https://inji.github.io/inji-config/logos/agro-vertias-logo.png" },
         "background_color": "#ebfaff",
         "text_color": "#000000"
     }],
-    "order": ["NumberOfCAR","RegistrationDate","RuralPropertyName","Municipality","Latitude","Longitude","TotalArea","FiscalModules","ProtocolCode","CPF","HolderName","TotalDeclaredArea","AdministrativeEasementArea","NetArea","ConsolidatedArea","NativeVegetationRemnant","LegalReserveArea","PermanentPreservationArea","RestrictedUseArea"],
+    "displayOrder": ["NumberOfCAR","RegistrationDate","RuralPropertyName","Municipality","Latitude","Longitude","TotalArea","FiscalModules","ProtocolCode","CPF","HolderName","TotalDeclaredArea","AdministrativeEasementArea","NetArea","ConsolidatedArea","NativeVegetationRemnant","LegalReserveArea","PermanentPreservationArea","RestrictedUseArea"],
     "scope": "land_registry_vc_ldp",
-    "credentialSubject": {
+    "claims": {
         "NumberOfCAR": {
             "display": [
                 {
