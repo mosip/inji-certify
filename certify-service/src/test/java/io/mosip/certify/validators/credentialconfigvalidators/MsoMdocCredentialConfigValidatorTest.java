@@ -18,7 +18,7 @@ class MsoMdocCredentialConfigValidatorTest {
     void testIsValidCheck_validConfig_returnsTrue() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("docType");
-        config.setSignatureCryptoSuite("suite");
+        config.setSignatureAlgo("ES256");
         config.setCredentialTypes(null);
         config.setContextURLs(null);
         config.setSdJwtVct(null);
@@ -30,7 +30,7 @@ class MsoMdocCredentialConfigValidatorTest {
     void testIsValidCheck_sdJwtClaimsPresent_returnsFalse() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("docType");
-        config.setSignatureCryptoSuite("suite");
+        config.setSignatureAlgo("ES256");
         config.setCredentialTypes(null);
         config.setContextURLs(null);
         config.setSdJwtVct(null);
@@ -43,7 +43,7 @@ class MsoMdocCredentialConfigValidatorTest {
     void testIsValidCheck_missingDocType_returnsFalse() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType(null);
-        config.setSignatureCryptoSuite("suite");
+        config.setSignatureAlgo("ES256");
         assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
     }
 
@@ -51,31 +51,43 @@ class MsoMdocCredentialConfigValidatorTest {
     void testIsValidCheck_emptyDocType_returnsFalse() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("");
-        config.setSignatureCryptoSuite("suite");
+        config.setSignatureAlgo("ES256");
         assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
     }
 
     @Test
-    void testIsValidCheck_missingSignatureCryptoSuite_returnsFalse() {
+    void testIsValidCheck_missingSignatureAlgo_returnsFalse() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("docType");
-        config.setSignatureCryptoSuite(null);
+        config.setSignatureAlgo(null);
         assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
     }
 
     @Test
-    void testIsValidCheck_emptySignatureCryptoSuite_returnsFalse() {
+    void testIsValidCheck_emptySignatureAlgo_returnsFalse() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("docType");
-        config.setSignatureCryptoSuite("");
+        config.setSignatureAlgo("");
         assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
+    }
+
+    /**
+     * An mdoc is signed with signatureAlgo alone, so a crypto suite is not required. A request that sends
+     * one is rejected by the service as an invalid request, not reported as a missing mandatory field.
+     */
+    @Test
+    void testIsValidCheck_withoutSignatureCryptoSuite_returnsTrue() {
+        CredentialConfigurationDTO config = new CredentialConfigurationDTO();
+        config.setDocType("docType");
+        config.setSignatureAlgo("ES256");
+        assertTrue(MsoMdocCredentialConfigValidator.isValidCheck(config));
     }
 
     @Test
     void testIsValidCheck_credentialTypeNotNull_returnsFalse() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("docType");
-        config.setSignatureCryptoSuite("suite");
+        config.setSignatureAlgo("ES256");
         config.setCredentialTypes(List.of("type"));
         assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
     }
@@ -84,7 +96,7 @@ class MsoMdocCredentialConfigValidatorTest {
     void testIsValidCheck_contextNotNull_returnsFalse() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("docType");
-        config.setSignatureCryptoSuite("suite");
+        config.setSignatureAlgo("ES256");
         config.setContextURLs(List.of("someContext URL"));
         assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
     }
@@ -93,7 +105,7 @@ class MsoMdocCredentialConfigValidatorTest {
     void testIsValidCheck_sdJwtVctNotNull_returnsFalse() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("docType");
-        config.setSignatureCryptoSuite("suite");
+        config.setSignatureAlgo("ES256");
         config.setSdJwtVct("sdJwtVct");
         assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
     }
@@ -102,7 +114,7 @@ class MsoMdocCredentialConfigValidatorTest {
     void testIsValidCheck_credentialSubjectNotNull_returnsFalse() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("docType");
-        config.setSignatureCryptoSuite("suite");
+        config.setSignatureAlgo("ES256");
         config.setClaims(new HashMap<>());
         assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
     }

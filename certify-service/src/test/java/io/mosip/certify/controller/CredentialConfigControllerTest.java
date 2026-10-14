@@ -130,13 +130,12 @@ public class CredentialConfigControllerTest {
     }
 
     /**
-     * The three attributes bind from the request JSON onto the DTO the service receives, rather than
-     * being dropped between Jackson and the controller.
+     * The two attributes the request carries bind from the request JSON onto the DTO the service
+     * receives, rather than being dropped between Jackson and the controller.
      */
     @Test
-    public void addCredentialConfiguration_BindsTheThreeMetadataAttributes() throws Exception {
+    public void addCredentialConfiguration_BindsTheMetadataAttributes() throws Exception {
         credentialConfigurationDTO.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
-        credentialConfigurationDTO.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
         credentialConfigurationDTO.setProofTypesSupported(
                 Map.of("jwt", Map.of(Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED, List.of("ES256"))));
 
@@ -155,13 +154,36 @@ public class CredentialConfigControllerTest {
         Mockito.verify(credentialConfigurationService).addCredentialConfiguration(captor.capture());
         CredentialConfigurationDTO received = captor.getValue();
         Assert.assertEquals(List.of("did:jwk"), received.getCryptographicBindingMethodsSupported());
-        Assert.assertEquals(List.of("EdDSA"), received.getCredentialSigningAlgValuesSupported());
         Assert.assertEquals(Map.of("jwt", Map.of(Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED, List.of("ES256"))),
                 received.getProofTypesSupported());
     }
 
     /**
-     * A request that leaves the three attributes out and one that sends them as null reach the service
+     * credentialSigningAlgValuesSupported is no longer part of the request. A client that still sends it
+     * is not rejected; the value is dropped before the service sees the request, so it cannot change
+     * what is stored or advertised.
+     */
+    @Test
+    public void addCredentialConfiguration_IgnoresCredentialSigningAlgValuesSupported() throws Exception {
+        Mockito.when(credentialConfigurationService.addCredentialConfiguration(Mockito.any(CredentialConfigurationDTO.class)))
+                .thenReturn(new CredentialConfigResponse());
+        credentialConfigurationDTO.setSignatureAlgo("EdDSA");
+        Map<String, Object> withSigningAlgs = new HashMap<>(objectMapper.convertValue(credentialConfigurationDTO,
+                new TypeReference<Map<String, Object>>() {}));
+        withSigningAlgs.put("credentialSigningAlgValuesSupported", List.of("ES256K"));
+
+        mockMvc.perform(post("/credential-configurations")
+                        .content(objectMapper.writeValueAsBytes(withSigningAlgs))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        ArgumentCaptor<CredentialConfigurationDTO> captor = ArgumentCaptor.forClass(CredentialConfigurationDTO.class);
+        Mockito.verify(credentialConfigurationService).addCredentialConfiguration(captor.capture());
+        Assert.assertEquals("EdDSA", captor.getValue().getSignatureAlgo());
+    }
+
+    /**
+     * A request that leaves the two attributes out and one that sends them as null reach the service
      * identically, so the service rejects a missing attribute and a null one the same way.
      */
     @Test
@@ -171,7 +193,6 @@ public class CredentialConfigControllerTest {
         Map<String, Object> withNulls = new HashMap<>(objectMapper.convertValue(credentialConfigurationDTO,
                 new TypeReference<Map<String, Object>>() {}));
         withNulls.put("cryptographicBindingMethodsSupported", null);
-        withNulls.put("credentialSigningAlgValuesSupported", null);
         withNulls.put("proofTypesSupported", null);
 
         mockMvc.perform(post("/credential-configurations")
@@ -187,18 +208,18 @@ public class CredentialConfigControllerTest {
         Mockito.verify(credentialConfigurationService, Mockito.times(2)).addCredentialConfiguration(captor.capture());
         for (CredentialConfigurationDTO received : captor.getAllValues()) {
             Assert.assertNull(received.getCryptographicBindingMethodsSupported());
-            Assert.assertNull(received.getCredentialSigningAlgValuesSupported());
             Assert.assertNull(received.getProofTypesSupported());
         }
     }
 
     /**
-     * The Get response carries all three attributes.
+     * The Get response carries the two attributes and the signing algorithm, which is returned as
+     * signatureAlgo rather than as a separate list.
      */
     @Test
-    public void getCredentialConfigurationById_ReturnsTheThreeMetadataAttributes() throws Exception {
+    public void getCredentialConfigurationById_ReturnsTheMetadataAttributes() throws Exception {
         credentialConfigurationDTO.setCryptographicBindingMethodsSupported(List.of("did:jwk", "did:key"));
-        credentialConfigurationDTO.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
+        credentialConfigurationDTO.setSignatureAlgo("EdDSA");
         credentialConfigurationDTO.setProofTypesSupported(
                 Map.of("jwt", Map.of(Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED, List.of("RS256", "ES256"))));
         Mockito.when(credentialConfigurationService.getCredentialConfigurationById(Mockito.anyString()))
@@ -207,7 +228,8 @@ public class CredentialConfigControllerTest {
         mockMvc.perform(get("/credential-configurations/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cryptographicBindingMethodsSupported").value(Matchers.contains("did:jwk", "did:key")))
-                .andExpect(jsonPath("$.credentialSigningAlgValuesSupported").value(Matchers.contains("EdDSA")))
+                .andExpect(jsonPath("$.signatureAlgo").value("EdDSA"))
+                .andExpect(jsonPath("$.credentialSigningAlgValuesSupported").doesNotExist())
                 .andExpect(jsonPath("$.proofTypesSupported.jwt.proof_signing_alg_values_supported")
                         .value(Matchers.contains("RS256", "ES256")));
     }

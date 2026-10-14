@@ -25,6 +25,7 @@ import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 import org.bouncycastle.jcajce.provider.asymmetric.edec.BCEdDSAPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import io.ipfs.multibase.Multibase;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.SignatureAlg;
@@ -42,6 +43,9 @@ public class DIDDocumentUtil {
     private final CredentialConfigRepository credentialConfigRepository;
 
     @Value("#{${mosip.certify.credential-config.credential-signing-alg-values-supported}}")
+    private Map<String, Object> declaredCredentialSigningAlgValues;
+
+    // The algorithms declared for each crypto suite, read from declaredCredentialSigningAlgValues at startup.
     private LinkedHashMap<String, List<String>> credentialSigningAlgValuesSupportedMap;
 
     private static final String MULTICODEC_PREFIX = "ed01";
@@ -59,6 +63,12 @@ public class DIDDocumentUtil {
                            CredentialConfigRepository credentialConfigRepository) {
         this.keymanagerService = keymanagerService;
         this.credentialConfigRepository = credentialConfigRepository;
+    }
+
+    @PostConstruct
+    void loadDeclaredCredentialSigningAlgValues() {
+        credentialSigningAlgValuesSupportedMap = new LinkedHashMap<>(
+                CredentialConfigMetadataResolver.parseDeclaredSigningAlgs(declaredCredentialSigningAlgValues).byCryptoSuite());
     }
 
     public Map<String, Object> generateDIDDocument(String didUrl) {
