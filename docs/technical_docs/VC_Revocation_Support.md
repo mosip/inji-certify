@@ -278,8 +278,8 @@ end
       "credentialTypes": ["FarmerCredential", "VerifiableCredential"],
       "contextURLs": ["https://www.w3.org/ns/credentials/v2"],
       "signatureCryptoSuite": "Ed25519Signature2020",
+      "signatureAlgo": "EdDSA",
       "cryptographicBindingMethodsSupported": ["did:jwk"],
-      "credentialSigningAlgValuesSupported": ["EdDSA"],
       "proofTypesSupported": {"jwt": {"proof_signing_alg_values_supported": ["ES256", "EdDSA"]}},
       "credentialStatusPurposes": ["revocation"],
       ...
