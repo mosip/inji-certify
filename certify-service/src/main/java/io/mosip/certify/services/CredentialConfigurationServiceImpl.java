@@ -283,25 +283,27 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                         cryptographicBindingMethodsSupportedMap);
 
         List<io.mosip.certify.core.dto.Error> errors = new ArrayList<>();
+        boolean withoutHolderBindingSupported = !"VCIssuance".equals(pluginMode);
         if (withoutHolderBinding) {
             CredentialConfigMetadataValidator.validateWithoutHolderBinding(credentialConfig.getCredentialFormat(), errors);
             // The VC issuance plugin always issues holder-bound credentials, so it could never issue this
-            if (pluginMode.equals("VCIssuance")) {
+            if (!withoutHolderBindingSupported) {
                 errors.add(new io.mosip.certify.core.dto.Error(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE,
                         "Credentials without holder binding are not supported in the VCIssuance plugin mode."));
             }
         }
         if (derivedBindingMethods != null) {
             CredentialConfigMetadataValidator.validateDerivedBindingMethods(derivedBindingMethods,
-                    credentialConfig.getCredentialFormat(), errors);
+                    credentialConfig.getCredentialFormat(), withoutHolderBindingSupported, errors);
         }
         if (!withoutHolderBinding && providedProofTypes == null) {
             CredentialConfigMetadataValidator.validateDerivedProofTypes(proofTypesSupported,
-                    credentialConfig.getCredentialFormat(), errors);
+                    credentialConfig.getCredentialFormat(), withoutHolderBindingSupported, errors);
         }
         if (providedBindingMethods != null) {
             CredentialConfigMetadataValidator.validateBindingMethods(providedBindingMethods,
-                    credentialConfig.getCredentialFormat(), cryptographicBindingMethodsSupportedMap, errors);
+                    credentialConfig.getCredentialFormat(), withoutHolderBindingSupported,
+                    cryptographicBindingMethodsSupportedMap, errors);
         }
         if (providedSigningAlgs != null) {
             CredentialConfigMetadataValidator.validateSigningAlgs(providedSigningAlgs,
@@ -315,7 +317,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 credentialConfig.getCredentialFormat(), COSE_ALGORITHM_INTEGER_MAP.keySet(), errors);
         if (providedProofTypes != null) {
             CredentialConfigMetadataValidator.validateProofTypes(providedProofTypes,
-                    credentialConfig.getCredentialFormat(), proofTypesSupported, errors);
+                    credentialConfig.getCredentialFormat(), withoutHolderBindingSupported, proofTypesSupported, errors);
         }
 
         if (!errors.isEmpty()) {
