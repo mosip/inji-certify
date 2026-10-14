@@ -155,14 +155,15 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         String clientId = (String) parsedAccessToken.getClaims().get(Constants.CLIENT_ID);
         String accessTokenHash = parsedAccessToken.getAccessTokenHash();
         if (requiresProof(credentialConfigurationSupported)) {
-            List<String> holderIds = validateProofs(credentialRequest, credentialConfigurationSupported,
+            List<String> holderIds = validateProofsAndExtractHolderIds(credentialRequest, credentialConfigurationSupported,
                     credentialIssuerMetadataDTO, clientId, accessTokenHash);
             for (String holderId : holderIds) {
                 vcResults.add(getVerifiableCredential(credentialConfigurationSupported, holderId));
             }
         } else {
-            log.info("Proof not required for credential_configuration_id {}, issuing without holder binding",
-                    credentialRequest.getCredentialConfigId());
+            log.info("Proof not required for credential_configuration_id {}, issuing without holder binding{}",
+                    credentialRequest.getCredentialConfigId(),
+                    CollectionUtils.isEmpty(credentialRequest.getProofs()) ? "" : "; the submitted proof is ignored");
             auditWrapper.logAudit(Action.PROOF_VALIDATION_SKIPPED, ActionStatus.SUCCESS,
                     AuditHelper.buildAuditDto(accessTokenHash, "accessTokenHash"), null);
             vcResults.add(getVerifiableCredential(credentialConfigurationSupported, null));
@@ -173,10 +174,10 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         return VCIssuanceUtil.getCredentialResponse(credentialConfigurationSupported.getFormat(), vcResults);
     }
 
-    private List<String> validateProofs(CredentialRequest credentialRequest,
-                                        CredentialConfigurationSupported credentialConfigurationSupported,
-                                        CredentialIssuerMetadataDTO credentialIssuerMetadataDTO,
-                                        String clientId, String accessTokenHash) {
+    private List<String> validateProofsAndExtractHolderIds(CredentialRequest credentialRequest,
+                                                           CredentialConfigurationSupported credentialConfigurationSupported,
+                                                           CredentialIssuerMetadataDTO credentialIssuerMetadataDTO,
+                                                           String clientId, String accessTokenHash) {
         if (CollectionUtils.isEmpty(credentialRequest.getProofs())) {
             throw new CertifyException(VCIErrorConstants.INVALID_PROOF, "Proofs are required for this credential configuration.");
         }
