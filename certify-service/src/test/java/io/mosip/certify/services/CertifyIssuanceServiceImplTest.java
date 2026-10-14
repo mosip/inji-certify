@@ -789,6 +789,69 @@ public class CertifyIssuanceServiceImplTest {
         verify(auditWrapper).logAudit(eq(Action.VC_ISSUANCE), eq(ActionStatus.SUCCESS), any(), isNull());
     }
 
+    /**
+     * A wallet that always sends a proof still gets a credential without holder binding: the proof is not
+     * validated and the credential carries no holder id.
+     */
+    @Test
+    public void getCredential_LDP_HolderBindingNotRequired_ProofSubmitted_IgnoresProof() throws Exception {
+        request = createValidCredentialRequest(DEFAULT_FORMAT_LDP);
+        when(parsedAccessToken.isActive()).thenReturn(true);
+        when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
+        removeHolderBinding("test-credential-id-ldp");
+        when(dataProviderPlugin.fetchData(claimsFromAccessToken)).thenReturn(new JSONObject().put("key", "value"));
+        stubSigningDetails();
+
+        W3CJsonLD mockW3CJsonLD = mock(W3CJsonLD.class);
+        when(credentialFactory.getCredential(DEFAULT_FORMAT_LDP)).thenReturn(Optional.of(mockW3CJsonLD));
+        when(mockW3CJsonLD.createCredential(anyMap(), anyString())).thenReturn("{\"unsigned\":\"credential\"}");
+        VCResult vcResult = new VCResult<JsonLDObject>();
+        vcResult.setCredential(JsonLDObject.fromJson("{\"signed\":\"credential\"}"));
+        when(mockW3CJsonLD.addProof(anyString(), eq(""), anyString(), anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(vcResult);
+
+        issuanceService.getCredential(request);
+
+        verifyNoInteractions(proofValidatorFactory, proofValidator);
+        ArgumentCaptor<Map> templateParamsCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(mockW3CJsonLD).createCredential(templateParamsCaptor.capture(), anyString());
+        assertFalse(templateParamsCaptor.getValue().containsKey(Constants._HOLDER_ID));
+    }
+
+    @Test
+    public void getCredential_SDJWT_HolderBindingNotRequired_ProofSubmitted_IgnoresProof() throws Exception {
+        request = createValidCredentialRequest(DEFAULT_FORMAT_SDJWT);
+        when(parsedAccessToken.isActive()).thenReturn(true);
+        when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
+        removeHolderBinding("test-credential-id-sdjwt");
+        when(dataProviderPlugin.fetchData(claimsFromAccessToken)).thenReturn(new JSONObject().put("key", "value"));
+        stubSigningDetails();
+
+        SDJWT mockSdJwt = mock(SDJWT.class);
+        when(credentialFactory.getCredential(DEFAULT_FORMAT_SDJWT)).thenReturn(Optional.of(mockSdJwt));
+        when(mockSdJwt.createCredential(anyMap(), anyString())).thenReturn("{\"unsigned\":\"sdjwt_payload\"}");
+        VCResult vcResult = new VCResult<String>();
+        vcResult.setCredential("signed.sdjwt.string~disclosure1");
+        when(mockSdJwt.addProof(anyString(), eq(""), anyString(), anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(vcResult);
+
+        issuanceService.getCredential(request);
+
+        verifyNoInteractions(proofValidatorFactory, proofValidator);
+        ArgumentCaptor<Map> templateParamsCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(mockSdJwt).createCredential(templateParamsCaptor.capture(), anyString());
+        assertFalse(templateParamsCaptor.getValue().containsKey(Constants.CONFIRMATION));
+        assertFalse(templateParamsCaptor.getValue().containsKey(Constants._HOLDER_ID));
+    }
+
+    private void stubSigningDetails() {
+        when(vcFormatter.getProofAlgorithm(anyString())).thenReturn("EdDSA");
+        when(vcFormatter.getAppID(anyString())).thenReturn("testAppId");
+        when(vcFormatter.getRefID(anyString())).thenReturn("testRefId");
+        when(vcFormatter.getDidUrl(anyString())).thenReturn("did:example:123");
+        when(vcFormatter.getSignatureCryptoSuite(anyString())).thenReturn("testSignatureCryptoSuite");
+    }
+
     @Test
     public void getCredential_SDJWT_With_TWO_PROOFS_Success() throws Exception {
         request = createValidCredentialRequest(DEFAULT_FORMAT_SDJWT);

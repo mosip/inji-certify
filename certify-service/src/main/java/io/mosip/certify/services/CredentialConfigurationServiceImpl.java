@@ -280,7 +280,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 : CredentialConfigMetadataResolver.deriveBindingMethods(credentialConfig.getCredentialFormat(),
                         cryptographicBindingMethodsSupportedMap);
 
-        List<io.mosip.certify.core.dto.Error> errors = new ArrayList<>();
+        List<Error> errors = new ArrayList<>();
         boolean withoutHolderBindingSupported = !"VCIssuance".equals(pluginMode);
         if (withoutHolderBinding) {
             CredentialConfigMetadataValidator.validateWithoutHolderBinding(credentialConfig.getCredentialFormat(), errors);
