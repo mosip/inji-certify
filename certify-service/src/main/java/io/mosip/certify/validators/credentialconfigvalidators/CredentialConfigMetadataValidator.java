@@ -184,11 +184,10 @@ public class CredentialConfigMetadataValidator {
     }
 
     /**
-     * A configuration without holder binding is not possible for mso_mdoc: ISO/IEC 18013-5 requires
-     * deviceKeyInfo in the mobile security object.
+     * A configuration without holder binding is not possible for a format that is always holder-bound.
      */
     public static void validateWithoutHolderBinding(String credentialFormat, List<Error> errors) {
-        if (VCFormats.MSO_MDOC.equals(credentialFormat)) {
+        if (CredentialConfigMetadataResolver.isAlwaysHolderBound(credentialFormat)) {
             errors.add(buildError(ErrorConstants.INVALID_REQUEST,
                     "mso_mdoc credentials are always holder-bound; cryptographicBindingMethodsSupported and proofTypesSupported must not be empty."));
         }
@@ -206,7 +205,7 @@ public class CredentialConfigMetadataValidator {
         }
         String message = "No cryptographic binding methods are declared for the credential format: " + credentialFormat
                 + ". Declare them in mosip.certify.credential-config.cryptographic-binding-methods-supported.";
-        if (!VCFormats.MSO_MDOC.equals(credentialFormat)) {
+        if (!CredentialConfigMetadataResolver.isAlwaysHolderBound(credentialFormat)) {
             message += WITHOUT_HOLDER_BINDING_HINT;
         }
         errors.add(buildError(ErrorConstants.CRYPTOGRAPHIC_BINDING_CONFIG_NOT_FOUND, message));
@@ -223,7 +222,7 @@ public class CredentialConfigMetadataValidator {
             return;
         }
         String message = "No proof types are declared. Declare them in mosip.certify.credential-config.proof-types-supported.";
-        if (!VCFormats.MSO_MDOC.equals(credentialFormat)) {
+        if (!CredentialConfigMetadataResolver.isAlwaysHolderBound(credentialFormat)) {
             message += WITHOUT_HOLDER_BINDING_HINT;
         }
         errors.add(buildError(ErrorConstants.UNSUPPORTED_PROOF_TYPE, message));
@@ -235,7 +234,7 @@ public class CredentialConfigMetadataValidator {
      */
     private static String emptyHolderBindingAttributeMessage(String attribute, String credentialFormat) {
         String message = attribute + " was provided but is empty.";
-        return VCFormats.MSO_MDOC.equals(credentialFormat) ? message : message + WITHOUT_HOLDER_BINDING_HINT;
+        return CredentialConfigMetadataResolver.isAlwaysHolderBound(credentialFormat) ? message : message + WITHOUT_HOLDER_BINDING_HINT;
     }
 
     private static Error buildError(String errorCode, String errorMessage) {

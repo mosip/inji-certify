@@ -124,7 +124,7 @@ public class VCIssuanceUtil {
      * binding. mso_mdoc always requires one, as ISO 18013-5 mandates deviceKeyInfo in the MSO.
      */
     public static boolean requiresProof(CredentialConfigurationSupported credentialConfigurationSupported) {
-        if (VCFormats.MSO_MDOC.equals(credentialConfigurationSupported.getFormat())) {
+        if (CredentialConfigMetadataResolver.isAlwaysHolderBound(credentialConfigurationSupported.getFormat())) {
             return true;
         }
         return !CollectionUtils.isEmpty(credentialConfigurationSupported.getCryptographicBindingMethodsSupported())
