@@ -30,15 +30,21 @@ public class VCIssuanceUtilTest {
     }
 
     @Test
-    public void doesNotRequireProof_whenBindingMethodsAreAbsentOrEmpty() {
-        assertFalse(VCIssuanceUtil.requiresProof(config(VCFormats.LDP_VC, null, JWT_PROOF_TYPES)));
-        assertFalse(VCIssuanceUtil.requiresProof(config(VCFormats.DC_SD_JWT, List.of(), JWT_PROOF_TYPES)));
+    public void doesNotRequireProof_whenBindingMethodsAndProofTypesAreBothAbsentOrEmpty() {
+        assertFalse(VCIssuanceUtil.requiresProof(config(VCFormats.LDP_VC, null, null)));
+        assertFalse(VCIssuanceUtil.requiresProof(config(VCFormats.DC_SD_JWT, List.of(), Collections.emptyMap())));
     }
 
+    /**
+     * The API never stores only one of the two attributes, but a row edited to declare only one still
+     * requires a proof rather than being issued without holder binding.
+     */
     @Test
-    public void doesNotRequireProof_whenProofTypesAreAbsentOrEmpty() {
-        assertFalse(VCIssuanceUtil.requiresProof(config(VCFormats.LDP_VC, List.of("did:jwk"), null)));
-        assertFalse(VCIssuanceUtil.requiresProof(config(VCFormats.DC_SD_JWT, List.of("did:jwk"), Collections.emptyMap())));
+    public void requiresProof_whenOnlyOneOfBindingMethodsAndProofTypesIsPresent() {
+        assertTrue(VCIssuanceUtil.requiresProof(config(VCFormats.LDP_VC, null, JWT_PROOF_TYPES)));
+        assertTrue(VCIssuanceUtil.requiresProof(config(VCFormats.DC_SD_JWT, List.of(), JWT_PROOF_TYPES)));
+        assertTrue(VCIssuanceUtil.requiresProof(config(VCFormats.LDP_VC, List.of("did:jwk"), null)));
+        assertTrue(VCIssuanceUtil.requiresProof(config(VCFormats.DC_SD_JWT, List.of("did:jwk"), Collections.emptyMap())));
     }
 
     @Test

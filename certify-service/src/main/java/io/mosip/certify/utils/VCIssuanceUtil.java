@@ -119,15 +119,16 @@ public class VCIssuanceUtil {
     }
 
     /**
-     * A proof is required when the configuration declares both cryptographic binding methods and
-     * proof types. mso_mdoc always requires one, as ISO 18013-5 mandates deviceKeyInfo in the MSO.
+     * A proof is required unless the configuration declares neither cryptographic binding methods nor
+     * proof types, so one edited to declare only one of them is still never issued without holder
+     * binding. mso_mdoc always requires one, as ISO 18013-5 mandates deviceKeyInfo in the MSO.
      */
     public static boolean requiresProof(CredentialConfigurationSupported credentialConfigurationSupported) {
         if (VCFormats.MSO_MDOC.equals(credentialConfigurationSupported.getFormat())) {
             return true;
         }
         return !CollectionUtils.isEmpty(credentialConfigurationSupported.getCryptographicBindingMethodsSupported())
-                && !CollectionUtils.isEmpty(credentialConfigurationSupported.getProofTypesSupported());
+                || !CollectionUtils.isEmpty(credentialConfigurationSupported.getProofTypesSupported());
     }
 
     public static Optional<CredentialConfigurationSupported> getScopeCredentialMapping(

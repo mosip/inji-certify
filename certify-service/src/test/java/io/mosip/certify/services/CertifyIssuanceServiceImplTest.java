@@ -602,6 +602,26 @@ public class CertifyIssuanceServiceImplTest {
         verify(auditWrapper).logAudit(eq(Action.VC_ISSUANCE), eq(ActionStatus.SUCCESS), any(), isNull());
     }
 
+    /**
+     * A configuration advertising proof types but no binding methods still requires a proof, so it is
+     * never issued without holder binding.
+     */
+    @Test
+    public void getCredential_OnlyProofTypesAdvertised_MissingProofs_ThrowsInvalidProof() {
+        request = new CredentialRequest();
+        request.setCredentialConfigId("test-credential-id-ldp");
+        request.setProofs(null);
+
+        when(parsedAccessToken.isActive()).thenReturn(true);
+        when(parsedAccessToken.getClaims()).thenReturn(claimsFromAccessToken);
+        mockGlobalCredentialIssuerMetadataDTO.getCredentialConfigurationSupportedDTO()
+                .get("test-credential-id-ldp").setCryptographicBindingMethodsSupported(List.of());
+
+        CertifyException ex = assertThrows(CertifyException.class, () -> issuanceService.getCredential(request));
+        assertEquals(VCIErrorConstants.INVALID_PROOF, ex.getErrorCode());
+        verifyNoInteractions(dataProviderPlugin);
+    }
+
     @Test
     public void getCredential_HolderBindingRequired_MissingProofs_ThrowsInvalidProof() {
         request = new CredentialRequest();
