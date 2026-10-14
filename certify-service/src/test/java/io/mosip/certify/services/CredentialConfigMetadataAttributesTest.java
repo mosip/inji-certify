@@ -683,6 +683,26 @@ public class CredentialConfigMetadataAttributesTest {
         verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
     }
 
+    /**
+     * An algorithm the format's list rejects is reported once, not a second time by the COSE check.
+     */
+    @Test
+    public void should_reportOneError_when_msoMdocAlgorithmIsNeitherDeclaredNorCose() {
+        declareSigningAlgsByFormat(Map.of("mso_mdoc", List.of("ES256")));
+        CredentialConfig entity = msoMdocEntity();
+        entity.setSignatureAlgo("ES25");
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
+        CredentialConfigurationDTO request = msoMdocRequest();
+        request.setSignatureAlgo("ES25");
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        Assert.assertEquals(1, exception.getErrors().size());
+        Assert.assertEquals(ErrorConstants.UNSUPPORTED_CREDENTIAL_SIGNING_ALG, exception.getErrors().getFirst().getErrorCode());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
     @Test
     public void should_acceptMsoMdoc_when_algorithmIsDeclaredForTheFormat() {
         declareSigningAlgsByFormat(Map.of("mso_mdoc", List.of("ES256")));

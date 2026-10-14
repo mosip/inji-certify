@@ -261,11 +261,15 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         List<io.mosip.certify.core.dto.Error> errors = new ArrayList<>();
         CredentialConfigMetadataValidator.validateBindingMethods(bindingMethods,
                 credentialConfig.getCredentialFormat(), cryptographicBindingMethodsSupportedMap, errors);
+        int errorsBeforeSigningAlg = errors.size();
         CredentialConfigMetadataValidator.validateSigningAlg(signatureAlgo, credentialConfig.getCredentialFormat(),
                 credentialConfig.getSignatureCryptoSuite(), credentialSigningAlgValuesSupportedMap,
                 credentialSigningAlgValuesSupportedByFormat, keyAliasMapper, errors);
-        CredentialConfigMetadataValidator.validateCoseSigningAlg(signatureAlgo,
-                credentialConfig.getCredentialFormat(), COSE_ALGORITHM_INTEGER_MAP.keySet(), errors);
+        // An algorithm already rejected by the allow-list is not reported a second time by the COSE check.
+        if (errors.size() == errorsBeforeSigningAlg) {
+            CredentialConfigMetadataValidator.validateCoseSigningAlg(signatureAlgo,
+                    credentialConfig.getCredentialFormat(), COSE_ALGORITHM_INTEGER_MAP.keySet(), errors);
+        }
         CredentialConfigMetadataValidator.validateProofTypes(proofTypes, proofTypesSupported, errors);
 
         if (!errors.isEmpty()) {
