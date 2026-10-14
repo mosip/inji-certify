@@ -6,6 +6,7 @@ import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CredentialConfigValidationException;
+import io.mosip.certify.config.AppConfig;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -17,7 +18,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -33,7 +37,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(value = CredentialConfigController.class)
+@Import(CredentialConfigControllerTest.ApplicationObjectMapper.class)
 public class CredentialConfigControllerTest {
+
+    /**
+     * Binds requests with the application's own ObjectMapper, as the running service does, rather than
+     * the web slice's default one, which tolerates unrecognised fields that the service rejects.
+     */
+    @TestConfiguration
+    static class ApplicationObjectMapper {
+        @Bean
+        ObjectMapper objectMapper() {
+            return new AppConfig().objectMapper();
+        }
+    }
     ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
@@ -160,13 +177,11 @@ public class CredentialConfigControllerTest {
 
     /**
      * credentialSigningAlgValuesSupported is no longer part of the request. A client that still sends it
-     * is not rejected; the value is dropped before the service sees the request, so it cannot change
-     * what is stored or advertised.
+     * is rejected as an unrecognised field before the service is reached, so nothing is stored and the
+     * client has to change its request body.
      */
     @Test
-    public void should_ignoreSigningAlgList_when_requestSendsCredentialSigningAlgValuesSupported() throws Exception {
-        Mockito.when(credentialConfigurationService.addCredentialConfiguration(Mockito.any(CredentialConfigurationDTO.class)))
-                .thenReturn(new CredentialConfigResponse());
+    public void should_rejectRequest_when_itSendsCredentialSigningAlgValuesSupported() throws Exception {
         credentialConfigurationDTO.setSignatureAlgo("EdDSA");
         Map<String, Object> withSigningAlgs = new HashMap<>(objectMapper.convertValue(credentialConfigurationDTO,
                 new TypeReference<Map<String, Object>>() {}));
@@ -175,11 +190,13 @@ public class CredentialConfigControllerTest {
         mockMvc.perform(post("/credential-configurations")
                         .content(objectMapper.writeValueAsBytes(withSigningAlgs))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].errorCode").value(ErrorConstants.INVALID_REQUEST))
+                .andExpect(jsonPath("$.errors[0].errorMessage")
+                        .value("Unrecognized field 'credentialSigningAlgValuesSupported' in request"));
 
-        ArgumentCaptor<CredentialConfigurationDTO> captor = ArgumentCaptor.forClass(CredentialConfigurationDTO.class);
-        Mockito.verify(credentialConfigurationService).addCredentialConfiguration(captor.capture());
-        Assert.assertEquals("EdDSA", captor.getValue().getSignatureAlgo());
+        Mockito.verify(credentialConfigurationService, Mockito.never())
+                .addCredentialConfiguration(Mockito.any(CredentialConfigurationDTO.class));
     }
 
     /**
