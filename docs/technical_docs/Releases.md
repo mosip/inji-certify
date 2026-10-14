@@ -47,10 +47,6 @@ Replace `$velocityCount` with `$foreach.count`, and `$velocityHasNext` with `$fo
 
 `SecureUberspector` is enabled. Templates can no longer call methods on classes like `Class`, `ClassLoader`, `Runtime` or `System`, so `$x.getClass().forName(...)` no longer works. Normal field access and the `$_dateTool` and `$_esc` tools are unaffected.
 
----
-
-# Changes in release 1.0.0-rc.1
-
 ## Credential configuration metadata attributes are mandatory
 
 `cryptographicBindingMethodsSupported`, `proofTypesSupported` and `signatureAlgo` are now mandatory in the Add (`POST /credential-configurations`) and Update (`PUT /credential-configurations/{credentialConfigKeyId}`) requests, for every credential format. A request that leaves one out, sends it as `null` or sends it empty is rejected, and nothing is filled in from the deployment properties any more. In particular, an `ldp_vc` configuration without `signatureAlgo` no longer takes the first algorithm declared for its crypto suite.
