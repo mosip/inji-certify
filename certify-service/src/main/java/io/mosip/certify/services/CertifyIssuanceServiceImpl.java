@@ -296,7 +296,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                 templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
             }
             // a null holderId removes the key, so unbound templates see no _holderId
-            jsonObject.put("_holderId", holderId);
+            jsonObject.put(Constants._HOLDER_ID, holderId);
             templateParams.putAll(jsonObject.toMap());
             if(!StringUtils.isEmpty(idPrefix)) {
                 templateParams.put(VCDMConstants.CREDENTIAL_ID, idPrefix + UUID.randomUUID());
