@@ -339,11 +339,15 @@ jobs:
           cp api-test/entrypoint.sh .
           cp -r api-test/testNgXmlFiles api-test/target/testNgXmlFiles
           cp -r api-test/target/classes/config api-test/target/config
-          sed -i 's|injiCertifyBaseURL=.*|injiCertifyBaseURL=http://certify:8090|' api-test/target/config/injiCertify.properties
+          ESIGNET_URL=https://esignet-mock.collab.mosip.net
+          CERTIFY_URL=http://certify:8090
+          echo "eSignetbaseurl=$ESIGNET_URL"
+          echo "injiCertifyBaseURL=$CERTIFY_URL"
+          sed -i "s|injiCertifyBaseURL=.*|injiCertifyBaseURL=$CERTIFY_URL|" api-test/target/config/injiCertify.properties
           sed -i 's|db-server=.*|db-server=database|' api-test/target/config/injiCertify.properties
           sed -i 's|db-port=.*|db-port=5432|' api-test/target/config/injiCertify.properties
           sed -i 's|useCaseToExecute=.*|useCaseToExecute=mock|' api-test/target/config/injiCertify.properties
-          sed -i 's|eSignetbaseurl=.*|eSignetbaseurl=http://certify:8090|' api-test/target/config/injiCertify.properties
+          sed -i "s|eSignetbaseurl=.*|eSignetbaseurl=$ESIGNET_URL|" api-test/target/config/injiCertify.properties
           touch application.properties
           mkdir -p "Biometric Devices"
           mkdir -p resource
@@ -425,12 +429,6 @@ jobs:
           XMLEOF
           sed -i 's/^[[:space:]]*//' api-test/target/testNgXmlFiles/injicertifyMasterTestSuite.xml
 
-      - name: Log patched config values (target)
-        run: |
-          PROPS=api-test/target/config/injiCertify.properties
-          echo "=== Patched config values (target) ==="
-          grep '^eSignetbaseurl=' "$PROPS" || echo 'eSignetbaseurl=NOT FOUND'
-          grep '^injiCertifyBaseURL=' "$PROPS" || echo 'injiCertifyBaseURL=NOT FOUND'
 
       - name: Build apitest image
         run: docker build -t apitest-inji-certify:ci -f api-test/Dockerfile .
