@@ -21,6 +21,7 @@ on:
       - MOSIP*
       - release*
       - INJICERT-*
+      - feat*
 
 jobs:
   build-maven-inji-certify:
