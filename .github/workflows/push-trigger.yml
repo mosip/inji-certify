@@ -302,13 +302,17 @@ jobs:
           PROPS=api-test/src/main/resources/config/injiCertify.properties
           ESIGNET_URL=https://esignet-mock.collab.mosip.net
           CERTIFY_URL=http://localhost:8090
-          echo "eSignetbaseurl=$ESIGNET_URL"
-          echo "injiCertifyBaseURL=$CERTIFY_URL"
           sed -i 's|useCaseToExecute=.*|useCaseToExecute=mock|' "$PROPS"
           sed -i "s|injiCertifyBaseURL=.*|injiCertifyBaseURL=$CERTIFY_URL|" "$PROPS"
           sed -i "s|eSignetbaseurl=.*|eSignetbaseurl=$ESIGNET_URL|" "$PROPS"
           sed -i 's|db-server=.*|db-server=database|' "$PROPS"
           sed -i 's|db-port=.*|db-port=5432|' "$PROPS"
+
+      - name: Log config URLs (source)
+        run: |
+          PROPS=api-test/src/main/resources/config/injiCertify.properties
+          echo "eSignetbaseurl=$(grep '^eSignetbaseurl=' $PROPS | cut -d'=' -f2-)"
+          echo "injiCertifyBaseURL=$(grep '^injiCertifyBaseURL=' $PROPS | cut -d'=' -f2-)"
 
       - name: Build apitest jar
         run: |
@@ -341,8 +345,6 @@ jobs:
           cp -r api-test/target/classes/config api-test/target/config
           ESIGNET_URL=https://esignet-mock.collab.mosip.net
           CERTIFY_URL=http://certify:8090
-          echo "eSignetbaseurl=$ESIGNET_URL"
-          echo "injiCertifyBaseURL=$CERTIFY_URL"
           sed -i "s|injiCertifyBaseURL=.*|injiCertifyBaseURL=$CERTIFY_URL|" api-test/target/config/injiCertify.properties
           sed -i 's|db-server=.*|db-server=database|' api-test/target/config/injiCertify.properties
           sed -i 's|db-port=.*|db-port=5432|' api-test/target/config/injiCertify.properties
@@ -429,6 +431,11 @@ jobs:
           XMLEOF
           sed -i 's/^[[:space:]]*//' api-test/target/testNgXmlFiles/injicertifyMasterTestSuite.xml
 
+      - name: Log config URLs (target)
+        run: |
+          PROPS=api-test/target/config/injiCertify.properties
+          echo "eSignetbaseurl=$(grep '^eSignetbaseurl=' $PROPS | cut -d'=' -f2-)"
+          echo "injiCertifyBaseURL=$(grep '^injiCertifyBaseURL=' $PROPS | cut -d'=' -f2-)"
 
       - name: Build apitest image
         run: docker build -t apitest-inji-certify:ci -f api-test/Dockerfile .
