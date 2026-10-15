@@ -1,6 +1,7 @@
 package io.mosip.certify.utils;
 
 import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.entity.CredentialConfig;
 
 import java.util.ArrayList;
@@ -24,6 +25,24 @@ import java.util.stream.Collectors;
 public class CredentialConfigMetadataResolver {
 
     private CredentialConfigMetadataResolver() {
+    }
+
+    /**
+     * False only for a configuration created without holder binding, which stores NULL for both
+     * cryptographic_binding_methods_supported and proof_types_supported. Such a configuration advertises
+     * neither and gets no derived defaults.
+     */
+    public static boolean hasHolderBinding(CredentialConfig credentialConfig) {
+        return credentialConfig.getCryptographicBindingMethodsSupported() != null
+                || credentialConfig.getProofTypesSupported() != null;
+    }
+
+    /**
+     * mso_mdoc cannot be issued without holder binding: ISO/IEC 18013-5 requires deviceKeyInfo in the
+     * mobile security object.
+     */
+    public static boolean isAlwaysHolderBound(String credentialFormat) {
+        return VCFormats.MSO_MDOC.equals(credentialFormat);
     }
 
     /**

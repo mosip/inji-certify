@@ -10,6 +10,7 @@
 - [DCQL Support](./technical_docs/DCQL_Support.md)
 - [Inji Verify as a Library](./technical_docs/Inji_Verify_As_A_Library.md)
 - [DPoP Support (RFC 9449)](./technical_docs/DPoP_Support.md)
+- [Credentials Without Holder Binding](./technical_docs/Credentials_Without_Holder_Binding.md)
 
 # Integrator READMEs
 
@@ -24,6 +25,7 @@ Collections that exercise the OAuth authorization code grant, split by which Cer
   - `inji-certify-with-mock-identity.postman_collection.json` + `.postman_environment.json` (`ENV Mock Identity Bearer`) – Bearer credential issuance against the mock identity system (CSV data-provider "farmer" credential).
   - `inji-certify-with-mock-identity-dpop.postman_collection.json` + `inji-certify-with-mock-identity-dpop.postman_environment.json` (`ENV Mock Identity DPoP`) – DPoP-constrained credential issuance (RFC 9449). It has its own environment: the two flows write the same variable names, so sharing one lets either run silently clobber the other's client keys and tokens.
   - `inji-certify-with-mock-mdoc-vci.postman_collection.json` – mock mDoc/mDL VCI collection; uses `ENV Mock Identity Bearer`.
+  - `inji-certify-sd-jwt.postman_collection.json` – SD-JWT VC issuance and optional holder-binding tests using the mock identity CSV data provider.
   - [README-mock-identity-dpop.md](./postman_collections/authorization_code_flow/data_provider_plugin/README-mock-identity-dpop.md) – 26-scenario DPoP conformance suite covering the two mock-identity collections above.
 - **[vc_issuance_plugin/](./postman_collections/authorization_code_flow/vc_issuance_plugin/)** – exercises the **VCIssuancePlugin** architecture ("Sunbird VCI Plugin Mode"), using Sunbird RC as the sample integration.
   - `inji-certify-with-sunbird-insurance.postman_collection.json` + `.postman_environment.json`

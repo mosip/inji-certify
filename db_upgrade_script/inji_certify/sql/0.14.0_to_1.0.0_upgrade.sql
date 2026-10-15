@@ -128,3 +128,14 @@ COMMENT ON COLUMN certify.vp_submission.response_code_expiry_at IS 'Expiry of th
 COMMENT ON COLUMN certify.vp_submission.response_code_used IS 'Whether the response code has been consumed';
 
 CREATE INDEX IF NOT EXISTS idx_vp_submission_response_code ON certify.vp_submission (response_code);
+
+-- -------------------------------------------------------------------------------------------------
+-- SECTION 4: Make holder binding optional per credential configuration
+-- -------------------------------------------------------------------------------------------------
+-- NULL in both columns means the configuration is issued without holder binding and no proof is
+-- required.
+ALTER TABLE certify.credential_config
+    ALTER COLUMN cryptographic_binding_methods_supported DROP NOT NULL;
+
+ALTER TABLE certify.credential_config
+    ALTER COLUMN proof_types_supported DROP NOT NULL;

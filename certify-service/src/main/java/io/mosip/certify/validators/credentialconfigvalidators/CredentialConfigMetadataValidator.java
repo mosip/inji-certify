@@ -21,15 +21,19 @@ import java.util.Set;
  */
 public class CredentialConfigMetadataValidator {
 
+    private static final String WITHOUT_HOLDER_BINDING_HINT = " To configure a credential without holder binding, "
+            + "send both cryptographicBindingMethodsSupported and proofTypesSupported empty.";
+
     private CredentialConfigMetadataValidator() {
     }
 
     public static void validateBindingMethods(List<String> requested, String credentialFormat,
+                                              boolean withoutHolderBindingSupported,
                                               Map<String, List<String>> declaredBindingMethodsByFormat,
                                               List<Error> errors) {
         if (requested.isEmpty()) {
-            errors.add(buildError(ErrorConstants.INVALID_REQUEST,
-                    "cryptographicBindingMethodsSupported was provided but is empty."));
+            errors.add(buildError(ErrorConstants.INVALID_REQUEST, "cryptographicBindingMethodsSupported was provided but is empty."
+                    + withoutHolderBindingHint(credentialFormat, withoutHolderBindingSupported)));
             return;
         }
 
@@ -109,11 +113,13 @@ public class CredentialConfigMetadataValidator {
         }
     }
 
-    public static void validateProofTypes(Map<String, Object> requested,
+    public static void validateProofTypes(Map<String, Object> requested, String credentialFormat,
+                                          boolean withoutHolderBindingSupported,
                                           Map<String, Object> declaredProofTypes,
                                           List<Error> errors) {
         if (requested.isEmpty()) {
-            errors.add(buildError(ErrorConstants.INVALID_REQUEST, "proofTypesSupported was provided but is empty."));
+            errors.add(buildError(ErrorConstants.INVALID_REQUEST, "proofTypesSupported was provided but is empty."
+                    + withoutHolderBindingHint(credentialFormat, withoutHolderBindingSupported)));
             return;
         }
 
@@ -177,6 +183,57 @@ public class CredentialConfigMetadataValidator {
                                 + proofType + ". The supported values are: " + declared));
             }
         }
+    }
+
+    /**
+     * A configuration without holder binding is not possible for a format that is always holder-bound.
+     */
+    public static void validateWithoutHolderBinding(String credentialFormat, List<Error> errors) {
+        if (CredentialConfigMetadataResolver.isAlwaysHolderBound(credentialFormat)) {
+            errors.add(buildError(ErrorConstants.INVALID_REQUEST,
+                    "mso_mdoc credentials are always holder-bound; cryptographicBindingMethodsSupported and proofTypesSupported must not be empty."));
+        }
+    }
+
+    /**
+     * A holder-bound configuration that names no binding methods takes the ones the deployment declares
+     * for its format. When the deployment declares none, the configuration would advertise an empty
+     * cryptographic_binding_methods_supported next to proof types and be issued without holder binding,
+     * so it is rejected instead.
+     */
+    public static void validateDerivedBindingMethods(List<String> derived, String credentialFormat,
+                                                     boolean withoutHolderBindingSupported, List<Error> errors) {
+        if (!derived.isEmpty()) {
+            return;
+        }
+        String message = "No cryptographic binding methods are declared for the credential format: " + credentialFormat
+                + ". Declare them in mosip.certify.credential-config.cryptographic-binding-methods-supported."
+                + withoutHolderBindingHint(credentialFormat, withoutHolderBindingSupported);
+        errors.add(buildError(ErrorConstants.CRYPTOGRAPHIC_BINDING_CONFIG_NOT_FOUND, message));
+    }
+
+    /**
+     * A holder-bound configuration that names no proof types takes the ones the deployment declares. When
+     * the deployment declares none, the configuration would advertise binding methods with no way to prove
+     * possession of the key, so it is rejected instead.
+     */
+    public static void validateDerivedProofTypes(Map<String, Object> declaredProofTypes, String credentialFormat,
+                                                 boolean withoutHolderBindingSupported, List<Error> errors) {
+        if (declaredProofTypes != null && !declaredProofTypes.isEmpty()) {
+            return;
+        }
+        String message = "No proof types are declared. Declare them in mosip.certify.credential-config.proof-types-supported."
+                + withoutHolderBindingHint(credentialFormat, withoutHolderBindingSupported);
+        errors.add(buildError(ErrorConstants.UNSUPPORTED_PROOF_TYPE, message));
+    }
+
+    /**
+     * How to configure the credential without holder binding, appended to a holder-binding error only where
+     * that is possible: the plugin mode supports it and the format is not always holder-bound.
+     */
+    private static String withoutHolderBindingHint(String credentialFormat, boolean withoutHolderBindingSupported) {
+        return withoutHolderBindingSupported && !CredentialConfigMetadataResolver.isAlwaysHolderBound(credentialFormat)
+                ? WITHOUT_HOLDER_BINDING_HINT : "";
     }
 
     private static Error buildError(String errorCode, String errorMessage) {

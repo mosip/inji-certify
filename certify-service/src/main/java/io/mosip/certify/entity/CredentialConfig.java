@@ -72,7 +72,6 @@ public class CredentialConfig {
     @NotNull(message = "Invalid request")
     private String scope;
 
-    @NotNull(message = "Invalid request")
     @Column(name = "cryptographic_binding_methods_supported", columnDefinition = "TEXT[]")
     private List<String> cryptographicBindingMethodsSupported;
 
@@ -80,7 +79,6 @@ public class CredentialConfig {
     @Column(name = "credential_signing_alg_values_supported", columnDefinition = "TEXT[]")
     private List<String> credentialSigningAlgValuesSupported;
 
-    @NotNull(message = "Invalid request")
     @Type(JsonBinaryType.class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "proof_types_supported", columnDefinition = "jsonb")

@@ -245,20 +245,43 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
         VelocityContext context = new VelocityContext(updatedTemplateParams);
         engine.evaluate(context, writer, /*logTag */ templateName, vcTemplateString); // use vcTemplateString
         JSONObject jsonObject = new JSONObject(writer.toString());
+        removeUnresolvedHolderId(jsonObject, updatedTemplateParams);
         if (updatedTemplateParams.containsKey(VCDMConstants.CREDENTIAL_ID)) {
             jsonObject.put(VCDMConstants.ID, updatedTemplateParams.get(VCDMConstants.CREDENTIAL_ID));
         }
         if(updatedTemplateParams.containsKey(VCDM2Constants.CREDENTIAL_STATUS) && templateName.contains(VCDM2Constants.URL)) {
             jsonObject.put(VCDM2Constants.CREDENTIAL_STATUS, updatedTemplateParams.get(VCDM2Constants.CREDENTIAL_STATUS));
         }
-        if( updatedTemplateParams.containsKey(VCTYPE) && updatedTemplateParams.containsKey(CONFIRMATION)
-                && updatedTemplateParams.containsKey(ISSUER)) {
+        if (updatedTemplateParams.containsKey(VCTYPE) && updatedTemplateParams.containsKey(ISSUER)) {
             jsonObject.put(VCTYPE, updatedTemplateParams.get(VCTYPE));
-            jsonObject.put(CONFIRMATION, updatedTemplateParams.get(CONFIRMATION));
             jsonObject.put(ISSUER, updatedTemplateParams.get(ISSUER));
+        }
+        // cnf is only present when the credential is holder-bound
+        if (updatedTemplateParams.containsKey(CONFIRMATION)) {
+            jsonObject.put(CONFIRMATION, updatedTemplateParams.get(CONFIRMATION));
         }
 
         return jsonObject.toString();
+    }
+
+    /**
+     * A credential issued without holder binding has no _holderId. Velocity renders an unguarded
+     * ${_holderId} reference as literal text, so an unresolved or blank credentialSubject.id is
+     * removed instead of being signed into the credential.
+     */
+    private void removeUnresolvedHolderId(JSONObject jsonObject, Map<String, Object> templateParams) {
+        if (templateParams.get(Constants._HOLDER_ID) != null) {
+            return;
+        }
+        JSONObject credentialSubject = jsonObject.optJSONObject("credentialSubject");
+        if (credentialSubject == null) {
+            return;
+        }
+        Object subjectId = credentialSubject.opt(VCDMConstants.ID);
+        if (subjectId instanceof String id
+                && (id.isBlank() || id.contains("${" + Constants._HOLDER_ID + "}") || id.contains("$" + Constants._HOLDER_ID))) {
+            credentialSubject.remove(VCDMConstants.ID);
+        }
     }
 
     /**

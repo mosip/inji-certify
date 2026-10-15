@@ -6,6 +6,31 @@
 -- -------------------------------------------------------------------------------------------------
 
 -- -------------------------------------------------------------------------------------------------
+-- SECTION 4: Revert optional holder binding
+-- -------------------------------------------------------------------------------------------------
+-- Runs first: 0.14.0 requires holder binding for every credential configuration, so configurations
+-- without it (NULL) get the 1.0.0 defaults, which SECTION 2 then converts to the 0.14.0 form. The
+-- values mirror mosip.certify.credential-config.cryptographic-binding-methods-supported and
+-- mosip.certify.credential-config.proof-types-supported in certify-default.properties; the proof
+-- algorithms keep the order SECTION 2 matches on.
+UPDATE certify.credential_config
+SET cryptographic_binding_methods_supported = CASE
+        WHEN credential_format = 'mso_mdoc' THEN ARRAY['cose_key']
+        ELSE ARRAY['did:jwk', 'did:key']
+    END
+WHERE cryptographic_binding_methods_supported IS NULL;
+
+UPDATE certify.credential_config
+SET proof_types_supported = '{"jwt": {"proof_signing_alg_values_supported": ["RS256", "ES256", "PS256", "EdDSA"]}}'::jsonb
+WHERE proof_types_supported IS NULL;
+
+ALTER TABLE certify.credential_config
+    ALTER COLUMN cryptographic_binding_methods_supported SET NOT NULL;
+
+ALTER TABLE certify.credential_config
+    ALTER COLUMN proof_types_supported SET NOT NULL;
+
+-- -------------------------------------------------------------------------------------------------
 -- SECTION 1: Revert credential_config OpenID4VCI 1.0 alignment
 -- Reverts: 1.0.0-alpha.1
 -- -------------------------------------------------------------------------------------------------

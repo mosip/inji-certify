@@ -98,22 +98,26 @@ public class VCIssuanceControllerTest {
         CredentialRequest credentialRequest = new CredentialRequest();
         credentialRequest.setCredentialConfigId("TestId");
 
+        // proofs are optional at the DTO level; the issuance service rejects them when holder binding is required
         credentialRequest.setProofs(null);
+        CertifyException missingProofs = new CertifyException(VCIErrorConstants.INVALID_PROOF, "Proofs are required for this credential configuration.");
+        Mockito.when(vcIssuanceService.getCredential(credentialRequest)).thenThrow(missingProofs);
         mockMvc.perform(post("/issuance/credential")
                         .content(objectMapper.writeValueAsBytes(credentialRequest))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value(VCIErrorConstants.INVALID_PROOF));
 
-        credentialRequest.setProofs(Map.of());
-
+        CredentialRequest unsupportedProofRequest = new CredentialRequest();
+        unsupportedProofRequest.setCredentialConfigId("TestId");
+        unsupportedProofRequest.setProofs(Map.of(ProofType.JWT, List.of("dummy_jwt_proof")));
         CertifyException certifyException = new CertifyException(ErrorConstants.UNSUPPORTED_PROOF_TYPE,"The proof type is not supported.");
-        Mockito.when(vcIssuanceService.getCredential(credentialRequest)).thenThrow(certifyException);
+        Mockito.when(vcIssuanceService.getCredential(unsupportedProofRequest)).thenThrow(certifyException);
         mockMvc.perform(post("/issuance/credential")
-                        .content(objectMapper.writeValueAsBytes(credentialRequest))
+                        .content(objectMapper.writeValueAsBytes(unsupportedProofRequest))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value(VCIErrorConstants.INVALID_PROOF));
+                .andExpect(jsonPath("$.error").value(ErrorConstants.UNSUPPORTED_PROOF_TYPE));
     }
 
     @Test

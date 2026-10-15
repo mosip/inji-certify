@@ -1,5 +1,7 @@
 package io.mosip.certify.services;
 
+import com.authlete.cose.constants.COSEAlgorithms;
+import com.nimbusds.jose.JWSAlgorithm;
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
@@ -13,11 +15,7 @@ import io.mosip.certify.entity.attributes.Claims;
 import io.mosip.certify.repository.CredentialConfigRepository;
 import io.mosip.certify.utils.CredentialConfigMapper;
 import io.mosip.certify.utils.CredentialConfigMetadataResolver;
-import io.mosip.certify.validators.credentialconfigvalidators.CredentialConfigMetadataValidator;
-import io.mosip.certify.validators.credentialconfigvalidators.LdpVcCredentialConfigValidator;
-import io.mosip.certify.validators.credentialconfigvalidators.MsoMdocCredentialConfigValidator;
-import io.mosip.certify.validators.credentialconfigvalidators.QrSettingsValidator;
-import io.mosip.certify.validators.credentialconfigvalidators.SdJwtCredentialConfigValidator;
+import io.mosip.certify.validators.credentialconfigvalidators.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,10 +26,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import io.mosip.certify.core.dto.Error;
+
 import java.util.*;
 import java.util.stream.Collectors;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.authlete.cose.constants.COSEAlgorithms;
 
 @Slf4j
 @Component
@@ -223,6 +221,11 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
      * derived from configuration on add, and to the previously stored value on update, so an earlier
      * explicit selection is never silently re-derived away.
      * <p>
+     * Sending both cryptographic_binding_methods_supported and proof_types_supported empty configures the
+     * credential without holder binding: both are stored as NULL and no proof is required at issuance. An
+     * update that omits both keeps such a configuration unbound. mso_mdoc is always holder-bound, as
+     * ISO/IEC 18013-5 requires deviceKeyInfo in the mobile security object.
+     * <p>
      * Every failure across all three attributes is collected before anything is stored, so the caller
      * sees the whole payload's problems at once and nothing is partially saved.
      */
@@ -234,6 +237,12 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         List<String> storedBindingMethods = credentialConfig.getCryptographicBindingMethodsSupported();
         Map<String, Object> storedProofTypes = credentialConfig.getProofTypesSupported();
         List<String> rawStoredSigningAlgs = credentialConfig.getCredentialSigningAlgValuesSupported();
+
+        boolean requestsNoHolderBinding = requestedBindingMethods != null && requestedBindingMethods.isEmpty()
+                && requestedProofTypes != null && requestedProofTypes.isEmpty();
+        boolean keepsNoHolderBinding = !isAdd && requestedBindingMethods == null && requestedProofTypes == null
+                && storedBindingMethods == null && storedProofTypes == null;
+        boolean withoutHolderBinding = requestsNoHolderBinding || keepsNoHolderBinding;
 
         // A retained value is validated too, so a value the deployment has stopped declaring surfaces on
         // the next update rather than drifting silently. A value that was only ever derived is not, since
@@ -251,12 +260,13 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 ? CredentialConfigMetadataResolver.resolveStoredSigningAlgs(credentialConfig, credentialSigningAlgValuesSupportedMap)
                 : null;
 
-        List<String> providedBindingMethods =
-                providedValue(requestedBindingMethods, storedBindingMethods, retainsBindingMethods);
+        // Without holder binding there is nothing to validate or store for these two attributes
+        List<String> providedBindingMethods = withoutHolderBinding ? null
+                : providedValue(requestedBindingMethods, storedBindingMethods, retainsBindingMethods);
         List<String> providedSigningAlgs =
                 providedValue(requestedSigningAlgs, storedSigningAlgs, retainsSigningAlgs);
-        Map<String, Object> providedProofTypes =
-                providedValue(requestedProofTypes, storedProofTypes, retainsProofTypes);
+        Map<String, Object> providedProofTypes = withoutHolderBinding ? null
+                : providedValue(requestedProofTypes, storedProofTypes, retainsProofTypes);
 
         // What this configuration will actually advertise: the request's selection, or the algorithms
         // derived from configuration when it made none.
@@ -265,10 +275,32 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 : CredentialConfigMetadataResolver.deriveSigningAlgs(credentialConfig.getSignatureCryptoSuite(),
                         credentialConfig.getSignatureAlgo(), credentialSigningAlgValuesSupportedMap);
 
-        List<io.mosip.certify.core.dto.Error> errors = new ArrayList<>();
+        // A holder-bound configuration that names no binding methods takes the deployment's declared ones
+        List<String> derivedBindingMethods = withoutHolderBinding || providedBindingMethods != null ? null
+                : CredentialConfigMetadataResolver.deriveBindingMethods(credentialConfig.getCredentialFormat(),
+                        cryptographicBindingMethodsSupportedMap);
+
+        List<Error> errors = new ArrayList<>();
+        boolean withoutHolderBindingSupported = !"VCIssuance".equals(pluginMode);
+        if (withoutHolderBinding) {
+            CredentialConfigMetadataValidator.validateWithoutHolderBinding(credentialConfig.getCredentialFormat(), errors);
+            if (!withoutHolderBindingSupported) {
+                errors.add(new Error(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE,
+                        "Credentials without holder binding are not supported in the VCIssuance plugin mode."));
+            }
+        }
+        if (derivedBindingMethods != null) {
+            CredentialConfigMetadataValidator.validateDerivedBindingMethods(derivedBindingMethods,
+                    credentialConfig.getCredentialFormat(), withoutHolderBindingSupported, errors);
+        }
+        if (!withoutHolderBinding && providedProofTypes == null) {
+            CredentialConfigMetadataValidator.validateDerivedProofTypes(proofTypesSupported,
+                    credentialConfig.getCredentialFormat(), withoutHolderBindingSupported, errors);
+        }
         if (providedBindingMethods != null) {
             CredentialConfigMetadataValidator.validateBindingMethods(providedBindingMethods,
-                    credentialConfig.getCredentialFormat(), cryptographicBindingMethodsSupportedMap, errors);
+                    credentialConfig.getCredentialFormat(), withoutHolderBindingSupported,
+                    cryptographicBindingMethodsSupportedMap, errors);
         }
         if (providedSigningAlgs != null) {
             CredentialConfigMetadataValidator.validateSigningAlgs(providedSigningAlgs,
@@ -281,20 +313,26 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         CredentialConfigMetadataValidator.validateCoseSigningAlgs(effectiveSigningAlgs,
                 credentialConfig.getCredentialFormat(), COSE_ALGORITHM_INTEGER_MAP.keySet(), errors);
         if (providedProofTypes != null) {
-            CredentialConfigMetadataValidator.validateProofTypes(providedProofTypes, proofTypesSupported, errors);
+            CredentialConfigMetadataValidator.validateProofTypes(providedProofTypes,
+                    credentialConfig.getCredentialFormat(), withoutHolderBindingSupported, proofTypesSupported, errors);
         }
 
         if (!errors.isEmpty()) {
             throw new CredentialConfigValidationException(errors);
         }
 
+        credentialConfig.setCredentialSigningAlgValuesSupported(effectiveSigningAlgs);
+
+        if (withoutHolderBinding) {
+            credentialConfig.setCryptographicBindingMethodsSupported(null);
+            credentialConfig.setProofTypesSupported(null);
+            return;
+        }
+
         // Whatever was provided is stored; only an attribute nobody provided falls back to configuration.
         credentialConfig.setCryptographicBindingMethodsSupported(providedBindingMethods != null
                 ? providedBindingMethods
-                : CredentialConfigMetadataResolver.deriveBindingMethods(credentialConfig.getCredentialFormat(),
-                        cryptographicBindingMethodsSupportedMap));
-
-        credentialConfig.setCredentialSigningAlgValuesSupported(effectiveSigningAlgs);
+                : derivedBindingMethods);
 
         // The derived default goes through the same resolution as a requested value, so a proof type the
         // deployment declares without any signing algorithm cannot be stored by omitting the attribute.
@@ -317,17 +355,20 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
         CredentialConfigurationDTO credentialConfigurationDTO = credentialConfigMapper.toDto(credentialConfig);
         // All three are always returned, resolving the defaults for configurations that never set them.
-        if (credentialConfigurationDTO.getCryptographicBindingMethodsSupported() == null) {
-            credentialConfigurationDTO.setCryptographicBindingMethodsSupported(
-                    CredentialConfigMetadataResolver.deriveBindingMethods(credentialConfig.getCredentialFormat(),
-                            cryptographicBindingMethodsSupportedMap));
-        }
+        // A configuration without holder binding returns neither binding methods nor proof types.
         credentialConfigurationDTO.setCredentialSigningAlgValuesSupported(
                 CredentialConfigMetadataResolver.resolveStoredSigningAlgs(credentialConfig, credentialSigningAlgValuesSupportedMap));
-        Map<String, Object> storedProofTypes = credentialConfigurationDTO.getProofTypesSupported();
-        credentialConfigurationDTO.setProofTypesSupported(CredentialConfigMetadataResolver.resolveProofTypes(
-                storedProofTypes == null || storedProofTypes.isEmpty() ? proofTypesSupported : storedProofTypes,
-                proofTypesSupported));
+        if (CredentialConfigMetadataResolver.hasHolderBinding(credentialConfig)) {
+            if (credentialConfigurationDTO.getCryptographicBindingMethodsSupported() == null) {
+                credentialConfigurationDTO.setCryptographicBindingMethodsSupported(
+                        CredentialConfigMetadataResolver.deriveBindingMethods(credentialConfig.getCredentialFormat(),
+                                cryptographicBindingMethodsSupportedMap));
+            }
+            Map<String, Object> storedProofTypes = credentialConfigurationDTO.getProofTypesSupported();
+            credentialConfigurationDTO.setProofTypesSupported(CredentialConfigMetadataResolver.resolveProofTypes(
+                    storedProofTypes == null || storedProofTypes.isEmpty() ? proofTypesSupported : storedProofTypes,
+                    proofTypesSupported));
+        }
         return credentialConfigurationDTO;
     }
 
@@ -484,16 +525,18 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
         // A configuration written before these attributes were stored carries neither, so the same
         // defaults the Get API resolves are applied here too - what a wallet reads and what an
-        // issuer reads back stay the same.
-        if (dto.getCryptographicBindingMethodsSupported() == null) {
-            dto.setCryptographicBindingMethodsSupported(
-                    CredentialConfigMetadataResolver.deriveBindingMethods(credentialConfig.getCredentialFormat(),
-                            cryptographicBindingMethodsSupportedMap));
+        // issuer reads back stay the same. A configuration without holder binding advertises neither.
+        if (CredentialConfigMetadataResolver.hasHolderBinding(credentialConfig)) {
+            if (dto.getCryptographicBindingMethodsSupported() == null) {
+                dto.setCryptographicBindingMethodsSupported(
+                        CredentialConfigMetadataResolver.deriveBindingMethods(credentialConfig.getCredentialFormat(),
+                                cryptographicBindingMethodsSupportedMap));
+            }
+            Map<String, Object> storedProofTypes = credentialConfig.getProofTypesSupported();
+            dto.setProofTypesSupported(CredentialConfigMetadataResolver.resolveProofTypes(
+                    storedProofTypes == null || storedProofTypes.isEmpty() ? proofTypesSupported : storedProofTypes,
+                    proofTypesSupported));
         }
-        Map<String, Object> storedProofTypes = credentialConfig.getProofTypesSupported();
-        dto.setProofTypesSupported(CredentialConfigMetadataResolver.resolveProofTypes(
-                storedProofTypes == null || storedProofTypes.isEmpty() ? proofTypesSupported : storedProofTypes,
-                proofTypesSupported));
 
         if (VCFormats.MSO_MDOC.equals(credentialConfig.getCredentialFormat()) && algs != null) {
             List<Object> coseAlgs = new ArrayList<>();

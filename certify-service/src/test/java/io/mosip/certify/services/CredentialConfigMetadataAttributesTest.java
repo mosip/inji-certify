@@ -538,18 +538,21 @@ public class CredentialConfigMetadataAttributesTest {
 
     // ---------- BR-CM-1: present but empty ----------
 
+    /**
+     * Binding methods and proof types empty together configure the credential without holder binding
+     * (covered below), so each is rejected here when it is empty on its own.
+     */
     @Test
     public void addWithEmptyAttributes_IsRejected() {
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
         CredentialConfigurationDTO request = ldpVcRequest();
         request.setCryptographicBindingMethodsSupported(List.of());
         request.setCredentialSigningAlgValuesSupported(List.of());
-        request.setProofTypesSupported(Map.of());
 
         CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
                 () -> credentialConfigurationService.addCredentialConfiguration(request));
 
-        Assert.assertEquals(3, exception.getErrors().size());
+        Assert.assertEquals(2, exception.getErrors().size());
         exception.getErrors().forEach(error ->
                 Assert.assertEquals(ErrorConstants.INVALID_REQUEST, error.getErrorCode()));
         verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
@@ -720,7 +723,10 @@ public class CredentialConfigMetadataAttributesTest {
     @Test
     public void getLegacyConfiguration_ReturnsResolvedDefaults() {
         CredentialConfig legacy = ldpVcEntity();
+        // Legacy rows always store binding methods; 0.14.0 stored empty proof types to mean the defaults.
+        legacy.setCryptographicBindingMethodsSupported(List.of("did:jwk", "did:web"));
         legacy.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
+        legacy.setProofTypesSupported(new LinkedHashMap<>());
 
         when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(legacy));
         when(credentialConfigMapper.toDto(legacy)).thenReturn(ldpVcRequest());
@@ -839,5 +845,302 @@ public class CredentialConfigMetadataAttributesTest {
 
         Assert.assertEquals(List.of("EdDSA"), metadata.getCredentialConfigurationSupportedDTO()
                 .get("test-credential").getCredentialSigningAlgValuesSupported());
+    }
+
+    // ---------- Optional holder binding: binding methods and proof types both empty ----------
+
+    @Test
+    public void addWithBindingMethodsAndProofTypesEmpty_StoresConfigurationWithoutHolderBinding() {
+        CredentialConfig entity = ldpVcEntity();
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setCryptographicBindingMethodsSupported(List.of());
+        request.setProofTypesSupported(Map.of());
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
+        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
+
+        credentialConfigurationService.addCredentialConfiguration(request);
+
+        Assert.assertNull(entity.getCryptographicBindingMethodsSupported());
+        Assert.assertNull(entity.getProofTypesSupported());
+        Assert.assertEquals(List.of("EdDSA"), entity.getCredentialSigningAlgValuesSupported());
+    }
+
+    @Test
+    public void addWithoutHolderBinding_InVCIssuanceMode_IsRejected() {
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "VCIssuance");
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setCryptographicBindingMethodsSupported(List.of());
+        request.setProofTypesSupported(Map.of());
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        Assert.assertEquals(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE, exception.getErrors().getFirst().getErrorCode());
+        Assert.assertEquals("Credentials without holder binding are not supported in the VCIssuance plugin mode.",
+                exception.getErrors().getFirst().getErrorMessage());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    @Test
+    public void updateWithBindingMethodsAndProofTypesEmpty_InVCIssuanceMode_IsRejected() {
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "VCIssuance");
+        CredentialConfig stored = ldpVcEntity();
+        stored.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
+        stored.setProofTypesSupported(new LinkedHashMap<>(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA")))));
+        CredentialConfigurationDTO request = new CredentialConfigurationDTO();
+        request.setCryptographicBindingMethodsSupported(List.of());
+        request.setProofTypesSupported(Map.of());
+
+        when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(stored));
+        when(credentialConfigMapper.toDto(any(CredentialConfig.class))).thenReturn(ldpVcRequest());
+        doNothing().when(credentialConfigMapper).updateEntityFromDto(any(CredentialConfigurationDTO.class), any(CredentialConfig.class));
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.updateCredentialConfiguration("test-credential", request));
+
+        Assert.assertEquals(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE, exception.getErrors().getFirst().getErrorCode());
+        Assert.assertEquals(List.of("did:jwk"), stored.getCryptographicBindingMethodsSupported());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    /**
+     * A configuration stored without holder binding, for example before the deployment switched plugin
+     * mode, is not kept unbound by an update that omits both attributes.
+     */
+    @Test
+    public void updateConfigurationWithoutHolderBinding_InVCIssuanceMode_IsRejected() {
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "VCIssuance");
+        CredentialConfig stored = ldpVcEntity();
+        stored.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
+
+        when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(stored));
+        when(credentialConfigMapper.toDto(any(CredentialConfig.class))).thenReturn(ldpVcRequest());
+        doNothing().when(credentialConfigMapper).updateEntityFromDto(any(CredentialConfigurationDTO.class), any(CredentialConfig.class));
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.updateCredentialConfiguration("test-credential", new CredentialConfigurationDTO()));
+
+        Assert.assertEquals(ErrorConstants.UNSUPPORTED_IN_CURRENT_PLUGIN_MODE, exception.getErrors().getFirst().getErrorCode());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    @Test
+    public void addWithHolderBinding_InVCIssuanceMode_IsStored() {
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "VCIssuance");
+        CredentialConfig entity = ldpVcEntity();
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
+        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
+
+        credentialConfigurationService.addCredentialConfiguration(ldpVcRequest());
+
+        Assert.assertNotNull(entity.getCryptographicBindingMethodsSupported());
+        Assert.assertNotNull(entity.getProofTypesSupported());
+    }
+
+    /**
+     * Configurations without holder binding are rejected in VCIssuance mode, so the message for an empty
+     * attribute does not suggest configuring one.
+     */
+    @Test
+    public void addWithOnlyBindingMethodsEmpty_InVCIssuanceMode_IsRejectedWithoutWithoutHolderBindingHint() {
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "VCIssuance");
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setCryptographicBindingMethodsSupported(List.of());
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        Assert.assertEquals("cryptographicBindingMethodsSupported was provided but is empty.",
+                exception.getErrors().getFirst().getErrorMessage());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    @Test
+    public void addWithAttributesOmitted_InVCIssuanceMode_ForFormatWithoutDeclaredBindingMethods_HasNoWithoutHolderBindingHint() {
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "VCIssuance");
+        ReflectionTestUtils.setField(credentialConfigurationService, "cryptographicBindingMethodsSupportedMap",
+                new LinkedHashMap<>(Map.of("mso_mdoc", List.of("cose_key"))));
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(ldpVcRequest()));
+
+        Assert.assertEquals(ErrorConstants.CRYPTOGRAPHIC_BINDING_CONFIG_NOT_FOUND, exception.getErrors().getFirst().getErrorCode());
+        Assert.assertFalse(exception.getErrors().getFirst().getErrorMessage().contains("without holder binding"));
+    }
+
+    @Test
+    public void addWithOnlyProofTypesEmpty_IsRejected() {
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
+        request.setProofTypesSupported(Map.of());
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        Assert.assertEquals(ErrorConstants.INVALID_REQUEST, exception.getErrors().getFirst().getErrorCode());
+        Assert.assertEquals("proofTypesSupported was provided but is empty. To configure a credential without holder "
+                        + "binding, send both cryptographicBindingMethodsSupported and proofTypesSupported empty.",
+                exception.getErrors().getFirst().getErrorMessage());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    @Test
+    public void addWithOnlyBindingMethodsEmpty_IsRejectedWithWithoutHolderBindingHint() {
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setCryptographicBindingMethodsSupported(List.of());
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        Assert.assertEquals(ErrorConstants.INVALID_REQUEST, exception.getErrors().getFirst().getErrorCode());
+        Assert.assertEquals("cryptographicBindingMethodsSupported was provided but is empty. To configure a credential "
+                        + "without holder binding, send both cryptographicBindingMethodsSupported and proofTypesSupported empty.",
+                exception.getErrors().getFirst().getErrorMessage());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    /**
+     * mso_mdoc cannot be configured without holder binding, so its message does not suggest it.
+     */
+    @Test
+    public void addMsoMdocWithOnlyBindingMethodsEmpty_IsRejectedWithoutWithoutHolderBindingHint() {
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(msoMdocEntity());
+        CredentialConfigurationDTO request = msoMdocRequest();
+        request.setCryptographicBindingMethodsSupported(List.of());
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        Assert.assertTrue(exception.getErrors().stream().anyMatch(error ->
+                error.getErrorMessage().equals("cryptographicBindingMethodsSupported was provided but is empty.")));
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    /**
+     * ISO/IEC 18013-5 requires deviceKeyInfo in the mobile security object, so mso_mdoc is always bound.
+     */
+    @Test
+    public void addMsoMdocWithBindingMethodsAndProofTypesEmpty_IsRejected() {
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(msoMdocEntity());
+        CredentialConfigurationDTO request = msoMdocRequest();
+        request.setCryptographicBindingMethodsSupported(List.of());
+        request.setProofTypesSupported(Map.of());
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        Assert.assertEquals(ErrorConstants.INVALID_REQUEST, exception.getErrors().getFirst().getErrorCode());
+        Assert.assertTrue(exception.getErrors().getFirst().getErrorMessage().contains("mso_mdoc"));
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    /**
+     * Omitting both attributes derives the binding methods declared for the format. With none declared the
+     * configuration would advertise an empty list next to proof types, so it is rejected.
+     */
+    @Test
+    public void addWithAttributesOmitted_ForFormatWithoutDeclaredBindingMethods_IsRejected() {
+        ReflectionTestUtils.setField(credentialConfigurationService, "cryptographicBindingMethodsSupportedMap",
+                new LinkedHashMap<>(Map.of("mso_mdoc", List.of("cose_key"))));
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVcEntity());
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setCryptographicBindingMethodsSupported(null);
+        request.setProofTypesSupported(null);
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        Assert.assertEquals(ErrorConstants.CRYPTOGRAPHIC_BINDING_CONFIG_NOT_FOUND, exception.getErrors().getFirst().getErrorCode());
+        Assert.assertTrue(exception.getErrors().getFirst().getErrorMessage().contains("without holder binding"));
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    @Test
+    public void addWithoutHolderBinding_ForFormatWithoutDeclaredBindingMethods_IsStored() {
+        ReflectionTestUtils.setField(credentialConfigurationService, "cryptographicBindingMethodsSupportedMap",
+                new LinkedHashMap<>(Map.of("mso_mdoc", List.of("cose_key"))));
+        CredentialConfig entity = ldpVcEntity();
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setCryptographicBindingMethodsSupported(List.of());
+        request.setProofTypesSupported(Map.of());
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
+        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
+
+        credentialConfigurationService.addCredentialConfiguration(request);
+
+        Assert.assertNull(entity.getCryptographicBindingMethodsSupported());
+        Assert.assertNull(entity.getProofTypesSupported());
+    }
+
+    @Test
+    public void updateConfigurationWithoutHolderBinding_WithAttributesOmitted_StaysWithoutHolderBinding() {
+        CredentialConfig stored = ldpVcEntity();
+        stored.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
+
+        when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(stored));
+        when(credentialConfigMapper.toDto(any(CredentialConfig.class))).thenReturn(ldpVcRequest());
+        doNothing().when(credentialConfigMapper).updateEntityFromDto(any(CredentialConfigurationDTO.class), any(CredentialConfig.class));
+        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(stored);
+
+        credentialConfigurationService.updateCredentialConfiguration("test-credential", new CredentialConfigurationDTO());
+
+        Assert.assertNull(stored.getCryptographicBindingMethodsSupported());
+        Assert.assertNull(stored.getProofTypesSupported());
+    }
+
+    @Test
+    public void updateWithBindingMethodsAndProofTypesEmpty_RemovesHolderBinding() {
+        CredentialConfig stored = ldpVcEntity();
+        stored.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
+        stored.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
+        stored.setProofTypesSupported(new LinkedHashMap<>(Map.of("jwt", Map.of(PROOF_SIGNING_ALGS, List.of("EdDSA")))));
+        CredentialConfigurationDTO request = new CredentialConfigurationDTO();
+        request.setCryptographicBindingMethodsSupported(List.of());
+        request.setProofTypesSupported(Map.of());
+
+        when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(stored));
+        when(credentialConfigMapper.toDto(any(CredentialConfig.class))).thenReturn(ldpVcRequest());
+        doNothing().when(credentialConfigMapper).updateEntityFromDto(any(CredentialConfigurationDTO.class), any(CredentialConfig.class));
+        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(stored);
+
+        credentialConfigurationService.updateCredentialConfiguration("test-credential", request);
+
+        Assert.assertNull(stored.getCryptographicBindingMethodsSupported());
+        Assert.assertNull(stored.getProofTypesSupported());
+    }
+
+    @Test
+    public void getConfigurationWithoutHolderBinding_ReturnsNeitherBindingMethodsNorProofTypes() {
+        CredentialConfig stored = ldpVcEntity();
+        stored.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
+
+        when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(stored));
+        when(credentialConfigMapper.toDto(stored)).thenReturn(ldpVcRequest());
+
+        CredentialConfigurationDTO result = credentialConfigurationService.getCredentialConfigurationById("test-credential");
+
+        Assert.assertNull(result.getCryptographicBindingMethodsSupported());
+        Assert.assertNull(result.getProofTypesSupported());
+        Assert.assertEquals(List.of("EdDSA"), result.getCredentialSigningAlgValuesSupported());
+    }
+
+    @Test
+    public void metadata_ForConfigurationWithoutHolderBinding_AdvertisesNeitherBindingMethodsNorProofTypes() {
+        CredentialConfig stored = ldpVcEntity();
+        stored.setCredentialSigningAlgValuesSupported(List.of("EdDSA"));
+
+        when(credentialConfigRepository.findAll()).thenReturn(List.of(stored));
+        when(credentialConfigMapper.toDto(stored)).thenReturn(ldpVcRequest());
+
+        CredentialConfigurationSupportedDTO supported = credentialConfigurationService.fetchCredentialIssuerMetadata()
+                .getCredentialConfigurationSupportedDTO().get("test-credential");
+
+        Assert.assertNull(supported.getCryptographicBindingMethodsSupported());
+        Assert.assertNull(supported.getProofTypesSupported());
     }
 }

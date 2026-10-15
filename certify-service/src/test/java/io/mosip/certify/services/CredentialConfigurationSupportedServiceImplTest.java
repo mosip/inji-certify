@@ -106,9 +106,16 @@ public class CredentialConfigurationSupportedServiceImplTest {
         credentialSigningMap.put("Ed25519Signature2020", List.of("EdDSA"));
         credentialSigningMap.put("RsaSignature2018", List.of("RS256"));
         credentialSigningMap.put("EcdsaSecp256r1Signature2019", List.of("ES256"));
-        ReflectionTestUtils.setField(credentialConfigurationService, "cryptographicBindingMethodsSupportedMap", new LinkedHashMap<>());
+        // Declared as a deployment declares them, so holder-bound configurations derive their defaults
+        Map<String, List<String>> bindingMethods = new LinkedHashMap<>();
+        bindingMethods.put("ldp_vc", List.of("did:jwk", "did:key"));
+        bindingMethods.put("mso_mdoc", List.of("cose_key"));
+        bindingMethods.put("dc+sd-jwt", List.of("did:jwk", "did:key"));
+        Map<String, Object> proofTypes = new LinkedHashMap<>();
+        proofTypes.put("jwt", Map.of("proof_signing_alg_values_supported", List.of("RS256", "ES256", "EdDSA")));
+        ReflectionTestUtils.setField(credentialConfigurationService, "cryptographicBindingMethodsSupportedMap", bindingMethods);
         ReflectionTestUtils.setField(credentialConfigurationService, "credentialSigningAlgValuesSupportedMap", credentialSigningMap);
-        ReflectionTestUtils.setField(credentialConfigurationService, "proofTypesSupported", new LinkedHashMap<>());
+        ReflectionTestUtils.setField(credentialConfigurationService, "proofTypesSupported", proofTypes);
         ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper", keyAliasMapper);
         Map<String, String> authServerMapping = new HashMap<>();
         authServerMapping.put("default", "http://auth.com");

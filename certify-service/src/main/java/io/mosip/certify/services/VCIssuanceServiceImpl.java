@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -58,6 +59,11 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
         if(!parsedAccessToken.isActive())
             throw new NotAuthenticatedException();
+
+        // The VC issuance plugin always issues holder-bound credentials, so proofs are required
+        if (CollectionUtils.isEmpty(credentialRequest.getProofs())) {
+            throw new CertifyException(VCIErrorConstants.INVALID_PROOF, "Proofs are required, as the VCIssuance plugin mode issues only holder-bound credentials.");
+        }
 
         String scopeClaim = (String) parsedAccessToken.getClaims().getOrDefault("scope", "");
         CredentialConfigurationSupported credentialConfigurationSupported = null;

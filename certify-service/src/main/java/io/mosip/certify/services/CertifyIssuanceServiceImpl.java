@@ -38,6 +38,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -50,6 +51,7 @@ import java.util.stream.Collectors;
 
 import static io.mosip.certify.utils.CredentialUtils.toJsonMap;
 import static io.mosip.certify.utils.VCIssuanceUtil.getScopeCredentialMapping;
+import static io.mosip.certify.utils.VCIssuanceUtil.requiresProof;
 
 @Slf4j
 @Service
@@ -152,6 +154,33 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
         // 3. Proof Validation
         String clientId = (String) parsedAccessToken.getClaims().get(Constants.CLIENT_ID);
         String accessTokenHash = parsedAccessToken.getAccessTokenHash();
+        if (requiresProof(credentialConfigurationSupported)) {
+            List<String> holderIds = validateProofsAndExtractHolderIds(credentialRequest, credentialConfigurationSupported,
+                    credentialIssuerMetadataDTO, clientId, accessTokenHash);
+            for (String holderId : holderIds) {
+                vcResults.add(getVerifiableCredential(credentialConfigurationSupported, holderId));
+            }
+        } else {
+            log.info("Proof not required for credential_configuration_id {}, issuing without holder binding{}",
+                    credentialRequest.getCredentialConfigId(),
+                    CollectionUtils.isEmpty(credentialRequest.getProofs()) ? "" : "; the submitted proof is ignored");
+            auditWrapper.logAudit(Action.PROOF_VALIDATION_SKIPPED, ActionStatus.SUCCESS,
+                    AuditHelper.buildAuditDto(accessTokenHash, "accessTokenHash"), null);
+            vcResults.add(getVerifiableCredential(credentialConfigurationSupported, null));
+        }
+
+        auditWrapper.logAudit(Action.VC_ISSUANCE, ActionStatus.SUCCESS,
+                AuditHelper.buildAuditDto(accessTokenHash, "accessTokenHash"), null);
+        return VCIssuanceUtil.getCredentialResponse(credentialConfigurationSupported.getFormat(), vcResults);
+    }
+
+    private List<String> validateProofsAndExtractHolderIds(CredentialRequest credentialRequest,
+                                                           CredentialConfigurationSupported credentialConfigurationSupported,
+                                                           CredentialIssuerMetadataDTO credentialIssuerMetadataDTO,
+                                                           String clientId, String accessTokenHash) {
+        if (CollectionUtils.isEmpty(credentialRequest.getProofs())) {
+            throw new CertifyException(VCIErrorConstants.INVALID_PROOF, "Proofs are required for this credential configuration.");
+        }
         Map<String, Object> supportedProofTypes = credentialConfigurationSupported.getProofTypesSupported();
         Map<ProofType, Set<String>> proofs = credentialRequest.getProofs()
                 .entrySet()
@@ -199,14 +228,7 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
         auditWrapper.logAudit(Action.PROOF_VALIDATION, ActionStatus.SUCCESS,
                 AuditHelper.buildAuditDto(accessTokenHash, "accessTokenHash"), null);
-
-        for (String holderId : holderIds) {
-            vcResults.add(getVerifiableCredential(credentialConfigurationSupported, holderId));
-        }
-
-        auditWrapper.logAudit(Action.VC_ISSUANCE, ActionStatus.SUCCESS,
-                AuditHelper.buildAuditDto(accessTokenHash, "accessTokenHash"), null);
-        return VCIssuanceUtil.getCredentialResponse(credentialConfigurationSupported.getFormat(), vcResults);
+        return holderIds;
     }
 
     @Override
@@ -252,7 +274,9 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
                     vcRequestDto.setVct(credentialConfigurationSupported.getVct());
                     templateName = CredentialUtils.getTemplateName(vcRequestDto);
                     templateParams.put(Constants.VCTYPE, vcRequestDto.getVct());
-                    templateParams.put(Constants.CONFIRMATION, Map.of("kid", holderId));
+                    if (holderId != null) {
+                        templateParams.put(Constants.CONFIRMATION, Map.of("kid", holderId));
+                    }
                     templateParams.put(Constants.ISSUER, certifyIssuer);
                     jsonObject.put(Constants.TYPE, vcRequestDto.getVct());
                     break;
@@ -274,7 +298,8 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
             if (!StringUtils.isEmpty(renderTemplateId)) {
                 templateParams.put(Constants.RENDERING_TEMPLATE_ID, renderTemplateId);
             }
-            jsonObject.put("_holderId", holderId);
+            // a null holderId removes the key, so unbound templates see no _holderId
+            jsonObject.put(Constants._HOLDER_ID, holderId);
             templateParams.putAll(jsonObject.toMap());
             if(!StringUtils.isEmpty(idPrefix)) {
                 templateParams.put(VCDMConstants.CREDENTIAL_ID, idPrefix + UUID.randomUUID());
