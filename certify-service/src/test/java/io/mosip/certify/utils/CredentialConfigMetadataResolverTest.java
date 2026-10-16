@@ -10,23 +10,24 @@ import java.util.Map;
 import static org.junit.Assert.assertThrows;
 
 /**
- * Covers reading mosip.certify.credential-config.credential-signing-alg-values-supported in both of its
- * shapes: keyed by crypto suite only, and grouped by credential format.
+ * Covers reading mosip.certify.credential-config.credential-signing-alg-values-supported, which must be
+ * grouped by credential format.
  */
 public class CredentialConfigMetadataResolverTest {
 
+    /**
+     * The earlier shape, keyed by crypto suite only, is no longer read.
+     */
     @Test
-    public void should_readEverySuite_when_propertyIsKeyedByCryptoSuite() {
+    public void should_failStartup_when_propertyIsKeyedByCryptoSuite() {
         Map<String, Object> declared = new LinkedHashMap<>();
         declared.put("Ed25519Signature2020", List.of("EdDSA"));
         declared.put("EcdsaSecp256r1Signature2019", List.of("ES256"));
 
-        CredentialConfigMetadataResolver.DeclaredSigningAlgs result =
-                CredentialConfigMetadataResolver.parseDeclaredSigningAlgs(declared);
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> CredentialConfigMetadataResolver.parseDeclaredSigningAlgs(declared));
 
-        Assert.assertEquals(Map.of("Ed25519Signature2020", List.of("EdDSA"), "EcdsaSecp256r1Signature2019", List.of("ES256")),
-                result.byCryptoSuite());
-        Assert.assertTrue(result.byFormat().isEmpty());
+        Assert.assertTrue(exception.getMessage().contains("must be grouped by credential format"));
     }
 
     @Test
@@ -49,10 +50,10 @@ public class CredentialConfigMetadataResolverTest {
     }
 
     /**
-     * A grouped property need not declare every format; one it leaves out keeps the original behaviour.
+     * The property need not declare every format; one it leaves out has no algorithms declared.
      */
     @Test
-    public void should_declareOnlyTheGivenFormats_when_groupedPropertyOmitsSome() {
+    public void should_declareOnlyTheGivenFormats_when_propertyOmitsSome() {
         Map<String, Object> declared = new LinkedHashMap<>();
         declared.put("ldp_vc", Map.of("Ed25519Signature2020", List.of("EdDSA")));
 
@@ -64,10 +65,10 @@ public class CredentialConfigMetadataResolverTest {
     }
 
     /**
-     * Mixing the two shapes is ambiguous, so it fails at startup rather than guessing.
+     * A crypto suite placed beside the formats rather than under ldp_vc fails at startup.
      */
     @Test
-    public void should_failStartup_when_groupedPropertyHasAKeyThatIsNotAFormat() {
+    public void should_failStartup_when_propertyHasAKeyThatIsNotAFormat() {
         Map<String, Object> declared = new LinkedHashMap<>();
         declared.put("mso_mdoc", List.of("ES256"));
         declared.put("Ed25519Signature2020", List.of("EdDSA"));

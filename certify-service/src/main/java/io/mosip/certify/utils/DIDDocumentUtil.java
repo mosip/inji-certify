@@ -25,7 +25,6 @@ import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 import org.bouncycastle.jcajce.provider.asymmetric.edec.BCEdDSAPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import io.ipfs.multibase.Multibase;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.SignatureAlg;
@@ -41,12 +40,7 @@ public class DIDDocumentUtil {
 
     private final KeymanagerService keymanagerService;
     private final CredentialConfigRepository credentialConfigRepository;
-
-    @Value("#{${mosip.certify.credential-config.credential-signing-alg-values-supported}}")
-    private Map<String, Object> declaredCredentialSigningAlgValues;
-
-    // The algorithms declared for each crypto suite, read from declaredCredentialSigningAlgValues at startup.
-    private LinkedHashMap<String, List<String>> credentialSigningAlgValuesSupportedMap;
+    private final CredentialConfigMetadataResolver.DeclaredSigningAlgs declaredSigningAlgs;
 
     private static final String MULTICODEC_PREFIX = "ed01";
     private static final String DID_CONTEXT = "https://www.w3.org/ns/did/v1";
@@ -60,15 +54,11 @@ public class DIDDocumentUtil {
     );
 
     public DIDDocumentUtil(KeymanagerService keymanagerService,
-                           CredentialConfigRepository credentialConfigRepository) {
+                           CredentialConfigRepository credentialConfigRepository,
+                           CredentialConfigMetadataResolver.DeclaredSigningAlgs declaredSigningAlgs) {
         this.keymanagerService = keymanagerService;
         this.credentialConfigRepository = credentialConfigRepository;
-    }
-
-    @PostConstruct
-    void loadDeclaredCredentialSigningAlgValues() {
-        credentialSigningAlgValuesSupportedMap = new LinkedHashMap<>(
-                CredentialConfigMetadataResolver.parseDeclaredSigningAlgs(declaredCredentialSigningAlgValues).byCryptoSuite());
+        this.declaredSigningAlgs = declaredSigningAlgs;
     }
 
     public Map<String, Object> generateDIDDocument(String didUrl) {
@@ -313,7 +303,7 @@ public class DIDDocumentUtil {
                 configDetails.add(refId);
                 if (config.getSignatureAlgo() == null) {
                     String signatureCryptoSuite = config.getSignatureCryptoSuite();
-                    configDetails.add(credentialSigningAlgValuesSupportedMap.get(signatureCryptoSuite).getFirst());
+                    configDetails.add(declaredSigningAlgs.byCryptoSuite().get(signatureCryptoSuite).getFirst());
                 } else {
                     configDetails.add(config.getSignatureAlgo());
                 }

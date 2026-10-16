@@ -58,8 +58,18 @@ Replace `$velocityCount` with `$foreach.count`, and `$velocityHasNext` with `$fo
 
 `mso_mdoc` is signed with `signatureAlgo` alone, so it now requires `signatureAlgo` in place of `signatureCryptoSuite`, and a request that sends `signatureCryptoSuite` is rejected with `invalid_request`.
 
-`mosip.certify.credential-config.credential-signing-alg-values-supported` can now be grouped by credential format, giving `mso_mdoc` and `dc+sd-jwt` their own list of allowed algorithms. The original shape, keyed by crypto suite only, is still read, so existing deployments need not change it.
+`mosip.certify.credential-config.credential-signing-alg-values-supported` is now grouped by credential format: the crypto suites move under `'ldp_vc'`, and `mso_mdoc` and `dc+sd-jwt` get their own list of allowed algorithms. A format left out of the property accepts no algorithm. The earlier shape, keyed by crypto suite only, is no longer read: certify fails at startup until the property is regrouped.
 
 **Action for existing automation:** every Update request must send both attributes and `signatureAlgo`, even one that only changes an unrelated field such as the display name. This includes configurations created before these attributes were stored. `credentialSigningAlgValuesSupported` must be removed from every request body, and `mso_mdoc` requests must drop `signatureCryptoSuite`.
+
+**Action for existing deployments:** regroup `mosip.certify.credential-config.credential-signing-alg-values-supported` by credential format before upgrading, for example:
+
+```properties
+mosip.certify.credential-config.credential-signing-alg-values-supported={\
+  'ldp_vc': {'Ed25519Signature2020': {'EdDSA'}, 'EcdsaSecp256r1Signature2019': {'ES256'}},\
+  'mso_mdoc': {'ES256'},\
+  'dc+sd-jwt': {'ES256', 'EdDSA'}\
+}
+```
 
 See [Credential Issuer Configuration](./Credential_Issuer_Configuration.md) for the validation rules.

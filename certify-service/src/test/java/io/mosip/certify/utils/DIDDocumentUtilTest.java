@@ -52,11 +52,11 @@ class DIDDocumentUtilTest {
     @BeforeEach
     void setUp() {
         mocks = MockitoAnnotations.openMocks(this);
-        didDocumentUtil = new DIDDocumentUtil(keymanagerService, credentialConfigRepository);
         LinkedHashMap<String, List<String>> signingMap = new LinkedHashMap<>();
         signingMap.put(SignatureAlg.ED25519_SIGNATURE_SUITE_2018, List.of(JWSAlgorithm.EdDSA));
         signingMap.put(SignatureAlg.ED25519_SIGNATURE_SUITE_2020, List.of(JWSAlgorithm.EdDSA));
-        ReflectionTestUtils.setField(didDocumentUtil, "credentialSigningAlgValuesSupportedMap", signingMap);
+        didDocumentUtil = new DIDDocumentUtil(keymanagerService, credentialConfigRepository,
+                new CredentialConfigMetadataResolver.DeclaredSigningAlgs(signingMap, Map.of()));
     }
 
     @AfterEach
