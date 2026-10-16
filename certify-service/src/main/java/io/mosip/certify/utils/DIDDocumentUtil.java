@@ -303,7 +303,16 @@ public class DIDDocumentUtil {
                 configDetails.add(refId);
                 if (config.getSignatureAlgo() == null) {
                     String signatureCryptoSuite = config.getSignatureCryptoSuite();
-                    configDetails.add(declaredSigningAlgs.byCryptoSuite().get(signatureCryptoSuite).getFirst());
+                    List<String> algs = signatureCryptoSuite == null ? null
+                            : declaredSigningAlgs.byCryptoSuite().get(signatureCryptoSuite);
+                    // One configuration with no resolvable algorithm is left out rather than failing the
+                    // whole DID document, as the issuer metadata does.
+                    if (algs == null || algs.isEmpty()) {
+                        log.error("Credential configuration {} is left out of the DID document: no signing algorithm is declared for its crypto suite {}",
+                                config.getCredentialConfigKeyId(), signatureCryptoSuite);
+                        continue;
+                    }
+                    configDetails.add(algs.getFirst());
                 } else {
                     configDetails.add(config.getSignatureAlgo());
                 }

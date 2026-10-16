@@ -26,6 +26,10 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -161,6 +165,39 @@ class DIDDocumentUtilTest {
         assertTrue(contexts.contains("https://w3id.org/security/suites/ed25519-2020/v1"));
     }
 
+
+    /**
+     * A legacy configuration whose crypto suite is no longer declared is left out, and the DID document
+     * is still built from every other configuration.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    void should_leaveOutConfiguration_when_cryptoSuiteIsNotDeclared() {
+        CredentialConfig undeclared = new CredentialConfig();
+        undeclared.setCredentialConfigKeyId("legacy-config");
+        undeclared.setKeyManagerAppId("legacy-app");
+        undeclared.setKeyManagerRefId("legacy-ref");
+        undeclared.setSignatureCryptoSuite("EcdsaKoblitzSignature2016");
+
+        CredentialConfig declared = new CredentialConfig();
+        declared.setKeyManagerAppId("ed-app");
+        declared.setKeyManagerRefId("ed-ref");
+        declared.setSignatureCryptoSuite(SignatureAlg.ED25519_SIGNATURE_SUITE_2020);
+
+        CertificateDataResponseDto certificate = new CertificateDataResponseDto();
+        certificate.setCertificateData(ED25519_CERTIFICATE);
+        certificate.setKeyId("ed-kid");
+
+        when(credentialConfigRepository.findAll()).thenReturn(List.of(undeclared, declared));
+        when(keymanagerService.getAllCertificates("ed-app", Optional.of("ed-ref")))
+                .thenReturn(new AllCertificatesDataResponseDto(new CertificateDataResponseDto[]{certificate}));
+
+        Map<String, Object> didDocument = didDocumentUtil.generateDIDDocument(DID_URL);
+        List<Map<String, Object>> verificationMethods = (List<Map<String, Object>>) didDocument.get("verificationMethod");
+
+        assertEquals(1, verificationMethods.size());
+        verify(keymanagerService, never()).getAllCertificates(eq("legacy-app"), any());
+    }
 
     @Test
     @SuppressWarnings("unchecked")
