@@ -9,8 +9,8 @@ info:
     name: MOSIP
     url: https://www.mosip.io
   license:
-    name: MPL-2.0
-    url: https://www.mozilla.org/en-US/MPL/2.0/
+    name: Apache-2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
 servers:
   - url: 'http://localhost:8090/v1/certify'
     description: Generated server url
