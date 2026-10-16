@@ -289,7 +289,14 @@ paths:
                     responseTime: '2025-08-14T04:36:23.066Z'
                     response:
                       status: Upload Success
-                      timestamp: '2025-08-14T04:36:23.054Z'
+                      timestamp:
+                        - 2025
+                        - 8
+                        - 14
+                        - 4
+                        - 36
+                        - 23
+                        - 54873000
                     errors: []
       servers:
         - url: 'http://localhost:8090/v1/certify'
@@ -384,7 +391,14 @@ paths:
                     responseTime: '2025-08-14T04:36:23.066Z'
                     response:
                       status: Upload Success
-                      timestamp: '2025-08-14T04:36:23.054Z'
+                      timestamp:
+                        - 2025
+                        - 8
+                        - 14
+                        - 4
+                        - 36
+                        - 23
+                        - 54873000
                     errors: []
       servers:
         - url: 'http://localhost:8090/v1/certify'
@@ -1765,9 +1779,10 @@ components:
           type: string
           description: 'Status of the upload (e.g., SUCCESS, FAILURE).'
         timestamp:
-          type: string
-          description: UTC timestamp when upload operation was completed.
-          format: date-time
+          type: array
+          items:
+            type: integer
+          description: UTC timestamp when upload operation was completed, serialized from LocalDateTime as [year, month, day, hour, minute, second, nanosecond].
     RequestWrapperCSRGenerateRequestDto:
       type: object
       properties:
@@ -1871,9 +1886,10 @@ components:
           type: string
           description: Status of the upload (e.g., SUCCESS, FAILURE).
         timestamp:
-          type: string
-          format: date-time
-          description: UTC timestamp when upload operation was completed.
+          type: array
+          items:
+            type: integer
+          description: UTC timestamp when upload operation was completed, serialized from LocalDateTime as [year, month, day, hour, minute, second, nanosecond].
       required:
         - status
         - timestamp
