@@ -2,6 +2,15 @@ openapi: 3.0.1
 info:
   version: v0
   title: OpenAPI definition
+  description: >-
+    APIs exposed by Inji Certify for managing credential configurations, signing certificates
+    and issuing verifiable credentials as per the OpenID4VCI specification.
+  contact:
+    name: MOSIP
+    url: https://www.mosip.io
+  license:
+    name: MPL-2.0
+    url: https://www.mozilla.org/en-US/MPL/2.0/
 servers:
   - url: 'http://localhost:8090/v1/certify'
     description: Generated server url
@@ -213,68 +222,8 @@ paths:
               examples:
                 Example 1:
                   value:
-                    vcTemplate: eyJjcmVkZW50aWFsU3ViamVjdCI6eyJSZWdpc3RyYXRpb25EYXRlIjoiJHtyZWdpc3RyYXRpb25fZGF0ZX0iLCJDb25zZXJ2YXRpb25Vbml0UHJvY2Vzc2luZ0RhdGUiOiIke2NvbnNlcnZhdGlvbl91bml0X3Byb2Nlc3NpbmdfZGF0ZX0iLCJMYXRpdHVkZSI6IiR7bGF0aXR1ZGV9IiwiQ29uc29saWRhdGVkUnVyYWxBcmVhIjoiJHtjb25zb2xpZGF0ZWRfcnVyYWxfYXJlYX0iLCJMZWdhbFJlc2VydmVMb2NhdGlvbiI6IiR7bG9jYXRpb25fb2ZfbGVnYWxfcmVzZXJ2ZX0iLCJSZWdpc3RlcmVkTGVnYWxSZXNlcnZlQXJlYSI6IiR7cmVnaXN0ZXJlZF9sZWdhbF9yZXNlcnZlX2FyZWF9IiwiUmVzdHJpY3RlZFVzZUFyZWFUb0JlUmVzdG9yZWQiOiIke3Jlc3RyaWN0ZWRfdXNlX2FyZWFfdG9fcmVjb21wb3NlfSIsIlRvdGFsRGVjbGFyZWRMZWdhbFJlc2VydmUiOiIke3RvdGFsX2xlZ2FsX3Jlc2VydmVfZGVjbGFyZWR9IiwiUGVybWFuZW50UHJlc2VydmF0aW9uQXJlYXMiOiIke3Blcm1hbmVudF9wcmVzZXJ2YXRpb25fYXJlYXNfYXBwfSIsIkFkbWluaXN0cmF0aXZlRWFzZW1lbnRBcmVhIjoiJHthZG1pbmlzdHJhdGl2ZV9lYXNlbWVudF9hcmVhfSIsIlJlc3RyaWN0ZWRVc2VBcmVhcyI6IiR7cmVzdHJpY3RlZF91c2VfYXJlYXN9IiwiUFJBQ29uZGl0aW9uIjoiJHtwcmFfY29uZGl0aW9ufSIsImlkIjoiJHtfaG9sZGVySWR9IiwiTGVnYWxSZXNlcnZlRGVmaWNpdE9yRXhjZXNzIjoiJHtsZWdhbF9yZXNlcnZlX2RlZmljaXRfZXhjZXNzfSIsIkxlZ2FsUmVzZXJ2ZUFyZWFUb0JlUmVzdG9yZWQiOiIke2xlZ2FsX3Jlc2VydmVfYXJlYV90b19yZWNvbXBvc2V9IiwiRW1iYXJnZ2VkQXJlYU92ZXJsYXBQZXJjZW50YWdlIjoiJHtlbWJhcmdvZWRfYXJlYV9vdmVybGFwX3BlcmNlbnRhZ2V9IiwiRW1iYXJnZ2VkQXJlYURlc2NyaXB0aW9uIjoiJHtlbWJhcmdvZWRfYXJlYV9kZXNjcmlwdGlvbn0iLCJHZW9yZWZlcmVuY2VkTGVnYWxSZXNlcnZlQXJlYSI6IiR7Z2VvcmVmZXJlbmNlZF9sZWdhbF9yZXNlcnZlX2FyZWF9IiwiQVBQSW5Db25zb2xpZGF0ZWRSdXJhbEFyZWEiOiIke2FwcF9pbl9jb25zb2xpZGF0ZWRfcnVyYWxfYXJlYX0iLCJFbWJhcmdnZWRBcmVhUHJvY2Vzc2luZ0RhdGUiOiIke2VtYmFyZ29lZF9hcmVhX3Byb2Nlc3NpbmdfZGF0ZX0iLCJDb25zZXJ2YXRpb25Vbml0RGVzY3JpcHRpb24iOiIke2NvbnNlcnZhdGlvbl91bml0X2Rlc2NyaXB0aW9ufSIsIk11bmljaXBhbGl0eSI6IiR7bXVuaWNpcGFsaXR5fSIsIkVtYmFyZ2dlZEFyZWFPdmVybGFwIjoiJHtlbWJhcmdvZWRfYXJlYV9vdmVybGFwfSIsIkFwcHJvdmVkVW5yZWdpc3RlcmVkTGVnYWxSZXNlcnZlQXJlYSI6IiR7YXBwcm92ZWRfbGVnYWxfcmVzZXJ2ZV9hcmVhX25vdF9yZWdpc3RlcmVkfSIsIlJlZ2lzdHJhdGlvblN0YXR1cyI6IiR7cmVnaXN0cmF0aW9uX3N0YXR1c30iLCJOdW1iZXJPZkNBUiI6IiR7Y2FyX3JlZ2lzdHJhdGlvbl9udW1iZXJ9IiwiUnVyYWxQcm9wZXJ0eUFyZWEiOiIke3J1cmFsX3Byb3BlcnR5X2FyZWF9IiwiTG9uZ2l0dWRlIjoiJHtsb25naXR1ZGV9IiwiQ29uc2VydmF0aW9uVW5pdE92ZXJsYXBBcmVhIjoiJHtjb25zZXJ2YXRpb25fdW5pdF9vdmVybGFwX2FyZWF9IiwiRXh0ZXJuYWxDb25kaXRpb24iOiIke2V4dGVybmFsX2NvbmRpdGlvbn0iLCJMYXN0TW9kaWZpY2F0aW9uRGF0ZSI6IiR7ZGF0ZV9vZl9sYXN0X2FtZW5kbWVudH0iLCJDb25zZXJ2YXRpb25Vbml0T3ZlcmxhcFBlcmNlbnRhZ2UiOiIke2NvbnNlcnZhdGlvbl91bml0X292ZXJsYXBfcGVyY2VudGFnZX0iLCJOYXRpdmVWZWdldGF0aW9uUmVtbmFudEFyZWEiOiIke25hdGl2ZV92ZWdldGF0aW9uX3JlbW5hbnRfYXJlYX0iLCJBUFBJbk5hdGl2ZVZlZ2V0YXRpb25SZW1uYW50QXJlYSI6IiR7YXBwX2luX25hdGl2ZV92ZWdldGF0aW9uX3JlbW5hbnRfYXJlYX0iLCJQZXJtYW5lbnRQcmVzZXJ2YXRpb25BcmVhc1RvQmVSZXN0b3JlZCI6IiR7cGVybWFuZW50X3ByZXNlcnZhdGlvbl9hcmVhc190b19yZWNvbXBvc2V9IiwiR3JvdW5kQ292ZXJhZ2UiOiIke2xhbmRfY292ZXJ9IiwiUHJvcG9zZWRMZWdhbFJlc2VydmVBcmVhIjoiJHtwcm9wb3NlZF9sZWdhbF9yZXNlcnZlX2FyZWF9In0sInZhbGlkVW50aWwiOiIke3ZhbGlkVW50aWx9IiwidmFsaWRGcm9tIjoiJHt2YWxpZEZyb219IiwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsImxhbmRzdGF0ZW1lbnRfZGF0YUludGVncml0eSJdLCJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvdjIiLCJodHRwczovL21vc2lwLmdpdGh1Yi5pby9pbmppLWNvbmZpZy9jb250ZXh0cy9sYW5kcmVnaXN0cnktc3RhdGVtZW50LWRhdGFJbnRlZ3JpdHktY29udGV4dC1hdXRvbWF0aW9uLmpzb24iXSwiaXNzdWVyIjoiJHtfaXNzdWVyfSJ9
-                    keyManagerRefId: ED25519_SIGN
-                    claims:
-                      APPInConsolidatedRuralArea:
-                        display:
-                          - name: APP in Consolidated Rural Area
-                            locale: en
-                      PermanentPreservationAreas:
-                        display:
-                          - name: Permanent Preservation Areas
-                            locale: en
-                    displayOrder:
-                      - NumberOfCAR
-                      - RegistrationDate
-                      - LastModificationDate
-                      - RuralPropertyArea
-                      - Latitude
-                      - Longitude
-                      - Municipality
-                      - ExternalCondition
-                      - RegistrationStatus
-                      - PRACondition
-                      - GroundCoverage
-                      - NativeVegetationRemnantArea
-                      - ConsolidatedRuralArea
-                      - AdministrativeEasementArea
-                      - LegalReserveLocation
-                      - RegisteredLegalReserveArea
-                      - GeoreferencedLegalReserveArea
-                      - ApprovedUnregisteredLegalReserveArea
-                      - ProposedLegalReserveArea
-                      - TotalDeclaredLegalReserve
-                      - PermanentPreservationAreas
-                      - APPInConsolidatedRuralArea
-                      - APPInNativeVegetationRemnantArea
-                      - RestrictedUseAreas
-                      - LegalReserveDeficitOrExcess
-                      - LegalReserveAreaToBeRestored
-                      - PermanentPreservationAreasToBeRestored
-                    didUrl: 'did:web:www.example.com:inji-config:collab:landregistry'
-                    contextURLs:
-                      - 'https://www.w3.org/ns/credentials/v2'
-                      - 'https://www.example.com/inji-config/contexts/landregistry-statement-dataIntegrity-context-automation.json'
-                    signatureCryptoSuite: eddsa-rdfc-2022
-                    credentialConfigKeyId: landstatement_dataIntegrity_2.0
-                    metaDataDisplay:
-                      - background_image:
-                          uri: 'https://www.example.com/inji-config/logos/agro-vertias-logo.png'
-                        background_color: '#ebfaff'
-                        name: land statement for data integrity
-                        logo:
-                          alt_text: land statement Logo
-                          url: 'https://www.example.com/inji-config/logos/agro-vertias-logo.png'
-                        text_color: '#000000'
-                        locale: en
-                    credentialFormat: ldp_vc
-                    scope: land_statement_vc_ldp
-                    keyManagerAppId: CERTIFY_VC_SIGN_ED25519
-                    credentialTypes:
-                      - VerifiableCredential
-                      - landstatement_dataIntegrity
-                    signatureAlgo: EdDSA
+                    id: 1b4c9a8e-3f2d-4e7a-9c61-5d8f2a7b0e34
+                    status: active
       servers:
         - url: 'http://localhost:8090/v1/certify'
           description: Generated server url
@@ -340,14 +289,7 @@ paths:
                     responseTime: '2025-08-14T04:36:23.066Z'
                     response:
                       status: Upload Success
-                      timestamp:
-                        - 2025
-                        - 8
-                        - 14
-                        - 4
-                        - 36
-                        - 23
-                        - 54873000
+                      timestamp: '2025-08-14T04:36:23.054Z'
                     errors: []
       servers:
         - url: 'http://localhost:8090/v1/certify'
@@ -442,14 +384,7 @@ paths:
                     responseTime: '2025-08-14T04:36:23.066Z'
                     response:
                       status: Upload Success
-                      timestamp:
-                        - 2025
-                        - 8
-                        - 14
-                        - 4
-                        - 36
-                        - 23
-                        - 54873000
+                      timestamp: '2025-08-14T04:36:23.054Z'
                     errors: []
       servers:
         - url: 'http://localhost:8090/v1/certify'
@@ -1017,7 +952,6 @@ paths:
                   credentialFormat: ldp_vc
                   credentialConfigKeyId: Insurance_eccr1
                   didUrl: ''
-                  signatureAlgo: ''
                   signatureCryptoSuite: EcdsaSecp256r1Signature2019
                   sdClaim: ''
                   displayOrder:
@@ -1439,7 +1373,7 @@ paths:
                     claim1: value1
                     claim2: value2
                   expires_in: 600
-                  tx_code: 11111
+                  tx_code: '11111'
               without tx_code example:
                 value:
                   credential_configuration_id: "MockVerifiableCredential"
@@ -1483,26 +1417,28 @@ paths:
           description: Generated server url
 
 tags:
-  - name: cryptomanager
-    description: Operation related to Encryption and Decryption
   - name: Credential Configuration
     description: Operations to manage credential configuration used for credential issuance
-  - name: System Information
-    description: Operations to upload and fetch signature certificates
-  - name: VC Issuance
-    description: Verifiable credential issuance and issuer metadata APIs
-  - name: Rendering Template
-    description: Operations for rendering template
-  - name: Well-known
-    description: Well-known endpoints
   - name: 'Credential Status'
     description: Operations for Credential Status
+  - name: cryptomanager
+    description: Operation related to Encryption and Decryption
   - name: 'Ledger Search'
     description: Operations for Ledger Search
+  - name: 'Nonce Controller'
+    description: Operation to generate c_nonce for credential issuance
   - name: oAuth-controller
     description: Operation to handle IAR and token api
   - name: Pre-Authorized Code
     description: Operation to create pre-authorize data and get credential offer
+  - name: Rendering Template
+    description: Operations for rendering template
+  - name: System Information
+    description: Operations to upload and fetch signature certificates
+  - name: VC Issuance
+    description: Verifiable credential issuance and issuer metadata APIs
+  - name: Well-known
+    description: Well-known endpoints
 
 components:
   securitySchemes:
@@ -1517,7 +1453,6 @@ components:
     dpopAuth:
       type: http
       scheme: DPoP
-      bearerFormat: JWT
       description: >-
         A DPoP-bound access token (RFC 9449), presented with a proof of possession in the
         DPoP header. The proof must be signed by the key whose thumbprint appears in the
@@ -1657,7 +1592,7 @@ components:
         credentialSigningAlgValuesSupported:
           type: array
           minItems: 1
-          description: 'Optional. Signing algorithms advertised for this credential configuration. Where signatureCryptoSuite is present every value must be declared for that suite in mosip.certify.credential-config.credential-signing-alg-values-supported; where the format carries no crypto suite, such as dc+sd-jwt, every value a request provides must be an algorithm the deployment holds a signing key for in mosip.certify.signature-algo.key-alias-mapper. Unlike the COSE constraint below, this key check applies only to the values a request provides: where the attribute is omitted, the algorithm derived from the configuration''s own signatureAlgo is stored without it, and a missing key surfaces at issuance rather than at configuration time. For the mso_mdoc format every value must additionally be ES256: that format advertises COSE algorithm identifiers, and ES256 is the only algorithm supported for an mdoc's issuerAuth; this applies to the algorithms derived from the crypto suite when the attribute is omitted just as it does to the ones a request selects. An undeclared value is rejected with unsupported_credential_signing_alg. Omitted on Add, the algorithms declared for the crypto suite apply, or the configuration''s own signatureAlgo where there is no suite; omitted on Update, the stored value is retained. Always returned by the Get response. An empty array is rejected.'
+          description: 'Optional. Signing algorithms advertised for this credential configuration. Where signatureCryptoSuite is present every value must be declared for that suite in mosip.certify.credential-config.credential-signing-alg-values-supported; where the format carries no crypto suite, such as dc+sd-jwt, every value a request provides must be an algorithm the deployment holds a signing key for in mosip.certify.signature-algo.key-alias-mapper. Unlike the COSE constraint below, this key check applies only to the values a request provides: where the attribute is omitted, the algorithm derived from the configuration''s own signatureAlgo is stored without it, and a missing key surfaces at issuance rather than at configuration time. For the mso_mdoc format every value must additionally be ES256: that format advertises COSE algorithm identifiers, and ES256 is the only algorithm supported for an mdoc''s issuerAuth; this applies to the algorithms derived from the crypto suite when the attribute is omitted just as it does to the ones a request selects. An undeclared value is rejected with unsupported_credential_signing_alg. Omitted on Add, the algorithms declared for the crypto suite apply, or the configuration''s own signatureAlgo where there is no suite; omitted on Update, the stored value is retained. Always returned by the Get response. An empty array is rejected.'
           items:
             type: string
         proofTypesSupported:
@@ -2116,6 +2051,7 @@ components:
       properties:
         certificate:
           type: string
+          nullable: true
           description: X509 self-signed certificate in PEM format.
         certSignRequest:
           type: string
@@ -2500,8 +2436,9 @@ components:
       type: object
       properties:
         logo:
-          $ref: '#/components/schemas/Logo'
           description: Holds information regarding the logo image.
+          allOf:
+            - $ref: '#/components/schemas/Logo'
         name:
           type: string
           description: 'The display name, typically used as a title or label.'
@@ -2530,6 +2467,7 @@ components:
           type: string
           description: 'The timestamp indicating when the response was generated, in ISO 8601 format.'
         response:
+          type: object
           description: 'The main response data. It is null in this case, indicating no successful data was returned.'
           nullable: true
         errors:
@@ -2578,7 +2516,6 @@ components:
         authorization_details:
           type: array
           items:
-            type: object
             $ref: '#/components/schemas/AuthorizationDetail'
           description: |
             JSON containing RFC 9396 authorization details
@@ -2756,7 +2693,7 @@ components:
         tx_code:
           type: string
           description: alphanumeric characters, if specified must be 4-8 characters
-          example: 11111
+          example: '11111'
     PreAuthorizedResponse:
       type: object
       required:
