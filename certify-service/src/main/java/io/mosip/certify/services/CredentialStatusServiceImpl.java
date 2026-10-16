@@ -92,9 +92,10 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
      * given from the app properties
      */
     private String resolveStatusPurpose(String requestedPurpose, StatusListCredential statusListCredential) {
+        String statusListPurpose = statusListCredential.getStatusPurpose();
         if (allowedStatusPurposes == null || allowedStatusPurposes.isEmpty()) {
             // The feature is not enabled, so leave the recorded purpose as it is.
-            return statusListCredential.getStatusPurpose();
+            return statusListPurpose;
         }
 
         // Trimmed once here and used everywhere below
@@ -108,6 +109,11 @@ public class CredentialStatusServiceImpl implements CredentialStatusService {
         if (!allowedStatusPurposes.contains(purpose)) {
             throw new CertifyException(ErrorConstants.INVALID_STATUS_PURPOSE,
                 "Invalid status purpose '" + purpose + "'. Allowed values are: " + allowedStatusPurposes);
+        }
+        
+        if(statusListPurpose !=null && !statusListPurpose.isEmpty() && !statusListPurpose.equals(purpose)){
+            throw new CertifyException(ErrorConstants.INVALID_STATUS_PURPOSE,
+                "Status purpose '" + purpose + "' does not match the status list purpose '" + statusListPurpose + "'");
         }
         return purpose;
     }
