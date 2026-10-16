@@ -10,6 +10,7 @@ import io.mosip.certify.entity.CredentialConfig;
 import io.mosip.certify.entity.attributes.Claims;
 import io.mosip.certify.repository.CredentialConfigRepository;
 import io.mosip.certify.utils.CredentialConfigMapper;
+import io.mosip.certify.utils.CredentialConfigMetadataResolver;
 import io.mosip.certify.validators.credentialconfigvalidators.LdpVcCredentialConfigValidator;
 import io.mosip.certify.validators.credentialconfigvalidators.MsoMdocCredentialConfigValidator;
 import io.mosip.certify.validators.credentialconfigvalidators.SdJwtCredentialConfigValidator;
@@ -108,7 +109,8 @@ public class CredentialConfigurationSupportedServiceImplTest {
         credentialSigningMap.put("RsaSignature2018", List.of("RS256"));
         credentialSigningMap.put("EcdsaSecp256r1Signature2019", List.of("ES256"));
         ReflectionTestUtils.setField(credentialConfigurationService, "cryptographicBindingMethodsSupportedMap", new LinkedHashMap<>());
-        ReflectionTestUtils.setField(credentialConfigurationService, "credentialSigningAlgValuesSupportedMap", credentialSigningMap);
+        ReflectionTestUtils.setField(credentialConfigurationService, "declaredSigningAlgs", new CredentialConfigMetadataResolver.DeclaredSigningAlgs(credentialSigningMap,
+                Map.of("mso_mdoc", List.of("ES256"), "dc+sd-jwt", List.of("ES256"))));
         ReflectionTestUtils.setField(credentialConfigurationService, "proofTypesSupported", new LinkedHashMap<>());
         ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper", keyAliasMapper);
         Map<String, String> authServerMapping = new HashMap<>();
@@ -426,8 +428,8 @@ public class CredentialConfigurationSupportedServiceImplTest {
         unsupportedAlgorithms.put("EcdsaSecp256r1Signature2019", List.of("UNSUPPORTED_ALG"));
         ReflectionTestUtils.setField(
                 credentialConfigurationService,
-                "credentialSigningAlgValuesSupportedMap",
-                unsupportedAlgorithms);
+                "declaredSigningAlgs",
+                new CredentialConfigMetadataResolver.DeclaredSigningAlgs(unsupportedAlgorithms, Map.of()));
 
         when(credentialConfigRepository.findAll()).thenReturn(List.of(config));
         CredentialConfigurationDTO dto = new CredentialConfigurationDTO();

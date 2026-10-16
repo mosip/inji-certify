@@ -37,30 +37,23 @@ public class CredentialConfigMetadataResolver {
 
     /**
      * mosip.certify.credential-config.credential-signing-alg-values-supported, read as two lookups: the
-     * algorithms declared for each crypto suite, and the algorithms declared for each credential format
-     * that carries no crypto suite of its own.
+     * algorithms declared for each ldp_vc crypto suite, and the algorithms declared for each credential
+     * format that carries no crypto suite of its own.
      */
     public record DeclaredSigningAlgs(Map<String, List<String>> byCryptoSuite, Map<String, List<String>> byFormat) {
     }
 
     /**
-     * Reads mosip.certify.credential-config.credential-signing-alg-values-supported in either of its shapes.
-     * <p>
-     * Grouped by credential format, the ldp_vc entry maps each crypto suite to its algorithms and the
-     * mso_mdoc and dc+sd-jwt entries each list their algorithms:
+     * Reads mosip.certify.credential-config.credential-signing-alg-values-supported, which is grouped by
+     * credential format: the ldp_vc entry maps each crypto suite to its algorithms, and the mso_mdoc and
+     * dc+sd-jwt entries each list their algorithms.
      * <pre>
      * {'ldp_vc': {'Ed25519Signature2020': {'EdDSA'}, ...}, 'mso_mdoc': {'ES256'}, 'dc+sd-jwt': {'ES256', 'EdDSA'}}
      * </pre>
-     * Keyed by crypto suite only, the original shape, the whole value maps each crypto suite to its
-     * algorithms and no format declares a list of its own:
-     * <pre>
-     * {'Ed25519Signature2020': {'EdDSA'}, 'EcdsaSecp256r1Signature2019': {'ES256'}, ...}
-     * </pre>
-     * The shape is recognised by its top-level keys, so a deployment can move to the grouped shape at its
-     * own pace.
      *
-     * @throws IllegalStateException when the property is malformed, so a deployment fails at startup
-     * rather than accepting configurations it cannot validate
+     * @throws IllegalStateException when the property is malformed, including the earlier shape keyed by
+     * crypto suite only, so a deployment fails at startup rather than accepting configurations it cannot
+     * validate
      */
     public static DeclaredSigningAlgs parseDeclaredSigningAlgs(Map<String, ?> declared) {
         Map<String, List<String>> byCryptoSuite = new LinkedHashMap<>();
@@ -69,15 +62,9 @@ public class CredentialConfigMetadataResolver {
             return new DeclaredSigningAlgs(byCryptoSuite, byFormat);
         }
 
-        boolean groupedByFormat = declared.keySet().stream().anyMatch(SIGNING_ALG_FORMATS::contains);
-        if (!groupedByFormat) {
-            declared.forEach((cryptoSuite, algs) -> byCryptoSuite.put(cryptoSuite, toAlgList(cryptoSuite, algs)));
-            return new DeclaredSigningAlgs(byCryptoSuite, byFormat);
-        }
-
         declared.forEach((format, value) -> {
             if (!SIGNING_ALG_FORMATS.contains(format)) {
-                throw new IllegalStateException("credential-signing-alg-values-supported is grouped by credential format, but "
+                throw new IllegalStateException("credential-signing-alg-values-supported must be grouped by credential format, but "
                         + format + " is not a credential format. The supported keys are: " + SIGNING_ALG_FORMATS);
             }
             if (VCFormats.LDP_VC.equals(format)) {
