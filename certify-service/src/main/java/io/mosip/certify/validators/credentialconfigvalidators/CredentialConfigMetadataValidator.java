@@ -230,9 +230,6 @@ public class CredentialConfigMetadataValidator {
     }
 
     /**
-     * A missing value and an empty one are rejected the same way, with the same message.
-     */
-    /**
      * The message for an ldp_vc crypto suite the deployment does not declare. When it declares no crypto
      * suite at all, the message says so, since the gap is in the deployment configuration rather than in
      * the request.
@@ -246,6 +243,9 @@ public class CredentialConfigMetadataValidator {
         return "Unsupported signature crypto suite: " + signatureCryptoSuite;
     }
 
+    /**
+     * A missing value and an empty one are rejected the same way, with the same message.
+     */
     private static Error missingOrEmptyError(String attribute) {
         return buildError(ErrorConstants.INVALID_REQUEST, attribute + " is mandatory and must not be empty.");
     }
