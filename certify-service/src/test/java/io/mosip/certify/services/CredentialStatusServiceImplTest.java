@@ -162,7 +162,7 @@ public class CredentialStatusServiceImplTest {
     }
 
     @Test
-    public void should_throwInvalidStatusPurposeException_when_statusPurposeIsInvalid() {
+    public void should_throwInvalidStatusPurposeExceptionException_when_statusPurposeIsInvalid() {
         String statusListCredential = "https://example.com/status-list/xyz#87823";
         UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(statusListCredential);
         request.getCredentialStatus().setStatusPurpose("invalid_purpose"); // Invalid status purpose
@@ -183,7 +183,7 @@ public class CredentialStatusServiceImplTest {
     }
 
     @Test
-    public void should_throwInvalidStatusPurposeException_when_statusPurposeNotConfigured_evenIfStoredOnStatusList() {
+    public void should_throwInvalidStatusPurposeExceptionException_when_statusPurposeNotConfigured_evenIfStoredOnStatusList() {
         String statusListCredential = "https://example.com/status-list/xyz#87823";
         UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(statusListCredential);
         request.getCredentialStatus().setStatusPurpose("suspension"); // not in the configured allowed list
@@ -272,6 +272,29 @@ public class CredentialStatusServiceImplTest {
 
         assertNotNull(response);
         assertEquals("revocation", response.getStatusPurpose());
+    }
+
+    @Test
+    public void should_throwInvalidStatusPurposeException_when_submittedPurposeDiffersExistingPurposeInStatusListCredential() {
+        // The purpose matches with configured value(s) but the new value is different to the DB stored prupose for the 
+        // status_list_credential
+        String statusListCredential = "https://example.com/status-list/xyz#87823";
+        UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(statusListCredential);
+        request.getCredentialStatus().setStatusPurpose("revocation");
+
+        StatusListCredential mockStatusListCredential = new StatusListCredential();
+        mockStatusListCredential.setId(statusListCredential);
+        mockStatusListCredential.setStatusPurpose("suspension");
+        mockStatusListCredential.setCapacityInKB(1024L);
+
+        when(statusListCredentialRepository.findById(statusListCredential)).thenReturn(Optional.of(mockStatusListCredential));
+
+        // CredentialStatusResponse response = credentialStatusService.updateCredentialStatus(request);
+        CertifyException exception = assertThrows(CertifyException.class, () ->
+                credentialStatusService.updateCredentialStatus(request));
+
+        assertEquals("invalid_status_purpose", exception.getErrorCode());
+        assertEquals("Status purpose 'revocation' does not match the status list purpose 'suspension'", exception.getMessage());
     }
 
     @Test
@@ -463,7 +486,7 @@ public class CredentialStatusServiceImplTest {
     }
 
     @Test
-    public void should_throwInvalidStatusPurposeException_when_statusPurposeDiffersOnlyByCase() {
+    public void should_throwInvalidStatusPurposeExceptionException_when_statusPurposeDiffersOnlyByCase() {
         // The configured list is documented as case-sensitive, so a capitalised variant is not a match.
         String statusListCredential = "https://example.com/status-list/xyz#87823";
         UpdateCredentialStatusRequest request = createValidUpdateCredentialRequest(statusListCredential);
