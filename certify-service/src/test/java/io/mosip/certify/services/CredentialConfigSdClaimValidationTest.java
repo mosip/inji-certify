@@ -1,6 +1,7 @@
 package io.mosip.certify.services;
 
 import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.ClaimsDTO;
 import io.mosip.certify.core.dto.ClaimsDisplayFieldsConfigDTO;
 import io.mosip.certify.core.dto.CredentialConfigurationDTO;
@@ -28,12 +29,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
- * An invalid sdClaim must be rejected when a credential configuration is added or updated.
+ * An invalid sdClaim must be rejected when a dc+sd-jwt credential configuration is added or updated.
  */
 @RunWith(MockitoJUnitRunner.class)
 public class CredentialConfigSdClaimValidationTest {
 
-    /** Literal on purpose: the constant does not exist yet. */
+    /** Literal on purpose: pins the error code clients receive, not just the constant's name. */
     private static final String INVALID_SD_CLAIM = "invalid_sd_claim";
 
     private static final String SD_JWT_KEY_ID = "sd-jwt-config";
@@ -431,14 +432,15 @@ public class CredentialConfigSdClaimValidationTest {
         assertAddAccepted("$.fullName[*]");
     }
 
+    /** sdClaim is only read for dc+sd-jwt, so other formats are not checked for it. */
     @Test
-    public void should_throwCertifyException_when_ldpVcSdClaimIsInvalid() {
-        assertAddRejected(ldpVcRequest("abcdef"), "abcdef");
+    public void should_allowCredentialConfiguration_when_ldpVcSdClaimIsInvalid() {
+        assertAddAccepted(ldpVcRequest("abcdef"));
     }
 
     @Test
-    public void should_throwCertifyException_when_msoMdocSdClaimIsInvalid() {
-        assertAddRejected(msoMdocRequest("abcdef"), "abcdef");
+    public void should_allowCredentialConfiguration_when_msoMdocSdClaimIsInvalid() {
+        assertAddAccepted(msoMdocRequest("abcdef"));
     }
 
     @Test
@@ -446,12 +448,15 @@ public class CredentialConfigSdClaimValidationTest {
         assertAddAccepted(ldpVcRequest("$.fullName, $.address.region"));
     }
 
-    /** Wrong in two ways; the cross-cutting sdClaim check runs before the format-specific one. */
+    /** Wrong in two ways; the dc+sd-jwt mandatory fields are checked before sdClaim. */
     @Test
-    public void should_reportInvalidSdClaim_when_vctIsAlsoMissing() {
+    public void should_reportMissingMandatoryFields_when_sdClaimIsAlsoInvalid() {
         CredentialConfigurationDTO request = sdJwtRequest("abcdef");
         request.setSdJwtVct(null);
-        assertAddRejected(request, "abcdef");
+        CertifyException e = assertThrows(CertifyException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+        Assert.assertEquals(ErrorConstants.DC_SD_JWT_MANDATORY_FIELDS_MISSING, e.getErrorCode());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
     }
 
     @Test

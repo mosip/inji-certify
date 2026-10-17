@@ -114,8 +114,6 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
     private void validateCredentialConfiguration(CredentialConfigurationDTO credentialConfig, boolean shouldCheckDuplicate) {
         validateCommonCredentialConfig(credentialConfig.getCredentialStatusPurposes(),credentialConfig.getVcTemplate(),credentialConfig.getQrSettings(),credentialConfig.getQrSignatureAlgo(),credentialConfig.getSignatureAlgo());
-        // sdClaim belongs to no single format, so it is checked here, ahead of the format branches.
-        SdClaimValidator.validateSdClaim(credentialConfig.getSdClaim());
 
         switch (credentialConfig.getCredentialFormat()) {
             case VCFormats.LDP_VC:
@@ -142,6 +140,8 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 if(shouldCheckDuplicate && SdJwtCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException(ErrorConstants.DC_SD_JWT_CONFIG_EXISTS, "Configuration already exists for the specified vct.");
                 }
+                // sdClaim lists the selective disclosure paths, which only dc+sd-jwt uses, so it is checked only here.
+                SdClaimValidator.validateSdClaim(credentialConfig.getSdClaim());
                 break;
             default:
                 throw new CertifyException(ErrorConstants.UNSUPPORTED_FORMAT, "Unsupported credential format: " + credentialConfig.getCredentialFormat());

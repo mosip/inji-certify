@@ -5,12 +5,8 @@ import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.utils.SDJsonUtils;
 
 /**
- * Validates the selective disclosure paths configured in {@code sdClaim} when a credential
- * configuration is added or updated.
- *
- * <p>Only what can be decided from the configured string is checked: a blank entry, or an entry that is
- * not a well formed path. Whether a path exists in the credential needs the holder's data, so that check
- * stays at VC fetch, in {@code SDJWT.createCredential}.
+ * Validates the selective disclosure paths configured in {@code sdClaim} when a dc+sd-jwt credential
+ * configuration is added or updated. Other formats do not use {@code sdClaim}, so they are not checked.
  */
 public class SdClaimValidator {
 
