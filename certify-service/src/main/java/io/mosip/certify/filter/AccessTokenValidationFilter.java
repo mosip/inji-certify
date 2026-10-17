@@ -226,7 +226,7 @@ public class AccessTokenValidationFilter extends OncePerRequestFilter {
             dpopProofValidator.validate(dpopToken, token, jwt.getClaims(), request);
 
         } else if (isDpopBoundAccessToken(jwt.getClaims())) {
-            throw new InvalidDpopHeaderException(ERROR_TOKEN_REQUIRES_DPOP);
+            throw new CertifyException(ErrorConstants.INVALID_AUTH_TOKEN, ERROR_TOKEN_REQUIRES_DPOP);
         }
     }
 

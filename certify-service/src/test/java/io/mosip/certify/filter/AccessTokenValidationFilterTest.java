@@ -319,6 +319,9 @@ class AccessTokenValidationFilterTest {
         verify(parsedAccessToken).setActive(false);
         assertEquals(AccessTokenValidationFilter.ERROR_TOKEN_REQUIRES_DPOP,
                 request.getAttribute(Constants.AUTH_ERROR_ATTRIBUTE));
+        // No proof took part, so the token error applies, not the proof error.
+        assertEquals(ErrorConstants.INVALID_AUTH_TOKEN,
+                request.getAttribute(Constants.AUTH_ERROR_CODE_ATTRIBUTE));
     }
 
     @Test

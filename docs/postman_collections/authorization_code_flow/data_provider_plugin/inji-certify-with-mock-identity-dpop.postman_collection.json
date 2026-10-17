@@ -1313,12 +1313,18 @@
 										"exec": [
 											"pm.test('status is 401', function () { pm.response.to.have.status(401); });",
 											"",
+											"pm.test('error is invalid_token, not invalid_dpop_proof - no proof was sent', function () {",
+											"    pm.expect(pm.response.json().error).to.equal('invalid_token');",
+											"});",
+											"",
 											"pm.test('error_description matches', function () {",
 											"    pm.expect(pm.response.json().error_description).to.match(/cannot be presented as a Bearer token/);",
 											"});",
 											"",
-											"pm.test('challenges in the scheme the caller used', function () {",
-											"    pm.expect(pm.response.headers.get('WWW-Authenticate')).to.be.a('string');",
+											"pm.test('error on the Bearer challenge, algs on a separate DPoP challenge', function () {",
+											"    var challenge = pm.response.headers.get('WWW-Authenticate');",
+											"    pm.expect(challenge).to.match(/^Bearer error=\"invalid_token\"/);",
+											"    pm.expect(challenge).to.match(/, DPoP algs=\"[^\"]+\"$/);",
 											"});"
 										]
 									}

@@ -578,18 +578,32 @@ paths:
           description: >-
             The access token or the DPoP proof was rejected. The WWW-Authenticate header
             challenges in the scheme the caller used, so a DPoP client is never told to
-            retry as Bearer - which it must not do for a bound token.
+            retry as Bearer - which it must not do for a bound token. invalid_dpop_proof
+            means the DPoP proof failed one of the checks of RFC 9449 section 4.3. A
+            sender-constrained (cnf.jkt) token presented as Bearer answers invalid_token
+            instead, because no proof took part in that request.
           headers:
             WWW-Authenticate:
               description: >-
                 Challenge in the caller's scheme, carrying error and error_description.
-                For invalid_dpop_proof it also carries algs, listing the signature
-                algorithms this issuer accepts on a proof.
+                algs lists the signature algorithms this issuer accepts on a proof and is a
+                DPoP parameter only: after a DPoP error it is on the same challenge; after a
+                Bearer error it is on a separate DPoP challenge, telling the client it can
+                retry under DPoP (RFC 9449 section 7.2).
               schema:
                 type: string
-              example: >-
-                DPoP error="invalid_dpop_proof", error_description="DPoP proof htu does not
-                match the request URI", algs="ES256 ES384 ES512 RS256 PS256 EdDSA"
+              examples:
+                invalidDpopProof:
+                  summary: The DPoP proof failed a check
+                  value: >-
+                    DPoP error="invalid_dpop_proof", error_description="DPoP proof htu does
+                    not match the request URI", algs="ES256 ES384 ES512 RS256 PS256 EdDSA"
+                boundTokenAsBearer:
+                  summary: A DPoP-bound access token was presented as Bearer
+                  value: >-
+                    Bearer error="invalid_token", error_description="This access token is
+                    DPoP-bound and cannot be presented as a Bearer token.", DPoP
+                    algs="ES256 ES384 ES512 RS256 PS256 EdDSA"
           content:
             '*/*':
               schema:
@@ -1462,8 +1476,8 @@ components:
       bearerFormat: JWT
       description: >-
         A plain access token. Accepted only when the token is not sender-constrained: a
-        token carrying a cnf.jkt claim is refused under this scheme, because honouring it
-        would discard the very protection that binding provides.
+        token carrying a cnf.jkt claim is refused under this scheme with invalid_token,
+        because honouring it would discard the very protection that binding provides.
     dpopAuth:
       type: http
       scheme: DPoP
