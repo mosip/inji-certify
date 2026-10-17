@@ -39,7 +39,7 @@ public final class BitStringStatusListUtils {
                 statusMap.size(), capacityInKB);
 
         try {
-            long actualCapacity = safeConvertKBToBits(capacityInKB);
+            long actualCapacity = safeConvertKBToBitsInternal(capacityInKB);
             BitSet bitstring = decodeEncodedList(encodedStatusList, (int) actualCapacity);
             for (Map.Entry<Long, Boolean> entry : statusMap.entrySet()) {
                 long index = entry.getKey();
@@ -74,7 +74,7 @@ public final class BitStringStatusListUtils {
      */
     public static String createEmptyEncodedList(long capacityInKB) {
         log.debug("Creating empty encoded list with capacity {}", capacityInKB);
-        long actualCapacity = safeConvertKBToBits(capacityInKB);
+        long actualCapacity = safeConvertKBToBitsInternal(capacityInKB);
         BitSet emptyBitstring = new BitSet((int) actualCapacity);
         byte[] emptyByteArray = convertBitstringToByteArray(emptyBitstring, (int) actualCapacity);
         return "u" + compressAndEncode(emptyByteArray);
@@ -172,7 +172,17 @@ public final class BitStringStatusListUtils {
      * @return Capacity in bits
      * @throws CertifyException if capacity is negative, overflow occurs, or result exceeds BitSet limits
      */
-    private static long safeConvertKBToBits(long capacityInKB) {
+    public static long safeConvertKBToBits(Long capacityInKB) {
+        // Handle null capacity
+        if (capacityInKB == null) {
+            log.error("StatusList capacity must not be null");
+            throw new CertifyException(ErrorConstants.STATUS_LIST_CAPACITY_MISCONFIGURED, "StatusList capacity must not be null");
+        }
+
+        return safeConvertKBToBitsInternal(capacityInKB);
+    }
+
+    private static long safeConvertKBToBitsInternal(long capacityInKB) {
         // Check for negative input
         if (capacityInKB < 0) {
             log.error("StatusList capacity must not be a negative value: {}", capacityInKB);
