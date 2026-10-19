@@ -1,106 +1,73 @@
 package io.mosip.certify.utils;
 
+import io.mosip.certify.core.constants.VCFormats;
+import io.mosip.certify.entity.CredentialConfig;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.assertThrows;
 
 /**
- * Covers reading mosip.certify.credential-config.credential-signing-alg-values-supported, which must be
- * grouped by credential format.
+ * Covers what a configuration advertises in credential_signing_alg_values_supported, which is read from
+ * the configuration alone and never from the deployment configuration.
  */
 public class CredentialConfigMetadataResolverTest {
 
-    /**
-     * The earlier shape, keyed by crypto suite only, is no longer read.
-     */
     @Test
-    public void should_failStartup_when_propertyIsKeyedByCryptoSuite() {
-        Map<String, Object> declared = new LinkedHashMap<>();
-        declared.put("Ed25519Signature2020", List.of("EdDSA"));
-        declared.put("EcdsaSecp256r1Signature2019", List.of("ES256"));
+    public void should_advertiseCryptoSuite_when_formatIsLdpVc() {
+        CredentialConfig config = config(VCFormats.LDP_VC, "eddsa-rdfc-2022", "EdDSA");
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class,
-                () -> CredentialConfigMetadataResolver.parseDeclaredSigningAlgs(declared));
-
-        Assert.assertTrue(exception.getMessage().contains("must be grouped by credential format"));
+        Assert.assertEquals(List.of("eddsa-rdfc-2022"), CredentialConfigMetadataResolver.resolveAdvertisedSigningAlgs(config));
     }
 
     @Test
-    public void should_splitSuitesAndFormats_when_propertyIsGroupedByFormat() {
-        Map<String, Object> ldpVcSuites = new LinkedHashMap<>();
-        ldpVcSuites.put("Ed25519Signature2020", List.of("EdDSA"));
-        ldpVcSuites.put("eddsa-rdfc-2022", List.of("EdDSA"));
-        Map<String, Object> declared = new LinkedHashMap<>();
-        declared.put("ldp_vc", ldpVcSuites);
-        declared.put("mso_mdoc", List.of("ES256"));
-        declared.put("dc+sd-jwt", List.of("ES256", "EdDSA"));
+    public void should_advertiseSignatureAlgo_when_ldpVcHasNoCryptoSuite() {
+        CredentialConfig config = config(VCFormats.LDP_VC, null, "ES256");
 
-        CredentialConfigMetadataResolver.DeclaredSigningAlgs result =
-                CredentialConfigMetadataResolver.parseDeclaredSigningAlgs(declared);
+        Assert.assertEquals(List.of("ES256"), CredentialConfigMetadataResolver.resolveAdvertisedSigningAlgs(config));
+    }
 
-        Assert.assertEquals(Map.of("Ed25519Signature2020", List.of("EdDSA"), "eddsa-rdfc-2022", List.of("EdDSA")),
-                result.byCryptoSuite());
-        Assert.assertEquals(Map.of("mso_mdoc", List.of("ES256"), "dc+sd-jwt", List.of("ES256", "EdDSA")),
-                result.byFormat());
+    @Test
+    public void should_advertiseSignatureAlgo_when_formatIsDcSdJwt() {
+        CredentialConfig config = config(VCFormats.DC_SD_JWT, null, "ES256");
+
+        Assert.assertEquals(List.of("ES256"), CredentialConfigMetadataResolver.resolveAdvertisedSigningAlgs(config));
     }
 
     /**
-     * The property need not declare every format; one it leaves out has no algorithms declared.
+     * A configuration stored before mso_mdoc ignored the crypto suite still advertises its signatureAlgo.
      */
     @Test
-    public void should_declareOnlyTheGivenFormats_when_propertyOmitsSome() {
-        Map<String, Object> declared = new LinkedHashMap<>();
-        declared.put("ldp_vc", Map.of("Ed25519Signature2020", List.of("EdDSA")));
+    public void should_advertiseSignatureAlgo_when_formatIsMsoMdocWithStoredCryptoSuite() {
+        CredentialConfig config = config(VCFormats.MSO_MDOC, "EcdsaSecp256r1Signature2019", "ES256");
 
-        CredentialConfigMetadataResolver.DeclaredSigningAlgs result =
-                CredentialConfigMetadataResolver.parseDeclaredSigningAlgs(declared);
-
-        Assert.assertEquals(Map.of("Ed25519Signature2020", List.of("EdDSA")), result.byCryptoSuite());
-        Assert.assertTrue(result.byFormat().isEmpty());
+        Assert.assertEquals(List.of("ES256"), CredentialConfigMetadataResolver.resolveAdvertisedSigningAlgs(config));
     }
 
     /**
-     * A crypto suite placed beside the formats rather than under ldp_vc fails at startup.
+     * The value advertised is the configuration's own, whatever was stored for the attribute earlier, so an
+     * existing configuration needs no re-submission.
      */
     @Test
-    public void should_failStartup_when_propertyHasAKeyThatIsNotAFormat() {
-        Map<String, Object> declared = new LinkedHashMap<>();
-        declared.put("mso_mdoc", List.of("ES256"));
-        declared.put("Ed25519Signature2020", List.of("EdDSA"));
+    public void should_ignoreStoredSigningAlgs_when_resolvingAdvertisedValue() {
+        CredentialConfig config = config(VCFormats.DC_SD_JWT, null, "EdDSA");
+        config.setCredentialSigningAlgValuesSupported(List.of("RS256", "ES256"));
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class,
-                () -> CredentialConfigMetadataResolver.parseDeclaredSigningAlgs(declared));
-
-        Assert.assertTrue(exception.getMessage().contains("Ed25519Signature2020 is not a credential format"));
+        Assert.assertEquals(List.of("EdDSA"), CredentialConfigMetadataResolver.resolveAdvertisedSigningAlgs(config));
     }
 
     @Test
-    public void should_failStartup_when_ldpVcIsNotASuiteMap() {
-        IllegalStateException exception = assertThrows(IllegalStateException.class,
-                () -> CredentialConfigMetadataResolver.parseDeclaredSigningAlgs(Map.of("ldp_vc", List.of("EdDSA"))));
+    public void should_advertiseNothing_when_signatureAlgoIsMissing() {
+        CredentialConfig config = config(VCFormats.DC_SD_JWT, null, null);
 
-        Assert.assertTrue(exception.getMessage().contains("must map each crypto suite to its algorithms"));
+        Assert.assertTrue(CredentialConfigMetadataResolver.resolveAdvertisedSigningAlgs(config).isEmpty());
     }
 
-    @Test
-    public void should_failStartup_when_formatIsNotGivenAList() {
-        IllegalStateException exception = assertThrows(IllegalStateException.class,
-                () -> CredentialConfigMetadataResolver.parseDeclaredSigningAlgs(Map.of("mso_mdoc", "ES256")));
-
-        Assert.assertTrue(exception.getMessage().contains("mso_mdoc must be a list of algorithms"));
-    }
-
-    @Test
-    public void should_returnEmptyLookups_when_propertyIsAbsent() {
-        CredentialConfigMetadataResolver.DeclaredSigningAlgs result =
-                CredentialConfigMetadataResolver.parseDeclaredSigningAlgs(null);
-
-        Assert.assertTrue(result.byCryptoSuite().isEmpty());
-        Assert.assertTrue(result.byFormat().isEmpty());
+    private static CredentialConfig config(String format, String signatureCryptoSuite, String signatureAlgo) {
+        CredentialConfig config = new CredentialConfig();
+        config.setCredentialFormat(format);
+        config.setSignatureCryptoSuite(signatureCryptoSuite);
+        config.setSignatureAlgo(signatureAlgo);
+        return config;
     }
 }
