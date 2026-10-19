@@ -63,66 +63,56 @@ public class CredentialConfigMetadataValidator {
      * instead). It is mandatory, and nothing is filled in from the deployment configuration when it is
      * left out.
      * <p>
-     * An ldp_vc configuration is checked against the algorithms declared for its crypto suite. Every
-     * other format is checked against the algorithms declared for the format itself, so a format the
-     * deployment declares nothing for accepts no algorithm.
+     * An ldp_vc configuration is checked against the algorithms declared for its crypto suite in
+     * mosip.certify.credential-config.credential-signing-alg-values-supported. mso_mdoc and dc+sd-jwt
+     * carry no crypto suite, so they are checked against mosip.certify.signature-algo.key-alias-mapper
+     * only: an algorithm the deployment holds no signing key for cannot be used.
      */
     public static void validateSigningAlg(String signatureAlgo, String credentialFormat, String signatureCryptoSuite,
                                           Map<String, List<String>> declaredSigningAlgsByCryptoSuite,
-                                          Map<String, List<String>> declaredSigningAlgsByFormat,
                                           Map<String, List<List<String>>> keyAliasMapper,
                                           List<Error> errors) {
         if (signatureAlgo == null || signatureAlgo.isEmpty()) {
-            errors.add(missingOrEmptyError(SIGNING_ALG_ATTRIBUTE));
+            errors.add(buildError(mandatoryFieldsMissingCode(credentialFormat),
+                    SIGNING_ALG_ATTRIBUTE + " is mandatory for the " + credentialFormat + " format."));
             return;
         }
 
         if (!VCFormats.LDP_VC.equals(credentialFormat)) {
-            // A format the property leaves out has no algorithms declared, so every value is rejected.
-            List<String> declaredForFormat = declaredSigningAlgsByFormat.get(credentialFormat);
-            if (declaredForFormat == null || declaredForFormat.isEmpty()) {
-                errors.add(buildError(ErrorConstants.UNSUPPORTED_CREDENTIAL_SIGNING_ALG,
-                        "No credential signing algorithms are configured for the credential format " + credentialFormat
-                                + " in this deployment, so " + signatureAlgo + " cannot be used."));
-                return;
+            List<List<String>> keyAliases = keyAliasMapper.get(signatureAlgo);
+            if (keyAliases == null || keyAliases.isEmpty()) {
+                errors.add(buildError(ErrorConstants.KEY_CHOOSER_CONFIG_NOT_FOUND,
+                        "No key chooser configuration found for the signature algorithm " + signatureAlgo
+                                + ". The supported values are: " + keyAliasMapper.keySet()));
             }
-            validateAgainstFormat(signatureAlgo, credentialFormat, signatureCryptoSuite, declaredForFormat,
-                    keyAliasMapper, errors);
             return;
         }
 
         List<String> declared = signatureCryptoSuite == null ? null : declaredSigningAlgsByCryptoSuite.get(signatureCryptoSuite);
         if (declared == null) {
             errors.add(buildError(ErrorConstants.UNSUPPORTED_CRYPTO_SUITE,
-                    unsupportedCryptoSuiteMessage(signatureCryptoSuite, declaredSigningAlgsByCryptoSuite)));
+                    "Unsupported signature crypto suite: " + signatureCryptoSuite));
             return;
         }
 
         if (!declared.contains(signatureAlgo)) {
-            errors.add(buildError(ErrorConstants.UNSUPPORTED_CREDENTIAL_SIGNING_ALG,
-                    "The credential signing algorithm " + signatureAlgo + " is not supported for the crypto suite "
+            errors.add(buildError(ErrorConstants.UNSUPPORTED_SIGNATURE_ALGO,
+                    "Signature algorithm " + signatureAlgo + " is not supported for the crypto suite: "
                             + signatureCryptoSuite + ". The supported values are: " + declared));
         }
     }
 
     /**
-     * mso_mdoc and dc+sd-jwt each declare their own algorithms, so the value is checked against its
-     * format directly rather than through a crypto suite. Both are signed with a key the deployment must also hold, so a declared algorithm with no
-     * signing key is still rejected.
+     * A missing signatureAlgo is reported with the format's own mandatory-fields code, as the format's
+     * mandatory-field check does.
      */
-    private static void validateAgainstFormat(String signatureAlgo, String credentialFormat, String signatureCryptoSuite,
-                                              List<String> declaredForFormat,
-                                              Map<String, List<List<String>>> keyAliasMapper,
-                                              List<Error> errors) {
-        if (!declaredForFormat.contains(signatureAlgo)) {
-            errors.add(buildError(ErrorConstants.UNSUPPORTED_CREDENTIAL_SIGNING_ALG,
-                    "The credential signing algorithm " + signatureAlgo + " is not supported for the credential format "
-                            + credentialFormat + ". The supported values are: " + declaredForFormat));
-        } else if (signatureCryptoSuite == null && !keyAliasMapper.containsKey(signatureAlgo)) {
-            errors.add(buildError(ErrorConstants.UNSUPPORTED_CREDENTIAL_SIGNING_ALG,
-                    "No signing key is available for the credential signing algorithm " + signatureAlgo
-                            + ". The supported values are: " + keyAliasMapper.keySet()));
-        }
+    private static String mandatoryFieldsMissingCode(String credentialFormat) {
+        return switch (credentialFormat) {
+            case VCFormats.LDP_VC -> ErrorConstants.LDP_VC_MANDATORY_FIELDS_MISSING;
+            case VCFormats.MSO_MDOC -> ErrorConstants.MSO_MDOC_MANDATORY_FIELDS_MISSING;
+            case VCFormats.DC_SD_JWT -> ErrorConstants.DC_SD_JWT_MANDATORY_FIELDS_MISSING;
+            default -> ErrorConstants.INVALID_REQUEST;
+        };
     }
 
     /**
@@ -227,20 +217,6 @@ public class CredentialConfigMetadataValidator {
         }
         errors.add(missingOrEmptyError(attribute));
         return true;
-    }
-
-    /**
-     * The message for an ldp_vc crypto suite the deployment does not declare. When it declares no crypto
-     * suite at all, the message says so, since the gap is in the deployment configuration rather than in
-     * the request.
-     */
-    public static String unsupportedCryptoSuiteMessage(String signatureCryptoSuite,
-                                                       Map<String, List<String>> declaredSigningAlgsByCryptoSuite) {
-        if (declaredSigningAlgsByCryptoSuite.isEmpty()) {
-            return "No crypto suites are configured for the credential format " + VCFormats.LDP_VC
-                    + " in this deployment, so " + signatureCryptoSuite + " cannot be used.";
-        }
-        return "Unsupported signature crypto suite: " + signatureCryptoSuite;
     }
 
     /**

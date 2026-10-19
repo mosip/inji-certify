@@ -68,8 +68,8 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     @Value("#{${mosip.certify.credential-config.cryptographic-binding-methods-supported}}")
     private LinkedHashMap<String, List<String>> cryptographicBindingMethodsSupportedMap;
 
-    @Autowired
-    private CredentialConfigMetadataResolver.DeclaredSigningAlgs declaredSigningAlgs;
+    @Value("#{${mosip.certify.credential-config.credential-signing-alg-values-supported}}")
+    private LinkedHashMap<String, List<String>> credentialSigningAlgValuesSupportedMap;
 
     @Value("#{${mosip.certify.credential-config.proof-types-supported}}")
     private LinkedHashMap<String, Object> proofTypesSupported;
@@ -118,7 +118,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         switch (credentialConfig.getCredentialFormat()) {
             case VCFormats.LDP_VC:
                 if (!LdpVcCredentialConfigValidator.isValidCheck(credentialConfig)) {
-                    throw new CertifyException(ErrorConstants.LDP_VC_MANDATORY_FIELDS_MISSING, "Fields context, credentialType, and signatureCryptoSuite are mandatory for the ldp_vc format.");
+                    throw new CertifyException(ErrorConstants.LDP_VC_MANDATORY_FIELDS_MISSING, "Fields context, credentialType, signatureCryptoSuite and signatureAlgo are mandatory for the ldp_vc format.");
                 }
                 if(shouldCheckDuplicate && LdpVcCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException(ErrorConstants.LDP_VC_CONFIG_EXISTS, "Configuration already exists for the specified context and credentialType.");
@@ -127,11 +127,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 break;
             case VCFormats.MSO_MDOC:
                 if (!MsoMdocCredentialConfigValidator.isValidCheck(credentialConfig)) {
-                    throw new CertifyException(ErrorConstants.MSO_MDOC_MANDATORY_FIELDS_MISSING, "Fields doctype and signatureAlgo are mandatory for the mso_mdoc format.");
-                }
-                // An mdoc's issuerAuth is signed with signatureAlgo alone, so a crypto suite has no meaning here.
-                if (credentialConfig.getSignatureCryptoSuite() != null) {
-                    throw new CertifyException(ErrorConstants.INVALID_REQUEST, "signatureCryptoSuite is not supported for the mso_mdoc format, which is signed with signatureAlgo.");
+                    throw new CertifyException(ErrorConstants.MSO_MDOC_MANDATORY_FIELDS_MISSING, "Fields doctype, signatureCryptoSuite and signatureAlgo are mandatory for the mso_mdoc format.");
                 }
                 if(shouldCheckDuplicate && MsoMdocCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException(ErrorConstants.MSO_MDOC_CONFIG_EXISTS, "Configuration already exists for the specified doctype.");
@@ -191,18 +187,12 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         String signatureCryptoSuite = credentialConfig.getSignatureCryptoSuite();
         String signatureAlgo = credentialConfig.getSignatureAlgo();
 
-        // The signing algorithm is mandatory and is never filled in from the deployment configuration.
-        if(signatureAlgo == null || signatureAlgo.isEmpty()) {
-            throw new CertifyException(ErrorConstants.INVALID_REQUEST, "signatureAlgo is mandatory and must not be empty.");
-        }
-
         if(signatureCryptoSuite != null) {
-            if(!declaredSigningAlgs.byCryptoSuite().containsKey(signatureCryptoSuite)) {
-                throw new CertifyException(ErrorConstants.UNSUPPORTED_CRYPTO_SUITE,
-                        CredentialConfigMetadataValidator.unsupportedCryptoSuiteMessage(signatureCryptoSuite, declaredSigningAlgs.byCryptoSuite()));
+            if(!credentialSigningAlgValuesSupportedMap.containsKey(signatureCryptoSuite)) {
+                throw new CertifyException(ErrorConstants.UNSUPPORTED_CRYPTO_SUITE, "Unsupported signature crypto suite: " + signatureCryptoSuite);
             }
 
-            List<String> signatureAlgos = declaredSigningAlgs.byCryptoSuite().get(signatureCryptoSuite);
+            List<String> signatureAlgos = credentialSigningAlgValuesSupportedMap.get(signatureCryptoSuite);
             if(!signatureAlgos.contains(signatureAlgo)) {
                 throw new CertifyException(ErrorConstants.UNSUPPORTED_SIGNATURE_ALGO, "Signature algorithm " + signatureAlgo + " is not supported for the crypto suite: " + signatureCryptoSuite);
             }
@@ -244,6 +234,11 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
      * sees the whole payload's problems at once and nothing is partially saved.
      */
     private void validateAndApplyCredentialConfigMetadataAttributes(CredentialConfigurationDTO request, CredentialConfig credentialConfig) {
+        // An mdoc's issuerAuth is signed with signatureAlgo alone, so the crypto suite an mso_mdoc request
+        // must carry is not validated, and never stored.
+        if (VCFormats.MSO_MDOC.equals(credentialConfig.getCredentialFormat())) {
+            credentialConfig.setSignatureCryptoSuite(null);
+        }
         List<String> bindingMethods = getDistinct(request.getCryptographicBindingMethodsSupported());
         String signatureAlgo = credentialConfig.getSignatureAlgo();
         Map<String, Object> proofTypes = getDistinctProofSigningAlgs(request.getProofTypesSupported());
@@ -253,9 +248,9 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 credentialConfig.getCredentialFormat(), cryptographicBindingMethodsSupportedMap, errors);
         int errorsBeforeSigningAlg = errors.size();
         CredentialConfigMetadataValidator.validateSigningAlg(signatureAlgo, credentialConfig.getCredentialFormat(),
-                credentialConfig.getSignatureCryptoSuite(), declaredSigningAlgs.byCryptoSuite(),
-                declaredSigningAlgs.byFormat(), keyAliasMapper, errors);
-        // An algorithm already rejected by the allow-list is not reported a second time by the COSE check.
+                credentialConfig.getSignatureCryptoSuite(), credentialSigningAlgValuesSupportedMap,
+                keyAliasMapper, errors);
+        // An algorithm already rejected above is not reported a second time by the COSE check.
         if (errors.size() == errorsBeforeSigningAlg) {
             CredentialConfigMetadataValidator.validateCoseSigningAlg(signatureAlgo,
                     credentialConfig.getCredentialFormat(), COSE_ALGORITHM_INTEGER_MAP.keySet(), errors);
@@ -268,7 +263,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
         credentialConfig.setCryptographicBindingMethodsSupported(bindingMethods);
         credentialConfig.setCredentialSigningAlgValuesSupported(
-                CredentialConfigMetadataResolver.resolveAdvertisedSigningAlgs(credentialConfig, declaredSigningAlgs.byCryptoSuite()));
+                CredentialConfigMetadataResolver.resolveAdvertisedSigningAlgs(credentialConfig));
         credentialConfig.setProofTypesSupported(proofTypes);
     }
 
@@ -465,7 +460,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         CredentialConfigurationSupportedDTO dto = mapToSupportedDTO(credentialConfig);
         // The configuration advertises what it signs with - its crypto suite for ldp_vc, its algorithm
         // otherwise - so a wallet is never told of something the credential is not actually signed with.
-        List<String> algs = CredentialConfigMetadataResolver.resolveAdvertisedSigningAlgs(credentialConfig, declaredSigningAlgs.byCryptoSuite());
+        List<String> algs = CredentialConfigMetadataResolver.resolveAdvertisedSigningAlgs(credentialConfig);
         if (algs.isEmpty()) {
             algs = null;
         }

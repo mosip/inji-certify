@@ -10,19 +10,18 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Reads what the deployment declares for cryptographic_binding_methods_supported,
- * credential_signing_alg_values_supported and proof_types_supported, and resolves the values a stored
- * credential configuration advertises.
+ * Reads what the deployment declares for cryptographic_binding_methods_supported and
+ * proof_types_supported, and resolves the values a stored credential configuration advertises.
  * <p>
- * A configuration written through the API always stores all three, and they are advertised as stored.
- * Configurations created before these attributes were stored carry no value, or a crypto suite name in
- * place of the signing algorithms, and are resolved from the deployment configuration so they keep
- * advertising what they always have, with no data migration. Nothing here is used to fill in a value
- * on write.
+ * A configuration written through the API always stores both, and they are advertised as stored.
+ * Configurations created before these attributes were stored carry no value, and are resolved from the
+ * deployment configuration so they keep advertising what they always have, with no data migration.
+ * credential_signing_alg_values_supported is never resolved from the deployment configuration: it is
+ * read from the configuration's own crypto suite or signatureAlgo. Nothing here is used to fill in a
+ * value on write.
  * <p>
  * This is the counterpart to CredentialConfigMetadataValidator: this class answers what the deployment
  * declares, the validator answers whether a requested value is among them. The declared values are
@@ -30,62 +29,7 @@ import java.util.stream.Collectors;
  */
 public class CredentialConfigMetadataResolver {
 
-    private static final Set<String> SIGNING_ALG_FORMATS = Set.of(VCFormats.LDP_VC, VCFormats.MSO_MDOC, VCFormats.DC_SD_JWT);
-
     private CredentialConfigMetadataResolver() {
-    }
-
-    /**
-     * mosip.certify.credential-config.credential-signing-alg-values-supported, read as two lookups: the
-     * algorithms declared for each ldp_vc crypto suite, and the algorithms declared for each credential
-     * format that carries no crypto suite of its own.
-     */
-    public record DeclaredSigningAlgs(Map<String, List<String>> byCryptoSuite, Map<String, List<String>> byFormat) {
-    }
-
-    /**
-     * Reads mosip.certify.credential-config.credential-signing-alg-values-supported, which is grouped by
-     * credential format: the ldp_vc entry maps each crypto suite to its algorithms, and the mso_mdoc and
-     * dc+sd-jwt entries each list their algorithms.
-     * <pre>
-     * {'ldp_vc': {'Ed25519Signature2020': {'EdDSA'}, ...}, 'mso_mdoc': {'ES256'}, 'dc+sd-jwt': {'ES256', 'EdDSA'}}
-     * </pre>
-     *
-     * @throws IllegalStateException when the property is malformed, including the earlier shape keyed by
-     * crypto suite only, so a deployment fails at startup rather than accepting configurations it cannot
-     * validate
-     */
-    public static DeclaredSigningAlgs parseDeclaredSigningAlgs(Map<String, ?> declared) {
-        Map<String, List<String>> byCryptoSuite = new LinkedHashMap<>();
-        Map<String, List<String>> byFormat = new LinkedHashMap<>();
-        if (declared == null) {
-            return new DeclaredSigningAlgs(byCryptoSuite, byFormat);
-        }
-
-        declared.forEach((format, value) -> {
-            if (!SIGNING_ALG_FORMATS.contains(format)) {
-                throw new IllegalStateException("credential-signing-alg-values-supported must be grouped by credential format, but "
-                        + format + " is not a credential format. The supported keys are: " + SIGNING_ALG_FORMATS);
-            }
-            if (VCFormats.LDP_VC.equals(format)) {
-                if (!(value instanceof Map<?, ?> suites)) {
-                    throw new IllegalStateException("credential-signing-alg-values-supported for " + VCFormats.LDP_VC
-                            + " must map each crypto suite to its algorithms.");
-                }
-                suites.forEach((cryptoSuite, algs) ->
-                        byCryptoSuite.put(String.valueOf(cryptoSuite), toAlgList(String.valueOf(cryptoSuite), algs)));
-            } else {
-                byFormat.put(format, toAlgList(format, value));
-            }
-        });
-        return new DeclaredSigningAlgs(byCryptoSuite, byFormat);
-    }
-
-    private static List<String> toAlgList(String key, Object algs) {
-        if (!(algs instanceof Collection<?> values)) {
-            throw new IllegalStateException("credential-signing-alg-values-supported for " + key + " must be a list of algorithms.");
-        }
-        return values.stream().map(String::valueOf).collect(Collectors.toList());
     }
 
     /**
@@ -98,72 +42,23 @@ public class CredentialConfigMetadataResolver {
     }
 
     /**
-     * The algorithms declared for the crypto suite, rather than the crypto suite name itself, so that
-     * what is advertised is an algorithm value such as EdDSA and not a suite such as Ed25519Signature2020.
-     */
-    public static List<String> deriveSigningAlgs(String signatureCryptoSuite, String signatureAlgo,
-                                                 Map<String, List<String>> declaredSigningAlgsByCryptoSuite) {
-        if (signatureCryptoSuite != null) {
-            List<String> declared = declaredSigningAlgsByCryptoSuite.get(signatureCryptoSuite);
-            if (declared != null) {
-                return new ArrayList<>(declared);
-            }
-        }
-        return signatureAlgo == null ? new ArrayList<>() : new ArrayList<>(List.of(signatureAlgo));
-    }
-
-    /**
      * What a configuration advertises in credential_signing_alg_values_supported, which is also what is
-     * stored for it: the one value it is signed with.
+     * stored for it: the one value it is signed with, taken from the configuration alone and never from
+     * the deployment configuration.
      * <p>
      * An ldp_vc configuration advertises its crypto suite, such as Ed25519Signature2020 or
      * eddsa-rdfc-2022, per OpenID4VCI 1.0 Appendix A.1.2.2, since a JWS algorithm alone can stand for
-     * several suites. Every other format advertises its signatureAlgo. A configuration created before
-     * signatureAlgo was mandatory may carry none, and keeps advertising what it always has.
+     * several suites. Every other format, and an ldp_vc configuration with no crypto suite, advertises its
+     * signatureAlgo. Because both are read from the configuration itself, an existing configuration
+     * advertises them without being re-submitted.
      */
-    public static List<String> resolveAdvertisedSigningAlgs(CredentialConfig credentialConfig,
-                                                            Map<String, List<String>> declaredSigningAlgsByCryptoSuite) {
+    public static List<String> resolveAdvertisedSigningAlgs(CredentialConfig credentialConfig) {
         String signatureCryptoSuite = credentialConfig.getSignatureCryptoSuite();
-        if (VCFormats.LDP_VC.equals(credentialConfig.getCredentialFormat())
-                && signatureCryptoSuite != null && !signatureCryptoSuite.isEmpty()) {
-            return new ArrayList<>(List.of(signatureCryptoSuite));
-        }
-        String signatureAlgo = credentialConfig.getSignatureAlgo();
-        if (signatureAlgo != null && !signatureAlgo.isEmpty()) {
-            return new ArrayList<>(List.of(signatureAlgo));
-        }
-        return resolveStoredSigningAlgs(credentialConfig, declaredSigningAlgsByCryptoSuite);
-    }
-
-    /**
-     * Reads the stored signing algorithms, translating the crypto suite names written by configurations
-     * created before those values were stored as algorithms. Existing configurations therefore keep
-     * advertising exactly what they advertised before, with no data migration.
-     */
-    public static List<String> resolveStoredSigningAlgs(CredentialConfig credentialConfig,
-                                                        Map<String, List<String>> declaredSigningAlgsByCryptoSuite) {
-        List<String> stored = credentialConfig.getCredentialSigningAlgValuesSupported();
-        if (stored == null || stored.isEmpty()) {
-            return deriveSigningAlgs(credentialConfig.getSignatureCryptoSuite(),
-                    credentialConfig.getSignatureAlgo(), declaredSigningAlgsByCryptoSuite);
-        }
-
-        List<String> resolved = new ArrayList<>();
-        for (String value : stored) {
-            if (value == null) {
-                continue;
-            }
-            List<String> algsForSuite = declaredSigningAlgsByCryptoSuite.get(value);
-            if (algsForSuite != null) {
-                resolved.addAll(algsForSuite);
-            } else {
-                resolved.add(value);
-            }
-        }
-        return resolved.isEmpty()
-                ? deriveSigningAlgs(credentialConfig.getSignatureCryptoSuite(),
-                        credentialConfig.getSignatureAlgo(), declaredSigningAlgsByCryptoSuite)
-                : resolved;
+        String advertised = VCFormats.LDP_VC.equals(credentialConfig.getCredentialFormat())
+                && signatureCryptoSuite != null && !signatureCryptoSuite.isEmpty()
+                ? signatureCryptoSuite
+                : credentialConfig.getSignatureAlgo();
+        return advertised == null || advertised.isEmpty() ? new ArrayList<>() : new ArrayList<>(List.of(advertised));
     }
 
     /**

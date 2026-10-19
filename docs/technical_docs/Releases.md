@@ -53,23 +53,13 @@ Replace `$velocityCount` with `$foreach.count`, and `$velocityHasNext` with `$fo
 
 `credentialSigningAlgValuesSupported` is no longer part of the request; a request that still sends it is rejected with `invalid_request` as an unrecognised field. What the credential issuer metadata advertises in `credential_signing_alg_values_supported` is derived from the configuration instead, so it is always what the credential is signed with:
 
-- `ldp_vc` advertises its crypto suite, for example `Ed25519Signature2020`, as OpenID4VCI 1.0 Appendix A.1.2.2 requires, where it previously advertised a JWS algorithm such as `EdDSA`. Existing `ldp_vc` configurations advertise their crypto suite without being re-submitted.
+- `ldp_vc` advertises its crypto suite, for example `Ed25519Signature2020`, as OpenID4VCI 1.0 Appendix A.1.2.2 requires ([#1110](https://github.com/inji/inji-certify/issues/1110)), where it previously advertised a JWS algorithm such as `EdDSA`.
 - `dc+sd-jwt` advertises its `signatureAlgo`, and `mso_mdoc` the COSE identifier of its `signatureAlgo`, as before.
 
-`mso_mdoc` is signed with `signatureAlgo` alone, so it now requires `signatureAlgo` in place of `signatureCryptoSuite`, and a request that sends `signatureCryptoSuite` is rejected with `invalid_request`.
+Nothing is resolved from the properties for it any more. Existing configurations advertise their own signing algorithm (or crypto suite for `ldp_vc`) without being re-submitted.
 
-`mosip.certify.credential-config.credential-signing-alg-values-supported` is now grouped by credential format: the crypto suites move under `'ldp_vc'`, and `mso_mdoc` and `dc+sd-jwt` get their own list of allowed algorithms. A format left out of the property accepts no algorithm. The earlier shape, keyed by crypto suite only, is no longer read: certify fails at startup until the property is regrouped.
+`mso_mdoc` is signed with `signatureAlgo` alone, so it now requires `signatureAlgo` as well as `signatureCryptoSuite`. `signatureCryptoSuite` stays mandatory so the request body is the same shape for every format, but for `mso_mdoc` its value is not validated, and it is not stored.
 
-**Action for existing automation:** every Update request must send both attributes and `signatureAlgo`, even one that only changes an unrelated field such as the display name. This includes configurations created before these attributes were stored. `credentialSigningAlgValuesSupported` must be removed from every request body, and `mso_mdoc` requests must drop `signatureCryptoSuite`.
-
-**Action for existing deployments:** regroup `mosip.certify.credential-config.credential-signing-alg-values-supported` by credential format before upgrading, for example:
-
-```properties
-mosip.certify.credential-config.credential-signing-alg-values-supported={\
-  'ldp_vc': {'Ed25519Signature2020': {'EdDSA'}, 'EcdsaSecp256r1Signature2019': {'ES256'}},\
-  'mso_mdoc': {'ES256'},\
-  'dc+sd-jwt': {'ES256', 'EdDSA'}\
-}
-```
+**Action for existing automation:** every Update request must send both attributes and `signatureAlgo`, even one that only changes an unrelated field such as the display name. This includes configurations created before these attributes were stored. `credentialSigningAlgValuesSupported` must be removed from every request body.
 
 See [Credential Issuer Configuration](./Credential_Issuer_Configuration.md) for the validation rules.
