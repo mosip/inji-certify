@@ -1560,14 +1560,16 @@ components:
           description: Reference ID for the key manager. Applicable for DataProvider plugin mode.
         signatureAlgo:
           description: |-
-            Mandatory on Add and Update for every credential format; a missing or empty value is rejected, and nothing is filled in from the deployment configuration. It is the algorithm the credential is signed with, and the signing key is selected by it through mosip.certify.signature-algo.key-alias-mapper.
+            In DataProvider plugin mode, mandatory on Add and Update for every credential format; a missing or empty value is rejected, and nothing is filled in from the deployment configuration. It is the algorithm the credential is signed with, and the signing key is selected by it through mosip.certify.signature-algo.key-alias-mapper.
+
+            In VCIssuance plugin mode the plugin signs the credential, so signatureAlgo is optional for every format. A value that is sent is validated as below, in both modes. An mso_mdoc or dc+sd-jwt configuration without signatureAlgo leaves credential_signing_alg_values_supported out of the credential issuer metadata; an ldp_vc one still advertises its signatureCryptoSuite. The plugin mode comes from mosip.certify.plugin-mode, not from the request.
 
             It is validated as follows:
             - ldp_vc: declared for the configuration's signatureCryptoSuite in mosip.certify.credential-config.credential-signing-alg-values-supported. Otherwise rejected with unsupported_signature_algo.
             - mso_mdoc: backed by a signing key in mosip.certify.signature-algo.key-alias-mapper, otherwise rejected with key_chooser_config_not_found; it must also be ES256, the only algorithm supported for an mdoc's issuerAuth, otherwise rejected with unsupported_credential_signing_alg.
             - dc+sd-jwt: backed by a signing key in mosip.certify.signature-algo.key-alias-mapper, otherwise rejected with key_chooser_config_not_found.
 
-            A missing value is rejected with the format's mandatory-fields code: ldp_vc_mandatory_fields_missing, mso_mdoc_mandatory_fields_missing or dc_sd_jwt_mandatory_fields_missing.
+            In DataProvider plugin mode, a missing value is rejected with the format's mandatory-fields code: ldp_vc_mandatory_fields_missing, mso_mdoc_mandatory_fields_missing or dc_sd_jwt_mandatory_fields_missing.
 
             For mso_mdoc and dc+sd-jwt this is the value advertised in credential_signing_alg_values_supported of the credential issuer metadata (as its COSE identifier for mso_mdoc). The request no longer accepts credentialSigningAlgValuesSupported; a request that still sends it is rejected with invalid_request as an unrecognised field, and nothing is stored.
 

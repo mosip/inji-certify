@@ -366,20 +366,76 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     /**
-     * The VCIssuance plugin skips the key selection check, but signatureAlgo is one of the format's
-     * mandatory fields, so it is rejected the same way.
+     * In VCIssuance mode the plugin signs the credential, so signatureAlgo is optional for every format.
+     * An ldp_vc configuration still advertises its crypto suite; the others have no algorithm to advertise.
      */
     @Test
-    public void should_rejectAdd_when_signatureAlgoIsMissingInVcIssuanceMode() {
+    public void should_acceptAdd_when_signatureAlgoIsMissingInVcIssuanceMode() {
         ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "VCIssuance");
-        CredentialConfigurationDTO request = ldpVcRequest();
+        CredentialConfig ldpVc = ldpVcEntity();
+        ldpVc.setSignatureAlgo(null);
+        CredentialConfig msoMdoc = msoMdocEntity();
+        msoMdoc.setSignatureAlgo(null);
+        CredentialConfig sdJwt = sdJwtEntity();
+        sdJwt.setSignatureAlgo(null);
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(ldpVc, msoMdoc, sdJwt);
+        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        CredentialConfigurationDTO ldpVcRequest = ldpVcRequest();
+        ldpVcRequest.setSignatureAlgo(null);
+        CredentialConfigurationDTO msoMdocRequest = msoMdocRequest();
+        msoMdocRequest.setSignatureAlgo(null);
+        CredentialConfigurationDTO sdJwtRequest = sdJwtRequest();
+        sdJwtRequest.setSignatureAlgo(null);
+
+        credentialConfigurationService.addCredentialConfiguration(ldpVcRequest);
+        credentialConfigurationService.addCredentialConfiguration(msoMdocRequest);
+        credentialConfigurationService.addCredentialConfiguration(sdJwtRequest);
+
+        Assert.assertNull(ldpVc.getSignatureAlgo());
+        Assert.assertEquals(List.of("Ed25519Signature2020"), ldpVc.getCredentialSigningAlgValuesSupported());
+        Assert.assertNull(msoMdoc.getSignatureAlgo());
+        Assert.assertEquals(List.of(), msoMdoc.getCredentialSigningAlgValuesSupported());
+        Assert.assertNull(sdJwt.getSignatureAlgo());
+        Assert.assertEquals(List.of(), sdJwt.getCredentialSigningAlgValuesSupported());
+        verify(credentialConfigRepository, times(3)).save(any(CredentialConfig.class));
+    }
+
+    @Test
+    public void should_rejectAdd_when_sdJwtSignatureAlgoIsMissingInDataProviderMode() {
+        CredentialConfigurationDTO request = sdJwtRequest();
         request.setSignatureAlgo(null);
 
         CertifyException exception = assertThrows(CertifyException.class,
                 () -> credentialConfigurationService.addCredentialConfiguration(request));
 
-        Assert.assertEquals(ErrorConstants.LDP_VC_MANDATORY_FIELDS_MISSING, exception.getErrorCode());
+        Assert.assertEquals(ErrorConstants.DC_SD_JWT_MANDATORY_FIELDS_MISSING, exception.getErrorCode());
+        Assert.assertTrue(exception.getMessage().contains("signatureAlgo"));
         verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    /**
+     * An ldp_vc configuration created in VCIssuance mode can hold no signature_algo, as the insurance
+     * setup does. It is updated without one.
+     */
+    @Test
+    public void should_acceptUpdate_when_storedSignatureAlgoIsNullInVcIssuanceMode() {
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "VCIssuance");
+        CredentialConfig stored = storedLdpVcEntity();
+        stored.setSignatureAlgo(null);
+        CredentialConfigurationDTO merged = ldpVcConfig();
+        merged.setSignatureAlgo(null);
+        when(credentialConfigRepository.findByCredentialConfigKeyId("test-credential")).thenReturn(Optional.of(stored));
+        when(credentialConfigMapper.toDto(any(CredentialConfig.class))).thenReturn(merged);
+        doNothing().when(credentialConfigMapper).updateEntityFromDto(any(CredentialConfigurationDTO.class), any(CredentialConfig.class));
+        when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(stored);
+        CredentialConfigurationDTO request = ldpVcRequest();
+        request.setSignatureAlgo(null);
+
+        credentialConfigurationService.updateCredentialConfiguration("test-credential", request);
+
+        Assert.assertNull(stored.getSignatureAlgo());
+        Assert.assertEquals(List.of("Ed25519Signature2020"), stored.getCredentialSigningAlgValuesSupported());
+        verify(credentialConfigRepository).save(stored);
     }
 
     @Test
@@ -564,11 +620,11 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     /**
-     * The VCIssuance plugin skips the key selection check, so the crypto suite's declared algorithms are
-     * enforced with the attributes.
+     * signatureAlgo is optional in VCIssuance mode, but a value that is sent is validated as in
+     * DataProvider mode: the VCIssuance plugin skips only the key selection check.
      */
     @Test
-    public void should_rejectAdd_when_algorithmIsNotDeclaredForCryptoSuite() {
+    public void should_rejectAdd_when_algorithmIsNotDeclaredForCryptoSuiteInVcIssuanceMode() {
         ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "VCIssuance");
         CredentialConfig entity = ldpVcEntity();
         entity.setSignatureAlgo("RS256");
@@ -582,6 +638,60 @@ public class CredentialConfigMetadataAttributesTest {
         Assert.assertEquals(ErrorConstants.UNSUPPORTED_SIGNATURE_ALGO,
                 exception.getErrors().getFirst().getErrorCode());
         Assert.assertTrue(exception.getErrors().getFirst().getErrorMessage().contains("Ed25519Signature2020"));
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    @Test
+    public void should_rejectMsoMdoc_when_algorithmHasNoSigningKeyInVcIssuanceMode() {
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "VCIssuance");
+        ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper", Map.of());
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(msoMdocEntity());
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(msoMdocRequest()));
+
+        Assert.assertEquals(ErrorConstants.KEY_CHOOSER_CONFIG_NOT_FOUND,
+                exception.getErrors().getFirst().getErrorCode());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    @Test
+    public void should_rejectSdJwt_when_algorithmHasNoSigningKeyInVcIssuanceMode() {
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "VCIssuance");
+        CredentialConfig entity = sdJwtEntity();
+        entity.setSignatureAlgo("PS256");
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
+        CredentialConfigurationDTO request = sdJwtRequest();
+        request.setSignatureAlgo("PS256");
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        Assert.assertEquals(ErrorConstants.KEY_CHOOSER_CONFIG_NOT_FOUND,
+                exception.getErrors().getFirst().getErrorCode());
+        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+    }
+
+    /**
+     * An mso_mdoc configuration advertises its signatureAlgo as a COSE identifier in either mode, so the
+     * COSE rule still applies in VCIssuance mode.
+     */
+    @Test
+    public void should_rejectMsoMdoc_when_algorithmHasNoCoseEquivalentInVcIssuanceMode() {
+        ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "VCIssuance");
+        ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper",
+                Map.of("PS256", List.of(List.of("TEST_EC", "TEST_EC-REF"))));
+        CredentialConfig entity = msoMdocEntity();
+        entity.setSignatureAlgo("PS256");
+        when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
+        CredentialConfigurationDTO request = msoMdocRequest();
+        request.setSignatureAlgo("PS256");
+
+        CredentialConfigValidationException exception = assertThrows(CredentialConfigValidationException.class,
+                () -> credentialConfigurationService.addCredentialConfiguration(request));
+
+        Assert.assertEquals(ErrorConstants.UNSUPPORTED_CREDENTIAL_SIGNING_ALG,
+                exception.getErrors().getFirst().getErrorCode());
         verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
     }
 
@@ -1126,6 +1236,68 @@ public class CredentialConfigMetadataAttributesTest {
 
         Assert.assertEquals(List.of("ES256"), supported.get("test-sd-jwt").getCredentialSigningAlgValuesSupported());
         Assert.assertEquals(List.of(-7), supported.get("test-mso-mdoc").getCredentialSigningAlgValuesSupported());
+    }
+
+    /**
+     * An ldp_vc configuration created in VCIssuance mode without a signatureAlgo still advertises its
+     * crypto suite.
+     */
+    @Test
+    public void should_advertiseCryptoSuite_when_ldpVcConfigurationHasNoSignatureAlgo() {
+        CredentialConfig ldpVc = ldpVcEntity();
+        ldpVc.setSignatureAlgo(null);
+        ldpVc.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
+        ldpVc.setCredentialSigningAlgValuesSupported(List.of("Ed25519Signature2020"));
+
+        when(credentialConfigRepository.findAll()).thenReturn(List.of(ldpVc));
+        when(credentialConfigMapper.toDto(ldpVc)).thenReturn(ldpVcConfig());
+
+        CredentialConfigurationSupportedDTO supported = credentialConfigurationService.fetchCredentialIssuerMetadata()
+                .getCredentialConfigurationSupportedDTO().get("test-credential");
+
+        Assert.assertEquals(List.of("Ed25519Signature2020"), supported.getCredentialSigningAlgValuesSupported());
+    }
+
+    /**
+     * A dc+sd-jwt configuration created in VCIssuance mode without a signatureAlgo has no algorithm to
+     * advertise, so credential_signing_alg_values_supported is left out rather than published empty.
+     */
+    @Test
+    public void should_omitSigningAlgs_when_sdJwtConfigurationHasNoSignatureAlgo() {
+        CredentialConfig sdJwt = sdJwtEntity();
+        sdJwt.setSignatureAlgo(null);
+        sdJwt.setCryptographicBindingMethodsSupported(List.of("did:jwk"));
+        sdJwt.setCredentialSigningAlgValuesSupported(List.of());
+
+        when(credentialConfigRepository.findAll()).thenReturn(List.of(sdJwt));
+        when(credentialConfigMapper.toDto(sdJwt)).thenReturn(sdJwtConfig());
+
+        CredentialConfigurationSupportedDTO supported = credentialConfigurationService.fetchCredentialIssuerMetadata()
+                .getCredentialConfigurationSupportedDTO().get("test-sd-jwt");
+
+        Assert.assertNotNull(supported);
+        Assert.assertNull(supported.getCredentialSigningAlgValuesSupported());
+    }
+
+    /**
+     * An mso_mdoc configuration created in VCIssuance mode without a signatureAlgo has no algorithm to
+     * advertise, so credential_signing_alg_values_supported is left out rather than published empty.
+     */
+    @Test
+    public void should_omitSigningAlgs_when_msoMdocConfigurationHasNoSignatureAlgo() {
+        CredentialConfig msoMdoc = msoMdocEntity();
+        msoMdoc.setSignatureAlgo(null);
+        msoMdoc.setCryptographicBindingMethodsSupported(List.of("cose_key"));
+        msoMdoc.setCredentialSigningAlgValuesSupported(List.of());
+
+        when(credentialConfigRepository.findAll()).thenReturn(List.of(msoMdoc));
+        when(credentialConfigMapper.toDto(msoMdoc)).thenReturn(msoMdocConfig());
+
+        CredentialConfigurationSupportedDTO supported = credentialConfigurationService.fetchCredentialIssuerMetadata()
+                .getCredentialConfigurationSupportedDTO().get("test-mso-mdoc");
+
+        Assert.assertNotNull(supported);
+        Assert.assertNull(supported.getCredentialSigningAlgValuesSupported());
     }
 
     /**

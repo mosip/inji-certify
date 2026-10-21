@@ -9,12 +9,12 @@ This document explains how to configure and use SD-JWT (Selective Disclosure JWT
 To add a new SD-JWT credential configuration, use the `/credential-configurations` endpoint with the following important fields in your JSON payload:
 
 - **credentialFormat**: Must be set to `dc+sd-jwt`
-- **signatureAlgo**: The signing algorithm (e.g., `ES256K`). It is validated against `mosip.certify.signature-algo.key-alias-mapper`: the deployment must hold a signing key for it, or the request is rejected with `key_chooser_config_not_found`. It is also the value the credential issuer metadata advertises in `credential_signing_alg_values_supported`.
+- **signatureAlgo**: The signing algorithm (e.g., `ES256K`). It is mandatory in DataProvider plugin mode and optional in VCIssuance plugin mode, where the plugin signs the credential. A value that is sent is validated in both modes against `mosip.certify.signature-algo.key-alias-mapper`: the deployment must hold a signing key for it, or the request is rejected with `key_chooser_config_not_found`. It is also the value the credential issuer metadata advertises in `credential_signing_alg_values_supported`.
 - **sdJwtVct**: The VCT (Verifiable Credential Type) value for the credential
 - **cryptographicBindingMethodsSupported**: The binding methods to advertise, chosen from those declared for `dc+sd-jwt` in `mosip.certify.credential-config.cryptographic-binding-methods-supported` (e.g., `["did:jwk"]`)
 - **proofTypesSupported**: The proof types to accept, each with its proof signing algorithms, chosen from `mosip.certify.credential-config.proof-types-supported` (e.g., `{"jwt": {"proof_signing_alg_values_supported": ["ES256"]}}`)
 
-`signatureAlgo`, `cryptographicBindingMethodsSupported` and `proofTypesSupported` are mandatory, and nothing is filled in from the properties when one is missing or empty. The request no longer takes a `credentialSigningAlgValuesSupported` list; a request that still sends it is rejected with `invalid_request`.
+`cryptographicBindingMethodsSupported` and `proofTypesSupported` are mandatory, and so is `signatureAlgo` in DataProvider plugin mode; nothing is filled in from the properties when one is missing or empty. A `dc+sd-jwt` configuration without `signatureAlgo` (VCIssuance plugin mode) leaves `credential_signing_alg_values_supported` out of the credential issuer metadata. `signatureCryptoSuite` must not be sent for `dc+sd-jwt`. The request no longer takes a `credentialSigningAlgValuesSupported` list; a request that still sends it is rejected with `invalid_request`.
 
 For full details on the required fields and how to structure your request with examples, refer to the [Inji Certify API documentation](https://mosip.stoplight.io/docs/inji-certify).
 

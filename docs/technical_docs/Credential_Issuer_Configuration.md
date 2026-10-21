@@ -67,11 +67,25 @@ Inji Certify checks your configuration for required fields and possible duplicat
   - for `mso_mdoc` format, docType value should be unique.
   - for `dc+sd-jwt` format, sdJwtVct value should be unique.
 - **Validation for `signatureCryptoSuite`, `signatureAlgo`, `keyManagerAppId`, `keyManagerRefId`**.
-  - `signatureAlgo` is mandatory for every credential format, on Add and on Update. It is the algorithm the credential is signed with, and nothing is filled in for it from the properties: a request that leaves it out is rejected with the format's mandatory-fields code, `ldp_vc_mandatory_fields_missing`, `mso_mdoc_mandatory_fields_missing` or `dc_sd_jwt_mandatory_fields_missing`.
+  - In DataProvider plugin mode, `signatureAlgo` is mandatory for every credential format, on Add and on Update. It is the algorithm the credential is signed with, and nothing is filled in for it from the properties: a request that leaves it out is rejected with the format's mandatory-fields code, `ldp_vc_mandatory_fields_missing`, `mso_mdoc_mandatory_fields_missing` or `dc_sd_jwt_mandatory_fields_missing`.
+  - In VCIssuance plugin mode the plugin signs the credential, so `signatureAlgo` is optional. A value that is sent is validated as below, in both modes. An `mso_mdoc` or `dc+sd-jwt` configuration without `signatureAlgo` leaves `credential_signing_alg_values_supported` out of the credential issuer metadata; an `ldp_vc` one still advertises its crypto suite.
   - `ldp_vc`: `signatureCryptoSuite` is mandatory and must be declared in `mosip.certify.credential-config.credential-signing-alg-values-supported` (`unsupported_crypto_suite` otherwise), and `signatureAlgo` must be one of the algorithms declared for that suite (`unsupported_signature_algo` otherwise).
   - `mso_mdoc`: an mdoc's issuerAuth is signed with `signatureAlgo` alone, so `signatureCryptoSuite` is optional. If one is sent, its value is not validated, and it is not stored. The deployment must hold a signing key for `signatureAlgo` in `mosip.certify.signature-algo.key-alias-mapper` (`key_chooser_config_not_found` otherwise), and it must be `ES256`, the only algorithm supported for an mdoc's issuerAuth. `EdDSA`, `RS256` and `ES256K` are rejected with `unsupported_credential_signing_alg`.
   - `dc+sd-jwt`: the deployment must hold a signing key for `signatureAlgo` in `mosip.certify.signature-algo.key-alias-mapper` (`key_chooser_config_not_found` otherwise).
   - `keyManagerAppId` and `keyManagerRefId` must refer to the correct keys defined in `mosip.certify.signature-algo.key-alias-mapper`.
+- **`signatureAlgo` and `signatureCryptoSuite` by format and plugin mode**.
+
+  | Format | Plugin mode | `signatureAlgo` | `signatureCryptoSuite` | `credential_signing_alg_values_supported` |
+  |---|---|---|---|---|
+  | `ldp_vc` | DataProvider | Required | Required | The suite, e.g. `["Ed25519Signature2020"]` |
+  | `ldp_vc` | VCIssuance | Not required, validated if sent | Required | The suite, e.g. `["Ed25519Signature2020"]` |
+  | `mso_mdoc` | DataProvider | Required | Not required, ignored and not stored | COSE number of the algorithm, e.g. `[-7]` for `ES256` |
+  | `mso_mdoc` | VCIssuance | Not required, validated if sent | Not required, ignored and not stored | COSE number if set, e.g. `[-7]`. Omitted if null. |
+  | `dc+sd-jwt` | DataProvider | Required | Must not be sent (the request is rejected) | The algorithm, e.g. `["ES256"]` |
+  | `dc+sd-jwt` | VCIssuance | Not required, validated if sent | Must not be sent | The algorithm if set. Omitted if null. |
+
+  The plugin mode comes from `mosip.certify.plugin-mode`, not from the request.
+
 - **What the credential issuer metadata advertises in `credential_signing_alg_values_supported`**.
   - It is derived from the credential configuration; the Add and Update requests no longer take a `credentialSigningAlgValuesSupported` list, and a request that still sends it is rejected with `invalid_request` as an unrecognised field, storing nothing. Each configuration advertises the one value it is signed with, so what is advertised can never differ from how the credential is signed.
   - `ldp_vc` advertises its `signatureCryptoSuite`, for example `Ed25519Signature2020` or `eddsa-rdfc-2022`, as OpenID4VCI 1.0 Appendix A.1.2.2 requires ([#1110](https://github.com/inji/inji-certify/issues/1110)). A JWS algorithm such as `EdDSA` stands for more than one suite, so a wallet could not act on it.
@@ -88,7 +102,7 @@ Inji Certify checks your configuration for required fields and possible duplicat
   - A value listed more than once, in either attribute or in a proof type's `proof_signing_alg_values_supported`, is stored once, in the order first given. The request is not rejected for it; for example, `["did:jwk", "did:jwk"]` is stored as `["did:jwk"]`.
   - Whatever is stored against a credential configuration is what the Get response returns and the credential issuer metadata advertises for it.
   - **Configurations created before these attributes were stored** need not be re-submitted. Where nothing is stored for the binding methods or proof types, the Get response and the issuer metadata keep resolving them from the properties as before.
-  - **Upgrading existing automation:** every Update request must now send both attributes and `signatureAlgo`, even one that only changes an unrelated field such as the display name. A script or client that omits any of them receives an error. `credentialSigningAlgValuesSupported` must be removed from every request body.
+  - **Upgrading existing automation:** every Update request must now send both attributes, and `signatureAlgo` in DataProvider plugin mode, even one that only changes an unrelated field such as the display name. A script or client that omits any of them receives an error. `credentialSigningAlgValuesSupported` must be removed from every request body.
   - An empty `cryptographicBindingMethodsSupported` or `proofTypesSupported` is rejected for now.
 - **Purpose of `didUrl` in `credential_config`**:
   - `didUrl` in `credential_config` can be different from the issuer did url specified by the property `mosip.certify.data-provider-plugin.did-url`.

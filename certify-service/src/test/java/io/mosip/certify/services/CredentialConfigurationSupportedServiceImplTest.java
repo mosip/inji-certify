@@ -505,11 +505,11 @@ public class CredentialConfigurationSupportedServiceImplTest {
         dto.setCredentialFormat("ldp_vc");
         dto.setVcTemplate("test_template");
         try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
-            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto)).thenReturn(false);
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(false);
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
             );
-            assertEquals("Fields context, credentialType, signatureCryptoSuite and signatureAlgo are mandatory for the ldp_vc format.", ex.getMessage());
+            assertEquals("Fields context, credentialType, signatureCryptoSuite and signatureAlgo (DataProvider plugin mode only) are mandatory for the ldp_vc format.", ex.getMessage());
         }
     }
 
@@ -518,8 +518,9 @@ public class CredentialConfigurationSupportedServiceImplTest {
         CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
         dto.setCredentialFormat("ldp_vc");
         dto.setVcTemplate("test_template");
+        dto.setSignatureAlgo("EdDSA");
         try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
-            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(true);
             mocked.when(() -> LdpVcCredentialConfigValidator.isConfigAlreadyPresent(eq(dto), any())).thenReturn(true);
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
@@ -534,11 +535,11 @@ public class CredentialConfigurationSupportedServiceImplTest {
         dto.setCredentialFormat("mso_mdoc");
         dto.setVcTemplate("test_template");
         try (var mocked = org.mockito.Mockito.mockStatic(MsoMdocCredentialConfigValidator.class)) {
-            mocked.when(() -> MsoMdocCredentialConfigValidator.isValidCheck(dto)).thenReturn(false);
+            mocked.when(() -> MsoMdocCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(false);
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
             );
-            assertEquals("Fields doctype and signatureAlgo are mandatory for the mso_mdoc format.", ex.getMessage());
+            assertEquals("Fields doctype and signatureAlgo (DataProvider plugin mode only) are mandatory for the mso_mdoc format.", ex.getMessage());
         }
     }
 
@@ -547,8 +548,9 @@ public class CredentialConfigurationSupportedServiceImplTest {
         CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
         dto.setCredentialFormat("mso_mdoc");
         dto.setVcTemplate("test_template");
+        dto.setSignatureAlgo("ES256");
         try (var mocked = org.mockito.Mockito.mockStatic(MsoMdocCredentialConfigValidator.class)) {
-            mocked.when(() -> MsoMdocCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
+            mocked.when(() -> MsoMdocCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(true);
             mocked.when(() -> MsoMdocCredentialConfigValidator.isConfigAlreadyPresent(eq(dto), any())).thenReturn(true);
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
@@ -563,11 +565,11 @@ public class CredentialConfigurationSupportedServiceImplTest {
         dto.setCredentialFormat("dc+sd-jwt");
         dto.setVcTemplate("test_template");
         try (var mocked = org.mockito.Mockito.mockStatic(SdJwtCredentialConfigValidator.class)) {
-            mocked.when(() -> SdJwtCredentialConfigValidator.isValidCheck(dto)).thenReturn(false);
+            mocked.when(() -> SdJwtCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(false);
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
             );
-            assertEquals("Fields vct and signatureAlgo are mandatory for the dc+sd-jwt format.", ex.getMessage());
+            assertEquals("Fields vct and signatureAlgo (DataProvider plugin mode only) are mandatory for the dc+sd-jwt format.", ex.getMessage());
         }
     }
 
@@ -577,7 +579,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
         dto.setCredentialFormat("dc+sd-jwt");
         dto.setVcTemplate("test_template");
         try (var mocked = org.mockito.Mockito.mockStatic(SdJwtCredentialConfigValidator.class)) {
-            mocked.when(() -> SdJwtCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
+            mocked.when(() -> SdJwtCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(true);
             mocked.when(() -> SdJwtCredentialConfigValidator.isConfigAlreadyPresent(eq(dto), any())).thenReturn(true);
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
@@ -643,7 +645,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
         dto.setKeyManagerRefId("TEST2019-REF");
         ReflectionTestUtils.setField(credentialConfigurationService, "allowedCredentialStatusPurposes", List.of("purpose1", "purpose2"));
         try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
-            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(true);
             ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true);
         }
     }
@@ -662,7 +664,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
         dto.setKeyManagerRefId("TEST2019-REF");
         ReflectionTestUtils.setField(credentialConfigurationService, "allowedCredentialStatusPurposes", List.of("purpose1", "purpose2"));
         try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
-            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(true);
             ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true);
         }
     }
@@ -681,7 +683,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
         dto.setKeyManagerRefId("TEST2019-REF");
         ReflectionTestUtils.setField(credentialConfigurationService, "allowedCredentialStatusPurposes", List.of("purpose1", "purpose2"));
         try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
-            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(true);
             ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true);
         }
     }
@@ -778,7 +780,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
         ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "DataProvider");
         ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper", Map.of("EdDSA", List.of(List.of("TEST2019", "TEST2019-REF"))));
         try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
-            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(true);
             ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true);
         }
     }
@@ -797,7 +799,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
         ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "DataProvider");
         ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper", Map.of("EdDSA", List.of(List.of("TEST2019", "TEST2019-REF"))));
         try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
-            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(true);
             ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true);
         }
     }
