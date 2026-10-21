@@ -19,7 +19,7 @@ class LdpVcCredentialConfigValidatorTest {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setContextURLs(null);
         config.setCredentialTypes(List.of("VerifiableCredential", "TestVerifiableCredential"));
-        assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config));
+        assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
@@ -28,7 +28,7 @@ class LdpVcCredentialConfigValidatorTest {
         config.setContextURLs(List.of("https://example.org/context"));
         config.setCredentialTypes(List.of("VerifiableCredential", "TestVerifiableCredential"));
         config.setSignatureCryptoSuite(null);
-        assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config));
+        assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
@@ -42,7 +42,28 @@ class LdpVcCredentialConfigValidatorTest {
         config.setSdJwtVct(null);
         config.setMsoMdocClaims(null);
         config.setSdJwtClaims(null);
-        assertTrue(LdpVcCredentialConfigValidator.isValidCheck(config));
+        assertTrue(LdpVcCredentialConfigValidator.isValidCheck(config, "DataProvider"));
+    }
+
+    @Test
+    void should_returnFalse_when_signatureAlgoIsMissingInDataProviderMode() {
+        CredentialConfigurationDTO config = new CredentialConfigurationDTO();
+        config.setContextURLs(List.of("https://example.org/context"));
+        config.setCredentialTypes(List.of("VerifiableCredential", "TestVerifiableCredential"));
+        config.setSignatureCryptoSuite("Ed25519Signature2020");
+        assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config, "DataProvider"));
+    }
+
+    /**
+     * In VCIssuance mode the plugin signs the credential, so signatureAlgo is optional.
+     */
+    @Test
+    void should_returnTrue_when_signatureAlgoIsMissingInVcIssuanceMode() {
+        CredentialConfigurationDTO config = new CredentialConfigurationDTO();
+        config.setContextURLs(List.of("https://example.org/context"));
+        config.setCredentialTypes(List.of("VerifiableCredential", "TestVerifiableCredential"));
+        config.setSignatureCryptoSuite("Ed25519Signature2020");
+        assertTrue(LdpVcCredentialConfigValidator.isValidCheck(config, "VCIssuance"));
     }
 
     @Test
@@ -50,7 +71,7 @@ class LdpVcCredentialConfigValidatorTest {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setContextURLs(List.of(""));
         config.setCredentialTypes(List.of("VerifiableCredential", "TestVerifiableCredential"));
-        assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config));
+        assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
@@ -58,7 +79,7 @@ class LdpVcCredentialConfigValidatorTest {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setContextURLs(List.of("https://example.org/context"));
         config.setCredentialTypes(null);
-        assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config));
+        assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
@@ -66,7 +87,7 @@ class LdpVcCredentialConfigValidatorTest {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setContextURLs(List.of("https://example.org/context"));
         config.setCredentialTypes(List.of());
-        assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config));
+        assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
@@ -75,7 +96,7 @@ class LdpVcCredentialConfigValidatorTest {
         config.setContextURLs(List.of("https://example.org/context"));
         config.setCredentialTypes(List.of("VerifiableCredential", "TestVerifiableCredential"));
         config.setDocType("docType");
-        assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config));
+        assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
@@ -85,7 +106,7 @@ class LdpVcCredentialConfigValidatorTest {
         config.setCredentialTypes(List.of("TestType"));
         config.setMsoMdocClaims(new HashMap<>());
         config.setSdJwtClaims(new HashMap<>());
-        assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config));
+        assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
@@ -94,7 +115,7 @@ class LdpVcCredentialConfigValidatorTest {
         config.setContextURLs(List.of("https://example.org/context"));
         config.setCredentialTypes(List.of("VerifiableCredential", "TestVerifiableCredential"));
         config.setSdJwtVct("sdJwtVct");
-        assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config));
+        assertFalse(LdpVcCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test

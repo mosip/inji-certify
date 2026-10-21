@@ -20,7 +20,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -53,10 +52,6 @@ class DIDDocumentUtilTest {
     void setUp() {
         mocks = MockitoAnnotations.openMocks(this);
         didDocumentUtil = new DIDDocumentUtil(keymanagerService, credentialConfigRepository);
-        LinkedHashMap<String, List<String>> signingMap = new LinkedHashMap<>();
-        signingMap.put(SignatureAlg.ED25519_SIGNATURE_SUITE_2018, List.of(JWSAlgorithm.EdDSA));
-        signingMap.put(SignatureAlg.ED25519_SIGNATURE_SUITE_2020, List.of(JWSAlgorithm.EdDSA));
-        ReflectionTestUtils.setField(didDocumentUtil, "credentialSigningAlgValuesSupportedMap", signingMap);
     }
 
     @AfterEach
@@ -144,6 +139,7 @@ class DIDDocumentUtilTest {
         config.setKeyManagerAppId("ed-app");
         config.setKeyManagerRefId("ed-ref");
         config.setSignatureCryptoSuite(SignatureAlg.ED25519_SIGNATURE_SUITE_2020);
+        config.setSignatureAlgo(JWSAlgorithm.EdDSA);
 
         CertificateDataResponseDto certificate = new CertificateDataResponseDto();
         certificate.setCertificateData(ED25519_CERTIFICATE);
@@ -169,6 +165,7 @@ class DIDDocumentUtilTest {
         edConfig.setKeyManagerAppId("ed-app");
         edConfig.setKeyManagerRefId("ed-ref");
         edConfig.setSignatureCryptoSuite(SignatureAlg.ED25519_SIGNATURE_SUITE_2018);
+        edConfig.setSignatureAlgo(JWSAlgorithm.EdDSA);
 
         CredentialConfig rsaConfig = new CredentialConfig();
         rsaConfig.setKeyManagerAppId("rsa-app");
