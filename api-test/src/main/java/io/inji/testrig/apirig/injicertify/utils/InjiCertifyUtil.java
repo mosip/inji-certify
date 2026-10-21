@@ -1465,6 +1465,10 @@ public static void configureOtp() {
 			if (accessToken.isBlank()) {
 				throw new AdminTestException("MOSIP ID access token is missing; cannot refresh the signing cache");
 			}
+			if (!url.regionMatches(true, 0, "https://", 0, "https://".length())) {
+				throw new AdminTestException(
+						"Refusing to send the MOSIP ID access token to a non-HTTPS cache URL: " + url);
+			}
 			Response response = io.restassured.RestAssured.given()
 					.header("Authorization", "Bearer " + accessToken).delete(url);
 			if (response.getStatusCode() == 403) {

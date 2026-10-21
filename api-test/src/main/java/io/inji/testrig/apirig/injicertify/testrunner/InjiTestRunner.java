@@ -176,15 +176,19 @@ public class InjiTestRunner {
 	}
 
 	/**
-	 * {@link PartnerRegistration#deviceGeneration()} casts a null partner-manager response when the
-	 * device partner is already registered. Certificate upload then continues with the same class.
+	 * {@link PartnerRegistration#deviceGeneration()} casts the partner-manager {@code response}
+	 * field to {@link JSONObject}. An already-registered partner returns JSON null
+	 * ({@code org.json.JSONObject$Null}), which is the only cast recovered here.
 	 */
 	private static void registerDevicePartner() {
 		try {
 			PartnerRegistration.deviceGeneration();
 			return;
 		} catch (ClassCastException alreadyRegistered) {
-			LOGGER.info("Device partner is already registered; uploading its certificates");
+			if (!isNullDevicePartnerResponse(alreadyRegistered)) {
+				throw alreadyRegistered;
+			}
+			LOGGER.error("Device partner is already registered; uploading its certificates", alreadyRegistered);
 		}
 		String partnerId = PartnerRegistration.deviceOrganizationName;
 		JSONObject certificates = PartnerRegistration.getDeviceCertificates(partnerId, "DEVICE");
@@ -208,6 +212,21 @@ public class InjiTestRunner {
 		}
 		throw new IllegalStateException(
 				"Device partner certificate upload did not return signedCertificateData for " + partnerId, last);
+	}
+
+	/** True only for the JSON-null {@code response} cast inside {@code deviceGeneration}. */
+	private static boolean isNullDevicePartnerResponse(ClassCastException failure) {
+		String message = failure.getMessage();
+		if (message == null || !message.contains("org.json.JSONObject$Null")) {
+			return false;
+		}
+		for (StackTraceElement frame : failure.getStackTrace()) {
+			if ("io.mosip.testrig.apirig.utils.PartnerRegistration".equals(frame.getClassName())
+					&& "deviceGeneration".equals(frame.getMethodName())) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public static void suiteSetup(String runType) {
