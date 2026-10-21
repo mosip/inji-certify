@@ -49,7 +49,18 @@ Replace `$velocityCount` with `$foreach.count`, and `$velocityHasNext` with `$fo
 
 ## Credential configuration metadata attributes are mandatory
 
-`cryptographicBindingMethodsSupported`, `proofTypesSupported` and `signatureAlgo` are now mandatory in the Add (`POST /credential-configurations`) and Update (`PUT /credential-configurations/{credentialConfigKeyId}`) requests, for every credential format. A request that leaves one out, sends it as `null` or sends it empty is rejected, and nothing is filled in from the deployment properties any more. In particular, an `ldp_vc` configuration without `signatureAlgo` no longer takes the first algorithm declared for its crypto suite.
+`cryptographicBindingMethodsSupported`, `proofTypesSupported` and `signatureAlgo` are now mandatory in the Add (`POST /credential-configurations`) and Update (`PUT /credential-configurations/{credentialConfigKeyId}`) requests, for every credential format. A request that leaves one out, sends it as `null` or sends it empty is rejected, and nothing is filled in from the deployment properties any more. In particular, an `ldp_vc` configuration without `signatureAlgo` no longer takes the first algorithm declared for its crypto suite. `signatureAlgo` is mandatory in DataProvider plugin mode only: in VCIssuance plugin mode the plugin signs the credential, so it is optional, but a value that is sent is validated in both modes.
+
+| Format | Plugin mode | `signatureAlgo` | `signatureCryptoSuite` | `credential_signing_alg_values_supported` |
+|---|---|---|---|---|
+| `ldp_vc` | DataProvider | Required | Required | The suite, e.g. `["Ed25519Signature2020"]` |
+| `ldp_vc` | VCIssuance | Not required, validated if sent | Required | The suite, e.g. `["Ed25519Signature2020"]` |
+| `mso_mdoc` | DataProvider | Required | Not required, ignored and not stored | COSE number of the algorithm, e.g. `[-7]` for `ES256` |
+| `mso_mdoc` | VCIssuance | Not required, validated if sent | Not required, ignored and not stored | COSE number if set, e.g. `[-7]`. Omitted if null. |
+| `dc+sd-jwt` | DataProvider | Required | Must not be sent (the request is rejected) | The algorithm, e.g. `["ES256"]` |
+| `dc+sd-jwt` | VCIssuance | Not required, validated if sent | Must not be sent | The algorithm if set. Omitted if null. |
+
+The plugin mode comes from `mosip.certify.plugin-mode`, not from the request.
 
 `credentialSigningAlgValuesSupported` is no longer part of the request; a request that still sends it is rejected with `invalid_request` as an unrecognised field. What the credential issuer metadata advertises in `credential_signing_alg_values_supported` is derived from the configuration instead, so it is always what the credential is signed with:
 
@@ -60,6 +71,16 @@ Nothing is resolved from the properties for it any more. Existing configurations
 
 `mso_mdoc` is signed with `signatureAlgo` alone, so it now requires `signatureAlgo`, and `signatureCryptoSuite` is optional. If one is sent for `mso_mdoc`, its value is not validated, and it is not stored.
 
-**Action for existing automation:** every Update request must send both attributes and `signatureAlgo`, even one that only changes an unrelated field such as the display name. This includes configurations created before these attributes were stored. `credentialSigningAlgValuesSupported` must be removed from every request body.
+**Action for existing deployments:** add `jwk` to the `ldp_vc` and `dc+sd-jwt` entries of `mosip.certify.credential-config.cryptographic-binding-methods-supported`. The previous release declared only `did:jwk` and `did:key`, so a configuration that selects `jwk` is rejected until it is added:
+
+```properties
+mosip.certify.credential-config.cryptographic-binding-methods-supported={\
+  'ldp_vc': {'jwk','did:jwk','did:key'},\
+  'mso_mdoc': {'cose_key'},\
+  'dc+sd-jwt': {'jwk','did:jwk','did:key'}\
+}
+```
+
+**Action for existing automation:** every Update request must send both attributes, and `signatureAlgo` in DataProvider plugin mode, even one that only changes an unrelated field such as the display name. This includes configurations created before these attributes were stored. `credentialSigningAlgValuesSupported` must be removed from every request body.
 
 See [Credential Issuer Configuration](./Credential_Issuer_Configuration.md) for the validation rules.

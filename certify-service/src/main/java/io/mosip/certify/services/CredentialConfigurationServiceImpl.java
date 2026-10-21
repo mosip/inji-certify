@@ -117,8 +117,8 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
         switch (credentialConfig.getCredentialFormat()) {
             case VCFormats.LDP_VC:
-                if (!LdpVcCredentialConfigValidator.isValidCheck(credentialConfig)) {
-                    throw new CertifyException(ErrorConstants.LDP_VC_MANDATORY_FIELDS_MISSING, "Fields context, credentialType, signatureCryptoSuite and signatureAlgo are mandatory for the ldp_vc format.");
+                if (!LdpVcCredentialConfigValidator.isValidCheck(credentialConfig, pluginMode)) {
+                    throw new CertifyException(ErrorConstants.LDP_VC_MANDATORY_FIELDS_MISSING, "Fields context, credentialType, signatureCryptoSuite and signatureAlgo (DataProvider plugin mode only) are mandatory for the ldp_vc format.");
                 }
                 if(shouldCheckDuplicate && LdpVcCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException(ErrorConstants.LDP_VC_CONFIG_EXISTS, "Configuration already exists for the specified context and credentialType.");
@@ -126,16 +126,16 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 validateKeyAliasMapperConfiguration(credentialConfig);
                 break;
             case VCFormats.MSO_MDOC:
-                if (!MsoMdocCredentialConfigValidator.isValidCheck(credentialConfig)) {
-                    throw new CertifyException(ErrorConstants.MSO_MDOC_MANDATORY_FIELDS_MISSING, "Fields doctype and signatureAlgo are mandatory for the mso_mdoc format.");
+                if (!MsoMdocCredentialConfigValidator.isValidCheck(credentialConfig, pluginMode)) {
+                    throw new CertifyException(ErrorConstants.MSO_MDOC_MANDATORY_FIELDS_MISSING, "Fields doctype and signatureAlgo (DataProvider plugin mode only) are mandatory for the mso_mdoc format.");
                 }
                 if(shouldCheckDuplicate && MsoMdocCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException(ErrorConstants.MSO_MDOC_CONFIG_EXISTS, "Configuration already exists for the specified doctype.");
                 }
                 break;
             case VCFormats.DC_SD_JWT:
-                if (!SdJwtCredentialConfigValidator.isValidCheck(credentialConfig)) {
-                    throw new CertifyException(ErrorConstants.DC_SD_JWT_MANDATORY_FIELDS_MISSING, "Fields vct and signatureAlgo are mandatory for the dc+sd-jwt format.");
+                if (!SdJwtCredentialConfigValidator.isValidCheck(credentialConfig, pluginMode)) {
+                    throw new CertifyException(ErrorConstants.DC_SD_JWT_MANDATORY_FIELDS_MISSING, "Fields vct and signatureAlgo (DataProvider plugin mode only) are mandatory for the dc+sd-jwt format.");
                 }
                 if(shouldCheckDuplicate && SdJwtCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException(ErrorConstants.DC_SD_JWT_CONFIG_EXISTS, "Configuration already exists for the specified vct.");
@@ -234,8 +234,8 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
      * sees the whole payload's problems at once and nothing is partially saved.
      */
     private void validateAndApplyCredentialConfigMetadataAttributes(CredentialConfigurationDTO request, CredentialConfig credentialConfig) {
-        // An mdoc's issuerAuth is signed with signatureAlgo alone, so the crypto suite an mso_mdoc request
-        // must carry is not validated, and never stored.
+        // An mdoc's issuerAuth is signed with signatureAlgo alone, so a crypto suite sent with an mso_mdoc
+        // request is not validated, and never stored.
         if (VCFormats.MSO_MDOC.equals(credentialConfig.getCredentialFormat())) {
             credentialConfig.setSignatureCryptoSuite(null);
         }
@@ -249,7 +249,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
         int errorsBeforeSigningAlg = errors.size();
         CredentialConfigMetadataValidator.validateSigningAlg(signatureAlgo, credentialConfig.getCredentialFormat(),
                 credentialConfig.getSignatureCryptoSuite(), credentialSigningAlgValuesSupportedMap,
-                keyAliasMapper, errors);
+                keyAliasMapper, pluginMode, errors);
         // An algorithm already rejected above is not reported a second time by the COSE check.
         if (errors.size() == errorsBeforeSigningAlg) {
             CredentialConfigMetadataValidator.validateCoseSigningAlg(signatureAlgo,

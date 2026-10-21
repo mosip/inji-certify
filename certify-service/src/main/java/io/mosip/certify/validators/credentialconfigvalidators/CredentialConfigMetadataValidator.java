@@ -60,8 +60,9 @@ public class CredentialConfigMetadataValidator {
     /**
      * The configuration's signatureAlgo is the one algorithm it signs with, and so what it advertises in
      * credential_signing_alg_values_supported (an ldp_vc configuration advertises its crypto suite
-     * instead). It is mandatory, and nothing is filled in from the deployment configuration when it is
-     * left out.
+     * instead). It is mandatory in DataProvider mode, where Certify signs the credential, and optional in
+     * VCIssuance mode, where the plugin signs it. Nothing is filled in from the deployment configuration
+     * when it is left out, and a value that is sent is validated in both modes.
      * <p>
      * An ldp_vc configuration is checked against the algorithms declared for its crypto suite in
      * mosip.certify.credential-config.credential-signing-alg-values-supported. mso_mdoc and dc+sd-jwt
@@ -71,14 +72,18 @@ public class CredentialConfigMetadataValidator {
     public static void validateSigningAlg(String signatureAlgo, String credentialFormat, String signatureCryptoSuite,
                                           Map<String, List<String>> declaredSigningAlgsByCryptoSuite,
                                           Map<String, List<List<String>>> keyAliasMapper,
-                                          List<Error> errors) {
-        if (signatureAlgo == null || signatureAlgo.isEmpty()) {
+                                          String pluginMode, List<Error> errors) {
+        boolean missing = signatureAlgo == null || signatureAlgo.isEmpty();
+        if (missing && "DataProvider".equals(pluginMode)) {
             errors.add(buildError(mandatoryFieldsMissingCode(credentialFormat),
                     SIGNING_ALG_ATTRIBUTE + " is mandatory for the " + credentialFormat + " format."));
             return;
         }
 
         if (!VCFormats.LDP_VC.equals(credentialFormat)) {
+            if (missing) {
+                return;
+            }
             List<List<String>> keyAliases = keyAliasMapper.get(signatureAlgo);
             if (keyAliases == null || keyAliases.isEmpty()) {
                 errors.add(buildError(ErrorConstants.KEY_CHOOSER_CONFIG_NOT_FOUND,
@@ -95,7 +100,7 @@ public class CredentialConfigMetadataValidator {
             return;
         }
 
-        if (!declared.contains(signatureAlgo)) {
+        if (!missing && !declared.contains(signatureAlgo)) {
             errors.add(buildError(ErrorConstants.UNSUPPORTED_SIGNATURE_ALGO,
                     "Signature algorithm " + signatureAlgo + " is not supported for the crypto suite: "
                             + signatureCryptoSuite + ". The supported values are: " + declared));
