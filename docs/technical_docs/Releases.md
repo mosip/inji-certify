@@ -58,7 +58,7 @@ Replace `$velocityCount` with `$foreach.count`, and `$velocityHasNext` with `$fo
 
 Nothing is resolved from the properties for it any more. Existing configurations advertise their own signing algorithm (or crypto suite for `ldp_vc`) without being re-submitted.
 
-`mso_mdoc` is signed with `signatureAlgo` alone, so it now requires `signatureAlgo` as well as `signatureCryptoSuite`. `signatureCryptoSuite` stays mandatory so the request body is the same shape for every format, but for `mso_mdoc` its value is not validated, and it is not stored.
+`mso_mdoc` is signed with `signatureAlgo` alone, so it now requires `signatureAlgo`, and `signatureCryptoSuite` is optional. If one is sent for `mso_mdoc`, its value is not validated, and it is not stored.
 
 **Action for existing automation:** every Update request must send both attributes and `signatureAlgo`, even one that only changes an unrelated field such as the display name. This includes configurations created before these attributes were stored. `credentialSigningAlgValuesSupported` must be removed from every request body.
 

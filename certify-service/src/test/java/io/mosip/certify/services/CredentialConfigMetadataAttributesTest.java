@@ -299,7 +299,7 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     /**
-     * An mdoc is signed with signatureAlgo alone, so the crypto suite it must carry is not validated - any
+     * An mdoc is signed with signatureAlgo alone, so a crypto suite sent with it is not validated - any
      * value is accepted - and is not stored. The configuration advertises its signatureAlgo.
      */
     @Test
@@ -345,22 +345,24 @@ public class CredentialConfigMetadataAttributesTest {
     }
 
     /**
-     * The crypto suite is mandatory for mso_mdoc so the request body has the same shape for every format,
-     * on Add as on Update.
+     * The crypto suite is optional for mso_mdoc, so a request without one is accepted.
      */
     @Test
-    public void should_rejectMsoMdoc_when_signatureCryptoSuiteIsMissingOrEmpty() {
+    public void should_acceptMsoMdocAndStoreNoSuite_when_signatureCryptoSuiteIsMissingOrEmpty() {
         for (String suite : Arrays.asList(null, "")) {
+            CredentialConfig entity = msoMdocEntity();
+            entity.setSignatureCryptoSuite(suite);
+            when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(entity);
+            when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(entity);
             CredentialConfigurationDTO request = msoMdocRequest();
             request.setSignatureCryptoSuite(suite);
 
-            CertifyException exception = assertThrows(CertifyException.class,
-                    () -> credentialConfigurationService.addCredentialConfiguration(request));
+            credentialConfigurationService.addCredentialConfiguration(request);
 
-            Assert.assertEquals(ErrorConstants.MSO_MDOC_MANDATORY_FIELDS_MISSING, exception.getErrorCode());
-            Assert.assertTrue(exception.getMessage().contains("signatureCryptoSuite"));
+            Assert.assertNull(entity.getSignatureCryptoSuite());
+            Assert.assertEquals(List.of("ES256"), entity.getCredentialSigningAlgValuesSupported());
         }
-        verify(credentialConfigRepository, never()).save(any(CredentialConfig.class));
+        verify(credentialConfigRepository, times(2)).save(any(CredentialConfig.class));
     }
 
     /**

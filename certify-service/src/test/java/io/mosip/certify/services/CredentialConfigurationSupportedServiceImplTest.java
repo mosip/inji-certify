@@ -451,7 +451,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
         mdocDTO.setCredentialConfigKeyId("mdoc-credential");
         mdocDTO.setDocType("docType1");
         mdocDTO.setVcTemplate("mdoc_template");
-        mdocDTO.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019"); // required
+        mdocDTO.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019"); // optional, not stored
         mdocDTO.setSignatureAlgo("ES256"); // required
         // An mdoc is signed with signatureAlgo, so the deployment must hold a key for it.
         ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper",
@@ -538,7 +538,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
             );
-            assertEquals("Fields doctype, signatureCryptoSuite and signatureAlgo are mandatory for the mso_mdoc format.", ex.getMessage());
+            assertEquals("Fields doctype and signatureAlgo are mandatory for the mso_mdoc format.", ex.getMessage());
         }
     }
 
