@@ -21,6 +21,7 @@ import org.testng.TestNG;
 import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
 
+import io.inji.testrig.apirig.injicertify.utils.DevicePartnerSetup;
 import io.inji.testrig.apirig.injicertify.utils.InjiCertifyConfigManager;
 import io.inji.testrig.apirig.injicertify.utils.InjiCertifyUtil;
 import io.mosip.testrig.apirig.dataprovider.BiometricDataProvider;
@@ -130,7 +131,7 @@ public class InjiTestRunner {
 
 				// mdocvp also AddIdentity's a MOSIP UIN, so IDA needs the same CBEFF face.
 				PartnerRegistration.deleteCertificates();
-				PartnerRegistration.deviceGeneration();
+				DevicePartnerSetup.ensureDevicePartner();
 				BiometricDataProvider.generateBiometricTestData("Registration");
 
 				startTestRunner();

@@ -120,6 +120,7 @@ public class InjiCertifyUtil extends AdminTestUtil {
 public static List<String> testCasesInRunScope = new ArrayList<>();
 
 	private static final String SAMPLE_MOSIP_IDENTITY_VC_CACHE_KEY = "PresentationDuringIssuance_sampleMosipIdentityVc";
+	private static boolean mosipIdCertificateCacheRefreshed;
 	private static final String MOSIP_ID_PARTNER_ID_KEYWORD =
 			"$ID:PartnerSelfRegistration_MOSIPID_All_Valid_Smoke_sid_partnerId$";
 	/** Mock eSignet partner. Valid for mdl/mdocvp mock OIDC, not for released IDA. */
@@ -251,28 +252,8 @@ public static void configureOtp() {
 		return "mdocvp".equals(trimLowerUseCase());
 	}
 
-	/**
-	 * First row of inji-config {@code driving_license_mosipid.csv} (dev-int).
-	 * MockCSVDataProviderPlugin looks up the IAR token {@code sub} against that
-	 * column. AddIdentity still uses a fresh idgenerator UIN so IDA can send OTP;
-	 * after IAR-with-VP succeeds we rewrite {@code iar_session.identity_data} to
-	 * this id so the subsequent token {@code sub} matches the CSV.
-	 */
-	public static final String DEFAULT_MDOCVP_CSV_IDENTITY_ID = "6039071423";
 	public static final String MDOCVP_IAR_VP_SMOKE_UNIQUE_ID = "TC_InjiCertify_IARInitialRequest_With_VP_01";
 	private static final Pattern SAFE_IAR_SESSION_TOKEN = Pattern.compile("[A-Za-z0-9._:-]+");
-
-	public static String mdocvpCsvIdentityId() {
-		try {
-			String configured = InjiCertifyConfigManager.getproperty("mdocvpCsvIdentityId");
-			if (configured != null && !configured.isBlank() && !"null".equalsIgnoreCase(configured.trim())) {
-				return configured.trim();
-			}
-		} catch (RuntimeException ignored) {
-			// Unit tests may call this before ConfigManager.init().
-		}
-		return DEFAULT_MDOCVP_CSV_IDENTITY_ID;
-	}
 
 	public static boolean shouldRewriteMdocvpIarSessionIdentity(TestCaseDTO testCaseDTO) {
 		if (!isMdocvpUseCase() || testCaseDTO == null) {
@@ -310,7 +291,7 @@ public static void configureOtp() {
 		} catch (JSONException e) {
 			throw new AdminTestException("IAR VP request is not JSON; cannot rewrite iar_session.identity_data");
 		}
-		String csvIdentityId = mdocvpCsvIdentityId();
+		String csvIdentityId = mdocvpIssuanceIdentityId();
 		String sql = mdocvpIarSessionIdentityUpdateSql(authSession, csvIdentityId);
 		String selectSql = "SELECT auth_session FROM iar_session WHERE auth_session = '" + authSession + "'";
 		logger.error("Rewriting mdocvp IAR session identity_data to the configured CSV identity");
@@ -344,7 +325,16 @@ public static void configureOtp() {
 				// Unit tests may call this before ConfigManager.init().
 			}
 			if (mdocDb != null && !mdocDb.isBlank() && !"null".equalsIgnoreCase(mdocDb.trim())) {
-				return "jdbc:postgresql://" + InjiCertifyConfigManager.getproperty("db-server") + ":"
+				String dbHost = InjiCertifyConfigManager.getproperty("db-server");
+				try {
+					String environmentHost = URI.create(BaseTestCase.ApplnURI).getHost();
+					if (environmentHost != null && environmentHost.startsWith("api-internal.")) {
+						dbHost = environmentHost.substring("api-internal.".length());
+					}
+				} catch (RuntimeException ignored) {
+					// Fall back to the configured DB host.
+				}
+				return "jdbc:postgresql://" + dbHost + ":"
 						+ InjiCertifyConfigManager.getproperty("db-port") + "/" + mdocDb.trim();
 			}
 		}
@@ -1405,6 +1395,100 @@ public static void configureOtp() {
 		return baseUrl;
 	}
 
+	public static boolean shouldSynchronizeMdocvpMosipIdClient(TestCaseDTO testCaseDTO) {
+		return isMdocvpUseCase() && testCaseDTO != null
+				&& "TC_pms_dependency_01".equals(testCaseDTO.getUniqueIdentifier());
+	}
+
+	/** eSignet 1.8 sends this client id to IDA, so it must be the PMS-issued API key. */
+	public static boolean shouldBindMosipIdDpopClient(TestCaseDTO testCaseDTO) {
+		return "mosipid".equals(trimLowerUseCase()) && testCaseDTO != null
+				&& "TC_esignetDependent_CreateOidc_DPoP_Mosip_01".equals(testCaseDTO.getUniqueIdentifier());
+	}
+
+	/** Mirrors a PMS-issued client into eSignet while preserving its IDA-authorized identifiers. */
+	public static String mdocvpMosipIdClientRequest(String pmsRequestJson, String pmsResponseJson) {
+		JSONObject pmsRequest = new JSONObject(pmsRequestJson).getJSONObject("request");
+		JSONObject pmsResponse = new JSONObject(pmsResponseJson).getJSONObject("response");
+		JSONObject request = new JSONObject();
+		request.put("clientId", pmsResponse.getString("clientId"));
+		request.put("clientName", "MOSIP PDI Client");
+		request.put("publicKey", pmsRequest.getJSONObject("publicKey"));
+		request.put("relyingPartyId", pmsRequest.getString("authPartnerId"));
+		request.put("userClaims", new JSONArray().put("name").put("email").put("gender")
+				.put("phone_number").put("birthdate"));
+		request.put("authContextRefs", new JSONArray().put("mosip:idp:acr:static-code")
+				.put("mosip:idp:acr:generated-code").put("mosip:idp:acr:biometrics")
+				.put("mosip:idp:acr:knowledge"));
+		request.put("logoUri", pmsRequest.getString("logoUri"));
+		request.put("redirectUris", pmsRequest.getJSONArray("redirectUris"));
+		request.put("grantTypes", pmsRequest.getJSONArray("grantTypes"));
+		request.put("clientAuthMethods", pmsRequest.getJSONArray("clientAuthMethods"));
+		request.put("clientNameLangMap", new JSONObject().put("eng", "MOSIP PDI Client"));
+		return new JSONObject().put("requestTime", generateCurrentUTCTimeStamp()).put("request", request).toString();
+	}
+
+	/** Same PMS client, with the DPoP binding eSignet requires on the access token. */
+	public static String mosipIdDpopClientRequest(String pmsRequestJson, String pmsResponseJson) {
+		JSONObject body = new JSONObject(mdocvpMosipIdClientRequest(pmsRequestJson, pmsResponseJson));
+		JSONObject request = body.getJSONObject("request");
+		request.put("clientName", "MOSIP OIDC Client");
+		request.getJSONObject("clientNameLangMap").put("eng", "MOSIP OIDC Client");
+		request.put("additionalConfig", new JSONObject().put("dpop_bound_access_tokens", true));
+		return body.toString();
+	}
+
+	public static String mosipIdDpopBindingPatch() {
+		return new JSONObject().put("requestTime", generateCurrentUTCTimeStamp())
+				.put("request", new JSONObject().put("additionalConfig",
+						new JSONObject().put("dpop_bound_access_tokens", true)))
+				.toString();
+	}
+
+	/** Refreshes the deployed issuer's cached signing kid before the mdocvp VC prerequisite. */
+	public static synchronized void refreshMosipIdCertificateCache(String testCaseName, String inputJson)
+			throws AdminTestException {
+		if (!isMdocvpUseCase() || testCaseName == null || !testCaseName.contains("_mdocvp_holder")
+				|| mosipIdCertificateCacheRefreshed) {
+			return;
+		}
+		String actuatorPath = InjiCertifyConfigManager.getproperty("actuatorCertifyEndpoint");
+		if (actuatorPath == null || actuatorPath.isBlank()) {
+			actuatorPath = "/v1/certify/actuator/env";
+		}
+		int envIndex = actuatorPath.lastIndexOf("/env");
+		String actuatorBase = envIndex >= 0 ? actuatorPath.substring(0, envIndex) : actuatorPath;
+		String url = getMosipIdCertifyBaseUrl().replaceAll("/+$", "")
+				+ actuatorBase + "/caches/certificatedatacache";
+		try {
+			String accessToken = new JSONObject(inputJson).optString("idpAccessToken", "");
+			if (accessToken.isBlank()) {
+				throw new AdminTestException("MOSIP ID access token is missing; cannot refresh the signing cache");
+			}
+			Response response = io.restassured.RestAssured.given().relaxedHTTPSValidation()
+					.header("Authorization", "Bearer " + accessToken).delete(url);
+			if (response.getStatusCode() == 403) {
+				String csrfToken = response.getCookie("XSRF-TOKEN");
+				if (csrfToken != null && !csrfToken.isBlank()) {
+					response = io.restassured.RestAssured.given().relaxedHTTPSValidation()
+							.header("Authorization", "Bearer " + accessToken).cookie("XSRF-TOKEN", csrfToken)
+							.header("X-XSRF-TOKEN", csrfToken).delete(url);
+				}
+			}
+			if (response.getStatusCode() != 200 && response.getStatusCode() != 204) {
+				throw new AdminTestException("Unable to refresh MOSIP ID signing certificate cache at " + url
+						+ ": HTTP " + response.getStatusCode() + " " + response.asString());
+			}
+			mosipIdCertificateCacheRefreshed = true;
+			logger.info("Refreshed MOSIP ID signing certificate cache before mdocvp credential issuance");
+		} catch (AdminTestException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new AdminTestException("Unable to refresh MOSIP ID signing certificate cache at " + url
+					+ ": " + e.getMessage());
+		}
+	}
+
 	public static String getMosipIdEsignetBaseUrl() {
 		String configured = InjiCertifyConfigManager.getproperty("eSignetMosipIdBaseUrl");
 		if (configured != null && !configured.isBlank()) {
@@ -1518,6 +1602,17 @@ public static void configureOtp() {
 	public static boolean shouldUpdateExistingMosipIdCredentialConfig(TestCaseDTO testCaseDTO, Response response) {
 		return shouldReplaceExistingMosipIdCredentialConfig(testCaseDTO)
 				&& isDuplicateMosipIdCredentialConfig(response);
+	}
+
+	/** qainji keeps these issuer configs; a second run updates them instead of failing the create. */
+	public static boolean shouldUpdateExistingLandRegistryCredentialConfig(TestCaseDTO testCaseDTO, Response response) {
+		if (!"landregistry".equals(trimLowerUseCase()) || testCaseDTO == null
+				|| !isDuplicateMosipIdCredentialConfig(response)) {
+			return false;
+		}
+		String uniqueIdentifier = testCaseDTO.getUniqueIdentifier();
+		return "TC_InjiCertify_LandRegistry_AddVCDM20_01".equals(uniqueIdentifier)
+				|| "TC_InjiCertify_LandRegistry_AddRegistrationReceipt_01".equals(uniqueIdentifier);
 	}
 
 	public static boolean isDuplicateMosipIdCredentialConfig(Response response) {
@@ -3163,6 +3258,21 @@ public static void configureOtp() {
 
 	public static String unwrapRawPlaceholders(String json) {
 		return RAW_PLACEHOLDER.matcher(json).replaceAll("$1");
+	}
+
+	/** Uses an identifier from the CSV configured by the deployed mdoc issuer. */
+	static String mdocvpIssuanceIdentityId() throws AdminTestException {
+		String csvUrl = getValueFromCertifyActuator(
+				InjiCertifyConfigManager.getproperty("certifyActuatorPropertySection"),
+				"mosip.certify.mock.data-provider.csv-registry-uri");
+		if (csvUrl == null || csvUrl.isBlank()) {
+			throw new AdminTestException("Issuer CSV registry URI is not configured");
+		}
+		String identityId = getIdFromCsvUrl(csvUrl.trim());
+		if (!isSafeIarSessionToken(identityId)) {
+			throw new AdminTestException("Issuer CSV has no valid identifier: " + csvUrl);
+		}
+		return identityId.trim();
 	}
 
 	public static String getIdFromCsvUrl(String url) {
