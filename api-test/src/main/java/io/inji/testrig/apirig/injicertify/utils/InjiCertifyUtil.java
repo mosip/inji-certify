@@ -1465,12 +1465,12 @@ public static void configureOtp() {
 			if (accessToken.isBlank()) {
 				throw new AdminTestException("MOSIP ID access token is missing; cannot refresh the signing cache");
 			}
-			Response response = io.restassured.RestAssured.given().relaxedHTTPSValidation()
+			Response response = io.restassured.RestAssured.given()
 					.header("Authorization", "Bearer " + accessToken).delete(url);
 			if (response.getStatusCode() == 403) {
 				String csrfToken = response.getCookie("XSRF-TOKEN");
 				if (csrfToken != null && !csrfToken.isBlank()) {
-					response = io.restassured.RestAssured.given().relaxedHTTPSValidation()
+					response = io.restassured.RestAssured.given()
 							.header("Authorization", "Bearer " + accessToken).cookie("XSRF-TOKEN", csrfToken)
 							.header("X-XSRF-TOKEN", csrfToken).delete(url);
 				}
@@ -1484,6 +1484,7 @@ public static void configureOtp() {
 		} catch (AdminTestException e) {
 			throw e;
 		} catch (Exception e) {
+			logger.error("Unable to refresh MOSIP ID signing certificate cache at " + url, e);
 			throw new AdminTestException("Unable to refresh MOSIP ID signing certificate cache at " + url
 					+ ": " + e.getMessage());
 		}
