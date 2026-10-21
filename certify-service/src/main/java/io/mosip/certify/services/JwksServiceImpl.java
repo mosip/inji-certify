@@ -42,9 +42,6 @@ public class JwksServiceImpl implements JwksService {
 
     private final CredentialConfigRepository credentialConfigRepository;
 
-    @Value("#{${mosip.certify.credential-config.credential-signing-alg-values-supported}}")
-    private LinkedHashMap<String, List<String>> credentialSigningAlgValuesSupportedMap;
-
     @Value("#{${mosip.certify.signature-algo.key-alias-mapper:{}}}")
     private Map<String, List<List<String>>> signatureAlgoKeyAliasMapper;
 

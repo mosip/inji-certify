@@ -2,6 +2,15 @@ openapi: 3.0.1
 info:
   version: v0
   title: OpenAPI definition
+  description: >-
+    APIs exposed by Inji Certify for managing credential configurations, signing certificates
+    and issuing verifiable credentials as per the OpenID4VCI specification.
+  contact:
+    name: MOSIP
+    url: https://www.mosip.io
+  license:
+    name: Apache-2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
 servers:
   - url: 'http://localhost:8090/v1/certify'
     description: Generated server url
@@ -92,6 +101,13 @@ paths:
                       - VerifiableCredential
                       - landstatement_dataIntegrity
                     signatureAlgo: EdDSA
+                    cryptographicBindingMethodsSupported:
+                      - 'did:jwk'
+                    proofTypesSupported:
+                      jwt:
+                        proof_signing_alg_values_supported:
+                          - ES256
+                          - EdDSA
                     qrSettings:
                       - Full Name: "${fullName}"
                         Phone Number: "${mobileNumber}"
@@ -198,6 +214,13 @@ paths:
                     - VerifiableCredential
                     - landstatement_dataIntegrity
                   signatureAlgo: EdDSA
+                  cryptographicBindingMethodsSupported:
+                    - 'did:jwk'
+                  proofTypesSupported:
+                    jwt:
+                      proof_signing_alg_values_supported:
+                        - ES256
+                        - EdDSA
                   qrSettings:
                     - Full Name: "${fullName}"
                       Phone Number: "${mobileNumber}"
@@ -213,68 +236,8 @@ paths:
               examples:
                 Example 1:
                   value:
-                    vcTemplate: eyJjcmVkZW50aWFsU3ViamVjdCI6eyJSZWdpc3RyYXRpb25EYXRlIjoiJHtyZWdpc3RyYXRpb25fZGF0ZX0iLCJDb25zZXJ2YXRpb25Vbml0UHJvY2Vzc2luZ0RhdGUiOiIke2NvbnNlcnZhdGlvbl91bml0X3Byb2Nlc3NpbmdfZGF0ZX0iLCJMYXRpdHVkZSI6IiR7bGF0aXR1ZGV9IiwiQ29uc29saWRhdGVkUnVyYWxBcmVhIjoiJHtjb25zb2xpZGF0ZWRfcnVyYWxfYXJlYX0iLCJMZWdhbFJlc2VydmVMb2NhdGlvbiI6IiR7bG9jYXRpb25fb2ZfbGVnYWxfcmVzZXJ2ZX0iLCJSZWdpc3RlcmVkTGVnYWxSZXNlcnZlQXJlYSI6IiR7cmVnaXN0ZXJlZF9sZWdhbF9yZXNlcnZlX2FyZWF9IiwiUmVzdHJpY3RlZFVzZUFyZWFUb0JlUmVzdG9yZWQiOiIke3Jlc3RyaWN0ZWRfdXNlX2FyZWFfdG9fcmVjb21wb3NlfSIsIlRvdGFsRGVjbGFyZWRMZWdhbFJlc2VydmUiOiIke3RvdGFsX2xlZ2FsX3Jlc2VydmVfZGVjbGFyZWR9IiwiUGVybWFuZW50UHJlc2VydmF0aW9uQXJlYXMiOiIke3Blcm1hbmVudF9wcmVzZXJ2YXRpb25fYXJlYXNfYXBwfSIsIkFkbWluaXN0cmF0aXZlRWFzZW1lbnRBcmVhIjoiJHthZG1pbmlzdHJhdGl2ZV9lYXNlbWVudF9hcmVhfSIsIlJlc3RyaWN0ZWRVc2VBcmVhcyI6IiR7cmVzdHJpY3RlZF91c2VfYXJlYXN9IiwiUFJBQ29uZGl0aW9uIjoiJHtwcmFfY29uZGl0aW9ufSIsImlkIjoiJHtfaG9sZGVySWR9IiwiTGVnYWxSZXNlcnZlRGVmaWNpdE9yRXhjZXNzIjoiJHtsZWdhbF9yZXNlcnZlX2RlZmljaXRfZXhjZXNzfSIsIkxlZ2FsUmVzZXJ2ZUFyZWFUb0JlUmVzdG9yZWQiOiIke2xlZ2FsX3Jlc2VydmVfYXJlYV90b19yZWNvbXBvc2V9IiwiRW1iYXJnZ2VkQXJlYU92ZXJsYXBQZXJjZW50YWdlIjoiJHtlbWJhcmdvZWRfYXJlYV9vdmVybGFwX3BlcmNlbnRhZ2V9IiwiRW1iYXJnZ2VkQXJlYURlc2NyaXB0aW9uIjoiJHtlbWJhcmdvZWRfYXJlYV9kZXNjcmlwdGlvbn0iLCJHZW9yZWZlcmVuY2VkTGVnYWxSZXNlcnZlQXJlYSI6IiR7Z2VvcmVmZXJlbmNlZF9sZWdhbF9yZXNlcnZlX2FyZWF9IiwiQVBQSW5Db25zb2xpZGF0ZWRSdXJhbEFyZWEiOiIke2FwcF9pbl9jb25zb2xpZGF0ZWRfcnVyYWxfYXJlYX0iLCJFbWJhcmdnZWRBcmVhUHJvY2Vzc2luZ0RhdGUiOiIke2VtYmFyZ29lZF9hcmVhX3Byb2Nlc3NpbmdfZGF0ZX0iLCJDb25zZXJ2YXRpb25Vbml0RGVzY3JpcHRpb24iOiIke2NvbnNlcnZhdGlvbl91bml0X2Rlc2NyaXB0aW9ufSIsIk11bmljaXBhbGl0eSI6IiR7bXVuaWNpcGFsaXR5fSIsIkVtYmFyZ2dlZEFyZWFPdmVybGFwIjoiJHtlbWJhcmdvZWRfYXJlYV9vdmVybGFwfSIsIkFwcHJvdmVkVW5yZWdpc3RlcmVkTGVnYWxSZXNlcnZlQXJlYSI6IiR7YXBwcm92ZWRfbGVnYWxfcmVzZXJ2ZV9hcmVhX25vdF9yZWdpc3RlcmVkfSIsIlJlZ2lzdHJhdGlvblN0YXR1cyI6IiR7cmVnaXN0cmF0aW9uX3N0YXR1c30iLCJOdW1iZXJPZkNBUiI6IiR7Y2FyX3JlZ2lzdHJhdGlvbl9udW1iZXJ9IiwiUnVyYWxQcm9wZXJ0eUFyZWEiOiIke3J1cmFsX3Byb3BlcnR5X2FyZWF9IiwiTG9uZ2l0dWRlIjoiJHtsb25naXR1ZGV9IiwiQ29uc2VydmF0aW9uVW5pdE92ZXJsYXBBcmVhIjoiJHtjb25zZXJ2YXRpb25fdW5pdF9vdmVybGFwX2FyZWF9IiwiRXh0ZXJuYWxDb25kaXRpb24iOiIke2V4dGVybmFsX2NvbmRpdGlvbn0iLCJMYXN0TW9kaWZpY2F0aW9uRGF0ZSI6IiR7ZGF0ZV9vZl9sYXN0X2FtZW5kbWVudH0iLCJDb25zZXJ2YXRpb25Vbml0T3ZlcmxhcFBlcmNlbnRhZ2UiOiIke2NvbnNlcnZhdGlvbl91bml0X292ZXJsYXBfcGVyY2VudGFnZX0iLCJOYXRpdmVWZWdldGF0aW9uUmVtbmFudEFyZWEiOiIke25hdGl2ZV92ZWdldGF0aW9uX3JlbW5hbnRfYXJlYX0iLCJBUFBJbk5hdGl2ZVZlZ2V0YXRpb25SZW1uYW50QXJlYSI6IiR7YXBwX2luX25hdGl2ZV92ZWdldGF0aW9uX3JlbW5hbnRfYXJlYX0iLCJQZXJtYW5lbnRQcmVzZXJ2YXRpb25BcmVhc1RvQmVSZXN0b3JlZCI6IiR7cGVybWFuZW50X3ByZXNlcnZhdGlvbl9hcmVhc190b19yZWNvbXBvc2V9IiwiR3JvdW5kQ292ZXJhZ2UiOiIke2xhbmRfY292ZXJ9IiwiUHJvcG9zZWRMZWdhbFJlc2VydmVBcmVhIjoiJHtwcm9wb3NlZF9sZWdhbF9yZXNlcnZlX2FyZWF9In0sInZhbGlkVW50aWwiOiIke3ZhbGlkVW50aWx9IiwidmFsaWRGcm9tIjoiJHt2YWxpZEZyb219IiwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsImxhbmRzdGF0ZW1lbnRfZGF0YUludGVncml0eSJdLCJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvdjIiLCJodHRwczovL21vc2lwLmdpdGh1Yi5pby9pbmppLWNvbmZpZy9jb250ZXh0cy9sYW5kcmVnaXN0cnktc3RhdGVtZW50LWRhdGFJbnRlZ3JpdHktY29udGV4dC1hdXRvbWF0aW9uLmpzb24iXSwiaXNzdWVyIjoiJHtfaXNzdWVyfSJ9
-                    keyManagerRefId: ED25519_SIGN
-                    claims:
-                      APPInConsolidatedRuralArea:
-                        display:
-                          - name: APP in Consolidated Rural Area
-                            locale: en
-                      PermanentPreservationAreas:
-                        display:
-                          - name: Permanent Preservation Areas
-                            locale: en
-                    displayOrder:
-                      - NumberOfCAR
-                      - RegistrationDate
-                      - LastModificationDate
-                      - RuralPropertyArea
-                      - Latitude
-                      - Longitude
-                      - Municipality
-                      - ExternalCondition
-                      - RegistrationStatus
-                      - PRACondition
-                      - GroundCoverage
-                      - NativeVegetationRemnantArea
-                      - ConsolidatedRuralArea
-                      - AdministrativeEasementArea
-                      - LegalReserveLocation
-                      - RegisteredLegalReserveArea
-                      - GeoreferencedLegalReserveArea
-                      - ApprovedUnregisteredLegalReserveArea
-                      - ProposedLegalReserveArea
-                      - TotalDeclaredLegalReserve
-                      - PermanentPreservationAreas
-                      - APPInConsolidatedRuralArea
-                      - APPInNativeVegetationRemnantArea
-                      - RestrictedUseAreas
-                      - LegalReserveDeficitOrExcess
-                      - LegalReserveAreaToBeRestored
-                      - PermanentPreservationAreasToBeRestored
-                    didUrl: 'did:web:www.example.com:inji-config:collab:landregistry'
-                    contextURLs:
-                      - 'https://www.w3.org/ns/credentials/v2'
-                      - 'https://www.example.com/inji-config/contexts/landregistry-statement-dataIntegrity-context-automation.json'
-                    signatureCryptoSuite: eddsa-rdfc-2022
-                    credentialConfigKeyId: landstatement_dataIntegrity_2.0
-                    metaDataDisplay:
-                      - background_image:
-                          uri: 'https://www.example.com/inji-config/logos/agro-vertias-logo.png'
-                        background_color: '#ebfaff'
-                        name: land statement for data integrity
-                        logo:
-                          alt_text: land statement Logo
-                          url: 'https://www.example.com/inji-config/logos/agro-vertias-logo.png'
-                        text_color: '#000000'
-                        locale: en
-                    credentialFormat: ldp_vc
-                    scope: land_statement_vc_ldp
-                    keyManagerAppId: CERTIFY_VC_SIGN_ED25519
-                    credentialTypes:
-                      - VerifiableCredential
-                      - landstatement_dataIntegrity
-                    signatureAlgo: EdDSA
+                    id: 1b4c9a8e-3f2d-4e7a-9c61-5d8f2a7b0e34
+                    status: active
       servers:
         - url: 'http://localhost:8090/v1/certify'
           description: Generated server url
@@ -742,6 +705,13 @@ paths:
                     - VerifiableCredential
                     - landstatement_dataIntegrity
                   signatureAlgo: EdDSA
+                  cryptographicBindingMethodsSupported:
+                    - 'did:jwk'
+                  proofTypesSupported:
+                    jwt:
+                      proof_signing_alg_values_supported:
+                        - ES256
+                        - EdDSA
                   qrSettings:
                     - Full Name: "${fullName}"
                       Phone Number: "${mobileNumber}"
@@ -751,7 +721,13 @@ paths:
                 value:
                   credentialConfigKeyId: DrivingLicenseCredential12
                   credentialFormat: mso_mdoc
-                  signatureCryptoSuite: EcdsaSecp256r1Signature2019
+                  signatureAlgo: ES256
+                  cryptographicBindingMethodsSupported:
+                    - 'cose_key'
+                  proofTypesSupported:
+                    jwt:
+                      proof_signing_alg_values_supported:
+                        - ES256
                   metaDataDisplay:
                     - name: Mobile Driving License
                       locale: en
@@ -809,6 +785,13 @@ paths:
                   keyManagerAppId: CERTIFY_VC_SIGN_ED25519
                   keyManagerRefId: ED25519_SIGN
                   signatureAlgo: EdDSA
+                  cryptographicBindingMethodsSupported:
+                    - 'did:jwk'
+                  proofTypesSupported:
+                    jwt:
+                      proof_signing_alg_values_supported:
+                        - ES256
+                        - EdDSA
                   sdJwtVct: SD_JWT
                   credentialFormat: dc+sd-jwt
                   didUrl: 'did:web:likhitharl.github.io:vc:qainji#key-0'
@@ -1017,8 +1000,14 @@ paths:
                   credentialFormat: ldp_vc
                   credentialConfigKeyId: Insurance_eccr1
                   didUrl: ''
-                  signatureAlgo: ''
+                  signatureAlgo: ES256
                   signatureCryptoSuite: EcdsaSecp256r1Signature2019
+                  cryptographicBindingMethodsSupported:
+                    - 'did:jwk'
+                  proofTypesSupported:
+                    jwt:
+                      proof_signing_alg_values_supported:
+                        - ES256
                   sdClaim: ''
                   displayOrder:
                     - fullName
@@ -1439,7 +1428,7 @@ paths:
                     claim1: value1
                     claim2: value2
                   expires_in: 600
-                  tx_code: 11111
+                  tx_code: '11111'
               without tx_code example:
                 value:
                   credential_configuration_id: "MockVerifiableCredential"
@@ -1483,26 +1472,28 @@ paths:
           description: Generated server url
 
 tags:
-  - name: cryptomanager
-    description: Operation related to Encryption and Decryption
   - name: Credential Configuration
     description: Operations to manage credential configuration used for credential issuance
-  - name: System Information
-    description: Operations to upload and fetch signature certificates
-  - name: VC Issuance
-    description: Verifiable credential issuance and issuer metadata APIs
-  - name: Rendering Template
-    description: Operations for rendering template
-  - name: Well-known
-    description: Well-known endpoints
   - name: 'Credential Status'
     description: Operations for Credential Status
+  - name: cryptomanager
+    description: Operation related to Encryption and Decryption
   - name: 'Ledger Search'
     description: Operations for Ledger Search
+  - name: 'Nonce Controller'
+    description: Operation to generate c_nonce for credential issuance
   - name: oAuth-controller
     description: Operation to handle IAR and token api
   - name: Pre-Authorized Code
     description: Operation to create pre-authorize data and get credential offer
+  - name: Rendering Template
+    description: Operations for rendering template
+  - name: System Information
+    description: Operations to upload and fetch signature certificates
+  - name: VC Issuance
+    description: Verifiable credential issuance and issuer metadata APIs
+  - name: Well-known
+    description: Well-known endpoints
 
 components:
   securitySchemes:
@@ -1517,7 +1508,6 @@ components:
     dpopAuth:
       type: http
       scheme: DPoP
-      bearerFormat: JWT
       description: >-
         A DPoP-bound access token (RFC 9449), presented with a proof of possession in the
         DPoP header. The proof must be signed by the key whose thumbprint appears in the
@@ -1529,6 +1519,8 @@ components:
         - credentialFormat
         - metaDataDisplay
         - scope
+        - cryptographicBindingMethodsSupported
+        - proofTypesSupported
       properties:
         vcTemplate:
           type: string
@@ -1567,7 +1559,20 @@ components:
           description: Reference ID for the key manager. Applicable for DataProvider plugin mode.
         signatureAlgo:
           description: |-
-            Signature or proof algorithm used for credential signing. This field is required for certain credential formats, such as dc+sd-jwt and optionally for ldp_vc when the signatureCryptoSuite is one of DataIntegrityProof suite (e.g. ecdsa-rdfc-2019, ecdsa-jcs-2019, etc). It ensures compatibility between the cryptographic suite and the signing algorithm. Mapping of signatureCryptoSuite and signatureAlgo values for DataIntegrityProof suite scenario :
+            In DataProvider plugin mode, mandatory on Add and Update for every credential format; a missing or empty value is rejected, and nothing is filled in from the deployment configuration. It is the algorithm the credential is signed with, and the signing key is selected by it through mosip.certify.signature-algo.key-alias-mapper.
+
+            In VCIssuance plugin mode the plugin signs the credential, so signatureAlgo is optional for every format. A value that is sent is validated as below, in both modes. An mso_mdoc or dc+sd-jwt configuration without signatureAlgo leaves credential_signing_alg_values_supported out of the credential issuer metadata; an ldp_vc one still advertises its signatureCryptoSuite. The plugin mode comes from mosip.certify.plugin-mode, not from the request.
+
+            It is validated as follows:
+            - ldp_vc: declared for the configuration's signatureCryptoSuite in mosip.certify.credential-config.credential-signing-alg-values-supported. Otherwise rejected with unsupported_signature_algo.
+            - mso_mdoc: backed by a signing key in mosip.certify.signature-algo.key-alias-mapper, otherwise rejected with key_chooser_config_not_found; it must also be ES256, the only algorithm supported for an mdoc's issuerAuth, otherwise rejected with unsupported_credential_signing_alg.
+            - dc+sd-jwt: backed by a signing key in mosip.certify.signature-algo.key-alias-mapper, otherwise rejected with key_chooser_config_not_found.
+
+            In DataProvider plugin mode, a missing value is rejected with the format's mandatory-fields code: ldp_vc_mandatory_fields_missing, mso_mdoc_mandatory_fields_missing or dc_sd_jwt_mandatory_fields_missing.
+
+            For mso_mdoc and dc+sd-jwt this is the value advertised in credential_signing_alg_values_supported of the credential issuer metadata (as its COSE identifier for mso_mdoc). The request no longer accepts credentialSigningAlgValuesSupported; a request that still sends it is rejected with invalid_request as an unrecognised field, and nothing is stored.
+
+            Mapping of signatureCryptoSuite and signatureAlgo values for DataIntegrityProof suite scenario :
 
             signatureCryptoSuite |  signatureAlgo
             ---------|----------
@@ -1578,6 +1583,7 @@ components:
             - EdDSA
             - ES256K
             - ES256
+            - RS256
           type: string
         sdClaim:
           type: string
@@ -1622,7 +1628,7 @@ components:
           type: string
           description: Document type identifier for the credential. Mandatory for mso_mdoc credential format.
         signatureCryptoSuite:
-          description: 'Holds value for signature crypto suites supported for key algorithms like Ed25519Signature2020,EcdsaSecp256k1Signature2019, etc. It will also be applicable for data integrity proof crypto suites, for e.g. ecds-rdfc-2019, eddsa-rdfc-2022, etc. Mandatory for DataProvider plugin. The values should be only be those supported by certify.'
+          description: 'Holds value for signature crypto suites supported for key algorithms like Ed25519Signature2020,EcdsaSecp256k1Signature2019, etc. It will also be applicable for data integrity proof crypto suites, for e.g. ecds-rdfc-2019, eddsa-rdfc-2022, etc. Mandatory for the ldp_vc format, and must be declared in mosip.certify.credential-config.credential-signing-alg-values-supported. For ldp_vc it is the value advertised in credential_signing_alg_values_supported of the credential issuer metadata, per OpenID4VCI 1.0 Appendix A.1.2.2. Optional for the mso_mdoc format, because an mdoc is signed with signatureAlgo alone: for mso_mdoc any value sent is ignored and not stored, so the values listed here apply to ldp_vc only. Must not be sent for the dc+sd-jwt format.'
           type: string
           enum:
             - RsaSignature2018
@@ -1651,31 +1657,26 @@ components:
         cryptographicBindingMethodsSupported:
           type: array
           minItems: 1
-          description: 'Optional. Binding methods advertised for this credential configuration. Every value must already be declared for this credential format in mosip.certify.credential-config.cryptographic-binding-methods-supported; a value that is not declared there is rejected with unsupported_cryptographic_binding_method, and a credential format with no declared binding methods is rejected with cryptographic_binding_config_not_found. Omitted on Add, the full set declared for the credential format applies; omitted on Update, the stored value is retained. Always returned by the Get response. An empty array is rejected.'
-          items:
-            type: string
-        credentialSigningAlgValuesSupported:
-          type: array
-          minItems: 1
-          description: 'Optional. Signing algorithms advertised for this credential configuration. Where signatureCryptoSuite is present every value must be declared for that suite in mosip.certify.credential-config.credential-signing-alg-values-supported; where the format carries no crypto suite, such as dc+sd-jwt, every value a request provides must be an algorithm the deployment holds a signing key for in mosip.certify.signature-algo.key-alias-mapper. Unlike the COSE constraint below, this key check applies only to the values a request provides: where the attribute is omitted, the algorithm derived from the configuration''s own signatureAlgo is stored without it, and a missing key surfaces at issuance rather than at configuration time. For the mso_mdoc format every value must additionally be ES256: that format advertises COSE algorithm identifiers, and ES256 is the only algorithm supported for an mdoc's issuerAuth; this applies to the algorithms derived from the crypto suite when the attribute is omitted just as it does to the ones a request selects. An undeclared value is rejected with unsupported_credential_signing_alg. Omitted on Add, the algorithms declared for the crypto suite apply, or the configuration''s own signatureAlgo where there is no suite; omitted on Update, the stored value is retained. Always returned by the Get response. An empty array is rejected.'
+          description: 'Mandatory on Add and Update. Binding methods advertised for this credential configuration. Every value must already be declared for this credential format in mosip.certify.credential-config.cryptographic-binding-methods-supported; a value that is not declared there is rejected with unsupported_cryptographic_binding_method, and a credential format with no declared binding methods is rejected with cryptographic_binding_config_not_found. Nothing is filled in from that property: a missing, null or empty value is rejected with invalid_request. A value listed more than once is stored once, in the order first given; the request is not rejected for it. Otherwise stored and returned by the Get response exactly as sent.'
           items:
             type: string
         proofTypesSupported:
           type: object
           minProperties: 1
-          description: 'Optional. Proof types advertised for this credential configuration. Each key must be a proof type declared in mosip.certify.credential-config.proof-types-supported, otherwise the request is rejected with unsupported_proof_type. A proof type may be named with null or with an empty object, in which case every algorithm declared for it applies. Omitted on Add, all declared proof types apply; omitted on Update, the stored value is retained. Always returned by the Get response. An empty object is rejected.'
+          description: 'Mandatory on Add and Update. Proof types advertised for this credential configuration. Each key must be a proof type declared in mosip.certify.credential-config.proof-types-supported, otherwise the request is rejected with unsupported_proof_type. Nothing is filled in from that property: a missing, null or empty value is rejected with invalid_request. A value listed more than once is stored once, in the order first given; the request is not rejected for it. Otherwise stored and returned by the Get response exactly as sent.'
           additionalProperties:
             $ref: '#/components/schemas/ProofTypeSupportedDTO'
     ProofTypeSupportedDTO:
       type: object
-      nullable: true
-      description: 'Narrows a single proof type. proof_signing_alg_values_supported is the only recognised attribute; any other attribute is rejected with invalid_request. Null is accepted and means every algorithm declared for the proof type applies.'
+      required:
+        - proof_signing_alg_values_supported
+      description: 'The proof signing algorithms accepted for a single proof type. proof_signing_alg_values_supported is the only recognised attribute; any other attribute is rejected with invalid_request. A proof type sent as null or without proof_signing_alg_values_supported is rejected with invalid_request.'
       additionalProperties: false
       properties:
         proof_signing_alg_values_supported:
           type: array
           minItems: 1
-          description: 'Optional. Must be a subset of the algorithms declared for this proof type in mosip.certify.credential-config.proof-types-supported; a value outside that set is rejected with unsupported_proof_signing_alg. Omitted, every declared algorithm for the proof type applies. An empty array is rejected.'
+          description: 'Mandatory. Must be a subset of the algorithms declared for this proof type in mosip.certify.credential-config.proof-types-supported; a value outside that set is rejected with unsupported_proof_signing_alg. A missing, null or empty value is rejected with invalid_request. A value listed more than once is stored once.'
           items:
             type: string
     CredentialConfigResponse:
@@ -1830,9 +1831,10 @@ components:
           type: string
           description: 'Status of the upload (e.g., SUCCESS, FAILURE).'
         timestamp:
-          type: string
-          description: UTC timestamp when upload operation was completed.
-          format: date-time
+          type: array
+          items:
+            type: integer
+          description: UTC timestamp when upload operation was completed, serialized from LocalDateTime as [year, month, day, hour, minute, second, nanosecond].
     RequestWrapperCSRGenerateRequestDto:
       type: object
       properties:
@@ -1936,9 +1938,10 @@ components:
           type: string
           description: Status of the upload (e.g., SUCCESS, FAILURE).
         timestamp:
-          type: string
-          format: date-time
-          description: UTC timestamp when upload operation was completed.
+          type: array
+          items:
+            type: integer
+          description: UTC timestamp when upload operation was completed, serialized from LocalDateTime as [year, month, day, hour, minute, second, nanosecond].
       required:
         - status
         - timestamp
@@ -2116,6 +2119,7 @@ components:
       properties:
         certificate:
           type: string
+          nullable: true
           description: X509 self-signed certificate in PEM format.
         certSignRequest:
           type: string
@@ -2189,12 +2193,12 @@ components:
           description: 'Document type identifier, used for mDL/mDoc credentials.'
         cryptographic_binding_methods_supported:
           type: array
-          description: 'List of supported cryptographic binding methods (e.g., did, holder\_binding).'
+          description: 'List of supported cryptographic binding methods (e.g., did:jwk, did:key, cose_key).'
           items:
             type: string
         credential_signing_alg_values_supported:
           type: array
-          description: 'List of supported credential signing algorithms (e.g., ES256, EdDSA for JWT/LDP formats, or integer values like -7 for mso_mdoc format).'
+          description: 'The single value the credential is signed with, derived from the credential configuration. For ldp_vc, the crypto suite (signatureCryptoSuite), for example Ed25519Signature2020 or eddsa-rdfc-2022, per OpenID4VCI 1.0 Appendix A.1.2.2. For dc+sd-jwt, the signing algorithm (signatureAlgo), for example ES256. For mso_mdoc, the COSE algorithm identifier of signatureAlgo, for example -7 for ES256.'
           items:
             anyOf:
               - type: string
@@ -2340,7 +2344,7 @@ components:
             statusPurpose:
               type: string
               nullable: true
-              description: 'Indicates the purpose of the status (e.g., ''revocation'', ''suspension''). Determines interpretation of the ''status'' bit. Should align with system policy/list purpose. If not provided, system may use a default value stored in the status_list_credential table for the provided statusListCredentialId.'
+              description: 'Indicates the purpose of the status (e.g., ''revocation'', ''suspension''). Determines interpretation of the ''status'' bit. Required when mosip.certify.data-provider-plugin.credential-status.allowed-status-purposes is configured, and must be one of its values; anything else is rejected. When that property is not configured the feature is not enabled: whatever is sent here is ignored, and the purpose already stored in the status_list_credential table for the provided statusListCredentialId is kept. Empty and whitespace-only values are trimmed and count as not provided.'
             statusListIndex:
               type: integer
               nullable: true
@@ -2500,8 +2504,9 @@ components:
       type: object
       properties:
         logo:
-          $ref: '#/components/schemas/Logo'
           description: Holds information regarding the logo image.
+          allOf:
+            - $ref: '#/components/schemas/Logo'
         name:
           type: string
           description: 'The display name, typically used as a title or label.'
@@ -2530,6 +2535,7 @@ components:
           type: string
           description: 'The timestamp indicating when the response was generated, in ISO 8601 format.'
         response:
+          type: object
           description: 'The main response data. It is null in this case, indicating no successful data was returned.'
           nullable: true
         errors:
@@ -2578,7 +2584,6 @@ components:
         authorization_details:
           type: array
           items:
-            type: object
             $ref: '#/components/schemas/AuthorizationDetail'
           description: |
             JSON containing RFC 9396 authorization details
@@ -2588,7 +2593,10 @@ components:
           description: Applicable for subsequent request - auth session value shared as response of initial IAR
         openid4vp_response:
           type: string
-          description: Applicable for subsequent request - OpenID4VP presentation submission response contains vp_token and presentation_submission
+          description: |
+            Applicable for subsequent request - OpenID4VP presentation submission response.
+            In DCQL mode (OpenID4VP 1.0) it contains a vp_token keyed by the DCQL credential
+            query id; there is no presentation_submission.
     AuthorizationSuccess:
       type: object
       required:
@@ -2611,7 +2619,11 @@ components:
           description: random string to identify session for auth flow, sent in response to initial request
         openid4vp_request:
           type: object
-          description: OpenId4VP compliant VP request. sent in response to initial request
+          description: |
+            OpenID4VP 1.0 compliant VP request, sent in response to the initial request.
+            Carries a dcql_query (Digital Credentials Query Language) describing the
+            credential(s) the wallet must present, together with nonce, response_mode
+            (only iae_post is supported for now) and response_uri.
         code:
           type: string
           description: Authorization code to exchange for access token, sent in subsequent request once VP is submitted and verified successfully
@@ -2749,7 +2761,7 @@ components:
         tx_code:
           type: string
           description: alphanumeric characters, if specified must be 4-8 characters
-          example: 11111
+          example: '11111'
     PreAuthorizedResponse:
       type: object
       required:

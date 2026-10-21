@@ -12,7 +12,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.inji.certify</groupId>
 	<artifactId>certify-parent</artifactId>
-	<version>1.0.0-alpha.3-SNAPSHOT</version>
+	<version>1.0.0-rc.2-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>certify</name>
 	<description>Parent project for MOSIP certify</description>
@@ -89,7 +89,7 @@
 		<maven.war.plugin.version>3.3.2</maven.war.plugin.version>
 		<maven.surefire.plugin.version>3.2.5</maven.surefire.plugin.version>
 		<maven.jacoco.version>0.8.12</maven.jacoco.version>
-		<maven.sonar.plugin.version>3.7.0.1746</maven.sonar.plugin.version>
+		<maven.sonar.plugin.version>5.8.0.7211</maven.sonar.plugin.version>
 		<maven.javadoc.version>3.6.3</maven.javadoc.version>
 		<maven-shade-plugin.version>4.4.3</maven-shade-plugin.version>
 
@@ -97,7 +97,10 @@
 		<central.publishing.maven.plugin.version>0.8.0</central.publishing.maven.plugin.version>
 
 		<java.version>21</java.version>
-		<jose4j.version>0.6.5</jose4j.version>
+		<jose4j.version>0.9.6</jose4j.version>
+		<nimbus-jose-jwt.version>10.0.2</nimbus-jose-jwt.version>
+		<!-- Velocity 2.4.1 requires commons-lang3 3.17.0; override Spring Boot's managed 3.13.0 -->
+		<commons-lang3.version>3.17.0</commons-lang3.version>
 		<kernel.core.version>1.3.0-beta.1</kernel.core.version>
 		<kernel.keymanager.version>1.4.0</kernel.keymanager.version>
 		<jsonld.common.java.version>0.5.0</jsonld.common.java.version>

@@ -403,4 +403,90 @@ public class ExceptionHandlerAdviceTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("invalid_request", ((OAuthTokenError) response.getBody()).getError());
     }
+
+    // --- unreadable bodies on the non-VCI endpoints (issue #878) ---------------------
+    // These go through handleExceptions with a URI that is neither /oauth/ nor /issuance/,
+    // which is how POST /v1/certify/credentials/status is routed. Before the shared
+    // describeUnreadableBody() helper they all fell through to 200 + unknown_error and
+    // returned Jackson's own message verbatim.
+
+    /** The first error of a ResponseWrapper; the DTO declares errors as raw java.lang.Error. */
+    private io.mosip.certify.core.dto.Error firstError(ResponseEntity<?> response) {
+        ResponseWrapper wrapper = (ResponseWrapper) response.getBody();
+        assertNotNull(wrapper);
+        assertFalse(wrapper.getErrors().isEmpty());
+        return (io.mosip.certify.core.dto.Error) wrapper.getErrors().get(0);
+    }
+
+    @Test
+    public void should_returnInvalidRequest_when_internalBodyHasUnrecognizedField() {
+        JsonParser parser = Mockito.mock(JsonParser.class);
+        when(parser.getCurrentLocation()).thenReturn(com.fasterxml.jackson.core.JsonLocation.NA);
+        UnrecognizedPropertyException cause = UnrecognizedPropertyException.from(
+                parser, Object.class, "bogus_field", null);
+
+        ResponseEntity<?> response = advice.handleExceptions(
+                new HttpMessageNotReadableException("msg", cause, null), webRequest("/credentials/status"));
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("invalid_request", firstError(response).getErrorCode());
+        assertEquals("Unrecognized field 'bogus_field' in request", firstError(response).getErrorMessage());
+    }
+
+    @Test
+    public void should_returnInvalidRequest_when_internalBodyHasWrongFieldType() {
+        // TC_InjiCertify_Update_Credential_Status_02 sends status="pass" for a Boolean field.
+        InvalidFormatException cause = InvalidFormatException.from(null, "msg", "pass", Boolean.class);
+
+        ResponseEntity<?> response = advice.handleExceptions(
+                new HttpMessageNotReadableException("msg", cause, null), webRequest("/credentials/status"));
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("invalid_request", firstError(response).getErrorCode());
+        assertEquals("Invalid format for field 'unknown' in request", firstError(response).getErrorMessage());
+    }
+
+    @Test
+    public void should_returnInvalidRequest_when_internalBodyIsMalformedJson() {
+        ResponseEntity<?> response = advice.handleExceptions(
+                new HttpMessageNotReadableException("msg", new JsonParseException(null, "msg"), null),
+                webRequest("/credentials/status"));
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("invalid_request", firstError(response).getErrorCode());
+        assertEquals("Malformed JSON syntax error", firstError(response).getErrorMessage());
+    }
+
+    @Test
+    public void should_returnInvalidRequest_when_internalBodyIsUnreadableWithoutCause() {
+        ResponseEntity<?> response = advice.handleExceptions(
+                new HttpMessageNotReadableException("msg", (Throwable) null, null),
+                webRequest("/credentials/status"));
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("invalid_request", firstError(response).getErrorCode());
+        assertEquals("Invalid JSON request body", firstError(response).getErrorMessage());
+    }
+
+    @Test
+    public void should_notLeakJacksonMessage_when_internalBodyIsUnreadable() {
+        // The reported symptom was the DTO class name reaching the caller. Guard it
+        // explicitly: the response must carry neither the package name nor Jackson's prose.
+        String jacksonProse = "JSON parse error: Unrecognized field \"c_nonce\" "
+                + "(class io.mosip.certify.core.dto.CredentialRequest), not marked as ignorable";
+        JsonParser parser = Mockito.mock(JsonParser.class);
+        when(parser.getCurrentLocation()).thenReturn(com.fasterxml.jackson.core.JsonLocation.NA);
+        UnrecognizedPropertyException cause = UnrecognizedPropertyException.from(
+                parser, Object.class, "c_nonce", null);
+
+        ResponseEntity<?> response = advice.handleExceptions(
+                new HttpMessageNotReadableException(jacksonProse, cause, null),
+                webRequest("/credentials/status"));
+
+        String errorMessage = firstError(response).getErrorMessage();
+        assertFalse(errorMessage.contains("io.mosip.certify"));
+        assertFalse(errorMessage.contains("JSON parse error"));
+        assertFalse("unknown_error must not be used for a body we could understand well enough to explain",
+                "unknown_error".equals(firstError(response).getErrorCode()));
+    }
 }

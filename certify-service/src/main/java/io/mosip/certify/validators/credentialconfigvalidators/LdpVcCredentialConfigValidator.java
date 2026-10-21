@@ -9,10 +9,15 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class LdpVcCredentialConfigValidator {
-    public static boolean isValidCheck(CredentialConfigurationDTO credentialConfig) {
+    /**
+     * signatureAlgo is mandatory in DataProvider mode, where Certify signs the credential. In VCIssuance
+     * mode the plugin signs it, so signatureAlgo is optional.
+     */
+    public static boolean isValidCheck(CredentialConfigurationDTO credentialConfig, String pluginMode) {
         return credentialConfig.getContextURLs() != null && !credentialConfig.getContextURLs().isEmpty()
                 && credentialConfig.getCredentialTypes() != null && !credentialConfig.getCredentialTypes().isEmpty()
                 && credentialConfig.getSignatureCryptoSuite() != null && !credentialConfig.getSignatureCryptoSuite().isEmpty()
+                && (!"DataProvider".equals(pluginMode) || (credentialConfig.getSignatureAlgo() != null && !credentialConfig.getSignatureAlgo().isEmpty()))
                 && credentialConfig.getDocType() == null && credentialConfig.getSdJwtVct() == null
                 && credentialConfig.getMsoMdocClaims() == null && credentialConfig.getSdJwtClaims() == null;
     }

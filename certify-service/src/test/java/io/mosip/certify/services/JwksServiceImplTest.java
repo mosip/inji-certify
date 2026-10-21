@@ -65,13 +65,6 @@ public class JwksServiceImplTest {
                 "signatureAlgoKeyAliasMapper",
                 signatureAlgoKeyAliasMapper
         );
-
-        // Present but unused map in current flows
-        ReflectionTestUtils.setField(
-                jwksService,
-                "credentialSigningAlgValuesSupportedMap",
-                new LinkedHashMap<String, List<String>>()
-        );
     }
 
     private AllCertificatesDataResponseDto buildAllCertificatesDto(

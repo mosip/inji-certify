@@ -2,6 +2,8 @@
 
 This document explains the integration of Credential rendering templates in Inji Certify using [VC Render Specification](https://w3c-ccg.github.io/vc-render-method/).
 
+> **Note:** Velocity templates are now rendered with Velocity 2.4.1 — see [template behaviour changes](./Releases.md#velocity-upgraded-from-17-to-241-template-behaviour-changes) for `#if` empty-value handling, loop-variable renames, and reflection restrictions.
+
 1. To use the Verifiable Credential Data Model 2.0 optional features one can configure them in the Velocity Template present in [this file](../../docker-compose/docker-compose-injistack/certify_init.sql)as per [this draft spec](https://w3c-ccg.github.io/vc-render-method/). The Render Template has to be routable by all the clients and should be cached appropriately. The template is not expected to be updated as the consuming clients are expected to verify the integrity with the provided `digestMultibase`. For detailed information please go through the draft spec.
 
 ```json

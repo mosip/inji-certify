@@ -29,3 +29,34 @@ CreateOIDCClientV2VCIForMockIDA:
       output: '{
     	"status": "ACTIVE"
 }'
+   InjiCertify_ESignet_CreateOIDCClientV2_ForMockIDA_DPoP_all_Valid_Smoke_sid:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/client-mgmt/client
+      uniqueIdentifier: TC_esignetDependent_CreateOidc_DPoP_Mock_01
+      description: Create OIDC client with DPoP-bound access tokens
+      role: partner
+      restMethod: post
+      inputTemplate: injicertify/VCIMockIDA/CreateOIDCClientV2ForMockIDA/CreateOIDCClientV2ForMockIDA
+      outputTemplate: injicertify/VCIMockIDA/CreateOIDCClientV2ForMockIDA/CreateOIDCClientV2ForMockIDAResult
+      input: '{
+      	"requestTime": "$TIMESTAMP$",
+      	"clientId": "$RANDOMID$DPM",
+      	"clientName": "MOSIP OIDC Client",
+      	"logoUri": "https://health-services.com/logo.png",
+      	"relyingPartyId": "Bharathi-Inc",
+      	"redirectUris": "$IDPREDIRECTURI$",
+      	"publicKey": "$OIDCJWKKEY_DPOP$",
+      	"userClaims1": "name",
+      	"userClaims2": "email",
+      	"userClaims3": "gender",
+      	"userClaims4": "phone_number",
+      	"userClaims5": "birthdate",
+      	"authContextRefs": [{acrValues: "mosip:idp:acr:static-code"},{acrValues: "mosip:idp:acr:generated-code"},{acrValues: "mosip:idp:acr:biometrics"},{acrValues: "mosip:idp:acr:knowledge"}],
+      	"grantTypes": "authorization_code",
+      	"clientAuthMethods": "private_key_jwt",
+      	"keyLang1": "$1STLANG$",
+      	"clientNameLang": "MOSIP OIDC Client",
+      	"additionalConfig": "true"
+}'
+      output: '{
+    	"status": "ACTIVE"
+}'

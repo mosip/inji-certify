@@ -2,7 +2,7 @@ apiVersion: v2
 name: inji-certify
 description: A Helm chart for inji certify service
 type: application
-version: 1.0.0-alpha.3-develop
+version: 1.0.0-rc.2-develop
 appVersion: ""
 dependencies:
   - name: common

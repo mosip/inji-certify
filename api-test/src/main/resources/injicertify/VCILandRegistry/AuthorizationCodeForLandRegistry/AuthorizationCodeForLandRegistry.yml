@@ -36,3 +36,22 @@ AuthorizationCodeForLandRegistry:
 }'
       output: '{
 }'
+
+   InjiCertify_ESignet_AuthorizationCode_ForLandRegistry_DPoP_All_Valid_Smoke_sid:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCode_DPoP_01
+      description: Authorization Code for DPoP client
+      role: resident
+      restMethod: post
+      additionalDependencies: TC_esignetDependent_AuthenticateUser_DPoP_01
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/VCILandRegistry/AuthorizationCodeForLandRegistry/AuthorizationCodeForLandRegistry
+      outputTemplate: injicertify/VCILandRegistry/AuthorizationCodeForLandRegistry/AuthorizationCodeForLandRegistryResult
+      input: '{
+        "encodedHash": "$ID:ESignet_OAuthDetailsRequest_ForLandRegistry_DPoP_uin_all_Valid_Smoke_sid_encodedResp$",
+      	"requestTime": "$TIMESTAMP$",
+      	"transactionId": "$ID:ESignet_OAuthDetailsRequest_ForLandRegistry_DPoP_uin_all_Valid_Smoke_sid_transactionId$"
+}'
+      output: '{
+}'

@@ -273,5 +273,34 @@
     ],
     "TC_sunbirdDependent_GenerateNonceNeg_01": [
         "TC_esignetDependent_CreateOidc_02"
+    ],
+    "TC_esignetDependent_AuthorizationCode_DPoP_Sunbird_01": [
+        "TC_esignetDependent_OAuthdetailsRequest_DPoP_Sunbird_01",
+        "TC_esignetDependent_AuthenticateUser_DPoP_Sunbird_01"
+    ],
+    "TC_esignetDependent_AuthenticateUser_DPoP_Sunbird_01": [
+        "TC_esignetDependent_OAuthdetailsRequest_DPoP_Sunbird_01",
+        "TC_SunbirdDependent_createpolicy",
+        "TC_SunbirdDependent_Getpolicy",
+        "TC_SunbirdDependent_searchpolicy"
+    ],
+    "TC_esignetDependent_CreateOidc_DPoP_Sunbird_01": [],
+    "TC_esignetDependent_GenerateToken_DPoP_Sunbird_01": [
+        "TC_esignetDependent_AuthorizationCode_DPoP_Sunbird_01",
+        "TC_esignetDependent_CreateOidc_DPoP_Sunbird_01"
+    ],
+    "TC_injicertify_credentialissuance_DPoP_01": [
+        "TC_esignetDependent_CreateOidc_DPoP_Sunbird_01",
+        "TC_esignetDependent_GenerateToken_DPoP_Sunbird_01",
+        "TC_sunbirdDependent_GenerateNonce_01",
+        "TC_InjiCertify_WellKnownEndpoint_Sunbird_01"
+    ],
+    "TC_injicertify_credentialissuance_DPoP_Bearer_01": [
+        "TC_esignetDependent_CreateOidc_DPoP_Sunbird_01",
+        "TC_esignetDependent_GenerateToken_DPoP_Sunbird_01",
+        "TC_sunbirdDependent_GenerateNonce_01"
+    ],
+    "TC_esignetDependent_OAuthdetailsRequest_DPoP_Sunbird_01": [
+        "TC_esignetDependent_CreateOidc_DPoP_Sunbird_01"
     ]
 }

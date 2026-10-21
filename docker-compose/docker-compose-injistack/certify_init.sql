@@ -188,7 +188,7 @@ VALUES (
     'did:web:8398-2405-201-1029-3025-e142-9ad3-e1f2-f543.ngrok-free.app',  -- did_url
     'CERTIFY_VC_SIGN_ED25519',  -- key_manager_app_id
     'ED25519_SIGN',  -- key_manager_ref_id (optional)
-    'EdDSA',  -- signature_algo (optional)
+    'EdDSA',  -- signature_algo
     'Ed25519Signature2020',  -- signature_crypto_suite
     NULL,  -- sd_claim (optional)
     '[{"name": "Farmer Verifiable Credential", "locale": "en", "logo": {"uri": "https://mosip.github.io/inji-config/logos/agro-vertias-logo.png", "alt_text": "Farmer Credential Logo"}, "background_color": "#12107c", "text_color": "#FFFFFF", "background_image": { "uri": "https://mosip.github.io/inji-config/logos/agro-vertias-logo.png" }}]'::JSONB,  -- display

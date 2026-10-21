@@ -38,5 +38,32 @@
     "TC_esignetDependent_AuthorizationCode_04": [
         "TC_esignetDependent_OAuthdetailsRequest_04",
         "TC_esignetDependent_AuthenticateUser_04"
-    ]
+    ],
+    "TC_esignetDependent_AuthorizationCode_DPoP_Mdl_01": [
+        "TC_esignetDependent_OAuthdetailsRequest_DPoP_Mdl_01",
+        "TC_esignetDependent_AuthenticateUser_DPoP_Mdl_01"
+    ],
+    "TC_esignetDependent_AuthenticateUser_DPoP_Mdl_01": [
+        "TC_esignetDependent_OAuthdetailsRequest_DPoP_Mdl_01"
+    ],
+    "TC_esignetDependent_GenerateToken_DPoP_Mdl_01": [
+        "TC_esignetDependent_AuthorizationCode_DPoP_Mdl_01",
+        "TC_esignetDependent_CreateOidc_DPoP_Mdl_01"
+    ],
+    "TC_InjiCertify_GetCredentialFormDoc_DPoP_01": [
+        "TC_esignetDependent_CreateOidc_DPoP_Mdl_01",
+        "TC_esignetDependent_GenerateToken_DPoP_Mdl_01",
+        "TC_mdlDependent_GenerateNonce_01",
+        "TC_InjiCertify_addCredentialtypeformdoc_01"
+    ],
+    "TC_InjiCertify_GetCredentialFormDoc_DPoP_Bearer_01": [
+        "TC_esignetDependent_CreateOidc_DPoP_Mdl_01",
+        "TC_esignetDependent_GenerateToken_DPoP_Mdl_01",
+        "TC_mdlDependent_GenerateNonce_01",
+        "TC_InjiCertify_addCredentialtypeformdoc_01"
+    ],
+    "TC_esignetDependent_OAuthdetailsRequest_DPoP_Mdl_01": [
+        "TC_esignetDependent_CreateOidc_DPoP_Mdl_01"
+    ],
+    "TC_esignetDependent_CreateOidc_DPoP_Mdl_01": []
 }
