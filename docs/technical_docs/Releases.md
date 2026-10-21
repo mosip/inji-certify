@@ -69,7 +69,7 @@ The plugin mode comes from `mosip.certify.plugin-mode`, not from the request.
 
 Nothing is resolved from the properties for it any more. Existing configurations advertise their own signing algorithm (or crypto suite for `ldp_vc`) without being re-submitted.
 
-`mso_mdoc` is signed with `signatureAlgo` alone, so it now requires `signatureAlgo`, and `signatureCryptoSuite` is optional. If one is sent for `mso_mdoc`, its value is not validated, and it is not stored.
+`mso_mdoc` is signed with `signatureAlgo` alone, so it now requires `signatureAlgo` in DataProvider plugin mode (optional in VCIssuance mode), and `signatureCryptoSuite` is optional. If one is sent for `mso_mdoc`, its value is not validated, and it is not stored.
 
 **Action for existing deployments:** add `jwk` to the `ldp_vc` and `dc+sd-jwt` entries of `mosip.certify.credential-config.cryptographic-binding-methods-supported`. The previous release declared only `did:jwk` and `did:key`, so a configuration that selects `jwk` is rejected until it is added:
 
