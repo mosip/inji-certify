@@ -80,7 +80,8 @@ public class DIDkeysProofManager implements JwtProofKeyManager {
                         .build();
 
                 return Optional.of(rsaKey);
-            } catch (IOException e) {
+            } catch (IOException | ClassCastException e) {
+                // a malformed key is rejected as an invalid proof
                 return Optional.empty();
             }
         }
