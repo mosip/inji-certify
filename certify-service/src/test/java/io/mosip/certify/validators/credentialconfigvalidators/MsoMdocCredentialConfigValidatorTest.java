@@ -78,24 +78,23 @@ class MsoMdocCredentialConfigValidatorTest {
     }
 
     /**
-     * signatureCryptoSuite is mandatory so the request body is the same shape for every format, even
-     * though an mdoc is signed with signatureAlgo alone.
+     * An mdoc is signed with signatureAlgo alone, so signatureCryptoSuite is optional.
      */
     @Test
-    void should_returnFalse_when_signatureCryptoSuiteIsMissing() {
+    void should_returnTrue_when_signatureCryptoSuiteIsMissing() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("docType");
         config.setSignatureAlgo("ES256");
-        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
+        assertTrue(MsoMdocCredentialConfigValidator.isValidCheck(config));
     }
 
     @Test
-    void should_returnFalse_when_signatureCryptoSuiteIsEmpty() {
+    void should_returnTrue_when_signatureCryptoSuiteIsEmpty() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("docType");
         config.setSignatureAlgo("ES256");
         config.setSignatureCryptoSuite("");
-        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
+        assertTrue(MsoMdocCredentialConfigValidator.isValidCheck(config));
     }
 
     /**

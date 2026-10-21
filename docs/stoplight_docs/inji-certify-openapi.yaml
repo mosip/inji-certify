@@ -722,7 +722,6 @@ paths:
                   credentialConfigKeyId: DrivingLicenseCredential12
                   credentialFormat: mso_mdoc
                   signatureAlgo: ES256
-                  signatureCryptoSuite: EcdsaSecp256r1Signature2019
                   cryptographicBindingMethodsSupported:
                     - 'cose_key'
                   proofTypesSupported:
@@ -1628,7 +1627,7 @@ components:
           type: string
           description: Document type identifier for the credential. Mandatory for mso_mdoc credential format.
         signatureCryptoSuite:
-          description: 'Holds value for signature crypto suites supported for key algorithms like Ed25519Signature2020,EcdsaSecp256k1Signature2019, etc. It will also be applicable for data integrity proof crypto suites, for e.g. ecds-rdfc-2019, eddsa-rdfc-2022, etc. Mandatory for the ldp_vc format, and must be declared in mosip.certify.credential-config.credential-signing-alg-values-supported. For ldp_vc it is the value advertised in credential_signing_alg_values_supported of the credential issuer metadata, per OpenID4VCI 1.0 Appendix A.1.2.2. Also mandatory for the mso_mdoc format, so the request body is the same shape for every format, but an mdoc is signed with signatureAlgo alone: for mso_mdoc its value is not validated, and it is not stored. A missing or empty value is rejected with mso_mdoc_mandatory_fields_missing. Must not be sent for the dc+sd-jwt format.'
+          description: 'Holds value for signature crypto suites supported for key algorithms like Ed25519Signature2020,EcdsaSecp256k1Signature2019, etc. It will also be applicable for data integrity proof crypto suites, for e.g. ecds-rdfc-2019, eddsa-rdfc-2022, etc. Mandatory for the ldp_vc format, and must be declared in mosip.certify.credential-config.credential-signing-alg-values-supported. For ldp_vc it is the value advertised in credential_signing_alg_values_supported of the credential issuer metadata, per OpenID4VCI 1.0 Appendix A.1.2.2. Optional for the mso_mdoc format, because an mdoc is signed with signatureAlgo alone: for mso_mdoc any value sent is ignored and not stored, so the values listed here apply to ldp_vc only. Must not be sent for the dc+sd-jwt format.'
           type: string
           enum:
             - RsaSignature2018

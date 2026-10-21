@@ -127,7 +127,7 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 break;
             case VCFormats.MSO_MDOC:
                 if (!MsoMdocCredentialConfigValidator.isValidCheck(credentialConfig)) {
-                    throw new CertifyException(ErrorConstants.MSO_MDOC_MANDATORY_FIELDS_MISSING, "Fields doctype, signatureCryptoSuite and signatureAlgo are mandatory for the mso_mdoc format.");
+                    throw new CertifyException(ErrorConstants.MSO_MDOC_MANDATORY_FIELDS_MISSING, "Fields doctype and signatureAlgo are mandatory for the mso_mdoc format.");
                 }
                 if(shouldCheckDuplicate && MsoMdocCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException(ErrorConstants.MSO_MDOC_CONFIG_EXISTS, "Configuration already exists for the specified doctype.");
