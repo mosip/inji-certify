@@ -23,7 +23,7 @@ class SdJwtCredentialConfigValidatorTest {
         config.setContextURLs(null);
         config.setDocType(null);
         config.setClaims(null);
-        assertTrue(SdJwtCredentialConfigValidator.isValidCheck(config));
+        assertTrue(SdJwtCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
@@ -36,7 +36,7 @@ class SdJwtCredentialConfigValidatorTest {
         config.setDocType(null);
         config.setClaims(null);
         config.setMsoMdocClaims(new HashMap<>());
-        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config));
+        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
@@ -44,7 +44,7 @@ class SdJwtCredentialConfigValidatorTest {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setSdJwtVct(null);
         config.setSignatureAlgo("algoValue");
-        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config));
+        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
@@ -52,7 +52,7 @@ class SdJwtCredentialConfigValidatorTest {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setSdJwtVct("");
         config.setSignatureAlgo("algoValue");
-        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config));
+        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
@@ -60,7 +60,7 @@ class SdJwtCredentialConfigValidatorTest {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setSdJwtVct("vctValue");
         config.setSignatureAlgo(null);
-        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config));
+        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
@@ -68,7 +68,18 @@ class SdJwtCredentialConfigValidatorTest {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setSdJwtVct("vctValue");
         config.setSignatureAlgo("");
-        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config));
+        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config, "DataProvider"));
+    }
+
+    /**
+     * In VCIssuance mode the plugin signs the credential, so signatureAlgo is optional.
+     */
+    @Test
+    void should_returnTrue_when_signatureAlgoIsMissingInVcIssuanceMode() {
+        CredentialConfigurationDTO config = new CredentialConfigurationDTO();
+        config.setSdJwtVct("vctValue");
+        config.setSignatureAlgo(null);
+        assertTrue(SdJwtCredentialConfigValidator.isValidCheck(config, "VCIssuance"));
     }
 
     @Test
@@ -77,7 +88,7 @@ class SdJwtCredentialConfigValidatorTest {
         config.setSdJwtVct("vctValue");
         config.setSignatureAlgo("algoValue");
         config.setCredentialTypes(java.util.Collections.singletonList("type"));
-        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config));
+        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
@@ -86,7 +97,7 @@ class SdJwtCredentialConfigValidatorTest {
         config.setSdJwtVct("vctValue");
         config.setSignatureAlgo("algoValue");
         config.setContextURLs(java.util.Collections.singletonList("someContextURL.com"));
-        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config));
+        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
@@ -95,7 +106,7 @@ class SdJwtCredentialConfigValidatorTest {
         config.setSdJwtVct("vctValue");
         config.setSignatureAlgo("algoValue");
         config.setDocType("docType");
-        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config));
+        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
@@ -104,7 +115,7 @@ class SdJwtCredentialConfigValidatorTest {
         config.setSdJwtVct("vctValue");
         config.setSignatureAlgo("algoValue");
         config.setClaims(new HashMap<>());
-        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config));
+        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
@@ -135,7 +146,7 @@ class SdJwtCredentialConfigValidatorTest {
         config.setSdJwtVct("vctValue");
         config.setSignatureAlgo("algoValue");
         config.setMsoMdocClaims(new HashMap<>());
-        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config));
+        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
@@ -144,6 +155,6 @@ class SdJwtCredentialConfigValidatorTest {
         config.setSdJwtVct("vctValue");
         config.setSignatureAlgo("algoValue");
         config.setSignatureCryptoSuite("suiteValue");
-        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config));
+        assertFalse(SdJwtCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 }

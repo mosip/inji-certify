@@ -1,6 +1,7 @@
 package io.mosip.certify.services;
 
 import io.mosip.certify.core.dto.*;
+import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.exception.CertifyException;
@@ -116,12 +117,28 @@ public class CredentialConfigurationSupportedServiceImplTest {
 
     }
 
+    /**
+     * Add and Update require the binding methods and proof types, so this declares an allow-list for them
+     * and has the request select from it. The signing algorithm is the request's own signatureAlgo.
+     */
+    private void selectMetadataAttributes(CredentialConfigurationDTO dto, String credentialFormat,
+                                          String bindingMethod, String signingAlg) {
+        ReflectionTestUtils.setField(credentialConfigurationService, "cryptographicBindingMethodsSupportedMap",
+                new LinkedHashMap<>(Map.of(credentialFormat, List.of(bindingMethod))));
+        ReflectionTestUtils.setField(credentialConfigurationService, "proofTypesSupported",
+                new LinkedHashMap<String, Object>(Map.of("jwt", Map.of(Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED, List.of(signingAlg)))));
+        dto.setCryptographicBindingMethodsSupported(List.of(bindingMethod));
+        dto.setProofTypesSupported(Map.of("jwt", Map.of(Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED, List.of(signingAlg))));
+    }
+
     @Test
     public void addNewCredentialConfig_Success() {
         credentialConfigurationDTO.setContextURLs(List.of("https://www.w3.org/2018/credentials/v1"));
         credentialConfigurationDTO.setCredentialTypes(List.of("VerifiableCredential", "TestVerifiableCredential"));
         credentialConfigurationDTO.setSignatureCryptoSuite("Ed25519Signature2020");
         credentialConfigurationDTO.setSignatureAlgo("EdDSA");
+        credentialConfig.setSignatureAlgo("EdDSA");
+        selectMetadataAttributes(credentialConfigurationDTO, "ldp_vc", "did:jwk", "EdDSA");
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(credentialConfig);
         when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(credentialConfig);
 
@@ -207,6 +224,8 @@ public class CredentialConfigurationSupportedServiceImplTest {
 
 
         CredentialConfigurationDTO mockDto = new CredentialConfigurationDTO();
+        selectMetadataAttributes(mockDto, "dc+sd-jwt", "did:jwk", "ES256");
+        ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper", Map.of("ES256", List.of(List.of("TEST_EC", "TEST_EC-REF"))));
 
         // Create a valid DTO for validation that will be returned by toDto
         CredentialConfigurationDTO validationDto = new CredentialConfigurationDTO();
@@ -378,6 +397,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
         config.setCredentialFormat("mso_mdoc");
         config.setDocType("org.iso.18013.5.1.mDL");
         config.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
+        config.setSignatureAlgo("ES256");
 
         when(credentialConfigRepository.findAll()).thenReturn(List.of(config));
         CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
@@ -401,14 +421,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
         config.setStatus("active");
         config.setCredentialFormat("mso_mdoc");
         config.setDocType("org.iso.18013.5.1.mDL");
-        config.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
-
-        LinkedHashMap<String, List<String>> unsupportedAlgorithms = new LinkedHashMap<>();
-        unsupportedAlgorithms.put("EcdsaSecp256r1Signature2019", List.of("UNSUPPORTED_ALG"));
-        ReflectionTestUtils.setField(
-                credentialConfigurationService,
-                "credentialSigningAlgValuesSupportedMap",
-                unsupportedAlgorithms);
+        config.setSignatureAlgo("UNSUPPORTED_ALG");
 
         when(credentialConfigRepository.findAll()).thenReturn(List.of(config));
         CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
@@ -431,14 +444,19 @@ public class CredentialConfigurationSupportedServiceImplTest {
         mdocConfig.setVcTemplate("mdoc_template");
         mdocConfig.setCredentialFormat("mso_mdoc");
         mdocConfig.setDocType("docType1");
-        mdocConfig.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
+        mdocConfig.setSignatureAlgo("ES256");
 
         CredentialConfigurationDTO mdocDTO = new CredentialConfigurationDTO();
         mdocDTO.setCredentialFormat("mso_mdoc");
         mdocDTO.setCredentialConfigKeyId("mdoc-credential");
         mdocDTO.setDocType("docType1");
         mdocDTO.setVcTemplate("mdoc_template");
-        mdocDTO.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019"); // required
+        mdocDTO.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019"); // optional, not stored
+        mdocDTO.setSignatureAlgo("ES256"); // required
+        // An mdoc is signed with signatureAlgo, so the deployment must hold a key for it.
+        ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper",
+                Map.of("ES256", List.of(List.of("TEST_EC", "TEST_EC-REF"))));
+        selectMetadataAttributes(mdocDTO, "mso_mdoc", "cose_key", "ES256");
 
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(mdocConfig);
         when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(mdocConfig);
@@ -467,6 +485,8 @@ public class CredentialConfigurationSupportedServiceImplTest {
         sdJwtDTO.setVcTemplate("sd_jwt_template");
         sdJwtDTO.setSdJwtVct("test-vct"); // required
         sdJwtDTO.setSignatureAlgo("ES256"); // required
+        selectMetadataAttributes(sdJwtDTO, "dc+sd-jwt", "did:jwk", "ES256");
+        ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper", Map.of("ES256", List.of(List.of("TEST_EC", "TEST_EC-REF"))));
 
         when(credentialConfigMapper.toEntity(any(CredentialConfigurationDTO.class))).thenReturn(sdJwtConfig);
         when(credentialConfigRepository.save(any(CredentialConfig.class))).thenReturn(sdJwtConfig);
@@ -485,11 +505,11 @@ public class CredentialConfigurationSupportedServiceImplTest {
         dto.setCredentialFormat("ldp_vc");
         dto.setVcTemplate("test_template");
         try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
-            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto)).thenReturn(false);
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(false);
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
             );
-            assertEquals("Fields context, credentialType, and signatureCryptoSuite are mandatory for the ldp_vc format.", ex.getMessage());
+            assertEquals("Fields context, credentialType, signatureCryptoSuite and signatureAlgo (DataProvider plugin mode only) are mandatory for the ldp_vc format.", ex.getMessage());
         }
     }
 
@@ -498,8 +518,9 @@ public class CredentialConfigurationSupportedServiceImplTest {
         CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
         dto.setCredentialFormat("ldp_vc");
         dto.setVcTemplate("test_template");
+        dto.setSignatureAlgo("EdDSA");
         try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
-            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(true);
             mocked.when(() -> LdpVcCredentialConfigValidator.isConfigAlreadyPresent(eq(dto), any())).thenReturn(true);
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
@@ -514,11 +535,11 @@ public class CredentialConfigurationSupportedServiceImplTest {
         dto.setCredentialFormat("mso_mdoc");
         dto.setVcTemplate("test_template");
         try (var mocked = org.mockito.Mockito.mockStatic(MsoMdocCredentialConfigValidator.class)) {
-            mocked.when(() -> MsoMdocCredentialConfigValidator.isValidCheck(dto)).thenReturn(false);
+            mocked.when(() -> MsoMdocCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(false);
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
             );
-            assertEquals("Fields doctype and signatureCryptoSuite are mandatory for the mso_mdoc format.", ex.getMessage());
+            assertEquals("Fields doctype and signatureAlgo (DataProvider plugin mode only) are mandatory for the mso_mdoc format.", ex.getMessage());
         }
     }
 
@@ -527,8 +548,9 @@ public class CredentialConfigurationSupportedServiceImplTest {
         CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
         dto.setCredentialFormat("mso_mdoc");
         dto.setVcTemplate("test_template");
+        dto.setSignatureAlgo("ES256");
         try (var mocked = org.mockito.Mockito.mockStatic(MsoMdocCredentialConfigValidator.class)) {
-            mocked.when(() -> MsoMdocCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
+            mocked.when(() -> MsoMdocCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(true);
             mocked.when(() -> MsoMdocCredentialConfigValidator.isConfigAlreadyPresent(eq(dto), any())).thenReturn(true);
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
@@ -543,11 +565,11 @@ public class CredentialConfigurationSupportedServiceImplTest {
         dto.setCredentialFormat("dc+sd-jwt");
         dto.setVcTemplate("test_template");
         try (var mocked = org.mockito.Mockito.mockStatic(SdJwtCredentialConfigValidator.class)) {
-            mocked.when(() -> SdJwtCredentialConfigValidator.isValidCheck(dto)).thenReturn(false);
+            mocked.when(() -> SdJwtCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(false);
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
             );
-            assertEquals("Fields vct and signatureAlgo are mandatory for the dc+sd-jwt format.", ex.getMessage());
+            assertEquals("Fields vct and signatureAlgo (DataProvider plugin mode only) are mandatory for the dc+sd-jwt format.", ex.getMessage());
         }
     }
 
@@ -557,7 +579,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
         dto.setCredentialFormat("dc+sd-jwt");
         dto.setVcTemplate("test_template");
         try (var mocked = org.mockito.Mockito.mockStatic(SdJwtCredentialConfigValidator.class)) {
-            mocked.when(() -> SdJwtCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
+            mocked.when(() -> SdJwtCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(true);
             mocked.when(() -> SdJwtCredentialConfigValidator.isConfigAlreadyPresent(eq(dto), any())).thenReturn(true);
             CertifyException ex = assertThrows(CertifyException.class, () ->
                     ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
@@ -567,20 +589,20 @@ public class CredentialConfigurationSupportedServiceImplTest {
     }
 
     @Test
-    public void validateCredentialConfiguration_LdpVc_MissingSignatureAlgo_ThrowsException() {
+    public void should_rejectWithLdpVcMandatoryFieldsMissing_when_signatureAlgoIsMissing() {
         CredentialConfigurationDTO dto = new CredentialConfigurationDTO();
         dto.setCredentialFormat("ldp_vc");
         dto.setVcTemplate("test_template");
-        dto.setSignatureCryptoSuite("test-rdfc-2019");
+        dto.setContextURLs(List.of("https://www.w3.org/2018/credentials/v1"));
+        dto.setCredentialTypes(List.of("VerifiableCredential"));
+        dto.setSignatureCryptoSuite("Ed25519Signature2020");
         dto.setSignatureAlgo("");
-        try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
-            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
-            mocked.when(() -> LdpVcCredentialConfigValidator.isConfigAlreadyPresent(eq(dto), any())).thenReturn(false);
-            CertifyException ex = assertThrows(CertifyException.class, () ->
-                    ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
-            );
-            assertEquals("Unsupported signature crypto suite: test-rdfc-2019", ex.getMessage());
-        }
+
+        CertifyException ex = assertThrows(CertifyException.class, () ->
+                ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true)
+        );
+        // Rejected rather than filled in with the first algorithm declared for the crypto suite.
+        assertEquals(ErrorConstants.LDP_VC_MANDATORY_FIELDS_MISSING, ex.getErrorCode());
     }
 
     @Test
@@ -623,7 +645,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
         dto.setKeyManagerRefId("TEST2019-REF");
         ReflectionTestUtils.setField(credentialConfigurationService, "allowedCredentialStatusPurposes", List.of("purpose1", "purpose2"));
         try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
-            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(true);
             ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true);
         }
     }
@@ -642,7 +664,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
         dto.setKeyManagerRefId("TEST2019-REF");
         ReflectionTestUtils.setField(credentialConfigurationService, "allowedCredentialStatusPurposes", List.of("purpose1", "purpose2"));
         try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
-            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(true);
             ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true);
         }
     }
@@ -661,7 +683,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
         dto.setKeyManagerRefId("TEST2019-REF");
         ReflectionTestUtils.setField(credentialConfigurationService, "allowedCredentialStatusPurposes", List.of("purpose1", "purpose2"));
         try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
-            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(true);
             ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true);
         }
     }
@@ -758,7 +780,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
         ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "DataProvider");
         ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper", Map.of("EdDSA", List.of(List.of("TEST2019", "TEST2019-REF"))));
         try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
-            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(true);
             ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true);
         }
     }
@@ -777,7 +799,7 @@ public class CredentialConfigurationSupportedServiceImplTest {
         ReflectionTestUtils.setField(credentialConfigurationService, "pluginMode", "DataProvider");
         ReflectionTestUtils.setField(credentialConfigurationService, "keyAliasMapper", Map.of("EdDSA", List.of(List.of("TEST2019", "TEST2019-REF"))));
         try (var mocked = org.mockito.Mockito.mockStatic(LdpVcCredentialConfigValidator.class)) {
-            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto)).thenReturn(true);
+            mocked.when(() -> LdpVcCredentialConfigValidator.isValidCheck(dto, "DataProvider")).thenReturn(true);
             ReflectionTestUtils.invokeMethod(credentialConfigurationService, "validateCredentialConfiguration", dto, true);
         }
     }

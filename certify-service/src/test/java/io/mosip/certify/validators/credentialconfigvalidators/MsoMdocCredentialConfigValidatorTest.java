@@ -18,93 +18,144 @@ class MsoMdocCredentialConfigValidatorTest {
     void testIsValidCheck_validConfig_returnsTrue() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("docType");
-        config.setSignatureCryptoSuite("suite");
+        config.setSignatureAlgo("ES256");
+        config.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
         config.setCredentialTypes(null);
         config.setContextURLs(null);
         config.setSdJwtVct(null);
         config.setClaims(null);
-        assertTrue(MsoMdocCredentialConfigValidator.isValidCheck(config));
+        assertTrue(MsoMdocCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
     void testIsValidCheck_sdJwtClaimsPresent_returnsFalse() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("docType");
-        config.setSignatureCryptoSuite("suite");
+        config.setSignatureAlgo("ES256");
+        config.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
         config.setCredentialTypes(null);
         config.setContextURLs(null);
         config.setSdJwtVct(null);
         config.setClaims(null);
         config.setSdJwtClaims(new HashMap<>());
-        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
+        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
     void testIsValidCheck_missingDocType_returnsFalse() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType(null);
-        config.setSignatureCryptoSuite("suite");
-        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
+        config.setSignatureAlgo("ES256");
+        config.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
+        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
     void testIsValidCheck_emptyDocType_returnsFalse() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("");
-        config.setSignatureCryptoSuite("suite");
-        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
+        config.setSignatureAlgo("ES256");
+        config.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
+        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
-    void testIsValidCheck_missingSignatureCryptoSuite_returnsFalse() {
+    void should_returnFalse_when_signatureAlgoIsMissingInDataProviderMode() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("docType");
-        config.setSignatureCryptoSuite(null);
-        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
+        config.setSignatureAlgo(null);
+        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
-    void testIsValidCheck_emptySignatureCryptoSuite_returnsFalse() {
+    void should_returnFalse_when_signatureAlgoIsEmptyInDataProviderMode() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("docType");
+        config.setSignatureAlgo("");
+        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config, "DataProvider"));
+    }
+
+    /**
+     * In VCIssuance mode the plugin signs the credential, so signatureAlgo is optional.
+     */
+    @Test
+    void should_returnTrue_when_signatureAlgoIsMissingInVcIssuanceMode() {
+        CredentialConfigurationDTO config = new CredentialConfigurationDTO();
+        config.setDocType("docType");
+        config.setSignatureAlgo(null);
+        assertTrue(MsoMdocCredentialConfigValidator.isValidCheck(config, "VCIssuance"));
+    }
+
+    /**
+     * An mdoc is signed with signatureAlgo alone, so signatureCryptoSuite is optional.
+     */
+    @Test
+    void should_returnTrue_when_signatureCryptoSuiteIsMissing() {
+        CredentialConfigurationDTO config = new CredentialConfigurationDTO();
+        config.setDocType("docType");
+        config.setSignatureAlgo("ES256");
+        assertTrue(MsoMdocCredentialConfigValidator.isValidCheck(config, "DataProvider"));
+    }
+
+    @Test
+    void should_returnTrue_when_signatureCryptoSuiteIsEmpty() {
+        CredentialConfigurationDTO config = new CredentialConfigurationDTO();
+        config.setDocType("docType");
+        config.setSignatureAlgo("ES256");
         config.setSignatureCryptoSuite("");
-        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
+        assertTrue(MsoMdocCredentialConfigValidator.isValidCheck(config, "DataProvider"));
+    }
+
+    /**
+     * The value itself is not validated: any crypto suite name is accepted for mso_mdoc.
+     */
+    @Test
+    void should_returnTrue_when_signatureCryptoSuiteIsAnyValue() {
+        CredentialConfigurationDTO config = new CredentialConfigurationDTO();
+        config.setDocType("docType");
+        config.setSignatureAlgo("ES256");
+        config.setSignatureCryptoSuite("NotADeclaredSuite");
+        assertTrue(MsoMdocCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
     void testIsValidCheck_credentialTypeNotNull_returnsFalse() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("docType");
-        config.setSignatureCryptoSuite("suite");
+        config.setSignatureAlgo("ES256");
+        config.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
         config.setCredentialTypes(List.of("type"));
-        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
+        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
     void testIsValidCheck_contextNotNull_returnsFalse() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("docType");
-        config.setSignatureCryptoSuite("suite");
+        config.setSignatureAlgo("ES256");
+        config.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
         config.setContextURLs(List.of("someContext URL"));
-        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
+        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
     void testIsValidCheck_sdJwtVctNotNull_returnsFalse() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("docType");
-        config.setSignatureCryptoSuite("suite");
+        config.setSignatureAlgo("ES256");
+        config.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
         config.setSdJwtVct("sdJwtVct");
-        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
+        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test
     void testIsValidCheck_credentialSubjectNotNull_returnsFalse() {
         CredentialConfigurationDTO config = new CredentialConfigurationDTO();
         config.setDocType("docType");
-        config.setSignatureCryptoSuite("suite");
+        config.setSignatureAlgo("ES256");
+        config.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
         config.setClaims(new HashMap<>());
-        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config));
+        assertFalse(MsoMdocCredentialConfigValidator.isValidCheck(config, "DataProvider"));
     }
 
     @Test

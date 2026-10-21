@@ -72,7 +72,5 @@ public class CredentialConfigurationDTO {
 
     private List<String> cryptographicBindingMethodsSupported;
 
-    private List<String> credentialSigningAlgValuesSupported;
-
     private Map<String, Object> proofTypesSupported;
 }

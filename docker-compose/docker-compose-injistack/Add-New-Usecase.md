@@ -103,13 +103,13 @@ Current usecases include:
      '',  -- did_url
      'CERTIFY_VC_SIGN_ED25519',  -- key_manager_app_id
      'ED25519_SIGN',  -- key_manager_ref_id (optional)
-     'EdDSA',  -- signature_algo (optional)
+     'EdDSA',  -- signature_algo
      NULL,  -- sd_claim (optional)
      ''::JSONB,  -- display
      ARRAY[],  -- display_order
      '',  -- scope
-     ARRAY[''],  -- cryptographic_binding_methods_supported
-     ARRAY[''],  -- credential_signing_alg_values_supported
+     ARRAY['did:jwk'],  -- cryptographic_binding_methods_supported
+     ARRAY['EdDSA'],  -- credential_signing_alg_values_supported
      ''::JSONB,  -- proof_types_supported
      ''::JSONB,  -- credential_subject
      NULL,  -- claims (optional)
