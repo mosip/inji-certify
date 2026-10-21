@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public interface CredentialConfigMapper {
     @Mapping(target = "configId", ignore = true)
     @Mapping(target = "status", ignore = true)
-    @Mapping(target = "createdTimes", expression = "java(java.time.LocalDateTime.now(java.time.ZoneOffset.UTC))")
+    @Mapping(target = "createdTimes", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "updatedTimes", ignore = true)
     @Mapping(target = "context", source = "contextURLs", qualifiedByName = "listToCommaSeparatedString")
     @Mapping(target = "credentialType", source = "credentialTypes", qualifiedByName = "listToCommaSeparatedString")
@@ -41,7 +41,7 @@ public interface CredentialConfigMapper {
     @Mapping(target = "configId", ignore = true)
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "createdTimes", ignore = true)
-    @Mapping(target = "updatedTimes", expression = "java(java.time.LocalDateTime.now(java.time.ZoneOffset.UTC))")
+    @Mapping(target = "updatedTimes", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "context", source = "contextURLs", qualifiedByName = "listToCommaSeparatedString")
     @Mapping(target = "credentialType", source = "credentialTypes", qualifiedByName = "listToCommaSeparatedString")
     @Mapping(target = "display", source = "metaDataDisplay")

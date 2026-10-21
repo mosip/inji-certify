@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
 @Entity
 @Table(name = "credential_status_transaction")
@@ -46,7 +45,7 @@ public class CredentialStatusTransaction {
 
     @PrePersist
     protected void onCreate() {
-        createdDtimes = LocalDateTime.now(ZoneOffset.UTC);
+        createdDtimes = LocalDateTime.now();
         if (isProcessed == null) {
             isProcessed = Boolean.FALSE;
         }

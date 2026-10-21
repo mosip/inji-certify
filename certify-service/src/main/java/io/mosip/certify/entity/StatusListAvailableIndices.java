@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
 @Entity
 @Table(name = "status_list_available_indices",
@@ -51,7 +50,7 @@ public class StatusListAvailableIndices {
 
     @PrePersist
     protected void onCreate() {
-        createdDtimes = LocalDateTime.now(ZoneOffset.UTC);
+        createdDtimes = LocalDateTime.now();
         if (isAssigned == null) {
             isAssigned = false;
         }
@@ -59,6 +58,6 @@ public class StatusListAvailableIndices {
 
     @PreUpdate
     protected void onUpdate() {
-        updatedDtimes = LocalDateTime.now(ZoneOffset.UTC);
+        updatedDtimes = LocalDateTime.now();
     }
 }

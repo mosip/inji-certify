@@ -9,7 +9,6 @@ import java.security.cert.X509Certificate;
 import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -273,7 +272,7 @@ public class DIDDocumentUtil {
         }
 
         CertificateDataResponseDto certificateData = Arrays.stream(kidResponse.getAllCertificates())
-                .filter(cert -> cert.getExpiryAt() != null && cert.getExpiryAt().isAfter(LocalDateTime.now(ZoneOffset.UTC)))
+                .filter(cert -> cert.getExpiryAt() != null && cert.getExpiryAt().isAfter(LocalDateTime.now()))
                 .max(Comparator.comparing(CertificateDataResponseDto::getExpiryAt))
                 .orElseThrow(() -> {
                     log.error("No valid certificates found for appId: {} and refId: {}", appId, refId);

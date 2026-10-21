@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -156,7 +155,7 @@ public class StatusListUpdateBatchJob {
             updateStatusListCredential(statusListCredential, newEncodedList);
 
             // Mark transactions as processed
-            LocalDateTime processedTime = LocalDateTime.now(ZoneOffset.UTC);
+            LocalDateTime processedTime = LocalDateTime.now();
             for (CredentialStatusTransaction txn : transactions) {
                 txn.setProcessedTime(processedTime);
                 txn.setIsProcessed(true);
@@ -214,7 +213,7 @@ public class StatusListUpdateBatchJob {
 
             // Update the database record
             statusListCredential.setVcDocument(updatedVcDocument);
-            statusListCredential.setUpdatedDtimes(LocalDateTime.now(ZoneOffset.UTC));
+            statusListCredential.setUpdatedDtimes(LocalDateTime.now());
             statusListRepository.save(statusListCredential);
 
             log.info("Successfully updated and saved StatusListCredential ID: {}", statusListCredential.getId());

@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
 
 /**
@@ -179,7 +178,7 @@ public class StatusListCredentialService {
             statusListCredential.setStatusPurpose(statusPurpose);
             statusListCredential.setCapacityInKB(statusListSizeInKB);
             statusListCredential.setCredentialStatus(StatusListCredential.CredentialStatus.AVAILABLE);
-            statusListCredential.setCreatedDtimes(LocalDateTime.now(ZoneOffset.UTC));
+            statusListCredential.setCreatedDtimes(LocalDateTime.now());
 
             // Save to database
             StatusListCredential savedCredential = statusListCredentialRepository.saveAndFlush(statusListCredential);
