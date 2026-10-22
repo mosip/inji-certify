@@ -1,0 +1,84 @@
+services:
+
+  database:
+    image: postgres:15
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./certify_init.sql:/docker-entrypoint-initdb.d/certify_init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  certify:
+    container_name: certify
+    image: inji-certify:ci
+    user: root
+    ports:
+      - "8090:8090"
+    environment:
+      - container_user=mosip
+      - active_profile_env=default,csvdp-farmer
+      - SPRING_CONFIG_NAME=certify
+      - SPRING_CONFIG_LOCATION=/home/mosip/config/
+      - enable_certify_artifactory=false
+      - download_hsm_client=false
+      - mosip_certify_domain_url=http://certify-nginx:80
+      # ✅ ADD DATABASE CONNECTION ENVIRONMENT VARIABLES
+      - DATABASE_HOST=database
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=inji_certify
+      - DATABASE_SCHEMA=certify
+      - DATABASE_USERNAME=postgres
+      - DATABASE_PASSWORD=postgres
+    volumes:
+      - ./config/certify-default.properties:/home/mosip/config/certify-default.properties
+      - ./config/certify-csvdp-farmer.properties:/home/mosip/config/certify-csvdp-farmer.properties
+      - ./data/CERTIFY_PKCS12:/home/mosip/CERTIFY_PKCS12
+      - ./config/farmer_identity_data.csv:/home/mosip/config/farmer_identity_data.csv
+      - ./config/vp_request_config.json:/home/mosip/config/vp_request_config.json
+      - ./context/farmer-context.json:/home/mosip/config/farmer-context.json
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8090/v1/certify/.well-known/openid-credential-issuer || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+  certify-nginx:
+    container_name: certify-nginx
+    image: nginx:stable
+    ports:
+      - "8091:80"
+    volumes:
+      - ./certify-nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./config/mimoto-issuers-config.json:/config/server/mimoto-issuers-config.json
+      - ./config/mimoto-trusted-verifiers.json:/config/server/mimoto-trusted-verifiers.json
+      - ./config/credential-template.html:/config/server/credential-template.html
+      - ./config/vp_request_config.json:/config/server/vp_request_config.json
+      - ./context/farmer-context.json:/config/server/farmer-context.json
+    depends_on:
+      - certify
+
+  apitest:
+    container_name: apitest
+    image: apitest-inji-certify:ci
+    user: root
+    depends_on:
+      certify:
+        condition: service_healthy
+    environment:
+      - ENV_ENDPOINT=http://certify:8090
+      - ENV_TESTLEVEL=smokeAndRegression
+      - ENV_USER=certify:8090
+      - ENV_USECASE=mock
+      - CI=true

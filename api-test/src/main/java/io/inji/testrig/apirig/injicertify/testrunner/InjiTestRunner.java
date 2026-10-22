@@ -87,27 +87,40 @@ public class InjiTestRunner {
 			GlobalMethods.reportCaptchaStatus(GlobalConstants.CAPTCHA_ENABLED, false);
 			setLogLevels();
 
-			useCaseToExecute = InjiCertifyConfigManager.getproperty("useCaseToExecute");
-			if (useCaseToExecute != null) {
-				useCaseToExecute = useCaseToExecute.trim();
+			if ("true".equals(System.getenv("CI"))) {
+				useCaseToExecute = "mock";
 			} else {
-				useCaseToExecute = "";
+				useCaseToExecute = InjiCertifyConfigManager.getproperty("useCaseToExecute");
+				String envUseCase = System.getenv("ENV_USECASE");
+				if (envUseCase != null && !envUseCase.isBlank()) {
+					useCaseToExecute = envUseCase;
+				}
+				if (useCaseToExecute != null) {
+					useCaseToExecute = useCaseToExecute.trim();
+				} else {
+					useCaseToExecute = "";
+				}
 			}
 
-			HealthChecker healthcheck = new HealthChecker();
-			healthcheck.setCurrentRunningModule(GlobalConstants.INJICERTIFY);
-			Thread trigger = new Thread(healthcheck);
-			trigger.start();
+			if (!"true".equals(System.getenv("CI"))) {
+				HealthChecker healthcheck = new HealthChecker();
+				healthcheck.setCurrentRunningModule(GlobalConstants.INJICERTIFY);
+				Thread trigger = new Thread(healthcheck);
+				trigger.start();
+			}
 
-			KeycloakUserManager.removeUser();
-			KeycloakUserManager.createUsers();
-			KeycloakUserManager.closeKeycloakInstance();
-			AdminTestUtil.getRequiredField();
+			if (!"true".equals(System.getenv("CI"))) {
+				KeycloakUserManager.removeUser();
+				KeycloakUserManager.createUsers();
+				KeycloakUserManager.closeKeycloakInstance();
+				AdminTestUtil.getRequiredField();
+			}
 
-			BaseTestCase.getLanguageList();
+			if (!"true".equals(System.getenv("CI"))) {
+				BaseTestCase.getLanguageList();
+				InjiCertifyUtil.configureOtp();
+			}
 			InjiCertifyUtil.getSupportedCredentialSigningAlg();
-
-			InjiCertifyUtil.configureOtp();
 
 			generateDependency = InjiCertifyConfigManager.getproperty("generateDependencyJson");
 
@@ -120,7 +133,10 @@ public class InjiTestRunner {
 			}
 
 			// Needed for every use case, not just mosipid, else eSignet returns 403 Forbidden
-			AdminTestUtil.fetchAndStoreCsrfToken();
+			// Skip in CI: eSignetbaseurl points to external MOSIP host unreachable from CI network
+			if (!"true".equals(System.getenv("CI"))) {
+				AdminTestUtil.fetchAndStoreCsrfToken();
+			}
 			
 			if (useCaseToExecute.equalsIgnoreCase("mosipid")
 					|| useCaseToExecute.equalsIgnoreCase("mdocvp")) {
@@ -141,6 +157,9 @@ public class InjiTestRunner {
 				}
 			} else {
 
+				if ("true".equals(System.getenv("CI"))) {
+					OTPListener.bTerminate = true;
+				}
 				startTestRunner();
 
 			}
@@ -154,8 +173,10 @@ public class InjiTestRunner {
 			InjiCertifyUtil.landRegistryDBCleanup();
 		}
 
-		KeycloakUserManager.removeUser();
-		KeycloakUserManager.closeKeycloakInstance();
+		if (!"true".equals(System.getenv("CI"))) {
+			KeycloakUserManager.removeUser();
+			KeycloakUserManager.closeKeycloakInstance();
+		}
 
 		OTPListener.bTerminate = true;
 
@@ -243,8 +264,10 @@ public class InjiTestRunner {
 		BaseTestCase.currentModule = BaseTestCase.runContext + GlobalConstants.INJICERTIFY;
 		BaseTestCase.certsForModule = BaseTestCase.runContext + GlobalConstants.INJICERTIFY;
 		AdminTestUtil.copymoduleSpecificAndConfigFile(GlobalConstants.INJICERTIFY);
-		BaseTestCase.otpListener = new OTPListener();
-		BaseTestCase.otpListener.run();
+		if (!"true".equals(System.getenv("CI"))) {
+			BaseTestCase.otpListener = new OTPListener();
+			BaseTestCase.otpListener.run();
+		}
 	}
 
 	private static void setLogLevels() {
@@ -282,12 +305,6 @@ public class InjiTestRunner {
 		}
 		File[] files = homeDir.listFiles();
 		if (files != null) {
-			String useCaseToExecute = InjiCertifyConfigManager.getproperty("useCaseToExecute");
-			if (useCaseToExecute != null) {
-				useCaseToExecute = useCaseToExecute.trim();
-			} else {
-				useCaseToExecute = "";
-			}
 			InjiCertifyUtil.currentUseCase = useCaseToExecute;
 
 			for (File file : files) {
