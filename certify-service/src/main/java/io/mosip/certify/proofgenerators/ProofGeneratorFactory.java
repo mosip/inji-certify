@@ -1,6 +1,5 @@
 package io.mosip.certify.proofgenerators;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -10,7 +9,6 @@ import java.util.Optional;
 public class ProofGeneratorFactory {
     private final List<ProofGenerator> proofGenerators;
 
-    @Autowired
     public ProofGeneratorFactory(List<ProofGenerator> proofGenerators) {
         this.proofGenerators = proofGenerators;
     }

@@ -7,7 +7,6 @@ import io.mosip.certify.services.PreAuthorizedCodeService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -18,7 +17,6 @@ public class PreAuthorizedCodeController {
 
     private final PreAuthorizedCodeService preAuthorizedCodeService;
 
-    @Autowired
     public PreAuthorizedCodeController(PreAuthorizedCodeService preAuthorizedCodeService) {
         this.preAuthorizedCodeService = preAuthorizedCodeService;
     }

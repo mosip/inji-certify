@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,7 +66,6 @@ public class StatusListCredentialService {
     @Value("${mosip.certify.status-list.key-manager-ref-id:ED25519_SIGN}")
     private String statusListKeyManagerRefId;
 
-    @Autowired
     public StatusListCredentialService(StatusListCredentialRepository statusListCredentialRepository,
                                        VCFormatter vcFormatter,
                                        CredentialFactory credentialFactory,

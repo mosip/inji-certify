@@ -19,7 +19,6 @@ import io.mosip.certify.validators.credentialconfigvalidators.MsoMdocCredentialC
 import io.mosip.certify.validators.credentialconfigvalidators.QrSettingsValidator;
 import io.mosip.certify.validators.credentialconfigvalidators.SdJwtCredentialConfigValidator;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.cache.annotation.CacheEvict;
@@ -80,7 +79,6 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
 
     private static final String CREDENTIAL_CONFIG_CACHE_NAME = "credentialConfig";
 
-    @Autowired
     public CredentialConfigurationServiceImpl(CredentialConfigRepository credentialConfigRepository,
                                               CredentialConfigMapper credentialConfigMapper) {
         this.credentialConfigRepository = credentialConfigRepository;

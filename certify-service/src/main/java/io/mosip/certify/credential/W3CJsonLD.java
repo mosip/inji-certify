@@ -26,7 +26,6 @@ import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.kernel.signature.service.SignatureService;
 import io.mosip.kernel.signature.service.CoseSignatureService;
 import io.mosip.kernel.signature.service.SignatureServicev2;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -59,7 +58,6 @@ public class W3CJsonLD extends Credential{
      * @param signatureServiceV2 the signer this class uses for its own proofs; it is the field named
      *                           signatureService here, which hides the base class's
      */
-    @Autowired
     public W3CJsonLD(VCFormatter vcFormatter, SignatureService signatureService,
                      CoseSignatureService coseSignatureService, ProofGeneratorFactory proofGeneratorFactory,
                      SignatureServicev2 signatureServiceV2, DIDDocumentUtil didDocumentUtil,

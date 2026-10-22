@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.core.LockAssert;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -44,7 +43,6 @@ public class StatusListUpdateBatchJob {
     @Value("${mosip.certify.batch.status-list-update.batch-size:1000}")
     private int batchSize;
 
-    @Autowired
     public StatusListUpdateBatchJob(CredentialStatusTransactionRepository transactionRepository,
                                     StatusListCredentialRepository statusListRepository,
                                     StatusListCredentialService statusListCredentialService,
@@ -127,9 +125,9 @@ public class StatusListUpdateBatchJob {
 
     /**
      * Update a specific status list with the given transactions. Runs in the transaction opened by
-     * {@link #updateStatusLists()}.
+     * {@link #updateStatusLists()}; it is package-private so that nothing outside can call it without one.
      */
-    public void updateStatusList(String statusListId, List<CredentialStatusTransaction> transactions) {
+    void updateStatusList(String statusListId, List<CredentialStatusTransaction> transactions) {
         log.info("Updating status list {} with {} transactions", statusListId, transactions.size());
 
         try {
@@ -187,9 +185,10 @@ public class StatusListUpdateBatchJob {
 
 
     /**
-     * Update the status list credential with the new encoded list. Runs in the caller's transaction.
+     * Update the status list credential with the new encoded list. Runs in the caller's transaction, so
+     * it is package-private like {@link #updateStatusList}.
      */
-    public void updateStatusListCredential(StatusListCredential statusListCredential, String newEncodedList) {
+    void updateStatusListCredential(StatusListCredential statusListCredential, String newEncodedList) {
         try {
             log.info("Starting update of StatusListCredential with ID: {}", statusListCredential.getId());
 

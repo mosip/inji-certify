@@ -9,7 +9,6 @@ import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.kernel.signature.dto.SignRequestDtoV2;
 import io.mosip.kernel.signature.dto.SignResponseDto;
 import io.mosip.kernel.signature.service.SignatureServicev2;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +23,6 @@ public class Ed25519Signature2020ProofGenerator implements ProofGenerator {
 
     private final SignatureServicev2 signatureService;
 
-    @Autowired
     public Ed25519Signature2020ProofGenerator(SignatureServicev2 signatureService) {
         this.signatureService = signatureService;
     }

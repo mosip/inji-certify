@@ -6,7 +6,6 @@ import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.utils.MDocProcessor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,7 +28,6 @@ public class MDocCredential extends Credential {
 
     private final MDocProcessor mDocProcessor;
 
-    @Autowired
     public MDocCredential(VCFormatter vcFormatter, SignatureService signatureService,
                           CoseSignatureService coseSignatureService, ObjectMapper objectMapper,
                           MDocProcessor mDocProcessor) {

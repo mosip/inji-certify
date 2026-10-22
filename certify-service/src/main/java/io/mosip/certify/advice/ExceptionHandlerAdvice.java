@@ -10,7 +10,6 @@ import io.mosip.certify.core.util.CommonUtil;
 import io.mosip.certify.dpop.DpopProofValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.TypeMismatchException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.http.HttpHeaders;
@@ -68,7 +67,6 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
      */
     private final DpopProofValidator dpopProofValidator;
 
-    @Autowired
     public ExceptionHandlerAdvice(MessageSource messageSource, @Nullable DpopProofValidator dpopProofValidator) {
         this.messageSource = messageSource;
         this.dpopProofValidator = dpopProofValidator;

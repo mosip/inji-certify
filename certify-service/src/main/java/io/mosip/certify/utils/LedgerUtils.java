@@ -8,7 +8,6 @@ import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.dto.CredentialStatusDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -19,7 +18,6 @@ public class LedgerUtils {
 
     private final IndexedAttributesConfig indexedAttributesConfig;
 
-    @Autowired
     public LedgerUtils(IndexedAttributesConfig indexedAttributesConfig) {
         this.indexedAttributesConfig = indexedAttributesConfig;
     }

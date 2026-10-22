@@ -6,7 +6,6 @@ import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,7 +21,6 @@ public class VCIssuanceController {
 
     private final MessageSource messageSource;
 
-    @Autowired
     public VCIssuanceController(VCIssuanceService vcIssuanceService,
                                 MessageSource messageSource) {
         this.vcIssuanceService = vcIssuanceService;

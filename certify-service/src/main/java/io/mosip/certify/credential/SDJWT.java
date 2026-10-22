@@ -9,7 +9,6 @@ import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.kernel.signature.dto.JWSSignatureRequestDtoV2;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.authlete.sd.Disclosure;
@@ -36,7 +35,6 @@ public class SDJWT extends Credential{
 
     private final ObjectMapper objectMapper;
 
-    @Autowired
     public SDJWT(VCFormatter vcFormatter, SignatureService signatureService,
                  CoseSignatureService coseSignatureService, ObjectMapper objectMapper){
         super(vcFormatter, signatureService, coseSignatureService);

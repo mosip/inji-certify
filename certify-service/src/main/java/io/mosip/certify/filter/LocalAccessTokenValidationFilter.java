@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -44,7 +43,6 @@ public class LocalAccessTokenValidationFilter extends OncePerRequestFilter {
 
     private NimbusJwtDecoder nimbusJwtDecoder;
 
-    @Autowired
     public LocalAccessTokenValidationFilter(ParsedAccessToken parsedAccessToken) {
         this.parsedAccessToken = parsedAccessToken;
     }

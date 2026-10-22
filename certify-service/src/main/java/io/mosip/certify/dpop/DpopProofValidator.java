@@ -13,7 +13,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -147,7 +146,6 @@ public class DpopProofValidator {
     @Value("#{${mosip.certify.cache.expire-in-seconds:{:}}}")
     private Map<String, Integer> cacheExpireInSeconds;
 
-    @Autowired
     public DpopProofValidator(CacheManager cacheManager) {
         this.cacheManager = cacheManager;
     }

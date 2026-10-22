@@ -9,7 +9,6 @@ import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import io.mosip.kernel.signature.service.SignatureService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -22,7 +21,6 @@ import java.util.Map;
 public class Ed25519Signature2018ProofGenerator implements ProofGenerator {
     private final SignatureService signatureService;
 
-    @Autowired
     public Ed25519Signature2018ProofGenerator(SignatureService signatureService) {
         this.signatureService = signatureService;
     }

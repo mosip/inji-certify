@@ -4,7 +4,6 @@ import io.mosip.certify.core.dto.CredentialIssuerMetadataDTO;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
 import io.mosip.certify.core.spi.JwksService;
 import io.mosip.certify.core.spi.VCIssuanceService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +23,6 @@ public class WellKnownController {
 
     private final JwksService jwksService;
 
-    @Autowired
     public WellKnownController(CredentialConfigurationService credentialConfigurationService,
                                VCIssuanceService vcIssuanceService,
                                JwksService jwksService) {

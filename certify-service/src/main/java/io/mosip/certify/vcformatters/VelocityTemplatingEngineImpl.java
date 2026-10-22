@@ -14,7 +14,6 @@ import org.apache.velocity.runtime.RuntimeConstants;
 import org.apache.velocity.util.introspection.SecureUberspector;
 import org.apache.velocity.tools.generic.DateTool;
 import org.apache.velocity.tools.generic.EscapeTool;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
@@ -52,7 +51,6 @@ public class VelocityTemplatingEngineImpl implements VCFormatter {
     @Value("${mosip.certify.data-provider-plugin.id-field-prefix-uri:}")
     String idPrefix;
 
-    @Autowired
     public VelocityTemplatingEngineImpl(CredentialConfigRepository credentialConfigRepository,
                                         RenderingTemplateService renderingTemplateService,
                                         ObjectMapper objectMapper) {

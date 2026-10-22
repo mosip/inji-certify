@@ -14,7 +14,6 @@ import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.entity.IarSession;
 import io.mosip.certify.repository.IarSessionRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -22,6 +21,7 @@ import org.springframework.util.StringUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -32,7 +32,7 @@ import java.util.*;
 @Service
 public class IarPresentationService {
 
-    private static final java.security.SecureRandom SECURE_RANDOM = new java.security.SecureRandom();
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final IarSessionRepository iarSessionRepository;
 
@@ -46,7 +46,6 @@ public class IarPresentationService {
     @Value("#{'${mosip.certify.iar.identity-data:uin,vid,UIN,UID}'.split(',')}")
     private Set<String> identityKeys;
 
-    @Autowired
     public IarPresentationService(IarSessionRepository iarSessionRepository,
                                    ObjectMapper objectMapper,
                                    VerifiablePresentationSubmissionService vpSubmissionService) {

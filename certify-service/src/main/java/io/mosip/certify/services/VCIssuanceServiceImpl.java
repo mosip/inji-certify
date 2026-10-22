@@ -22,7 +22,6 @@ import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
 import io.mosip.certify.utils.VCIssuanceUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
@@ -46,7 +45,6 @@ public class VCIssuanceServiceImpl implements VCIssuanceService {
 
     private final CredentialConfigurationService credentialConfigurationService;
 
-    @Autowired
     public VCIssuanceServiceImpl(ParsedAccessToken parsedAccessToken,
                                  VCIssuancePlugin vcIssuancePlugin,
                                  ProofValidatorFactory proofValidatorFactory,

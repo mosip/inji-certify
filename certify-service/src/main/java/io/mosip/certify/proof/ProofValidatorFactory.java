@@ -2,7 +2,6 @@ package io.mosip.certify.proof;
 
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -12,7 +11,6 @@ public class ProofValidatorFactory {
 
     private final List<ProofValidator> proofValidators;
 
-    @Autowired
     public ProofValidatorFactory(List<ProofValidator> proofValidators) {
         this.proofValidators = proofValidators;
     }

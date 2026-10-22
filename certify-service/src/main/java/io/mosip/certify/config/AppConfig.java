@@ -4,7 +4,6 @@ import io.mosip.pixelpass.PixelPass;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -55,7 +54,6 @@ public class AppConfig implements ApplicationRunner {
     @Value("${mosip.certify.plugin-mode}")
     private String pluginMode;
 
-    @Autowired
     public AppConfig(KeymanagerService keymanagerService) {
         this.keymanagerService = keymanagerService;
     }

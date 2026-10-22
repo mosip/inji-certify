@@ -6,7 +6,6 @@ import io.mosip.certify.entity.StatusListCredential;
 import io.mosip.certify.repository.StatusListAvailableIndicesRepository;
 import io.mosip.certify.repository.StatusListCredentialRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +30,6 @@ public class DatabaseStatusListIndexProvider implements StatusListIndexProvider 
     @Value("${mosip.certify.statuslist.usable-capacity-percentage:50}")
     private int usableCapacityPercentage;
 
-    @Autowired
     public DatabaseStatusListIndexProvider(StatusListAvailableIndicesRepository statusListAvailableIndicesRepository,
                                            StatusListCredentialRepository statusListCredentialRepository,
                                            EntityManager entityManager) {

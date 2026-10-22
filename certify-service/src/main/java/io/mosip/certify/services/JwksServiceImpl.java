@@ -13,7 +13,6 @@ import io.mosip.certify.repository.CredentialConfigRepository;
 import io.mosip.kernel.keymanagerservice.dto.AllCertificatesDataResponseDto;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -45,7 +44,6 @@ public class JwksServiceImpl implements JwksService {
     @Value("#{${mosip.certify.signature-algo.key-alias-mapper:{}}}")
     private Map<String, List<List<String>>> signatureAlgoKeyAliasMapper;
 
-    @Autowired
     public JwksServiceImpl(KeymanagerService keymanagerService,
                            CredentialConfigRepository credentialConfigRepository) {
         this.keymanagerService = keymanagerService;

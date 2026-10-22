@@ -29,7 +29,6 @@ import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -40,11 +39,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class MDocProcessor {
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     /**
      * ISO/IEC 18013-5: ValidityInfo timestamps shall not use fractions of seconds
      * and shall use a UTC offset of 00:00, as indicated by the character "Z".
      */
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final DateTimeFormatter VALIDITY_INFO_DATETIME_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
@@ -54,7 +54,6 @@ public class MDocProcessor {
 
     private final CoseSignatureService coseSignatureService;
 
-    @Autowired
     public MDocProcessor(ObjectMapper objectMapper,
                          MDocConfig mDocConfig,
                          CoseSignatureService coseSignatureService) {

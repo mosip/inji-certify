@@ -11,7 +11,6 @@ import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CertifyException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
@@ -56,7 +55,6 @@ public class IarVpRequestService {
     @Value("${mosip.certify.oauth.interactive-authorization-endpoint:}")
     private String certifyIaeEndpoint;
 
-    @Autowired
     public IarVpRequestService(RestTemplate restTemplate,
                                 ObjectMapper objectMapper,
                                 VerifiablePresentationRequestService vpRequestService,

@@ -4,7 +4,6 @@ import io.mosip.certify.core.dto.RenderingTemplateDTO;
 import io.mosip.certify.core.exception.RenderingTemplateException;
 import io.mosip.certify.core.spi.RenderingTemplateService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
@@ -25,7 +24,6 @@ public class RenderingTemplateController {
     Integer maxAgeDays;
     private final RenderingTemplateService renderingTemplateService;
 
-    @Autowired
     public RenderingTemplateController(RenderingTemplateService renderingTemplateService) {
         this.renderingTemplateService = renderingTemplateService;
     }

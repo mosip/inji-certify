@@ -2,7 +2,6 @@ package io.mosip.certify.services;
 
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 public class RenderingTemplateServiceImpl implements RenderingTemplateService {
     private final RenderingTemplateRepository renderTemplateRepository;
 
-    @Autowired
     public RenderingTemplateServiceImpl(RenderingTemplateRepository renderTemplateRepository) {
         this.renderTemplateRepository = renderTemplateRepository;
     }

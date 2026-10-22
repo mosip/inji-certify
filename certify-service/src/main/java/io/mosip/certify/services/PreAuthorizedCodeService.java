@@ -15,7 +15,6 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -66,7 +65,6 @@ public class PreAuthorizedCodeService {
     @Value("${mosip.certify.oauth.access-token.audience:}")
     private String oauthAudience;
 
-    @Autowired
     public PreAuthorizedCodeService(VCICacheService vciCacheService,
                                     AccessTokenJwtUtil accessTokenJwtUtil,
                                     ObjectMapper objectMapper,

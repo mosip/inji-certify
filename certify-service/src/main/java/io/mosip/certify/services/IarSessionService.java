@@ -10,7 +10,6 @@ import io.mosip.certify.entity.IarSession;
 import io.mosip.certify.repository.CredentialConfigRepository;
 import io.mosip.certify.repository.IarSessionRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -35,7 +34,6 @@ public class IarSessionService {
     private static final String SESSION_PREFIX = "iar_session_";
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
-    @Autowired
     public IarSessionService(IarSessionRepository iarSessionRepository,
                              CredentialConfigRepository credentialConfigRepository) {
         this.iarSessionRepository = iarSessionRepository;

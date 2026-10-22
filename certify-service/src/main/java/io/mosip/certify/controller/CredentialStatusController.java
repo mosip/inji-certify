@@ -7,7 +7,6 @@ import io.mosip.certify.core.spi.CredentialStatusService;
 import io.mosip.certify.services.StatusListCredentialService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +19,6 @@ public class CredentialStatusController {
 
     private final CredentialStatusService credentialStatusService;
 
-    @Autowired
     public CredentialStatusController(StatusListCredentialService statusListCredentialService,
                                       CredentialStatusService credentialStatusService) {
         this.statusListCredentialService = statusListCredentialService;

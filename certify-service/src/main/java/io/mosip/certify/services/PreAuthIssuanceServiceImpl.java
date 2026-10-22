@@ -7,7 +7,6 @@ import io.mosip.certify.core.dto.ParsedAccessToken;
 import io.mosip.certify.core.dto.PreAuthTransaction;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +20,6 @@ public class PreAuthIssuanceServiceImpl implements DataProviderPlugin {
     private final VCICacheService vciCacheService;
     private final ParsedAccessToken parsedAccessToken;
 
-    @Autowired
     public PreAuthIssuanceServiceImpl(VCICacheService vciCacheService,
                                       ParsedAccessToken parsedAccessToken) {
         this.vciCacheService = vciCacheService;

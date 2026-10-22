@@ -15,7 +15,6 @@ import io.mosip.kernel.partnercertservice.dto.CACertificateRequestDto;
 import io.mosip.kernel.partnercertservice.dto.CACertificateResponseDto;
 import io.mosip.kernel.partnercertservice.service.spi.PartnerCertificateManagerService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,7 +39,6 @@ public class SystemInfoController {
     @Value("${mosip.certify.audit.claim-name:preferred_username}")
     private String claimName;
 
-    @Autowired
     public SystemInfoController(KeymanagerService keymanagerService,
                                 PartnerCertificateManagerService partnerCertificateManagerService,
                                 AuditPlugin auditWrapper) {
