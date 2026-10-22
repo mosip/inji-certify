@@ -16,6 +16,7 @@ import java.util.Properties;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
+import org.json.JSONObject;
 import org.testng.TestNG;
 
 import com.nimbusds.jose.jwk.KeyUse;
@@ -130,7 +131,7 @@ public class InjiTestRunner {
 
 				// mdocvp also AddIdentity's a MOSIP UIN, so IDA needs the same CBEFF face.
 				PartnerRegistration.deleteCertificates();
-				PartnerRegistration.deviceGeneration();
+				registerDevicePartner();
 				BiometricDataProvider.generateBiometricTestData("Registration");
 
 				startTestRunner();
@@ -172,6 +173,60 @@ public class InjiTestRunner {
 
 		System.exit(0);
 
+	}
+
+	/**
+	 * {@link PartnerRegistration#deviceGeneration()} casts the partner-manager {@code response}
+	 * field to {@link JSONObject}. An already-registered partner returns JSON null
+	 * ({@code org.json.JSONObject$Null}), which is the only cast recovered here.
+	 */
+	private static void registerDevicePartner() {
+		try {
+			PartnerRegistration.deviceGeneration();
+			return;
+		} catch (ClassCastException alreadyRegistered) {
+			if (!isNullDevicePartnerResponse(alreadyRegistered)) {
+				throw alreadyRegistered;
+			}
+			LOGGER.error("Device partner is already registered; uploading its certificates", alreadyRegistered);
+		}
+		String partnerId = PartnerRegistration.deviceOrganizationName;
+		JSONObject certificates = PartnerRegistration.getDeviceCertificates(partnerId, "DEVICE");
+		String caCertificate = certificates.getString("caCertificate");
+		String intermediateCertificate = certificates.getString("interCertificate");
+		String partnerCertificate = certificates.getString("partnerCertificate");
+		ClassCastException last = null;
+		for (int attempt = 0; attempt < 4; attempt++) {
+			PartnerRegistration.uploadCACertificate(caCertificate, "DEVICE");
+			PartnerRegistration.uploadIntermediateCertificate(intermediateCertificate, "DEVICE");
+			try {
+				JSONObject signed = PartnerRegistration.uploadPartnerCertificate(partnerCertificate, "DEVICE",
+						partnerId);
+				PartnerRegistration.uploadSignedCertificate(signed.getString("signedCertificateData"), "DEVICE",
+						partnerId, Boolean.TRUE);
+				return;
+			} catch (ClassCastException notYetTrusted) {
+				last = notYetTrusted;
+				LOGGER.info("Device partner certificate upload did not return signed data yet");
+			}
+		}
+		throw new IllegalStateException(
+				"Device partner certificate upload did not return signedCertificateData for " + partnerId, last);
+	}
+
+	/** True only for the JSON-null {@code response} cast inside {@code deviceGeneration}. */
+	private static boolean isNullDevicePartnerResponse(ClassCastException failure) {
+		String message = failure.getMessage();
+		if (message == null || !message.contains("org.json.JSONObject$Null")) {
+			return false;
+		}
+		for (StackTraceElement frame : failure.getStackTrace()) {
+			if ("io.mosip.testrig.apirig.utils.PartnerRegistration".equals(frame.getClassName())
+					&& "deviceGeneration".equals(frame.getMethodName())) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public static void suiteSetup(String runType) {

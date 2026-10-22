@@ -1,5 +1,6 @@
 package io.inji.testrig.apirig.injicertify.utils;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -8,6 +9,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import io.inji.testrig.apirig.injicertify.testrunner.InjiTestRunner;
+import io.mosip.testrig.apirig.testrunner.BaseTestCase;
 import io.mosip.testrig.apirig.utils.ConfigManager;
 
 public class InjiCertifyConfigManager extends ConfigManager{
@@ -35,6 +37,24 @@ public class InjiCertifyConfigManager extends ConfigManager{
 	
 	public static String getInjiCertifyDBURL() {
 		return "jdbc:postgresql://" + getproperty("db-server") + ":" + getproperty("db-port") + "/" + getproperty("inji_certify_db_table");
+	}
+
+	public static String getInjiCertifyBaseUrl() {
+		String configured = getproperty("injiCertifyBaseURL");
+		if (!"mdocvp".equalsIgnoreCase(getproperty("useCaseToExecute"))) {
+			return configured;
+		}
+		try {
+			URI environmentUri = URI.create(BaseTestCase.ApplnURI);
+			String host = environmentUri.getHost();
+			if (host != null && host.startsWith("api-internal.")) {
+				return environmentUri.getScheme() + "://injicertify-mdoc."
+						+ host.substring("api-internal.".length());
+			}
+		} catch (RuntimeException e) {
+			LOGGER.warn("Unable to derive the mdoc issuer URL from " + BaseTestCase.ApplnURI);
+		}
+		return configured;
 	}
 
 	public static void add(Map<String, Object> additionalPropertiesMap) {

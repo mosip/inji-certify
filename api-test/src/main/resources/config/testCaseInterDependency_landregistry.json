@@ -392,6 +392,7 @@
         "TC_landRegistryDependent_GenerateNonce_01"
     ],
     "TC_InjiCertify_GetCredentialForLandRegistry_28": [
+        "TC_InjiCertify_LandRegistry_AddVCDM20_01",
         "TC_DBDependent_InsertQuery_02",
         "TC_esignetDependent_GenerateToken_14",
         "TC_esignetDependent_CreateOidc_03",
@@ -399,6 +400,7 @@
     ],
     "TC_InjiCertify_UpdateConfiguration_01": [],
     "TC_InjiCertify_GetCredentialForLandRegistry_23": [
+        "TC_InjiCertify_LandRegistry_AddVCDM20_01",
         "TC_DBDependent_InsertQuery_02",
         "TC_esignetDependent_GenerateToken_14",
         "TC_esignetDependent_CreateOidc_03",
@@ -411,18 +413,21 @@
         "TC_landRegistryDependent_GenerateNonce_01"
     ],
     "TC_InjiCertify_GetCredentialForLandRegistry_25": [
+        "TC_InjiCertify_LandRegistry_AddRegistrationReceipt_01",
         "TC_esignetDependent_GenerateToken_15",
         "TC_DBDependent_InsertQuery_01",
         "TC_esignetDependent_CreateOidc_03",
         "TC_landRegistryDependent_GenerateNonce_01"
     ],
     "TC_InjiCertify_GetCredentialForLandRegistry_24": [
+        "TC_InjiCertify_LandRegistry_AddRegistrationReceipt_01",
         "TC_esignetDependent_GenerateToken_15",
         "TC_DBDependent_InsertQuery_01",
         "TC_esignetDependent_CreateOidc_03",
         "TC_landRegistryDependent_GenerateNonce_01"
     ],
     "TC_InjiCertify_GetCredentialForLandRegistry_30": [
+        "TC_InjiCertify_LandRegistry_AddRegistrationReceipt_01",
         "TC_esignetDependent_GenerateToken_15",
         "TC_DBDependent_InsertQuery_02",
         "TC_esignetDependent_CreateOidc_03",
@@ -707,6 +712,7 @@
         "TC_landRegistryDependent_GenerateNonceNeg_01"
     ],
     "TC_InjiCertify_GetCredentialForLandRegistry_08": [
+        "TC_InjiCertify_LandRegistry_AddRegistrationReceipt_01",
         "TC_esignetDependent_GenerateToken_15",
         "TC_DBDependent_InsertQuery_01",
         "TC_esignetDependent_CreateOidc_03",
@@ -719,6 +725,7 @@
         "TC_mock_identity_dependency_02"
     ],
     "TC_InjiCertify_GetCredentialForLandRegistry_05": [
+        "TC_InjiCertify_LandRegistry_AddRegistrationReceipt_01",
         "TC_esignetDependent_GenerateToken_15",
         "TC_DBDependent_InsertQuery_01",
         "TC_InjiCertify_dataIntegrity_proof_01",
@@ -728,18 +735,21 @@
         "TC_esignetDependent_GenerateToken_01"
     ],
     "TC_InjiCertify_GetCredentialForLandRegistry_04": [
+        "TC_InjiCertify_LandRegistry_AddVCDM20_01",
         "TC_DBDependent_InsertQuery_02",
         "TC_esignetDependent_GenerateToken_14",
         "TC_esignetDependent_CreateOidc_03",
         "TC_landRegistryDependent_GenerateNonce_01"
     ],
     "TC_InjiCertify_GetCredentialForLandRegistry_07": [
+        "TC_InjiCertify_LandRegistry_AddRegistrationReceipt_01",
         "TC_esignetDependent_GenerateToken_15",
         "TC_DBDependent_InsertQuery_01",
         "TC_esignetDependent_CreateOidc_03",
         "TC_landRegistryDependent_GenerateNonce_01"
     ],
     "TC_InjiCertify_GetCredentialForLandRegistry_06": [
+        "TC_InjiCertify_LandRegistry_AddRegistrationReceipt_01",
         "TC_esignetDependent_GenerateToken_15",
         "TC_DBDependent_InsertQuery_01",
         "TC_esignetDependent_CreateOidc_03",
@@ -752,6 +762,7 @@
         "TC_landRegistryDependent_GenerateNonce_01"
     ],
     "TC_InjiCertify_GetCredentialForLandRegistry_03": [
+        "TC_InjiCertify_LandRegistry_AddVCDM20_01",
         "TC_DBDependent_InsertQuery_02",
         "TC_esignetDependent_GenerateToken_14",
         "TC_esignetDependent_CreateOidc_03",
@@ -832,6 +843,7 @@
     "TC_InjiCertify_Update_Credential_Status_V2_08": [],
     "TC_InjiCertify_Update_Credential_Status_V2_07": [],
     "TC_InjiCertify_GetCredentialForLandRegistry_21": [
+        "TC_InjiCertify_LandRegistry_AddVCDM20_01",
         "TC_esignetDependent_GenerateToken_18",
         "TC_esignetDependent_CreateOidc_03",
         "TC_landRegistryDependent_GenerateNonceNeg_01"
