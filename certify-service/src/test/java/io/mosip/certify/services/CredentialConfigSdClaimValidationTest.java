@@ -115,7 +115,6 @@ public class CredentialConfigSdClaimValidationTest {
         dto.setKeyManagerAppId("CERTIFY_VC_SIGN_EC_R1");
         dto.setKeyManagerRefId("EC_SECP256R1_SIGN");
         dto.setCryptographicBindingMethodsSupported(new ArrayList<>(List.of("did:jwk", "did:web")));
-        dto.setCredentialSigningAlgValuesSupported(new ArrayList<>(List.of("ES256")));
         Map<String, Object> proofTypes = new LinkedHashMap<>();
         proofTypes.put("jwt", Map.of(Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED,
                 List.of("RS256", "PS256", "ES256", "EdDSA")));
@@ -143,6 +142,9 @@ public class CredentialConfigSdClaimValidationTest {
         dto.setKeyManagerRefId("ED25519_SIGN");
         dto.setSignatureAlgo("EdDSA");
         dto.setSignatureCryptoSuite("Ed25519Signature2020");
+        dto.setCryptographicBindingMethodsSupported(new ArrayList<>(List.of("did:jwk", "did:web")));
+        dto.setProofTypesSupported(new LinkedHashMap<>(Map.of("jwt",
+                Map.of(Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED, List.of("EdDSA")))));
         dto.setMetaDataDisplay(display());
         dto.setDisplayOrder(new ArrayList<>(List.of("fullName", "gender")));
         dto.setScope("t1077_ldp_vc");
@@ -161,9 +163,12 @@ public class CredentialConfigSdClaimValidationTest {
         dto.setCredentialFormat("mso_mdoc");
         dto.setDocType("org.iso.18013.5.1.T1077");
         dto.setSignatureCryptoSuite("EcdsaSecp256r1Signature2019");
+        dto.setSignatureAlgo("ES256");
         dto.setKeyManagerAppId("CERTIFY_VC_SIGN_EC_R1");
         dto.setKeyManagerRefId("EC_SECP256R1_SIGN");
         dto.setCryptographicBindingMethodsSupported(new ArrayList<>(List.of("cose_key")));
+        dto.setProofTypesSupported(new LinkedHashMap<>(Map.of("jwt",
+                Map.of(Constants.PROOF_SIGNING_ALG_VALUES_SUPPORTED, List.of("ES256")))));
         dto.setMetaDataDisplay(display());
         dto.setDisplayOrder(new ArrayList<>(List.of("org.iso.18013.5.1.mDL~family_name")));
         dto.setScope("t1077_mso_mdoc");
