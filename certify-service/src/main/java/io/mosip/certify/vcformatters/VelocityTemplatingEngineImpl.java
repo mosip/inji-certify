@@ -14,7 +14,6 @@ import org.apache.velocity.runtime.RuntimeConstants;
 import org.apache.velocity.util.introspection.SecureUberspector;
 import org.apache.velocity.tools.generic.DateTool;
 import org.apache.velocity.tools.generic.EscapeTool;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
@@ -41,19 +40,24 @@ import static io.mosip.certify.core.constants.Constants.*;
 public class VelocityTemplatingEngineImpl implements VCFormatter {
     VelocityEngine engine;
 
-    @Autowired
-    CredentialConfigRepository credentialConfigRepository;
-    @Autowired
-    RenderingTemplateService renderingTemplateService;
+    private final CredentialConfigRepository credentialConfigRepository;
+    private final RenderingTemplateService renderingTemplateService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     @Value("${mosip.certify.data-provider-plugin.vc-expiry-duration:P730d}")
     String defaultExpiryDuration;
 
     @Value("${mosip.certify.data-provider-plugin.id-field-prefix-uri:}")
     String idPrefix;
+
+    public VelocityTemplatingEngineImpl(CredentialConfigRepository credentialConfigRepository,
+                                        RenderingTemplateService renderingTemplateService,
+                                        ObjectMapper objectMapper) {
+        this.credentialConfigRepository = credentialConfigRepository;
+        this.renderingTemplateService = renderingTemplateService;
+        this.objectMapper = objectMapper;
+    }
 
     @PostConstruct
     public void initialize() {

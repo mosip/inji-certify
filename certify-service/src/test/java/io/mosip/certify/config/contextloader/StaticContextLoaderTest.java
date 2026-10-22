@@ -386,6 +386,24 @@ class StaticContextLoaderTest {
     }
 
     @Test
+    void should_keepInterruptFlag_when_remoteFetchIsInterrupted() {
+        JsonLdContextLoaderProperties props = baseProps();
+        props.getRemote().setAllowedHosts(Set.of("localhost"));
+        StaticContextLoader loader = new StaticContextLoader(props, mock(ResourceLoader.class));
+        URI uri = URI.create("http://localhost:" + port + "/ctx");
+        DocumentLoaderOptions options = new DocumentLoaderOptions();
+
+        // HttpClient.send throws InterruptedException at once on an interrupted thread. Catching it
+        // clears the flag, so the loader has to set it again for whoever is stopping this thread.
+        Thread.currentThread().interrupt();
+        try {
+            assertThrows(JsonLdError.class, () -> loader.loadDocument(uri, options));
+        } finally {
+            assertTrue(Thread.interrupted(), "The interrupt must survive the failed fetch");
+        }
+    }
+
+    @Test
     void allowUnknownFalse_hostNotInAllowedHosts_throws() {
         JsonLdContextLoaderProperties props = baseProps();
         props.getRemote().setAllowUnknown(false);

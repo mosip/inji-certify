@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
@@ -66,13 +65,17 @@ public class AccessTokenValidationFilter extends OncePerRequestFilter {
     @Value("#{${mosip.certify.authn.filter-urls}}")
     private List<String> urlPatterns;
 
-    @Autowired
-    private ParsedAccessToken parsedAccessToken;
+    private final ParsedAccessToken parsedAccessToken;
 
-    @Autowired
-    private DpopProofValidator dpopProofValidator;
+    private final DpopProofValidator dpopProofValidator;
 
     private NimbusJwtDecoder nimbusJwtDecoder;
+
+    public AccessTokenValidationFilter(ParsedAccessToken parsedAccessToken,
+                                       DpopProofValidator dpopProofValidator) {
+        this.parsedAccessToken = parsedAccessToken;
+        this.dpopProofValidator = dpopProofValidator;
+    }
 
     private boolean isJwt(String token) {
         return token.split("\\.").length == 3;

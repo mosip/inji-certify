@@ -2,7 +2,6 @@ package io.mosip.certify.config;
 
 import io.mosip.certify.core.config.LocalAuthenticationEntryPoint;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,8 +35,7 @@ import java.util.Map;
 @Profile(value = {"!test"})
 public class SecurityConfig {
 
-    @Autowired
-    private LocalAuthenticationEntryPoint localAuthenticationEntryPoint;
+    private final LocalAuthenticationEntryPoint localAuthenticationEntryPoint;
 
     @Value("${server.servlet.path}")
     private String servletPath;
@@ -62,6 +60,10 @@ public class SecurityConfig {
 
     @Value("${mosip.certify.security.cors-enabled-get-method-urls:}")
     private String corsEnabledGetMethodUrls;
+
+    public SecurityConfig(LocalAuthenticationEntryPoint localAuthenticationEntryPoint) {
+        this.localAuthenticationEntryPoint = localAuthenticationEntryPoint;
+    }
 
     @Bean
     public SecurityFilterChain web(HttpSecurity http) throws Exception {

@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -40,10 +39,13 @@ public class LocalAccessTokenValidationFilter extends OncePerRequestFilter {
     @Value("#{${mosip.certify.authn.filter-urls}}")
     private List<String> urlPatterns;
 
-    @Autowired
-    private ParsedAccessToken parsedAccessToken;
+    private final ParsedAccessToken parsedAccessToken;
 
     private NimbusJwtDecoder nimbusJwtDecoder;
+
+    public LocalAccessTokenValidationFilter(ParsedAccessToken parsedAccessToken) {
+        this.parsedAccessToken = parsedAccessToken;
+    }
 
 
     private boolean isJwt(String token) {

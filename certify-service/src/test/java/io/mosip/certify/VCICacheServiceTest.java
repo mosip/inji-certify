@@ -41,7 +41,7 @@ public class VCICacheServiceTest {
     private ObjectMapper objectMapper;
 
     @InjectMocks
-    private VCICacheService vciCacheService = new VCICacheService();
+    private VCICacheService vciCacheService;
 
     private static final String TEST_ACCESS_TOKEN_HASH = "testHash123";
     private static final String VCISSUANCE_CACHE = "vcissuance";

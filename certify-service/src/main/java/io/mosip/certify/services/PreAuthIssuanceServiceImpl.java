@@ -7,7 +7,6 @@ import io.mosip.certify.core.dto.ParsedAccessToken;
 import io.mosip.certify.core.dto.PreAuthTransaction;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
@@ -18,10 +17,14 @@ import java.util.Map;
 @ConditionalOnProperty(value = "mosip.certify.integration.data-provider-plugin", havingValue = "PreAuthDataProviderPlugin")
 public class PreAuthIssuanceServiceImpl implements DataProviderPlugin {
 
-    @Autowired
-    private VCICacheService vciCacheService;
-    @Autowired
-    private ParsedAccessToken parsedAccessToken;
+    private final VCICacheService vciCacheService;
+    private final ParsedAccessToken parsedAccessToken;
+
+    public PreAuthIssuanceServiceImpl(VCICacheService vciCacheService,
+                                      ParsedAccessToken parsedAccessToken) {
+        this.vciCacheService = vciCacheService;
+        this.parsedAccessToken = parsedAccessToken;
+    }
 
     @Override
     public JSONObject fetchData(Map<String, Object> identityDetails) throws DataProviderExchangeException {

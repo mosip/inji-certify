@@ -9,7 +9,6 @@ import io.mosip.certify.entity.Ledger;
 import io.mosip.certify.core.dto.CredentialStatusDetail;
 import io.mosip.certify.repository.LedgerRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,8 +22,11 @@ import java.util.stream.Stream;
 @Slf4j
 @Component
 public class CredentialLedgerServiceImpl implements CredentialLedgerService {
-    @Autowired
-    private LedgerRepository ledgerRepository;
+    private final LedgerRepository ledgerRepository;
+
+    public CredentialLedgerServiceImpl(LedgerRepository ledgerRepository) {
+        this.ledgerRepository = ledgerRepository;
+    }
 
     @Override
     public List<CredentialStatusResponse> searchCredentialLedger(CredentialLedgerSearchRequest request) {

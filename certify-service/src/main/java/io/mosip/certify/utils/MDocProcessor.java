@@ -29,7 +29,6 @@ import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -40,6 +39,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class MDocProcessor {
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     /**
      * ISO/IEC 18013-5: ValidityInfo timestamps shall not use fractions of seconds
      * and shall use a UTC offset of 00:00, as indicated by the character "Z".
@@ -47,14 +48,19 @@ public class MDocProcessor {
     private static final DateTimeFormatter VALIDITY_INFO_DATETIME_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
-    @Autowired
-    private MDocConfig mDocConfig;
+    private final MDocConfig mDocConfig;
 
-    @Autowired
-    private CoseSignatureService coseSignatureService;
+    private final CoseSignatureService coseSignatureService;
+
+    public MDocProcessor(ObjectMapper objectMapper,
+                         MDocConfig mDocConfig,
+                         CoseSignatureService coseSignatureService) {
+        this.objectMapper = objectMapper;
+        this.mDocConfig = mDocConfig;
+        this.coseSignatureService = coseSignatureService;
+    }
 
     /**
      * Process templated JSON to create final mDoc structure
@@ -172,11 +178,10 @@ public class MDocProcessor {
 
             List<Map<String, Object>> saltedElements = new ArrayList<>();
 
-            SecureRandom sr = new SecureRandom();
             for (Map<String, Object> element : elements) {
                 // Generate 24-byte random salt
                 byte[] randomSalt = new byte[24];
-                sr.nextBytes(randomSalt);
+                SECURE_RANDOM.nextBytes(randomSalt);
 
                 // Clone element with random salt as hex string
                 Map<String, Object> saltedElement = new HashMap<>(element);

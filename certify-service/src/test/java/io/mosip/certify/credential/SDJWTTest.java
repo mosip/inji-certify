@@ -1,5 +1,6 @@
 package io.mosip.certify.credential;
 
+import io.mosip.kernel.signature.service.CoseSignatureService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.api.dto.VCResult;
@@ -14,11 +15,9 @@ import io.mosip.kernel.signature.service.SignatureService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.*;
 
@@ -37,13 +36,12 @@ public class SDJWTTest {
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
-    @InjectMocks
     private SDJWT sdjwt;
 
     @Before
     public void setup() {
         MockitoAnnotations.openMocks(this);
-        ReflectionTestUtils.setField(sdjwt, "objectMapper", objectMapper);
+        sdjwt = new SDJWT(mockFormatter, mockSignatureService, mock(CoseSignatureService.class), objectMapper);
     }
 
     @Test

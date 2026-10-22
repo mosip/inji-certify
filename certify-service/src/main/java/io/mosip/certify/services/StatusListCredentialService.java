@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,17 +34,13 @@ import java.util.*;
 @Service
 public class StatusListCredentialService {
 
-    @Autowired
-    private StatusListCredentialRepository statusListCredentialRepository;
+    private final StatusListCredentialRepository statusListCredentialRepository;
 
-    @Autowired
-    private VCFormatter vcFormatter;
+    private final VCFormatter vcFormatter;
 
-    @Autowired
-    private CredentialFactory credentialFactory;
+    private final CredentialFactory credentialFactory;
 
-    @Autowired
-    private DatabaseStatusListIndexProvider indexProvider;
+    private final DatabaseStatusListIndexProvider indexProvider;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -70,6 +65,16 @@ public class StatusListCredentialService {
 
     @Value("${mosip.certify.status-list.key-manager-ref-id:ED25519_SIGN}")
     private String statusListKeyManagerRefId;
+
+    public StatusListCredentialService(StatusListCredentialRepository statusListCredentialRepository,
+                                       VCFormatter vcFormatter,
+                                       CredentialFactory credentialFactory,
+                                       DatabaseStatusListIndexProvider indexProvider) {
+        this.statusListCredentialRepository = statusListCredentialRepository;
+        this.vcFormatter = vcFormatter;
+        this.credentialFactory = credentialFactory;
+        this.indexProvider = indexProvider;
+    }
 
     public String getStatusListCredential(String id) throws CertifyException {
         log.info("Processing status list credential request for ID: {}", id);

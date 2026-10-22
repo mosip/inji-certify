@@ -6,7 +6,6 @@ import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.spi.VCIssuanceService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,11 +17,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/issuance")
 public class VCIssuanceController {
 
-    @Autowired
-    private VCIssuanceService vcIssuanceService;
+    private final VCIssuanceService vcIssuanceService;
 
-    @Autowired
-    MessageSource messageSource;
+    private final MessageSource messageSource;
+
+    public VCIssuanceController(VCIssuanceService vcIssuanceService,
+                                MessageSource messageSource) {
+        this.vcIssuanceService = vcIssuanceService;
+        this.messageSource = messageSource;
+    }
 
     /**
      * 1. The credential Endpoint MUST accept Access Tokens

@@ -7,7 +7,6 @@ import io.mosip.certify.services.PreAuthorizedCodeService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -16,8 +15,11 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Pre-Authorized Code API", description = "Endpoints for Pre-Authorized Code Flow")
 public class PreAuthorizedCodeController {
 
-    @Autowired
-    private PreAuthorizedCodeService preAuthorizedCodeService;
+    private final PreAuthorizedCodeService preAuthorizedCodeService;
+
+    public PreAuthorizedCodeController(PreAuthorizedCodeService preAuthorizedCodeService) {
+        this.preAuthorizedCodeService = preAuthorizedCodeService;
+    }
 
     @PostMapping(value = "/pre-authorized-data", produces = "application/json")
     public PreAuthorizedResponse generatePreAuthorizedCode(@Valid @RequestBody PreAuthorizedRequest request) {

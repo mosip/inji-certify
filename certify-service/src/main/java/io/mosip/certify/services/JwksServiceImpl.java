@@ -13,7 +13,6 @@ import io.mosip.certify.repository.CredentialConfigRepository;
 import io.mosip.kernel.keymanagerservice.dto.AllCertificatesDataResponseDto;
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -38,14 +37,18 @@ import static io.mosip.certify.core.constants.Constants.ED25519_REF_ID;
 @Slf4j
 public class JwksServiceImpl implements JwksService {
 
-    @Autowired
-    private KeymanagerService keymanagerService;
+    private final KeymanagerService keymanagerService;
 
-    @Autowired
-    private CredentialConfigRepository credentialConfigRepository;
+    private final CredentialConfigRepository credentialConfigRepository;
 
     @Value("#{${mosip.certify.signature-algo.key-alias-mapper:{}}}")
     private Map<String, List<List<String>>> signatureAlgoKeyAliasMapper;
+
+    public JwksServiceImpl(KeymanagerService keymanagerService,
+                           CredentialConfigRepository credentialConfigRepository) {
+        this.keymanagerService = keymanagerService;
+        this.credentialConfigRepository = credentialConfigRepository;
+    }
 
     /**
      * Internal method to fetch JWK set - cached for performance

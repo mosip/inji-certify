@@ -9,7 +9,6 @@ import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import io.mosip.kernel.signature.service.SignatureService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -27,14 +26,18 @@ import java.util.Map;
 @Component
 public class AccessTokenJwtUtil {
 
-    @Autowired
-    private SignatureService signatureService;
+    private final SignatureService signatureService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     @Value("${mosip.certify.cnonce-expire-seconds:300}")
     private int cNonceExpireSeconds;
+
+    public AccessTokenJwtUtil(SignatureService signatureService,
+                              ObjectMapper objectMapper) {
+        this.signatureService = signatureService;
+        this.objectMapper = objectMapper;
+    }
 
     /**
      * Generate a signed JWT access token using keymanager service

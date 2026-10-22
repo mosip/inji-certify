@@ -161,6 +161,13 @@ public final class StaticContextLoader implements DocumentLoader {
         }
     }
 
+    private static JsonLdError fetchFailed(URI uri, Exception cause) {
+        JsonLdError err = new JsonLdError(JsonLdErrorCode.LOADING_DOCUMENT_FAILED,
+                "Failed to fetch remote context: " + uri + " - " + cause.getMessage());
+        err.initCause(cause);
+        return err;
+    }
+
     /**
      * Fetches a remote JSON-LD document with manual redirect handling.
      * The initial request (i=0) is validated with {@link #validateRemoteHostAllowed},
@@ -186,11 +193,12 @@ public final class StaticContextLoader implements DocumentLoader {
                                 .timeout(Duration.ofSeconds(10))
                                 .build(),
                         HttpResponse.BodyHandlers.ofString());
+            } catch (InterruptedException e) {
+                // Restore the flag so whoever is stopping this thread still sees the interrupt.
+                Thread.currentThread().interrupt();
+                throw fetchFailed(current, e);
             } catch (Exception e) {
-                JsonLdError err = new JsonLdError(JsonLdErrorCode.LOADING_DOCUMENT_FAILED,
-                        "Failed to fetch remote context: " + current + " - " + e.getMessage());
-                err.initCause(e);
-                throw err;
+                throw fetchFailed(current, e);
             }
 
             int status = response.statusCode();

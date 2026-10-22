@@ -151,7 +151,8 @@ public class JwtProofValidator implements ProofValidator {
         try {
             SignedJWT jwt = (SignedJWT) JWTParser.parse(proofJwt);
             JwtProofKeyManager jpkm = getInstance(jwt.getHeader().getKeyID());
-            return jpkm.getDID(jwt.getHeader()).get();
+            return jpkm.getDID(jwt.getHeader())
+                    .orElseThrow(() -> new InvalidRequestException(ErrorConstants.PROOF_HEADER_INVALID_KEY));
         } catch (ParseException e) {
             log.error("Failed to parse jwt in the credential proof", e);
         } catch (InvalidRequestException e) {

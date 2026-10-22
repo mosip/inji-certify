@@ -20,8 +20,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SDJsonUtils {
 
+    // Possessive quantifiers: a greedy repeated group recurses once per segment in
+    // java.util.regex and overflows the stack on a long enough path. The segments start
+    // with distinct characters, so nothing ever needs to backtrack and the accepted paths
+    // are unchanged.
     private static final Pattern SD_PATH_SYNTAX =
-            Pattern.compile("^\\$(?:\\.[^.\\[\\]]+|\\[(?:\\*|0|[1-9]\\d*)\\])*$");
+            Pattern.compile("^\\$(?:\\.[^.\\[\\]]++|\\[(?:\\*|0|[1-9]\\d*+)\\])*+$");
 
     /**
      * This method constructs the SD-JWT payload for a given JSON node.

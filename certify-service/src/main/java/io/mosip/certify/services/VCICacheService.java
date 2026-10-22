@@ -9,7 +9,6 @@ import io.mosip.certify.core.dto.VCIssuanceTransaction;
 import io.mosip.certify.core.exception.CertifyException;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -21,8 +20,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class VCICacheService {
 
-    @Autowired
-    private CacheManager cacheManager;
+    private final CacheManager cacheManager;
 
     @Value("${spring.cache.type:simple}")
     private String cacheType;
@@ -30,6 +28,10 @@ public class VCICacheService {
     private static final String VCISSUANCE_CACHE = "vcissuance";
     private static final String PRE_AUTH_TXN_CACHE = "preAuthCacheTxn";
     private static final String NONCE_CACHE = "nonce";
+
+    public VCICacheService(CacheManager cacheManager) {
+        this.cacheManager = cacheManager;
+    }
 
     @PostConstruct
     public void validateCacheConfiguration() {

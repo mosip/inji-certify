@@ -1,6 +1,5 @@
 package io.mosip.certify.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -12,8 +11,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
-    @Autowired
-    private AuthorizationDetailsConverter authorizationDetailsConverter;
+    private final AuthorizationDetailsConverter authorizationDetailsConverter;
+
+    public WebMvcConfig(AuthorizationDetailsConverter authorizationDetailsConverter) {
+        this.authorizationDetailsConverter = authorizationDetailsConverter;
+    }
 
     @Override
     public void addFormatters(FormatterRegistry registry) {

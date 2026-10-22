@@ -15,7 +15,6 @@ import org.junit.*;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -55,7 +54,6 @@ public class JwksServiceImplTest {
 
     @Before
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
 
         // Default mapper: algo -> [[appId, refId]]
         signatureAlgoKeyAliasMapper = new LinkedHashMap<>();

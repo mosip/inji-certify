@@ -20,7 +20,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -63,7 +62,6 @@ public class CredentialConfigurationSupportedServiceImplTest {
                 List.of("TEST2019", "TEST2019-REF")));
 //        keyAliasMapper.put("RS256", List.of());
 
-        MockitoAnnotations.openMocks(this);
         logo = new MetaDataDisplayDTO.Logo();
         logo.setUri("https://logo2.mosip.io");
         metaDataDisplayDTO = new MetaDataDisplayDTO();

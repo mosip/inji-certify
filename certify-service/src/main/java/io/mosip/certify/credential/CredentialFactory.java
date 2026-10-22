@@ -4,7 +4,6 @@ import java.util.Optional;
 import java.util.List;
 
 import io.mosip.certify.core.constants.VCFormats;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
@@ -17,8 +16,11 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class CredentialFactory {
 
-    @Autowired
-    private List<Credential> credentials;
+    private final List<Credential> credentials;
+
+    public CredentialFactory(List<Credential> credentials) {
+        this.credentials = credentials;
+    }
 
     /**
      * Factory method to create objects based on the given format.

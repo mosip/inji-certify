@@ -12,6 +12,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
 import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.InvalidRequestException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.BeforeEach;
@@ -102,6 +103,22 @@ class JwtProofValidatorTest {
         String keyMaterial = jwtProofValidator.getKeyMaterial(credentialProof);
         assertNotNull(keyMaterial);
         assertTrue(keyMaterial.startsWith("did:jwk:"), "Key material should be prefixed with did:jwk");
+    }
+
+    @Test
+    void should_rejectProof_when_noDidCanBeDerivedFromTheHeader() throws Exception {
+        // No embedded jwk and a kid that is neither did:jwk nor did:key: there is no DID to
+        // return. This used to escape as a NoSuchElementException, a 500.
+        RSAKey rsaJWK = new RSAKeyGenerator(2048).generate();
+        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.RS256)
+                .type(new JOSEObjectType("openid4vci-proof+jwt"))
+                .keyID("key-1")
+                .build(), new JWTClaimsSet.Builder().issueTime(new Date()).build());
+        jwt.sign(new RSASSASigner(rsaJWK));
+
+        InvalidRequestException exception = assertThrows(InvalidRequestException.class,
+                () -> jwtProofValidator.getKeyMaterial(jwt.serialize()));
+        assertEquals(ErrorConstants.PROOF_HEADER_INVALID_KEY, exception.getErrorCode());
     }
 
     @Test

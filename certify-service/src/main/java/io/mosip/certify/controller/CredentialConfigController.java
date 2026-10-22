@@ -6,7 +6,6 @@ import io.mosip.certify.core.dto.CredentialConfigurationDTO;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,8 +15,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/credential-configurations")
 public class CredentialConfigController {
 
-    @Autowired
-    private CredentialConfigurationService credentialConfigurationService;
+    private final CredentialConfigurationService credentialConfigurationService;
+
+    public CredentialConfigController(CredentialConfigurationService credentialConfigurationService) {
+        this.credentialConfigurationService = credentialConfigurationService;
+    }
 
     @PostMapping(produces = "application/json")
     public ResponseEntity<CredentialConfigResponse> addCredentialConfiguration(@Valid @RequestBody CredentialConfigurationDTO credentialConfigurationRequest) throws JsonProcessingException {

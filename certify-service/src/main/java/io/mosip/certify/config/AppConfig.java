@@ -4,14 +4,12 @@ import io.mosip.pixelpass.PixelPass;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.util.ObjectUtils;
@@ -48,8 +46,7 @@ public class AppConfig implements ApplicationRunner {
     @Value("${mosip.certify.default.httpclient.connections.max:100}")
     private int defaultTotalMaxConnection;
 
-    @Autowired
-    private KeymanagerService keymanagerService;
+    private final KeymanagerService keymanagerService;
 
     @Value("${mosip.certify.cache.security.secretkey.reference-id}")
     private String cacheSecretKeyRefId;
@@ -57,8 +54,9 @@ public class AppConfig implements ApplicationRunner {
     @Value("${mosip.certify.plugin-mode}")
     private String pluginMode;
 
-    @Autowired
-    private Environment env;
+    public AppConfig(KeymanagerService keymanagerService) {
+        this.keymanagerService = keymanagerService;
+    }
 
     @Bean
     public ObjectMapper objectMapper() {

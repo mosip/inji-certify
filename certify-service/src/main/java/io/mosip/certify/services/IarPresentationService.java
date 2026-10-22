@@ -14,7 +14,6 @@ import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.entity.IarSession;
 import io.mosip.certify.repository.IarSessionRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -22,6 +21,7 @@ import org.springframework.util.StringUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -31,6 +31,8 @@ import java.util.*;
 @Slf4j
 @Service
 public class IarPresentationService {
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final IarSessionRepository iarSessionRepository;
 
@@ -44,7 +46,6 @@ public class IarPresentationService {
     @Value("#{'${mosip.certify.iar.identity-data:uin,vid,UIN,UID}'.split(',')}")
     private Set<String> identityKeys;
 
-    @Autowired
     public IarPresentationService(IarSessionRepository iarSessionRepository,
                                    ObjectMapper objectMapper,
                                    VerifiablePresentationSubmissionService vpSubmissionService) {
@@ -261,12 +262,12 @@ public class IarPresentationService {
         // For Base64 URL encoding, we need approximately 3/4 of the target length in bytes
         int byteLength = (int) Math.ceil(authorizationCodeLength * 0.75);
         byte[] randomBytes = new byte[byteLength];
-        new java.security.SecureRandom().nextBytes(randomBytes);
+        SECURE_RANDOM.nextBytes(randomBytes);
         String encoded = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
         // Ensure we have enough characters, pad if necessary
         if (encoded.length() < authorizationCodeLength) {
             byte[] additionalBytes = new byte[16];
-            new java.security.SecureRandom().nextBytes(additionalBytes);
+            SECURE_RANDOM.nextBytes(additionalBytes);
             String additionalEncoded = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(additionalBytes);
             encoded = (encoded + additionalEncoded).substring(0, authorizationCodeLength);
         }

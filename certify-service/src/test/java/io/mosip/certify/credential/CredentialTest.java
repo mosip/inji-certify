@@ -12,7 +12,6 @@ import io.mosip.certify.vcformatters.VCFormatter;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -31,13 +30,12 @@ public class CredentialTest {
         mockCoseSignatureService = mock(CoseSignatureService.class);
 
         // Minimal subclass of Credential to allow testing
-        credential = new Credential(mockFormatter, mockSignatureService) {
+        credential = new Credential(mockFormatter, mockSignatureService, mockCoseSignatureService) {
             @Override
             public boolean canHandle(String format) {
                 return false;
             }
         };
-        ReflectionTestUtils.setField(credential, "coseSignatureService", mockCoseSignatureService);
     }
 
     @Test

@@ -8,12 +8,10 @@ import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.entity.Ledger;
 import io.mosip.certify.repository.LedgerRepository;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.LocalDateTime;
@@ -34,10 +32,6 @@ public class CredentialLedgerServiceImplTest {
     @InjectMocks
     private CredentialLedgerServiceImpl ledgerService;
 
-    @Before
-    public void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
 
     @Test
     public void searchCredentials_ValidRequestWithAllFields_ReturnsResult() {

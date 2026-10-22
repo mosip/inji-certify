@@ -6,7 +6,6 @@ import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.VCFormats;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.utils.MDocProcessor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.api.dto.VCResult;
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.kernel.signature.service.SignatureService;
+import io.mosip.kernel.signature.service.CoseSignatureService;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -24,14 +24,16 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class MDocCredential extends Credential {
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
-    @Autowired
-    private MDocProcessor mDocProcessor;
+    private final MDocProcessor mDocProcessor;
 
-    public MDocCredential(VCFormatter vcFormatter, SignatureService signatureService) {
-        super(vcFormatter, signatureService);
+    public MDocCredential(VCFormatter vcFormatter, SignatureService signatureService,
+                          CoseSignatureService coseSignatureService, ObjectMapper objectMapper,
+                          MDocProcessor mDocProcessor) {
+        super(vcFormatter, signatureService, coseSignatureService);
+        this.objectMapper = objectMapper;
+        this.mDocProcessor = mDocProcessor;
     }
 
     @Override

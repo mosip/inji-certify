@@ -5,7 +5,6 @@ import io.mosip.certify.core.dto.CredentialStatusResponse;
 import io.mosip.certify.core.spi.CredentialLedgerService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,8 +16,11 @@ import java.util.List;
 @RestController
 public class CredentialLedgerController {
 
-    @Autowired
-    private CredentialLedgerService credentialLedgerService;
+    private final CredentialLedgerService credentialLedgerService;
+
+    public CredentialLedgerController(CredentialLedgerService credentialLedgerService) {
+        this.credentialLedgerService = credentialLedgerService;
+    }
 
     @PostMapping(value = "/ledger-search", produces = "application/json")
     public ResponseEntity<List<CredentialStatusResponse>> searchCredentials(

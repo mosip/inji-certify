@@ -12,7 +12,6 @@ import jakarta.validation.Validator;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -69,7 +68,6 @@ public class IarServiceImpl implements IarService {
 
     private static final String AUTH_CODE_PREFIX = "iar_auth_";
 
-    @Autowired
     public IarServiceImpl(IarSessionRepository iarSessionRepository,
                           IarPresentationService iarPresentationService,
                           IarSessionService iarSessionService,

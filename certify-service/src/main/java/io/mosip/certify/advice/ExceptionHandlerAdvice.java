@@ -10,10 +10,10 @@ import io.mosip.certify.core.util.CommonUtil;
 import io.mosip.certify.dpop.DpopProofValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.TypeMismatchException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -53,8 +53,7 @@ import static io.mosip.certify.core.constants.VCIErrorConstants.INVALID_REQUEST;
 @ControllerAdvice
 public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler implements AccessDeniedHandler {
 
-    @Autowired
-    MessageSource messageSource;
+    private final MessageSource messageSource;
 
     /**
      * Source of the {@code algs} parameter advertised in a DPoP challenge (RFC 9449
@@ -63,11 +62,15 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler imple
      * <p>The validator is asked for the list rather than the property being bound here a
      * second time: two bindings of one key can be edited apart, and a challenge that
      * advertises algorithms the validator does not accept sends a wallet developer
-     * chasing a fault that is not theirs. Optional so an advice built outside a Spring
-     * context still answers, just without the {@code algs} hint.
+     * chasing a fault that is not theirs. Optional (null when there is no validator bean)
+     * so the advice still answers, just without the {@code algs} hint.
      */
-    @Autowired(required = false)
-    private DpopProofValidator dpopProofValidator;
+    private final DpopProofValidator dpopProofValidator;
+
+    public ExceptionHandlerAdvice(MessageSource messageSource, @Nullable DpopProofValidator dpopProofValidator) {
+        this.messageSource = messageSource;
+        this.dpopProofValidator = dpopProofValidator;
+    }
 
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers,

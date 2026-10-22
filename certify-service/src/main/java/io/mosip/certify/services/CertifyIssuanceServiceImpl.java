@@ -33,7 +33,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -56,17 +55,13 @@ import static io.mosip.certify.utils.VCIssuanceUtil.getScopeCredentialMapping;
 @ConditionalOnProperty(value = "mosip.certify.plugin-mode", havingValue = "DataProvider")
 public class CertifyIssuanceServiceImpl implements VCIssuanceService {
 
-    @Autowired
-    private ParsedAccessToken parsedAccessToken;
+    private final ParsedAccessToken parsedAccessToken;
 
-    @Autowired
-    private VCFormatter vcFormatter;
+    private final VCFormatter vcFormatter;
 
-    @Autowired
-    private CredentialFactory credentialFactory;
+    private final CredentialFactory credentialFactory;
 
-    @Autowired
-    private DataProviderPlugin dataProviderPlugin;
+    private final DataProviderPlugin dataProviderPlugin;
 
     @Value("${mosip.certify.data-provider-plugin.did-url}")
     private String didUrl;
@@ -74,41 +69,31 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Value("${mosip.certify.data-provider-plugin.rendering-template-id:}")
     private String renderTemplateId;
 
-    @Autowired
-    private ProofValidatorFactory proofValidatorFactory;
+    private final ProofValidatorFactory proofValidatorFactory;
 
-    @Autowired
-    private VCICacheService vcICacheService;
+    private final VCICacheService vcICacheService;
 
-    @Autowired
-    private AuditPlugin auditWrapper;
+    private final AuditPlugin auditWrapper;
 
-    @Autowired
-    @Qualifier("certifyPixelPass")
-    private PixelPass pixelPass;
+    private final PixelPass pixelPass;
 
     private Map<String, Object> didDocument;
 
-    @Autowired
-    private CredentialConfigurationService credentialConfigurationService;
+    private final CredentialConfigurationService credentialConfigurationService;
 
     @Value("${mosip.certify.identifier}")
     private String certifyIssuer;
 
-    @Autowired
-    private StatusListCredentialService statusListCredentialService;
+    private final StatusListCredentialService statusListCredentialService;
 
     @Value("${mosip.certify.domain.url}")
     private String domainUrl;
 
-    @Autowired
-    private DIDDocumentUtil didDocumentUtil;
+    private final DIDDocumentUtil didDocumentUtil;
 
-    @Autowired
-    private LedgerUtils ledgerUtils;
+    private final LedgerUtils ledgerUtils;
 
-    @Autowired
-    private CredentialLedgerService credentialLedgerService;
+    private final CredentialLedgerService credentialLedgerService;
 
     @Value("#{${mosip.certify.issuer.ledger-enabled:true}}")
     private boolean isLedgerEnabled;
@@ -122,8 +107,37 @@ public class CertifyIssuanceServiceImpl implements VCIssuanceService {
     @Value("#{${mosip.certify.signature-algo.key-alias-mapper}}")
     private Map<String, List<List<String>>> keyAliasMapper;
 
-    @Autowired
-    private VelocityEnvConfig velocityEnvConfig;
+    private final VelocityEnvConfig velocityEnvConfig;
+
+    public CertifyIssuanceServiceImpl(ParsedAccessToken parsedAccessToken,
+                                      VCFormatter vcFormatter,
+                                      CredentialFactory credentialFactory,
+                                      DataProviderPlugin dataProviderPlugin,
+                                      ProofValidatorFactory proofValidatorFactory,
+                                      VCICacheService vcICacheService,
+                                      AuditPlugin auditWrapper,
+                                      @Qualifier("certifyPixelPass") PixelPass pixelPass,
+                                      CredentialConfigurationService credentialConfigurationService,
+                                      StatusListCredentialService statusListCredentialService,
+                                      DIDDocumentUtil didDocumentUtil,
+                                      LedgerUtils ledgerUtils,
+                                      CredentialLedgerService credentialLedgerService,
+                                      VelocityEnvConfig velocityEnvConfig) {
+        this.parsedAccessToken = parsedAccessToken;
+        this.vcFormatter = vcFormatter;
+        this.credentialFactory = credentialFactory;
+        this.dataProviderPlugin = dataProviderPlugin;
+        this.proofValidatorFactory = proofValidatorFactory;
+        this.vcICacheService = vcICacheService;
+        this.auditWrapper = auditWrapper;
+        this.pixelPass = pixelPass;
+        this.credentialConfigurationService = credentialConfigurationService;
+        this.statusListCredentialService = statusListCredentialService;
+        this.didDocumentUtil = didDocumentUtil;
+        this.ledgerUtils = ledgerUtils;
+        this.credentialLedgerService = credentialLedgerService;
+        this.velocityEnvConfig = velocityEnvConfig;
+    }
 
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {

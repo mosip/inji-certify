@@ -1,5 +1,6 @@
 package io.mosip.certify.advice;
 
+import org.springframework.cache.CacheManager;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -54,11 +55,10 @@ public class ExceptionHandlerAdviceTest {
 
     @Before
     public void setUp() {
-        advice = new ExceptionHandlerAdvice();
         messageSource = Mockito.mock(MessageSource.class);
         when(messageSource.getMessage(anyString(), any(), anyString(), any(Locale.class)))
                 .thenAnswer(inv -> inv.getArgument(2));
-        ReflectionTestUtils.setField(advice, "messageSource", messageSource);
+        advice = new ExceptionHandlerAdvice(messageSource, null);
     }
 
     private ServletWebRequest webRequest(String uri) {
@@ -149,7 +149,7 @@ public class ExceptionHandlerAdviceTest {
         // processed for beans built with new, hence setting the field it binds.
         // A misconfigured property is the only way a quote reaches algs, but the header
         // must stay well-formed either way.
-        DpopProofValidator validator = new DpopProofValidator();
+        DpopProofValidator validator = new DpopProofValidator(Mockito.mock(CacheManager.class));
         ReflectionTestUtils.setField(validator, "allowedAlgorithms", List.of("ES256", "RS\"256"));
         ReflectionTestUtils.setField(advice, "dpopProofValidator", validator);
 

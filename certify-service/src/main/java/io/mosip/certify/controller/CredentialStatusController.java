@@ -7,7 +7,6 @@ import io.mosip.certify.core.spi.CredentialStatusService;
 import io.mosip.certify.services.StatusListCredentialService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,11 +15,15 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/credentials")
 public class CredentialStatusController {
 
-    @Autowired
-    private StatusListCredentialService statusListCredentialService;
+    private final StatusListCredentialService statusListCredentialService;
 
-    @Autowired
-    private CredentialStatusService credentialStatusService;
+    private final CredentialStatusService credentialStatusService;
+
+    public CredentialStatusController(StatusListCredentialService statusListCredentialService,
+                                      CredentialStatusService credentialStatusService) {
+        this.statusListCredentialService = statusListCredentialService;
+        this.credentialStatusService = credentialStatusService;
+    }
 
     /**
      * Get Status List Credential by ID with optional fragment support

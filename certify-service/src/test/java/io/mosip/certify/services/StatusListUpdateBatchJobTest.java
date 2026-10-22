@@ -12,12 +12,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -42,12 +43,18 @@ public class StatusListUpdateBatchJobTest {
     @Mock
     private StatusListCredentialService statusListCredentialService;
 
-    @Spy
-    @InjectMocks
+    @Mock
+    private PlatformTransactionManager transactionManager;
+
+    @Mock
+    private TransactionStatus transactionStatus;
+
     private StatusListUpdateBatchJob batchJob;
 
     @Before
     public void setup() {
+        batchJob = spy(new StatusListUpdateBatchJob(transactionRepository, statusListRepository,
+                statusListCredentialService, new TransactionTemplate(transactionManager)));
         LockAssert.TestHelper.makeAllAssertsPass(true);
         ReflectionTestUtils.setField(batchJob, "batchJobEnabled", true);
         ReflectionTestUtils.setField(batchJob, "batchSize", 1000);
@@ -94,6 +101,24 @@ public class StatusListUpdateBatchJobTest {
 
         verify(batchJob).updateStatusList(eq("list-a"), anyList());
         verify(batchJob).updateStatusList(eq("list-b"), anyList());
+    }
+
+    @Test
+    public void should_updateEachStatusListInItsOwnTransaction_when_oneGroupFails() {
+        // updateStatusList is called on this, so only the template can give it a transaction:
+        // a failed list is rolled back on its own and the other list still commits.
+        List<CredentialStatusTransaction> txns = List.of(txn("list-a", 1L, true), txn("list-b", 1L, true));
+        when(transactionRepository.findByIsProcessedFalseOrderByCreatedDtimesAsc(any(Pageable.class)))
+                .thenReturn(txns);
+        when(transactionManager.getTransaction(any())).thenReturn(transactionStatus);
+        doThrow(new RuntimeException("fail")).when(batchJob).updateStatusList(eq("list-a"), anyList());
+        doNothing().when(batchJob).updateStatusList(eq("list-b"), anyList());
+
+        batchJob.updateStatusLists();
+
+        verify(transactionManager, times(2)).getTransaction(any());
+        verify(transactionManager).rollback(transactionStatus);
+        verify(transactionManager).commit(transactionStatus);
     }
 
     @Test

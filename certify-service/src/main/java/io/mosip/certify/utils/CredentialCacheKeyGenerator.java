@@ -5,7 +5,6 @@ import io.mosip.certify.entity.CredentialConfig;
 import io.mosip.certify.repository.CredentialConfigRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
@@ -17,11 +16,15 @@ import static io.mosip.certify.core.constants.Constants.DELIMITER;
 public class CredentialCacheKeyGenerator {
 
     private static final Logger log = LoggerFactory.getLogger(CredentialCacheKeyGenerator.class);
-    @Autowired
-    private CredentialConfigRepository credentialConfigRepository;
+    private final CredentialConfigRepository credentialConfigRepository;
 
-    @Autowired
-    private CacheManager cacheManager;
+    private final CacheManager cacheManager;
+
+    public CredentialCacheKeyGenerator(CredentialConfigRepository credentialConfigRepository,
+                                       CacheManager cacheManager) {
+        this.credentialConfigRepository = credentialConfigRepository;
+        this.cacheManager = cacheManager;
+    }
 
     public String generateKeyFromCredentialConfigKeyId(String credentialConfigKeyId) {
         if (credentialConfigKeyId == null) {

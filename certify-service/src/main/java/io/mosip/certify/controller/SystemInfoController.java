@@ -15,7 +15,6 @@ import io.mosip.kernel.partnercertservice.dto.CACertificateRequestDto;
 import io.mosip.kernel.partnercertservice.dto.CACertificateResponseDto;
 import io.mosip.kernel.partnercertservice.service.spi.PartnerCertificateManagerService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,17 +30,22 @@ import java.util.Optional;
 @RequestMapping("/system-info")
 public class SystemInfoController {
 
-    @Autowired
-    private KeymanagerService keymanagerService;
+    private final KeymanagerService keymanagerService;
 
-    @Autowired
-    private PartnerCertificateManagerService partnerCertificateManagerService;
+    private final PartnerCertificateManagerService partnerCertificateManagerService;
     
-    @Autowired
-    AuditPlugin auditWrapper;
+    private final AuditPlugin auditWrapper;
     
     @Value("${mosip.certify.audit.claim-name:preferred_username}")
     private String claimName;
+
+    public SystemInfoController(KeymanagerService keymanagerService,
+                                PartnerCertificateManagerService partnerCertificateManagerService,
+                                AuditPlugin auditWrapper) {
+        this.keymanagerService = keymanagerService;
+        this.partnerCertificateManagerService = partnerCertificateManagerService;
+        this.auditWrapper = auditWrapper;
+    }
 
     @GetMapping(value = "/certificate", produces = "application/json")
     public ResponseWrapper<KeyPairGenerateResponseDto> getCertificate(

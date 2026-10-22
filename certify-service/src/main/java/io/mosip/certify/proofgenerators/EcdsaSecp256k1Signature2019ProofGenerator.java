@@ -9,7 +9,6 @@ import io.mosip.certify.core.constants.SignatureAlg;
 import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
 import io.mosip.kernel.signature.dto.JWTSignatureResponseDto;
 import io.mosip.kernel.signature.service.SignatureService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -24,8 +23,11 @@ import java.util.Map;
 @Component
 public class EcdsaSecp256k1Signature2019ProofGenerator implements ProofGenerator {
 
-    @Autowired
-    SignatureService signatureService;
+    private final SignatureService signatureService;
+
+    public EcdsaSecp256k1Signature2019ProofGenerator(SignatureService signatureService) {
+        this.signatureService = signatureService;
+    }
 
     Canonicalizer canonicalizer = new URDNA2015Canonicalizer();
 

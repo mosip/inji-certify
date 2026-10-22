@@ -15,7 +15,6 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -66,7 +65,6 @@ public class PreAuthorizedCodeService {
     @Value("${mosip.certify.oauth.access-token.audience:}")
     private String oauthAudience;
 
-    @Autowired
     public PreAuthorizedCodeService(VCICacheService vciCacheService,
                                     AccessTokenJwtUtil accessTokenJwtUtil,
                                     ObjectMapper objectMapper,
@@ -314,9 +312,9 @@ public class PreAuthorizedCodeService {
             throw new CertifyException(ErrorConstants.UNSUPPORTED_GRANT_TYPE, "Grant type not supported");
         }
 
-        // Atomically claim the pre-authorized code
-        boolean claimed = vciCacheService.claimPreAuthCode(request.getPre_authorized_code());
-        if (!claimed) {
+        // Atomically claim the pre-authorized code. A code with no stored data can never be
+        // claimed, so it is refused the same way before any of its fields are read.
+        if (codeData == null || !vciCacheService.claimPreAuthCode(request.getPre_authorized_code())) {
             log.error("Pre-authorized code already used or invalid");
             throw new CertifyException(ErrorConstants.INVALID_GRANT, "Pre-authorized code has already been used  or invalid");
         }

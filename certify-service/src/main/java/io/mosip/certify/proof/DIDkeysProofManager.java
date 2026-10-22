@@ -66,8 +66,7 @@ public class DIDkeysProofManager implements JwtProofKeyManager {
             return Optional.of(j);
         } else if (b[0] == (byte) 0x85 && b[1] == (byte) 0x24) {
             // RSA2048
-            ASN1InputStream asn1 = new ASN1InputStream(Arrays.copyOfRange(b, 2, b.length));
-            try {
+            try (ASN1InputStream asn1 = new ASN1InputStream(Arrays.copyOfRange(b, 2, b.length))) {
                 ASN1Sequence seq = (ASN1Sequence) asn1.readObject();
                 if (seq.size() != 2) {
                     // missing modulus or exponent
@@ -81,7 +80,8 @@ public class DIDkeysProofManager implements JwtProofKeyManager {
                         .build();
 
                 return Optional.of(rsaKey);
-            } catch (IOException e) {
+            } catch (IOException | ClassCastException e) {
+                // a malformed key is rejected as an invalid proof
                 return Optional.empty();
             }
         }

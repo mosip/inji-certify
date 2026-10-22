@@ -13,7 +13,6 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -41,7 +40,6 @@ public class CredentialStatusServiceImplTest {
 
     @Before
     public void setUp() {
-        MockitoAnnotations.openMocks(this);
         // mosip.certify.data-provider-plugin.credential-status.allowed-status-purposes={'revocation'}
         ReflectionTestUtils.setField(credentialStatusService, "allowedStatusPurposes", List.of("revocation"));
     }

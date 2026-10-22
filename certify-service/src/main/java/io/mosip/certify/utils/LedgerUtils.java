@@ -8,7 +8,6 @@ import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.dto.CredentialStatusDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -17,8 +16,11 @@ import java.util.*;
 @Component
 public class LedgerUtils {
 
-    @Autowired
-    private IndexedAttributesConfig indexedAttributesConfig;
+    private final IndexedAttributesConfig indexedAttributesConfig;
+
+    public LedgerUtils(IndexedAttributesConfig indexedAttributesConfig) {
+        this.indexedAttributesConfig = indexedAttributesConfig;
+    }
 
     /**
      * Process extracted values to handle complex types appropriately

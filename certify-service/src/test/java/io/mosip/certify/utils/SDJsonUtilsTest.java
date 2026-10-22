@@ -460,6 +460,15 @@ public class SDJsonUtilsTest {
   }
 
   @Test
+  public void should_validatePathWithoutStackOverflow_when_pathIsVeryLong() {
+      // A greedy repeated group recursed once per segment and overflowed the stack here.
+      String path = "$" + ".a[0]".repeat(20_000);
+
+      assertTrue(SDJsonUtils.isPathSyntaxValid(path));
+      assertFalse(SDJsonUtils.isPathSyntaxValid(path + "[x]"));
+  }
+
+  @Test
   public void should_reportAbsent_when_dataIsMissingNullOrEmpty() throws Exception {
       JsonNode node = new ObjectMapper().readTree("{\"nickname\": null, \"nationalities\": [], \"address\": {}}");
 

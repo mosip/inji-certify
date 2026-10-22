@@ -24,8 +24,8 @@ import io.mosip.certify.utils.CredentialUtils;
 import io.mosip.certify.utils.DIDDocumentUtil;
 import io.mosip.certify.vcformatters.VCFormatter;
 import io.mosip.kernel.signature.service.SignatureService;
+import io.mosip.kernel.signature.service.CoseSignatureService;
 import io.mosip.kernel.signature.service.SignatureServicev2;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -40,28 +40,33 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class W3CJsonLD extends Credential{
-    @Autowired
-    ProofGeneratorFactory proofGeneratorFactory;
-    @Autowired
-    SignatureServicev2 signatureService;
-    @Autowired
-    DIDDocumentUtil didDocumentUtil;
+    private final ProofGeneratorFactory proofGeneratorFactory;
+    private final SignatureServicev2 signatureService;
+    private final DIDDocumentUtil didDocumentUtil;
 
     @Value("#{${mosip.certify.signature-algo.key-alias-mapper}}")
     private Map<String, List<List<String>>> keyAliasMapper;
 
-    @Autowired
-    private StaticContextLoader staticContextLoader;
+    private final StaticContextLoader staticContextLoader;
 
 
     /**
      * Constructor for credentials
      *
      * @param vcFormatter
-     * @param signatureService
+     * @param signatureService   the base class's signer
+     * @param signatureServiceV2 the signer this class uses for its own proofs; it is the field named
+     *                           signatureService here, which hides the base class's
      */
-    public W3CJsonLD(VCFormatter vcFormatter, SignatureService signatureService) {
-        super(vcFormatter, signatureService);
+    public W3CJsonLD(VCFormatter vcFormatter, SignatureService signatureService,
+                     CoseSignatureService coseSignatureService, ProofGeneratorFactory proofGeneratorFactory,
+                     SignatureServicev2 signatureServiceV2, DIDDocumentUtil didDocumentUtil,
+                     StaticContextLoader staticContextLoader) {
+        super(vcFormatter, signatureService, coseSignatureService);
+        this.proofGeneratorFactory = proofGeneratorFactory;
+        this.signatureService = signatureServiceV2;
+        this.didDocumentUtil = didDocumentUtil;
+        this.staticContextLoader = staticContextLoader;
     }
 
 

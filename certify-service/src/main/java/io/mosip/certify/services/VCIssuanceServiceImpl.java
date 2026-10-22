@@ -22,7 +22,6 @@ import io.mosip.certify.proof.ProofValidator;
 import io.mosip.certify.proof.ProofValidatorFactory;
 import io.mosip.certify.utils.VCIssuanceUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
@@ -34,23 +33,31 @@ import java.util.stream.Collectors;
 @ConditionalOnProperty(value = "mosip.certify.plugin-mode", havingValue = "VCIssuance")
 public class VCIssuanceServiceImpl implements VCIssuanceService {
 
-    @Autowired
-    private ParsedAccessToken parsedAccessToken;
+    private final ParsedAccessToken parsedAccessToken;
 
-    @Autowired
-    private VCIssuancePlugin vcIssuancePlugin;
+    private final VCIssuancePlugin vcIssuancePlugin;
 
-    @Autowired
-    private ProofValidatorFactory proofValidatorFactory;
+    private final ProofValidatorFactory proofValidatorFactory;
 
-    @Autowired
-    private VCICacheService vciCacheService;
+    private final VCICacheService vciCacheService;
 
-    @Autowired
-    private AuditPlugin auditWrapper;
+    private final AuditPlugin auditWrapper;
 
-    @Autowired
-    private CredentialConfigurationService credentialConfigurationService;
+    private final CredentialConfigurationService credentialConfigurationService;
+
+    public VCIssuanceServiceImpl(ParsedAccessToken parsedAccessToken,
+                                 VCIssuancePlugin vcIssuancePlugin,
+                                 ProofValidatorFactory proofValidatorFactory,
+                                 VCICacheService vciCacheService,
+                                 AuditPlugin auditWrapper,
+                                 CredentialConfigurationService credentialConfigurationService) {
+        this.parsedAccessToken = parsedAccessToken;
+        this.vcIssuancePlugin = vcIssuancePlugin;
+        this.proofValidatorFactory = proofValidatorFactory;
+        this.vciCacheService = vciCacheService;
+        this.auditWrapper = auditWrapper;
+        this.credentialConfigurationService = credentialConfigurationService;
+    }
 
     @Override
     public CredentialResponse getCredential(CredentialRequest credentialRequest) {

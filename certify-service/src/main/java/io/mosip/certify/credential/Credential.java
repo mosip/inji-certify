@@ -15,7 +15,6 @@ import io.mosip.kernel.signature.service.SignatureService;
 import io.mosip.kernel.signature.service.impl.CoseSignatureServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
-import org.springframework.beans.factory.annotation.Autowired;
 
 
 @Slf4j
@@ -25,17 +24,19 @@ public abstract class Credential{
 
     protected SignatureService signatureService;
 
-    @Autowired
-    private CoseSignatureService coseSignatureService;
+    private final CoseSignatureService coseSignatureService;
 
     /**
      * Constructor for credentials
      * @param vcFormatter
      * @param signatureService
+     * @param coseSignatureService
      */
-    public Credential(VCFormatter vcFormatter, SignatureService signatureService){
+    protected Credential(VCFormatter vcFormatter, SignatureService signatureService,
+                         CoseSignatureService coseSignatureService){
         this.vcFormatter = vcFormatter;
         this.signatureService = signatureService;
+        this.coseSignatureService = coseSignatureService;
     }
 
     /**

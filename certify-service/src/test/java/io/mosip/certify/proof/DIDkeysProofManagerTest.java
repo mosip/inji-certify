@@ -9,10 +9,15 @@ import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import io.ipfs.multibase.Multibase;
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1Integer;
+import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
@@ -134,6 +139,40 @@ public class DIDkeysProofManagerTest {
         assertEquals("AQAB", ((RSAKey) result).getPublicExponent().toString());
         assertEquals("y6dYuJhvq1gPXDm2ulPepI5RO19Z9i0ZVrWkvebXEZ2R_gUXNpVk7zHa2K-Z_JEX1Vtnrgr9X2bBgsxU57PoPRQIMiVKbV-xPLEfmtuX7sFn2Oucj7_lqI0Nm3wPZ8X0nl5I-Wy-Lug5NGWghEtjbXzF2d2gHRtuZ72_MbYnMBT7qpkK7GizutCMBqmzXASdbxijkApteOe2cMqZprFcnoGSPV_sfD_1eQaFHNCMPJjYOm_L1Mx0M7vLMvbh3mNGlvxWN7gC7m5bgvn_TEBeKDi3OkMGmBbGXsVo7qcCxJrp_eIgahX3YtkzMsjD7CwM_A-H1vl8w_v0KtZZNbLpAw",
                 ((RSAKey) result).getModulus().toString());
+    }
+
+    /**
+     * An RSA did:key whose payload is valid DER but not a SEQUENCE is rejected as an invalid key
+     * rather than failing with a ClassCastException.
+     */
+    @Test
+    void should_returnEmpty_when_rsaDidKeyIsNotAnAsn1Sequence() throws IOException {
+        JWSHeader header = Mockito.mock(JWSHeader.class);
+        when(header.getKeyID()).thenReturn(rsaDidKey(new ASN1Integer(65537).getEncoded()));
+
+        assertTrue(new DIDkeysProofManager().getKeyFromHeader(header).isEmpty());
+    }
+
+    /**
+     * An RSA did:key whose SEQUENCE holds something other than the modulus and exponent integers is
+     * rejected as an invalid key rather than failing with a ClassCastException.
+     */
+    @Test
+    void should_returnEmpty_when_rsaDidKeySequenceHoldsNonIntegers() throws IOException {
+        JWSHeader header = Mockito.mock(JWSHeader.class);
+        byte[] der = new DERSequence(new ASN1Encodable[]{
+                new DEROctetString(new byte[]{1}), new DEROctetString(new byte[]{2})}).getEncoded();
+        when(header.getKeyID()).thenReturn(rsaDidKey(der));
+
+        assertTrue(new DIDkeysProofManager().getKeyFromHeader(header).isEmpty());
+    }
+
+    private static String rsaDidKey(byte[] der) {
+        byte[] key = new byte[der.length + 2];
+        key[0] = (byte) 0x85;
+        key[1] = (byte) 0x24;
+        System.arraycopy(der, 0, key, 2, der.length);
+        return "did:key:" + Multibase.encode(Multibase.Base.Base58BTC, key);
     }
 
     @Test

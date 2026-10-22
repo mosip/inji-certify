@@ -1,6 +1,5 @@
 package io.mosip.certify.proofgenerators;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -8,8 +7,11 @@ import java.util.Optional;
 
 @Component
 public class ProofGeneratorFactory {
-    @Autowired
-    private List<ProofGenerator> proofGenerators;
+    private final List<ProofGenerator> proofGenerators;
+
+    public ProofGeneratorFactory(List<ProofGenerator> proofGenerators) {
+        this.proofGenerators = proofGenerators;
+    }
 
     /**
      * Factory method to create ProofGenerator based on the given algorithm name.

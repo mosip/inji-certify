@@ -90,7 +90,7 @@ public final class BitStringStatusListUtils {
             if (bitstring.get(i)) {
                 int byteIndex = i / 8;
                 int bitIndex = i % 8;
-                byteArray[byteIndex] = (byte) (byteArray[byteIndex] | (1 << (7 - bitIndex)));
+                byteArray[byteIndex] = (byte) ((byteArray[byteIndex] & 0xff) | (1 << (7 - bitIndex)));
             }
         }
         return byteArray;

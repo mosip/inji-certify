@@ -1,5 +1,7 @@
 package io.mosip.certify.credential;
 
+import io.mosip.certify.config.contextloader.StaticContextLoader;
+import io.mosip.kernel.signature.service.CoseSignatureService;
 import com.apicatalog.jsonld.JsonLdError;
 import com.apicatalog.jsonld.JsonLdErrorCode;
 import com.danubetech.dataintegrity.signer.LdSigner;
@@ -21,7 +23,6 @@ import io.mosip.kernel.signature.service.SignatureServicev2;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -38,7 +39,6 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 public class W3CJsonLDTest {
 
-    @InjectMocks
     private W3CJsonLD w3cJsonLd;
 
     @Mock
@@ -65,8 +65,10 @@ public class W3CJsonLDTest {
         keyAliasMapper.put("Ed25519Signature2020", Arrays.asList(
                 Arrays.asList("appID", "refID")));
 
-        ReflectionTestUtils.setField(w3cJsonLd, "proofGeneratorFactory", proofGeneratorFactory);
-        ReflectionTestUtils.setField(w3cJsonLd, "didDocumentUtil", didDocumentUtil);
+        // Built explicitly: SignatureServicev2 extends SignatureService, so @InjectMocks could put either
+        // mock in the base class's slot.
+        w3cJsonLd = new W3CJsonLD(vcFormatter, signatureService, mock(CoseSignatureService.class),
+                proofGeneratorFactory, signatureServicev2, didDocumentUtil, mock(StaticContextLoader.class));
         ReflectionTestUtils.setField(w3cJsonLd, "keyAliasMapper", keyAliasMapper);
         when(proofGeneratorFactory.getProofGenerator(any())).thenReturn(Optional.of(proofGenerator));
     }

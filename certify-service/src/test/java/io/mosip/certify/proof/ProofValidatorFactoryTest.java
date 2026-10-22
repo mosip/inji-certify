@@ -4,10 +4,8 @@ import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
 
@@ -16,7 +14,6 @@ import static org.mockito.Mockito.*;
 
 class ProofValidatorFactoryTest {
 
-    @InjectMocks
     private ProofValidatorFactory proofValidatorFactory;
 
     @Mock
@@ -28,8 +25,7 @@ class ProofValidatorFactoryTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        proofValidatorFactory = new ProofValidatorFactory();
-        ReflectionTestUtils.setField(proofValidatorFactory, "proofValidators", Arrays.asList(jwtProofValidator, anotherProofValidator));
+        proofValidatorFactory = new ProofValidatorFactory(Arrays.asList(jwtProofValidator, anotherProofValidator));
     }
 
     @Test

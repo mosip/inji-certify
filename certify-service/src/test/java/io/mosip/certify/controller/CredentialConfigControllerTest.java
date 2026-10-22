@@ -8,6 +8,7 @@ import io.mosip.certify.core.dto.*;
 import io.mosip.certify.core.exception.CredentialConfigValidationException;
 import io.mosip.certify.config.AppConfig;
 import io.mosip.certify.core.spi.CredentialConfigurationService;
+import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
@@ -48,7 +49,7 @@ public class CredentialConfigControllerTest {
     static class ApplicationObjectMapper {
         @Bean
         ObjectMapper objectMapper() {
-            return new AppConfig().objectMapper();
+            return new AppConfig(Mockito.mock(KeymanagerService.class)).objectMapper();
         }
     }
     ObjectMapper objectMapper = new ObjectMapper();

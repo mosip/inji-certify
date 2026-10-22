@@ -47,13 +47,11 @@ class DpopProofValidatorTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        validator = new DpopProofValidator();
+        validator = new DpopProofValidator(new ConcurrentMapCacheManager(DpopProofValidator.DPOP_JTI_CACHE));
         ReflectionTestUtils.setField(validator, "domainUrl", DOMAIN_URL);
         ReflectionTestUtils.setField(validator, "allowedAlgorithms", Arrays.asList("ES256", "RS256", "PS256", "EdDSA"));
         ReflectionTestUtils.setField(validator, "proofMaxAgeSeconds", 60L);
         ReflectionTestUtils.setField(validator, "maxClockSkewSeconds", 10L);
-        ReflectionTestUtils.setField(validator, "cacheManager",
-                new ConcurrentMapCacheManager(DpopProofValidator.DPOP_JTI_CACHE));
         ReflectionTestUtils.setField(validator, "cacheType", "simple");
 
         request = new MockHttpServletRequest();
