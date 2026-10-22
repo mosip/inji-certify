@@ -122,6 +122,7 @@ public class SimplePost extends InjiCertifyUtil implements ITest {
 
 		else {
 			inputJson = inputStringKeyWordHandeler(inputJson, testCaseName);
+			InjiCertifyUtil.refreshMosipIdCertificateCache(testCaseName, inputJson);
 			InjiCertifyUtil.ensureMdocDrivingLicenseTemplateHasSigned(testCaseDTO);
 			String tempUrl = InjiCertifyConfigManager.getEsignetBaseUrl();
 			if (testCaseName.contains("ESignet_") || testCaseName.contains("InjiCertify")) {

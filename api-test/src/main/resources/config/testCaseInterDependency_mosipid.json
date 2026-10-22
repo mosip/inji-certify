@@ -15,7 +15,6 @@
     "TC_esignetDependent_OAuthdetailsRequest_claim169_02": ["TC_pms_dependency_01"],
     "TC_IDRepo_CreateVID_01": ["TC_idrepo_dependency_01"],
     "TC_pms_dependency_10": ["TC_pms_dependency_03"],
-    "TC_InjiCertify_Delete_Credential_Config_Mosipid_05": ["TC_InjiCertify_MosipID_AddCredentialConfig_07"],
     "TC_InjiCertify_Delete_Credential_Config_Mosipid_04": ["TC_InjiCertify_MosipID_AddCredentialConfig_06"],
     "TC_injicertify_Mosipidcredentialissuance_02": [
         "TC_pms_dependency_01",
@@ -102,7 +101,7 @@
     ],
     "TC_InjiCertify_MosipID_AddCredentialConfig_09": ["TC_InjiCertify_Delete_Credential_Config_Mosipid_07"],
     "TC_InjiCertify_MosipID_AddCredentialConfig_08": ["TC_InjiCertify_Delete_Credential_Config_Mosipid_06"],
-    "TC_InjiCertify_MosipID_AddCredentialConfig_07": ["TC_InjiCertify_Delete_Credential_Config_Mosipid_05"],
+    "TC_InjiCertify_MosipID_AddCredentialConfig_07": [],
     "TC_InjiCertify_MosipID_AddCredentialConfig_06": ["TC_InjiCertify_Delete_Credential_Config_Mosipid_04"],
     "TC_InjiCertify_MosipID_AddCredentialConfig_01": ["TC_InjiCertify_Delete_Credential_Config_Mosipid_01"],
     "TC_esignetDependent_AuthenticateUser_claim169_01": [

@@ -22,33 +22,24 @@ CreateOIDCClient:
         "status": "ACTIVE"
 }'
    InjiCertify_ESignet_CreateOIDCClient_MOSIPID_DPoP_all_Valid_Smoke_sid:
-      endPoint: $ESIGNETMOSIPIDBASEURL$/v1/esignet/client-mgmt/client
+      endPoint: /v1/partnermanager/oidc/client
       uniqueIdentifier: TC_esignetDependent_CreateOidc_DPoP_Mosip_01
       description: Create OIDC client with DPoP-bound access tokens
       role: partner
       restMethod: post
-      inputTemplate: injicertify/VCILandRegistry/CreateOIDCClientV2ForLandRegistry/CreateOIDCClientV2ForLandRegistry
-      outputTemplate: injicertify/VCILandRegistry/CreateOIDCClientV2ForLandRegistry/CreateOIDCClientV2ForLandRegistryResult
+      additionalDependencies: TC_pms_dependency_09,TC_pms_dependency_10,TC_pms_dependency_08,TC_pms_dependency_07,TC_pms_dependency_02
+      inputTemplate: injicertify/OidcClient/OIDCClient
+      outputTemplate: injicertify/OidcClient/OIDCClientResult
       input: '{
-      	"requestTime": "$TIMESTAMP$",
-      	"clientId": "$RANDOMID$DPI",
-      	"clientName": "MOSIP OIDC Client",
-      	"logoUri": "https://health-services.com/logo.png",
-      	"relyingPartyId": "mpartner-default-mobile",
-      	"redirectUris": "$IDPREDIRECTURI$",
-      	"publicKey": "$OIDCJWKKEY_DPOP$",
-      	"userClaims1": "name",
-      	"userClaims2": "email",
-      	"userClaims3": "gender",
-      	"userClaims4": "phone_number",
-      	"userClaims5": "birthdate",
-      	"authContextRefs": [{acrValues: "mosip:idp:acr:static-code"},{acrValues: "mosip:idp:acr:generated-code"},{acrValues: "mosip:idp:acr:biometrics"},{acrValues: "mosip:idp:acr:knowledge"}],
-      	"grantTypes": "authorization_code",
-      	"clientAuthMethods": "private_key_jwt",
-      	"keyLang1": "$1STLANG$",
-      	"clientNameLang": "MOSIP OIDC Client",
-      	"additionalConfig": "true"
+        "name": "$RANDOMID$",
+        "policyId": "$ID:DefinePolicy_MOSIPID_All_Valid_Smoke_sid_id$",
+        "publicKey": "$OIDCJWKKEY_DPOP$",
+        "authPartnerId": "$ID:PartnerSelfRegistration_MOSIPID_All_Valid_Smoke_sid_partnerId$",
+        "logoUri": "https://health-services.com/logo.png",
+        "redirectUris": "$IDPREDIRECTURI$",
+        "grantTypes": "authorization_code",
+        "clientAuthMethods": "private_key_jwt"
 }'
       output: '{
-    	"status": "ACTIVE"
+        "status": "ACTIVE"
 }'

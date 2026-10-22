@@ -465,6 +465,16 @@
 				name="io.inji.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
 		</classes>
 	</test>
+	<test name="AddLandRegistryIssuerCredentialConfig">
+		<parameter name="ymlFile"
+			value="injicertify/VCILandRegistry/AddCredentialConfigVCDM20/AddCredentialConfiguration.yml" />
+		<parameter name="idKeyName" value="id" />
+		<parameter name="prerequisite" value="Yes" />
+		<classes>
+			<class
+				name="io.inji.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
 	<test name="GetCredentialForLandRegistry">
 		<parameter name="ymlFile"
 			value="injicertify/VCILandRegistry/GetCredentialForLandRegistry/GetCredentialForLandRegistry.yml" />

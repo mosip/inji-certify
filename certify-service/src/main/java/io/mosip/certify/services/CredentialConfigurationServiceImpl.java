@@ -17,6 +17,7 @@ import io.mosip.certify.validators.credentialconfigvalidators.CredentialConfigMe
 import io.mosip.certify.validators.credentialconfigvalidators.LdpVcCredentialConfigValidator;
 import io.mosip.certify.validators.credentialconfigvalidators.MsoMdocCredentialConfigValidator;
 import io.mosip.certify.validators.credentialconfigvalidators.QrSettingsValidator;
+import io.mosip.certify.validators.credentialconfigvalidators.SdClaimValidator;
 import io.mosip.certify.validators.credentialconfigvalidators.SdJwtCredentialConfigValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -115,7 +116,6 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
     }
 
     private void validateCredentialConfiguration(CredentialConfigurationDTO credentialConfig, boolean shouldCheckDuplicate) {
-
         validateCommonCredentialConfig(credentialConfig.getCredentialStatusPurposes(),credentialConfig.getVcTemplate(),credentialConfig.getQrSettings(),credentialConfig.getQrSignatureAlgo(),credentialConfig.getSignatureAlgo());
 
         switch (credentialConfig.getCredentialFormat()) {
@@ -143,6 +143,8 @@ public class CredentialConfigurationServiceImpl implements CredentialConfigurati
                 if(shouldCheckDuplicate && SdJwtCredentialConfigValidator.isConfigAlreadyPresent(credentialConfig, credentialConfigRepository)) {
                     throw new CertifyException(ErrorConstants.DC_SD_JWT_CONFIG_EXISTS, "Configuration already exists for the specified vct.");
                 }
+                // sdClaim lists the selective disclosure paths, which only dc+sd-jwt uses, so it is checked only here.
+                SdClaimValidator.validateSdClaim(credentialConfig.getSdClaim());
                 break;
             default:
                 throw new CertifyException(ErrorConstants.UNSUPPORTED_FORMAT, "Unsupported credential format: " + credentialConfig.getCredentialFormat());
