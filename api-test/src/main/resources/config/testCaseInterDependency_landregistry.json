@@ -45,18 +45,6 @@
     "TC_InjiCertify_EccR1_MetaAttrs_GetCredential_02": ["TC_InjiCertify_EccR1_MetaAttrs_Add_02","TC_InjiCertify_EccR1_MetaAttrs_Get_01","TC_DBDependent_InsertQuery_02","TC_esignetDependent_CreateOidc_For_EccR1_04","TC_esignetDependent_GenerateToken_03","TC_landRegistryDependent_GenerateNonce_EccR1_MetaAttrs_02"],
     "TC_landRegistryDependent_GenerateNonce_EccR1_MetaAttrs_02": ["TC_esignetDependent_GenerateToken_03"],
     "TC_InjiCertify_EccR1_MetaAttrs_Delete_02": ["TC_InjiCertify_EccR1_MetaAttrs_GetCredential_02"],
-    "TC_InjiCertify_Sd_jwt_Signature_10": [
-        "TC_InjiCertify_DeleteCredentialConfig_34"
-    ],
-    "TC_InjiCertify_DeleteCredentialConfig_34": [
-        "TC_InjiCertify_Sd_jwt_Signature_10"
-    ],
-    "TC_InjiCertify_Sd_jwt_Signature_11": [
-        "TC_InjiCertify_DeleteCredentialConfig_35"
-    ],
-    "TC_InjiCertify_DeleteCredentialConfig_35": [
-        "TC_InjiCertify_Sd_jwt_Signature_11"
-    ],
     "TC_InjiCertify_DeleteCredentialConfig_17": [
         "TC_InjiCertify_EccR1_Signature_03"
     ],
@@ -395,20 +383,6 @@
     ],
     "TC_InjiCertify_GetCredentialFor_Sd_jwt_01": [
         "TC_InjiCertify_Sd_jwt_Signature_01",
-        "TC_esignetDependent_GenerateToken_07",
-        "TC_DBDependent_InsertQuery_02",
-        "TC_esignetDependent_CreateOidc_For_EccR1_04",
-        "TC_landRegistryDependent_GenerateNonce_sd_jwt_01"
-    ],
-    "TC_InjiCertify_GetCredentialFor_Sd_jwt_MetaAttrs_narrowed": [
-        "TC_InjiCertify_Sd_jwt_Signature_10",
-        "TC_esignetDependent_GenerateToken_07",
-        "TC_DBDependent_InsertQuery_02",
-        "TC_esignetDependent_CreateOidc_For_EccR1_04",
-        "TC_landRegistryDependent_GenerateNonce_sd_jwt_01"
-    ],
-    "TC_InjiCertify_GetCredentialFor_Sd_jwt_MetaAttrs_omit": [
-        "TC_InjiCertify_Sd_jwt_Signature_11",
         "TC_esignetDependent_GenerateToken_07",
         "TC_DBDependent_InsertQuery_02",
         "TC_esignetDependent_CreateOidc_For_EccR1_04",
@@ -1260,8 +1234,5 @@
     "TC_esignetDependent_AuthorizationCode_DPoP_01": [
         "TC_esignetDependent_OAuthdetailsRequest_DPoP_01",
         "TC_esignetDependent_AuthenticateUser_DPoP_01"
-    ],
-    "TC_InjiCertify_Delete_landregistry_CSRCertificate_05": [
-        "TC_InjiCertify_CsrCertificate_landregistry_05"
     ]
 }
