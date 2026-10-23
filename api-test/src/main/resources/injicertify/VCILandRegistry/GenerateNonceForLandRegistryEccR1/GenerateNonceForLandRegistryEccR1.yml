@@ -11,3 +11,17 @@ GenerateNonceForLandRegistryEccR1:
       input: '{
 }'
       output: "200"
+
+   InjiCertify_LandRegistry_GenerateNonce_StatusCode_ForEccR1_MetaAttrs_valid_subset_sid:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/nonce
+      uniqueIdentifier: TC_landRegistryDependent_GenerateNonce_EccR1_MetaAttrs_02
+      description: Generate a fresh nonce to issue a credential with the ECC R1 metadata configuration
+      role: noauth
+      restMethod: post
+      checkOnlyStatusCodeInResponse: true
+      additionalDependencies: TC_esignetDependent_GenerateToken_03
+      inputTemplate: injicertify/VCILandRegistry/GenerateNonceForLandRegistryEccR1/GenerateNonceForLandRegistryEccR1
+      outputTemplate: injicertify/responseCode
+      input: '{
+      }'
+      output: "200"

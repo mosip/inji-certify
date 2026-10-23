@@ -11,3 +11,16 @@ GenerateNonceForLandRegistryCSR:
       input: '{
 }'
       output: "200"
+
+   InjiCertify_LandRegistry_GenerateNonce_StatusCode_ForCSR_MetaAttrs_Valid_Smoke_sid:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/nonce
+      uniqueIdentifier: TC_landRegistryDependent_GenerateNonce_CSR_MetaAttrs_01
+      description: Fresh nonce for Land Registry CSR metadata attributes flow
+      role: noauth
+      restMethod: post
+      checkOnlyStatusCodeInResponse: true
+      inputTemplate: injicertify/VCILandRegistry/GenerateNonceForLandRegistryCSR/GenerateNonceForLandRegistryCSR
+      outputTemplate: injicertify/responseCode
+      input: '{
+}'
+      output: "200"

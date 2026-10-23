@@ -65,5 +65,19 @@
     "TC_esignetDependent_OAuthdetailsRequest_DPoP_Mdl_01": [
         "TC_esignetDependent_CreateOidc_DPoP_Mdl_01"
     ],
-    "TC_esignetDependent_CreateOidc_DPoP_Mdl_01": []
+    "TC_esignetDependent_CreateOidc_DPoP_Mdl_01": [],
+    "TC_InjiCertify_mdl_MetaAttrs_Add_01": ["TC_InjiCertify_mdl_MetaAttrs_Delete_01"],
+    "TC_InjiCertify_mdl_MetaAttrs_Add_02": ["TC_InjiCertify_mdl_MetaAttrs_Delete_02"],
+    "TC_InjiCertify_mdl_MetaAttrs_Get_01": ["TC_InjiCertify_mdl_MetaAttrs_Add_01"],
+    "TC_InjiCertify_mdl_MetaAttrs_Get_02": ["TC_InjiCertify_mdl_MetaAttrs_Add_02"],
+    "TC_mdlDependent_GenerateNonce_mdl_MetaAttrs_01": ["TC_esignetDependent_GenerateToken_04"],
+    "TC_InjiCertify_mdl_MetaAttrs_GetCredential_01": [
+        "TC_InjiCertify_mdl_MetaAttrs_Add_01",
+        "TC_InjiCertify_mdl_MetaAttrs_Get_01",
+        "TC_esignetDependent_CreateOidc_01",
+        "TC_esignetDependent_GenerateToken_04",
+        "TC_mdlDependent_GenerateNonce_mdl_MetaAttrs_01"
+    ],
+    "TC_InjiCertify_mdl_MetaAttrs_Delete_01": ["TC_InjiCertify_mdl_MetaAttrs_GetCredential_01"],
+    "TC_InjiCertify_mdl_MetaAttrs_Delete_02": ["TC_InjiCertify_mdl_MetaAttrs_Get_02"]
 }
