@@ -11,3 +11,16 @@ GenerateNonceFormDocMDL:
       input: '{
 }'
       output: "200"
+
+   InjiCertify_Formdl_GenerateNonce_InvalidId_StatusCode_sid:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/nonce
+      uniqueIdentifier: TC_mdlDependent_GenerateNonce_InvalidId_01
+      description: Generate nonce for mDocMDL invalid individual ID negative flow
+      role: resident
+      restMethod: post
+      checkOnlyStatusCodeInResponse: true
+      inputTemplate: injicertify/mDocMDL/GenerateNonceFormDoc/GenerateNonceFormDoc
+      outputTemplate: injicertify/responseCode
+      input: '{
+}'
+      output: "200"
