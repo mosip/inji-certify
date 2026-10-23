@@ -9,6 +9,7 @@ import org.apache.velocity.app.VelocityEngine;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.certify.core.constants.Constants;
+import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.constants.VCDM2Constants;
 import io.mosip.certify.core.constants.VCDMConstants;
 import io.mosip.certify.core.constants.VCFormats;
@@ -303,7 +304,7 @@ public class VelocityTemplatingEngineImplTest {
     }
 
     @Test
-    public void should_handleGracefully_when_renderingTemplateMissing() throws Exception {
+    public void should_throwCertifyException_when_renderingTemplateMissing() throws Exception {
         mockLdp(ldpConfig("{\"issuer\":\"${_issuer}\"}"));
         when(renderingTemplateService.getTemplate("render-1"))
                 .thenThrow(new RenderingTemplateException("not-found"));
@@ -312,8 +313,10 @@ public class VelocityTemplatingEngineImplTest {
         params.put(Constants.DID_URL, "did:example:issuer");
         params.put(Constants.RENDERING_TEMPLATE_ID, "render-1");
 
-        String result = formatter.format(params);
-        assertNotNull(new JSONObject(result));
+        CertifyException exception = assertThrows(CertifyException.class, () -> formatter.format(params));
+        assertEquals(ErrorConstants.INVALID_TEMPLATE_ID, exception.getErrorCode());
+        assertEquals("Rendering template id 'render-1' is not present in the rendering_template table.",
+                exception.getMessage());
     }
 
     @Test
