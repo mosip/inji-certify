@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.core.MediaType;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -34,8 +36,10 @@ import io.mosip.testrig.apirig.utils.AdminTestException;
 import io.mosip.testrig.apirig.utils.AdminTestUtil;
 import io.mosip.testrig.apirig.utils.AuthenticationTestException;
 import io.mosip.testrig.apirig.utils.GlobalConstants;
+import io.mosip.testrig.apirig.utils.GlobalMethods;
 import io.mosip.testrig.apirig.utils.OutputValidationUtil;
 import io.mosip.testrig.apirig.utils.ReportUtil;
+import io.mosip.testrig.apirig.utils.RestClient;
 import io.mosip.testrig.apirig.utils.SecurityXSSException;
 import io.restassured.response.Response;
 
@@ -253,10 +257,9 @@ public class SimplePostForAutoGenId extends InjiCertifyUtil implements ITest {
 		boolean alreadyPresent = syncErrors != null && syncErrors.length() == 1
 				&& "duplicate_client_id".equals(syncErrors.getJSONObject(0).optString("errorCode"));
 		if (alreadyPresent) {
-			syncResponse = patchWithPathParamsBodyHeaderWithBearerToken(
+			syncResponse = patchEsignetClientWithBearerToken(
 					InjiCertifyUtil.getMosipIdEsignetBaseUrl() + "/v1/esignet/client-mgmt/client/" + clientId,
-					InjiCertifyUtil.mosipIdDpopBindingPatch(), COOKIENAME, testCaseDTO.getRole(),
-					testCaseDTO.getTestCaseName(), "");
+					InjiCertifyUtil.mosipIdDpopBindingPatch(), testCaseDTO.getRole());
 			syncBody = readEsignetBody(syncResponse, "PMS client could not be bound for DPoP");
 			syncErrors = syncBody.optJSONArray("errors");
 		}
@@ -264,6 +267,25 @@ public class SimplePostForAutoGenId extends InjiCertifyUtil implements ITest {
 			throw new AdminTestException("PMS client could not be bound for DPoP: HTTP "
 					+ syncResponse.getStatusCode() + " " + syncResponse.asString());
 		}
+	}
+
+	/** Authenticate the existing-client update in the same way as client creation. */
+	private Response patchEsignetClientWithBearerToken(String url, String body, String role)
+			throws AdminTestException, SecurityXSSException {
+		String bearerToken = kernelAuthLib.getTokenByRole(role);
+		if (bearerToken == null || bearerToken.isBlank()) {
+			throw new AdminTestException("Cannot enable DPoP: no authentication token available for role " + role);
+		}
+		GlobalMethods.reportRequest(null, body, url);
+		Response patchResponse = RestClient.patchWithPathParamsBodyHeaderWithBearerToken(url,
+				new HashMap<>(), body, MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON,
+				COOKIENAME, bearerToken);
+		if (patchResponse == null) {
+			throw new AdminTestException("Cannot enable DPoP: no response from eSignet client update at " + url);
+		}
+		GlobalMethods.checkXSSProtectionHeader(patchResponse, url);
+		GlobalMethods.reportResponse(patchResponse.getHeaders().asList().toString(), url, patchResponse);
+		return patchResponse;
 	}
 
 	private void synchronizePmsClientToEsignet(String pmsInput, Response pmsResponse, TestCaseDTO testCaseDTO)

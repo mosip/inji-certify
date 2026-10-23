@@ -549,6 +549,13 @@
 				name="io.inji.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
 		</classes>
 	</test>	
+	<test name="GetCredentialConfigMetadataForMdocMDL">
+		<parameter name="ymlFile"
+			value="injicertify/mDocMDL/GetCredentialConfigurationForMdoc/GetCredentialConfigurationForMdoc.yml" />
+		<classes>
+			<class name="io.inji.testrig.apirig.injicertify.testscripts.GetWithParam" />
+		</classes>
+	</test>
 	<test name="OAuthDetailsRequestVCIFormDocMDL">
 		<parameter name="ymlFile"
 			value="injicertify/mDocMDL/OAuthDetailsRequestFormDoc/OAuthDetailsRequestFormDoc.yml" />
@@ -638,6 +645,12 @@
 			<class name="io.inji.testrig.apirig.injicertify.testscripts.PutWithPathParamsAndBody" />
 		</classes>
 	</test>	
+	<test name="GetUpdatedCredentialConfig">
+		<parameter name="ymlFile" value="injicertify/CredentialConfig/GetCredentialConfiguration/GetUpdatedCredentialConfiguration.yml" />
+		<classes>
+			<class name="io.inji.testrig.apirig.injicertify.testscripts.GetWithParam" />
+		</classes>
+	</test>
 	<test name="DeleteCredentialConfig">
 		<parameter name="ymlFile"
 			value="injicertify/CredentialConfig/DeleteCredentialConfiguration/DeleteCredentialConfiguration.yml" />
@@ -660,6 +673,13 @@
 		<classes>
 			<class
 				name="io.inji.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="GetCredentialConfigForEccR1">
+		<parameter name="ymlFile"
+			value="injicertify/EccR1/GetCredentialConfigurationEccR1/GetCredentialConfigurationEccR1.yml" />
+		<classes>
+			<class name="io.inji.testrig.apirig.injicertify.testscripts.GetWithParam" />
 		</classes>
 	</test>
 	<test name="OAuthDetailsRequestVCIForLandRegistryEccR1">
@@ -736,6 +756,13 @@
 				name="io.inji.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
 		</classes>
 	</test>
+	<test name="GetCredentialConfigForSd_jwt">
+		<parameter name="ymlFile"
+			value="injicertify/Sd_Jwt/GetCredentialConfigurationSd_Jwt/GetCredentialConfigurationSd_Jwt.yml" />
+		<classes>
+			<class name="io.inji.testrig.apirig.injicertify.testscripts.GetWithParam" />
+		</classes>
+	</test>
 	<test name="OAuthDetailsRequestForSd_jwt">
 		<parameter name="ymlFile"
 			value="injicertify/Sd_Jwt/OAuthDetailsRequestForSd_Jwt/OAuthDetailsRequestForSd_Jwt.yml" />
@@ -810,6 +837,13 @@
 				name="io.inji.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
 		</classes>
 	</test>
+	<test name="GetCredentialConfigForDataIntegrityProof">
+		<parameter name="ymlFile"
+			value="injicertify/DataIntegrityProof/GetCredentialConfigurationForDataIntegrity/GetCredentialConfigurationForDataIntegrity.yml" />
+		<classes>
+			<class name="io.inji.testrig.apirig.injicertify.testscripts.GetWithParam" />
+		</classes>
+	</test>
 	<test name="OAuthDetailsRequestForDataIntegrityProof">
 		<parameter name="ymlFile"
 			value="injicertify/DataIntegrityProof/OAuthDetailsRequestForDataIntegrity/OAuthDetailsRequestForDataIntegrity.yml" />
@@ -881,6 +915,13 @@
 		<classes>
 			<class
 				name="io.inji.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="GetCredentialConfigForRevocation">
+		<parameter name="ymlFile"
+			value="injicertify/Revocation/GetCredentialConfigurationForRevocation/GetCredentialConfigurationForRevocation.yml" />
+		<classes>
+			<class name="io.inji.testrig.apirig.injicertify.testscripts.GetWithParam" />
 		</classes>
 	</test>
 	<test name="OAuthDetailsRequestForRevocation">
@@ -1009,6 +1050,13 @@
 		<classes>
 			<class
 				name="io.inji.testrig.apirig.injicertify.testscripts.SimplePostForAutoGenId" />
+		</classes>
+	</test>
+	<test name="GetCredentialConfigForCSRCertificate">
+		<parameter name="ymlFile"
+			value="injicertify/CSRCertificate/GetCredentialConfigurationForCSRCertificate/GetCredentialConfigurationForCSRCertificate.yml" />
+		<classes>
+			<class name="io.inji.testrig.apirig.injicertify.testscripts.GetWithParam" />
 		</classes>
 	</test>
 	<test name="OAuthDetailsRequestForCSRCertificate">

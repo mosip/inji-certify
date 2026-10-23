@@ -11,3 +11,16 @@ GenerateNonceFormDocMDL:
       input: '{
 }'
       output: "200"
+
+   InjiCertify_Formdl_GenerateNonce_mdl_MetaAttrs_StatusCode_Valid_Smoke_sid:
+      endPoint: $INJICERTIFYBASEURL$/v1/certify/nonce
+      uniqueIdentifier: TC_mdlDependent_GenerateNonce_mdl_MetaAttrs_01
+      description: Generate a nonce for the mDoc configuration created for the metadata attribute tests
+      role: resident
+      restMethod: post
+      checkOnlyStatusCodeInResponse: true
+      inputTemplate: injicertify/mDocMDL/GenerateNonceFormDoc/GenerateNonceFormDoc
+      outputTemplate: injicertify/responseCode
+      input: '{
+}'
+      output: "200"
