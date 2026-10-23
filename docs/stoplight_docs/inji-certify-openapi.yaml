@@ -592,13 +592,20 @@ paths:
           description: >-
             The access token or the DPoP proof was rejected. The WWW-Authenticate header
             challenges in the scheme the caller used, so a DPoP client is never told to
-            retry as Bearer - which it must not do for a bound token.
+            retry as Bearer - which it must not do for a bound token. On a deployment with
+            mosip.certify.dpop.enabled=false, a DPoP-scheme request is refused with
+            invalid_token and "DPoP is not supported by this deployment. Use a Bearer token.",
+            before the access token or request body is examined, and a DPoP-bound token
+            presented as Bearer is still refused.
           headers:
             WWW-Authenticate:
               description: >-
                 Challenge in the caller's scheme, carrying error and error_description.
                 For invalid_dpop_proof it also carries algs, listing the signature
-                algorithms this issuer accepts on a proof.
+                algorithms this issuer accepts on a proof. With DPoP disabled the challenge
+                is always Bearer and never carries algs, for example: Bearer
+                error="invalid_token", error_description="DPoP is not supported by this
+                deployment. Use a Bearer token."
               schema:
                 type: string
               example: >-
@@ -1511,7 +1518,8 @@ components:
       description: >-
         A DPoP-bound access token (RFC 9449), presented with a proof of possession in the
         DPoP header. The proof must be signed by the key whose thumbprint appears in the
-        token's cnf.jkt claim.
+        token's cnf.jkt claim. Offered only while mosip.certify.dpop.enabled is true, the
+        default.
   schemas:
     CredentialConfigurationDTO:
       type: object

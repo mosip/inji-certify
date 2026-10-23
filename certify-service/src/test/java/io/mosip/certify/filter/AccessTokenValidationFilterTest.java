@@ -2,7 +2,11 @@ package io.mosip.certify.filter;
 
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import io.mosip.certify.core.exception.CertifyException;
+import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.core.dto.ParsedAccessToken;
 import io.mosip.certify.dpop.DpopProofValidator;
 import io.mosip.certify.core.util.CommonUtil;
@@ -13,11 +17,13 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.slf4j.LoggerFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -51,6 +57,9 @@ class AccessTokenValidationFilterTest {
 
     @Mock
     private DpopProofValidator dpopProofValidator;
+
+    @Mock
+    private HandlerExceptionResolver handlerExceptionResolver;
 
     private MockHttpServletRequest request;
     private MockHttpServletResponse response;
@@ -346,6 +355,109 @@ class AccessTokenValidationFilterTest {
         assertEquals(AccessTokenValidationFilter.INVALID_TOKEN_TYPE,
                 request.getAttribute(Constants.AUTH_ERROR_ATTRIBUTE));
         verify(filterChain).doFilter(request, response);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"DPoP", "dpop", "DPOP"})
+    public void should_rejectAtEntrance_when_dpopIsDisabledAndDpopSchemeIsUsed(String scheme)
+            throws ServletException, IOException {
+        disableDpop();
+        request.addHeader("Authorization", scheme + " " + TOKEN);
+        request.addHeader("DPoP", "a.proof.jwt");
+        request.setRequestURI("/api/v1/secured");
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        // Answered here: the request never reaches the controller, so the body is not
+        // parsed, and the access token is not even decoded.
+        verify(handlerExceptionResolver).resolveException(eq(request), eq(response), isNull(),
+                any(NotAuthenticatedException.class));
+        verify(filterChain, never()).doFilter(any(), any());
+        verifyNoInteractions(jwtDecoder);
+        verify(parsedAccessToken).setActive(false);
+        assertEquals(AccessTokenValidationFilter.ERROR_DPOP_NOT_SUPPORTED,
+                request.getAttribute(Constants.AUTH_ERROR_ATTRIBUTE));
+        assertEquals(ErrorConstants.INVALID_AUTH_TOKEN, request.getAttribute(Constants.AUTH_ERROR_CODE_ATTRIBUTE));
+        // A DPoP retry can never succeed here, so the challenge must not invite one.
+        assertEquals(Constants.SCHEME_BEARER, request.getAttribute(Constants.AUTH_SCHEME_ATTRIBUTE));
+    }
+
+    @Test
+    public void should_activateToken_when_dpopIsDisabledAndPlainBearerTokenIsUsed() throws ServletException, IOException {
+        disableDpop();
+        request.addHeader("Authorization", "Bearer " + TOKEN);
+
+        Jwt jwt = mock(Jwt.class);
+        when(jwt.getClaims()).thenReturn(createValidClaims());
+        when(jwtDecoder.decode(TOKEN)).thenReturn(jwt);
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        verify(parsedAccessToken).setActive(true);
+        verify(filterChain).doFilter(request, response);
+        verifyNoInteractions(handlerExceptionResolver);
+    }
+
+    @Test
+    public void should_reject_when_dpopIsDisabledAndDpopBoundTokenIsPresentedAsBearer() throws ServletException, IOException {
+        // Disabling DPoP must not make a sender-constrained token usable as a bearer token.
+        disableDpop();
+        request.addHeader("Authorization", "Bearer " + TOKEN);
+        request.setRequestURI("/api/v1/secured");
+
+        Map<String, Object> claims = createValidClaims();
+        claims.put("cnf", Map.of("jkt", "some-thumbprint"));
+        Jwt jwt = mock(Jwt.class);
+        when(jwt.getClaims()).thenReturn(claims);
+        when(jwtDecoder.decode(anyString())).thenReturn(jwt);
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        verify(parsedAccessToken).setActive(false);
+        assertEquals(AccessTokenValidationFilter.ERROR_TOKEN_REQUIRES_DPOP,
+                request.getAttribute(Constants.AUTH_ERROR_ATTRIBUTE));
+        assertEquals(ErrorConstants.INVALID_DPOP_PROOF, request.getAttribute(Constants.AUTH_ERROR_CODE_ATTRIBUTE));
+        assertEquals(Constants.SCHEME_BEARER, request.getAttribute(Constants.AUTH_SCHEME_ATTRIBUTE));
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    public void should_rejectAsUnknownScheme_when_dpopIsDisabledAndSchemeIsNeitherBearerNorDpop()
+            throws ServletException, IOException {
+        disableDpop();
+        request.addHeader("Authorization", "Basic " + TOKEN);
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        verify(parsedAccessToken).setActive(false);
+        assertEquals(AccessTokenValidationFilter.INVALID_TOKEN_TYPE,
+                request.getAttribute(Constants.AUTH_ERROR_ATTRIBUTE));
+        verify(filterChain).doFilter(request, response);
+        verifyNoInteractions(handlerExceptionResolver);
+    }
+
+    @Test
+    public void should_logEffectiveDpopMode_when_filterStarts() {
+        Logger logger = (Logger) LoggerFactory.getLogger(AccessTokenValidationFilter.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            filter.logDpopMode();
+            disableDpop();
+            filter.logDpopMode();
+        } finally {
+            logger.detachAppender(appender);
+        }
+
+        List<String> messages = appender.list.stream().map(ILoggingEvent::getFormattedMessage).toList();
+        assertTrue(messages.get(0).startsWith("DPoP support is enabled"));
+        assertTrue(messages.get(1).startsWith("DPoP support is disabled"));
+    }
+
+    /** The validator is absent from the context when mosip.certify.dpop.enabled is false. */
+    private void disableDpop() {
+        ReflectionTestUtils.setField(filter, "dpopProofValidator", null);
     }
 
     private Map<String, Object> createValidClaims() {

@@ -11,6 +11,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -32,6 +34,7 @@ import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.util.CommonUtil;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DpopProofValidatorTest {
@@ -435,6 +438,43 @@ class DpopProofValidatorTest {
         ReflectionTestUtils.setField(validator, "cacheExpireInSeconds", Map.of("someOtherCache", 600));
 
         assertThrows(IllegalStateException.class, () -> validator.checkJtiCacheTtl());
+    }
+
+    // ---------- mosip.certify.dpop.enabled ----------
+
+    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+            .withBean(CacheManager.class, () -> new ConcurrentMapCacheManager(DpopProofValidator.DPOP_JTI_CACHE))
+            .withUserConfiguration(DpopProofValidator.class);
+
+    @Test
+    void should_createValidator_when_dpopEnabledIsUnset() {
+        // Existing deployments carry no value and must keep DPoP after an upgrade.
+        contextRunner
+                .withPropertyValues("mosip.certify.domain.url=" + DOMAIN_URL,
+                        "mosip.certify.cache.expire-in-seconds={'dpopJti': 120}")
+                .run(context -> assertThat(context).hasSingleBean(DpopProofValidator.class));
+    }
+
+    @Test
+    void should_createValidator_when_dpopIsEnabled() {
+        contextRunner
+                .withPropertyValues("mosip.certify.dpop.enabled=true",
+                        "mosip.certify.domain.url=" + DOMAIN_URL,
+                        "mosip.certify.cache.expire-in-seconds={'dpopJti': 120}")
+                .run(context -> assertThat(context).hasSingleBean(DpopProofValidator.class));
+    }
+
+    @Test
+    void should_startWithoutValidator_when_dpopIsDisabledAndDpopPropertiesAreUnusable() {
+        // No dpopJti TTL and an unparseable tuning value would each stop an enabled
+        // deployment at startup. A Bearer-only one must ignore them.
+        contextRunner
+                .withPropertyValues("mosip.certify.dpop.enabled=false",
+                        "mosip.certify.dpop.proof-max-age=not-a-number")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    assertThat(context).doesNotHaveBean(DpopProofValidator.class);
+                });
     }
 
     @Test

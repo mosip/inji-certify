@@ -159,9 +159,15 @@ that key.
 A bound token presented as a plain `Bearer` token is **refused**. That is the point of the binding: honouring it would
 let a stolen token be replayed, which is what sender constraining exists to prevent.
 
-No configuration is needed to enable this — Certify follows whatever the authorization server issued. The tunables are:
+DPoP is enabled by default, so no configuration is needed to use it — Certify follows whatever the authorization server
+issued. A deployment whose authorization server does not issue DPoP-bound tokens can switch the DPoP path off. The
+properties are:
 
 ```properties
+# Whether Certify offers the DPoP authentication path; true when unset. With false, Certify
+# is Bearer-only: a DPoP-scheme request gets 401 invalid_token with a Bearer challenge, a
+# DPoP-bound token presented as Bearer is still refused, and the properties below are ignored.
+mosip.certify.dpop.enabled=true
 # Signature algorithms accepted on a proof, and advertised in the WWW-Authenticate
 # challenge. Asymmetric only; MAC and none are refused whatever is listed here.
 mosip.certify.dpop.allowed-algorithms=ES256,ES384,ES512,RS256,PS256,EdDSA

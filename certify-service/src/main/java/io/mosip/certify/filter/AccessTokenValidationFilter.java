@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
@@ -24,14 +25,17 @@ import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import io.mosip.certify.core.constants.Constants;
 import io.mosip.certify.core.constants.ErrorConstants;
 import io.mosip.certify.core.exception.CertifyException;
 import io.mosip.certify.core.exception.InvalidDpopHeaderException;
+import io.mosip.certify.core.exception.NotAuthenticatedException;
 import io.mosip.certify.dpop.DpopProofValidator;
 import io.mosip.certify.core.dto.ParsedAccessToken;
 import io.mosip.certify.core.util.CommonUtil;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,6 +54,7 @@ public class AccessTokenValidationFilter extends OncePerRequestFilter {
     static final String ERROR_MISSING_DPOP_PROOF = "A DPoP header is required when using the DPoP authorization scheme.";
     static final String ERROR_TOKEN_REQUIRES_DPOP = "This access token is DPoP-bound and cannot be presented as a Bearer token.";
     static final String ERROR_MULTIPLE_DPOP_PROOFS = "Exactly one DPoP header is allowed.";
+    static final String ERROR_DPOP_NOT_SUPPORTED = "DPoP is not supported by this deployment. Use a Bearer token.";
 
     private static final String BEARER_PREFIX = Constants.SCHEME_BEARER + " ";
     private static final String DPOP_PREFIX = Constants.SCHEME_DPOP + " ";
@@ -69,10 +74,36 @@ public class AccessTokenValidationFilter extends OncePerRequestFilter {
     @Autowired
     private ParsedAccessToken parsedAccessToken;
 
-    @Autowired
+    /**
+     * Present only when {@code mosip.certify.dpop.enabled} is true, the default. Its
+     * absence is what switches this filter to Bearer-only: the validator is conditional on
+     * that property, so a null here means DPoP is disabled for this deployment.
+     */
+    @Autowired(required = false)
     private DpopProofValidator dpopProofValidator;
 
+    /**
+     * Answers a request rejected before it reaches a controller, so the response goes
+     * through {@code ExceptionHandlerAdvice} like every other authentication failure.
+     */
+    @Autowired
+    @Qualifier("handlerExceptionResolver")
+    private HandlerExceptionResolver handlerExceptionResolver;
+
     private NimbusJwtDecoder nimbusJwtDecoder;
+
+    @PostConstruct
+    public void logDpopMode() {
+        if (isDpopEnabled()) {
+            log.info("DPoP support is enabled: access tokens are accepted under the Bearer and DPoP schemes");
+        } else {
+            log.info("DPoP support is disabled: Bearer-only resource server, DPoP-scheme requests are rejected");
+        }
+    }
+
+    private boolean isDpopEnabled() {
+        return dpopProofValidator != null;
+    }
 
     private boolean isJwt(String token) {
         return token.split("\\.").length == 3;
@@ -110,6 +141,11 @@ public class AccessTokenValidationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String authorizationHeader = request.getHeader("Authorization");
         String scheme = resolveScheme(authorizationHeader);
+
+        if (Constants.SCHEME_DPOP.equals(scheme) && !isDpopEnabled()) {
+            rejectDpopScheme(request, response);
+            return;
+        }
 
         if (scheme == null) {
             request.setAttribute(Constants.AUTH_ERROR_ATTRIBUTE, INVALID_TOKEN_TYPE);
@@ -159,6 +195,25 @@ public class AccessTokenValidationFilter extends OncePerRequestFilter {
         }
         parsedAccessToken.setActive(false);
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * Refuses a DPoP-scheme request on a deployment with DPoP disabled, at the entrance.
+     *
+     * <p>Unlike every other failure in this filter, the request is not passed down the
+     * chain: the answer depends on the deployment alone, so neither the access token nor
+     * the request body is looked at, and no proof is parsed or spent against the replay
+     * cache. The challenge is Bearer rather than the scheme the caller used, since a DPoP
+     * retry can never succeed here, and the code is {@code invalid_token} because no proof
+     * took part in the rejection.
+     */
+    private void rejectDpopScheme(HttpServletRequest request, HttpServletResponse response) {
+        log.error("DPoP authorization scheme presented, but DPoP is disabled on this deployment");
+        request.setAttribute(Constants.AUTH_SCHEME_ATTRIBUTE, Constants.SCHEME_BEARER);
+        request.setAttribute(Constants.AUTH_ERROR_ATTRIBUTE, ERROR_DPOP_NOT_SUPPORTED);
+        request.setAttribute(Constants.AUTH_ERROR_CODE_ATTRIBUTE, ErrorConstants.INVALID_AUTH_TOKEN);
+        parsedAccessToken.setActive(false);
+        handlerExceptionResolver.resolveException(request, response, null, new NotAuthenticatedException());
     }
 
     /**

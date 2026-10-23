@@ -15,6 +15,7 @@ import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
@@ -57,9 +58,16 @@ import lombok.extern.slf4j.Slf4j;
  * {@code CacheUtilService.checkAndMarkJti}. Since {@code iat} freshness already bounds how
  * long any proof can be presented, a {@code jti} only has to be remembered for that same
  * window - after it, the proof is rejected on age anyway.
+ *
+ * <p>Created only while {@code mosip.certify.dpop.enabled} is true, which is the default
+ * when it is unset. With DPoP disabled the bean does not exist, so none of the
+ * {@code mosip.certify.dpop.*} properties are bound and neither startup check below runs:
+ * a Bearer-only deployment does not need a {@code dpopJti} cache. Callers treat the
+ * absent bean as DPoP being disabled.
  */
 @Slf4j
 @Component
+@ConditionalOnProperty(name = "mosip.certify.dpop.enabled", havingValue = "true", matchIfMissing = true)
 public class DpopProofValidator {
 
     private static final String DPOP_JWT_TYPE = "dpop+jwt";

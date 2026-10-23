@@ -308,6 +308,46 @@ public class ExceptionHandlerAdviceTest {
     }
 
     @Test
+    public void should_answerBearerChallengeWithoutAlgs_when_dpopIsDisabledAndDpopSchemeIsRejected() {
+        // What AccessTokenValidationFilter records for a DPoP-scheme request on a
+        // deployment with DPoP disabled. The validator bean is absent in that mode.
+        HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
+        when(req.getAttribute(Constants.AUTH_ERROR_ATTRIBUTE)).thenReturn("DPoP is not supported by this deployment. Use a Bearer token.");
+        when(req.getAttribute(Constants.AUTH_ERROR_CODE_ATTRIBUTE)).thenReturn(ErrorConstants.INVALID_AUTH_TOKEN);
+        when(req.getAttribute(Constants.AUTH_SCHEME_ATTRIBUTE)).thenReturn(Constants.SCHEME_BEARER);
+        ReflectionTestUtils.setField(advice, "dpopProofValidator", null);
+
+        ResponseEntity<VCError> response = advice.handleVCIControllerExceptions(new NotAuthenticatedException(), req);
+
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals(ErrorConstants.INVALID_AUTH_TOKEN, response.getBody().getError());
+        assertEquals("DPoP is not supported by this deployment. Use a Bearer token.",
+                response.getBody().getError_description());
+        assertEquals("Bearer error=\"invalid_token\", error_description=\"DPoP is not supported by this deployment. Use a Bearer token.\"",
+                response.getHeaders().getFirst(HttpHeaders.WWW_AUTHENTICATE));
+    }
+
+    @Test
+    public void should_notAdvertiseAlgs_when_dpopIsDisabledAndDpopBoundTokenIsPresentedAsBearer() {
+        // The downgrade guard still answers invalid_dpop_proof, which normally carries algs.
+        // With DPoP disabled no DPoP retry can succeed, so none may be advertised.
+        HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
+        when(req.getAttribute(Constants.AUTH_ERROR_ATTRIBUTE))
+                .thenReturn("This access token is DPoP-bound and cannot be presented as a Bearer token.");
+        when(req.getAttribute(Constants.AUTH_ERROR_CODE_ATTRIBUTE)).thenReturn(ErrorConstants.INVALID_DPOP_PROOF);
+        when(req.getAttribute(Constants.AUTH_SCHEME_ATTRIBUTE)).thenReturn(Constants.SCHEME_BEARER);
+        ReflectionTestUtils.setField(advice, "dpopProofValidator", null);
+
+        ResponseEntity<VCError> response = advice.handleVCIControllerExceptions(
+                new NotAuthenticatedException(ErrorConstants.INVALID_DPOP_PROOF), req);
+
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        String challenge = response.getHeaders().getFirst(HttpHeaders.WWW_AUTHENTICATE);
+        assertTrue(challenge.startsWith("Bearer "));
+        assertFalse(challenge.contains("algs="));
+    }
+
+    @Test
     public void should_returnUnauthorizedWithChallenge_when_vciNotAuthenticated() {
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
         when(req.getAttribute(Constants.AUTH_ERROR_ATTRIBUTE)).thenReturn(null);
