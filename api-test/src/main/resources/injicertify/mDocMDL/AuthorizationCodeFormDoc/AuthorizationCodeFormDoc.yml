@@ -37,3 +37,22 @@ AuthorizationCodeFormDocMDL:
       output: '{
       
 }'
+   InjiCertify_ESignet_AuthorizationCode_Formdl_InvalidId_01_sid:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/auth-code
+      uniqueIdentifier: TC_esignetDependent_AuthorizationCode_mdl_InvalidId_01
+      description: Authorization Code for mDoc MDL invalid individual ID negative flow
+      role: resident
+      restMethod: post
+      additionalDependencies: TC_esignetDependent_AuthenticateUser_mdl_InvalidId_01
+      checkErrorsOnlyInResponse: true
+      validityCheckRequired: true
+      inputTemplate: injicertify/mDocMDL/AuthorizationCodeFormDoc/AuthorizationCodeFormDoc
+      outputTemplate: injicertify/mDocMDL/AuthorizationCodeFormDoc/AuthorizationCodeFormDocResult
+      input: '{
+           "encodedHash": "$ID:ESignet_OAuthDetailsRequest_Formdl_InvalidId_01_sid_encodedResp$",
+           "requestTime": "$TIMESTAMP$",
+           "transactionId": "$ID:ESignet_OAuthDetailsRequest_Formdl_InvalidId_01_sid_transactionId$"
+   }'
+      output: '{
+
+}'

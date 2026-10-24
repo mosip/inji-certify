@@ -53,3 +53,59 @@ OAuthDetailsRequestFormDocMDL:
       output: '{
        
 }'
+
+   InjiCertify_ESignet_OAuthDetailsRequest_Formdl_InvalidId_01_sid:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_mdl_InvalidId_01
+      description: OAuth details request for mDL invalid individual ID negative flow
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      inputTemplate: injicertify/mDocMDL/OAuthDetailsRequestFormDoc/OAuthDetailsRequestFormDoc
+      outputTemplate: injicertify/mDocMDL/OAuthDetailsRequestFormDoc/OAuthDetailsRequestFormDocResult
+      input: '{
+           "requestTime": "$TIMESTAMP$",
+           "clientId": "$ID:ESignet_CreateOIDCClientV2_Formdl_all_Valid_Smoke_sid_clientId$",
+           "scope": "sample_vc_mdoc",
+           "responseType": "code",
+           "redirectUri": "$IDPREDIRECTURI$",
+           "display": "popup",
+           "prompt": "login",
+           "acrValues": "mosip:idp:acr:generated-code",
+           "nonce": "$UNIQUENONCEVALUE$",
+           "state": "eree2311",
+           "claimsLocales": "en",
+           "codeChallenge": "$CODECHALLENGE$",
+           "codeChallengeMethod": "S256"
+}'
+      output: '{
+
+}'
+
+   InjiCertify_ESignet_OAuthDetailsRequest_Formdl_InvalidOtp_01_sid:
+      endPoint: $ESIGNETMOCKIDABASEURL$/v1/esignet/authorization/v2/oauth-details
+      uniqueIdentifier: TC_esignetDependent_OAuthdetailsRequest_mdl_InvalidOtp_01
+      description: OAuth details request for mDL invalid OTP negative flow
+      role: resident
+      restMethod: post
+      checkErrorsOnlyInResponse: true
+      inputTemplate: injicertify/mDocMDL/OAuthDetailsRequestFormDoc/OAuthDetailsRequestFormDoc
+      outputTemplate: injicertify/mDocMDL/OAuthDetailsRequestFormDoc/OAuthDetailsRequestFormDocResult
+      input: '{
+          	"requestTime": "$TIMESTAMP$",
+          	"clientId": "$ID:ESignet_CreateOIDCClientV2_Formdl_all_Valid_Smoke_sid_clientId$",
+          	"scope": "sample_vc_mdoc",
+          	"responseType": "code",
+          	"redirectUri": "$IDPREDIRECTURI$",
+          	"display": "popup",
+          	"prompt": "login",
+          	"acrValues": "mosip:idp:acr:generated-code",
+          	"nonce": "$UNIQUENONCEVALUE$",
+          	"state": "invalid-otp-state",
+          	"claimsLocales": "en",
+          	"codeChallenge": "$CODECHALLENGE$",
+          	"codeChallengeMethod": "S256"
+   }'
+      output: '{
+
+   }'
